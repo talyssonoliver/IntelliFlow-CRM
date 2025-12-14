@@ -794,7 +794,8 @@ $sprint0 | Group-Object Status | Select-Object Name, Count
 - **Metrics Dashboard**: http://localhost:3002/ - Real-time sprint progress
 - **Data Sync Docs**: `apps/project-tracker/docs/DATA_SYNC.md` - Synchronization system documentation
 - **Metrics README**: `apps/project-tracker/docs/metrics/README.md` - Infrastructure documentation
-- **README**: `Readme.md` - Sprint decomposition and automation strategy
+- **README**: `README.md` - Project overview and quick start guide
+- **Planning Analysis**: `PLANNING_ANALYSIS.md` - Initial sprint planning and decomposition (Portuguese)
 - **ADRs**: Architecture decisions in `docs/planning/adr/`
 - **API Docs**: Auto-generated from tRPC routers (run `pnpm run docs:api`)
 - **Domain Docs**: Docusaurus site at `docs/`
