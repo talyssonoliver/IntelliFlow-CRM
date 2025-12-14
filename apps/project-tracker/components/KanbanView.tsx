@@ -10,40 +10,19 @@ interface KanbanViewProps {
 
 export default function KanbanView({ tasks, onTaskClick }: KanbanViewProps) {
   const columns = [
-    { id: 'backlog', title: 'Backlog', status: 'Planned' },
-    { id: 'todo', title: 'To Do', status: 'Planned' },
+    { id: 'planned', title: 'Planned', status: 'Planned' },
     { id: 'inprogress', title: 'In Progress', status: 'In Progress' },
-    { id: 'review', title: 'Review', status: 'Completed' },
-    { id: 'done', title: 'Done', status: 'Completed' },
+    { id: 'blocked', title: 'Blocked', status: 'Blocked' },
+    { id: 'completed', title: 'Completed', status: 'Completed' },
   ];
 
   const getTasksForColumn = (columnId: string, status: string) => {
-    if (columnId === 'backlog') {
-      // Show first half of planned tasks in backlog
-      const planned = tasks.filter(t => t.status === 'Planned');
-      return planned.slice(0, Math.ceil(planned.length / 2));
-    }
-    if (columnId === 'todo') {
-      // Show second half of planned tasks in to-do column
-      const planned = tasks.filter(t => t.status === 'Planned');
-      return planned.slice(Math.ceil(planned.length / 2));
-    }
-    if (columnId === 'review') {
-      // Show first half of completed tasks in review
-      const completed = tasks.filter(t => t.status === 'Completed');
-      return completed.slice(0, Math.ceil(completed.length / 2));
-    }
-    if (columnId === 'done') {
-      // Show second half of completed tasks in done
-      const completed = tasks.filter(t => t.status === 'Completed');
-      return completed.slice(Math.ceil(completed.length / 2));
-    }
     return tasks.filter(t => t.status === status);
   };
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-5 gap-2">
+      <div className="grid grid-cols-4 gap-3">
         {columns.map(column => {
           const columnTasks = getTasksForColumn(column.id, column.status);
 
