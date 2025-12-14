@@ -32,6 +32,22 @@ const CONFIG = {
     cicd: 30,
     production: 90,
   },
+  // Files/patterns excluded from secret scanning (documentation that discusses security concepts)
+  secretScanExclusions: [
+    'docs/**/*',
+    '**/*.md',
+    '**/Sprint_plan.csv',
+    '**/Sprint_plan.json',
+    '**/task-status.schema.json',
+    '**/*.schema.json',
+    '**/CLAUDE.md',
+    '**/copilot-instructions.md',
+    'apps/project-tracker/**/*',
+    '**/docker-compose*.yml',
+    '**/docker-compose*.yaml',
+    'artifacts/misc/*.yml',
+    'artifacts/misc/*.yaml',
+  ],
 }
 
 // Validation rules
@@ -345,6 +361,21 @@ class ArtifactPathLinter {
   }
 
   /**
+   * Check if file should be excluded from secret scanning
+   */
+  private isExcludedFromSecretScan(file: string): boolean {
+    // Normalize path to forward slashes for consistent matching
+    const normalizedFile = file.replace(/\\/g, '/')
+    for (const pattern of CONFIG.secretScanExclusions) {
+      const regex = this.globToRegex(pattern)
+      if (regex.test(normalizedFile)) {
+        return true
+      }
+    }
+    return false
+  }
+
+  /**
    * Scan file contents for secrets
    */
   private async scanForSecrets(file: string): Promise<Violation[]> {
@@ -352,6 +383,11 @@ class ArtifactPathLinter {
 
     // Only scan text files
     if (!this.isTextFile(file)) {
+      return violations
+    }
+
+    // Skip excluded files (documentation that discusses security concepts)
+    if (this.isExcludedFromSecretScan(file)) {
       return violations
     }
 

@@ -198,7 +198,8 @@ function updateTaskRegistry(tasks: any[], metricsDir: string): void {
     completed: sprint0Tasks.filter(t => t.Status === 'Done' || t.Status === 'Completed').length,
     in_progress: sprint0Tasks.filter(t => t.Status === 'In Progress').length,
     blocked: sprint0Tasks.filter(t => t.Status === 'Blocked').length,
-    not_started: sprint0Tasks.filter(t => t.Status === 'Planned').length,
+    planned: sprint0Tasks.filter(t => t.Status === 'Planned').length,
+    backlog: sprint0Tasks.filter(t => t.Status === 'Backlog').length,
   };
 
   // Merge with existing registry

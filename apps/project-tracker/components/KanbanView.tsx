@@ -10,6 +10,7 @@ interface KanbanViewProps {
 
 export default function KanbanView({ tasks, onTaskClick }: KanbanViewProps) {
   const columns = [
+    { id: 'backlog', title: 'Backlog', status: 'Backlog' },
     { id: 'planned', title: 'Planned', status: 'Planned' },
     { id: 'inprogress', title: 'In Progress', status: 'In Progress' },
     { id: 'blocked', title: 'Blocked', status: 'Blocked' },
@@ -22,7 +23,7 @@ export default function KanbanView({ tasks, onTaskClick }: KanbanViewProps) {
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-5 gap-2">
         {columns.map(column => {
           const columnTasks = getTasksForColumn(column.id, column.status);
 

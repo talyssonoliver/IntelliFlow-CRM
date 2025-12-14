@@ -132,13 +132,15 @@ function parseSprint(sprintValue: string | number): SprintNumber {
  * Normalize status value
  */
 function normalizeStatus(status: string): Task['status'] {
-  const normalized = (status || 'Planned').trim();
+  const normalized = (status || 'Backlog').trim();
 
+  if (normalized === 'Backlog') return 'Backlog';
+  if (normalized === 'Planned') return 'Planned';
   if (normalized === 'In Progress') return 'In Progress';
   if (normalized === 'Completed' || normalized === 'Done') return 'Completed';
   if (normalized === 'Blocked') return 'Blocked';
 
-  return 'Planned';
+  return 'Backlog';
 }
 
 /**
@@ -171,12 +173,19 @@ export function groupTasksBySprint(tasks: Task[]): Map<SprintNumber, Task[]> {
  * Count tasks by status
  */
 export function countTasksByStatus(tasks: Task[]) {
+  const backlog = tasks.filter(t => t.status === 'Backlog').length;
+  const planned = tasks.filter(t => t.status === 'Planned').length;
+  const inProgress = tasks.filter(t => t.status === 'In Progress').length;
+  const completed = tasks.filter(t => t.status === 'Completed').length;
+  const blocked = tasks.filter(t => t.status === 'Blocked').length;
+  
   return {
-    total: tasks.length,
-    planned: tasks.filter(t => t.status === 'Planned').length,
-    inProgress: tasks.filter(t => t.status === 'In Progress').length,
-    completed: tasks.filter(t => t.status === 'Completed').length,
-    blocked: tasks.filter(t => t.status === 'Blocked').length,
+    backlog,
+    planned,
+    inProgress,
+    completed,
+    blocked,
+    total: backlog + planned + inProgress + completed + blocked,
   };
 }
 

@@ -32,13 +32,14 @@ export function formatNumber(num: number): string {
  * Get color based on status
  */
 export function getStatusColor(status: string): string {
-  const colors: Record<string, string> = {
+  const statusColors: Record<string, string> = {
+    Backlog: 'bg-slate-100 text-slate-800',
     Planned: 'bg-gray-100 text-gray-800',
     'In Progress': 'bg-blue-100 text-blue-800',
     Completed: 'bg-green-100 text-green-800',
     Blocked: 'bg-red-100 text-red-800',
   };
-  return colors[status] || 'bg-gray-100 text-gray-800';
+  return statusColors[status] || 'bg-gray-100 text-gray-800';
 }
 
 /**

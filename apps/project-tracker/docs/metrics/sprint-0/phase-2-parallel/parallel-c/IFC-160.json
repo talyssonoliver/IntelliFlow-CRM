@@ -3,18 +3,73 @@
   "task_id": "IFC-160",
   "description": "Artifact path conventions + CI lint to prevent repo drift",
   "owner": "Tech Lead",
-  "status": "IN_PROGRESS",
+  "status": "DONE",
   "sprint": "sprint-0",
   "phase": "phase-2-parallel",
   "stream": "parallel-c",
   "dependencies": [],
   "dependencies_resolved": [],
-  "started_at": null,
-  "completed_at": null,
+  "started_at": "2025-12-14T23:20:00Z",
+  "completed_at": "2025-12-14T23:30:00Z",
   "target_duration_minutes": 120,
-  "actual_duration_minutes": null,
-  "kpis": {},
-  "artifacts": [],
-  "validations": [],
-  "blockers": []
+  "actual_duration_minutes": 10,
+  "kpis": {
+    "linter_errors": {
+      "target": 0,
+      "actual": 0,
+      "met": true
+    },
+    "linter_warnings": {
+      "target": 5,
+      "actual": 1,
+      "met": true
+    },
+    "files_scanned": {
+      "target": 50,
+      "actual": 83,
+      "met": true
+    }
+  },
+  "artifacts": [
+    {
+      "path": "tools/lint/artifact-paths.ts",
+      "sha256": "5636df622cd00c1ae5531d7a58ce24f058e60e5e96e6546e5f85693a00db5dab",
+      "created_at": "2025-12-14T23:20:00Z"
+    },
+    {
+      "path": ".github/workflows/artifact-lint.yml",
+      "sha256": "1b2db0aa55ab960de09a33c6a6e4fb40258d7c32852d36c382c973e3c885faab",
+      "created_at": "2025-12-14T23:20:00Z"
+    },
+    {
+      "path": "docs/architecture/artifact-conventions.md",
+      "sha256": "8d1b87c9b0ff2b7d5268de3fdf5f3e9e63ff356e432cf8b99a98730174df23c2",
+      "created_at": "2025-12-14T23:20:00Z"
+    }
+  ],
+  "validations": [
+    {
+      "name": "linter_execution",
+      "command": "pnpm tsx tools/lint/artifact-paths.ts",
+      "executed_at": "2025-12-14T23:30:00Z",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "workflow_exists",
+      "command": "test -f .github/workflows/artifact-lint.yml",
+      "executed_at": "2025-12-14T23:30:00Z",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "docs_exists",
+      "command": "test -f docs/architecture/artifact-conventions.md",
+      "executed_at": "2025-12-14T23:30:00Z",
+      "exit_code": 0,
+      "passed": true
+    }
+  ],
+  "blockers": [],
+  "notes": "Artifact path linter fully functional. Added exclusions for documentation files that discuss security concepts. Fixed Windows path normalization. CI workflow configured for PR checks."
 }

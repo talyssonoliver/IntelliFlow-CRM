@@ -3,7 +3,7 @@
  * Maps directly to Sprint_plan.csv columns
  */
 
-export type TaskStatus = 'Planned' | 'In Progress' | 'Completed' | 'Blocked';
+export type TaskStatus = 'Backlog' | 'Planned' | 'In Progress' | 'Completed' | 'Blocked';
 
 export type SprintNumber = number | 'Continuous' | 'all';
 

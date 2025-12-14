@@ -392,7 +392,9 @@ function mapCsvStatus(status: string): string {
   if (status === 'Done' || status === 'Completed') return 'DONE';
   if (status === 'In Progress') return 'IN_PROGRESS';
   if (status === 'Blocked') return 'BLOCKED';
-  return 'PLANNED';
+  if (status === 'Planned') return 'PLANNED';
+  if (status === 'Backlog') return 'BACKLOG';
+  return 'BACKLOG';
 }
 
 /**

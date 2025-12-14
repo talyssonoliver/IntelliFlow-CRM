@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2025-12-14T23:22:17.205Z",
+  "last_updated": "2025-12-14T23:44:00.946Z",
   "total_tasks": 305,
   "sprints": {
     "sprint-0": {
@@ -9,7 +9,8 @@
       "completed": 7,
       "in_progress": 11,
       "blocked": 0,
-      "not_started": 9
+      "planned": 1,
+      "backlog": 8
     }
   },
   "tasks_by_status": {
