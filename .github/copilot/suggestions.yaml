@@ -1,0 +1,461 @@
+# GitHub Copilot Custom Suggestion Rules for IntelliFlow CRM
+# These rules customize Copilot's behavior for this project
+
+version: 1.0
+
+# Project-specific patterns and preferences
+patterns:
+  # Domain-Driven Design patterns
+  - pattern: entity
+    template: |
+      export class {ClassName} extends AggregateRoot<{ClassName}Props> {
+        private constructor(props: {ClassName}Props, id?: {ClassName}Id) {
+          super(props, id)
+        }
+
+        static create(props: {ClassName}Props, id?: {ClassName}Id): Result<{ClassName}> {
+          // Validation logic
+          const {varName} = new {ClassName}(props, id)
+          if (!id) {
+            {varName}.addDomainEvent(new {ClassName}CreatedEvent({varName}))
+          }
+          return Result.ok({varName})
+        }
+
+        // Business methods
+      }
+
+  - pattern: value-object
+    template: |
+      export class {ClassName} extends ValueObject {
+        private constructor(private readonly value: {Type}) {
+          super()
+          // Validation
+        }
+
+        static create(value: {Type}): Result<{ClassName}> {
+          try {
+            return Result.ok(new {ClassName}(value))
+          } catch (error) {
+            return Result.fail(error.message)
+          }
+        }
+
+        getValue(): {Type} {
+          return this.value
+        }
+
+        equals(other: {ClassName}): boolean {
+          return this.value === other.value
+        }
+      }
+
+  - pattern: repository
+    template: |
+      // Domain interface (packages/domain/)
+      export interface {EntityName}Repository {
+        save(entity: {EntityName}): Promise<Result<void>>
+        findById(id: {EntityName}Id): Promise<Result<{EntityName} | null>>
+        findAll(): Promise<Result<{EntityName}[]>>
+        delete(id: {EntityName}Id): Promise<Result<void>>
+      }
+
+      // Infrastructure implementation (packages/adapters/)
+      export class Prisma{EntityName}Repository implements {EntityName}Repository {
+        constructor(private prisma: PrismaClient) {}
+
+        async save(entity: {EntityName}): Promise<Result<void>> {
+          try {
+            await this.prisma.{tableName}.upsert({
+              where: { id: entity.id.getValue() },
+              create: this.toPrisma(entity),
+              update: this.toPrisma(entity),
+            })
+            return Result.ok()
+          } catch (error) {
+            return Result.fail(error.message)
+          }
+        }
+
+        private toPrisma(entity: {EntityName}): Prisma{EntityName}CreateInput {
+          // Mapping logic
+        }
+
+        private toDomain(prisma: Prisma{EntityName}): Result<{EntityName}> {
+          // Mapping logic
+        }
+      }
+
+  - pattern: trpc-router
+    template: |
+      import { z } from 'zod'
+      import { createTRPCRouter, protectedProcedure, publicProcedure } from '../trpc'
+
+      export const {routerName}Router = createTRPCRouter({
+        getById: protectedProcedure
+          .input(z.object({ id: z.string().uuid() }))
+          .query(async ({ input, ctx }) => {
+            const result = await ctx.services.{serviceName}.findById(input.id)
+            if (result.isFailure) {
+              throw new TRPCError({
+                code: 'NOT_FOUND',
+                message: result.getError(),
+              })
+            }
+            return result.getValue()
+          }),
+
+        create: protectedProcedure
+          .input({schemaName}Schema)
+          .mutation(async ({ input, ctx }) => {
+            const result = await ctx.services.{serviceName}.create(input)
+            if (result.isFailure) {
+              throw new TRPCError({
+                code: 'BAD_REQUEST',
+                message: result.getError(),
+              })
+            }
+            return result.getValue()
+          }),
+      })
+
+  - pattern: validation-schema
+    template: |
+      import { z } from 'zod'
+
+      export const {schemaName}Schema = z.object({
+        // Define schema fields with validation
+      })
+
+      export type {TypeName} = z.infer<typeof {schemaName}Schema>
+
+  - pattern: domain-event
+    template: |
+      export class {EventName}Event extends DomainEvent {
+        constructor(
+          public readonly aggregateId: string,
+          // Additional event data
+        ) {
+          super()
+        }
+
+        getAggregateId(): string {
+          return this.aggregateId
+        }
+      }
+
+  - pattern: use-case
+    template: |
+      export class {UseCaseName}UseCase {
+        constructor(
+          private {repositoryName}Repository: {RepositoryName}Repository,
+          private eventBus: EventBus
+        ) {}
+
+        async execute(input: {InputType}): Promise<Result<{OutputType}>> {
+          try {
+            // 1. Validate input
+            // 2. Load aggregate
+            // 3. Execute business logic
+            // 4. Save aggregate
+            // 5. Publish events
+            // 6. Return result
+            return Result.ok(output)
+          } catch (error) {
+            return Result.fail(error.message)
+          }
+        }
+      }
+
+  - pattern: ai-chain
+    template: |
+      import { ChatOpenAI } from '@langchain/openai'
+      import { StructuredOutputParser } from 'langchain/output_parsers'
+      import { RunnableSequence } from '@langchain/core/runnables'
+      import { PromptTemplate } from '@langchain/core/prompts'
+      import { z } from 'zod'
+
+      export const {chainName}OutputSchema = z.object({
+        // Define structured output schema
+      })
+
+      export type {ChainName}Output = z.infer<typeof {chainName}OutputSchema>
+
+      export const create{ChainName}Chain = (llm: ChatOpenAI) => {
+        const parser = StructuredOutputParser.fromZodSchema({chainName}OutputSchema)
+
+        const prompt = PromptTemplate.fromTemplate(`
+          {System instructions}
+
+          Input: {input}
+
+          {format_instructions}
+        `)
+
+        const chain = RunnableSequence.from([
+          prompt,
+          llm,
+          parser,
+        ])
+
+        return chain
+      }
+
+  - pattern: react-server-component
+    template: |
+      import { db } from '@intelliflow/db'
+
+      export default async function {ComponentName}Page({
+        params,
+        searchParams,
+      }: {
+        params: { id: string }
+        searchParams: { [key: string]: string | string[] | undefined }
+      }) {
+        // Fetch data directly in server component
+        const data = await db.{model}.findUnique({
+          where: { id: params.id },
+        })
+
+        return (
+          <div>
+            {/* Render UI */}
+          </div>
+        )
+      }
+
+  - pattern: react-client-component
+    template: |
+      'use client'
+
+      import { useState } from 'react'
+      import { api } from '@/trpc/client'
+
+      export function {ComponentName}() {
+        const [state, setState] = useState()
+        const mutation = api.{router}.{procedure}.useMutation()
+
+        const handleAction = async () => {
+          await mutation.mutateAsync(data)
+        }
+
+        return (
+          <div>
+            {/* Interactive UI */}
+          </div>
+        )
+      }
+
+# Suggestion preferences
+preferences:
+  # Always use strict TypeScript
+  typescript:
+    strict: true
+    noImplicitAny: true
+    strictNullChecks: true
+
+  # Prefer functional patterns
+  functional:
+    preferConst: true
+    preferArrowFunctions: true
+    preferTemplateStrings: true
+
+  # Testing preferences
+  testing:
+    framework: vitest
+    coverageThreshold: 90
+    preferDescribeBlocks: true
+    includeEdgeCases: true
+
+  # Error handling
+  errorHandling:
+    preferResultPattern: true
+    avoidThrowInDomain: true
+    useZodForValidation: true
+
+  # Imports
+  imports:
+    preferNamedImports: true
+    organizeImports: true
+    useWorkspaceProtocol: true
+
+# Code quality rules
+quality:
+  # Complexity limits
+  complexity:
+    maxFunctionLines: 50
+    maxFunctionParameters: 4
+    maxNestedCallbacks: 3
+
+  # Naming conventions
+  naming:
+    classes: PascalCase
+    functions: camelCase
+    constants: UPPER_SNAKE_CASE
+    types: PascalCase
+    interfaces: PascalCase
+
+  # Documentation
+  documentation:
+    requireJSDoc: true
+    includeExamples: true
+    documentComplexLogic: true
+
+# Technology-specific rules
+technologies:
+  react:
+    preferFunctionComponents: true
+    useHooks: true
+    avoidDefaultExport: false
+    preferServerComponents: true
+
+  nextjs:
+    useAppRouter: true
+    preferServerComponents: true
+    useMetadataAPI: true
+
+  prisma:
+    useTransactions: true
+    selectOnlyNeededFields: true
+    handleErrors: true
+
+  trpc:
+    validateInputs: true
+    useTypedContext: true
+    handleErrors: true
+
+  zod:
+    provideErrorMessages: true
+    useTransformsCarefully: true
+    exportInferredTypes: true
+
+# Security rules
+security:
+  - rule: no-secrets-in-code
+    severity: error
+    message: Never commit secrets, API keys, or credentials
+
+  - rule: validate-all-inputs
+    severity: error
+    message: All inputs must be validated with Zod schemas
+
+  - rule: sanitize-ai-outputs
+    severity: warning
+    message: AI-generated content must be sanitized before rendering
+
+  - rule: use-parameterized-queries
+    severity: error
+    message: Use Prisma parameterized queries to prevent SQL injection
+
+  - rule: implement-rate-limiting
+    severity: warning
+    message: Public endpoints should have rate limiting
+
+# Performance rules
+performance:
+  - rule: minimize-bundle-size
+    severity: warning
+    message: Use dynamic imports for large dependencies
+
+  - rule: optimize-database-queries
+    severity: warning
+    message: Select only needed fields and use indexes
+
+  - rule: cache-ai-calls
+    severity: info
+    message: Consider caching AI API calls to reduce costs
+
+  - rule: use-server-components
+    severity: info
+    message: Prefer Server Components over Client Components in Next.js
+
+# Architecture rules
+architecture:
+  - rule: domain-independence
+    severity: error
+    message: Domain layer must not depend on infrastructure
+
+  - rule: use-repository-pattern
+    severity: error
+    message: Data access must go through repository interfaces
+
+  - rule: bounded-contexts
+    severity: warning
+    message: Respect bounded context boundaries
+
+  - rule: domain-events
+    severity: info
+    message: Use domain events for cross-aggregate communication
+
+# Custom snippets for common tasks
+snippets:
+  - trigger: "test-unit"
+    body: |
+      describe('{ComponentName}', () => {
+        it('should {testCase}', () => {
+          // Arrange
+          const input = {}
+
+          // Act
+          const result = {}
+
+          // Assert
+          expect(result).toBe()
+        })
+      })
+
+  - trigger: "test-integration"
+    body: |
+      describe('{RouterName} integration', () => {
+        it('should {testCase}', async () => {
+          const caller = router.createCaller(mockContext)
+          const result = await caller.{procedure}(input)
+          expect(result).toMatchObject({})
+        })
+      })
+
+  - trigger: "error-handling"
+    body: |
+      try {
+        // Operation
+        return Result.ok(value)
+      } catch (error) {
+        return Result.fail(error instanceof Error ? error.message : 'Unknown error')
+      }
+
+# Context-aware suggestions
+contexts:
+  - context: packages/domain
+    rules:
+      - No infrastructure dependencies
+      - Use Result pattern for errors
+      - Include domain events
+      - Write comprehensive tests
+
+  - context: packages/adapters
+    rules:
+      - Implement repository interfaces
+      - Handle infrastructure errors
+      - Map between domain and persistence models
+
+  - context: apps/web
+    rules:
+      - Prefer Server Components
+      - Use tRPC client for API calls
+      - Implement proper error boundaries
+      - Follow shadcn/ui patterns
+
+  - context: apps/api
+    rules:
+      - Validate all inputs with Zod
+      - Use typed tRPC context
+      - Handle errors properly
+      - Include proper logging
+
+  - context: apps/ai-worker
+    rules:
+      - Use structured outputs
+      - Include confidence scores
+      - Implement timeouts
+      - Cache expensive calls
+      - Track costs

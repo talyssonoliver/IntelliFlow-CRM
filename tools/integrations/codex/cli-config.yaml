@@ -1,0 +1,406 @@
+# Codex CLI Configuration for IntelliFlow CRM
+# Configuration for OpenAI Codex integration and CLI tools
+
+version: 1.0
+project: intelliflow-crm
+
+# API Configuration
+api:
+  provider: openai
+  base_url: https://api.openai.com/v1
+  model: gpt-4-turbo
+  fallback_model: gpt-3.5-turbo
+  timeout: 30000  # 30 seconds
+  max_retries: 3
+  retry_delay: 1000  # 1 second
+
+  # Rate limiting
+  rate_limit:
+    requests_per_minute: 60
+    tokens_per_minute: 150000
+    concurrent_requests: 5
+
+  # Cost management
+  cost_control:
+    max_monthly_cost: 500  # USD
+    alert_threshold: 0.8
+    track_usage: true
+    cost_per_1k_tokens:
+      gpt-4-turbo: 0.01
+      gpt-3.5-turbo: 0.002
+
+# Authentication
+auth:
+  method: api_key
+  key_source: environment  # OPENAI_API_KEY
+  organization_id: ${OPENAI_ORG_ID}  # Optional
+  verify_ssl: true
+
+# CLI Settings
+cli:
+  interactive_mode: true
+  output_format: markdown
+  color_output: true
+  verbose: false
+  log_level: info
+
+  # Command aliases
+  aliases:
+    review: code-review
+    test: test-generation
+    doc: documentation
+    refactor: suggest-refactoring
+
+  # Default options
+  defaults:
+    temperature: 0.2  # Lower for more consistent code generation
+    max_tokens: 4096
+    top_p: 1.0
+    frequency_penalty: 0.0
+    presence_penalty: 0.0
+
+# Prompt Configuration
+prompts:
+  base_path: tools/integrations/codex/prompts
+  cache_enabled: true
+  cache_ttl: 3600  # 1 hour
+
+  # Available prompts
+  available:
+    - name: code-review
+      file: code-review.md
+      description: Comprehensive code review with security, performance, and quality checks
+      temperature: 0.2
+      max_tokens: 2048
+
+    - name: test-generation
+      file: test-generation.md
+      description: Generate comprehensive unit and integration tests
+      temperature: 0.3
+      max_tokens: 4096
+
+    - name: documentation
+      file: documentation.md
+      description: Generate API documentation and JSDoc comments
+      temperature: 0.2
+      max_tokens: 2048
+
+    - name: refactoring
+      file: refactoring.md
+      description: Suggest code refactoring opportunities
+      temperature: 0.3
+      max_tokens: 3072
+
+    - name: bug-fix
+      file: bug-fix.md
+      description: Analyze and suggest fixes for bugs
+      temperature: 0.2
+      max_tokens: 2048
+
+# Context Configuration
+context:
+  # Project context to include in all prompts
+  project_context:
+    - file: CLAUDE.md
+      section: all
+      priority: high
+
+    - file: docs/shared/copilot-instructions.md
+      section: all
+      priority: high
+
+    - file: package.json
+      section: all
+      priority: medium
+
+  # Code context window
+  code_context:
+    max_lines_before: 50
+    max_lines_after: 50
+    include_imports: true
+    include_types: true
+    include_tests: false
+
+  # Repository context
+  repo_context:
+    include_file_tree: true
+    max_depth: 3
+    exclude_patterns:
+      - node_modules/**
+      - dist/**
+      - .next/**
+      - coverage/**
+
+# Output Configuration
+output:
+  format: markdown
+  include_metadata: true
+  save_to_file: true
+  output_directory: artifacts/codex-outputs
+
+  # Metadata to include
+  metadata:
+    - timestamp
+    - model_used
+    - tokens_used
+    - cost_estimate
+    - confidence_score
+
+  # File naming
+  file_naming:
+    pattern: "{command}_{timestamp}_{hash}"
+    timestamp_format: "YYYY-MM-DD_HH-mm-ss"
+    extension: .md
+
+# Code Review Settings
+code_review:
+  enabled: true
+  auto_fix_suggestions: true
+  severity_levels: [critical, high, medium, low, info]
+  min_severity: low
+
+  focus_areas:
+    - security:
+        weight: 10
+        checks:
+          - sql_injection
+          - xss_vulnerabilities
+          - secrets_exposure
+          - unsafe_dependencies
+          - authentication_issues
+
+    - performance:
+        weight: 8
+        checks:
+          - inefficient_loops
+          - unnecessary_re-renders
+          - memory_leaks
+          - n_plus_one_queries
+          - unoptimized_queries
+
+    - type_safety:
+        weight: 9
+        checks:
+          - missing_types
+          - any_usage
+          - type_assertions
+          - unsafe_casts
+
+    - best_practices:
+        weight: 7
+        checks:
+          - code_duplication
+          - long_functions
+          - complex_conditionals
+          - god_objects
+          - magic_numbers
+
+    - testing:
+        weight: 8
+        checks:
+          - missing_tests
+          - low_coverage
+          - missing_edge_cases
+          - brittle_tests
+
+    - domain_driven_design:
+        weight: 9
+        checks:
+          - domain_purity
+          - bounded_context_violations
+          - repository_pattern_compliance
+          - aggregate_rules
+
+# Test Generation Settings
+test_generation:
+  enabled: true
+  framework: vitest
+  coverage_target: 90
+
+  test_types:
+    - unit:
+        enabled: true
+        pattern: "**/*.test.ts"
+        isolation: true
+        mock_dependencies: true
+
+    - integration:
+        enabled: true
+        pattern: "**/*.integration.test.ts"
+        use_test_db: true
+
+    - e2e:
+        enabled: false
+        framework: playwright
+
+  generation_rules:
+    include_happy_path: true
+    include_edge_cases: true
+    include_error_cases: true
+    include_boundary_tests: true
+    include_setup_teardown: true
+    use_describe_blocks: true
+    use_it_blocks: true
+
+  naming_conventions:
+    describe_pattern: "{ClassName}"
+    it_pattern: "should {behavior}"
+
+# Documentation Settings
+documentation:
+  enabled: true
+  formats: [jsdoc, markdown, api_reference]
+
+  jsdoc:
+    include_params: true
+    include_returns: true
+    include_examples: true
+    include_throws: true
+    include_deprecated: true
+
+  markdown:
+    include_toc: true
+    include_examples: true
+    include_usage: true
+    include_api_reference: true
+
+  api_reference:
+    format: openapi
+    version: 3.0.0
+    output: docs/api/reference.yaml
+
+# Refactoring Settings
+refactoring:
+  enabled: true
+  auto_apply: false  # Safety: require manual review
+
+  patterns_to_detect:
+    - extract_function
+    - extract_variable
+    - inline_function
+    - rename_symbol
+    - move_to_module
+    - split_class
+    - introduce_parameter_object
+
+  complexity_thresholds:
+    max_function_length: 50
+    max_cyclomatic_complexity: 15
+    max_cognitive_complexity: 20
+    max_parameters: 4
+
+# Caching
+cache:
+  enabled: true
+  provider: filesystem
+  directory: .cache/codex
+  ttl: 3600  # 1 hour
+  max_size_mb: 100
+
+  cache_keys:
+    - prompt_hash
+    - code_hash
+    - model_version
+
+# Logging
+logging:
+  enabled: true
+  level: info
+  output: artifacts/logs/codex.log
+  rotation: daily
+  max_files: 30
+
+  log_events:
+    - api_calls
+    - errors
+    - warnings
+    - cost_tracking
+    - performance_metrics
+
+# Monitoring
+monitoring:
+  enabled: true
+  metrics_output: artifacts/metrics/codex-metrics.csv
+
+  track:
+    - api_calls_count
+    - tokens_used
+    - cost_incurred
+    - response_time
+    - error_rate
+    - cache_hit_rate
+
+  alerts:
+    - condition: cost > monthly_budget * 0.8
+      action: notify
+      channels: [email, slack]
+
+    - condition: error_rate > 0.1
+      action: notify
+      channels: [slack]
+
+    - condition: response_time > 30s
+      action: log_warning
+
+# Safety and Security
+safety:
+  enabled: true
+
+  input_validation:
+    max_input_length: 100000  # characters
+    allowed_file_types: [ts, tsx, js, jsx, py, yaml, json, md]
+    sanitize_inputs: true
+
+  output_validation:
+    validate_json: true
+    validate_code_syntax: true
+    sanitize_outputs: true
+
+  sandboxing:
+    enabled: true
+    config_file: artifacts/misc/sandbox-security.json
+    restrict_file_access: true
+    allowed_paths:
+      - packages/**
+      - apps/**
+      - tools/**
+      - docs/**
+
+# Integration Settings
+integrations:
+  github:
+    enabled: true
+    create_pr_comments: true
+    create_issues: true
+    link_to_commits: true
+
+  vscode:
+    enabled: true
+    extension_id: openai.codex-vscode
+    auto_trigger: false
+
+  ci_cd:
+    enabled: true
+    run_on_pr: true
+    run_on_push: false
+    fail_on_critical: true
+
+# Experimentation
+experiments:
+  enabled: true
+  features:
+    - name: multi_file_analysis
+      enabled: false
+      description: Analyze multiple files in a single request
+
+    - name: incremental_refactoring
+      enabled: false
+      description: Suggest incremental refactoring steps
+
+    - name: custom_rules
+      enabled: true
+      description: Use project-specific custom rules
+
+    - name: ai_pair_programming
+      enabled: false
+      description: Interactive AI pair programming mode

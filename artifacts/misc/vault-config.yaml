@@ -1,0 +1,58 @@
+# HashiCorp Vault Configuration for IntelliFlow CRM
+# This configuration sets up Vault for secrets management across all services
+
+# Storage backend configuration
+storage "file" {
+  path = "/vault/data"
+}
+
+# Listener configuration (HTTPS required for production)
+listener "tcp" {
+  address       = "0.0.0.0:8200"
+  tls_disable   = false
+  tls_cert_file = "/vault/tls/tls.crt"
+  tls_key_file  = "/vault/tls/tls.key"
+}
+
+# API configuration
+api_addr = "https://vault.intelliflow.local:8200"
+cluster_addr = "https://vault.intelliflow.local:8201"
+
+# UI configuration
+ui = true
+
+# Telemetry configuration for monitoring
+telemetry {
+  prometheus_retention_time = "30s"
+  disable_hostname = false
+
+  # OpenTelemetry integration
+  statsite_address = "localhost:8125"
+  statsd_address = "localhost:8125"
+}
+
+# Log level
+log_level = "Info"
+
+# Disable mlock for development (enable in production)
+disable_mlock = false
+
+# Seal configuration (auto-unseal with cloud KMS in production)
+seal "awskms" {
+  region     = "us-east-1"
+  kms_key_id = "alias/vault-unseal-key"
+  endpoint   = "https://kms.us-east-1.amazonaws.com"
+}
+
+# Plugin directory
+plugin_directory = "/vault/plugins"
+
+# Maximum lease TTL
+max_lease_ttl = "768h"
+default_lease_ttl = "168h"
+
+# Service registration (for high availability)
+service_registration "kubernetes" {
+  namespace = "vault"
+  pod_name = "vault-0"
+}

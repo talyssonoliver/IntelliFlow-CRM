@@ -1,0 +1,11 @@
+from,to,reason,status
+"src/build.log","artifacts/logs/build/build.log","File in prohibited location (src/)",pending
+"apps/web/coverage-report.html","artifacts/reports/coverage/web-coverage.html","Coverage report in wrong location",pending
+"apps/api/test-results.json","artifacts/reports/test/api-test-results.json","Test results in wrong location",pending
+"packages/domain/coverage.json","artifacts/reports/coverage/domain-coverage.json","Coverage data in source directory",pending
+"tools/output.json","artifacts/misc/tools/output.json","Generated output in tools directory",pending
+"docs/metrics.csv","artifacts/metrics/docs/metrics.csv","Metrics data in docs directory",pending
+"infra/deployment.log","artifacts/logs/deployment/deployment.log","Deployment log in infra directory",pending
+"apps/ai-worker/ai-chain-test.log","artifacts/logs/ai/chain-test.log","AI worker log in app directory",pending
+"build-output.txt","artifacts/logs/build/build-output.txt","Build output in root directory",pending
+"test-screenshot-1234.png","artifacts/misc/screenshots/test-screenshot-1234.png","Screenshot in root directory",pending

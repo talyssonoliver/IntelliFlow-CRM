@@ -1,0 +1,307 @@
+// IntelliFlow CRM - Prisma Schema
+// This schema is AI-optimized with pgvector for embeddings
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  extensions = [vector, uuid_ossp]
+}
+
+// ============================================
+// AUTH & USERS
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  avatarUrl     String?
+  role          UserRole  @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  leads         Lead[]
+  contacts      Contact[]
+  accounts      Account[]
+  opportunities Opportunity[]
+  tasks         Task[]
+  aiScores      AIScore[]
+  auditLogs     AuditLog[]
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  MANAGER
+  SALES_REP
+}
+
+// ============================================
+// CRM CORE ENTITIES
+// ============================================
+
+model Lead {
+  id            String      @id @default(cuid())
+  email         String
+  firstName     String?
+  lastName      String?
+  company       String?
+  title         String?
+  phone         String?
+  source        LeadSource  @default(WEBSITE)
+  status        LeadStatus  @default(NEW)
+  score         Int         @default(0)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Relations
+  ownerId       String
+  owner         User        @relation(fields: [ownerId], references: [id])
+  contact       Contact?
+  aiScores      AIScore[]
+  tasks         Task[]
+
+  // AI Embedding for semantic search
+  embedding     Unsupported("vector(1536)")?
+
+  @@index([email])
+  @@index([status])
+  @@index([score])
+  @@index([ownerId])
+  @@index([createdAt])
+  @@map("leads")
+}
+
+enum LeadSource {
+  WEBSITE
+  REFERRAL
+  SOCIAL
+  EMAIL
+  COLD_CALL
+  EVENT
+  OTHER
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  UNQUALIFIED
+  CONVERTED
+  LOST
+}
+
+model Contact {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  firstName     String
+  lastName      String
+  title         String?
+  phone         String?
+  department    String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  ownerId       String
+  owner         User      @relation(fields: [ownerId], references: [id])
+  accountId     String?
+  account       Account?  @relation(fields: [accountId], references: [id])
+  leadId        String?   @unique
+  lead          Lead?     @relation(fields: [leadId], references: [id])
+  opportunities Opportunity[]
+  tasks         Task[]
+
+  // AI Embedding
+  embedding     Unsupported("vector(1536)")?
+
+  @@index([email])
+  @@index([ownerId])
+  @@index([accountId])
+  @@map("contacts")
+}
+
+model Account {
+  id            String    @id @default(cuid())
+  name          String
+  website       String?
+  industry      String?
+  employees     Int?
+  revenue       Decimal?  @db.Decimal(15, 2)
+  description   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  ownerId       String
+  owner         User      @relation(fields: [ownerId], references: [id])
+  contacts      Contact[]
+  opportunities Opportunity[]
+
+  @@index([name])
+  @@index([ownerId])
+  @@map("accounts")
+}
+
+model Opportunity {
+  id            String              @id @default(cuid())
+  name          String
+  value         Decimal             @db.Decimal(15, 2)
+  stage         OpportunityStage    @default(PROSPECTING)
+  probability   Int                 @default(0)
+  expectedCloseDate DateTime?
+  description   String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  closedAt      DateTime?
+
+  // Relations
+  ownerId       String
+  owner         User                @relation(fields: [ownerId], references: [id])
+  accountId     String
+  account       Account             @relation(fields: [accountId], references: [id])
+  contactId     String?
+  contact       Contact?            @relation(fields: [contactId], references: [id])
+  tasks         Task[]
+
+  @@index([stage])
+  @@index([ownerId])
+  @@index([accountId])
+  @@index([expectedCloseDate])
+  @@map("opportunities")
+}
+
+enum OpportunityStage {
+  PROSPECTING
+  QUALIFICATION
+  NEEDS_ANALYSIS
+  PROPOSAL
+  NEGOTIATION
+  CLOSED_WON
+  CLOSED_LOST
+}
+
+model Task {
+  id            String      @id @default(cuid())
+  title         String
+  description   String?
+  dueDate       DateTime?
+  priority      TaskPriority @default(MEDIUM)
+  status        TaskStatus  @default(PENDING)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  completedAt   DateTime?
+
+  // Relations
+  ownerId       String
+  owner         User        @relation(fields: [ownerId], references: [id])
+  leadId        String?
+  lead          Lead?       @relation(fields: [leadId], references: [id])
+  contactId     String?
+  contact       Contact?    @relation(fields: [contactId], references: [id])
+  opportunityId String?
+  opportunity   Opportunity? @relation(fields: [opportunityId], references: [id])
+
+  @@index([status])
+  @@index([ownerId])
+  @@index([dueDate])
+  @@map("tasks")
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// ============================================
+// AI & INTELLIGENCE
+// ============================================
+
+model AIScore {
+  id            String    @id @default(cuid())
+  score         Int
+  confidence    Float
+  factors       Json      // Scoring factors breakdown
+  modelVersion  String
+  createdAt     DateTime  @default(now())
+
+  // Relations
+  leadId        String
+  lead          Lead      @relation(fields: [leadId], references: [id])
+  scoredById    String
+  scoredBy      User      @relation(fields: [scoredById], references: [id])
+
+  @@index([leadId])
+  @@index([createdAt])
+  @@map("ai_scores")
+}
+
+// ============================================
+// AUDIT & EVENTS
+// ============================================
+
+model AuditLog {
+  id            String    @id @default(cuid())
+  action        String
+  entityType    String
+  entityId      String
+  oldValue      Json?
+  newValue      Json?
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime  @default(now())
+
+  // Relations
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model DomainEvent {
+  id            String    @id @default(cuid())
+  eventType     String
+  aggregateType String
+  aggregateId   String
+  payload       Json
+  metadata      Json?
+  occurredAt    DateTime  @default(now())
+  processedAt   DateTime?
+  status        EventStatus @default(PENDING)
+
+  @@index([eventType])
+  @@index([aggregateType, aggregateId])
+  @@index([status])
+  @@index([occurredAt])
+  @@map("domain_events")
+}
+
+enum EventStatus {
+  PENDING
+  PROCESSING
+  PROCESSED
+  FAILED
+}

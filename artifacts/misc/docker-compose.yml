@@ -1,0 +1,201 @@
+version: '3.9'
+
+services:
+  # PostgreSQL Database with pgvector extension for embeddings
+  postgres:
+    image: ankane/pgvector:latest
+    container_name: intelliflow-postgres
+    environment:
+      POSTGRES_DB: intelliflow_dev
+      POSTGRES_USER: intelliflow
+      POSTGRES_PASSWORD: dev_password_change_in_prod
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/supabase/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U intelliflow -d intelliflow_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - intelliflow
+
+  # Redis for caching and rate limiting
+  redis:
+    image: redis:7-alpine
+    container_name: intelliflow-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - intelliflow
+    command: redis-server --appendonly yes
+
+  # Ollama for local AI development
+  ollama:
+    image: ollama/ollama:latest
+    container_name: intelliflow-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - intelliflow
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  # Supabase Studio (optional - for database management)
+  supabase-studio:
+    image: supabase/studio:latest
+    container_name: intelliflow-supabase-studio
+    environment:
+      POSTGRES_PASSWORD: dev_password_change_in_prod
+      SUPABASE_URL: http://localhost:54321
+      SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiJ9.ZopqoUt20nEV9cklpv9e3yw3PVyZLmKs5qLD6nGL8g4
+    ports:
+      - "54323:3000"
+    depends_on:
+      - postgres
+    networks:
+      - intelliflow
+
+  # API Server (tRPC)
+  api:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.api
+    container_name: intelliflow-api
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://intelliflow:dev_password_change_in_prod@postgres:5432/intelliflow_dev
+      REDIS_URL: redis://redis:6379
+      PORT: 4000
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/api:/app/apps/api
+      - ./packages:/app/packages
+      - /app/node_modules
+      - /app/apps/api/node_modules
+    networks:
+      - intelliflow
+    command: pnpm --filter api dev
+
+  # Web Application (Next.js)
+  web:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.web
+    container_name: intelliflow-web
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    volumes:
+      - ./apps/web:/app/apps/web
+      - ./packages:/app/packages
+      - /app/node_modules
+      - /app/apps/web/node_modules
+      - /app/apps/web/.next
+    networks:
+      - intelliflow
+    command: pnpm --filter web dev
+
+  # AI Worker (LangChain/CrewAI)
+  ai-worker:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.ai-worker
+    container_name: intelliflow-ai-worker
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://intelliflow:dev_password_change_in_prod@postgres:5432/intelliflow_dev
+      REDIS_URL: redis://redis:6379
+      OLLAMA_BASE_URL: http://ollama:11434
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-sk-dev-key}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    volumes:
+      - ./apps/ai-worker:/app/apps/ai-worker
+      - ./packages:/app/packages
+      - /app/node_modules
+      - /app/apps/ai-worker/node_modules
+    networks:
+      - intelliflow
+    command: pnpm --filter ai-worker dev
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: intelliflow-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - intelliflow
+
+  # Grafana for metrics visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: intelliflow-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infra/monitoring/grafana:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    networks:
+      - intelliflow
+
+networks:
+  intelliflow:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  ollama_data:
+  prometheus_data:
+  grafana_data:

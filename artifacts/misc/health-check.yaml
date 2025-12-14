@@ -1,0 +1,185 @@
+# IntelliFlow CRM Health Check Configuration
+# Defines health check endpoints and criteria for all services
+
+version: '1.0'
+
+services:
+  api:
+    endpoint: http://localhost:4000/health
+    interval: 30s
+    timeout: 5s
+    retries: 3
+    start_period: 10s
+    checks:
+      - name: database_connection
+        critical: true
+        description: Verify PostgreSQL connection
+      - name: redis_connection
+        critical: true
+        description: Verify Redis cache connection
+      - name: tRPC_router
+        critical: true
+        description: Verify tRPC router initialization
+      - name: authentication
+        critical: false
+        description: Verify auth middleware is loaded
+    success_criteria:
+      status_code: 200
+      response_time_ms: 200
+      required_fields:
+        - status
+        - timestamp
+        - version
+
+  web:
+    endpoint: http://localhost:3000/api/health
+    interval: 30s
+    timeout: 5s
+    retries: 3
+    start_period: 15s
+    checks:
+      - name: next_server
+        critical: true
+        description: Verify Next.js server is running
+      - name: api_connection
+        critical: true
+        description: Verify connection to API server
+      - name: static_assets
+        critical: false
+        description: Verify static assets are accessible
+    success_criteria:
+      status_code: 200
+      response_time_ms: 500
+      required_fields:
+        - status
+        - timestamp
+
+  ai_worker:
+    endpoint: http://localhost:5000/health
+    interval: 30s
+    timeout: 10s
+    retries: 3
+    start_period: 20s
+    checks:
+      - name: langchain_initialized
+        critical: true
+        description: Verify LangChain is initialized
+      - name: crewai_agents
+        critical: true
+        description: Verify CrewAI agents are loaded
+      - name: ollama_connection
+        critical: false
+        description: Verify Ollama connection (dev only)
+      - name: openai_connection
+        critical: false
+        description: Verify OpenAI API connection
+      - name: vector_db
+        critical: true
+        description: Verify pgvector connection
+    success_criteria:
+      status_code: 200
+      response_time_ms: 1000
+      required_fields:
+        - status
+        - timestamp
+        - ai_provider
+
+  postgres:
+    endpoint: internal
+    command: pg_isready -U intelliflow -d intelliflow_dev
+    interval: 10s
+    timeout: 5s
+    retries: 5
+    checks:
+      - name: database_ready
+        critical: true
+        description: PostgreSQL accepting connections
+      - name: pgvector_extension
+        critical: true
+        description: pgvector extension loaded
+    success_criteria:
+      exit_code: 0
+
+  redis:
+    endpoint: internal
+    command: redis-cli ping
+    interval: 10s
+    timeout: 5s
+    retries: 5
+    checks:
+      - name: redis_ready
+        critical: true
+        description: Redis accepting connections
+      - name: memory_usage
+        critical: false
+        description: Redis memory usage within limits
+    success_criteria:
+      exit_code: 0
+      response: PONG
+
+  ollama:
+    endpoint: http://localhost:11434/api/version
+    interval: 30s
+    timeout: 10s
+    retries: 3
+    checks:
+      - name: ollama_ready
+        critical: false
+        description: Ollama API is responsive
+      - name: models_loaded
+        critical: false
+        description: Required models are loaded
+    success_criteria:
+      status_code: 200
+      response_time_ms: 2000
+
+monitoring:
+  aggregated_health:
+    endpoint: http://localhost:4000/health/all
+    description: Aggregated health status of all services
+    critical_services:
+      - postgres
+      - redis
+      - api
+
+  alerts:
+    critical_failure:
+      action: notify_team
+      channels:
+        - slack
+        - pagerduty
+      threshold: 2_consecutive_failures
+
+    degraded_performance:
+      action: log_warning
+      threshold: response_time_p95_500ms
+
+    service_restart:
+      action: log_info
+      auto_restart: true
+      max_restarts: 3
+
+  metrics:
+    collect_interval: 60s
+    retention_days: 30
+    export_format: prometheus
+
+dashboards:
+  grafana:
+    url: http://localhost:3001
+    health_dashboard: /d/health-overview
+
+  prometheus:
+    url: http://localhost:9090
+    targets: /targets
+
+notifications:
+  slack:
+    webhook_url: ${SLACK_WEBHOOK_URL}
+    channel: "#intelliflow-alerts"
+
+  pagerduty:
+    integration_key: ${PAGERDUTY_KEY}
+    severity_mapping:
+      critical: high
+      degraded: low

@@ -1,0 +1,319 @@
+{
+  "$schema": "https://json.schemastore.org/github-copilot-team-settings.json",
+  "version": "1.0",
+  "organization": "intelliflow-crm",
+  "projectName": "IntelliFlow CRM",
+  "description": "AI-powered CRM system with intelligent lead scoring and automation",
+
+  "team": {
+    "name": "IntelliFlow Development Team",
+    "size": "small",
+    "roles": [
+      {
+        "name": "Full Stack Developer",
+        "count": 2,
+        "permissions": ["read", "write", "copilot_enterprise"]
+      },
+      {
+        "name": "AI/ML Engineer",
+        "count": 1,
+        "permissions": ["read", "write", "copilot_enterprise"]
+      },
+      {
+        "name": "DevOps Engineer",
+        "count": 1,
+        "permissions": ["read", "write", "copilot_enterprise"]
+      },
+      {
+        "name": "Product Owner",
+        "count": 1,
+        "permissions": ["read"]
+      }
+    ]
+  },
+
+  "features": {
+    "copilot_chat": {
+      "enabled": true,
+      "maxTokens": 4096,
+      "temperature": 0.2,
+      "model": "gpt-4-turbo"
+    },
+    "copilot_completions": {
+      "enabled": true,
+      "aggressiveness": "balanced",
+      "multilineCompletions": true,
+      "contextAwareness": "high"
+    },
+    "copilot_docs": {
+      "enabled": true,
+      "includeProjectDocs": true,
+      "docsPaths": [
+        "docs/**",
+        "CLAUDE.md",
+        "README.md",
+        "packages/**/README.md"
+      ]
+    },
+    "copilot_pr_reviews": {
+      "enabled": true,
+      "autoReview": true,
+      "focusAreas": [
+        "security",
+        "performance",
+        "best_practices",
+        "type_safety",
+        "test_coverage"
+      ]
+    },
+    "copilot_commit_messages": {
+      "enabled": true,
+      "format": "conventional",
+      "includeContext": true
+    },
+    "copilot_workspace": {
+      "enabled": true,
+      "indexing": "smart",
+      "semanticSearch": true
+    }
+  },
+
+  "policies": {
+    "code_quality": {
+      "enforceTypeSafety": true,
+      "requireTests": true,
+      "minCoverageThreshold": 90,
+      "complexityLimit": 15,
+      "maxFunctionLength": 50
+    },
+    "security": {
+      "scanSecrets": true,
+      "preventSecretsCommit": true,
+      "vulnerabilityScan": true,
+      "dependencyAudit": true,
+      "allowedLicenses": [
+        "MIT",
+        "Apache-2.0",
+        "BSD-3-Clause",
+        "ISC"
+      ]
+    },
+    "ai_usage": {
+      "requireHumanReview": true,
+      "confidenceThreshold": 0.7,
+      "logAllSuggestions": true,
+      "trackAcceptanceRate": true
+    },
+    "collaboration": {
+      "requireCodeReview": true,
+      "minApprovals": 1,
+      "blockMergeOnFailedTests": true,
+      "blockMergeOnLowCoverage": true
+    }
+  },
+
+  "customization": {
+    "language": "typescript",
+    "framework": "nextjs",
+    "codeStyle": {
+      "indentation": "2spaces",
+      "quotes": "single",
+      "semicolons": false,
+      "trailingComma": "es5"
+    },
+    "namingConventions": {
+      "files": {
+        "components": "PascalCase",
+        "utilities": "camelCase",
+        "tests": "*.test.ts"
+      },
+      "code": {
+        "variables": "camelCase",
+        "constants": "UPPER_SNAKE_CASE",
+        "functions": "camelCase",
+        "classes": "PascalCase",
+        "interfaces": "PascalCase",
+        "types": "PascalCase"
+      }
+    },
+    "patterns": {
+      "preferredPatterns": [
+        "domain_driven_design",
+        "repository_pattern",
+        "result_pattern",
+        "domain_events",
+        "cqrs"
+      ],
+      "avoidPatterns": [
+        "god_objects",
+        "anemic_models",
+        "service_locator"
+      ]
+    }
+  },
+
+  "contextFiles": [
+    {
+      "path": "CLAUDE.md",
+      "priority": "high",
+      "description": "Comprehensive project guide and conventions"
+    },
+    {
+      "path": "docs/shared/copilot-instructions.md",
+      "priority": "high",
+      "description": "Copilot-specific instructions and patterns"
+    },
+    {
+      "path": "Sprint_plan.csv",
+      "priority": "medium",
+      "description": "Sprint planning and task breakdown"
+    },
+    {
+      "path": "docs/architecture/**",
+      "priority": "medium",
+      "description": "Architecture documentation"
+    },
+    {
+      "path": "docs/planning/adr/**",
+      "priority": "medium",
+      "description": "Architecture Decision Records"
+    }
+  ],
+
+  "suggestions": {
+    "codeGeneration": {
+      "includeDocs": true,
+      "includeTests": true,
+      "includeErrorHandling": true,
+      "includeValidation": true,
+      "useProjectPatterns": true
+    },
+    "refactoring": {
+      "maintainTypeSafety": true,
+      "preserveTests": true,
+      "updateDocs": true,
+      "followDDDPrinciples": true
+    },
+    "testing": {
+      "framework": "vitest",
+      "coverageTarget": 90,
+      "includeEdgeCases": true,
+      "includeUnitTests": true,
+      "includeIntegrationTests": true
+    }
+  },
+
+  "integrations": {
+    "github_actions": {
+      "enabled": true,
+      "workflows": [
+        "ci.yml",
+        "cd.yml",
+        "code-quality.yml",
+        "security-scan.yml"
+      ]
+    },
+    "issue_tracking": {
+      "enabled": true,
+      "autoLinkIssues": true,
+      "suggestRelatedIssues": true
+    },
+    "documentation": {
+      "enabled": true,
+      "platform": "docusaurus",
+      "autoUpdate": true
+    }
+  },
+
+  "metrics": {
+    "track": {
+      "acceptanceRate": true,
+      "timesSaved": true,
+      "suggestionQuality": true,
+      "errorReduction": true,
+      "codeCoverage": true
+    },
+    "reporting": {
+      "frequency": "weekly",
+      "recipients": [
+        "team_lead",
+        "product_owner"
+      ],
+      "metrics": [
+        "acceptance_rate",
+        "time_saved",
+        "quality_improvements",
+        "security_issues_prevented"
+      ]
+    }
+  },
+
+  "training": {
+    "onboarding": {
+      "enabled": true,
+      "materials": [
+        "docs/shared/copilot-instructions.md",
+        "CLAUDE.md",
+        "docs/architecture/overview.md"
+      ],
+      "estimatedTime": "2 hours"
+    },
+    "bestPractices": {
+      "documentationUrl": "docs/ai-development/copilot-best-practices.md",
+      "exampleProjects": [
+        "packages/domain",
+        "apps/api"
+      ]
+    }
+  },
+
+  "costManagement": {
+    "budgeting": {
+      "monthlyBudget": 500,
+      "currency": "USD",
+      "alertThreshold": 0.8
+    },
+    "optimization": {
+      "cacheCompletions": true,
+      "rateLimiting": true,
+      "usagePriority": [
+        "core_development",
+        "testing",
+        "documentation",
+        "refactoring"
+      ]
+    }
+  },
+
+  "compliance": {
+    "dataRetention": {
+      "retainCompletions": false,
+      "retainTelemetry": true,
+      "retentionPeriod": "90 days"
+    },
+    "privacy": {
+      "excludeSensitiveFiles": true,
+      "anonymizeData": true,
+      "gdprCompliant": true
+    }
+  },
+
+  "experimental": {
+    "features": {
+      "voiceCommands": false,
+      "multimodalInput": false,
+      "advancedRefactoring": true,
+      "aiPairProgramming": true
+    }
+  },
+
+  "feedback": {
+    "enabled": true,
+    "channels": [
+      "inline_comments",
+      "github_discussions",
+      "team_meetings"
+    ],
+    "reviewCycle": "bi_weekly"
+  }
+}

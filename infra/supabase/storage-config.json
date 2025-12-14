@@ -1,0 +1,287 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "title": "IntelliFlow CRM Storage Configuration",
+  "description": "Supabase Storage bucket configuration for file management",
+  "buckets": [
+    {
+      "name": "avatars",
+      "public": true,
+      "fileSizeLimit": "2MB",
+      "allowedMimeTypes": [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/gif"
+      ],
+      "description": "User avatar images",
+      "policies": [
+        {
+          "name": "Avatar uploads - authenticated users",
+          "operation": "INSERT",
+          "definition": "auth.role() = 'authenticated'",
+          "check": "bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text"
+        },
+        {
+          "name": "Avatar updates - own files only",
+          "operation": "UPDATE",
+          "definition": "auth.role() = 'authenticated' AND (storage.foldername(name))[1] = auth.uid()::text",
+          "check": "bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text"
+        },
+        {
+          "name": "Avatar deletes - own files only",
+          "operation": "DELETE",
+          "definition": "auth.role() = 'authenticated' AND (storage.foldername(name))[1] = auth.uid()::text"
+        },
+        {
+          "name": "Avatar reads - public",
+          "operation": "SELECT",
+          "definition": "true"
+        }
+      ]
+    },
+    {
+      "name": "documents",
+      "public": false,
+      "fileSizeLimit": "50MB",
+      "allowedMimeTypes": [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/vnd.ms-powerpoint",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "text/plain",
+        "text/csv"
+      ],
+      "description": "Business documents, contracts, proposals",
+      "policies": [
+        {
+          "name": "Document uploads - authenticated users",
+          "operation": "INSERT",
+          "definition": "auth.role() = 'authenticated'",
+          "check": "bucket_id = 'documents' AND (storage.foldername(name))[1] = auth.uid()::text"
+        },
+        {
+          "name": "Document updates - own files or admin",
+          "operation": "UPDATE",
+          "definition": "auth.role() = 'authenticated' AND ((storage.foldername(name))[1] = auth.uid()::text OR auth.is_admin())",
+          "check": "bucket_id = 'documents'"
+        },
+        {
+          "name": "Document deletes - own files or admin",
+          "operation": "DELETE",
+          "definition": "auth.role() = 'authenticated' AND ((storage.foldername(name))[1] = auth.uid()::text OR auth.is_admin())"
+        },
+        {
+          "name": "Document reads - own files, team files for managers, all for admins",
+          "operation": "SELECT",
+          "definition": "auth.role() = 'authenticated' AND ((storage.foldername(name))[1] = auth.uid()::text OR auth.is_manager() OR auth.is_admin())"
+        }
+      ]
+    },
+    {
+      "name": "email-attachments",
+      "public": false,
+      "fileSizeLimit": "25MB",
+      "allowedMimeTypes": [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "text/plain",
+        "text/csv",
+        "application/zip"
+      ],
+      "description": "Email attachment storage for campaigns and communications",
+      "policies": [
+        {
+          "name": "Email attachment uploads - authenticated users",
+          "operation": "INSERT",
+          "definition": "auth.role() = 'authenticated'",
+          "check": "bucket_id = 'email-attachments'"
+        },
+        {
+          "name": "Email attachment reads - authenticated users",
+          "operation": "SELECT",
+          "definition": "auth.role() = 'authenticated'"
+        },
+        {
+          "name": "Email attachment deletes - owner or admin",
+          "operation": "DELETE",
+          "definition": "auth.role() = 'authenticated' AND ((storage.foldername(name))[1] = auth.uid()::text OR auth.is_admin())"
+        }
+      ]
+    },
+    {
+      "name": "ai-generated",
+      "public": false,
+      "fileSizeLimit": "10MB",
+      "allowedMimeTypes": [
+        "application/json",
+        "text/plain",
+        "text/csv",
+        "application/pdf"
+      ],
+      "description": "AI-generated content, reports, and analysis results",
+      "policies": [
+        {
+          "name": "AI content uploads - system only",
+          "operation": "INSERT",
+          "definition": "auth.is_admin()",
+          "check": "bucket_id = 'ai-generated'"
+        },
+        {
+          "name": "AI content reads - authenticated users for their content",
+          "operation": "SELECT",
+          "definition": "auth.role() = 'authenticated' AND ((storage.foldername(name))[1] = auth.uid()::text OR auth.is_manager() OR auth.is_admin())"
+        },
+        {
+          "name": "AI content deletes - admin only",
+          "operation": "DELETE",
+          "definition": "auth.is_admin()"
+        }
+      ]
+    },
+    {
+      "name": "imports",
+      "public": false,
+      "fileSizeLimit": "100MB",
+      "allowedMimeTypes": [
+        "text/csv",
+        "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/json"
+      ],
+      "description": "Bulk import files for leads, contacts, and accounts",
+      "policies": [
+        {
+          "name": "Import uploads - authenticated users",
+          "operation": "INSERT",
+          "definition": "auth.role() = 'authenticated'",
+          "check": "bucket_id = 'imports' AND (storage.foldername(name))[1] = auth.uid()::text"
+        },
+        {
+          "name": "Import reads - own files or admin",
+          "operation": "SELECT",
+          "definition": "auth.role() = 'authenticated' AND ((storage.foldername(name))[1] = auth.uid()::text OR auth.is_admin())"
+        },
+        {
+          "name": "Import deletes - own files or admin",
+          "operation": "DELETE",
+          "definition": "auth.role() = 'authenticated' AND ((storage.foldername(name))[1] = auth.uid()::text OR auth.is_admin())"
+        }
+      ]
+    },
+    {
+      "name": "exports",
+      "public": false,
+      "fileSizeLimit": "100MB",
+      "allowedMimeTypes": [
+        "text/csv",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/json",
+        "application/pdf"
+      ],
+      "description": "Data export files and reports",
+      "policies": [
+        {
+          "name": "Export uploads - system/backend only",
+          "operation": "INSERT",
+          "definition": "auth.is_admin()",
+          "check": "bucket_id = 'exports'"
+        },
+        {
+          "name": "Export reads - own files only",
+          "operation": "SELECT",
+          "definition": "auth.role() = 'authenticated' AND (storage.foldername(name))[1] = auth.uid()::text"
+        },
+        {
+          "name": "Export deletes - own files or admin",
+          "operation": "DELETE",
+          "definition": "auth.role() = 'authenticated' AND ((storage.foldername(name))[1] = auth.uid()::text OR auth.is_admin())"
+        }
+      ]
+    }
+  ],
+  "settings": {
+    "defaultFileSizeLimit": "10MB",
+    "imageTransformation": {
+      "enabled": true,
+      "maxWidth": 2000,
+      "maxHeight": 2000,
+      "quality": 80,
+      "format": "webp"
+    },
+    "virusScanning": {
+      "enabled": true,
+      "description": "Enable ClamAV virus scanning for uploaded files"
+    },
+    "contentTypeValidation": {
+      "enabled": true,
+      "description": "Validate file content matches declared MIME type"
+    },
+    "deduplification": {
+      "enabled": true,
+      "description": "Use content hashing to avoid storing duplicate files"
+    }
+  },
+  "lifecycle": {
+    "rules": [
+      {
+        "bucket": "imports",
+        "deleteAfterDays": 30,
+        "description": "Auto-delete import files after 30 days"
+      },
+      {
+        "bucket": "exports",
+        "deleteAfterDays": 7,
+        "description": "Auto-delete export files after 7 days"
+      },
+      {
+        "bucket": "email-attachments",
+        "deleteAfterDays": 90,
+        "description": "Auto-delete old email attachments after 90 days"
+      }
+    ]
+  },
+  "cors": {
+    "allowedOrigins": [
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+      "https://*.intelliflow.com"
+    ],
+    "allowedMethods": ["GET", "POST", "PUT", "DELETE"],
+    "allowedHeaders": ["Authorization", "Content-Type", "Range"],
+    "exposedHeaders": ["Content-Length", "Content-Range"],
+    "maxAge": 3600
+  },
+  "notes": {
+    "setup": [
+      "Run 'supabase storage buckets create' for each bucket",
+      "Apply RLS policies using 'supabase db reset' or manually via SQL",
+      "Configure CORS settings in Supabase dashboard",
+      "Enable image transformation in project settings",
+      "Set up lifecycle rules in storage settings"
+    ],
+    "usage": [
+      "Use service role key for backend operations",
+      "Use anon key with RLS for frontend uploads",
+      "Organize files by user ID: {bucket}/{userId}/{filename}",
+      "Use signed URLs for temporary access to private files",
+      "Implement client-side file size validation before upload"
+    ],
+    "security": [
+      "All buckets except 'avatars' are private by default",
+      "RLS policies enforce user-level access control",
+      "MIME type validation prevents malicious file uploads",
+      "Virus scanning protects against malware",
+      "Content type validation prevents MIME type spoofing"
+    ]
+  }
+}

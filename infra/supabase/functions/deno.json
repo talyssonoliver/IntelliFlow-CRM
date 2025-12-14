@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "lib": ["deno.window"],
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "imports": {
+    "supabase": "https://esm.sh/@supabase/supabase-js@2.39.0",
+    "http": "https://deno.land/std@0.177.0/http/server.ts"
+  },
+  "tasks": {
+    "serve": "deno run --allow-net --allow-env --allow-read --watch index.ts",
+    "test": "deno test --allow-all"
+  }
+}

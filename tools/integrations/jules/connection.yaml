@@ -1,0 +1,312 @@
+# Jules API Connection Configuration
+# Configuration for Jules AI code analysis and workflow automation
+
+version: 1.0
+service: jules
+project: intelliflow-crm
+
+# API Connection
+connection:
+  base_url: https://api.jules.dev/v1
+  api_version: v1
+  timeout: 60000  # 60 seconds
+  retry_policy:
+    max_retries: 3
+    retry_delay: 2000  # 2 seconds
+    backoff_multiplier: 2
+    retry_on:
+      - network_error
+      - timeout
+      - rate_limit
+      - server_error
+
+# Authentication
+auth:
+  type: bearer_token
+  token_source: environment  # JULES_API_TOKEN
+  workspace_id: ${JULES_WORKSPACE_ID}
+  refresh_token: ${JULES_REFRESH_TOKEN}
+  auto_refresh: true
+
+# Connection Pool
+pool:
+  min_connections: 2
+  max_connections: 10
+  idle_timeout: 300000  # 5 minutes
+  connection_timeout: 10000  # 10 seconds
+  keep_alive: true
+
+# Request Configuration
+requests:
+  default_headers:
+    Content-Type: application/json
+    Accept: application/json
+    User-Agent: IntelliFlow-CRM/1.0
+    X-Project-ID: intelliflow-crm
+
+  # Rate limiting
+  rate_limit:
+    requests_per_second: 10
+    burst_size: 20
+    strategy: token_bucket
+
+  # Compression
+  compression:
+    enabled: true
+    algorithms: [gzip, deflate]
+    min_size: 1024  # bytes
+
+# Response Handling
+responses:
+  parse_json: true
+  validate_schema: true
+  max_response_size: 10485760  # 10MB
+
+  # Error handling
+  error_handling:
+    include_stack_trace: false
+    log_errors: true
+    retry_on_error: true
+
+# Webhooks
+webhooks:
+  enabled: true
+  endpoint: https://api.intelliflow.dev/webhooks/jules
+  secret: ${JULES_WEBHOOK_SECRET}
+  events:
+    - analysis.completed
+    - workflow.finished
+    - error.occurred
+
+  # Webhook security
+  security:
+    verify_signature: true
+    signature_header: X-Jules-Signature
+    algorithm: sha256
+
+# SSL/TLS Configuration
+ssl:
+  verify: true
+  cert_path: null  # Use system certificates
+  key_path: null
+  ca_bundle: null
+
+# Proxy Configuration
+proxy:
+  enabled: false
+  http_proxy: ${HTTP_PROXY}
+  https_proxy: ${HTTPS_PROXY}
+  no_proxy: ${NO_PROXY}
+
+# Logging
+logging:
+  enabled: true
+  level: info
+  log_requests: true
+  log_responses: false  # Avoid logging large responses
+  log_headers: false  # Security: don't log auth headers
+  output: artifacts/logs/jules-connection.log
+  rotation: daily
+  max_files: 30
+
+# Metrics
+metrics:
+  enabled: true
+  output: artifacts/metrics/jules-connection.csv
+  collect:
+    - request_count
+    - response_time
+    - error_rate
+    - bytes_sent
+    - bytes_received
+    - connection_pool_usage
+
+# Caching
+cache:
+  enabled: true
+  provider: redis
+  connection:
+    host: ${REDIS_HOST:-localhost}
+    port: ${REDIS_PORT:-6379}
+    password: ${REDIS_PASSWORD}
+    db: 2  # Use separate DB for Jules cache
+  ttl: 3600  # 1 hour
+  key_prefix: jules:
+
+# Health Checks
+health_check:
+  enabled: true
+  endpoint: /health
+  interval: 60000  # 1 minute
+  timeout: 5000  # 5 seconds
+  unhealthy_threshold: 3
+  healthy_threshold: 2
+
+  on_unhealthy:
+    action: log_and_alert
+    alert_channels:
+      - slack
+      - email
+
+# Circuit Breaker
+circuit_breaker:
+  enabled: true
+  failure_threshold: 5
+  success_threshold: 2
+  timeout: 60000  # 1 minute
+  half_open_max_requests: 3
+
+  on_open:
+    action: fallback
+    fallback_response:
+      status: service_unavailable
+      message: Jules service temporarily unavailable
+
+# Feature Flags
+features:
+  streaming_responses: true
+  batch_requests: true
+  async_workflows: true
+  real_time_analysis: false
+  custom_models: false
+
+# Workflow Integration
+workflows:
+  base_path: tools/integrations/jules/workflows
+  auto_load: true
+  default_timeout: 300000  # 5 minutes
+
+  available:
+    - name: code-analysis
+      file: code-analysis.yaml
+      enabled: true
+      priority: high
+
+    - name: security-scan
+      file: security-scan.yaml
+      enabled: true
+      priority: critical
+
+    - name: performance-analysis
+      file: performance-analysis.yaml
+      enabled: true
+      priority: medium
+
+    - name: architecture-review
+      file: architecture-review.yaml
+      enabled: false
+      priority: low
+
+# Data Privacy
+privacy:
+  anonymize_data: true
+  exclude_patterns:
+    - "**/*.env"
+    - "**/secrets/**"
+    - "**/*.pem"
+    - "**/*.key"
+    - "**/credentials.json"
+
+  pii_detection: true
+  gdpr_compliant: true
+  data_retention: 90  # days
+
+# Cost Management
+cost:
+  budget:
+    monthly_limit: 300  # USD
+    alert_threshold: 0.8
+    hard_limit: true
+
+  tracking:
+    enabled: true
+    output: artifacts/metrics/jules-costs.csv
+    granularity: daily
+
+  optimization:
+    cache_aggressively: true
+    batch_similar_requests: true
+    use_compression: true
+
+# Development Settings
+development:
+  mock_responses: false
+  debug_mode: false
+  verbose_logging: false
+  test_endpoint: https://api-test.jules.dev/v1
+
+# Production Settings
+production:
+  strict_mode: true
+  error_reporting: true
+  performance_monitoring: true
+  auto_scaling: true
+
+# Notifications
+notifications:
+  enabled: true
+
+  channels:
+    slack:
+      enabled: true
+      webhook_url: ${SLACK_WEBHOOK_URL}
+      channel: "#intelliflow-alerts"
+      events: [error, warning, critical]
+
+    email:
+      enabled: true
+      recipients:
+        - devops@intelliflow.dev
+        - alerts@intelliflow.dev
+      events: [critical]
+
+    pagerduty:
+      enabled: false
+      integration_key: ${PAGERDUTY_KEY}
+      events: [critical]
+
+# Maintenance
+maintenance:
+  scheduled_downtime: []
+  auto_retry_during_maintenance: true
+  maintenance_window:
+    - day: sunday
+      start: "02:00"
+      end: "04:00"
+      timezone: UTC
+
+# Compliance
+compliance:
+  soc2: true
+  gdpr: true
+  hipaa: false
+  iso27001: true
+
+  audit_logging:
+    enabled: true
+    output: artifacts/logs/jules-audit.log
+    retention: 365  # days
+
+# Backup and Recovery
+backup:
+  enabled: true
+  frequency: daily
+  retention: 30  # days
+  location: s3://intelliflow-backups/jules/
+
+# Testing
+testing:
+  test_mode: false
+  mock_api: false
+  fixtures_path: tools/integrations/jules/fixtures
+  record_requests: false
+  replay_requests: false
+
+# Advanced Configuration
+advanced:
+  keep_alive_timeout: 120000  # 2 minutes
+  max_redirects: 5
+  follow_redirects: true
+  decode_content: true
+  stream_buffersize: 8192
+  trust_env: true

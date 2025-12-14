@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"C:\\taly\\intelliFlow-CRM\" /B)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

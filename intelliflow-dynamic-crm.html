@@ -1,0 +1,2574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IntelliFlow CRM - AI-Native Project Management System</title>
+    <style>
+        /* ==================== CSS VARIABLES & THEME ==================== */
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #3b82f6;
+            --dark-bg: #1f2937;
+            --light-bg: #f9fafb;
+            --card-bg: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            --hover-bg: #f3f4f6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* ==================== LAYOUT ==================== */
+        .page {
+            display: none;
+            min-height: 100vh;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* ==================== HEADER - MOBILE FIRST ==================== */
+        .header {
+            background-color: var(--dark-bg);
+            color: white;
+            padding: 1rem;
+            box-shadow: var(--shadow-md);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ai-badge {
+            background: var(--gradient-primary);
+            padding: 0.2rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            .header {
+                padding: 1.25rem 1.5rem;
+            }
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            .ai-badge {
+                display: inline-block;
+                font-size: 0.75rem;
+                padding: 0.25rem 0.75rem;
+            }
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            padding: 0.4rem 0.75rem;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .nav-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .nav-btn.active {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .upload-btn {
+            background-color: var(--success-color) !important;
+            border-color: var(--success-color) !important;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .upload-btn:hover {
+            background-color: #059669 !important;
+            animation: none;
+        }
+
+        /* ==================== SPRINT SELECTOR ==================== */
+        .sprint-selector {
+            display: flex;
+            gap: 0.25rem;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 0.25rem;
+            border-radius: 0.375rem;
+            max-width: 100%;
+            overflow-x: auto;
+        }
+
+        .sprint-btn {
+            padding: 0.3rem 0.6rem;
+            background-color: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .sprint-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .sprint-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .sprint-count {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 0.1rem 0.3rem;
+            border-radius: 0.25rem;
+            font-size: 0.65rem;
+            font-weight: 600;
+        }
+
+        /* ==================== COMMON COMPONENTS ==================== */
+        .main-content {
+            padding: 1.5rem 1rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 768px) {
+            .main-content {
+                padding: 2rem;
+            }
+        }
+
+        .dashboard-card {
+            background-color: var(--card-bg);
+            border-radius: 0.75rem;
+            border: 1px solid var(--border-color);
+            padding: 1.25rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        @media (min-width: 768px) {
+            .dashboard-card {
+                padding: 1.5rem;
+            }
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            border: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #5558e3;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: var(--light-bg);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        /* ==================== SKELETON LOADING ==================== */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 0.375rem;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .skeleton-text {
+            height: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 0.25rem;
+        }
+
+        .skeleton-card {
+            height: 120px;
+            margin-bottom: 1rem;
+            border-radius: 0.5rem;
+        }
+
+        /* ==================== UPLOAD AREA ==================== */
+        .upload-area {
+            border: 2px dashed var(--success-color);
+            border-radius: 0.75rem;
+            padding: 3rem 2rem;
+            text-align: center;
+            background-color: rgba(16, 185, 129, 0.05);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-area:hover {
+            background-color: rgba(16, 185, 129, 0.1);
+            border-color: #059669;
+        }
+
+        .upload-area.dragover {
+            background-color: rgba(16, 185, 129, 0.2);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1rem;
+            color: var(--success-color);
+        }
+
+        /* ==================== DASHBOARD STYLES ==================== */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(6, 1fr);
+                gap: 1.5rem;
+            }
+            .col-span-2 { grid-column: span 2; }
+            .col-span-3 { grid-column: span 3; }
+            .col-span-4 { grid-column: span 4; }
+            .col-span-6 { grid-column: span 6; }
+        }
+
+        @media (min-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(12, 1fr);
+            }
+            .col-span-4 { grid-column: span 4; }
+            .col-span-6 { grid-column: span 6; }
+            .col-span-8 { grid-column: span 8; }
+            .col-span-12 { grid-column: span 12; }
+        }
+
+        .metric-card {
+            background-color: var(--card-bg);
+            padding: 1.25rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .metric-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .metric-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        @media (min-width: 768px) {
+            .metric-value {
+                font-size: 2rem;
+            }
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* ==================== KANBAN STYLES ==================== */
+        .kanban-board {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding-bottom: 1.5rem;
+            min-height: calc(100vh - 250px);
+        }
+
+        @media (min-width: 768px) {
+            .kanban-board {
+                gap: 1.5rem;
+                padding-bottom: 2rem;
+                min-height: calc(100vh - 300px);
+            }
+        }
+
+        .kanban-column {
+            flex: 0 0 280px;
+            background-color: #f3f4f6;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (min-width: 768px) {
+            .kanban-column {
+                flex: 0 0 320px;
+                padding: 1rem;
+            }
+        }
+
+        .column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .column-title {
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .task-count {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.125rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .column-cards {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            padding: 0.25rem;
+        }
+
+        .task-card {
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: var(--shadow-sm);
+            cursor: grab;
+            transition: all 0.2s;
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        .task-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .task-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .task-priority {
+            width: 4px;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            border-radius: 0.5rem 0 0 0.5rem;
+        }
+
+        .priority-high { background-color: var(--danger-color); }
+        .priority-medium { background-color: var(--warning-color); }
+        .priority-low { background-color: var(--success-color); }
+
+        .task-id {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            background-color: var(--light-bg);
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+
+        .task-title {
+            font-weight: 500;
+            font-size: 0.875rem;
+            margin: 0.5rem 0;
+            line-height: 1.4;
+        }
+
+        .task-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.75rem;
+        }
+
+        .task-tag {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: var(--light-bg);
+            color: var(--text-secondary);
+        }
+
+        .task-tag.ai {
+            background-color: rgba(139, 92, 246, 0.1);
+            color: var(--secondary-color);
+        }
+
+        .assignee-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* ==================== TABLE STYLES ==================== */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .data-table {
+                font-size: 0.75rem;
+            }
+        }
+
+        .data-table thead {
+            background-color: var(--light-bg);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .data-table th {
+            padding: 0.75rem 0.5rem;
+            text-align: left;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border-color);
+            cursor: pointer;
+        }
+
+        @media (min-width: 768px) {
+            .data-table th {
+                padding: 0.75rem 1rem;
+                font-size: 0.75rem;
+            }
+        }
+
+        .data-table tbody tr {
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: var(--hover-bg);
+        }
+
+        .data-table td {
+            padding: 0.75rem 0.5rem;
+            font-size: 0.8rem;
+            vertical-align: middle;
+        }
+
+        @media (min-width: 768px) {
+            .data-table td {
+                padding: 1rem;
+                font-size: 0.875rem;
+            }
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .status-badge.planned { background-color: #e5e7eb; color: #6b7280; }
+        .status-badge.active { background-color: #dbeafe; color: #1e40af; }
+        .status-badge.completed { background-color: #d1fae5; color: #065f46; }
+
+        /* ==================== MODAL STYLES ==================== */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.2s;
+            padding: 1rem;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 0.75rem;
+            width: 100%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            animation: slideIn 0.3s;
+        }
+
+        .modal-header {
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        @media (min-width: 768px) {
+            .modal-header {
+                padding: 1.5rem;
+            }
+        }
+
+        .modal-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        @media (min-width: 768px) {
+            .modal-title {
+                font-size: 1.25rem;
+            }
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 1.25rem;
+        }
+
+        @media (min-width: 768px) {
+            .modal-body {
+                padding: 1.5rem;
+            }
+        }
+
+        /* ==================== ANIMATIONS ==================== */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            .col-span-4, .col-span-6, .col-span-8 {
+                grid-column: span 6;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .kanban-board {
+                flex-direction: column;
+            }
+            .kanban-column {
+                flex: 1;
+                width: 100%;
+            }
+        }
+
+        /* ==================== SEARCH & FILTERS ==================== */
+        .controls {
+            padding: 0.75rem 1rem;
+            background-color: white;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        @media (min-width: 768px) {
+            .controls {
+                padding: 1rem 2rem;
+            }
+        }
+
+        .controls-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            padding: 0.5rem 1rem 0.5rem 2.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            width: 200px;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+
+        @media (min-width: 768px) {
+            .search-box input {
+                width: 300px;
+            }
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .filter-dropdown {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 0.5rem;
+            background-color: var(--light-bg);
+            padding: 0.25rem;
+            border-radius: 0.375rem;
+        }
+
+        .view-btn {
+            padding: 0.4rem 0.75rem;
+            border: none;
+            background-color: transparent;
+            cursor: pointer;
+            border-radius: 0.25rem;
+            transition: all 0.2s;
+            font-size: 0.8rem;
+        }
+
+        @media (min-width: 768px) {
+            .view-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.875rem;
+            }
+        }
+
+        .view-btn.active {
+            background-color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* ==================== SPRINT INFO BAR ==================== */
+        .sprint-info {
+            background-color: white;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+        }
+
+        @media (min-width: 768px) {
+            .sprint-info {
+                padding: 1rem 2rem;
+            }
+        }
+
+        .sprint-info-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .sprint-metrics {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        @media (min-width: 768px) {
+            .sprint-metrics {
+                gap: 2rem;
+            }
+        }
+
+        .metric {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* ==================== PROGRESS BARS ==================== */
+        .progress-bar {
+            height: 8px;
+            background-color: var(--light-bg);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-primary);
+            transition: width 0.5s ease;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        /* ==================== SECTION HEADERS ==================== */
+        .section-header {
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        @media (min-width: 768px) {
+            .section-header {
+                margin-bottom: 2rem;
+                padding-bottom: 1rem;
+            }
+        }
+
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .section-title {
+                font-size: 1.25rem;
+            }
+        }
+
+        .section-description {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        /* ==================== MESSAGE STYLES ==================== */
+        .message {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .message-info {
+            background-color: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: var(--info-color);
+        }
+
+        .message-error {
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--danger-color);
+        }
+
+        .message-success {
+            background-color: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--success-color);
+        }
+
+        .data-source-info {
+            padding: 0.5rem 1rem;
+            background-color: rgba(99, 102, 241, 0.1);
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            color: var(--primary-color);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Hidden file input */
+        .file-input-hidden {
+            display: none;
+        }
+
+        /* ==================== SETTINGS STYLES ==================== */
+        .settings-sidebar {
+            width: 280px;
+            flex-shrink: 0;
+        }
+
+        .settings-nav {
+            background-color: var(--card-bg);
+            border-radius: 0.75rem;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            position: sticky;
+            top: 5rem;
+        }
+
+        .nav-section {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-section:last-child {
+            border-bottom: none;
+        }
+
+        .nav-section-title {
+            padding: 1rem 1.5rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-size: 0.875rem;
+        }
+
+        .nav-item:hover {
+            background-color: var(--light-bg);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background-color: rgba(99, 102, 241, 0.1);
+            color: var(--primary-color);
+            border-right: 3px solid var(--primary-color);
+        }
+
+        .nav-item svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .settings-content {
+            flex: 1;
+            background-color: var(--card-bg);
+            border-radius: 0.75rem;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .content-section {
+            display: none;
+            padding: 2rem;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .settings-card {
+            background-color: var(--light-bg);
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .settings-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .settings-card-title {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        /* ==================== FORM STYLES ==================== */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        /* ==================== TOGGLE SWITCH ==================== */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .toggle-input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--border-color);
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        .toggle-input:checked + .toggle-slider {
+            background-color: var(--primary-color);
+        }
+
+        .toggle-input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+
+        @media (max-width: 1024px) {
+            .main-content.settings-layout {
+                flex-direction: column;
+            }
+            
+            .settings-sidebar {
+                width: 100%;
+            }
+            
+            .settings-nav {
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ==================== MAIN HEADER ==================== -->
+    <header class="header">
+        <div class="header-content">
+            <h1>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z"></path>
+                    <path d="M2 17L12 22L22 17"></path>
+                    <path d="M2 12L12 17L22 12"></path>
+                </svg>
+                IntelliFlow
+                <span class="ai-badge">AI-PLM</span>
+            </h1>
+            <nav class="header-nav">
+                <button class="upload-btn" onclick="triggerFileUpload()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    Upload File
+                </button>
+                <div class="sprint-selector" id="sprintSelector">
+                    <!-- Sprint buttons will be generated here -->
+                </div>
+                <button class="nav-btn active" onclick="navigateTo('dashboard')">Dashboard</button>
+                <button class="nav-btn" onclick="navigateTo('kanban')">Kanban</button>
+                <button class="nav-btn" onclick="navigateTo('analytics')">Analytics</button>
+                <button class="nav-btn" onclick="navigateTo('settings')">Settings</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hidden file input -->
+    <input type="file" id="fileInput" class="file-input-hidden" accept=".json,.txt" onchange="handleFileSelect(event)">
+
+    <!-- ==================== PAGE 1: MAIN DASHBOARD ==================== -->
+    <div id="dashboard" class="page active">
+        <section class="sprint-info">
+            <div class="sprint-info-content">
+                <div class="sprint-details">
+                    <h2 style="font-size: 1rem; font-weight: 600;" id="sprintTitle">Loading Sprint Data...</h2>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary);" id="sprintDescription">Please upload your project file to begin</p>
+                </div>
+                <div class="sprint-metrics" id="sprintMetrics">
+                    <!-- Metrics will be generated here -->
+                </div>
+            </div>
+        </section>
+
+        <main class="main-content">
+            <div id="dataSourceInfo" class="data-source-info">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span>No file loaded - Click "Upload File" to load your project data</span>
+            </div>
+
+            <div id="dashboardContent">
+                <!-- Upload prompt -->
+                <div class="dashboard-card">
+                    <div class="upload-area" onclick="triggerFileUpload()" id="uploadArea">
+                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;">Upload Your Project File</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 1rem;">Drop your JSON file here or click to browse</p>
+                        <button class="btn btn-primary">Select File</button>
+                    </div>
+                </div>
+
+                <!-- Skeleton loading -->
+                <div class="dashboard-grid" id="skeletonGrid">
+                    <div class="dashboard-card col-span-12">
+                        <div class="skeleton skeleton-text" style="width: 40%;"></div>
+                        <div class="skeleton" style="height: 12px; margin: 1rem 0;"></div>
+                        <div class="skeleton skeleton-text" style="width: 30%;"></div>
+                    </div>
+                    <div class="metric-card col-span-4">
+                        <div class="skeleton skeleton-text" style="width: 60%; height: 2rem;"></div>
+                        <div class="skeleton skeleton-text" style="width: 80%;"></div>
+                    </div>
+                    <div class="metric-card col-span-4">
+                        <div class="skeleton skeleton-text" style="width: 60%; height: 2rem;"></div>
+                        <div class="skeleton skeleton-text" style="width: 80%;"></div>
+                    </div>
+                    <div class="metric-card col-span-4">
+                        <div class="skeleton skeleton-text" style="width: 60%; height: 2rem;"></div>
+                        <div class="skeleton skeleton-text" style="width: 80%;"></div>
+                    </div>
+                </div>
+
+                <!-- Real content will be loaded here -->
+                <div class="dashboard-grid" id="realDashboard" style="display: none;">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== PAGE 2: ANALYTICS ==================== -->
+    <div id="analytics" class="page">
+        <section class="sprint-info">
+            <div class="sprint-info-content">
+                <div class="sprint-details">
+                    <h2 style="font-size: 1rem; font-weight: 600;">Analytics & Performance Insights</h2>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary);">Real-time metrics powered by AI-driven analysis</p>
+                </div>
+            </div>
+        </section>
+
+        <main class="main-content">
+            <div id="analyticsContent">
+                <!-- Will be populated dynamically -->
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== PAGE 3: KANBAN BOARD ==================== -->
+    <div id="kanban" class="page">
+        <section class="sprint-info">
+            <div class="sprint-info-content">
+                <div class="sprint-details">
+                    <h2 style="font-size: 1rem; font-weight: 600;" id="kanbanSprintTitle">Sprint Board</h2>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary);" id="kanbanSprintDesc">Loading...</p>
+                </div>
+                <div class="view-toggle">
+                    <button class="view-btn active" onclick="showView('kanban-view')">Kanban</button>
+                    <button class="view-btn" onclick="showView('timeline-view')">Timeline</button>
+                    <button class="view-btn" onclick="showView('list-view')">List</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Kanban View -->
+        <div id="kanban-view" class="view-content" style="display: block;">
+            <div class="controls">
+                <div class="controls-content">
+                    <div class="filter-controls">
+                        <div class="search-box">
+                            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            <input type="text" placeholder="Search tasks..." id="kanbanSearchInput" onkeyup="filterTasks()">
+                        </div>
+                        <select class="filter-dropdown" id="ownerFilter" onchange="filterTasks()">
+                            <option value="">All Owners</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="kanban-board" id="kanbanBoard">
+                    <!-- Kanban columns will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline View -->
+        <div id="timeline-view" class="view-content" style="display: none;">
+            <div class="main-content" style="overflow-x: auto;">
+                <div class="timeline-wrapper" style="min-width: 800px; background-color: white; border-radius: 0.5rem; box-shadow: var(--shadow-md); padding: 1.5rem;">
+                    <div class="timeline-header" style="display: grid; grid-template-columns: 200px 1fr; border-bottom: 2px solid var(--border-color); margin-bottom: 1rem;">
+                        <div style="padding: 1rem; font-weight: 600; color: var(--text-secondary);">Task / Owner</div>
+                        <div class="timeline-dates" id="timelineDates" style="display: grid; grid-template-columns: repeat(5, 1fr); padding: 0 1rem;">
+                            <!-- Will be populated dynamically -->
+                        </div>
+                    </div>
+                    <div id="timelineBody">
+                        <!-- Timeline rows will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- List View -->
+        <div id="list-view" class="view-content" style="display: none;">
+            <div class="main-content">
+                <div style="background-color: white; border-radius: 0.5rem; box-shadow: var(--shadow-sm); overflow: hidden;">
+                    <table class="data-table" id="listTable">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable('id')">Task ID ↕</th>
+                                <th onclick="sortTable('description')">Description ↕</th>
+                                <th onclick="sortTable('owner')">Owner ↕</th>
+                                <th onclick="sortTable('status')">Status ↕</th>
+                                <th onclick="sortTable('sprint')">Sprint ↕</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listTableBody">
+                            <!-- Will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== PAGE 4: SETTINGS ==================== -->
+    <div id="settings" class="page">
+        <section class="sprint-info">
+            <div class="sprint-info-content">
+                <div class="sprint-details">
+                    <h2 style="font-size: 1rem; font-weight: 600;">System Configuration & Settings</h2>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary);">Manage AI agents, team access, integrations, and system preferences</p>
+                </div>
+            </div>
+        </section>
+
+        <main class="main-content settings-layout" style="display: flex; gap: 2rem;">
+            <!-- Settings Sidebar -->
+            <aside class="settings-sidebar">
+                <nav class="settings-nav">
+                    <div class="nav-section">
+                        <div class="nav-section-title">AI & Automation</div>
+                        <button class="nav-item active" data-section="ai-agents">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                            </svg>
+                            AI Agents
+                        </button>
+                        <button class="nav-item" data-section="llm-config">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="12 2 2 7 7 14 2 22 13 17 22 22 17 14 22 7 13 2"></polygon>
+                            </svg>
+                            LLM Configuration
+                        </button>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <div class="nav-section-title">Development</div>
+                        <button class="nav-item" data-section="devops">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="16 18 22 12 16 6"></polyline>
+                                <polyline points="8 6 2 12 8 18"></polyline>
+                            </svg>
+                            DevSecOps
+                        </button>
+                        <button class="nav-item" data-section="monitoring">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                            </svg>
+                            Monitoring
+                        </button>
+                    </div>
+
+                    <div class="nav-section">
+                        <div class="nav-section-title">Integrations</div>
+                        <button class="nav-item" data-section="integrations">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                                <polyline points="16 6 12 2 8 6"></polyline>
+                                <line x1="12" y1="2" x2="12" y2="15"></line>
+                            </svg>
+                            External Services
+                        </button>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- Settings Content -->
+            <div class="settings-content">
+                <!-- AI Agents Settings -->
+                <section class="content-section active" id="ai-agents">
+                    <div class="section-header">
+                        <h2 class="section-title">AI Agent Configuration</h2>
+                        <p class="section-description">Configure AI agents, models, and automation preferences for Sprint <span id="settingsSprintNumber">0</span></p>
+                    </div>
+
+                    <div class="settings-grid">
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <h3 class="settings-card-title">Claude Code</h3>
+                                <span class="status-badge active">Active</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Enable Custom Commands</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" class="toggle-input" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Automation Hooks</label>
+                                <select class="form-select">
+                                    <option value="all" selected>All Events</option>
+                                    <option value="commits">Commits Only</option>
+                                    <option value="prs">PRs Only</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <h3 class="settings-card-title">GitHub Copilot Enterprise</h3>
+                                <span class="status-badge active">Connected</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Code Suggestions</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" class="toggle-input" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Confidence Threshold</label>
+                                <select class="form-select">
+                                    <option value="high" selected>High (95%+)</option>
+                                    <option value="medium">Medium (80%+)</option>
+                                    <option value="low">Low (60%+)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <h3 class="settings-card-title">LangChain Integration</h3>
+                                <span class="status-badge active">Configured</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Primary Model</label>
+                                <select class="form-select">
+                                    <option value="gpt-4" selected>GPT-4 Turbo</option>
+                                    <option value="claude">Claude 3 Opus</option>
+                                    <option value="llama">Llama 3.1</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Max Tokens</label>
+                                <input type="number" class="form-input" value="4096">
+                            </div>
+                        </div>
+
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <h3 class="settings-card-title">External AI Tools</h3>
+                                <span class="status-badge active">Integrated</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Codex Integration</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" class="toggle-input" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Jules Integration</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" class="toggle-input" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                        <button class="btn btn-primary">Save Configuration</button>
+                    </div>
+                </section>
+
+                <!-- LLM Configuration -->
+                <section class="content-section" id="llm-config">
+                    <div class="section-header">
+                        <h2 class="section-title">LLM Configuration</h2>
+                        <p class="section-description">Configure language models and their parameters</p>
+                    </div>
+
+                    <div class="settings-grid">
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <h3 class="settings-card-title">OpenAI GPT-4</h3>
+                                <span class="status-badge active">Active</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Temperature</label>
+                                <input type="range" class="form-input" min="0" max="1" step="0.1" value="0.7">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Top P</label>
+                                <input type="number" class="form-input" value="0.9" step="0.1" min="0" max="1">
+                            </div>
+                        </div>
+
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <h3 class="settings-card-title">Claude 3</h3>
+                                <span class="status-badge active">Configured</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Model Version</label>
+                                <select class="form-select">
+                                    <option value="opus" selected>Claude 3 Opus</option>
+                                    <option value="sonnet">Claude 3 Sonnet</option>
+                                    <option value="haiku">Claude 3 Haiku</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- DevOps Settings -->
+                <section class="content-section" id="devops">
+                    <div class="section-header">
+                        <h2 class="section-title">DevSecOps Configuration</h2>
+                        <p class="section-description">Configure CI/CD pipelines, security gates, and deployment settings</p>
+                    </div>
+
+                    <div class="settings-grid">
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <h3 class="settings-card-title">CI/CD Pipeline</h3>
+                                <span class="status-badge active">Active</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Auto Deploy to Staging</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" class="toggle-input" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Build Timeout (minutes)</label>
+                                <select class="form-select">
+                                    <option value="5">5 minutes</option>
+                                    <option value="10" selected>10 minutes</option>
+                                    <option value="15">15 minutes</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <h3 class="settings-card-title">Security Gates</h3>
+                                <span class="status-badge active">Enforced</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">SAST Scanning</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" class="toggle-input" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Dependency Check</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" class="toggle-input" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Monitoring Settings -->
+                <section class="content-section" id="monitoring">
+                    <div class="section-header">
+                        <h2 class="section-title">Monitoring Configuration</h2>
+                        <p class="section-description">Configure observability and alerting</p>
+                    </div>
+
+                    <div class="settings-grid">
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <h3 class="settings-card-title">OpenTelemetry</h3>
+                                <span class="status-badge active">Active</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Distributed Tracing</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" class="toggle-input" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Sampling Rate (%)</label>
+                                <input type="number" class="form-input" value="10" min="1" max="100">
+                            </div>
+                        </div>
+
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <h3 class="settings-card-title">Alerts</h3>
+                                <span class="status-badge active">Configured</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Error Rate Threshold (%)</label>
+                                <input type="number" class="form-input" value="5" min="1" max="100">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Response Time Alert (ms)</label>
+                                <input type="number" class="form-input" value="200" min="50" max="5000">
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Integrations Settings -->
+                <section class="content-section" id="integrations">
+                    <div class="section-header">
+                        <h2 class="section-title">External Service Integrations</h2>
+                        <p class="section-description">Configure connections to external services and APIs</p>
+                    </div>
+
+                    <div class="settings-grid">
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <h3 class="settings-card-title">Supabase</h3>
+                                <span class="status-badge active">Connected</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Project URL</label>
+                                <input type="text" class="form-input" value="https://xxxxx.supabase.co" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Real-time Subscriptions</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" class="toggle-input" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <h3 class="settings-card-title">Vercel</h3>
+                                <span class="status-badge active">Deployed</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Auto Deploy</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" class="toggle-input" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Environment</label>
+                                <select class="form-select">
+                                    <option value="preview">Preview</option>
+                                    <option value="production" selected>Production</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <h3 class="settings-card-title">Railway</h3>
+                                <span class="status-badge active">Running</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Service Health</label>
+                                <input type="text" class="form-input" value="Healthy - 99.9% uptime" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Auto Scaling</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" class="toggle-input" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== TASK DETAIL MODAL ==================== -->
+    <div class="modal" id="taskModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Task Details</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== JAVASCRIPT ==================== -->
+    <script>
+        // ==================== GLOBAL VARIABLES ====================
+        let allTasks = [];
+        let currentSprint = '0';
+        let availableSprints = [];
+        let currentPage = 'dashboard';
+        let sprintTaskCounts = {};
+
+        // ==================== INITIALIZATION ====================
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded, initializing...');
+            
+            // Setup drag and drop
+            setupDragAndDrop();
+            
+            // Initialize with skeleton UI
+            showSkeletonUI();
+            
+            // Update data source info
+            updateDataSourceInfo('none');
+            
+            // Initialize settings navigation
+            initializeSettingsNavigation();
+            
+            // Try to load embedded data or show upload prompt
+            initializeApp();
+        });
+
+        function initializeApp() {
+            console.log('Initializing app...');
+            
+            // Show upload prompt
+            document.getElementById('uploadArea').style.display = 'block';
+            document.getElementById('skeletonGrid').style.display = 'none';
+            document.getElementById('realDashboard').style.display = 'none';
+            
+            // Update sprint info
+            document.getElementById('sprintTitle').textContent = 'No Project Loaded';
+            document.getElementById('sprintDescription').textContent = 'Upload your JSON file to begin tracking your sprints';
+            document.getElementById('sprintMetrics').innerHTML = '';
+        }
+
+        // ==================== FILE HANDLING ====================
+        function triggerFileUpload() {
+            document.getElementById('fileInput').click();
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                console.log('File selected:', file.name);
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        const content = e.target.result;
+                        loadTasksFromJSON(content, file.name);
+                    } catch (error) {
+                        console.error('Error reading file:', error);
+                        showErrorMessage('Error reading file: ' + error.message);
+                    }
+                };
+                
+                reader.onerror = function(error) {
+                    console.error('FileReader error:', error);
+                    showErrorMessage('Failed to read file');
+                };
+                
+                reader.readAsText(file);
+            }
+        }
+
+        function setupDragAndDrop() {
+            const uploadArea = document.getElementById('uploadArea');
+            if (!uploadArea) return;
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, () => {
+                    uploadArea.classList.add('dragover');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, () => {
+                    uploadArea.classList.remove('dragover');
+                }, false);
+            });
+
+            uploadArea.addEventListener('drop', handleDrop, false);
+        }
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0) {
+                const file = files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        const content = e.target.result;
+                        loadTasksFromJSON(content, file.name);
+                    } catch (error) {
+                        console.error('Error reading dropped file:', error);
+                        showErrorMessage('Error reading file: ' + error.message);
+                    }
+                };
+                
+                reader.readAsText(file);
+            }
+        }
+
+        // ==================== DATA LOADING - FIXED ====================
+        function loadTasksFromJSON(jsonContent, fileName) {
+            console.log('Loading tasks from JSON...');
+            
+            try {
+                const data = JSON.parse(jsonContent);
+                allTasks = [];
+                sprintTaskCounts = {};
+                
+                // Process all sections
+                Object.keys(data).forEach(section => {
+                    if (Array.isArray(data[section])) {
+                        console.log(`Processing section: ${section} with ${data[section].length} tasks`);
+                        
+                        data[section].forEach(task => {
+                            // Normalize task structure
+                            const normalizedTask = {
+                                id: task['Task ID'] || task.id || '',
+                                section: task.Section || section,
+                                description: task.Description || task.description || '',
+                                owner: task.Owner || task.owner || '',
+                                dependencies: task.Dependencies || task.dependencies || '',
+                                status: task.Status || task.status || 'Planned',
+                                sprint: '', // Will be set below
+                                kpis: task.KPIs || task.kpis || '',
+                                dod: task['Definition of Done'] || task.dod || '',
+                                prerequisites: task['Pre-requisites'] || task.prerequisites || '',
+                                artifacts: task['Artifacts To Track'] || task.artifacts || '',
+                                validation: task['Validation Method'] || task.validation || ''
+                            };
+                            
+                            // FIXED: Properly handle sprint values including "Continuous"
+                            const sprintValue = (task['Target Sprint'] || task.targetSprint || '0').toString();
+                            
+                            if (sprintValue.toLowerCase().includes('continuous')) {
+                                normalizedTask.sprint = 'Continuous';
+                            } else if (sprintValue.includes('-')) {
+                                // Handle ranges like "28-42"
+                                const range = sprintValue.split('-');
+                                normalizedTask.sprint = range[0].replace(/\D/g, '') || '0';
+                            } else {
+                                // Extract numeric sprint value
+                                normalizedTask.sprint = sprintValue.replace(/\D/g, '') || '0';
+                            }
+                            
+                            allTasks.push(normalizedTask);
+                            
+                            // Count tasks per sprint
+                            sprintTaskCounts[normalizedTask.sprint] = (sprintTaskCounts[normalizedTask.sprint] || 0) + 1;
+                        });
+                    }
+                });
+                
+                console.log(`Loaded ${allTasks.length} total tasks`);
+                console.log('Tasks per sprint:', sprintTaskCounts);
+                
+                if (allTasks.length === 0) {
+                    throw new Error('No valid tasks found in file');
+                }
+                
+                // Extract unique sprints and sort them
+                availableSprints = [...new Set(allTasks.map(t => t.sprint))].sort((a, b) => {
+                    // Put "Continuous" at the end
+                    if (a === 'Continuous') return 1;
+                    if (b === 'Continuous') return -1;
+                    // Sort numerically
+                    return parseInt(a) - parseInt(b);
+                });
+                
+                console.log('Available sprints:', availableSprints);
+                console.log('Sprint 0 has', sprintTaskCounts['0'], 'tasks');
+                
+                // Generate sprint navigation with task counts
+                generateSprintNavigation();
+                
+                // Load first sprint
+                currentSprint = availableSprints[0] || '0';
+                loadSprintData(currentSprint);
+                
+                // Update UI
+                updateDataSourceInfo('file', fileName);
+                showSuccessMessage(`Loaded ${allTasks.length} tasks from ${availableSprints.length} sprints`);
+                
+                // Hide upload area
+                document.getElementById('uploadArea').style.display = 'none';
+                document.getElementById('skeletonGrid').style.display = 'none';
+                document.getElementById('realDashboard').style.display = 'grid';
+                
+            } catch (error) {
+                console.error('Error parsing JSON:', error);
+                showErrorMessage('Invalid JSON file: ' + error.message);
+            }
+        }
+
+        // ==================== SPRINT NAVIGATION WITH COUNTS ====================
+        function generateSprintNavigation() {
+            const selector = document.getElementById('sprintSelector');
+            if (!selector) return;
+            
+            selector.innerHTML = availableSprints.map(sprint => {
+                const count = sprintTaskCounts[sprint] || 0;
+                const displayName = sprint === 'Continuous' ? 'Continuous' : `Sprint ${sprint}`;
+                
+                return `
+                    <button class="sprint-btn ${sprint === currentSprint ? 'active' : ''}" 
+                            onclick="switchSprint('${sprint}')">
+                        ${displayName}
+                        <span class="sprint-count">${count}</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function switchSprint(sprint) {
+            console.log('Switching to sprint:', sprint);
+            currentSprint = sprint;
+            
+            // Update active button
+            document.querySelectorAll('.sprint-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.closest('.sprint-btn').classList.add('active');
+            
+            // Load sprint data
+            loadSprintData(sprint);
+            
+            // Update settings sprint number if on settings page
+            const settingsSprintEl = document.getElementById('settingsSprintNumber');
+            if (settingsSprintEl) {
+                settingsSprintEl.textContent = sprint === 'Continuous' ? 'Continuous' : sprint;
+            }
+        }
+
+        function loadSprintData(sprint) {
+            const sprintTasks = allTasks.filter(t => t.sprint === sprint);
+            console.log(`Loading ${sprintTasks.length} tasks for sprint ${sprint}`);
+            
+            // Update all pages with sprint data
+            updateDashboard(sprintTasks, sprint);
+            updateKanban(sprintTasks, sprint);
+            updateAnalytics(sprintTasks, sprint);
+            
+            // Update sprint info
+            updateSprintInfo(sprintTasks, sprint);
+        }
+
+        // ==================== UI UPDATES ====================
+        function updateSprintInfo(tasks, sprint) {
+            const sprintTitle = document.getElementById('sprintTitle');
+            const sprintDesc = document.getElementById('sprintDescription');
+            const sprintMetrics = document.getElementById('sprintMetrics');
+            
+            const displayName = sprint === 'Continuous' ? 'Continuous Tasks' : `Sprint ${sprint}`;
+            
+            if (sprintTitle) {
+                sprintTitle.textContent = `${displayName} - ${tasks.length} Tasks`;
+            }
+            
+            if (sprintDesc) {
+                const sections = [...new Set(tasks.map(t => t.section))];
+                sprintDesc.textContent = sections.length > 0 ? `Sections: ${sections.join(', ')}` : 'No sections';
+            }
+            
+            if (sprintMetrics) {
+                const completed = tasks.filter(t => t.status === 'Completed').length;
+                const active = tasks.filter(t => t.status === 'Active').length;
+                const planned = tasks.filter(t => t.status === 'Planned').length;
+                
+                sprintMetrics.innerHTML = `
+                    <div class="metric">
+                        <div class="metric-value" style="color: var(--primary-color);">${tasks.length}</div>
+                        <div class="metric-label">Total Tasks</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" style="color: var(--success-color);">${completed}</div>
+                        <div class="metric-label">Completed</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" style="color: var(--warning-color);">${active}</div>
+                        <div class="metric-label">Active</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" style="color: var(--text-secondary);">${planned}</div>
+                        <div class="metric-label">Planned</div>
+                    </div>
+                `;
+            }
+        }
+
+        function updateDashboard(tasks, sprint) {
+            const dashboard = document.getElementById('realDashboard');
+            if (!dashboard) return;
+            
+            const progress = calculateProgress(tasks);
+            const criticalTasks = tasks.slice(0, 5);
+            const displayName = sprint === 'Continuous' ? 'Continuous Tasks' : `Sprint ${sprint}`;
+            
+            dashboard.innerHTML = `
+                <div class="dashboard-card col-span-12">
+                    <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem;">${displayName} Progress</h3>
+                    <div class="progress-bar" style="height: 12px; margin-bottom: 1rem;">
+                        <div class="progress-fill" style="width: ${progress}%"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.875rem;">
+                        <span>${progress}% Complete</span>
+                        <span style="color: var(--text-secondary);">${tasks.length} Tasks</span>
+                    </div>
+                </div>
+                
+                ${generateMetricCards(tasks)}
+                
+                <div class="dashboard-card col-span-8">
+                    <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem;">Recent Tasks</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Task ID</th>
+                                <th>Description</th>
+                                <th>Owner</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${criticalTasks.map(task => `
+                                <tr onclick="showTaskDetails('${task.id}')" style="cursor: pointer;">
+                                    <td><span class="task-id">${task.id}</span></td>
+                                    <td>${truncateText(task.description, 50)}</td>
+                                    <td>${truncateText(task.owner, 20)}</td>
+                                    <td><span class="status-badge ${task.status.toLowerCase()}">${task.status}</span></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="dashboard-card col-span-4">
+                    <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem;">Task Distribution</h3>
+                    ${generateSectionDistribution(tasks)}
+                </div>
+            `;
+        }
+
+        function generateMetricCards(tasks) {
+            const sections = [...new Set(tasks.map(t => t.section))];
+            return sections.slice(0, 3).map(section => {
+                const sectionTasks = tasks.filter(t => t.section === section);
+                const progress = calculateProgress(sectionTasks);
+                
+                return `
+                    <div class="metric-card col-span-4">
+                        <div class="metric-value" style="color: var(--primary-color);">${sectionTasks.length}</div>
+                        <div class="metric-label">${section}</div>
+                        <div style="margin-top: 1rem;">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${progress}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function generateSectionDistribution(tasks) {
+            const sections = {};
+            tasks.forEach(task => {
+                sections[task.section] = (sections[task.section] || 0) + 1;
+            });
+            
+            return Object.entries(sections).slice(0, 5).map(([section, count]) => {
+                const percentage = Math.round((count / tasks.length) * 100);
+                return `
+                    <div style="margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="font-size: 0.875rem;">${truncateText(section, 20)}</span>
+                            <span style="font-size: 0.875rem; font-weight: 600;">${percentage}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${percentage}%;"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateKanban(tasks, sprint) {
+            const kanbanBoard = document.getElementById('kanbanBoard');
+            if (!kanbanBoard) return;
+            
+            const columns = {
+                'backlog': { title: 'Backlog', tasks: [] },
+                'todo': { title: 'To Do', tasks: [] },
+                'progress': { title: 'In Progress', tasks: [] },
+                'review': { title: 'Review', tasks: [] },
+                'done': { title: 'Done', tasks: [] }
+            };
+            
+            // Distribute tasks based on status
+            tasks.forEach(task => {
+                if (task.status === 'Completed') {
+                    columns.done.tasks.push(task);
+                } else if (task.status === 'Active') {
+                    columns.progress.tasks.push(task);
+                } else {
+                    // Distribute planned tasks between backlog and todo
+                    if (Math.random() > 0.5) {
+                        columns.backlog.tasks.push(task);
+                    } else {
+                        columns.todo.tasks.push(task);
+                    }
+                }
+            });
+            
+            kanbanBoard.innerHTML = Object.entries(columns).map(([key, column]) => `
+                <div class="kanban-column" data-column="${key}">
+                    <div class="column-header">
+                        <div class="column-title">
+                            ${column.title}
+                            <span class="task-count">${column.tasks.length}</span>
+                        </div>
+                    </div>
+                    <div class="column-cards" id="${key}-cards">
+                        ${column.tasks.map(task => createTaskCard(task)).join('')}
+                    </div>
+                </div>
+            `).join('');
+            
+            // Update kanban sprint info
+            const kanbanTitle = document.getElementById('kanbanSprintTitle');
+            const kanbanDesc = document.getElementById('kanbanSprintDesc');
+            const displayName = sprint === 'Continuous' ? 'Continuous' : `Sprint ${sprint}`;
+            
+            if (kanbanTitle) kanbanTitle.textContent = `${displayName} Board`;
+            if (kanbanDesc) kanbanDesc.textContent = `${tasks.length} tasks`;
+            
+            // Update list view
+            updateListView(tasks);
+            
+            // Update owner filter
+            updateOwnerFilter(tasks);
+        }
+
+        function updateAnalytics(tasks, sprint) {
+            const analyticsContent = document.getElementById('analyticsContent');
+            if (!analyticsContent) return;
+            
+            const statusCounts = {
+                Planned: tasks.filter(t => t.status === 'Planned').length,
+                Active: tasks.filter(t => t.status === 'Active').length,
+                Completed: tasks.filter(t => t.status === 'Completed').length
+            };
+            
+            const displayName = sprint === 'Continuous' ? 'Continuous Tasks' : `Sprint ${sprint}`;
+            
+            analyticsContent.innerHTML = `
+                <div class="dashboard-grid">
+                    <div class="dashboard-card col-span-12">
+                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">${displayName} Analytics</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                            ${Object.entries(statusCounts).map(([status, count]) => `
+                                <div style="text-align: center; padding: 1.5rem; background-color: var(--light-bg); border-radius: 0.5rem;">
+                                    <div style="font-size: 2rem; font-weight: 700; color: ${
+                                        status === 'Completed' ? 'var(--success-color)' :
+                                        status === 'Active' ? 'var(--warning-color)' :
+                                        'var(--text-secondary)'
+                                    }">${count}</div>
+                                    <div style="font-size: 0.875rem; color: var(--text-secondary);">${status}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateListView(tasks) {
+            const tbody = document.getElementById('listTableBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = tasks.map(task => `
+                <tr onclick="showTaskDetails('${task.id}')" style="cursor: pointer;">
+                    <td><span class="task-id">${task.id}</span></td>
+                    <td>${truncateText(task.description, 50)}</td>
+                    <td>${truncateText(task.owner, 20)}</td>
+                    <td><span class="status-badge ${task.status.toLowerCase()}">${task.status}</span></td>
+                    <td>${task.sprint === 'Continuous' ? 'Continuous' : `Sprint ${task.sprint}`}</td>
+                </tr>
+            `).join('');
+        }
+
+        function updateOwnerFilter(tasks) {
+            const filter = document.getElementById('ownerFilter');
+            if (!filter) return;
+            
+            const owners = [...new Set(tasks.map(t => t.owner))].sort();
+            filter.innerHTML = '<option value="">All Owners</option>' +
+                owners.map(owner => `<option value="${owner}">${truncateText(owner, 30)}</option>`).join('');
+        }
+
+        // ==================== SETTINGS NAVIGATION ====================
+        function initializeSettingsNavigation() {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    // Remove active class from all nav items and sections
+                    document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                    document.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
+                    
+                    // Add active class to clicked nav item
+                    this.classList.add('active');
+                    
+                    // Show corresponding section
+                    const sectionId = this.getAttribute('data-section');
+                    const section = document.getElementById(sectionId);
+                    if (section) {
+                        section.classList.add('active');
+                    }
+                });
+            });
+        }
+
+        // ==================== HELPER FUNCTIONS ====================
+        function calculateProgress(tasks) {
+            if (tasks.length === 0) return 0;
+            const completed = tasks.filter(t => t.status === 'Completed').length;
+            return Math.round((completed / tasks.length) * 100);
+        }
+
+        function truncateText(text, maxLength) {
+            if (!text) return '';
+            if (text.length <= maxLength) return text;
+            return text.substring(0, maxLength) + '...';
+        }
+
+        function createTaskCard(task) {
+            const tags = task.section ? [task.section.toLowerCase().replace(/\s+/g, '-')] : [];
+            
+            return `
+                <div class="task-card" data-task-id="${task.id}" onclick="showTaskDetails('${task.id}')">
+                    <div class="task-priority priority-${Math.random() > 0.7 ? 'high' : Math.random() > 0.4 ? 'medium' : 'low'}"></div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span class="task-id">${task.id}</span>
+                    </div>
+                    <div class="task-title">${truncateText(task.description, 60)}</div>
+                    <div class="task-tags">
+                        ${tags.map(tag => `<span class="task-tag ${tag.includes('ai') ? 'ai' : ''}">${tag}</span>`).join('')}
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div class="assignee-avatar">${getInitials(task.owner)}</div>
+                            <span style="font-size: 0.75rem;">${truncateText(task.owner, 15)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getInitials(name) {
+            if (!name) return '??';
+            const parts = name.split(/[\s+&]/);
+            if (parts.length > 1) {
+                return (parts[0][0] + parts[1][0]).toUpperCase();
+            }
+            return name.substring(0, 2).toUpperCase();
+        }
+
+        // ==================== UI FEEDBACK ====================
+        function showSkeletonUI() {
+            const skeleton = document.getElementById('skeletonGrid');
+            if (skeleton) skeleton.style.display = 'grid';
+        }
+
+        function showErrorMessage(message) {
+            console.error('Error:', message);
+            const container = document.getElementById('dashboardContent');
+            if (!container) return;
+            
+            const alert = document.createElement('div');
+            alert.className = 'message message-error';
+            alert.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span>${message}</span>
+            `;
+            
+            container.insertBefore(alert, container.firstChild);
+            setTimeout(() => alert.remove(), 5000);
+        }
+
+        function showSuccessMessage(message) {
+            console.log('Success:', message);
+            const container = document.getElementById('dashboardContent');
+            if (!container) return;
+            
+            const alert = document.createElement('div');
+            alert.className = 'message message-success';
+            alert.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <span>${message}</span>
+            `;
+            
+            container.insertBefore(alert, container.firstChild);
+            setTimeout(() => alert.remove(), 5000);
+        }
+
+        function updateDataSourceInfo(source, fileName = '') {
+            const info = document.getElementById('dataSourceInfo');
+            if (!info) return;
+            
+            if (source === 'file') {
+                info.innerHTML = `
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                        <polyline points="13 2 13 9 20 9"></polyline>
+                    </svg>
+                    <span>Data loaded from: ${fileName}</span>
+                `;
+                info.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+                info.style.color = 'var(--success-color)';
+            } else {
+                info.innerHTML = `
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    <span>No file loaded - Click "Upload File" to load your project data</span>
+                `;
+                info.style.backgroundColor = 'rgba(99, 102, 241, 0.1)';
+                info.style.color = 'var(--primary-color)';
+            }
+        }
+
+        // ==================== NAVIGATION ====================
+        function navigateTo(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            document.getElementById(pageId).classList.add('active');
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            event.target.classList.add('active');
+            currentPage = pageId;
+            
+            // Refresh current sprint data if tasks are loaded
+            if (allTasks.length > 0) {
+                loadSprintData(currentSprint);
+            }
+        }
+
+        function showView(viewId) {
+            document.querySelectorAll('.view-content').forEach(view => {
+                view.style.display = 'none';
+            });
+            document.getElementById(viewId).style.display = 'block';
+            
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        // ==================== FILTER FUNCTIONS ====================
+        function filterTasks() {
+            const searchTerm = document.getElementById('kanbanSearchInput')?.value.toLowerCase() || '';
+            const ownerFilter = document.getElementById('ownerFilter')?.value || '';
+            
+            document.querySelectorAll('.task-card').forEach(card => {
+                const taskId = card.dataset.taskId;
+                const task = allTasks.find(t => t.id === taskId);
+                
+                if (!task) return;
+                
+                let show = true;
+                
+                if (searchTerm) {
+                    show = task.description.toLowerCase().includes(searchTerm) || 
+                           task.id.toLowerCase().includes(searchTerm) ||
+                           task.owner.toLowerCase().includes(searchTerm);
+                }
+                
+                if (show && ownerFilter) {
+                    show = task.owner === ownerFilter;
+                }
+                
+                card.style.display = show ? 'block' : 'none';
+            });
+        }
+
+        // ==================== MODAL FUNCTIONS ====================
+        function showTaskDetails(taskId) {
+            const task = allTasks.find(t => t.id === taskId);
+            if (!task) return;
+            
+            const modal = document.getElementById('taskModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            
+            modalTitle.textContent = task.description;
+            
+            modalBody.innerHTML = `
+                <div style="display: grid; gap: 1.5rem;">
+                    <div>
+                        <h3 style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.75rem;">Task Information</h3>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                            <div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">Task ID</div>
+                                <div style="font-weight: 500;">${task.id}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">Owner</div>
+                                <div style="font-weight: 500;">${task.owner}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">Sprint</div>
+                                <div style="font-weight: 500;">${task.sprint === 'Continuous' ? 'Continuous' : `Sprint ${task.sprint}`}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">Status</div>
+                                <div style="font-weight: 500;">${task.status}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${task.prerequisites ? `
+                    <div>
+                        <h3 style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.75rem;">Prerequisites</h3>
+                        <p style="font-size: 0.875rem; line-height: 1.6;">${task.prerequisites}</p>
+                    </div>
+                    ` : ''}
+                    
+                    ${task.dod ? `
+                    <div>
+                        <h3 style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.75rem;">Definition of Done</h3>
+                        <p style="font-size: 0.875rem; line-height: 1.6;">${task.dod}</p>
+                    </div>
+                    ` : ''}
+                    
+                    ${task.kpis ? `
+                    <div>
+                        <h3 style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.75rem;">Key Performance Indicators</h3>
+                        <p style="font-size: 0.875rem; line-height: 1.6;">${task.kpis}</p>
+                    </div>
+                    ` : ''}
+                    
+                    ${task.dependencies ? `
+                    <div>
+                        <h3 style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.75rem;">Dependencies</h3>
+                        <p style="font-size: 0.875rem; line-height: 1.6;">${task.dependencies}</p>
+                    </div>
+                    ` : ''}
+                    
+                    ${task.artifacts ? `
+                    <div>
+                        <h3 style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.75rem;">Artifacts</h3>
+                        <p style="font-size: 0.875rem; line-height: 1.6; font-family: monospace; background-color: var(--light-bg); padding: 0.75rem; border-radius: 0.375rem;">${task.artifacts}</p>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('taskModal');
+            modal.classList.remove('active');
+        }
+
+        // ==================== SORT TABLE ====================
+        let sortDirection = {};
+        function sortTable(column) {
+            const sprintTasks = allTasks.filter(t => t.sprint === currentSprint);
+            sortDirection[column] = !sortDirection[column];
+            
+            const sortedTasks = [...sprintTasks].sort((a, b) => {
+                let aVal = a[column];
+                let bVal = b[column];
+                
+                if (sortDirection[column]) {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+            
+            updateListView(sortedTasks);
+        }
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('taskModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>

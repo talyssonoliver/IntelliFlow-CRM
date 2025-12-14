@@ -1,0 +1,144 @@
+apps/ai-worker/
+│
+├── Configuration & Setup
+│   ├── package.json              # Dependencies and scripts
+│   ├── tsconfig.json             # TypeScript configuration
+│   ├── vitest.config.ts          # Test configuration
+│   ├── .eslintrc.js              # Linting configuration
+│   ├── .gitignore                # Git ignore rules
+│   └── .env.example              # Environment template
+│
+├── Documentation
+│   ├── README.md                 # Comprehensive documentation
+│   ├── QUICKSTART.md             # Quick start guide
+│   ├── IMPLEMENTATION_SUMMARY.md # Implementation summary
+│   └── STRUCTURE.txt             # This file
+│
+└── src/
+    │
+    ├── Core Entry Point
+    │   └── index.ts              # Main entry point, exports public API
+    │
+    ├── Configuration
+    │   └── config/
+    │       └── ai.config.ts      # AI provider config, model pricing
+    │
+    ├── LangChain Pipelines
+    │   └── chains/
+    │       ├── scoring.chain.ts      # Lead scoring with LangChain
+    │       └── scoring.chain.test.ts # Unit tests for scoring
+    │
+    ├── Agent Framework
+    │   └── agents/
+    │       ├── base.agent.ts         # Base agent class
+    │       ├── qualification.agent.ts # Lead qualification agent
+    │       └── crew.ts               # Multi-agent crew skeleton
+    │
+    ├── Utilities
+    │   └── utils/
+    │       └── cost-tracker.ts   # Cost tracking and monitoring
+    │
+    ├── Type Definitions
+    │   └── types/
+    │       └── index.ts          # Shared TypeScript types
+    │
+    ├── Scripts
+    │   └── scripts/
+    │       └── benchmark.ts      # Performance benchmarking
+    │
+    └── Examples
+        └── examples/
+            └── usage.ts          # Comprehensive usage examples
+
+Key Components:
+
+1. AI Configuration (ai.config.ts)
+   - Dual provider support (OpenAI/Ollama)
+   - Model pricing database
+   - Environment-based configuration
+   - Feature flags
+
+2. Lead Scoring Chain (scoring.chain.ts)
+   - LangChain integration
+   - Structured output with Zod
+   - Batch processing
+   - Result validation
+
+3. Base Agent (base.agent.ts)
+   - Extensible agent framework
+   - Task execution model
+   - Confidence calculation
+   - Error handling
+
+4. Qualification Agent (qualification.agent.ts)
+   - BANT framework implementation
+   - Detailed analysis and reasoning
+   - Recommended actions
+   - Next steps generation
+
+5. Cost Tracker (cost-tracker.ts)
+   - Token usage tracking
+   - Cost calculation
+   - Daily limits
+   - Detailed reporting
+
+6. Multi-Agent Crew (crew.ts)
+   - Sequential execution
+   - Parallel execution
+   - Hierarchical delegation
+   - Future CrewAI integration
+
+Dependencies:
+
+Production:
+  - @langchain/core, @langchain/openai, @langchain/community
+  - langchain, openai
+  - zod, zod-to-json-schema
+  - pino, pino-pretty
+  - dotenv
+
+Development:
+  - vitest, tsup, tsx
+  - typescript
+  - @intelliflow/typescript-config
+
+Integration Points:
+
+  ← @intelliflow/validators (Zod schemas)
+  ← @intelliflow/domain (Domain models)
+  → Future: tRPC API integration
+  → Future: Message queue (BullMQ)
+  → Future: OpenTelemetry tracing
+
+Usage Example:
+
+  import { leadScoringChain } from '@intelliflow/ai-worker';
+  
+  const result = await leadScoringChain.scoreLead({
+    email: 'john@acme.com',
+    company: 'Acme Corp',
+    title: 'VP Sales',
+    source: 'WEBSITE'
+  });
+  
+  console.log(result.score);      // 85
+  console.log(result.confidence); // 0.92
+
+Scripts:
+
+  pnpm dev           → Development mode with hot reload
+  pnpm build         → Build for production
+  pnpm test          → Run all tests
+  pnpm test:chains   → Test LangChain pipelines
+  pnpm ai:benchmark  → Performance benchmarks
+  pnpm typecheck     → Type checking
+  pnpm lint          → Lint code
+
+Environment:
+
+  AI_PROVIDER=openai|ollama
+  OPENAI_API_KEY=sk-...
+  COST_WARNING_THRESHOLD=10.0
+  ENABLE_CONFIDENCE_SCORES=true
+
+Status: ✅ Complete and ready for development

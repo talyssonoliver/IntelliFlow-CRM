@@ -1,0 +1,39 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# IntelliFlow CRM Pre-commit Hook
+# Runs linting, type checking, and formatting before commit
+
+echo "🔍 Running pre-commit checks..."
+
+# Run linting
+echo "📋 Linting code..."
+pnpm run lint --filter=!project-tracker || {
+  echo "❌ Linting failed. Please fix errors before committing."
+  exit 1
+}
+
+# Run type checking
+echo "🔧 Type checking..."
+pnpm run typecheck || {
+  echo "❌ Type checking failed. Please fix type errors before committing."
+  exit 1
+}
+
+# Run formatting check
+echo "💅 Checking code formatting..."
+pnpm exec prettier --check "**/*.{ts,tsx,js,jsx,json,md}" || {
+  echo "❌ Code formatting check failed. Running auto-fix..."
+  pnpm run format
+  echo "✅ Code formatted. Please review changes and commit again."
+  exit 1
+}
+
+# Run unit tests for changed files
+echo "🧪 Running affected tests..."
+pnpm run test -- --changed || {
+  echo "❌ Tests failed. Please fix failing tests before committing."
+  exit 1
+}
+
+echo "✅ All pre-commit checks passed!"

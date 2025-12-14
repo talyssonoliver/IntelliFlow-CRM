@@ -1,0 +1,441 @@
+# Jules Code Analysis Workflow
+# Comprehensive code quality analysis workflow for IntelliFlow CRM
+
+version: 1.0
+workflow_name: code-analysis
+description: Analyze code quality, security, performance, and maintainability
+
+# Workflow Metadata
+metadata:
+  owner: devops-team
+  category: code-quality
+  tags: [analysis, quality, security, performance]
+  priority: high
+  estimated_duration: 300  # seconds
+
+# Trigger Configuration
+triggers:
+  - type: push
+    branches: [main, develop, feature/*]
+    paths:
+      - "packages/**/*.ts"
+      - "apps/**/*.ts"
+      - "apps/**/*.tsx"
+
+  - type: pull_request
+    events: [opened, synchronize]
+    branches: [main, develop]
+
+  - type: schedule
+    cron: "0 2 * * *"  # Daily at 2 AM UTC
+
+  - type: manual
+    allowed_users: [team-lead, devops]
+
+# Input Configuration
+inputs:
+  required:
+    - name: target_path
+      type: string
+      description: Path to analyze
+      default: "."
+
+    - name: analysis_depth
+      type: enum
+      values: [shallow, standard, deep]
+      default: standard
+
+  optional:
+    - name: focus_areas
+      type: array
+      items: [security, performance, maintainability, testing]
+      default: [security, maintainability]
+
+    - name: exclude_patterns
+      type: array
+      items: string
+      default:
+        - "**/node_modules/**"
+        - "**/dist/**"
+        - "**/.next/**"
+        - "**/coverage/**"
+
+# Workflow Steps
+steps:
+  # Step 1: Initialize Analysis
+  - name: initialize
+    type: setup
+    actions:
+      - name: validate_inputs
+        validate:
+          - target_path exists
+          - analysis_depth in allowed_values
+          - focus_areas not empty
+
+      - name: setup_context
+        context:
+          project: intelliflow-crm
+          language: typescript
+          framework: [nextjs, trpc, prisma]
+
+      - name: load_project_config
+        config_files:
+          - CLAUDE.md
+          - tsconfig.json
+          - package.json
+
+  # Step 2: Static Analysis
+  - name: static_analysis
+    type: analysis
+    parallel: true
+    actions:
+      - name: typescript_check
+        tool: tsc
+        args: ["--noEmit", "--strict"]
+        fail_on_error: true
+        output: artifacts/reports/typescript-check.json
+
+      - name: lint_check
+        tool: eslint
+        args: ["**/*.{ts,tsx}", "--format", "json"]
+        config: .eslintrc.json
+        output: artifacts/reports/eslint-report.json
+
+      - name: complexity_analysis
+        tool: typescript-complexity
+        thresholds:
+          cyclomatic: 15
+          cognitive: 20
+          lines_per_function: 50
+        output: artifacts/reports/complexity.json
+
+  # Step 3: Security Analysis
+  - name: security_scan
+    type: security
+    condition: "'security' in inputs.focus_areas"
+    parallel: true
+    actions:
+      - name: dependency_audit
+        tool: npm audit
+        severity_threshold: moderate
+        output: artifacts/reports/npm-audit.json
+
+      - name: secret_scanning
+        tool: trufflehog
+        patterns:
+          - api_keys
+          - passwords
+          - tokens
+          - private_keys
+        exclude:
+          - "**/test/**"
+          - "**/*.test.ts"
+        output: artifacts/reports/secrets-scan.json
+
+      - name: vulnerability_scan
+        tool: snyk
+        fail_on: high
+        output: artifacts/reports/snyk-report.json
+
+      - name: code_security_analysis
+        tool: semgrep
+        rules:
+          - javascript.express.security
+          - typescript.react.security
+          - generic.secrets
+        output: artifacts/reports/semgrep.json
+
+  # Step 4: Code Quality Analysis
+  - name: quality_analysis
+    type: quality
+    condition: "'maintainability' in inputs.focus_areas"
+    actions:
+      - name: code_duplication
+        tool: jscpd
+        threshold: 5  # percentage
+        min_lines: 5
+        min_tokens: 50
+        output: artifacts/reports/duplication.json
+
+      - name: maintainability_index
+        tool: radon
+        thresholds:
+          mi_min: 65  # Maintainability index minimum
+          cc_max: 10  # Cyclomatic complexity maximum
+        output: artifacts/reports/maintainability.json
+
+      - name: code_smells
+        tool: sonarqube
+        quality_gate: pass
+        categories:
+          - code_smell
+          - bug
+          - vulnerability
+        output: artifacts/reports/sonarqube.json
+
+  # Step 5: Performance Analysis
+  - name: performance_analysis
+    type: performance
+    condition: "'performance' in inputs.focus_areas"
+    actions:
+      - name: bundle_size_analysis
+        tool: webpack-bundle-analyzer
+        thresholds:
+          max_initial_size: 250  # KB
+          max_total_size: 1000  # KB
+        output: artifacts/reports/bundle-analysis.json
+
+      - name: database_query_analysis
+        tool: prisma-analyzer
+        checks:
+          - n_plus_one_queries
+          - missing_indexes
+          - inefficient_queries
+        output: artifacts/reports/db-analysis.json
+
+      - name: memory_leak_detection
+        tool: clinic
+        duration: 60  # seconds
+        output: artifacts/reports/memory-analysis.json
+
+  # Step 6: Testing Analysis
+  - name: testing_analysis
+    type: testing
+    condition: "'testing' in inputs.focus_areas"
+    actions:
+      - name: coverage_analysis
+        tool: vitest
+        args: ["--coverage", "--reporter=json"]
+        thresholds:
+          lines: 90
+          branches: 85
+          functions: 90
+          statements: 90
+        output: artifacts/coverage/coverage-summary.json
+
+      - name: test_quality
+        tool: test-quality-analyzer
+        checks:
+          - missing_assertions
+          - brittle_tests
+          - slow_tests
+          - flaky_tests
+        output: artifacts/reports/test-quality.json
+
+  # Step 7: Architecture Analysis
+  - name: architecture_analysis
+    type: architecture
+    actions:
+      - name: dependency_graph
+        tool: madge
+        detect:
+          - circular_dependencies
+          - orphan_modules
+          - unused_dependencies
+        output: artifacts/reports/dependencies.json
+
+      - name: ddd_compliance
+        tool: custom-analyzer
+        script: scripts/check-ddd-compliance.ts
+        rules:
+          - domain_independence
+          - bounded_contexts
+          - repository_pattern
+          - aggregate_rules
+        output: artifacts/reports/ddd-compliance.json
+
+      - name: api_boundary_check
+        tool: custom-analyzer
+        script: scripts/check-api-boundaries.ts
+        output: artifacts/reports/api-boundaries.json
+
+  # Step 8: AI-Powered Analysis
+  - name: ai_analysis
+    type: ai_enhanced
+    model: gpt-4-turbo
+    temperature: 0.2
+    actions:
+      - name: code_review
+        prompt_template: |
+          Review the following code for:
+          1. TypeScript best practices
+          2. Domain-Driven Design patterns
+          3. Security vulnerabilities
+          4. Performance optimizations
+          5. Code maintainability
+
+          Code:
+          {code}
+
+          Project Context:
+          {project_context}
+        output: artifacts/reports/ai-review.json
+
+      - name: refactoring_suggestions
+        prompt_template: |
+          Analyze code and suggest refactoring opportunities for:
+          - Reducing complexity
+          - Improving readability
+          - Enhancing performance
+          - Better DDD alignment
+
+          Code: {code}
+        output: artifacts/reports/refactoring-suggestions.json
+
+  # Step 9: Generate Report
+  - name: generate_report
+    type: reporting
+    actions:
+      - name: aggregate_results
+        inputs:
+          - artifacts/reports/typescript-check.json
+          - artifacts/reports/eslint-report.json
+          - artifacts/reports/complexity.json
+          - artifacts/reports/npm-audit.json
+          - artifacts/reports/snyk-report.json
+          - artifacts/coverage/coverage-summary.json
+        output: artifacts/reports/analysis-aggregate.json
+
+      - name: calculate_scores
+        metrics:
+          - type_safety_score: typescript_errors == 0 ? 100 : 0
+          - security_score: vulnerabilities.critical == 0 ? 100 : max(0, 100 - vulnerabilities.total * 5)
+          - quality_score: (100 - code_smells.count * 2)
+          - coverage_score: coverage.lines
+          - performance_score: bundle_size < threshold ? 100 : 80
+        output: artifacts/metrics/quality-scores.json
+
+      - name: generate_markdown_report
+        template: tools/integrations/jules/templates/report.md
+        output: artifacts/reports/code-analysis-{timestamp}.md
+        include:
+          - executive_summary
+          - detailed_findings
+          - metrics_dashboard
+          - recommendations
+          - action_items
+
+      - name: generate_html_report
+        template: tools/integrations/jules/templates/report.html
+        output: artifacts/reports/code-analysis-{timestamp}.html
+        interactive: true
+
+  # Step 10: Create Issues
+  - name: create_issues
+    type: automation
+    condition: "findings.critical > 0 || findings.high > 5"
+    actions:
+      - name: create_github_issues
+        for_each: critical_findings
+        template:
+          title: "🔴 Critical: {finding.title}"
+          body: |
+            ## Issue
+            {finding.description}
+
+            ## Location
+            File: {finding.file}
+            Line: {finding.line}
+
+            ## Recommendation
+            {finding.recommendation}
+
+            ## Priority
+            Critical - Address immediately
+
+          labels: [critical, code-quality, automated]
+          assignees: [team-lead]
+
+  # Step 11: Notifications
+  - name: notify
+    type: notification
+    actions:
+      - name: slack_notification
+        channel: "#intelliflow-dev"
+        condition: always
+        template: |
+          📊 Code Analysis Complete
+
+          **Type Safety:** {scores.type_safety_score}%
+          **Security:** {scores.security_score}%
+          **Quality:** {scores.quality_score}%
+          **Coverage:** {scores.coverage_score}%
+
+          {findings.critical > 0 ? '🔴 ' + findings.critical + ' critical issues found!' : '✅ No critical issues'}
+
+          [View Full Report]({report_url})
+
+      - name: pr_comment
+        condition: "trigger.type == 'pull_request'"
+        template: |
+          ## 🤖 Automated Code Analysis
+
+          ### Scores
+          - Type Safety: {scores.type_safety_score}%
+          - Security: {scores.security_score}%
+          - Quality: {scores.quality_score}%
+          - Test Coverage: {scores.coverage_score}%
+
+          ### Findings
+          - Critical: {findings.critical}
+          - High: {findings.high}
+          - Medium: {findings.medium}
+          - Low: {findings.low}
+
+          {findings.critical > 0 ? '❌ Please address critical issues before merging.' : '✅ Ready for review!'}
+
+# Output Configuration
+outputs:
+  - name: analysis_results
+    type: json
+    path: artifacts/reports/analysis-results.json
+
+  - name: quality_metrics
+    type: csv
+    path: artifacts/metrics/code-quality.csv
+    append: true
+
+  - name: html_report
+    type: html
+    path: artifacts/reports/latest-analysis.html
+
+# Success Criteria
+success_criteria:
+  - typescript_errors == 0
+  - critical_vulnerabilities == 0
+  - test_coverage >= 90
+  - quality_score >= 80
+
+# Failure Handling
+on_failure:
+  - name: log_error
+    output: artifacts/logs/workflow-errors.log
+
+  - name: create_incident
+    severity: high
+    assignee: devops-team
+
+  - name: rollback
+    condition: "trigger.type == 'deployment'"
+
+# Cleanup
+cleanup:
+  - remove_temp_files: true
+  - archive_old_reports: true
+  - compress_artifacts: true
+
+# Performance
+performance:
+  timeout: 600  # 10 minutes
+  max_memory: 4096  # MB
+  parallel_jobs: 4
+
+# Caching
+cache:
+  enabled: true
+  key: "{project}-{git_hash}"
+  paths:
+    - node_modules
+    - .next/cache
+    - dist
+  ttl: 86400  # 24 hours
