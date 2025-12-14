@@ -1,0 +1,145 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "task-registry.schema.json",
+  "title": "Task Registry Schema",
+  "description": "Schema for task-registry.json - all tasks across sprints",
+  "type": "object",
+  "required": ["version", "last_updated", "total_tasks", "sprints", "tasks_by_status"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "total_tasks": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "sprints": {
+      "type": "object",
+      "patternProperties": {
+        "^sprint-\\d+$": {
+          "type": "object",
+          "required": ["name", "total_tasks", "completed", "in_progress", "blocked", "not_started", "tasks"],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "total_tasks": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "completed": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "in_progress": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "blocked": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "not_started": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "tasks": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "tasks_by_status": {
+      "type": "object",
+      "properties": {
+        "DONE": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "IN_PROGRESS": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "BLOCKED": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "PLANNED": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "FAILED": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "tasks_by_section": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "task_details": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["section", "description", "owner", "status", "sprint"],
+        "properties": {
+          "section": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["DONE", "IN_PROGRESS", "BLOCKED", "PLANNED", "FAILED"]
+          },
+          "sprint": {
+            "type": "integer"
+          },
+          "completed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "duration_minutes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "metrics_file": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

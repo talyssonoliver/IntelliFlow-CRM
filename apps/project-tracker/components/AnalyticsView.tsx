@@ -5,8 +5,8 @@ import { countTasksByStatus } from '@/lib/csv-parser';
 import { groupBy } from '@/lib/utils';
 
 interface AnalyticsViewProps {
-  tasks: Task[];
-  sections: string[];
+  readonly tasks: Task[];
+  readonly sections: string[];
 }
 
 export default function AnalyticsView({ tasks, sections }: AnalyticsViewProps) {

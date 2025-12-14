@@ -1,0 +1,2501 @@
+{
+  "$schema": "../schemas/task-registry.schema.json",
+  "version": "1.0.0",
+  "last_updated": "2025-12-14T23:00:34.729Z",
+  "total_tasks": 305,
+  "sprints": {
+    "sprint-0": {
+      "total_tasks": 27,
+      "completed": 7,
+      "in_progress": 11,
+      "blocked": 0,
+      "not_started": 9
+    }
+  },
+  "tasks_by_status": {
+    "DONE": [
+      "EXC-INIT-001",
+      "AI-SETUP-001",
+      "AI-SETUP-002",
+      "AI-SETUP-003",
+      "ENV-001-AI",
+      "ENV-002-AI",
+      "EXC-SEC-001"
+    ],
+    "IN_PROGRESS": [
+      "ENV-003-AI",
+      "ENV-004-AI",
+      "ENV-005-AI",
+      "ENV-006-AI",
+      "ENV-007-AI",
+      "ENV-008-AI",
+      "ENV-009-AI",
+      "ENV-010-AI",
+      "ENV-011-AI",
+      "ENV-012-AI",
+      "IFC-160"
+    ],
+    "BLOCKED": [],
+    "PLANNED": [
+      "ENV-013-AI",
+      "ENV-014-AI",
+      "ENV-015-AI",
+      "ENV-016-AI",
+      "ENV-017-AI",
+      "ENV-018-AI",
+      "AUTOMATION-001",
+      "AUTOMATION-002",
+      "IFC-000",
+      "IFC-001",
+      "IFC-002",
+      "IFC-003",
+      "IFC-004",
+      "IFC-005",
+      "IFC-006",
+      "IFC-007",
+      "IFC-008",
+      "IFC-009",
+      "IFC-010",
+      "IFC-011",
+      "IFC-012",
+      "IFC-013",
+      "IFC-014",
+      "IFC-015",
+      "IFC-016",
+      "IFC-017",
+      "IFC-018",
+      "IFC-019",
+      "IFC-020",
+      "IFC-021",
+      "IFC-022",
+      "IFC-023",
+      "IFC-024",
+      "IFC-025",
+      "IFC-026",
+      "IFC-027",
+      "IFC-028",
+      "IFC-029",
+      "IFC-030",
+      "IFC-031",
+      "IFC-032",
+      "IFC-033",
+      "IFC-034",
+      "IFC-035",
+      "IFC-036",
+      "IFC-037",
+      "IFC-038",
+      "IFC-039",
+      "IFC-040",
+      "IFC-041",
+      "IFC-042",
+      "IFC-043",
+      "IFC-044",
+      "IFC-045",
+      "IFC-046",
+      "IFC-047",
+      "IFC-048",
+      "IFC-049",
+      "IFC-050",
+      "IFC-051",
+      "IFC-052",
+      "IFC-053",
+      "IFC-054",
+      "IFC-055",
+      "IFC-056",
+      "IFC-057",
+      "IFC-058",
+      "IFC-059",
+      "IFC-060",
+      "IFC-070",
+      "IFC-071",
+      "IFC-072",
+      "IFC-073",
+      "IFC-074",
+      "IFC-075",
+      "IFC-076",
+      "IFC-077",
+      "IFC-078",
+      "IFC-079",
+      "IFC-080",
+      "IFC-081",
+      "IFC-082",
+      "IFC-083",
+      "IFC-084",
+      "IFC-085",
+      "IFC-086",
+      "IFC-087",
+      "IFC-088",
+      "IFC-089",
+      "IFC-090",
+      "IFC-091",
+      "IFC-092",
+      "IFC-093",
+      "IFC-094",
+      "IFC-095",
+      "IFC-096",
+      "IFC-097",
+      "IFC-098",
+      "IFC-099",
+      "IFC-100",
+      "PG-001",
+      "PG-002",
+      "PG-003",
+      "PG-004",
+      "PG-005",
+      "PG-006",
+      "PG-007",
+      "PG-008",
+      "PG-009",
+      "PG-010",
+      "PG-011",
+      "PG-012",
+      "PG-013",
+      "PG-014",
+      "PG-015",
+      "PG-016",
+      "PG-017",
+      "PG-018",
+      "PG-019",
+      "PG-020",
+      "PG-021",
+      "PG-022",
+      "PG-023",
+      "PG-024",
+      "PG-025",
+      "PG-026",
+      "PG-027",
+      "PG-028",
+      "PG-029",
+      "PG-030",
+      "PG-031",
+      "PG-032",
+      "PG-033",
+      "PG-034",
+      "PG-035",
+      "PG-036",
+      "PG-037",
+      "PG-038",
+      "PG-039",
+      "PG-040",
+      "PG-041",
+      "PG-042",
+      "PG-043",
+      "PG-044",
+      "PG-045",
+      "PG-046",
+      "PG-047",
+      "PG-048",
+      "PG-049",
+      "PG-050",
+      "PG-051",
+      "PG-052",
+      "PG-053",
+      "PG-054",
+      "PG-055",
+      "PG-056",
+      "PG-057",
+      "PG-058",
+      "PG-059",
+      "PG-060",
+      "PG-061",
+      "PG-062",
+      "PG-063",
+      "PG-064",
+      "PG-065",
+      "PG-066",
+      "PG-067",
+      "PG-068",
+      "PG-069",
+      "PG-070",
+      "PG-071",
+      "PG-072",
+      "PG-073",
+      "PG-074",
+      "PG-075",
+      "PG-076",
+      "PG-077",
+      "PG-078",
+      "PG-079",
+      "PG-080",
+      "PG-081",
+      "PG-082",
+      "PG-083",
+      "PG-084",
+      "PG-085",
+      "PG-086",
+      "PG-087",
+      "PG-088",
+      "PG-089",
+      "PG-090",
+      "PG-091",
+      "PG-092",
+      "PG-093",
+      "PG-094",
+      "PG-095",
+      "PG-096",
+      "PG-097",
+      "PG-098",
+      "PG-099",
+      "PG-100",
+      "PG-101",
+      "PG-102",
+      "PG-103",
+      "PG-104",
+      "PG-105",
+      "PG-106",
+      "PG-107",
+      "PG-108",
+      "PG-109",
+      "PG-110",
+      "PG-111",
+      "PG-112",
+      "PG-113",
+      "PG-114",
+      "PG-115",
+      "PG-116",
+      "PG-117",
+      "PG-118",
+      "PG-119",
+      "PG-120",
+      "PG-121",
+      "PG-122",
+      "PG-123",
+      "IFC-101",
+      "IFC-102",
+      "IFC-103",
+      "IFC-104",
+      "IFC-105",
+      "IFC-106",
+      "IFC-107",
+      "IFC-108",
+      "IFC-109",
+      "IFC-110",
+      "IFC-111",
+      "IFC-112",
+      "IFC-113",
+      "IFC-114",
+      "IFC-115",
+      "IFC-116",
+      "IFC-117",
+      "IFC-118",
+      "IFC-119",
+      "IFC-120",
+      "PG-124",
+      "PG-125",
+      "IFC-121",
+      "IFC-122",
+      "IFC-123",
+      "IFC-124",
+      "PG-126",
+      "IFC-125",
+      "IFC-126",
+      "IFC-127",
+      "IFC-128",
+      "IFC-129",
+      "IFC-130",
+      "IFC-131",
+      "IFC-132",
+      "IFC-133",
+      "IFC-134",
+      "IFC-135",
+      "IFC-136",
+      "IFC-137",
+      "IFC-138",
+      "IFC-139",
+      "IFC-140",
+      "IFC-141",
+      "IFC-142",
+      "IFC-143",
+      "IFC-144",
+      "IFC-145",
+      "IFC-146",
+      "IFC-147",
+      "IFC-148",
+      "IFC-149",
+      "IFC-150",
+      "IFC-151",
+      "IFC-152",
+      "IFC-153",
+      "IFC-154",
+      "IFC-155",
+      "IFC-156",
+      "IFC-157",
+      "IFC-158",
+      "IFC-159",
+      "IFC-163"
+    ],
+    "FAILED": []
+  },
+  "tasks_by_section": {
+    "Foundation Setup": [
+      "ENV-001-AI",
+      "ENV-002-AI",
+      "ENV-003-AI",
+      "ENV-004-AI",
+      "ENV-005-AI",
+      "ENV-006-AI",
+      "ENV-007-AI",
+      "ENV-008-AI",
+      "ENV-009-AI",
+      "ENV-010-AI",
+      "ENV-011-AI",
+      "ENV-012-AI",
+      "ENV-013-AI",
+      "ENV-014-AI",
+      "ENV-015-AI",
+      "ENV-016-AI",
+      "ENV-017-AI",
+      "ENV-018-AI"
+    ],
+    "AI Foundation": [
+      "AI-SETUP-001",
+      "AI-SETUP-002",
+      "AI-SETUP-003",
+      "EXC-SEC-001",
+      "EXC-MONITOR-001"
+    ],
+    "Automation": [
+      "AUTOMATION-001",
+      "AUTOMATION-002"
+    ],
+    "Architecture": [
+      "IFC-160"
+    ]
+  },
+  "task_details": {
+    "EXC-INIT-001": {
+      "section": "AI Foundation",
+      "description": "Sprint 0 - Environment Setup with Agent Ecosystem",
+      "owner": "Tech Lead",
+      "status": "DONE",
+      "sprint": 0
+    },
+    "AI-SETUP-001": {
+      "section": "AI Foundation",
+      "description": "Configure Claude Code with Custom Commands and Hooks",
+      "owner": "AI Specialist",
+      "status": "DONE",
+      "sprint": 0
+    },
+    "AI-SETUP-002": {
+      "section": "AI Foundation",
+      "description": "GitHub Copilot Enterprise Automation Setup",
+      "owner": "DevOps Engineer",
+      "status": "DONE",
+      "sprint": 0
+    },
+    "AI-SETUP-003": {
+      "section": "AI Foundation",
+      "description": "External AI Tools Integration (Codex, Jules)",
+      "owner": "AI Specialist",
+      "status": "DONE",
+      "sprint": 0
+    },
+    "ENV-001-AI": {
+      "section": "Foundation Setup",
+      "description": "Automated Monorepo Creation",
+      "owner": "Tech Lead + Claude Code",
+      "status": "DONE",
+      "sprint": 0
+    },
+    "ENV-002-AI": {
+      "section": "Foundation Setup",
+      "description": "Automated Development Tools Configuration",
+      "owner": "DevOps + Copilot",
+      "status": "DONE",
+      "sprint": 0
+    },
+    "ENV-003-AI": {
+      "section": "Foundation Setup",
+      "description": "Docker Environment with Optimized Configuration",
+      "owner": "DevOps + Claude Code",
+      "status": "IN_PROGRESS",
+      "sprint": 0
+    },
+    "ENV-004-AI": {
+      "section": "Foundation Setup",
+      "description": "Supabase Integration with Automated Schema Design",
+      "owner": "Backend Dev + AI Agents",
+      "status": "IN_PROGRESS",
+      "sprint": 0,
+      "completed_at": "2025-12-14T20:30:00Z",
+      "duration_minutes": 5,
+      "metrics_file": "../sprint-0/phase-3-dependencies/ENV-004-AI.json"
+    },
+    "ENV-005-AI": {
+      "section": "Foundation Setup",
+      "description": "CI/CD Pipeline with Predictive Optimization",
+      "owner": "DevOps + Claude Code",
+      "status": "IN_PROGRESS",
+      "sprint": 0
+    },
+    "ENV-006-AI": {
+      "section": "Foundation Setup",
+      "description": "Prisma Schema with Generated Optimizations",
+      "owner": "Backend Dev + Copilot",
+      "status": "IN_PROGRESS",
+      "sprint": 0
+    },
+    "ENV-007-AI": {
+      "section": "Foundation Setup",
+      "description": "tRPC Setup with Automated Type Generation",
+      "owner": "Tech Lead + Claude Code",
+      "status": "IN_PROGRESS",
+      "sprint": 0
+    },
+    "ENV-008-AI": {
+      "section": "Foundation Setup",
+      "description": "Automated Observability with Predictive Monitoring",
+      "owner": "DevOps + AI Agents",
+      "status": "IN_PROGRESS",
+      "sprint": 0
+    },
+    "ENV-009-AI": {
+      "section": "Foundation Setup",
+      "description": "Frontend with Generated Components and Optimization",
+      "owner": "Frontend Dev + Claude Code",
+      "status": "IN_PROGRESS",
+      "sprint": 0
+    },
+    "ENV-010-AI": {
+      "section": "Foundation Setup",
+      "description": "Automated Test Generation and Automation",
+      "owner": "QA Lead + AI Testing Suite",
+      "status": "IN_PROGRESS",
+      "sprint": 0
+    },
+    "ENV-011-AI": {
+      "section": "Foundation Setup",
+      "description": "LangChain Integration with Optimized Chains",
+      "owner": "AI Specialist + Claude Code",
+      "status": "IN_PROGRESS",
+      "sprint": 0
+    },
+    "ENV-012-AI": {
+      "section": "Foundation Setup",
+      "description": "Documentation with Auto-Generation",
+      "owner": "Tech Writer + AI Agents",
+      "status": "IN_PROGRESS",
+      "sprint": 0
+    },
+    "ENV-013-AI": {
+      "section": "Foundation Setup",
+      "description": "Automated Security Implementation",
+      "owner": "Security Eng + AI Security Tools",
+      "status": "PLANNED",
+      "sprint": 0
+    },
+    "ENV-014-AI": {
+      "section": "Foundation Setup",
+      "description": "Performance Optimization with AI Profiling",
+      "owner": "Performance Eng + AI Tools",
+      "status": "PLANNED",
+      "sprint": 0
+    },
+    "ENV-015-AI": {
+      "section": "Foundation Setup",
+      "description": "AI-Managed Feature Flags with Predictive Rollout",
+      "owner": "Backend Dev + AI Agents",
+      "status": "PLANNED",
+      "sprint": 0
+    },
+    "ENV-016-AI": {
+      "section": "Foundation Setup",
+      "description": "Privacy-First Analytics with AI Insights",
+      "owner": "Frontend Dev + AI Analytics",
+      "status": "PLANNED",
+      "sprint": 0
+    },
+    "ENV-017-AI": {
+      "section": "Foundation Setup",
+      "description": "Automated Integration Testing",
+      "owner": "All Teams + AI Orchestrator",
+      "status": "PLANNED",
+      "sprint": 0
+    },
+    "ENV-018-AI": {
+      "section": "Foundation Setup",
+      "description": "Sprint Planning and Velocity Prediction",
+      "owner": "PM + AI Planning Tools",
+      "status": "PLANNED",
+      "sprint": 0
+    },
+    "AUTOMATION-001": {
+      "section": "AI Foundation",
+      "description": "Continuous AI Agent Coordination System",
+      "owner": "AI Specialist",
+      "status": "PLANNED",
+      "sprint": 0
+    },
+    "AUTOMATION-002": {
+      "section": "AI Foundation",
+      "description": "AI Performance Dashboard and Optimization Loop",
+      "owner": "DevOps + AI Monitoring",
+      "status": "PLANNED",
+      "sprint": 0
+    },
+    "IFC-000": {
+      "section": "Planning",
+      "description": "IntelliFlow CRM Feasibility Assessment",
+      "owner": "CEO + CTO + CFO",
+      "status": "PLANNED",
+      "sprint": 0
+    },
+    "IFC-001": {
+      "section": "Validation",
+      "description": "Technical Architecture Spike - Modern Stack",
+      "owner": "CTO + Tech Lead",
+      "status": "PLANNED",
+      "sprint": 1
+    },
+    "IFC-002": {
+      "section": "Validation",
+      "description": "Domain Model Design (DDD)",
+      "owner": "Tech Lead + DA",
+      "status": "PLANNED",
+      "sprint": 1
+    },
+    "IFC-003": {
+      "section": "Validation",
+      "description": "tRPC API Foundation",
+      "owner": "DevOps + Backend Dev",
+      "status": "PLANNED",
+      "sprint": 1
+    },
+    "IFC-004": {
+      "section": "Validation",
+      "description": "Next.js 16.0.10 Lead Capture UI",
+      "owner": "Frontend Dev + UX",
+      "status": "PLANNED",
+      "sprint": 2
+    },
+    "IFC-005": {
+      "section": "Validation",
+      "description": "LangChain AI Scoring Prototype",
+      "owner": "AI Specialist + Backend Dev",
+      "status": "PLANNED",
+      "sprint": 2
+    },
+    "IFC-006": {
+      "section": "Validation",
+      "description": "Supabase Integration Test",
+      "owner": "Backend Dev + DevOps",
+      "status": "PLANNED",
+      "sprint": 3
+    },
+    "IFC-007": {
+      "section": "Validation",
+      "description": "Performance Benchmarks - Modern Stack",
+      "owner": "Performance Eng + DevOps",
+      "status": "PLANNED",
+      "sprint": 3
+    },
+    "IFC-008": {
+      "section": "Validation",
+      "description": "Security Assessment - OWASP + ISO 42001 Prep",
+      "owner": "Security Eng + CTO",
+      "status": "PLANNED",
+      "sprint": 2
+    },
+    "IFC-009": {
+      "section": "Validation",
+      "description": "Team Capability Assessment - Modern Stack",
+      "owner": "PM + Tech Lead",
+      "status": "PLANNED",
+      "sprint": 4
+    },
+    "IFC-010": {
+      "section": "Decision Gate",
+      "description": "Phase 1 Go/No-Go Decision",
+      "owner": "CEO + Leadership",
+      "status": "PLANNED",
+      "sprint": 4
+    },
+    "IFC-011": {
+      "section": "Parallel Track",
+      "description": "Supabase Free Tier Optimization",
+      "owner": "DevOps + PM",
+      "status": "PLANNED",
+      "sprint": 3
+    },
+    "IFC-012": {
+      "section": "MVP Week 1",
+      "description": "Turborepo Monorepo Setup",
+      "owner": "DevOps + Tech Lead",
+      "status": "PLANNED",
+      "sprint": 6
+    },
+    "IFC-013": {
+      "section": "MVP Week 1",
+      "description": "tRPC Router Implementation",
+      "owner": "Backend Dev + Tech Lead",
+      "status": "PLANNED",
+      "sprint": 7
+    },
+    "IFC-014": {
+      "section": "MVP Week 1",
+      "description": "Next.js 16.0.10 App Router UI",
+      "owner": "Frontend Dev + UX",
+      "status": "PLANNED",
+      "sprint": 8
+    },
+    "IFC-015": {
+      "section": "MVP Week 1",
+      "description": "BullMQ Job Queue Setup",
+      "owner": "Backend Dev + DevOps",
+      "status": "PLANNED",
+      "sprint": 8
+    },
+    "IFC-016": {
+      "section": "MVP Week 1",
+      "description": "Real-time Subscriptions",
+      "owner": "Frontend Dev + Backend Dev",
+      "status": "PLANNED",
+      "sprint": 9
+    },
+    "IFC-017": {
+      "section": "MVP Week 1",
+      "description": "Prisma + Supabase Data Layer",
+      "owner": "Backend Dev + DA",
+      "status": "PLANNED",
+      "sprint": 9
+    },
+    "IFC-018": {
+      "section": "MVP Week 1",
+      "description": "Vitest Testing Suite",
+      "owner": "QA + Whole Team",
+      "status": "PLANNED",
+      "sprint": 11
+    },
+    "IFC-019": {
+      "section": "Investment Gate",
+      "description": "Gate 1 Review - £500 Investment",
+      "owner": "CFO + CEO",
+      "status": "PLANNED",
+      "sprint": 11
+    },
+    "IFC-020": {
+      "section": "Intelligence",
+      "description": "LangChain Pipeline Design",
+      "owner": "AI Specialist + Data Scientist",
+      "status": "PLANNED",
+      "sprint": 12
+    },
+    "IFC-021": {
+      "section": "Intelligence",
+      "description": "CrewAI Agent Framework",
+      "owner": "Backend Dev + AI Specialist",
+      "status": "PLANNED",
+      "sprint": 12
+    },
+    "IFC-022": {
+      "section": "Intelligence",
+      "description": "Structured AI Output Implementation",
+      "owner": "AI Specialist + Backend Dev",
+      "status": "PLANNED",
+      "sprint": 13
+    },
+    "IFC-023": {
+      "section": "Intelligence",
+      "description": "AI Explainability UI",
+      "owner": "Frontend Dev + UX",
+      "status": "PLANNED",
+      "sprint": 13
+    },
+    "IFC-024": {
+      "section": "Intelligence",
+      "description": "Human-in-the-Loop Feedback",
+      "owner": "Full Stack Dev",
+      "status": "PLANNED",
+      "sprint": 14
+    },
+    "IFC-025": {
+      "section": "Intelligence",
+      "description": "A/B Testing Framework",
+      "owner": "Data Scientist + Backend Dev",
+      "status": "PLANNED",
+      "sprint": 14
+    },
+    "IFC-026": {
+      "section": "Intelligence",
+      "description": "Playwright E2E Testing",
+      "owner": "QA + AI Specialist",
+      "status": "PLANNED",
+      "sprint": 15
+    },
+    "IFC-027": {
+      "section": "Investment Gate",
+      "description": "Gate 2 Review - £2000 Investment",
+      "owner": "CFO + CEO",
+      "status": "PLANNED",
+      "sprint": 15
+    },
+    "IFC-028": {
+      "section": "Automation",
+      "description": "Workflow Engine with LangGraph",
+      "owner": "Backend Dev + Architect",
+      "status": "PLANNED",
+      "sprint": 16
+    },
+    "IFC-029": {
+      "section": "Automation",
+      "description": "Auto-Response with Approval Gate",
+      "owner": "Backend Dev + AI Specialist",
+      "status": "PLANNED",
+      "sprint": 16
+    },
+    "IFC-030": {
+      "section": "Automation",
+      "description": "Smart Lead Routing",
+      "owner": "Backend Dev + Sales Ops",
+      "status": "PLANNED",
+      "sprint": 17
+    },
+    "IFC-031": {
+      "section": "Automation",
+      "description": "Workflow Builder UI (React Flow)",
+      "owner": "Frontend Dev + UX",
+      "status": "PLANNED",
+      "sprint": 17
+    },
+    "IFC-032": {
+      "section": "Automation",
+      "description": "OpenTelemetry Monitoring",
+      "owner": "DevOps + SRE",
+      "status": "PLANNED",
+      "sprint": 18
+    },
+    "IFC-033": {
+      "section": "Automation",
+      "description": "Load Testing with k6",
+      "owner": "Performance Eng + DevOps",
+      "status": "PLANNED",
+      "sprint": 19
+    },
+    "IFC-034": {
+      "section": "Investment Gate",
+      "description": "Gate 3 Review - £3000 Investment",
+      "owner": "CFO + CEO",
+      "status": "PLANNED",
+      "sprint": 19
+    },
+    "IFC-035": {
+      "section": "Enhancement",
+      "description": "WhatsApp Business API Research",
+      "owner": "Integration Eng + PM",
+      "status": "PLANNED",
+      "sprint": 20
+    },
+    "IFC-036": {
+      "section": "Enhancement",
+      "description": "WhatsApp + tRPC Integration",
+      "owner": "Backend Dev + Integration Eng",
+      "status": "PLANNED",
+      "sprint": 21
+    },
+    "IFC-037": {
+      "section": "Enhancement",
+      "description": "Analytics Dashboard Design",
+      "owner": "Data Analyst + UX",
+      "status": "PLANNED",
+      "sprint": 21
+    },
+    "IFC-038": {
+      "section": "Enhancement",
+      "description": "Analytics Implementation",
+      "owner": "Frontend Dev + Data Eng",
+      "status": "PLANNED",
+      "sprint": 22
+    },
+    "IFC-039": {
+      "section": "Enhancement",
+      "description": "Advanced AI Features (RAG)",
+      "owner": "AI Specialist + Full Team",
+      "status": "PLANNED",
+      "sprint": 23
+    },
+    "IFC-040": {
+      "section": "Enhancement",
+      "description": "Production Hardening",
+      "owner": "DevOps + Security",
+      "status": "PLANNED",
+      "sprint": 24
+    },
+    "IFC-041": {
+      "section": "Documentation",
+      "description": "User Manual with Interactive Examples",
+      "owner": "Tech Writer + PM",
+      "status": "PLANNED",
+      "sprint": 0
+    },
+    "IFC-042": {
+      "section": "Documentation",
+      "description": "tRPC API Client SDK Docs",
+      "owner": "Backend Dev + Tech Writer",
+      "status": "PLANNED",
+      "sprint": 0
+    },
+    "IFC-043": {
+      "section": "Documentation",
+      "description": "Operational runbooks (deploy, rollback, incident response, backup/restore, access requests)",
+      "owner": "DevOps + Tech Lead",
+      "status": "PLANNED",
+      "sprint": 20
+    },
+    "IFC-044": {
+      "section": "Testing",
+      "description": "Unit Tests (Vitest + TDD)",
+      "owner": "All Developers",
+      "status": "PLANNED",
+      "sprint": 0
+    },
+    "IFC-045": {
+      "section": "Testing",
+      "description": "Integration Tests (Vitest + MSW)",
+      "owner": "QA + Backend Dev",
+      "status": "PLANNED",
+      "sprint": 0
+    },
+    "IFC-046": {
+      "section": "Testing",
+      "description": "Security Tests (OWASP ZAP + Snyk)",
+      "owner": "Security Eng + QA",
+      "status": "PLANNED",
+      "sprint": 0
+    },
+    "IFC-047": {
+      "section": "Testing",
+      "description": "Performance Tests (k6 + Lighthouse)",
+      "owner": "Performance Eng",
+      "status": "PLANNED",
+      "sprint": 0
+    },
+    "IFC-048": {
+      "section": "Testing",
+      "description": "User Acceptance Testing",
+      "owner": "PM + Sales Team",
+      "status": "PLANNED",
+      "sprint": 25
+    },
+    "IFC-049": {
+      "section": "Investment Gate",
+      "description": "Gate 4 Review - £5000 Investment",
+      "owner": "CEO + Board",
+      "status": "PLANNED",
+      "sprint": 26
+    },
+    "IFC-050": {
+      "section": "Launch",
+      "description": "Internal Launch Preparation",
+      "owner": "PM + Marketing",
+      "status": "PLANNED",
+      "sprint": 26
+    },
+    "IFC-051": {
+      "section": "Launch",
+      "description": "Pilot Customer Selection",
+      "owner": "Sales + CEO",
+      "status": "PLANNED",
+      "sprint": 27
+    },
+    "IFC-052": {
+      "section": "Launch",
+      "description": "Production Deployment",
+      "owner": "DevOps + Whole Team",
+      "status": "PLANNED",
+      "sprint": 27
+    },
+    "IFC-053": {
+      "section": "Launch",
+      "description": "Hypercare Period",
+      "owner": "Support Team + DevOps",
+      "status": "PLANNED",
+      "sprint": 0
+    },
+    "IFC-054": {
+      "section": "Risk Mgmt",
+      "description": "Technical Complexity Monitoring",
+      "owner": "CTO + Tech Lead",
+      "status": "PLANNED",
+      "sprint": 0
+    },
+    "IFC-055": {
+      "section": "Risk Mgmt",
+      "description": "Budget Tracking with FinOps",
+      "owner": "CFO + PM",
+      "status": "PLANNED",
+      "sprint": 0
+    },
+    "IFC-056": {
+      "section": "Risk Mgmt",
+      "description": "Team Upskilling Program",
+      "owner": "HR + Tech Lead",
+      "status": "PLANNED",
+      "sprint": 0
+    },
+    "IFC-057": {
+      "section": "Risk Mgmt",
+      "description": "Vendor Lock-in Mitigation",
+      "owner": "PM + Tech Lead",
+      "status": "PLANNED",
+      "sprint": 0
+    },
+    "IFC-058": {
+      "section": "Compliance",
+      "description": "GDPR baseline controls: Supabase RLS policies, data minimisation, retention hooks",
+      "owner": "DPO + Legal",
+      "status": "PLANNED",
+      "sprint": 11
+    },
+    "IFC-059": {
+      "section": "Compliance",
+      "description": "ISO 42001 Readiness Assessment",
+      "owner": "External Auditor + CTO",
+      "status": "PLANNED",
+      "sprint": 25
+    },
+    "IFC-060": {
+      "section": "Success",
+      "description": "Success Metrics Review",
+      "owner": "CEO + All Leads",
+      "status": "PLANNED",
+      "sprint": 33
+    },
+    "IFC-070": {
+      "section": "Migration",
+      "description": "Data Migration from Legacy",
+      "owner": "DA + DevOps",
+      "status": "PLANNED",
+      "sprint": 18
+    },
+    "IFC-071": {
+      "section": "Resilience",
+      "description": "Multi-Region Setup",
+      "owner": "DevOps + DBA",
+      "status": "PLANNED",
+      "sprint": 24
+    },
+    "IFC-072": {
+      "section": "Security",
+      "description": "Zero Trust Security Model",
+      "owner": "Security Eng + CTO",
+      "status": "PLANNED",
+      "sprint": 1
+    },
+    "IFC-073": {
+      "section": "Compliance",
+      "description": "Privacy Impact Assessment",
+      "owner": "DPO + Legal",
+      "status": "PLANNED",
+      "sprint": 1
+    },
+    "IFC-074": {
+      "section": "Observability",
+      "description": "Full Stack Observability",
+      "owner": "SRE Lead + DevOps",
+      "status": "PLANNED",
+      "sprint": 1
+    },
+    "IFC-075": {
+      "section": "Infrastructure",
+      "description": "IaC with Terraform",
+      "owner": "DevOps",
+      "status": "PLANNED",
+      "sprint": 1
+    },
+    "IFC-076": {
+      "section": "Quality",
+      "description": "Component Library (shadcn/ui)",
+      "owner": "Frontend Dev + UX",
+      "status": "PLANNED",
+      "sprint": 10
+    },
+    "IFC-077": {
+      "section": "Security",
+      "description": "API Rate Limiting (tRPC + Upstash)",
+      "owner": "Backend Dev + Security Eng",
+      "status": "PLANNED",
+      "sprint": 1
+    },
+    "IFC-078": {
+      "section": "Platform",
+      "description": "Platform Engineering Foundation",
+      "owner": "DevOps + Tech Lead",
+      "status": "PLANNED",
+      "sprint": 18
+    },
+    "IFC-079": {
+      "section": "Documentation",
+      "description": "Docusaurus Setup",
+      "owner": "Tech Writer + DevOps",
+      "status": "PLANNED",
+      "sprint": 2
+    },
+    "IFC-080": {
+      "section": "Documentation",
+      "description": "LLM-Friendly Documentation Templates",
+      "owner": "Tech Writer + AI Specialist",
+      "status": "PLANNED",
+      "sprint": 2
+    },
+    "IFC-081": {
+      "section": "Documentation",
+      "description": "API Documentation (tRPC + OpenAPI)",
+      "owner": "Backend Dev + Tech Writer",
+      "status": "PLANNED",
+      "sprint": 0
+    },
+    "IFC-082": {
+      "section": "Documentation",
+      "description": "Domain Knowledge Base",
+      "owner": "Tech Lead + Team",
+      "status": "PLANNED",
+      "sprint": 4
+    },
+    "IFC-083": {
+      "section": "Documentation",
+      "description": "RAG Integration for Docs",
+      "owner": "AI Specialist + Tech Writer",
+      "status": "PLANNED",
+      "sprint": 23
+    },
+    "IFC-084": {
+      "section": "Documentation",
+      "description": "Video Tutorials & Demos",
+      "owner": "Tech Writer + Marketing",
+      "status": "PLANNED",
+      "sprint": 25
+    },
+    "IFC-085": {
+      "section": "AI/ML",
+      "description": "Ollama Local Development",
+      "owner": "AI Specialist + DevOps",
+      "status": "PLANNED",
+      "sprint": 2
+    },
+    "IFC-086": {
+      "section": "AI/ML",
+      "description": "Model Versioning with Zep",
+      "owner": "AI Specialist + Backend Dev",
+      "status": "PLANNED",
+      "sprint": 14
+    },
+    "IFC-087": {
+      "section": "Performance",
+      "description": "Edge Functions Optimization",
+      "owner": "Frontend Dev + DevOps",
+      "status": "PLANNED",
+      "sprint": 20
+    },
+    "IFC-088": {
+      "section": "Quality",
+      "description": "Continuous Quality Metrics",
+      "owner": "QA Lead + PM",
+      "status": "PLANNED",
+      "sprint": 0
+    },
+    "IFC-089": {
+      "section": "Core CRM",
+      "description": "Contacts Module - Create/Edit/Search",
+      "owner": "Frontend Dev + Backend Dev",
+      "status": "PLANNED",
+      "sprint": 5
+    },
+    "IFC-090": {
+      "section": "Core CRM",
+      "description": "Contact 360 Page - Full Detail View",
+      "owner": "Frontend Dev + UX Designer",
+      "status": "PLANNED",
+      "sprint": 6
+    },
+    "IFC-091": {
+      "section": "Core CRM",
+      "description": "Deals Pipeline - Kanban Board",
+      "owner": "Frontend Dev + Backend Dev",
+      "status": "PLANNED",
+      "sprint": 6
+    },
+    "IFC-092": {
+      "section": "Core CRM",
+      "description": "Deal Forecasting & Reporting",
+      "owner": "Data Eng + Backend Dev",
+      "status": "PLANNED",
+      "sprint": 7
+    },
+    "IFC-093": {
+      "section": "Core CRM",
+      "description": "Tickets Module - SLA Tracking",
+      "owner": "Backend Dev + Frontend Dev",
+      "status": "PLANNED",
+      "sprint": 7
+    },
+    "IFC-094": {
+      "section": "Core CRM",
+      "description": "Documents Management - Upload & Sign",
+      "owner": "Backend Dev + Integrations Eng",
+      "status": "PLANNED",
+      "sprint": 8
+    },
+    "IFC-095": {
+      "section": "AI Insights",
+      "description": "Churn Risk & Next Best Action",
+      "owner": "AI Specialist + Backend Dev",
+      "status": "PLANNED",
+      "sprint": 8
+    },
+    "IFC-096": {
+      "section": "Reports",
+      "description": "Custom Reports & Dashboards",
+      "owner": "Frontend Dev + Data Eng",
+      "status": "PLANNED",
+      "sprint": 9
+    },
+    "IFC-097": {
+      "section": "Ops & Observability",
+      "description": "Distributed Tracing & Logging",
+      "owner": "DevOps + SRE",
+      "status": "PLANNED",
+      "sprint": 9
+    },
+    "IFC-098": {
+      "section": "Security",
+      "description": "RBAC/ABAC & Audit Trail",
+      "owner": "Security Eng + Backend Dev",
+      "status": "PLANNED",
+      "sprint": 9
+    },
+    "IFC-099": {
+      "section": "Integrations",
+      "description": "ERP/Payment/Email Connectors",
+      "owner": "Integrations Eng + Backend Dev",
+      "status": "PLANNED",
+      "sprint": 10
+    },
+    "IFC-100": {
+      "section": "Governance",
+      "description": "ADR Registry & Compliance Reporting",
+      "owner": "PM + CTO",
+      "status": "PLANNED",
+      "sprint": 10
+    },
+    "PG-001": {
+      "section": "Public Pages",
+      "description": "Home Page",
+      "owner": "Growth FE",
+      "status": "PLANNED",
+      "sprint": 11
+    },
+    "PG-002": {
+      "section": "Public Pages",
+      "description": "Features Page",
+      "owner": "Growth FE",
+      "status": "PLANNED",
+      "sprint": 11
+    },
+    "PG-003": {
+      "section": "Public Pages",
+      "description": "Pricing Page",
+      "owner": "Growth FE",
+      "status": "PLANNED",
+      "sprint": 11
+    },
+    "PG-004": {
+      "section": "Public Pages",
+      "description": "About Page",
+      "owner": "Growth FE",
+      "status": "PLANNED",
+      "sprint": 11
+    },
+    "PG-005": {
+      "section": "Public Pages",
+      "description": "Contact Page",
+      "owner": "Growth FE",
+      "status": "PLANNED",
+      "sprint": 11
+    },
+    "PG-006": {
+      "section": "Public Pages",
+      "description": "Partners Page",
+      "owner": "Growth FE",
+      "status": "PLANNED",
+      "sprint": 11
+    },
+    "PG-007": {
+      "section": "Public Pages",
+      "description": "Press Page",
+      "owner": "Growth FE",
+      "status": "PLANNED",
+      "sprint": 11
+    },
+    "PG-008": {
+      "section": "Public Pages",
+      "description": "Security Page",
+      "owner": "Growth FE",
+      "status": "PLANNED",
+      "sprint": 11
+    },
+    "PG-009": {
+      "section": "Public Pages",
+      "description": "Blog Index",
+      "owner": "Growth FE",
+      "status": "PLANNED",
+      "sprint": 12
+    },
+    "PG-010": {
+      "section": "Public Pages",
+      "description": "Blog Post",
+      "owner": "Growth FE",
+      "status": "PLANNED",
+      "sprint": 12
+    },
+    "PG-011": {
+      "section": "Public Pages",
+      "description": "Careers Page",
+      "owner": "Growth FE",
+      "status": "PLANNED",
+      "sprint": 12
+    },
+    "PG-012": {
+      "section": "Public Pages",
+      "description": "Career Detail",
+      "owner": "Growth FE",
+      "status": "PLANNED",
+      "sprint": 12
+    },
+    "PG-013": {
+      "section": "Marketing Pages",
+      "description": "Landing Page Template",
+      "owner": "Growth FE",
+      "status": "PLANNED",
+      "sprint": 12
+    },
+    "PG-014": {
+      "section": "Public Pages",
+      "description": "Status Page",
+      "owner": "Growth FE",
+      "status": "PLANNED",
+      "sprint": 12
+    },
+    "PG-015": {
+      "section": "Auth Pages",
+      "description": "Sign In",
+      "owner": "Platform FE",
+      "status": "PLANNED",
+      "sprint": 13
+    },
+    "PG-016": {
+      "section": "Auth Pages",
+      "description": "Sign Up",
+      "owner": "Platform FE",
+      "status": "PLANNED",
+      "sprint": 13
+    },
+    "PG-017": {
+      "section": "Auth Pages",
+      "description": "Sign Up Success",
+      "owner": "Platform FE",
+      "status": "PLANNED",
+      "sprint": 13
+    },
+    "PG-018": {
+      "section": "Auth Pages",
+      "description": "Logout",
+      "owner": "Platform FE",
+      "status": "PLANNED",
+      "sprint": 13
+    },
+    "PG-019": {
+      "section": "Auth Pages",
+      "description": "Forgot Password",
+      "owner": "Platform FE",
+      "status": "PLANNED",
+      "sprint": 13
+    },
+    "PG-020": {
+      "section": "Auth Pages",
+      "description": "Reset Password",
+      "owner": "Platform FE",
+      "status": "PLANNED",
+      "sprint": 13
+    },
+    "PG-021": {
+      "section": "Auth Pages",
+      "description": "MFA Setup",
+      "owner": "Platform FE",
+      "status": "PLANNED",
+      "sprint": 13
+    },
+    "PG-022": {
+      "section": "Auth Pages",
+      "description": "MFA Verify",
+      "owner": "Platform FE",
+      "status": "PLANNED",
+      "sprint": 13
+    },
+    "PG-023": {
+      "section": "Auth Pages",
+      "description": "Email Verification",
+      "owner": "Platform FE",
+      "status": "PLANNED",
+      "sprint": 13
+    },
+    "PG-024": {
+      "section": "Auth Pages",
+      "description": "SSO Callback",
+      "owner": "Platform FE",
+      "status": "PLANNED",
+      "sprint": 13
+    },
+    "PG-025": {
+      "section": "Billing Pages",
+      "description": "Billing Portal",
+      "owner": "Platform BE",
+      "status": "PLANNED",
+      "sprint": 14
+    },
+    "PG-026": {
+      "section": "Billing Pages",
+      "description": "Checkout",
+      "owner": "Platform BE",
+      "status": "PLANNED",
+      "sprint": 14
+    },
+    "PG-027": {
+      "section": "Billing Pages",
+      "description": "Invoices",
+      "owner": "Platform BE",
+      "status": "PLANNED",
+      "sprint": 14
+    },
+    "PG-028": {
+      "section": "Billing Pages",
+      "description": "Invoice Detail",
+      "owner": "Platform BE",
+      "status": "PLANNED",
+      "sprint": 14
+    },
+    "PG-029": {
+      "section": "Billing Pages",
+      "description": "Payment Methods",
+      "owner": "Platform BE",
+      "status": "PLANNED",
+      "sprint": 14
+    },
+    "PG-030": {
+      "section": "Billing Pages",
+      "description": "Subscriptions",
+      "owner": "Platform BE",
+      "status": "PLANNED",
+      "sprint": 14
+    },
+    "PG-031": {
+      "section": "Billing Pages",
+      "description": "Receipts",
+      "owner": "Platform BE",
+      "status": "PLANNED",
+      "sprint": 14
+    },
+    "PG-032": {
+      "section": "Developer Pages",
+      "description": "Docs Index",
+      "owner": "DevRel",
+      "status": "PLANNED",
+      "sprint": 15
+    },
+    "PG-033": {
+      "section": "Developer Pages",
+      "description": "API Docs",
+      "owner": "DevRel",
+      "status": "PLANNED",
+      "sprint": 15
+    },
+    "PG-034": {
+      "section": "Developer Pages",
+      "description": "Webhooks Docs",
+      "owner": "DevRel",
+      "status": "PLANNED",
+      "sprint": 15
+    },
+    "PG-035": {
+      "section": "Developer Pages",
+      "description": "Changelog",
+      "owner": "DevRel",
+      "status": "PLANNED",
+      "sprint": 15
+    },
+    "PG-036": {
+      "section": "Developer Pages",
+      "description": "SDK Guides",
+      "owner": "DevRel",
+      "status": "PLANNED",
+      "sprint": 15
+    },
+    "PG-037": {
+      "section": "Developer Pages",
+      "description": "CLI Docs",
+      "owner": "DevRel",
+      "status": "PLANNED",
+      "sprint": 15
+    },
+    "PG-038": {
+      "section": "Developer Pages",
+      "description": "Auth Guides",
+      "owner": "DevRel",
+      "status": "PLANNED",
+      "sprint": 15
+    },
+    "PG-039": {
+      "section": "Developer Pages",
+      "description": "Dev Apps",
+      "owner": "DevRel",
+      "status": "PLANNED",
+      "sprint": 15
+    },
+    "PG-040": {
+      "section": "Developer Pages",
+      "description": "New Dev App",
+      "owner": "DevRel",
+      "status": "PLANNED",
+      "sprint": 15
+    },
+    "PG-041": {
+      "section": "Developer Pages",
+      "description": "Dev App Detail",
+      "owner": "DevRel",
+      "status": "PLANNED",
+      "sprint": 15
+    },
+    "PG-042": {
+      "section": "Developer Pages",
+      "description": "Dev App Edit",
+      "owner": "DevRel",
+      "status": "PLANNED",
+      "sprint": 15
+    },
+    "PG-043": {
+      "section": "Support Pages",
+      "description": "Help Center Index",
+      "owner": "Support Eng",
+      "status": "PLANNED",
+      "sprint": 16
+    },
+    "PG-044": {
+      "section": "Support Pages",
+      "description": "Help Search",
+      "owner": "Support Eng",
+      "status": "PLANNED",
+      "sprint": 16
+    },
+    "PG-045": {
+      "section": "Support Pages",
+      "description": "Help Article",
+      "owner": "Support Eng",
+      "status": "PLANNED",
+      "sprint": 16
+    },
+    "PG-046": {
+      "section": "Support Pages",
+      "description": "Support Tickets",
+      "owner": "Support Eng",
+      "status": "PLANNED",
+      "sprint": 16
+    },
+    "PG-047": {
+      "section": "Support Pages",
+      "description": "New Ticket",
+      "owner": "Support Eng",
+      "status": "PLANNED",
+      "sprint": 16
+    },
+    "PG-048": {
+      "section": "Support Pages",
+      "description": "Ticket Detail",
+      "owner": "Support Eng",
+      "status": "PLANNED",
+      "sprint": 16
+    },
+    "PG-049": {
+      "section": "Support Pages",
+      "description": "Support Chat",
+      "owner": "Support Eng",
+      "status": "PLANNED",
+      "sprint": 16
+    },
+    "PG-050": {
+      "section": "Legal Pages",
+      "description": "Privacy Policy",
+      "owner": "Legal Counsel",
+      "status": "PLANNED",
+      "sprint": 17
+    },
+    "PG-051": {
+      "section": "Legal Pages",
+      "description": "Terms of Service",
+      "owner": "Legal Counsel",
+      "status": "PLANNED",
+      "sprint": 17
+    },
+    "PG-052": {
+      "section": "Legal Pages",
+      "description": "Cookie Policy",
+      "owner": "Legal Counsel",
+      "status": "PLANNED",
+      "sprint": 17
+    },
+    "PG-053": {
+      "section": "Legal Pages",
+      "description": "Data Processing Addendum",
+      "owner": "Legal Counsel",
+      "status": "PLANNED",
+      "sprint": 17
+    },
+    "PG-054": {
+      "section": "Legal Pages",
+      "description": "Acceptable Use Policy",
+      "owner": "Legal Counsel",
+      "status": "PLANNED",
+      "sprint": 17
+    },
+    "PG-055": {
+      "section": "System Pages",
+      "description": "404 Not Found",
+      "owner": "SRE",
+      "status": "PLANNED",
+      "sprint": 17
+    },
+    "PG-056": {
+      "section": "System Pages",
+      "description": "500 Error",
+      "owner": "SRE",
+      "status": "PLANNED",
+      "sprint": 17
+    },
+    "PG-057": {
+      "section": "System Pages",
+      "description": "Maintenance",
+      "owner": "SRE",
+      "status": "PLANNED",
+      "sprint": 17
+    },
+    "PG-058": {
+      "section": "Core CRM",
+      "description": "Dashboard",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 18
+    },
+    "PG-059": {
+      "section": "Core CRM",
+      "description": "Leads List",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 18
+    },
+    "PG-060": {
+      "section": "Core CRM",
+      "description": "New Lead",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 18
+    },
+    "PG-061": {
+      "section": "Core CRM",
+      "description": "Lead Detail",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 18
+    },
+    "PG-062": {
+      "section": "Core CRM",
+      "description": "Edit Lead",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 18
+    },
+    "PG-063": {
+      "section": "Core CRM",
+      "description": "Import Leads",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 18
+    },
+    "PG-064": {
+      "section": "Core CRM",
+      "description": "Contacts List",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 19
+    },
+    "PG-065": {
+      "section": "Core CRM",
+      "description": "Contact 360",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 19
+    },
+    "PG-066": {
+      "section": "Core CRM",
+      "description": "Edit Contact",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 19
+    },
+    "PG-067": {
+      "section": "Core CRM",
+      "description": "Import Contacts",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 19
+    },
+    "PG-068": {
+      "section": "Core CRM",
+      "description": "Merge Contacts",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 19
+    },
+    "PG-069": {
+      "section": "Core CRM",
+      "description": "Accounts List",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 19
+    },
+    "PG-070": {
+      "section": "Core CRM",
+      "description": "Account Detail",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 20
+    },
+    "PG-071": {
+      "section": "Core CRM",
+      "description": "Edit Account",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 20
+    },
+    "PG-072": {
+      "section": "Core CRM",
+      "description": "Import Accounts",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 20
+    },
+    "PG-073": {
+      "section": "Core CRM",
+      "description": "Opportunities List",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 20
+    },
+    "PG-074": {
+      "section": "Core CRM",
+      "description": "Opportunity Detail",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 20
+    },
+    "PG-075": {
+      "section": "Core CRM",
+      "description": "Edit Opportunity",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 20
+    },
+    "PG-076": {
+      "section": "Core CRM",
+      "description": "Pipeline Board",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 21
+    },
+    "PG-077": {
+      "section": "Core CRM",
+      "description": "Pipeline Stages",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 21
+    },
+    "PG-078": {
+      "section": "Core CRM",
+      "description": "Stage Detail",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 21
+    },
+    "PG-079": {
+      "section": "Core CRM",
+      "description": "Forecasts",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 21
+    },
+    "PG-080": {
+      "section": "Core CRM",
+      "description": "Activities",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 21
+    },
+    "PG-081": {
+      "section": "Core CRM",
+      "description": "Tasks",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 21
+    },
+    "PG-082": {
+      "section": "Core CRM",
+      "description": "Task Detail",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 22
+    },
+    "PG-083": {
+      "section": "Core CRM",
+      "description": "Calendar",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 22
+    },
+    "PG-084": {
+      "section": "Core CRM",
+      "description": "Emails",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 22
+    },
+    "PG-085": {
+      "section": "Core CRM",
+      "description": "Email Templates",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 22
+    },
+    "PG-086": {
+      "section": "Core CRM",
+      "description": "SMS Templates",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 22
+    },
+    "PG-087": {
+      "section": "Core CRM",
+      "description": "Calls",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 22
+    },
+    "PG-088": {
+      "section": "Core CRM",
+      "description": "Notes",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 23
+    },
+    "PG-089": {
+      "section": "Core CRM",
+      "description": "Files",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 23
+    },
+    "PG-090": {
+      "section": "Core CRM",
+      "description": "File Detail",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 23
+    },
+    "PG-091": {
+      "section": "Core CRM",
+      "description": "Products",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 23
+    },
+    "PG-092": {
+      "section": "Core CRM",
+      "description": "Product Detail",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 23
+    },
+    "PG-093": {
+      "section": "Core CRM",
+      "description": "Price Books",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 23
+    },
+    "PG-094": {
+      "section": "Core CRM",
+      "description": "Price Book Detail",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 24
+    },
+    "PG-095": {
+      "section": "Core CRM",
+      "description": "Quotes",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 24
+    },
+    "PG-096": {
+      "section": "Core CRM",
+      "description": "New Quote",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 24
+    },
+    "PG-097": {
+      "section": "Core CRM",
+      "description": "Quote Detail",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 24
+    },
+    "PG-098": {
+      "section": "Core CRM",
+      "description": "Edit Quote",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 24
+    },
+    "PG-099": {
+      "section": "Core CRM",
+      "description": "Orders",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 24
+    },
+    "PG-100": {
+      "section": "Core CRM",
+      "description": "Order Detail",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 25
+    },
+    "PG-101": {
+      "section": "Core CRM",
+      "description": "Reports",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 25
+    },
+    "PG-102": {
+      "section": "Core CRM",
+      "description": "Custom Reports",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 25
+    },
+    "PG-103": {
+      "section": "Core CRM",
+      "description": "Report Schedules",
+      "owner": "CRM FE+BE",
+      "status": "PLANNED",
+      "sprint": 25
+    },
+    "PG-104": {
+      "section": "Settings",
+      "description": "Settings Home",
+      "owner": "Platform FE+BE",
+      "status": "PLANNED",
+      "sprint": 25
+    },
+    "PG-105": {
+      "section": "Settings",
+      "description": "Profile Settings",
+      "owner": "Platform FE+BE",
+      "status": "PLANNED",
+      "sprint": 25
+    },
+    "PG-106": {
+      "section": "Settings",
+      "description": "Account Settings",
+      "owner": "Platform FE+BE",
+      "status": "PLANNED",
+      "sprint": 26
+    },
+    "PG-107": {
+      "section": "Settings",
+      "description": "Organization Settings",
+      "owner": "Platform FE+BE",
+      "status": "PLANNED",
+      "sprint": 26
+    },
+    "PG-108": {
+      "section": "Settings",
+      "description": "Users",
+      "owner": "Platform FE+BE",
+      "status": "PLANNED",
+      "sprint": 26
+    },
+    "PG-109": {
+      "section": "Settings",
+      "description": "Roles",
+      "owner": "Platform FE+BE",
+      "status": "PLANNED",
+      "sprint": 26
+    },
+    "PG-110": {
+      "section": "Settings",
+      "description": "Permissions",
+      "owner": "Platform FE+BE",
+      "status": "PLANNED",
+      "sprint": 26
+    },
+    "PG-111": {
+      "section": "Settings",
+      "description": "Teams",
+      "owner": "Platform FE+BE",
+      "status": "PLANNED",
+      "sprint": 26
+    },
+    "PG-112": {
+      "section": "Settings",
+      "description": "Audit Log",
+      "owner": "Platform FE+BE",
+      "status": "PLANNED",
+      "sprint": 27
+    },
+    "PG-113": {
+      "section": "Settings",
+      "description": "API Keys",
+      "owner": "Platform FE+BE",
+      "status": "PLANNED",
+      "sprint": 27
+    },
+    "PG-114": {
+      "section": "Settings",
+      "description": "Webhooks",
+      "owner": "Platform FE+BE",
+      "status": "PLANNED",
+      "sprint": 27
+    },
+    "PG-115": {
+      "section": "Settings",
+      "description": "Integrations",
+      "owner": "Platform FE+BE",
+      "status": "PLANNED",
+      "sprint": 27
+    },
+    "PG-116": {
+      "section": "Settings",
+      "description": "Notifications",
+      "owner": "Platform FE+BE",
+      "status": "PLANNED",
+      "sprint": 27
+    },
+    "PG-117": {
+      "section": "Settings",
+      "description": "Localization",
+      "owner": "Platform FE+BE",
+      "status": "PLANNED",
+      "sprint": 27
+    },
+    "PG-118": {
+      "section": "Settings",
+      "description": "Data Retention",
+      "owner": "Platform FE+BE",
+      "status": "PLANNED",
+      "sprint": 28
+    },
+    "PG-119": {
+      "section": "Settings",
+      "description": "Compliance",
+      "owner": "Platform FE+BE",
+      "status": "PLANNED",
+      "sprint": 28
+    },
+    "PG-120": {
+      "section": "Settings",
+      "description": "Security",
+      "owner": "Platform FE+BE",
+      "status": "PLANNED",
+      "sprint": 28
+    },
+    "PG-121": {
+      "section": "Settings",
+      "description": "Import/Export",
+      "owner": "Platform FE+BE",
+      "status": "PLANNED",
+      "sprint": 28
+    },
+    "PG-122": {
+      "section": "Settings",
+      "description": "Privacy Export",
+      "owner": "Platform FE+BE",
+      "status": "PLANNED",
+      "sprint": 28
+    },
+    "PG-123": {
+      "section": "Settings",
+      "description": "Privacy Delete",
+      "owner": "Platform FE+BE",
+      "status": "PLANNED",
+      "sprint": 28
+    },
+    "IFC-101": {
+      "section": "Validation",
+      "description": "Lead Aggregate and Value Objects",
+      "owner": "Backend Dev + Tech Lead",
+      "status": "PLANNED",
+      "sprint": 2
+    },
+    "IFC-102": {
+      "section": "Validation",
+      "description": "Contact Aggregate and Value Objects",
+      "owner": "Backend Dev + Tech Lead",
+      "status": "PLANNED",
+      "sprint": 2
+    },
+    "IFC-103": {
+      "section": "Validation",
+      "description": "Account Aggregate and Value Objects",
+      "owner": "Backend Dev + Tech Lead",
+      "status": "PLANNED",
+      "sprint": 2
+    },
+    "IFC-104": {
+      "section": "Validation",
+      "description": "Opportunity Aggregate and Value Objects",
+      "owner": "Backend Dev + Tech Lead",
+      "status": "PLANNED",
+      "sprint": 3
+    },
+    "IFC-105": {
+      "section": "Validation",
+      "description": "Task Aggregate and Value Objects",
+      "owner": "Backend Dev + Tech Lead",
+      "status": "PLANNED",
+      "sprint": 3
+    },
+    "IFC-106": {
+      "section": "Architecture",
+      "description": "Define Hexagonal module boundaries + create canonical packages/application + packages/adapters skeleton",
+      "owner": "Tech Lead + Backend Dev",
+      "status": "PLANNED",
+      "sprint": 1
+    },
+    "IFC-107": {
+      "section": "Infrastructure",
+      "description": "Implement Repositories and Factories",
+      "owner": "Backend Dev",
+      "status": "PLANNED",
+      "sprint": 3
+    },
+    "IFC-108": {
+      "section": "Validation",
+      "description": "Implement Domain Services & Business Logic",
+      "owner": "Backend Dev",
+      "status": "PLANNED",
+      "sprint": 4
+    },
+    "IFC-109": {
+      "section": "Testing",
+      "description": "Define TDD Process, Coverage & Review Checklist",
+      "owner": "QA Lead + Tech Lead",
+      "status": "PLANNED",
+      "sprint": 2
+    },
+    "IFC-110": {
+      "section": "Testing",
+      "description": "Write Unit & Integration Tests for Domain Entities",
+      "owner": "QA + Backend Dev",
+      "status": "PLANNED",
+      "sprint": 4
+    },
+    "IFC-111": {
+      "section": "Quality",
+      "description": "Set up SonarQube and integrate static analysis into CI/CD",
+      "owner": "DevOps + QA Lead",
+      "status": "PLANNED",
+      "sprint": 5
+    },
+    "IFC-112": {
+      "section": "Infrastructure",
+      "description": "Implement blue/green deployment and rollback strategy",
+      "owner": "DevOps",
+      "status": "PLANNED",
+      "sprint": 6
+    },
+    "IFC-113": {
+      "section": "Security",
+      "description": "Implement secrets management and encryption at rest and in transit",
+      "owner": "Security Eng + DevOps",
+      "status": "PLANNED",
+      "sprint": 6
+    },
+    "IFC-114": {
+      "section": "Security",
+      "description": "Implement API rate limiting and DDoS protection",
+      "owner": "Backend Dev + DevOps",
+      "status": "PLANNED",
+      "sprint": 7
+    },
+    "IFC-115": {
+      "section": "Resilience",
+      "description": "Setup backups and disaster recovery plan",
+      "owner": "DevOps + DBA",
+      "status": "PLANNED",
+      "sprint": 8
+    },
+    "IFC-116": {
+      "section": "Observability",
+      "description": "Instrument application with OpenTelemetry, unify logs, metrics and traces",
+      "owner": "DevOps + SRE",
+      "status": "PLANNED",
+      "sprint": 9
+    },
+    "IFC-117": {
+      "section": "AI Insights",
+      "description": "Monitor AI models for drift, latency, hallucination and ROI",
+      "owner": "AI Specialist + SRE",
+      "status": "PLANNED",
+      "sprint": 10
+    },
+    "IFC-118": {
+      "section": "Risk Mgmt",
+      "description": "Establish and maintain a risk register with mitigation actions",
+      "owner": "PM + Tech Lead",
+      "status": "PLANNED",
+      "sprint": 2
+    },
+    "IFC-119": {
+      "section": "Planning",
+      "description": "Define recurring backlog refinement, sprint planning, review and retrospective ceremonies",
+      "owner": "Scrum Master + PM",
+      "status": "PLANNED",
+      "sprint": 1
+    },
+    "IFC-120": {
+      "section": "Auth Pages",
+      "description": "Implement password reset and email verification flows",
+      "owner": "Frontend Dev + Backend Dev",
+      "status": "PLANNED",
+      "sprint": 14
+    },
+    "PG-124": {
+      "section": "Auth Pages",
+      "description": "Implement SSO (SAML/OAuth) and social login providers",
+      "owner": "Frontend Dev + Backend Dev",
+      "status": "PLANNED",
+      "sprint": 15
+    },
+    "PG-125": {
+      "section": "Auth Pages",
+      "description": "Add MFA using TOTP or SMS and allow users to enable/disable from security settings",
+      "owner": "Frontend Dev + Backend Dev",
+      "status": "PLANNED",
+      "sprint": 16
+    },
+    "IFC-121": {
+      "section": "Security",
+      "description": "Schedule periodic secret rotation and dependency vulnerability updates",
+      "owner": "DevOps + Security",
+      "status": "PLANNED",
+      "sprint": 10
+    },
+    "IFC-122": {
+      "section": "Resilience",
+      "description": "Implement circuit breaker and retry policies for external service calls",
+      "owner": "Backend Dev",
+      "status": "PLANNED",
+      "sprint": 7
+    },
+    "IFC-123": {
+      "section": "Performance",
+      "description": "Design caching strategy (Redis/CDN) and tune Prisma queries",
+      "owner": "Backend Dev + SRE",
+      "status": "PLANNED",
+      "sprint": 8
+    },
+    "IFC-124": {
+      "section": "Compliance",
+      "description": "Encrypt and aggregate audit logs; automate compliance reporting",
+      "owner": "Security Eng + Compliance",
+      "status": "PLANNED",
+      "sprint": 9
+    },
+    "PG-126": {
+      "section": "Public Pages",
+      "description": "Add in‑app onboarding, guided product tours and feedback collection",
+      "owner": "UX Designer + Frontend Dev",
+      "status": "PLANNED",
+      "sprint": 17
+    },
+    "IFC-125": {
+      "section": "AI Foundation",
+      "description": "Implement guardrails for prompt injection, data leakage, and monitor AI bias",
+      "owner": "AI Specialist + Security",
+      "status": "PLANNED",
+      "sprint": 11
+    },
+    "IFC-126": {
+      "section": "Documentation",
+      "description": "Continuously maintain ADR registry and developer guide updates",
+      "owner": "Tech Writer + PM",
+      "status": "PLANNED",
+      "sprint": 3
+    },
+    "IFC-127": {
+      "section": "Security",
+      "description": "Implement tenant isolation at database and application layers",
+      "owner": "Backend Dev + DevOps",
+      "status": "PLANNED",
+      "sprint": 10
+    },
+    "IFC-128": {
+      "section": "AI Foundation",
+      "description": "Establish AI output review and manual fallback processes",
+      "owner": "QA Lead + Tech Lead",
+      "status": "PLANNED",
+      "sprint": 3
+    },
+    "IFC-129": {
+      "section": "Testing",
+      "description": "Write UI and contract tests for core pages and tRPC endpoints",
+      "owner": "QA + Frontend Dev",
+      "status": "PLANNED",
+      "sprint": 6
+    },
+    "IFC-130": {
+      "section": "Validation",
+      "description": "Release governance: staging auto-deploy, promotion policy, quality/security gates, rollback criteria",
+      "owner": "DevOps Lead",
+      "status": "PLANNED",
+      "sprint": 5
+    },
+    "IFC-131": {
+      "section": "Foundation Setup",
+      "description": "Architecture boundary enforcement: domain/infrastructure dependency rules + architecture tests in CI",
+      "owner": "Tech Lead",
+      "status": "PLANNED",
+      "sprint": 4
+    },
+    "IFC-132": {
+      "section": "Security",
+      "description": "Supply chain security: dependency pinning + SBOM generation in CI (npm/pnpm + container)",
+      "owner": "Security Engineer + DevOps",
+      "status": "PLANNED",
+      "sprint": 6
+    },
+    "IFC-133": {
+      "section": "Security",
+      "description": "Supply chain security: artifact signing + provenance for build outputs (images + releases)",
+      "owner": "DevOps Engineer",
+      "status": "PLANNED",
+      "sprint": 6
+    },
+    "IFC-134": {
+      "section": "Security",
+      "description": "Container/image scanning in CI and registry with fail-on-critical policy",
+      "owner": "Security Engineer",
+      "status": "PLANNED",
+      "sprint": 6
+    },
+    "IFC-135": {
+      "section": "Architecture",
+      "description": "Create ADR pack for multi-tenancy; workflow engine choice; agent tool-calling; data classification & retention; audit logging",
+      "owner": "Tech Lead + Architect",
+      "status": "PLANNED",
+      "sprint": 1
+    },
+    "IFC-136": {
+      "section": "Domain",
+      "description": "Implement Case/Matter aggregate root with tasks; deadlines; parties; lawyer assignments",
+      "owner": "Backend Dev + Domain Architect",
+      "status": "PLANNED",
+      "sprint": 3
+    },
+    "IFC-137": {
+      "section": "Scheduling",
+      "description": "Develop Appointment aggregate with conflict detection; buffers; recurrence; linkage to cases and calendars",
+      "owner": "Backend Dev + Calendar Specialist",
+      "status": "PLANNED",
+      "sprint": 4
+    },
+    "IFC-138": {
+      "section": "Integration",
+      "description": "Integrate external calendar providers (Google/Microsoft) with bidirectional sync; webhook handling; idempotency; reconciliation",
+      "owner": "Backend Dev + DevOps",
+      "status": "PLANNED",
+      "sprint": 5
+    },
+    "IFC-139": {
+      "section": "AI Assistant",
+      "description": "Expose application services as agent tools and implement human approval flows with preview and rollback for high-risk actions",
+      "owner": "AI Specialist + Backend Dev",
+      "status": "PLANNED",
+      "sprint": 6
+    },
+    "IFC-140": {
+      "section": "Compliance",
+      "description": "Implement data governance workflows: DSAR requests; retention & legal hold policies; tenant-specific encryption key management; data residency compliance",
+      "owner": "Legal Ops + Security Eng",
+      "status": "PLANNED",
+      "sprint": 7
+    },
+    "IFC-141": {
+      "section": "Workflow",
+      "description": "Evaluate n8n; custom engine; and Temporal; document decision via ADR; build event-driven minimal rules engine and integrate selected workflow engine",
+      "owner": "Tech Lead + DevOps + Product Manager",
+      "status": "PLANNED",
+      "sprint": 4
+    },
+    "IFC-142": {
+      "section": "Operations",
+      "description": "Define SLOs/SLIs and alerting; establish on-call and incident management process; conduct restore drills; create capacity and cost budgets for AI inference and search",
+      "owner": "SRE Lead + DevOps + Finance",
+      "status": "PLANNED",
+      "sprint": 8
+    },
+    "IFC-143": {
+      "section": "Security",
+      "description": "Perform threat modeling and abuse-case analysis for multi-tenancy and agent tool-calling; design mitigations; schedule penetration test; implement cookie consent mechanism",
+      "owner": "Security Lead + AI Specialist",
+      "status": "PLANNED",
+      "sprint": 6
+    },
+    "IFC-144": {
+      "section": "Integration",
+      "description": "Design and implement inbound/outbound email flows: SPF/DKIM/DMARC; inbound parsing; attachments; implement general webhook handling with idempotency and retries; publish public API specification (OpenAPI) with versioning; baseline inbound email feature delivered",
+      "owner": "Integration Lead + Backend Dev",
+      "status": "PLANNED",
+      "sprint": 7
+    },
+    "IFC-145": {
+      "section": "Migration",
+      "description": "Plan and execute legacy system migration: discover and map data; assess data quality; design migration scripts; run rehearsals and reconciliation reporting; finalize cutover with rollback plan",
+      "owner": "Data Engineer + DBA + PM",
+      "status": "PLANNED",
+      "sprint": 9
+    },
+    "IFC-146": {
+      "section": "Planning",
+      "description": "Define PRD and user journey templates; create Definition of Ready criteria; develop traceability matrix linking capabilities to domain services; APIs; UIs; and tests",
+      "owner": "Product Manager + Tech Lead",
+      "status": "PLANNED",
+      "sprint": 2
+    },
+    "IFC-147": {
+      "section": "UI/Domain",
+      "description": "Develop Case timeline UI with deadline engine: display tasks; deadlines; events; implement deadline engine to compute legal deadlines and reminders; integrate with scheduling",
+      "owner": "Frontend Dev + Backend Dev",
+      "status": "PLANNED",
+      "sprint": 5
+    },
+    "IFC-148": {
+      "section": "AI Assistant",
+      "description": "Implement conversation record entity: store chat transcripts; tool calls; actions per case; enable search and retrieval; integrate audit logging and data retention policies",
+      "owner": "Backend Dev + AI Specialist",
+      "status": "PLANNED",
+      "sprint": 6
+    },
+    "IFC-149": {
+      "section": "AI Assistant",
+      "description": "Implement action preview and rollback UI for agent-initiated changes; integrated with approval flows",
+      "owner": "Frontend Dev + AI Specialist",
+      "status": "PLANNED",
+      "sprint": 6
+    },
+    "EXC-SEC-001": {
+      "section": "AI Foundation",
+      "description": "Implement Secrets Management (e.g., HashiCorp Vault) for API Keys (OpenAI, etc.).",
+      "owner": "Security Eng + DevOps",
+      "status": "DONE",
+      "sprint": 0,
+      "completed_at": "2025-12-14T20:40:51Z",
+      "duration_minutes": 6,
+      "metrics_file": "../sprint-0/phase-2-parallel/parallel-c/EXC-SEC-001.json"
+    },
+    "IFC-150": {
+      "section": "Platform",
+      "description": "Domain events infrastructure: event contracts + versioning + outbox pattern + idempotent publishing",
+      "owner": "Backend Dev + Architect",
+      "status": "PLANNED",
+      "sprint": 3
+    },
+    "IFC-151": {
+      "section": "Platform",
+      "description": "Event consumers framework: retries + DLQ + backoff + observability; standard webhook/idempotency utilities",
+      "owner": "Backend Dev + SRE",
+      "status": "PLANNED",
+      "sprint": 4
+    },
+    "IFC-152": {
+      "section": "Case Docs",
+      "description": "Case document model: storage metadata, versioning, ACL mapping (tenant + case + role), and audit hooks",
+      "owner": "Backend Dev + Domain Architect",
+      "status": "PLANNED",
+      "sprint": 6
+    },
+    "IFC-153": {
+      "section": "Case Docs",
+      "description": "Ingestion pipeline for case files: upload/email attachment intake, antivirus scan, metadata extraction, storage, and indexing triggers",
+      "owner": "Backend Dev + Integration Eng",
+      "status": "PLANNED",
+      "sprint": 7
+    },
+    "IFC-154": {
+      "section": "Case Docs",
+      "description": "OCR + text extraction worker for scanned PDFs/images; normalized text artifacts stored for search and RAG",
+      "owner": "Backend Dev + AI Specialist",
+      "status": "PLANNED",
+      "sprint": 8
+    },
+    "IFC-155": {
+      "section": "Search/AI",
+      "description": "Permissioned indexing for case documents and notes: full-text + embeddings with tenant/case ACL filters",
+      "owner": "Backend Dev + AI Specialist",
+      "status": "PLANNED",
+      "sprint": 8
+    },
+    "IFC-156": {
+      "section": "AI Assistant",
+      "description": "Case RAG tool: agent retrieval tool constrained by tenant/case permissions; citations + source trace; prompt-injection hardening for retrieved content",
+      "owner": "AI Specialist + Security",
+      "status": "PLANNED",
+      "sprint": 9
+    },
+    "IFC-157": {
+      "section": "Notifications",
+      "description": "Notification service MVP: unified delivery (in-app + email) with preference model (backend), templates, and audit logging",
+      "owner": "Backend Dev + SRE",
+      "status": "PLANNED",
+      "sprint": 7
+    },
+    "IFC-158": {
+      "section": "Scheduling",
+      "description": "Scheduling communications: ICS invites, reschedule/cancel flows, reminders; integrated with notification service and calendar sync",
+      "owner": "Backend Dev + Calendar Specialist",
+      "status": "PLANNED",
+      "sprint": 8
+    },
+    "IFC-159": {
+      "section": "UI/Domain",
+      "description": "Case timeline enrichment: include documents/versions, communications (email/WhatsApp), and agent actions/approvals as timeline events",
+      "owner": "Frontend Dev + Backend Dev",
+      "status": "PLANNED",
+      "sprint": 9
+    },
+    "IFC-160": {
+      "section": "Planning",
+      "description": "Artifact path conventions + CI lint to prevent repo drift",
+      "owner": "Tech Lead + DevOps",
+      "status": "IN_PROGRESS",
+      "sprint": 0
+    },
+    "IFC-163": {
+      "section": "Platform",
+      "description": "Standardize worker runtime under apps/workers (events, ingestion, notifications) with shared job framework, metrics, and deployment packaging",
+      "owner": "SRE Lead + Backend Dev",
+      "status": "PLANNED",
+      "sprint": 6
+    }
+  }
+}

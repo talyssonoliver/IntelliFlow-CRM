@@ -1,0 +1,38 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "AUTOMATION-002",
+  "description": "AI Performance Dashboard and Optimization Loop",
+  "owner": "DevOps + AI Monitoring",
+  "status": "PLANNED",
+  "sprint": "sprint-0",
+  "phase": "phase-5-completion",
+  "stream": null,
+  "dependencies": [
+    "AUTOMATION-001"
+  ],
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 120,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "dora_quality_metrics_dashboard_live": {
+      "target": true,
+      "actual": null,
+      "unit": "boolean"
+    },
+    "weekly_review_cadence_established": {
+      "target": true,
+      "actual": null,
+      "unit": "boolean"
+    },
+    "action_items_tracked": {
+      "target": true,
+      "actual": null,
+      "unit": "boolean"
+    }
+  },
+  "artifacts": [],
+  "validations": [],
+  "blockers": []
+}

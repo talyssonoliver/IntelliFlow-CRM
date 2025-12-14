@@ -1,0 +1,36 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "EXC-INIT-001",
+  "description": "Sprint 0 - Environment Setup with Agent Ecosystem",
+  "owner": "Tech Lead",
+  "status": "DONE",
+  "sprint": "sprint-0",
+  "phase": "phase-0-initialisation",
+  "stream": null,
+  "dependencies": [],
+  "dependencies_resolved": [],
+  "started_at": "2025-12-14T20:00:00Z",
+  "completed_at": "2025-12-14T20:05:00Z",
+  "target_duration_minutes": 240,
+  "actual_duration_minutes": 5,
+  "kpis": {
+    "setup_time_hours": {
+      "target": 4,
+      "actual": null,
+      "unit": "hours"
+    },
+    "automation_percentage": {
+      "target": 80,
+      "actual": null,
+      "unit": "percent"
+    },
+    "manual_configuration_errors": {
+      "target": 0,
+      "actual": null,
+      "unit": "count"
+    }
+  },
+  "artifacts": [],
+  "validations": [],
+  "blockers": []
+}

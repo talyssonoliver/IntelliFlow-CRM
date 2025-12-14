@@ -1,0 +1,285 @@
+{
+  "$schema": "../schemas/kpi-definitions.schema.json",
+  "version": "1.0.0",
+  "last_updated": "2025-12-14T21:00:00Z",
+  "description": "Standardized KPI definitions for consistent measurement across all sprints",
+  
+  "categories": {
+    "performance": {
+      "name": "Performance Metrics",
+      "kpis": {
+        "api_response_time": {
+          "name": "API Response Time",
+          "description": "End-to-end API response time for typical requests",
+          "unit": "milliseconds",
+          "targets": {
+            "p95": 100,
+            "p99": 200
+          },
+          "measurement_method": "Load testing with k6 or Artillery",
+          "validation_command": "pnpm run test:load"
+        },
+        "database_query_time": {
+          "name": "Database Query Time",
+          "description": "Query execution time for standard operations",
+          "unit": "milliseconds",
+          "targets": {
+            "simple": 20,
+            "complex": 100
+          },
+          "measurement_method": "Prisma query profiling",
+          "validation_command": "pnpm run db:profile"
+        },
+        "build_time": {
+          "name": "Monorepo Build Time",
+          "description": "Full monorepo build duration",
+          "unit": "minutes",
+          "targets": {
+            "max": 3
+          },
+          "measurement_method": "CI pipeline timing",
+          "validation_command": "pnpm run build"
+        },
+        "first_contentful_paint": {
+          "name": "First Contentful Paint",
+          "description": "Time to first contentful paint on page load",
+          "unit": "seconds",
+          "targets": {
+            "max": 1.0
+          },
+          "measurement_method": "Lighthouse audit",
+          "validation_command": "pnpm run lighthouse"
+        }
+      }
+    },
+    "quality": {
+      "name": "Code Quality Metrics",
+      "kpis": {
+        "test_coverage": {
+          "name": "Test Coverage",
+          "description": "Percentage of code covered by automated tests",
+          "unit": "percent",
+          "targets": {
+            "domain": 95,
+            "application": 90,
+            "overall": 90
+          },
+          "measurement_method": "Vitest coverage report",
+          "validation_command": "pnpm run test:coverage"
+        },
+        "type_safety": {
+          "name": "Type Safety Score",
+          "description": "TypeScript strict mode compliance",
+          "unit": "boolean",
+          "targets": {
+            "strict_mode": true,
+            "no_any": true
+          },
+          "measurement_method": "TypeScript compiler checks",
+          "validation_command": "pnpm run typecheck"
+        },
+        "lint_violations": {
+          "name": "Lint Violations",
+          "description": "Number of ESLint/SonarLint violations",
+          "unit": "count",
+          "targets": {
+            "errors": 0,
+            "warnings": 0
+          },
+          "measurement_method": "ESLint audit",
+          "validation_command": "pnpm run lint"
+        }
+      }
+    },
+    "automation": {
+      "name": "Automation Metrics",
+      "kpis": {
+        "automation_percentage": {
+          "name": "Task Automation Percentage",
+          "description": "Percentage of tasks completed with AI/automation",
+          "unit": "percent",
+          "targets": {
+            "sprint_0": 80,
+            "overall": 70
+          },
+          "measurement_method": "Manual tracking in task JSON files",
+          "validation_command": null
+        },
+        "manual_interventions": {
+          "name": "Manual Interventions",
+          "description": "Number of manual interventions required",
+          "unit": "count",
+          "targets": {
+            "max": 0
+          },
+          "measurement_method": "Blocker tracking in sprint summary",
+          "validation_command": null
+        },
+        "setup_time": {
+          "name": "Environment Setup Time",
+          "description": "Time required to set up development environment",
+          "unit": "minutes",
+          "targets": {
+            "max": 10
+          },
+          "measurement_method": "Timed execution of setup scripts",
+          "validation_command": "pnpm run setup"
+        }
+      }
+    },
+    "security": {
+      "name": "Security Metrics",
+      "kpis": {
+        "secrets_in_code": {
+          "name": "Secrets in Code",
+          "description": "Number of hardcoded secrets found in repository",
+          "unit": "count",
+          "targets": {
+            "max": 0
+          },
+          "measurement_method": "Git-secrets or TruffleHog scan",
+          "validation_command": "pnpm run security:scan"
+        },
+        "dependency_vulnerabilities": {
+          "name": "Dependency Vulnerabilities",
+          "description": "Number of known vulnerabilities in dependencies",
+          "unit": "count",
+          "targets": {
+            "critical": 0,
+            "high": 0,
+            "medium": 5
+          },
+          "measurement_method": "npm audit or Snyk scan",
+          "validation_command": "pnpm audit"
+        },
+        "programmatic_secret_access": {
+          "name": "Programmatic Secret Access",
+          "description": "Percentage of secrets accessed programmatically",
+          "unit": "percent",
+          "targets": {
+            "min": 100
+          },
+          "measurement_method": "Vault access logs",
+          "validation_command": null
+        }
+      }
+    },
+    "observability": {
+      "name": "Observability Metrics",
+      "kpis": {
+        "mttr": {
+          "name": "Mean Time To Resolve",
+          "description": "Average time to resolve incidents",
+          "unit": "minutes",
+          "targets": {
+            "max": 30
+          },
+          "measurement_method": "Incident tracking system",
+          "validation_command": null
+        },
+        "mttd": {
+          "name": "Mean Time To Detect",
+          "description": "Average time to detect issues",
+          "unit": "minutes",
+          "targets": {
+            "max": 2
+          },
+          "measurement_method": "Monitoring alerts",
+          "validation_command": null
+        },
+        "trace_correlation": {
+          "name": "Trace Correlation Rate",
+          "description": "Percentage of requests with complete traces",
+          "unit": "percent",
+          "targets": {
+            "min": 100
+          },
+          "measurement_method": "OpenTelemetry trace analysis",
+          "validation_command": null
+        }
+      }
+    },
+    "ai_performance": {
+      "name": "AI/ML Performance",
+      "kpis": {
+        "ai_scoring_latency": {
+          "name": "AI Scoring Latency",
+          "description": "Time for AI to score a lead",
+          "unit": "seconds",
+          "targets": {
+            "max": 2.0
+          },
+          "measurement_method": "LangChain callback timing",
+          "validation_command": "pnpm run test:ai"
+        },
+        "ai_prediction_accuracy": {
+          "name": "AI Prediction Accuracy",
+          "description": "Accuracy of AI predictions",
+          "unit": "percent",
+          "targets": {
+            "min": 85
+          },
+          "measurement_method": "Validation set evaluation",
+          "validation_command": "pnpm run ai:evaluate"
+        },
+        "llm_cost_per_request": {
+          "name": "LLM Cost Per Request",
+          "description": "Average cost of LLM API calls per request",
+          "unit": "dollars",
+          "targets": {
+            "max": 0.01
+          },
+          "measurement_method": "OpenAI API usage tracking",
+          "validation_command": null
+        }
+      }
+    },
+    "sprint_velocity": {
+      "name": "Sprint Velocity Metrics",
+      "kpis": {
+        "tasks_completed": {
+          "name": "Tasks Completed",
+          "description": "Number of tasks completed in sprint",
+          "unit": "count",
+          "targets": {},
+          "measurement_method": "Task status tracking",
+          "validation_command": null
+        },
+        "sprint_completion_rate": {
+          "name": "Sprint Completion Rate",
+          "description": "Percentage of planned tasks completed",
+          "unit": "percent",
+          "targets": {
+            "min": 80
+          },
+          "measurement_method": "Sprint summary calculation",
+          "validation_command": null
+        },
+        "blockers_resolved": {
+          "name": "Blockers Resolved",
+          "description": "Number of blockers encountered and resolved",
+          "unit": "count",
+          "targets": {},
+          "measurement_method": "Blocker tracking in task files",
+          "validation_command": null
+        },
+        "average_task_duration": {
+          "name": "Average Task Duration",
+          "description": "Average time to complete a task",
+          "unit": "minutes",
+          "targets": {},
+          "measurement_method": "Execution duration in task files",
+          "validation_command": null
+        }
+      }
+    }
+  },
+  
+  "measurement_schedule": {
+    "continuous": ["test_coverage", "type_safety", "lint_violations", "build_time"],
+    "per_task": ["automation_percentage", "manual_interventions", "blockers_resolved"],
+    "per_sprint": ["sprint_completion_rate", "tasks_completed", "average_task_duration"],
+    "weekly": ["dependency_vulnerabilities", "secrets_in_code"],
+    "on_demand": ["api_response_time", "first_contentful_paint", "ai_scoring_latency"]
+  }
+}

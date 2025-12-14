@@ -1,0 +1,38 @@
+{
+  "$schema": "../../../schemas/task-status.schema.json",
+  "task_id": "ENV-007-AI",
+  "description": "tRPC Setup with Automated Type Generation",
+  "owner": "Tech Lead + Claude Code",
+  "status": "IN_PROGRESS",
+  "sprint": "sprint-0",
+  "phase": "phase-3-dependencies",
+  "stream": null,
+  "dependencies": [
+    "ENV-006-AI"
+  ],
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 30,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "type_generation_time": {
+      "target": 30,
+      "actual": null,
+      "unit": "seconds"
+    },
+    "type_errors": {
+      "target": 0,
+      "actual": null,
+      "unit": "count"
+    },
+    "ai_validated_contracts": {
+      "target": true,
+      "actual": null,
+      "unit": "boolean"
+    }
+  },
+  "artifacts": [],
+  "validations": [],
+  "blockers": []
+}

@@ -4,8 +4,8 @@ import { Task } from '@/lib/types';
 import { getInitials, truncate } from '@/lib/utils';
 
 interface KanbanViewProps {
-  tasks: Task[];
-  onTaskClick: (task: Task) => void;
+  readonly tasks: Task[];
+  readonly onTaskClick: (task: Task) => void;
 }
 
 export default function KanbanView({ tasks, onTaskClick }: KanbanViewProps) {
@@ -24,17 +24,17 @@ export default function KanbanView({ tasks, onTaskClick }: KanbanViewProps) {
       return planned.slice(0, Math.ceil(planned.length / 2));
     }
     if (columnId === 'todo') {
-      // Show second half of planned tasks in todo
+      // Show second half of planned tasks in to-do column
       const planned = tasks.filter(t => t.status === 'Planned');
       return planned.slice(Math.ceil(planned.length / 2));
     }
     if (columnId === 'review') {
-      // Show first half of completed in review
+      // Show first half of completed tasks in review
       const completed = tasks.filter(t => t.status === 'Completed');
       return completed.slice(0, Math.ceil(completed.length / 2));
     }
     if (columnId === 'done') {
-      // Show second half of completed in done
+      // Show second half of completed tasks in done
       const completed = tasks.filter(t => t.status === 'Completed');
       return completed.slice(Math.ceil(completed.length / 2));
     }
@@ -42,46 +42,59 @@ export default function KanbanView({ tasks, onTaskClick }: KanbanViewProps) {
   };
 
   return (
-    <div className="overflow-x-auto pb-4">
-      <div className="inline-flex gap-4 min-w-full">
+    <div className="w-full">
+      <div className="grid grid-cols-5 gap-2">
         {columns.map(column => {
           const columnTasks = getTasksForColumn(column.id, column.status);
 
           return (
-            <div key={column.id} className="flex-shrink-0 w-80">
-              <div className="bg-gray-100 rounded-lg p-4">
+            <div key={column.id} className="min-w-0">
+              <div className="bg-gray-100 rounded-lg p-2.5">
                 {/* Column Header */}
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-gray-900">{column.title}</h3>
-                  <span className="bg-gray-200 text-gray-700 text-sm font-medium px-2 py-1 rounded-full">
+                <div className="flex items-center justify-between mb-2.5">
+                  <h3 className="font-semibold text-gray-900 text-sm">{column.title}</h3>
+                  <span className="bg-gray-200 text-gray-700 text-xs font-medium px-1.5 py-0.5 rounded-full">
                     {columnTasks.length}
                   </span>
                 </div>
 
                 {/* Tasks */}
-                <div className="space-y-3 min-h-[200px]">
+                <div className="space-y-2 min-h-[200px]">
                   {columnTasks.map(task => {
-                    // Simple priority based on section
-                    const priority = task.section.includes('Security') ? 'high' :
-                                   task.section.includes('Core') ? 'medium' : 'low';
+                    // Determine priority based on section
+                    let priority: 'high' | 'medium' | 'low';
+                    if (task.section.includes('Security')) {
+                      priority = 'high';
+                    } else if (task.section.includes('Core')) {
+                      priority = 'medium';
+                    } else {
+                      priority = 'low';
+                    }
 
-                    const priorityColor = priority === 'high' ? 'border-red-500' :
-                                        priority === 'medium' ? 'border-yellow-500' : 'border-green-500';
+                    let priorityColor: string;
+                    if (priority === 'high') {
+                      priorityColor = 'border-red-500';
+                    } else if (priority === 'medium') {
+                      priorityColor = 'border-yellow-500';
+                    } else {
+                      priorityColor = 'border-green-500';
+                    }
 
                     return (
-                      <div
+                      <button
                         key={task.id}
                         onClick={() => onTaskClick(task)}
-                        className={`bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer border-l-4 ${priorityColor}`}
+                        type="button"
+                        className={`w-full text-left bg-white rounded-lg p-2.5 shadow-sm hover:shadow-md transition-shadow cursor-pointer border-l-4 ${priorityColor}`}
                       >
                         {/* Task ID */}
-                        <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center justify-between mb-1.5">
                           <span className="text-xs font-medium text-gray-500">{task.id}</span>
                           <span className="text-xs text-gray-400">Sprint {task.sprint}</span>
                         </div>
 
                         {/* Description */}
-                        <p className="text-sm text-gray-900 mb-3">
+                        <p className="text-sm text-gray-900 mb-2">
                           {truncate(task.description, 60)}
                         </p>
 
@@ -96,7 +109,7 @@ export default function KanbanView({ tasks, onTaskClick }: KanbanViewProps) {
                             {getInitials(task.owner)}
                           </div>
                         </div>
-                      </div>
+                      </button>
                     );
                   })}
                 </div>

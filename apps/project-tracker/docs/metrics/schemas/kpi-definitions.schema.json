@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "kpi-definitions.schema.json",
+  "title": "KPI Definitions Schema",
+  "description": "Schema for kpi-definitions.json - standardized KPI measurement definitions",
+  "type": "object",
+  "required": ["version", "last_updated", "categories", "measurement_schedule"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "description": {
+      "type": "string"
+    },
+    "categories": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["name", "kpis"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "kpis": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "required": ["name", "description", "unit", "targets", "measurement_method"],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": ["milliseconds", "seconds", "minutes", "percent", "count", "boolean", "dollars"]
+                },
+                "targets": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "oneOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      }
+                    ]
+                  }
+                },
+                "measurement_method": {
+                  "type": "string"
+                },
+                "validation_command": {
+                  "type": ["string", "null"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "measurement_schedule": {
+      "type": "object",
+      "properties": {
+        "continuous": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "per_task": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "per_sprint": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "weekly": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "on_demand": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

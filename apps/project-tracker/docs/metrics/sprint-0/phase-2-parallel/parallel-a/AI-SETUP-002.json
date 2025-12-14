@@ -1,0 +1,40 @@
+{
+  "$schema": "../../../schemas/task-status.schema.json",
+  "task_id": "AI-SETUP-002",
+  "description": "GitHub Copilot Enterprise Automation Setup",
+  "owner": "DevOps Engineer",
+  "status": "DONE",
+  "sprint": "sprint-0",
+  "phase": "phase-2-parallel",
+  "stream": "parallel-a",
+  "dependencies": [
+    "AI-SETUP-001"
+  ],
+  "dependencies_resolved": [
+    "AI-SETUP-001"
+  ],
+  "started_at": "2025-12-14T20:20:00Z",
+  "completed_at": "2025-12-14T20:35:00Z",
+  "target_duration_minutes": 45,
+  "actual_duration_minutes": 15,
+  "kpis": {
+    "copilot_response_time": {
+      "target": 2,
+      "actual": null,
+      "unit": "seconds"
+    },
+    "team_access": {
+      "target": 100,
+      "actual": null,
+      "unit": "percent"
+    },
+    "automation_workflows_active": {
+      "target": true,
+      "actual": null,
+      "unit": "boolean"
+    }
+  },
+  "artifacts": [],
+  "validations": [],
+  "blockers": []
+}

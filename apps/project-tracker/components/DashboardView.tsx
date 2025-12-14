@@ -3,16 +3,16 @@
 import { Task } from '@/lib/types';
 import { countTasksByStatus, calculateCompletionRate } from '@/lib/csv-parser';
 import { groupBy } from '@/lib/utils';
-import { CheckCircle2, Clock, PlayCircle, XCircle } from 'lucide-react';
+import React from 'react';
+import { Clock, CheckCircle2, PlayCircle } from 'lucide-react';
 
 interface DashboardViewProps {
-  tasks: Task[];
-  allTasks: Task[];
-  sections: string[];
-  onTaskClick: (task: Task) => void;
+  readonly tasks: Task[];
+  readonly sections: string[];
+  readonly onTaskClick: (task: Task) => void;
 }
 
-export default function DashboardView({ tasks, allTasks, sections, onTaskClick }: DashboardViewProps) {
+export default function DashboardView({ tasks, sections, onTaskClick }: DashboardViewProps) {
   const stats = countTasksByStatus(tasks);
   const completionRate = calculateCompletionRate(tasks);
   const tasksBySection = groupBy(tasks, 'section');
@@ -152,10 +152,12 @@ export default function DashboardView({ tasks, allTasks, sections, onTaskClick }
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      task.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                      task.status === 'In Progress' ? 'bg-blue-100 text-blue-800' :
-                      task.status === 'Blocked' ? 'bg-red-100 text-red-800' :
-                      'bg-gray-100 text-gray-800'
+                      (() => {
+                        if (task.status === 'Completed') return 'bg-green-100 text-green-800';
+                        if (task.status === 'In Progress') return 'bg-blue-100 text-blue-800';
+                        if (task.status === 'Blocked') return 'bg-red-100 text-red-800';
+                        return 'bg-gray-100 text-gray-800';
+                      })()
                     }`}>
                       {task.status}
                     </span>

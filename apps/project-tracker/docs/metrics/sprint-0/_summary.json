@@ -1,0 +1,154 @@
+{
+  "sprint": "sprint-0",
+  "name": "Foundation & AI Setup",
+  "target_date": "2025-01-17",
+  
+  "started_at": "2025-12-14T20:25:00Z",
+  "completed_at": null,
+  
+  "phases": [
+    {
+      "id": "phase-0-initialisation",
+      "status": "DONE",
+      "started_at": "2025-12-14T20:00:00Z",
+      "completed_at": "2025-12-14T20:05:00Z"
+    },
+    {
+      "id": "phase-1-ai-foundation",
+      "status": "DONE",
+      "started_at": "2025-12-14T20:05:00Z",
+      "completed_at": "2025-12-14T20:20:00Z"
+    },
+    {
+      "id": "phase-2-parallel",
+      "status": "IN_PROGRESS",
+      "started_at": "2025-12-14T20:20:00Z",
+      "completed_at": null
+    },
+    {
+      "id": "phase-3-dependencies",
+      "status": "NOT_STARTED",
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "id": "phase-4-integration",
+      "status": "NOT_STARTED",
+      "started_at": null,
+      "completed_at": null
+    }
+  ],
+  
+  "task_summary": {
+    "total": 27,
+    "done": 7,
+    "in_progress": 11,
+    "blocked": 0,
+    "not_started": 9,
+    "failed": 0
+  },
+  
+  "kpi_summary": {
+    "setup_time_hours": {
+      "target": 4,
+      "actual": 2.5,
+      "status": "ON_TARGET",
+      "unit": "hours"
+    },
+    "automation_percentage": {
+      "target": 80,
+      "actual": 25.9,
+      "status": "BELOW_TARGET",
+      "unit": "percent"
+    },
+    "manual_interventions": {
+      "target": 0,
+      "actual": 5,
+      "status": "ABOVE_TARGET",
+      "unit": "count"
+    },
+    "tasks_completed": {
+      "target": 27,
+      "actual": 7,
+      "status": "BELOW_TARGET",
+      "unit": "count"
+    },
+    "blockers_resolved": {
+      "target": null,
+      "actual": 3,
+      "status": "MEASURING",
+      "unit": "count"
+    }
+  },
+  
+  "blockers": [
+    {
+      "task_id": "ENV-004-AI",
+      "blocker": "Supabase CLI not installed globally, required npx workaround",
+      "owner": "DevOps",
+      "raised_at": "2025-12-14T20:25:00Z",
+      "resolved_at": "2025-12-14T20:29:00Z"
+    },
+    {
+      "task_id": "EXC-SEC-001",
+      "blocker": "HashiCorp Vault not provisioned on system",
+      "owner": "DevOps",
+      "raised_at": "2025-12-14T20:35:00Z",
+      "resolved_at": "2025-12-14T20:39:00Z"
+    },
+    {
+      "task_id": "EXC-SEC-001",
+      "blocker": "Chocolatey installation requires Administrator privileges",
+      "owner": "DevOps",
+      "raised_at": "2025-12-14T20:36:00Z",
+      "resolved_at": "2025-12-14T20:37:00Z"
+    },
+    {
+      "task_id": "ENV-004-AI",
+      "blocker": "ENV-003-AI (Docker) prerequisite - resolved, Docker containers now healthy",
+      "owner": "DevOps",
+      "raised_at": "2025-12-14T21:00:00Z",
+      "resolved_at": "2025-12-14T22:01:50Z"
+    }
+  ],
+  
+  "completed_tasks": [
+    {
+      "task_id": "EXC-INIT-001",
+      "completed_at": "2025-12-14T20:05:00Z",
+      "duration_minutes": 5
+    },
+    {
+      "task_id": "AI-SETUP-001",
+      "completed_at": "2025-12-14T20:20:00Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "AI-SETUP-002",
+      "completed_at": "2025-12-14T20:45:00Z",
+      "duration_minutes": 25
+    },
+    {
+      "task_id": "AI-SETUP-003",
+      "completed_at": "2025-12-14T20:50:00Z",
+      "duration_minutes": 30
+    },
+    {
+      "task_id": "ENV-001-AI",
+      "completed_at": "2025-12-14T21:10:00Z",
+      "duration_minutes": 50
+    },
+    {
+      "task_id": "ENV-002-AI",
+      "completed_at": "2025-12-14T21:45:00Z",
+      "duration_minutes": 85
+    },
+    {
+      "task_id": "EXC-SEC-001",
+      "completed_at": "2025-12-14T22:03:04Z",
+      "duration_minutes": 90
+    }
+  ],
+  
+  "notes": "Phase 0 & 1 complete. Docker containers operational (postgres, redis, postgres-test, redis-test). Vault dev server running. 7/27 tasks done (26%), 11 in progress (41%). Project tracker with SSE file watching implemented. ESLint 9 + TypeScript configured. Phase 2 (Parallel streams) actively progressing with 11 concurrent tasks. 9 tasks remain not started. Critical path: ENV-003-AI completion → ENV-004-AI → ENV-006-AI chain."
+}

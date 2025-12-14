@@ -47,52 +47,78 @@ All project tasks are tracked in `Sprint_plan.csv` with the following structure:
 ```
 intelliFlow-CRM/
 ├── apps/
-│   ├── web/              # Next.js frontend application
-│   ├── api/              # tRPC API server
-│   └── ai-worker/        # AI processing worker (LangChain/CrewAI)
+│   ├── web/                   # Next.js frontend application
+│   ├── api/                   # tRPC API server
+│   ├── ai-worker/             # AI processing worker (LangChain/CrewAI)
+│   └── project-tracker/       # Sprint tracker & metrics dashboard (Next.js)
+│       └── docs/
+│           └── metrics/       # **CRITICAL**: Metrics tracking infrastructure
+│               ├── schemas/   # JSON schemas for task/phase/sprint metrics
+│               ├── sprint-0/  # Sprint 0 metrics with phase breakdown
+│               └── _global/   # **Sprint_plan.json & Sprint_plan.csv location**
 ├── packages/
-│   ├── db/               # Prisma schema and database client
-│   ├── domain/           # Domain models (DDD approach)
-│   ├── application/      # Application layer (use cases, ports)
-│   ├── adapters/         # Infrastructure adapters (repos, external APIs)
-│   ├── validators/       # Zod validation schemas
-│   ├── api-client/       # Generated tRPC client
-│   └── ui/               # Shared UI components (shadcn/ui based)
+│   ├── db/                    # Prisma schema and database client
+│   ├── domain/                # Domain models (DDD approach)
+│   ├── application/           # Application layer (use cases, ports)
+│   ├── adapters/              # Infrastructure adapters (repos, external APIs)
+│   ├── validators/            # Zod validation schemas
+│   ├── api-client/            # Generated tRPC client
+│   └── ui/                    # Shared UI components (shadcn/ui based)
 ├── infra/
-│   ├── docker/           # Docker configurations
-│   ├── supabase/         # Supabase migrations and config
-│   ├── monitoring/       # Observability configs (OpenTelemetry, Grafana)
-│   └── terraform/        # Infrastructure as Code
-├── docs/                 # Docusaurus documentation
-│   ├── planning/         # ADRs, feasibility, architecture docs
-│   │   └── adr/          # Architecture Decision Records
-│   ├── domain/           # Domain model documentation
-│   ├── operations/       # Runbooks, incident response
-│   └── security/         # Security documentation
-├── artifacts/            # Build artifacts, reports, metrics
-│   ├── benchmarks/       # Performance benchmarks
-│   ├── coverage/         # Test coverage reports
-│   ├── lighthouse/       # Lighthouse performance reports
-│   ├── logs/             # Build and test logs
-│   ├── metrics/          # Metrics data (JSON/CSV)
-│   ├── misc/             # Configuration files, test data
-│   └── reports/          # Analysis reports (PDFs, Excel)
-├── tests/                # Shared test utilities
-│   ├── e2e/              # Playwright E2E tests
-│   └── integration/      # Integration tests
-├── .claude/              # Claude Code configuration
-│   └── commands/         # Custom slash commands
-├── Sprint_plan.csv       # Complete task breakdown (303 tasks)
-└── Readme.md             # Sprint decomposition and automation strategy
+│   ├── docker/                # Docker configurations
+│   ├── supabase/              # Supabase migrations and config
+│   ├── monitoring/            # Observability configs (OpenTelemetry, Grafana)
+│   └── terraform/             # Infrastructure as Code
+├── docs/                      # Docusaurus documentation
+│   ├── planning/              # ADRs, feasibility, architecture docs
+│   │   └── adr/               # Architecture Decision Records
+│   ├── domain/                # Domain model documentation
+│   ├── operations/            # Runbooks, incident response
+│   └── security/              # Security documentation
+├── artifacts/                 # Build artifacts, reports, metrics
+│   ├── benchmarks/            # Performance benchmarks
+│   ├── coverage/              # Test coverage reports
+│   ├── logs/                  # Build and test logs
+│   ├── metrics/               # Sprint metrics (JSON/CSV)
+│   ├── misc/                  # Configuration files, test data
+│   │   ├── access-policy.json
+│   │   ├── commitlint.config.js
+│   │   ├── docker-compose.yml
+│   │   ├── docusaurus.config.js
+│   │   ├── health-check.yaml
+│   │   ├── vault-config.yaml
+│   │   └── workflow-automation.yaml
+│   └── reports/               # Analysis reports (PDFs, Excel)
+├── tests/                     # Shared test utilities
+│   ├── e2e/                   # Playwright E2E tests
+│   └── integration/           # Integration tests
+├── scripts/
+│   └── migration/             # Migration scripts and tracking
+│       └── artifact-move-map.csv  # Artifact relocation tracking
+├── .claude/                   # Claude Code configuration
+│   └── commands/              # Custom slash commands
+├── supabase/                  # **Supabase local dev (ENV-004-AI)**
+│   ├── config.toml            # Supabase configuration
+│   └── .gitignore
+└── Readme.md                  # Sprint decomposition and automation strategy
 ```
 
 **Artifact Conventions** (from `IFC-160`):
 - All artifacts follow consistent path conventions enforced by CI linter
 - Performance reports: `artifacts/benchmarks/`
 - Test coverage: `artifacts/coverage/`
-- Configuration: `artifacts/misc/`
-- Metrics: `artifacts/metrics/`
+- Configuration: `artifacts/misc/` (access-policy.json, vault-config.yaml, etc.)
+- Metrics: `artifacts/metrics/` (sprint metrics, KPI tracking)
 - Reports: `artifacts/reports/`
+
+**⚠️ CRITICAL FILE LOCATIONS** (Do NOT move without updating references):
+- **Sprint_plan.json**: `apps/project-tracker/docs/metrics/_global/Sprint_plan.json`
+- **Sprint_plan.csv**: `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`
+- **Metrics Infrastructure**: `apps/project-tracker/docs/metrics/`
+  - Task status files: `sprint-0/phase-*/TASK-ID.json`
+  - Phase summaries: `sprint-0/phase-*/_phase-summary.json`
+  - Sprint summary: `sprint-0/_summary.json`
+  - JSON schemas: `schemas/*.schema.json`
 
 ## Development Commands
 
@@ -478,8 +504,22 @@ Key metrics tracked:
 9. **Artifact Paths**: Follow conventions from `IFC-160`
    - Paths are linted in CI
    - Wrong paths will cause CI failures
+   - Use `scripts/migration/artifact-move-map.csv` to track relocations
 
-10. **Hexagonal Architecture**: Domain layer CANNOT depend on infrastructure
+10. **Sprint Plan Location**: **NEVER move Sprint_plan files without updating API routes**
+   - Sprint_plan.json: `apps/project-tracker/docs/metrics/_global/`
+   - Sprint_plan.csv: `apps/project-tracker/docs/metrics/_global/`
+   - Referenced by: `apps/project-tracker/app/api/sprint-plan/route.ts`
+   - Tracker dashboard: http://localhost:3002/
+
+11. **Metrics Infrastructure**: Structured JSON tracking prevents fabrication
+   - Task files: `apps/project-tracker/docs/metrics/sprint-0/phase-*/*.json`
+   - Must include: SHA256 hashes, ISO timestamps, validation results
+   - Update Sprint_plan.csv when completing tasks (status → "Completed")
+   - Update corresponding JSON file with execution details
+   - Schemas enforce: `task-status.schema.json`, `phase-summary.schema.json`, `sprint-summary.schema.json`
+
+12. **Hexagonal Architecture**: Domain layer CANNOT depend on infrastructure
     - Enforced by architecture tests in `packages/architecture-tests/`
     - Violations will fail CI
 
@@ -500,11 +540,21 @@ The project follows an aggressive AI-assisted sprint plan with **303 tasks acros
 
 ### Sprint Phases
 
-**Sprint 0 (Foundation)** - 23 tasks
+**Sprint 0 (Foundation)** - 27 tasks total, **2 completed** (7.4%)
 - AI tooling setup (Claude Code, GitHub Copilot, external AI tools)
 - Automated environment creation (monorepo, Docker, CI/CD)
 - Infrastructure (Supabase, Prisma, tRPC, observability)
 - Security foundations (secrets management, zero trust)
+
+**✅ Completed Tasks**:
+- **ENV-004-AI**: Supabase Integration (2025-12-14, 5 min)
+  - Initialized Supabase with `supabase init`
+  - Created config.toml and directory structure
+  - Status: `apps/project-tracker/docs/metrics/sprint-0/phase-3-dependencies/ENV-004-AI.json`
+- **EXC-SEC-001**: HashiCorp Vault Setup (2025-12-14, 6 min)
+  - Installed Vault v1.21.1 via Chocolatey
+  - Dev server running on http://127.0.0.1:8200
+  - Status: `apps/project-tracker/docs/metrics/sprint-0/phase-2-parallel/parallel-c/EXC-SEC-001.json`
 
 **Sprint 1 (Validation)** - Architecture & security
 - Technical architecture spike (`IFC-001`)
@@ -610,9 +660,140 @@ This tells you:
 - Ensure domain has no infrastructure deps (verified by tests)
 - Document in ADR
 
+## Metrics & Progress Tracking
+
+### Real-Time Metrics Dashboard
+
+**Location**: http://localhost:3002/ (project-tracker app)
+
+**Features**:
+- **Live Sprint Progress**: Auto-refreshes every 30 seconds
+- **Phase Breakdown**: Visual progress for all 5 Sprint 0 phases
+- **KPI Tracking**: Automation %, manual interventions, blockers
+- **Completed Tasks**: Timeline with duration metrics
+- **Blocker History**: All blockers with resolution status
+
+**API Endpoints**:
+- `/api/metrics/sprint` - Sprint summary with KPIs
+- `/api/metrics/phases` - All phase progress
+- `/api/metrics/task/[taskId]` - Individual task details
+
+### Task Completion Workflow
+
+When completing a Sprint_plan task:
+
+1. **Update Sprint_plan.csv**: Change `Status` column from "Planned" → "Completed"
+2. **Create Task JSON**: Add `{TASK-ID}.json` in appropriate phase folder
+3. **Update Phase Summary**: Modify `_phase-summary.json` aggregated metrics
+4. **Update Sprint Summary**: Update `sprint-0/_summary.json` with new totals
+5. **Verify Dashboard**: Check http://localhost:3002/ Metrics tab shows update
+
+**Required Task JSON Fields**:
+- `task_id`, `section`, `description`, `owner`
+- `dependencies` with verification timestamp
+- `status_history` with ISO 8601 timestamps
+- `execution` details (duration, executor, log path)
+- `artifacts.created` with SHA256 hashes
+- `validations` with command, exit code, passed status
+- `kpis` with target vs actual and met boolean
+- `blockers` with raised_at and resolved_at
+
+**Example**: See completed tasks
+- `apps/project-tracker/docs/metrics/sprint-0/phase-3-dependencies/ENV-004-AI.json`
+- `apps/project-tracker/docs/metrics/sprint-0/phase-2-parallel/parallel-c/EXC-SEC-001.json`
+
+### Anti-Fabrication Measures
+
+All metrics use cryptographic verification:
+- **SHA256 hashes**: Prove artifact creation
+- **Stdout hashes**: Verify command execution
+- **ISO 8601 timestamps**: Immutable audit trail
+- **Validation exit codes**: Prove test success
+- **JSON schemas**: Enforce data integrity
+
+## Data Synchronization System
+
+### Single Source of Truth
+
+**CRITICAL**: `Sprint_plan.csv` is the **single source of truth** for all task data. All JSON files are **derived** from this CSV.
+
+**Architecture**:
+```
+Sprint_plan.csv (SOURCE OF TRUTH)
+       ↓
+   [Auto-Sync Process]
+       ↓
+   ├── Sprint_plan.json
+   ├── task-registry.json
+   ├── Individual task files (*.json)
+   └── Phase summaries (_phase-summary.json)
+```
+
+### Automatic Synchronization
+
+The system **automatically syncs** all metrics files whenever:
+1. **CSV is uploaded** via Upload CSV button
+2. **Page refreshes** and loads CSV from server
+3. **Manual sync** triggered via "Sync" button on Metrics page
+
+**What Gets Synced**:
+- `Sprint_plan.json` - Structured JSON grouped by section
+- `task-registry.json` - Central registry with status tracking
+- Individual task files - All `{TASK_ID}.json` files for Sprint 0
+- Phase summaries - Aggregated metrics for each phase
+
+### When to Sync
+
+**Always sync after editing Sprint_plan.csv!**
+
+**Methods** (in order of preference):
+1. ✅ **UI Sync** - Go to Metrics page → Click green "Sync" button → Click "Refresh"
+2. ✅ **Auto-Sync** - Click "Refresh" button on any page (auto-syncs in background)
+3. ✅ **API Call** - `curl -X POST http://localhost:3002/api/sync-metrics`
+4. ✅ **CLI Script** - `cd apps/project-tracker && npx tsx scripts/sync-metrics.ts`
+
+### Important Rules
+
+**✅ DO**:
+- Always edit `Sprint_plan.csv` for task updates
+- Run sync after CSV changes
+- Use the UI sync button (easiest)
+- Check console logs to verify sync succeeded
+
+**❌ DON'T**:
+- Edit JSON files directly (they'll be overwritten)
+- Skip syncing after CSV edits (causes inconsistencies)
+- Edit multiple files manually (only edit the CSV)
+
+### Troubleshooting Inconsistent Data
+
+If metrics don't match after editing CSV:
+1. Click green "Sync" button on Metrics page
+2. Check browser console for "Metrics synced:" message
+3. Click "Refresh" to reload updated data
+4. Verify numbers match your CSV changes
+
+**Manual Verification**:
+```powershell
+$csv = Import-Csv "apps\project-tracker\docs\metrics\_global\Sprint_plan.csv"
+$sprint0 = $csv | Where-Object { $_.'Target Sprint' -eq '0' }
+$sprint0 | Group-Object Status | Select-Object Name, Count
+```
+
+### Implementation Files
+
+- `apps/project-tracker/lib/data-sync.ts` - Sync utility functions
+- `apps/project-tracker/app/api/sync-metrics/route.ts` - API endpoint
+- `apps/project-tracker/scripts/sync-metrics.ts` - CLI script
+- `apps/project-tracker/docs/DATA_SYNC.md` - Full documentation
+
 ## Resources
 
-- **Sprint Plan**: `Sprint_plan.csv` - Complete task breakdown (303 tasks)
+- **Sprint Plan**: `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv` - Complete task breakdown (303 tasks) - **SINGLE SOURCE OF TRUTH**
+- **Sprint JSON**: `apps/project-tracker/docs/metrics/_global/Sprint_plan.json` - Structured task data (auto-generated from CSV)
+- **Metrics Dashboard**: http://localhost:3002/ - Real-time sprint progress
+- **Data Sync Docs**: `apps/project-tracker/docs/DATA_SYNC.md` - Synchronization system documentation
+- **Metrics README**: `apps/project-tracker/docs/metrics/README.md` - Infrastructure documentation
 - **README**: `Readme.md` - Sprint decomposition and automation strategy
 - **ADRs**: Architecture decisions in `docs/planning/adr/`
 - **API Docs**: Auto-generated from tRPC routers (run `pnpm run docs:api`)

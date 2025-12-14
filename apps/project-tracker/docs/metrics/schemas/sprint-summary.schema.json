@@ -1,0 +1,139 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://intelliflow-crm.com/schemas/sprint-summary.schema.json",
+  "title": "Sprint Summary Schema",
+  "description": "Schema for aggregating metrics across an entire sprint",
+  "type": "object",
+  "required": [
+    "sprint",
+    "name",
+    "target_date",
+    "phases",
+    "task_summary"
+  ],
+  "properties": {
+    "sprint": {
+      "type": "string",
+      "pattern": "^sprint-[0-9]+$",
+      "description": "Sprint identifier (e.g., sprint-0)"
+    },
+    "name": {
+      "type": "string",
+      "description": "Sprint name/title"
+    },
+    "target_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Target completion date (YYYY-MM-DD)"
+    },
+    "started_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "phases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "status"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^phase-[0-9]+-[a-z-]+$"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["NOT_STARTED", "IN_PROGRESS", "DONE", "BLOCKED"]
+          },
+          "started_at": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "completed_at": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          }
+        }
+      },
+      "description": "Status of each phase in the sprint"
+    },
+    "task_summary": {
+      "type": "object",
+      "required": ["total", "done", "in_progress", "blocked", "not_started"],
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "done": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "in_progress": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blocked": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "not_started": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failed": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "kpi_summary": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["target", "actual", "status"],
+        "properties": {
+          "target": {},
+          "actual": {},
+          "status": {
+            "type": "string",
+            "enum": ["MEASURING", "ON_TARGET", "BELOW_TARGET", "ABOVE_TARGET", "MET"]
+          },
+          "unit": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["task_id", "blocker", "owner", "raised_at"],
+        "properties": {
+          "task_id": {
+            "type": "string"
+          },
+          "blocker": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "raised_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "resolved_at": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          }
+        }
+      },
+      "description": "Active blockers in the sprint"
+    }
+  }
+}

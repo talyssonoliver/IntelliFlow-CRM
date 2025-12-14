@@ -1,0 +1,38 @@
+{
+  "$schema": "../../../schemas/task-status.schema.json",
+  "task_id": "ENV-012-AI",
+  "description": "Documentation with Auto-Generation",
+  "owner": "Tech Writer + AI Agents",
+  "status": "IN_PROGRESS",
+  "sprint": "sprint-0",
+  "phase": "phase-2-parallel",
+  "stream": "parallel-b",
+  "dependencies": [
+    "ENV-001-AI"
+  ],
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 30,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "doc_generation_time": {
+      "target": 30,
+      "actual": null,
+      "unit": "seconds"
+    },
+    "coverage": {
+      "target": 100,
+      "actual": null,
+      "unit": "percent"
+    },
+    "readability_score": {
+      "target": 90,
+      "actual": null,
+      "unit": "score"
+    }
+  },
+  "artifacts": [],
+  "validations": [],
+  "blockers": []
+}

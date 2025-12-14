@@ -1,0 +1,40 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "AI-SETUP-001",
+  "description": "Configure Claude Code with Custom Commands and Hooks",
+  "owner": "AI Specialist",
+  "status": "DONE",
+  "sprint": "sprint-0",
+  "phase": "phase-1-ai-foundation",
+  "stream": null,
+  "dependencies": [
+    "EXC-INIT-001"
+  ],
+  "dependencies_resolved": [
+    "EXC-INIT-001"
+  ],
+  "started_at": "2025-12-14T20:05:00Z",
+  "completed_at": "2025-12-14T20:20:00Z",
+  "target_duration_minutes": 60,
+  "actual_duration_minutes": 15,
+  "kpis": {
+    "commands_functional": {
+      "target": 100,
+      "actual": null,
+      "unit": "percent"
+    },
+    "hook_trigger_time": {
+      "target": 100,
+      "actual": null,
+      "unit": "milliseconds"
+    },
+    "github_integration_verified": {
+      "target": true,
+      "actual": null,
+      "unit": "boolean"
+    }
+  },
+  "artifacts": [],
+  "validations": [],
+  "blockers": []
+}

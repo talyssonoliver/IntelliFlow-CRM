@@ -3,11 +3,6 @@
  * Connects to apps/api tracker endpoints
  */
 
-import { createTRPCReact } from '@trpc/react-query';
-import type { AppRouter } from '../../../api/src/router'; // Will be created next
-
-export const trpc = createTRPCReact<AppRouter>();
-
 /**
  * API configuration
  */

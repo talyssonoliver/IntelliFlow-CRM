@@ -1,0 +1,151 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "dependency-graph.schema.json",
+  "title": "Dependency Graph Schema",
+  "description": "Schema for dependency-graph.json - cross-sprint dependencies",
+  "type": "object",
+  "required": ["version", "last_updated", "nodes", "critical_paths", "ready_to_start"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "description": {
+      "type": "string"
+    },
+    "nodes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["task_id", "sprint", "status", "dependencies", "dependents"],
+        "properties": {
+          "task_id": {
+            "type": "string"
+          },
+          "sprint": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["DONE", "IN_PROGRESS", "BLOCKED", "PLANNED", "FAILED"]
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "dependents": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "critical_paths": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "tasks", "total_duration_estimate_minutes", "completion_percentage", "blocking_status"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "tasks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "total_duration_estimate_minutes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "completion_percentage": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "blocking_status": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "cross_sprint_dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["from_task", "to_task", "from_sprint", "to_sprint", "dependency_type"],
+        "properties": {
+          "from_task": {
+            "type": "string"
+          },
+          "to_task": {
+            "type": "string"
+          },
+          "from_sprint": {
+            "type": "integer"
+          },
+          "to_sprint": {
+            "type": "integer"
+          },
+          "dependency_type": {
+            "type": "string",
+            "enum": ["REQUIRED", "OPTIONAL", "BLOCKED_BY"]
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "blocked_tasks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ready_to_start": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "dependency_violations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string"
+          },
+          "violation": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "parallel_execution_groups": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

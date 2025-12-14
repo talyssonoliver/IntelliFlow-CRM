@@ -1,0 +1,40 @@
+{
+  "$schema": "../../../schemas/task-status.schema.json",
+  "task_id": "ENV-006-AI",
+  "description": "Prisma Schema with Generated Optimizations",
+  "owner": "Backend Dev + Copilot",
+  "status": "IN_PROGRESS",
+  "sprint": "sprint-0",
+  "phase": "phase-3-dependencies",
+  "stream": null,
+  "dependencies": [
+    "ENV-004-AI"
+  ],
+  "dependencies_resolved": [
+    "ENV-004-AI"
+  ],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 15,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "migration_time": {
+      "target": 15,
+      "actual": null,
+      "unit": "seconds"
+    },
+    "ai_verified_indexes": {
+      "target": true,
+      "actual": null,
+      "unit": "boolean"
+    },
+    "query_optimization": {
+      "target": 100,
+      "actual": null,
+      "unit": "percent"
+    }
+  },
+  "artifacts": [],
+  "validations": [],
+  "blockers": []
+}

@@ -1,0 +1,20 @@
+{
+  "$schema": "../../../schemas/task-status.schema.json",
+  "task_id": "IFC-160",
+  "description": "Artifact path conventions + CI lint to prevent repo drift",
+  "owner": "Tech Lead",
+  "status": "IN_PROGRESS",
+  "sprint": "sprint-0",
+  "phase": "phase-2-parallel",
+  "stream": "parallel-c",
+  "dependencies": [],
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 120,
+  "actual_duration_minutes": null,
+  "kpis": {},
+  "artifacts": [],
+  "validations": [],
+  "blockers": []
+}

@@ -23,8 +23,8 @@ export async function parseCSV(file: File): Promise<ParsedCSVData> {
       complete: (results) => {
         try {
           const tasks = normalizeCSVData(results.data as any[]);
-          const sections = [...new Set(tasks.map(t => t.section))].sort();
-          const owners = [...new Set(tasks.map(t => t.owner))].sort();
+          const sections = [...new Set(tasks.map(t => t.section))].sort((a, b) => a.localeCompare(b));
+          const owners = [...new Set(tasks.map(t => t.owner))].sort((a, b) => a.localeCompare(b));
           const sprints = [...new Set(tasks.map(t => t.sprint))].sort((a, b) => {
             if (a === 'Continuous') return 1;
             if (b === 'Continuous') return -1;
@@ -53,8 +53,8 @@ export function parseCSVText(csvText: string): ParsedCSVData {
   });
 
   const tasks = normalizeCSVData(results.data as any[]);
-  const sections = [...new Set(tasks.map(t => t.section))].sort();
-  const owners = [...new Set(tasks.map(t => t.owner))].sort();
+  const sections = [...new Set(tasks.map(t => t.section))].sort((a, b) => a.localeCompare(b));
+  const owners = [...new Set(tasks.map(t => t.owner))].sort((a, b) => a.localeCompare(b));
   const sprints = [...new Set(tasks.map(t => t.sprint))].sort((a, b) => {
     if (a === 'Continuous') return 1;
     if (b === 'Continuous') return -1;
@@ -119,13 +119,13 @@ function parseSprint(sprintValue: string | number): SprintNumber {
   // Handle ranges like "28-42" - take first number
   if (str.includes('-')) {
     const first = str.split('-')[0].trim();
-    const num = parseInt(first, 10);
-    return isNaN(num) ? 0 : num;
+    const num = Number.parseInt(first, 10);
+    return Number.isNaN(num) ? 0 : num;
   }
 
   // Parse as number
-  const num = parseInt(str, 10);
-  return isNaN(num) ? 0 : num;
+  const num = Number.parseInt(str, 10);
+  return Number.isNaN(num) ? 0 : num;
 }
 
 /**
@@ -135,7 +135,7 @@ function normalizeStatus(status: string): Task['status'] {
   const normalized = (status || 'Planned').trim();
 
   if (normalized === 'In Progress') return 'In Progress';
-  if (normalized === 'Completed') return 'Completed';
+  if (normalized === 'Completed' || normalized === 'Done') return 'Completed';
   if (normalized === 'Blocked') return 'Blocked';
 
   return 'Planned';
@@ -158,11 +158,11 @@ function parseBoolean(value: any): boolean {
 export function groupTasksBySprint(tasks: Task[]): Map<SprintNumber, Task[]> {
   const grouped = new Map<SprintNumber, Task[]>();
 
-  tasks.forEach(task => {
+  for (const task of tasks) {
     const existing = grouped.get(task.sprint) || [];
     existing.push(task);
     grouped.set(task.sprint, existing);
-  });
+  }
 
   return grouped;
 }

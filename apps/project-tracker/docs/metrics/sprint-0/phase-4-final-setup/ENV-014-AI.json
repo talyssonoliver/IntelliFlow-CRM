@@ -1,0 +1,38 @@
+{
+  "$schema": "../../../schemas/task-status.schema.json",
+  "task_id": "ENV-014-AI",
+  "description": "Performance Optimization with AI Profiling",
+  "owner": "Performance Eng + AI Tools",
+  "status": "PLANNED",
+  "sprint": "sprint-0",
+  "phase": "phase-4-final-setup",
+  "stream": null,
+  "dependencies": [
+    "ENV-009-AI"
+  ],
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 120,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "performance_gain": {
+      "target": 40,
+      "actual": null,
+      "unit": "percent"
+    },
+    "ai_optimized_bundles": {
+      "target": true,
+      "actual": null,
+      "unit": "boolean"
+    },
+    "predictive_caching_active": {
+      "target": true,
+      "actual": null,
+      "unit": "boolean"
+    }
+  },
+  "artifacts": [],
+  "validations": [],
+  "blockers": []
+}

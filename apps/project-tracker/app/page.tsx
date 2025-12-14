@@ -1,22 +1,22 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { Upload, BarChart3, Kanban, Settings, FileText, RefreshCw } from 'lucide-react';
+import { Upload, BarChart3, Kanban, Settings, FileText, RefreshCw, Activity } from 'lucide-react';
 import { parseCSV, parseCSVText, type ParsedCSVData } from '@/lib/csv-parser';
 import type { Task, SprintNumber } from '@/lib/types';
 import DashboardView from '@/components/DashboardView';
 import KanbanView from '@/components/KanbanView';
 import AnalyticsView from '@/components/AnalyticsView';
 import SettingsView from '@/components/SettingsView';
+import MetricsView from '@/components/MetricsView';
 import TaskModal from '@/components/TaskModal';
 
-type Page = 'dashboard' | 'kanban' | 'analytics' | 'settings';
+type Page = 'dashboard' | 'kanban' | 'analytics' | 'metrics' | 'settings';
 
 export default function Home() {
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [sections, setSections] = useState<string[]>([]);
-  const [owners, setOwners] = useState<string[]>([]);
   const [sprints, setSprints] = useState<SprintNumber[]>([]);
   const [currentSprint, setCurrentSprint] = useState<SprintNumber>(0);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -32,7 +32,6 @@ export default function Home() {
       const data: ParsedCSVData = await parseCSV(file);
       setAllTasks(data.tasks);
       setSections(data.sections);
-      setOwners(data.owners);
       setSprints(data.sprints);
       if (data.sprints.length > 0) {
         setCurrentSprint(data.sprints[0]);
@@ -53,12 +52,34 @@ export default function Home() {
     setSelectedTask(null);
   }, []);
 
+  // Sync metrics from CSV
+  const syncMetrics = useCallback(async () => {
+    try {
+      const response = await fetch('/api/sync-metrics', {
+        method: 'POST',
+        cache: 'no-store',
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Metrics synced successfully:', result);
+        return true;
+      } else {
+        console.error('Sync failed:', await response.text());
+        return false;
+      }
+    } catch (error) {
+      console.error('Error syncing metrics:', error);
+      return false;
+    }
+  }, []);
+
   // Load Sprint_plan.csv
   const loadSprintPlan = useCallback(async () => {
     setIsLoading(true);
     try {
       // Add timestamp to prevent caching
-      const timestamp = new Date().getTime();
+      const timestamp = Date.now();
       const response = await fetch(`/api/sprint-plan?t=${timestamp}`, {
         cache: 'no-store',
         headers: {
@@ -84,25 +105,26 @@ export default function Home() {
 
       setAllTasks(data.tasks);
       setSections(data.sections);
-      setOwners(data.owners);
       setSprints(data.sprints);
       setLastUpdated(new Date());
       if (data.sprints.length > 0 && currentSprint === 0) {
         setCurrentSprint(data.sprints[0]);
       }
+
+      // Auto-sync metrics after loading CSV
+      console.log('Auto-syncing metrics...');
+      await syncMetrics();
     } catch (error) {
       console.error('Error loading Sprint plan:', error);
       // Don't show alert on auto-load failure, user can still upload manually
     } finally {
       setIsLoading(false);
     }
-  }, [currentSprint]);
+  }, [currentSprint, syncMetrics]);
 
-  // Auto-load on mount and refresh every 5 seconds
+  // Auto-load on mount only (no polling)
   useEffect(() => {
     loadSprintPlan();
-    const interval = setInterval(loadSprintPlan, 5000);
-    return () => clearInterval(interval);
   }, [loadSprintPlan]);
 
   const filteredTasks = currentSprint === 'all'
@@ -132,7 +154,16 @@ export default function Home() {
               {sprints.length > 0 && (
                 <select
                   value={currentSprint}
-                  onChange={(e) => setCurrentSprint(e.target.value === 'all' ? 'all' : e.target.value === 'Continuous' ? 'Continuous' : parseInt(e.target.value))}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === 'all') {
+                      setCurrentSprint('all');
+                    } else if (value === 'Continuous') {
+                      setCurrentSprint('Continuous');
+                    } else {
+                      setCurrentSprint(Number.parseInt(value, 10));
+                    }
+                  }}
                   className="bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">All Sprints</option>
@@ -207,6 +238,17 @@ export default function Home() {
               Analytics
             </button>
             <button
+              onClick={() => setCurrentPage('metrics')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
+                currentPage === 'metrics'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              <Activity className="w-4 h-4" />
+              Metrics
+            </button>
+            <button
               onClick={() => setCurrentPage('settings')}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
                 currentPage === 'settings'
@@ -222,7 +264,7 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {isLoading && (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -253,7 +295,6 @@ export default function Home() {
             {currentPage === 'dashboard' && (
               <DashboardView
                 tasks={filteredTasks}
-                allTasks={allTasks}
                 sections={sections}
                 onTaskClick={handleTaskClick}
               />
@@ -266,9 +307,12 @@ export default function Home() {
             )}
             {currentPage === 'analytics' && (
               <AnalyticsView
-                tasks={allTasks}
+                tasks={filteredTasks}
                 sections={sections}
               />
+            )}
+            {currentPage === 'metrics' && (
+              <MetricsView />
             )}
             {currentPage === 'settings' && (
               <SettingsView />

@@ -5,7 +5,7 @@
 
 export type TaskStatus = 'Planned' | 'In Progress' | 'Completed' | 'Blocked';
 
-export type SprintNumber = number | 'Continuous';
+export type SprintNumber = number | 'Continuous' | 'all';
 
 export interface Task {
   id: string;                    // Task ID

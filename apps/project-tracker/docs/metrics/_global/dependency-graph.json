@@ -1,0 +1,148 @@
+{
+  "$schema": "../schemas/dependency-graph.schema.json",
+  "version": "1.0.0",
+  "last_updated": "2025-12-14T22:05:00Z",
+  "description": "Cross-sprint dependency tracking for all tasks",
+  
+  "nodes": {
+    "ENV-004-AI": {
+      "task_id": "ENV-004-AI",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": ["ENV-003-AI"],
+      "dependents": ["ENV-006-AI", "IFC-155"]
+    },
+    "EXC-SEC-001": {
+      "task_id": "EXC-SEC-001",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": ["ENV-013-AI"],
+      "dependents": []
+    },
+    "ENV-001-AI": {
+      "task_id": "ENV-001-AI",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": [],
+      "dependents": ["ENV-002-AI", "ENV-005-AI"]
+    },
+    "ENV-002-AI": {
+      "task_id": "ENV-002-AI",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": ["ENV-001-AI"],
+      "dependents": ["ENV-005-AI"]
+    },
+    "ENV-003-AI": {
+      "task_id": "ENV-003-AI",
+      "sprint": 0,
+      "status": "IN_PROGRESS",
+      "dependencies": ["ENV-001-AI"],
+      "dependents": ["ENV-004-AI"]
+    },
+    "EXC-INIT-001": {
+      "task_id": "EXC-INIT-001",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": [],
+      "dependents": ["AI-SETUP-001"]
+    },
+    "AI-SETUP-001": {
+      "task_id": "AI-SETUP-001",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": ["EXC-INIT-001"],
+      "dependents": ["AI-SETUP-002", "AI-SETUP-003", "ENV-001-AI"]
+    },
+    "AI-SETUP-002": {
+      "task_id": "AI-SETUP-002",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": ["AI-SETUP-001"],
+      "dependents": []
+    },
+    "AI-SETUP-003": {
+      "task_id": "AI-SETUP-003",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": ["AI-SETUP-001"],
+      "dependents": []
+    },
+    "ENV-009-AI": {
+      "task_id": "ENV-009-AI",
+      "sprint": 0,
+      "status": "IN_PROGRESS",
+      "dependencies": ["ENV-001-AI"],
+      "dependents": []
+    },
+    "IFC-160": {
+      "task_id": "IFC-160",
+      "sprint": 0,
+      "status": "IN_PROGRESS",
+      "dependencies": [],
+      "dependents": []
+    }
+  },
+  
+  "critical_paths": [
+    {
+      "name": "Database Setup Path",
+      "tasks": ["ENV-001-AI", "ENV-003-AI", "ENV-004-AI", "ENV-006-AI"],
+      "total_duration_estimate_minutes": 60,
+      "completion_percentage": 75,
+      "blocking_status": "ENV-003-AI"
+    },
+    {
+      "name": "CI/CD Pipeline Path",
+      "tasks": ["ENV-001-AI", "ENV-002-AI", "ENV-005-AI"],
+      "total_duration_estimate_minutes": 45,
+      "completion_percentage": 66.7,
+      "blocking_status": "ENV-005-AI"
+    },
+    {
+      "name": "Security Foundation Path",
+      "tasks": ["ENV-013-AI", "EXC-SEC-001"],
+      "total_duration_estimate_minutes": 30,
+      "completion_percentage": 50,
+      "blocking_status": "ENV-013-AI"
+    }
+  ],
+  
+  "cross_sprint_dependencies": [
+    {
+      "from_task": "ENV-004-AI",
+      "to_task": "IFC-155",
+      "from_sprint": 0,
+      "to_sprint": 8,
+      "dependency_type": "REQUIRED",
+      "description": "IFC-155 requires pgvector enabled in Supabase"
+    },
+    {
+      "from_task": "ENV-007-AI",
+      "to_task": "IFC-003",
+      "from_sprint": 0,
+      "to_sprint": 1,
+      "dependency_type": "REQUIRED",
+      "description": "tRPC API foundation requires completed setup"
+    }
+  ],
+  
+  "blocked_tasks": [],
+  
+  "ready_to_start": [
+    "ENV-005-AI",
+    "ENV-007-AI",
+    "ENV-010-AI",
+    "ENV-012-AI"
+  ],
+  
+  "dependency_violations": [],
+  
+  "parallel_execution_groups": {
+    "phase-2-parallel": {
+      "parallel-a": ["AI-SETUP-002", "AI-SETUP-003"],
+      "parallel-b": ["ENV-001-AI", "ENV-002-AI", "ENV-003-AI", "ENV-009-AI", "ENV-012-AI"],
+      "parallel-c": ["EXC-SEC-001", "IFC-160"]
+    }
+  }
+}

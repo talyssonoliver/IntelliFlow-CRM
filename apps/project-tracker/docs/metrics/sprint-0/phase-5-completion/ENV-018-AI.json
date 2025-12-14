@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../schemas/task-status.schema.json",
+  "task_id": "ENV-018-AI",
+  "description": "Sprint Planning and Velocity Prediction",
+  "owner": "PM + AI Planning Tools",
+  "status": "PLANNED",
+  "sprint": "sprint-0",
+  "phase": "phase-5-completion",
+  "stream": null,
+  "dependencies": [
+    "ENV-017-AI"
+  ],
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 120,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "delivery_metrics_dashboard_live": {
+      "target": true,
+      "actual": null,
+      "unit": "boolean"
+    },
+    "forecast_error": {
+      "target": 20,
+      "actual": null,
+      "unit": "percent"
+    }
+  },
+  "artifacts": [],
+  "validations": [],
+  "blockers": []
+}

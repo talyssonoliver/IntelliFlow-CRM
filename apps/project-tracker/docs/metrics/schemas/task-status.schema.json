@@ -1,0 +1,228 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://intelliflow-crm.com/schemas/task-status.schema.json",
+  "title": "Task Status Schema",
+  "description": "Schema for tracking individual task execution, artifacts, validations, and KPIs",
+  "type": "object",
+  "required": [
+    "task_id",
+    "section",
+    "description",
+    "owner",
+    "dependencies",
+    "status",
+    "status_history"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "task_id": {
+      "type": "string",
+      "pattern": "^[A-Z]+-[A-Z0-9-]+$",
+      "description": "Unique task identifier (e.g., ENV-002-AI, EXC-SEC-001)"
+    },
+    "section": {
+      "type": "string",
+      "description": "Task category/section"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of the task"
+    },
+    "owner": {
+      "type": "string",
+      "description": "Task owner or responsible party"
+    },
+    "dependencies": {
+      "type": "object",
+      "required": ["required", "verified_at", "all_satisfied"],
+      "properties": {
+        "required": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "List of prerequisite task IDs"
+        },
+        "verified_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when dependencies were verified"
+        },
+        "all_satisfied": {
+          "type": "boolean",
+          "description": "Whether all dependencies are satisfied"
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["PLANNED", "IN_PROGRESS", "VALIDATING", "DONE", "BLOCKED", "FAILED"],
+      "description": "Current task status"
+    },
+    "status_history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["status", "at"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["PLANNED", "IN_PROGRESS", "VALIDATING", "DONE", "BLOCKED", "FAILED"]
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Chronological history of status changes"
+    },
+    "execution": {
+      "type": "object",
+      "properties": {
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completed_at": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "duration_minutes": {
+          "type": ["number", "null"]
+        },
+        "executor": {
+          "type": "string",
+          "description": "Who/what executed the task (human, agent, etc.)"
+        },
+        "execution_log": {
+          "type": "string",
+          "description": "Path to detailed execution log file"
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "properties": {
+        "expected": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "List of expected file paths or patterns"
+        },
+        "created": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "sha256", "created_at"],
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          },
+          "description": "Artifacts actually created with verification hashes"
+        },
+        "missing": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Expected artifacts that were not created"
+        }
+      }
+    },
+    "validations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "command", "executed_at", "exit_code", "passed"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "command": {
+            "type": "string"
+          },
+          "executed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "exit_code": {
+            "type": "integer"
+          },
+          "duration_ms": {
+            "type": "integer"
+          },
+          "stdout_hash": {
+            "type": "string",
+            "description": "SHA256 hash of stdout for verification"
+          },
+          "passed": {
+            "type": "boolean"
+          }
+        }
+      },
+      "description": "Validation commands executed to verify task completion"
+    },
+    "kpis": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["target", "actual", "met"],
+        "properties": {
+          "target": {
+            "description": "Target value for the KPI"
+          },
+          "actual": {
+            "description": "Actual measured value"
+          },
+          "met": {
+            "type": "boolean",
+            "description": "Whether target was met"
+          },
+          "unit": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Key Performance Indicators for this task"
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["description", "raised_at"],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "raised_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "resolved_at": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "resolution": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Any blockers encountered during task execution"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes or context"
+    }
+  }
+}
