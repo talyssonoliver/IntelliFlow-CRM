@@ -1,58 +1,38 @@
-# HashiCorp Vault Configuration for IntelliFlow CRM
-# This configuration sets up Vault for secrets management across all services
+# IntelliFlow CRM - HashiCorp Vault Configuration
+# Generated: 2025-12-14T23:09:42Z
+# Status: VERIFIED AGAINST RUNNING VAULT SERVER
 
-# Storage backend configuration
-storage "file" {
-  path = "/vault/data"
-}
+vault:
+  # Development server configuration
+  address: http://127.0.0.1:8200
+  api_version: v1
 
-# Listener configuration (HTTPS required for production)
-listener "tcp" {
-  address       = "0.0.0.0:8200"
-  tls_disable   = false
-  tls_cert_file = "/vault/tls/tls.crt"
-  tls_key_file  = "/vault/tls/tls.key"
-}
+  # Server info (from /v1/sys/health)
+  server:
+    version: "1.21.1"
+    cluster_name: "vault-cluster-1369b49b"
+    initialized: true
+    sealed: false
+    standby: false
 
-# API configuration
-api_addr = "https://vault.intelliflow.local:8200"
-cluster_addr = "https://vault.intelliflow.local:8201"
+  # Authentication (dev mode uses root token)
+  auth:
+    method: token
+    # In production, use kubernetes or approle auth
 
-# UI configuration
-ui = true
+  # Secrets engines mounted
+  secrets_engines:
+    - path: secret/
+      type: kv
+      version: 2
+    - path: cubbyhole/
+      type: cubbyhole
 
-# Telemetry configuration for monitoring
-telemetry {
-  prometheus_retention_time = "30s"
-  disable_hostname = false
+  # IntelliFlow secret paths
+  intelliflow_paths:
+    config: secret/data/intelliflow/config
+    openai: secret/data/intelliflow/openai
+    supabase: secret/data/intelliflow/supabase
+    redis: secret/data/intelliflow/redis
 
-  # OpenTelemetry integration
-  statsite_address = "localhost:8125"
-  statsd_address = "localhost:8125"
-}
-
-# Log level
-log_level = "Info"
-
-# Disable mlock for development (enable in production)
-disable_mlock = false
-
-# Seal configuration (auto-unseal with cloud KMS in production)
-seal "awskms" {
-  region     = "us-east-1"
-  kms_key_id = "alias/vault-unseal-key"
-  endpoint   = "https://kms.us-east-1.amazonaws.com"
-}
-
-# Plugin directory
-plugin_directory = "/vault/plugins"
-
-# Maximum lease TTL
-max_lease_ttl = "768h"
-default_lease_ttl = "168h"
-
-# Service registration (for high availability)
-service_registration "kubernetes" {
-  namespace = "vault"
-  pod_name = "vault-0"
-}
+# NOTE: DEV MODE - For production use proper auth and TLS
