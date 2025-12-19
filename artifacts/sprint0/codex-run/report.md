@@ -48,6 +48,7 @@ Command run:
 
 - `pnpm run validate:sprint0`
 - `pnpm run validate:sprint-data`
+- `pnpm run validate:sprint0:report` (sanitized file output)
 
 Result:
 
@@ -84,6 +85,7 @@ Patch exports:
 - `artifacts/sprint0/codex-run/patches/SPRINT0-sprint-data-validation.patch`
 - `artifacts/sprint0/codex-run/patches/REPO-ignore-python-cache.patch`
 - `artifacts/sprint0/codex-run/patches/SPRINT0-validation-output-human-readable.patch`
+- `artifacts/sprint0/codex-run/patches/SPRINT0-validation-output-generator.patch`
 - `artifacts/sprint0/codex-run/patches/ENV-008-AI.patch`
 - `artifacts/sprint0/codex-run/patches/ENV-010-AI.patch`
 - `artifacts/sprint0/codex-run/patches/ENV-013-AI.patch`

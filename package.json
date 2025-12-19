@@ -52,6 +52,7 @@
     "docs:api": "pnpm --filter api docs:generate",
     "tracker": "pnpm --filter @intelliflow/project-tracker dev",
     "validate:sprint0": "tsx tools/scripts/sprint0-validation.ts",
+    "validate:sprint0:report": "tsx tools/scripts/capture-validation-output.ts --output artifacts/sprint0/codex-run/validation-output.txt",
     "validate:sprint-data": "tsx tools/scripts/validate-sprint-data.ts",
     "sync:metrics": "cd apps/project-tracker && npx tsx scripts/sync-metrics.ts",
     "quality:check": "pnpm run typecheck && pnpm run lint && pnpm test --run && pnpm run quality:deps && pnpm run quality:security && pnpm run quality:deadcode",

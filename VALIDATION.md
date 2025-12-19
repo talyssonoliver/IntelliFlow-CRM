@@ -14,6 +14,18 @@ met:
 pnpm run validate:sprint0
 ```
 
+### Generate a Human-Readable Log File
+
+If you need to save the validation output to a file (for audits/CI logs), use
+the report script. It strips ANSI color codes and avoids encoding issues seen
+when piping output on Windows PowerShell:
+
+```bash
+pnpm run validate:sprint0:report
+```
+
+Writes to: `artifacts/sprint0/codex-run/validation-output.txt`
+
 This will check:
 
 - ✅ Monorepo structure (5 checks)
