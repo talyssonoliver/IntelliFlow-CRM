@@ -1,0 +1,51 @@
+{
+  "agent": "Integrator",
+  "actions": [
+    {
+      "type": "branches",
+      "created": [
+        "sprint0/codex-run",
+        "sprint0/ENV-008-AI-codex",
+        "sprint0/ENV-010-AI-codex",
+        "sprint0/ENV-013-AI-codex",
+        "sprint0/ENV-014-AI-codex",
+        "sprint0/ENV-015-AI-codex",
+        "sprint0/ENV-016-AI-codex",
+        "sprint0/ENV-017-AI-codex",
+        "sprint0/ENV-018-AI-codex",
+        "sprint0/AUTOMATION-001-codex",
+        "sprint0/AUTOMATION-002-codex",
+        "sprint0/IFC-000-codex",
+        "sprint0/metrics-sync-codex",
+        "sprint0/repo-track-artifacts-codex"
+      ]
+    },
+    {
+      "type": "patch_export",
+      "output_dir": "artifacts/sprint0/codex-run/patches"
+    },
+    {
+      "type": "pr_drafts",
+      "output_dir": "artifacts/sprint0/codex-run/pr-drafts"
+    }
+  ],
+  "changes": [
+    {
+      "type": "created_files",
+      "paths": [
+        "artifacts/sprint0/codex-run/patches/*.patch",
+        "artifacts/sprint0/codex-run/pr-drafts/*.md"
+      ]
+    }
+  ],
+  "validation": {
+    "dryRunCommands": ["git format-patch -1 <sha> --stdout --binary"],
+    "result": "success"
+  },
+  "dod": [
+    "Patch files exist for each change set",
+    "Local branches created (no pushes performed)",
+    "PR drafts written per task"
+  ]
+}
+

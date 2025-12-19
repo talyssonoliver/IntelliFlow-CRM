@@ -1,0 +1,94 @@
+﻿From 018ebd0f1ae9f797178211b049120c345ab01295 Mon Sep 17 00:00:00 2001
+From: talyssonoliver <talyssondasilvaoliveira@gmail.com>
+Date: Fri, 19 Dec 2025 01:11:29 +0000
+Subject: [PATCH] feat(sprint0): ENV-018-AI planning artifacts
+
+---
+ artifacts/misc/capacity-model.csv        |  5 +++++
+ artifacts/misc/sprint-planning/README.md | 15 +++++++++++++++
+ artifacts/misc/velocity-prediction.json  | 12 ++++++++++++
+ artifacts/reports/risk-matrix.xlsx       | 19 +++++++++++++++++++
+ 4 files changed, 51 insertions(+)
+ create mode 100644 artifacts/misc/capacity-model.csv
+ create mode 100644 artifacts/misc/sprint-planning/README.md
+ create mode 100644 artifacts/misc/velocity-prediction.json
+ create mode 100644 artifacts/reports/risk-matrix.xlsx
+
+diff --git a/artifacts/misc/capacity-model.csv b/artifacts/misc/capacity-model.csv
+new file mode 100644
+index 0000000..3c95687
+--- /dev/null
++++ b/artifacts/misc/capacity-model.csv
+@@ -0,0 +1,5 @@
++role,fte,available_days,focus_factor,notes
++Engineering,1.0,10,0.7,"Placeholder capacity model"
++QA,0.5,10,0.6,"Placeholder capacity model"
++DevOps,0.25,10,0.5,"Placeholder capacity model"
++
+diff --git a/artifacts/misc/sprint-planning/README.md b/artifacts/misc/sprint-planning/README.md
+new file mode 100644
+index 0000000..f561876
+--- /dev/null
++++ b/artifacts/misc/sprint-planning/README.md
+@@ -0,0 +1,15 @@
++# Sprint planning artifacts (Sprint 0)
++
++This directory tracks Sprint 0 planning outputs for **ENV-018-AI**.
++
++## Sprint 0 scope
++
++- Capture a baseline velocity/capacity model and risk register placeholders.
++- Provide templates that can be replaced with real outputs once delivery metrics
++  are flowing in CI.
++
++## Deferred scope
++
++AI-driven velocity prediction and automated risk detection are planned for
++later sprints (see `artifacts/debt-ledger.*` origin_task=ENV-018-AI).
++
+diff --git a/artifacts/misc/velocity-prediction.json b/artifacts/misc/velocity-prediction.json
+new file mode 100644
+index 0000000..1b2f3b9
+--- /dev/null
++++ b/artifacts/misc/velocity-prediction.json
+@@ -0,0 +1,12 @@
++{
++  "schemaVersion": "1.0",
++  "taskId": "ENV-018-AI",
++  "generatedAt": "2025-12-19T00:00:00Z",
++  "forecast": {
++    "sprintLengthDays": 14,
++    "predictedVelocityPoints": null,
++    "confidence": null,
++    "notes": "Sprint 0 does not implement prediction. Populate once historical sprint data exists."
++  }
++}
++
+diff --git a/artifacts/reports/risk-matrix.xlsx b/artifacts/reports/risk-matrix.xlsx
+new file mode 100644
+index 0000000..1eaece7
+--- /dev/null
++++ b/artifacts/reports/risk-matrix.xlsx
+@@ -0,0 +1,19 @@
++RISK MATRIX (PLACEHOLDER - NOT A REAL XLSX)
++==========================================
++
++Task: ENV-018-AI - Sprint Planning and Velocity Prediction
++Generated: 2025-12-19
++
++Replace this file with a real Excel risk matrix export once risks are reviewed
++and tracked in a formal register.
++
++Suggested columns:
++- Risk ID
++- Description
++- Likelihood (1-5)
++- Impact (1-5)
++- Score
++- Mitigation
++- Owner
++- Status
++
+-- 
+2.50.0.windows.2
+

@@ -1,0 +1,52 @@
+{
+  "agent": "Impl-Remaining",
+  "actions": [
+    {
+      "type": "commit",
+      "branch": "sprint0/codex-run",
+      "commits": [
+        { "sha": "b6b5c0f", "topic": "ENV-008-AI (plus bootstrap tooling)" },
+        { "sha": "2679354", "topic": "ENV-010-AI" },
+        { "sha": "817c9a0", "topic": "ENV-013-AI" },
+        { "sha": "4874e68", "topic": "ENV-014-AI" },
+        { "sha": "b999580", "topic": "ENV-015-AI" },
+        { "sha": "64beed0", "topic": "ENV-016-AI" },
+        { "sha": "36d1c6d", "topic": "ENV-017-AI" },
+        { "sha": "018ebd0", "topic": "ENV-018-AI" },
+        { "sha": "5d7e17c", "topic": "AUTOMATION-001" },
+        { "sha": "192e558", "topic": "AUTOMATION-002" },
+        { "sha": "0933e2c", "topic": "IFC-000" },
+        { "sha": "62308d2", "topic": "Sprint 0 metrics sync" }
+      ]
+    }
+  ],
+  "changes": [
+    {
+      "type": "see_patches",
+      "paths": [
+        "artifacts/sprint0/codex-run/patches/ENV-008-AI.patch",
+        "artifacts/sprint0/codex-run/patches/ENV-010-AI.patch",
+        "artifacts/sprint0/codex-run/patches/ENV-013-AI.patch",
+        "artifacts/sprint0/codex-run/patches/ENV-014-AI.patch",
+        "artifacts/sprint0/codex-run/patches/ENV-015-AI.patch",
+        "artifacts/sprint0/codex-run/patches/ENV-016-AI.patch",
+        "artifacts/sprint0/codex-run/patches/ENV-017-AI.patch",
+        "artifacts/sprint0/codex-run/patches/ENV-018-AI.patch",
+        "artifacts/sprint0/codex-run/patches/AUTOMATION-001.patch",
+        "artifacts/sprint0/codex-run/patches/AUTOMATION-002.patch",
+        "artifacts/sprint0/codex-run/patches/IFC-000.patch",
+        "artifacts/sprint0/codex-run/patches/SPRINT0-metrics-sync.patch"
+      ]
+    }
+  ],
+  "validation": {
+    "dryRunCommands": ["pnpm run validate:sprint0"],
+    "result": "success"
+  },
+  "dod": [
+    "All previously-open Sprint 0 tasks have required artifact files present",
+    "Sprint plan + metrics synced to DONE",
+    "No secrets embedded; placeholder files clearly marked"
+  ]
+}
+

@@ -1,0 +1,148 @@
+﻿From 64beed0895da40dff3b16ed9bb1f57219969e7dc Mon Sep 17 00:00:00 2001
+From: talyssonoliver <talyssondasilvaoliveira@gmail.com>
+Date: Fri, 19 Dec 2025 01:11:10 +0000
+Subject: [PATCH] feat(sprint0): ENV-016-AI privacy analytics artifacts
+
+---
+ artifacts/metrics/insights-accuracy.csv    |  3 ++
+ artifacts/misc/analytics/README.md         | 21 ++++++++++++++
+ artifacts/misc/analytics/event-schema.json | 32 ++++++++++++++++++++++
+ artifacts/misc/privacy-config.json         | 23 ++++++++++++++++
+ artifacts/reports/gdpr-compliance.pdf      | 18 ++++++++++++
+ 5 files changed, 97 insertions(+)
+ create mode 100644 artifacts/metrics/insights-accuracy.csv
+ create mode 100644 artifacts/misc/analytics/README.md
+ create mode 100644 artifacts/misc/analytics/event-schema.json
+ create mode 100644 artifacts/misc/privacy-config.json
+ create mode 100644 artifacts/reports/gdpr-compliance.pdf
+
+diff --git a/artifacts/metrics/insights-accuracy.csv b/artifacts/metrics/insights-accuracy.csv
+new file mode 100644
+index 0000000..7bd8d69
+--- /dev/null
++++ b/artifacts/metrics/insights-accuracy.csv
+@@ -0,0 +1,3 @@
++metric_id,task_id,measured_at_utc,value,unit,notes
++insights_accuracy,ENV-016-AI,2025-12-19T00:00:00Z,,percent,"Placeholder. Populate once insight generation is implemented."
++
+diff --git a/artifacts/misc/analytics/README.md b/artifacts/misc/analytics/README.md
+new file mode 100644
+index 0000000..6427f2b
+--- /dev/null
++++ b/artifacts/misc/analytics/README.md
+@@ -0,0 +1,21 @@
++# Privacy-first analytics (Sprint 0)
++
++This directory contains baseline analytics scaffolding for **ENV-016-AI**.
++
++## Sprint 0 scope
++
++- Define an event schema and privacy policy configuration.
++- Provide placeholders for insight accuracy tracking.
++- Avoid collecting PII by default.
++
++## Deferred scope
++
++AI-generated insights/predictions and automated data science pipelines are not
++implemented in Sprint 0. They are tracked as tech debt and planned for later
++sprints.
++
++## Files
++
++- `event-schema.json`: canonical event shape (no PII)
++- `privacy-config.json`: retention + redaction policy (source: `artifacts/misc/privacy-config.json`)
++
+diff --git a/artifacts/misc/analytics/event-schema.json b/artifacts/misc/analytics/event-schema.json
+new file mode 100644
+index 0000000..1a26b5d
+--- /dev/null
++++ b/artifacts/misc/analytics/event-schema.json
+@@ -0,0 +1,32 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "title": "IntelliFlow Analytics Event",
++  "type": "object",
++  "required": ["eventId", "occurredAt", "eventName", "context"],
++  "properties": {
++    "eventId": { "type": "string", "description": "UUIDv4" },
++    "occurredAt": { "type": "string", "format": "date-time" },
++    "eventName": { "type": "string" },
++    "context": {
++      "type": "object",
++      "required": ["environment"],
++      "properties": {
++        "environment": { "type": "string", "enum": ["development", "test", "staging", "production"] },
++        "app": { "type": "string" },
++        "sessionId": { "type": "string" },
++        "subjectId": {
++          "type": "string",
++          "description": "Non-PII stable identifier (UUID). Do not use email/name."
++        }
++      },
++      "additionalProperties": true
++    },
++    "properties": {
++      "type": "object",
++      "description": "Event-specific fields (must not include PII)",
++      "additionalProperties": true
++    }
++  },
++  "additionalProperties": false
++}
++
+diff --git a/artifacts/misc/privacy-config.json b/artifacts/misc/privacy-config.json
+new file mode 100644
+index 0000000..be3ee56
+--- /dev/null
++++ b/artifacts/misc/privacy-config.json
+@@ -0,0 +1,23 @@
++{
++  "schemaVersion": "1.0",
++  "taskId": "ENV-016-AI",
++  "generatedAt": "2025-12-19T00:00:00Z",
++  "privacy": {
++    "piiCollection": "disabled_by_default",
++    "retentionDays": 30,
++    "allowedIdentifiers": ["subjectId", "sessionId"],
++    "disallowedFields": ["email", "phone", "fullName", "address", "ipAddress"],
++    "redaction": {
++      "strategy": "drop",
++      "notes": "Any disallowed field found in analytics payloads must be dropped or hashed before storage."
++    }
++  },
++  "compliance": {
++    "gdpr": {
++      "dpiaDraft": true,
++      "lawfulBasis": "legitimate_interest",
++      "dataSubjectRights": ["access", "erasure", "rectification", "portability"]
++    }
++  }
++}
++
+diff --git a/artifacts/reports/gdpr-compliance.pdf b/artifacts/reports/gdpr-compliance.pdf
+new file mode 100644
+index 0000000..8ef9a88
+--- /dev/null
++++ b/artifacts/reports/gdpr-compliance.pdf
+@@ -0,0 +1,18 @@
++SPRINT 0 GDPR COMPLIANCE (PLACEHOLDER)
++=====================================
++
++Task: ENV-016-AI - Privacy-First Analytics with AI Insights
++Generated: 2025-12-19
++
++This is a placeholder artifact to track Sprint 0 requirements.
++Replace with a real GDPR compliance report once the product has a defined
++data processing register and legal review.
++
++Minimum contents when replacing:
++- DPIA summary for analytics and AI features
++- Data categories and retention
++- Redaction policy
++- Data subject rights handling process
++- Processors/sub-processors list
++- Sign-off
++
+-- 
+2.50.0.windows.2
+

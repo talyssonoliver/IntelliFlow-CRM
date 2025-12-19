@@ -1,0 +1,21 @@
+{
+  "agent": "Planner",
+  "inputs": ["artifacts/sprint0/codex-run/tasks.json"],
+  "actions": [{ "type": "write", "path": "artifacts/sprint0/codex-run/plan.json" }],
+  "changes": [
+    {
+      "path": "artifacts/sprint0/codex-run/plan.json",
+      "type": "create"
+    }
+  ],
+  "validation": {
+    "dryRunCommands": [],
+    "result": "success"
+  },
+  "dod": [
+    "Dependency graph emitted (nodes + edges)",
+    "Critical path called out (ENV-001-AI)",
+    "Parallelization waves and 6h schedule included"
+  ]
+}
+

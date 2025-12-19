@@ -1,0 +1,31 @@
+{
+  "agent": "TaskExtractor",
+  "inputs": [
+    "artifacts/Sprint0_prompt.md",
+    "docs/sprint-0-completion-summary.md",
+    "Readme.md",
+    "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv",
+    "apps/project-tracker/docs/metrics/sprint-0/"
+  ],
+  "actions": [
+    { "type": "read", "path": "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv" },
+    { "type": "read", "path": "apps/project-tracker/docs/metrics/sprint-0/" },
+    { "type": "write", "path": "artifacts/sprint0/codex-run/tasks.json" }
+  ],
+  "changes": [
+    {
+      "path": "artifacts/sprint0/codex-run/tasks.json",
+      "type": "create"
+    }
+  ],
+  "validation": {
+    "dryRunCommands": [],
+    "result": "success"
+  },
+  "dod": [
+    "All Sprint 0 tasks enumerated (27 total)",
+    "Task IDs normalized and unique",
+    "Dependencies parsed from Sprint_plan.csv"
+  ]
+}
+

@@ -1,0 +1,127 @@
+﻿From 192e558b7332ddfcc511f0aec87999d8d35eee2e Mon Sep 17 00:00:00 2001
+From: talyssonoliver <talyssondasilvaoliveira@gmail.com>
+Date: Fri, 19 Dec 2025 01:11:55 +0000
+Subject: [PATCH] feat(sprint0): AUTOMATION-002 dashboard artifacts
+
+---
+ artifacts/metrics/metrics-realtime.json       | 22 +++++++++++++++++++
+ artifacts/misc/ai-dashboard/README.md         | 14 ++++++++++++
+ .../misc/ai-dashboard/dashboard-spec.json     | 14 ++++++++++++
+ artifacts/misc/optimization-loop.yaml         | 21 ++++++++++++++++++
+ artifacts/misc/roi-tracking.csv               |  5 +++++
+ 5 files changed, 76 insertions(+)
+ create mode 100644 artifacts/metrics/metrics-realtime.json
+ create mode 100644 artifacts/misc/ai-dashboard/README.md
+ create mode 100644 artifacts/misc/ai-dashboard/dashboard-spec.json
+ create mode 100644 artifacts/misc/optimization-loop.yaml
+ create mode 100644 artifacts/misc/roi-tracking.csv
+
+diff --git a/artifacts/metrics/metrics-realtime.json b/artifacts/metrics/metrics-realtime.json
+new file mode 100644
+index 0000000..d896fe9
+--- /dev/null
++++ b/artifacts/metrics/metrics-realtime.json
+@@ -0,0 +1,22 @@
++{
++  "schemaVersion": "1.0",
++  "taskId": "AUTOMATION-002",
++  "generatedAt": "2025-12-19T00:00:00Z",
++  "dora": {
++    "lead_time_days": null,
++    "deploy_frequency_per_day": null,
++    "change_failure_rate": null,
++    "mttr_minutes": null
++  },
++  "quality": {
++    "lint_errors": null,
++    "typecheck_errors": null,
++    "test_failures": null
++  },
++  "ai": {
++    "cost_usd": null,
++    "latency_p95_ms": null
++  },
++  "notes": "Populate from CI and runtime observability once the dashboard pipeline is wired."
++}
++
+diff --git a/artifacts/misc/ai-dashboard/README.md b/artifacts/misc/ai-dashboard/README.md
+new file mode 100644
+index 0000000..312aab8
+--- /dev/null
++++ b/artifacts/misc/ai-dashboard/README.md
+@@ -0,0 +1,14 @@
++# AI performance dashboard (Sprint 0)
++
++This directory contains baseline artifacts for **AUTOMATION-002**.
++
++## Sprint 0 scope
++
++- Define the dashboard spec and the optimization loop contract.
++- Track ROI and DORA/quality metrics placeholders.
++
++## Deferred scope
++
++The actual dashboard UI (Grafana/Datadog/etc) and automated optimization
++recommendations are post-Sprint 0.
++
+diff --git a/artifacts/misc/ai-dashboard/dashboard-spec.json b/artifacts/misc/ai-dashboard/dashboard-spec.json
+new file mode 100644
+index 0000000..7f9d31f
+--- /dev/null
++++ b/artifacts/misc/ai-dashboard/dashboard-spec.json
+@@ -0,0 +1,14 @@
++{
++  "schemaVersion": "1.0",
++  "taskId": "AUTOMATION-002",
++  "generatedAt": "2025-12-19T00:00:00Z",
++  "widgets": [
++    { "id": "dora.lead_time", "title": "Lead time for changes", "type": "timeseries" },
++    { "id": "dora.deploy_frequency", "title": "Deploy frequency", "type": "timeseries" },
++    { "id": "dora.change_failure_rate", "title": "Change failure rate", "type": "timeseries" },
++    { "id": "dora.mttr", "title": "Mean time to recovery (MTTR)", "type": "timeseries" },
++    { "id": "ai.cost", "title": "AI cost (USD)", "type": "timeseries" },
++    { "id": "ai.latency", "title": "AI latency (p95)", "type": "timeseries" }
++  ]
++}
++
+diff --git a/artifacts/misc/optimization-loop.yaml b/artifacts/misc/optimization-loop.yaml
+new file mode 100644
+index 0000000..dda8297
+--- /dev/null
++++ b/artifacts/misc/optimization-loop.yaml
+@@ -0,0 +1,21 @@
++# AI optimization loop contract (Sprint 0)
++#
++# This file captures the inputs/outputs expected for weekly optimization review.
++
++version: 1
++taskId: AUTOMATION-002
++cadence: weekly
++inputs:
++  - artifacts/metrics/metrics-realtime.json
++  - artifacts/misc/roi-tracking.csv
++outputs:
++  - artifacts/logs/quality-gates.log
++  - artifacts/logs/optimization-log.csv
++actions:
++  - id: review_top_regressions
++    owner: devops-team
++  - id: review_ai_cost_spikes
++    owner: ai-team
++  - id: publish_action_items
++    owner: tech-lead
++
+diff --git a/artifacts/misc/roi-tracking.csv b/artifacts/misc/roi-tracking.csv
+new file mode 100644
+index 0000000..91f5830
+--- /dev/null
++++ b/artifacts/misc/roi-tracking.csv
+@@ -0,0 +1,5 @@
++measured_at_utc,task_id,metric,value,unit,notes
++2025-12-19T00:00:00Z,AUTOMATION-002,engineering_hours_saved,,,Placeholder
++2025-12-19T00:00:00Z,AUTOMATION-002,ai_cost_usd,,,Placeholder
++2025-12-19T00:00:00Z,AUTOMATION-002,roi,,,Placeholder
++
+-- 
+2.50.0.windows.2
+

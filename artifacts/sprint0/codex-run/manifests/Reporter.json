@@ -1,0 +1,10 @@
+{
+  "agent": "Reporter",
+  "actions": [{ "type": "write", "path": "artifacts/sprint0/codex-run/report.md" }],
+  "changes": [{ "path": "artifacts/sprint0/codex-run/report.md", "type": "create" }],
+  "validation": { "dryRunCommands": [], "result": "success" },
+  "dod": [
+    "Report includes tasks, patches, validation output, and operator next steps"
+  ]
+}
+

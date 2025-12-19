@@ -1,0 +1,111 @@
+﻿From 4874e68fac2a5fa49877f2d51b326a486ae4f277 Mon Sep 17 00:00:00 2001
+From: talyssonoliver <talyssondasilvaoliveira@gmail.com>
+Date: Fri, 19 Dec 2025 01:10:42 +0000
+Subject: [PATCH] feat(sprint0): ENV-014-AI performance artifacts
+
+---
+ artifacts/logs/optimization-log.csv   |  3 +++
+ artifacts/misc/cache-config.yaml      | 24 ++++++++++++++++++++++++
+ artifacts/misc/profiling-results.json | 15 +++++++++++++++
+ artifacts/performance/README.md       | 26 ++++++++++++++++++++++++++
+ 4 files changed, 68 insertions(+)
+ create mode 100644 artifacts/logs/optimization-log.csv
+ create mode 100644 artifacts/misc/cache-config.yaml
+ create mode 100644 artifacts/misc/profiling-results.json
+ create mode 100644 artifacts/performance/README.md
+
+diff --git a/artifacts/logs/optimization-log.csv b/artifacts/logs/optimization-log.csv
+new file mode 100644
+index 0000000..392e05e
+--- /dev/null
++++ b/artifacts/logs/optimization-log.csv
+@@ -0,0 +1,3 @@
++timestamp_utc,task_id,area,change,expected_impact,measured_impact,notes
++2025-12-19T00:00:00Z,ENV-014-AI,baseline,Initial placeholder artifacts created,unknown,unknown,"Replace with real optimization entries as profiling identifies bottlenecks."
++
+diff --git a/artifacts/misc/cache-config.yaml b/artifacts/misc/cache-config.yaml
+new file mode 100644
+index 0000000..8b712c6
+--- /dev/null
++++ b/artifacts/misc/cache-config.yaml
+@@ -0,0 +1,24 @@
++# IntelliFlow CRM - Baseline caching configuration (Sprint 0)
++#
++# This file is a placeholder to track caching decisions for ENV-014-AI.
++# Replace with concrete runtime configs (CDN, Next.js caching, Redis caching)
++# once deployment targets are selected.
++
++version: 1
++taskId: ENV-014-AI
++caching:
++  http:
++    cdn:
++      enabled: false
++      notes: "Enable when deploying behind CDN (Vercel/Cloudflare)."
++  api:
++    trpc:
++      enabled: false
++      ttlSeconds: 30
++      notes: "Enable for read-heavy endpoints once invalidation strategy is defined."
++  ai:
++    embeddings:
++      enabled: false
++      ttlSeconds: 86400
++      notes: "Cache embedding results to reduce cost; ensure privacy constraints."
++
+diff --git a/artifacts/misc/profiling-results.json b/artifacts/misc/profiling-results.json
+new file mode 100644
+index 0000000..ad8c8d3
+--- /dev/null
++++ b/artifacts/misc/profiling-results.json
+@@ -0,0 +1,15 @@
++{
++  "schemaVersion": "1.0",
++  "taskId": "ENV-014-AI",
++  "generatedAt": "2025-12-19T00:00:00Z",
++  "summary": {
++    "status": "placeholder",
++    "notes": "Replace with real profiling output (CPU, memory, bundle analysis, query timings) after running benchmark and Lighthouse."
++  },
++  "results": {
++    "api": { "p50_ms": null, "p95_ms": null, "p99_ms": null },
++    "web": { "lcp_ms": null, "fid_ms": null, "cls": null, "lighthouse_score": null },
++    "aiWorker": { "avg_latency_ms": null, "tokens_per_second": null }
++  }
++}
++
+diff --git a/artifacts/performance/README.md b/artifacts/performance/README.md
+new file mode 100644
+index 0000000..f3081c8
+--- /dev/null
++++ b/artifacts/performance/README.md
+@@ -0,0 +1,26 @@
++# Performance (Sprint 0)
++
++This directory tracks Sprint 0 performance artifacts for **ENV-014-AI**.
++
++## What exists in Sprint 0
++
++- Baseline budgets: `infra/monitoring/performance-budgets.json`
++- Lighthouse config: `lighthouserc.js` and `tools/perf/lighthouse.config.js`
++- Benchmark harness: `tools/perf/benchmark.ts`
++
++## Artifacts
++
++- `artifacts/misc/profiling-results.json`: profiling output placeholder (replace with real runs).
++- `artifacts/logs/optimization-log.csv`: optimization decisions log.
++- `artifacts/misc/cache-config.yaml`: baseline caching configuration placeholder.
++
++## Suggested workflow (operator)
++
++```bash
++pnpm install
++pnpm run build
++pnpm -w exec tsx tools/perf/benchmark.ts
++```
++
++Then commit updated performance artifacts and keep the optimization log current.
++
+-- 
+2.50.0.windows.2
+

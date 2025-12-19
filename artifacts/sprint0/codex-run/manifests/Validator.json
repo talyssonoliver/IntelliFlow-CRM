@@ -1,0 +1,10 @@
+{
+  "agent": "Validator",
+  "validation": {
+    "commands": ["pnpm run validate:sprint0"],
+    "artifacts": ["artifacts/sprint0/codex-run/validation-output.txt"],
+    "result": "success"
+  },
+  "dod": ["validate:sprint0 passes (green)"]
+}
+

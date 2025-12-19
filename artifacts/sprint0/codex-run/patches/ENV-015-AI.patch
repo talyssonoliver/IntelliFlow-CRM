@@ -1,0 +1,410 @@
+﻿From b9995805c6e1a02365c333ebdf79f1277ccb9639 Mon Sep 17 00:00:00 2001
+From: talyssonoliver <talyssondasilvaoliveira@gmail.com>
+Date: Fri, 19 Dec 2025 01:10:58 +0000
+Subject: [PATCH] feat(sprint0): ENV-015-AI feature flags scaffold
+
+---
+ artifacts/metrics/prediction-accuracy.json    |  9 ++
+ artifacts/misc/ab-test-results.csv            |  4 +
+ artifacts/misc/rollout-config.json            | 30 ++++++
+ packages/platform/README.md                   | 22 +++++
+ packages/platform/package.json                | 41 ++++++++
+ .../src/feature-flags/in-memory-provider.ts   | 98 +++++++++++++++++++
+ packages/platform/src/feature-flags/index.ts  |  4 +
+ packages/platform/src/feature-flags/schema.ts | 26 +++++
+ packages/platform/src/feature-flags/types.ts  | 61 ++++++++++++
+ packages/platform/src/index.ts                |  2 +
+ packages/platform/tsconfig.json               | 14 +++
+ 11 files changed, 311 insertions(+)
+ create mode 100644 artifacts/metrics/prediction-accuracy.json
+ create mode 100644 artifacts/misc/ab-test-results.csv
+ create mode 100644 artifacts/misc/rollout-config.json
+ create mode 100644 packages/platform/README.md
+ create mode 100644 packages/platform/package.json
+ create mode 100644 packages/platform/src/feature-flags/in-memory-provider.ts
+ create mode 100644 packages/platform/src/feature-flags/index.ts
+ create mode 100644 packages/platform/src/feature-flags/schema.ts
+ create mode 100644 packages/platform/src/feature-flags/types.ts
+ create mode 100644 packages/platform/src/index.ts
+ create mode 100644 packages/platform/tsconfig.json
+
+diff --git a/artifacts/metrics/prediction-accuracy.json b/artifacts/metrics/prediction-accuracy.json
+new file mode 100644
+index 0000000..4551d7e
+--- /dev/null
++++ b/artifacts/metrics/prediction-accuracy.json
+@@ -0,0 +1,9 @@
++{
++  "taskId": "ENV-015-AI",
++  "generatedAt": "2025-12-19T00:00:00Z",
++  "metric": "rollout_prediction_accuracy",
++  "unit": "percent",
++  "value": null,
++  "notes": "Sprint 0 does not implement predictive rollout. Populate once a prediction model exists."
++}
++
+diff --git a/artifacts/misc/ab-test-results.csv b/artifacts/misc/ab-test-results.csv
+new file mode 100644
+index 0000000..6308a7b
+--- /dev/null
++++ b/artifacts/misc/ab-test-results.csv
+@@ -0,0 +1,4 @@
++experiment_id,task_id,variant,exposures,conversions,conversion_rate,notes
++ai.worker.enabled,ENV-015-AI,control,0,0,0.0,"Placeholder row. Populate after wiring experiment exposure/conversion tracking."
++ai.worker.enabled,ENV-015-AI,treatment,0,0,0.0,"Placeholder row. Populate after wiring experiment exposure/conversion tracking."
++
+diff --git a/artifacts/misc/rollout-config.json b/artifacts/misc/rollout-config.json
+new file mode 100644
+index 0000000..b03329c
+--- /dev/null
++++ b/artifacts/misc/rollout-config.json
+@@ -0,0 +1,30 @@
++{
++  "version": 1,
++  "taskId": "ENV-015-AI",
++  "flags": [
++    {
++      "key": "ai.worker.enabled",
++      "description": "Enable AI worker processing pipeline",
++      "enabled": true,
++      "rolloutPercent": 0,
++      "variants": ["control", "treatment"],
++      "rules": [
++        {
++          "when": { "environment": "development" },
++          "then": { "enabled": true, "variant": "control" }
++        }
++      ]
++    },
++    {
++      "key": "analytics.enabled",
++      "description": "Enable privacy-first analytics event emission",
++      "enabled": true,
++      "rolloutPercent": 0,
++      "rules": [
++        { "when": { "environment": "development" }, "then": { "enabled": true } }
++      ]
++    }
++  ],
++  "notes": "Sprint 0 config is deterministic and conservative; predictive rollout is deferred."
++}
++
+diff --git a/packages/platform/README.md b/packages/platform/README.md
+new file mode 100644
+index 0000000..fa8e94e
+--- /dev/null
++++ b/packages/platform/README.md
+@@ -0,0 +1,22 @@
++# @intelliflow/platform
++
++Sprint 0 scaffolding package for platform primitives.
++
++## Feature flags
++
++`packages/platform/src/feature-flags/*` implements a minimal, deterministic
++feature-flag evaluator (no external service required).
++
++### Goals (Sprint 0)
++
++- Provide a typed API for evaluating flags.
++- Enable safe local development without external dependencies.
++- Keep PII out of analytics/flag contexts by default.
++
++### Non-goals (Sprint 0)
++
++- Predictive rollout automation and AI-driven decisioning.
++- Real A/B test statistical analysis.
++
++Those are tracked as follow-up work in later sprints.
++
+diff --git a/packages/platform/package.json b/packages/platform/package.json
+new file mode 100644
+index 0000000..4df4611
+--- /dev/null
++++ b/packages/platform/package.json
+@@ -0,0 +1,41 @@
++{
++  "name": "@intelliflow/platform",
++  "version": "0.1.0",
++  "private": true,
++  "description": "Platform utilities for IntelliFlow CRM (feature flags, rollout primitives)",
++  "main": "./dist/index.js",
++  "module": "./dist/index.mjs",
++  "types": "./dist/index.d.ts",
++  "exports": {
++    ".": {
++      "types": "./dist/index.d.ts",
++      "import": "./dist/index.mjs",
++      "require": "./dist/index.js"
++    },
++    "./feature-flags": {
++      "types": "./dist/feature-flags/index.d.ts",
++      "import": "./dist/feature-flags/index.mjs",
++      "require": "./dist/feature-flags/index.js"
++    }
++  },
++  "scripts": {
++    "build": "tsup src/index.ts src/feature-flags/index.ts --format cjs,esm --dts",
++    "dev": "tsup src/index.ts src/feature-flags/index.ts --format cjs,esm --dts --watch",
++    "clean": "rm -rf dist .turbo",
++    "typecheck": "tsc --noEmit",
++    "lint": "eslint src/",
++    "test": "vitest run",
++    "test:watch": "vitest"
++  },
++  "dependencies": {
++    "zod": "^3.22.0"
++  },
++  "devDependencies": {
++    "@intelliflow/typescript-config": "workspace:*",
++    "@types/node": "^20.11.0",
++    "tsup": "^8.0.0",
++    "typescript": "^5.3.0",
++    "vitest": "^1.2.0"
++  }
++}
++
+diff --git a/packages/platform/src/feature-flags/in-memory-provider.ts b/packages/platform/src/feature-flags/in-memory-provider.ts
+new file mode 100644
+index 0000000..3cebe99
+--- /dev/null
++++ b/packages/platform/src/feature-flags/in-memory-provider.ts
+@@ -0,0 +1,98 @@
++import type {
++  FeatureFlagContext,
++  FeatureFlagDecision,
++  FeatureFlagDefinition,
++  FeatureFlagKey,
++  FeatureFlagProvider,
++  FeatureFlagsConfig,
++} from './types';
++import { featureFlagsConfigSchema } from './schema';
++
++function stableHashPercent(input: string): number {
++  // FNV-1a 32-bit
++  let hash = 0x811c9dc5;
++  for (let i = 0; i < input.length; i += 1) {
++    hash ^= input.charCodeAt(i);
++    hash = Math.imul(hash, 0x01000193);
++  }
++  // Convert to [0, 100)
++  return (hash >>> 0) % 100;
++}
++
++function firstMatchingRule(
++  definition: FeatureFlagDefinition,
++  context: FeatureFlagContext | undefined
++): FeatureFlagDecision | null {
++  if (!definition.rules?.length) return null;
++  const attrs = context?.attributes ?? {};
++
++  for (const rule of definition.rules) {
++    const matches = Object.entries(rule.when).every(([key, expected]) => attrs[key] === expected);
++    if (matches) {
++      return {
++        key: definition.key,
++        enabled: rule.then.enabled,
++        variant: rule.then.variant,
++        reason: 'rule_match',
++      };
++    }
++  }
++
++  return null;
++}
++
++function rolloutDecision(
++  definition: FeatureFlagDefinition,
++  context: FeatureFlagContext | undefined
++): FeatureFlagDecision | null {
++  if (definition.rolloutPercent === undefined) return null;
++  const subjectId = context?.subjectId;
++  if (!subjectId) return null;
++
++  const bucket = stableHashPercent(`${definition.key}:${subjectId}`);
++  const enabled = bucket < definition.rolloutPercent;
++
++  let variant: string | undefined;
++  if (enabled && definition.variants?.length) {
++    const variantBucket = stableHashPercent(`${definition.key}:variant:${subjectId}`);
++    variant = definition.variants[variantBucket % definition.variants.length];
++  }
++
++  return { key: definition.key, enabled, variant, reason: 'percentage_rollout' };
++}
++
++export class InMemoryFeatureFlagProvider implements FeatureFlagProvider {
++  private readonly flagsByKey: Map<FeatureFlagKey, FeatureFlagDefinition>;
++
++  private constructor(flags: FeatureFlagDefinition[]) {
++    this.flagsByKey = new Map(flags.map((f) => [f.key, f]));
++  }
++
++  static fromConfig(input: unknown): InMemoryFeatureFlagProvider {
++    const parsed = featureFlagsConfigSchema.safeParse(input);
++    if (!parsed.success) {
++      // Fail closed: treat everything as disabled if config is invalid.
++      return new InMemoryFeatureFlagProvider([]);
++    }
++    return new InMemoryFeatureFlagProvider((parsed.data as FeatureFlagsConfig).flags);
++  }
++
++  getDecision(key: FeatureFlagKey, context?: FeatureFlagContext): FeatureFlagDecision {
++    const definition = this.flagsByKey.get(key);
++    if (!definition) return { key, enabled: false, reason: 'missing_flag' };
++    if (!definition.enabled) return { key, enabled: false, reason: 'disabled' };
++
++    const ruleDecision = firstMatchingRule(definition, context);
++    if (ruleDecision) return ruleDecision;
++
++    const rollout = rolloutDecision(definition, context);
++    if (rollout) return rollout;
++
++    return { key, enabled: true, reason: 'default' };
++  }
++
++  isEnabled(key: FeatureFlagKey, context?: FeatureFlagContext): boolean {
++    return this.getDecision(key, context).enabled;
++  }
++}
++
+diff --git a/packages/platform/src/feature-flags/index.ts b/packages/platform/src/feature-flags/index.ts
+new file mode 100644
+index 0000000..cbdc5e4
+--- /dev/null
++++ b/packages/platform/src/feature-flags/index.ts
+@@ -0,0 +1,4 @@
++export * from './types';
++export * from './schema';
++export * from './in-memory-provider';
++
+diff --git a/packages/platform/src/feature-flags/schema.ts b/packages/platform/src/feature-flags/schema.ts
+new file mode 100644
+index 0000000..8a9aca1
+--- /dev/null
++++ b/packages/platform/src/feature-flags/schema.ts
+@@ -0,0 +1,26 @@
++import { z } from 'zod';
++
++export const featureFlagRuleSchema = z.object({
++  when: z.record(z.union([z.string(), z.number(), z.boolean()])),
++  then: z.object({
++    enabled: z.boolean(),
++    variant: z.string().optional(),
++  }),
++});
++
++export const featureFlagDefinitionSchema = z.object({
++  key: z.string().min(1),
++  description: z.string().optional(),
++  enabled: z.boolean(),
++  rolloutPercent: z.number().min(0).max(100).optional(),
++  rules: z.array(featureFlagRuleSchema).optional(),
++  variants: z.array(z.string().min(1)).optional(),
++});
++
++export const featureFlagsConfigSchema = z.object({
++  version: z.literal(1),
++  flags: z.array(featureFlagDefinitionSchema),
++});
++
++export type FeatureFlagsConfigInput = z.input<typeof featureFlagsConfigSchema>;
++
+diff --git a/packages/platform/src/feature-flags/types.ts b/packages/platform/src/feature-flags/types.ts
+new file mode 100644
+index 0000000..12ce361
+--- /dev/null
++++ b/packages/platform/src/feature-flags/types.ts
+@@ -0,0 +1,61 @@
++export type FeatureFlagKey = string;
++
++export interface FeatureFlagContext {
++  /**
++   * Stable identifier used for deterministic rollout bucketing.
++   * Avoid emails/names; prefer an internal UUID.
++   */
++  subjectId?: string;
++
++  /**
++   * Optional attributes for rule evaluation (environment, plan tier, etc).
++   */
++  attributes?: Record<string, string | number | boolean>;
++}
++
++export interface FeatureFlagDecision {
++  key: FeatureFlagKey;
++  enabled: boolean;
++  variant?: string;
++  reason:
++    | 'default'
++    | 'missing_flag'
++    | 'disabled'
++    | 'rule_match'
++    | 'percentage_rollout'
++    | 'invalid_config';
++}
++
++export interface FeatureFlagRule {
++  when: Record<string, string | number | boolean>;
++  then: { enabled: boolean; variant?: string };
++}
++
++export interface FeatureFlagDefinition {
++  key: FeatureFlagKey;
++  description?: string;
++  enabled: boolean;
++  /**
++   * Percentage rollout (0..100). If omitted, no percentage-based rollout is applied.
++   */
++  rolloutPercent?: number;
++  /**
++   * Optional rule list; first match wins.
++   */
++  rules?: FeatureFlagRule[];
++  /**
++   * Variant names for experiments. If provided and rolloutPercent triggers, a variant may be selected.
++   */
++  variants?: string[];
++}
++
++export interface FeatureFlagsConfig {
++  version: 1;
++  flags: FeatureFlagDefinition[];
++}
++
++export interface FeatureFlagProvider {
++  getDecision(key: FeatureFlagKey, context?: FeatureFlagContext): FeatureFlagDecision;
++  isEnabled(key: FeatureFlagKey, context?: FeatureFlagContext): boolean;
++}
++
+diff --git a/packages/platform/src/index.ts b/packages/platform/src/index.ts
+new file mode 100644
+index 0000000..7f96419
+--- /dev/null
++++ b/packages/platform/src/index.ts
+@@ -0,0 +1,2 @@
++export * from './feature-flags';
++
+diff --git a/packages/platform/tsconfig.json b/packages/platform/tsconfig.json
+new file mode 100644
+index 0000000..609ff8a
+--- /dev/null
++++ b/packages/platform/tsconfig.json
+@@ -0,0 +1,14 @@
++{
++  "extends": "@intelliflow/typescript-config/base.json",
++  "compilerOptions": {
++    "module": "Node16",
++    "moduleResolution": "node16",
++    "outDir": "./dist",
++    "rootDir": "./src",
++    "declaration": true,
++    "declarationMap": true
++  },
++  "include": ["src/**/*.ts"],
++  "exclude": ["node_modules", "dist", "**/__tests__/**"]
++}
++
+-- 
+2.50.0.windows.2
+
