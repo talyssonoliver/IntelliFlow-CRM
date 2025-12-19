@@ -1,0 +1,3 @@
+timestamp_utc,task_id,change_id,summary,notes
+2025-12-19T00:00:00Z,ENV-013-AI,placeholder,Initial security artifact scaffolding,"Replace with real remediation/patch entries as vulnerabilities are detected and fixed."
+

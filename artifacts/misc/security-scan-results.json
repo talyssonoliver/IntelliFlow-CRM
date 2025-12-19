@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "1.0",
+  "taskId": "ENV-013-AI",
+  "generatedAt": "2025-12-19T00:00:00Z",
+  "summary": {
+    "status": "placeholder",
+    "notes": "Replace this file with real scan outputs once CI security workflows have executed."
+  },
+  "tools": [
+    {
+      "name": "trivy",
+      "scope": ["filesystem", "containers"],
+      "result": "not_executed",
+      "thresholds": { "critical": 0, "high": 5 }
+    },
+    {
+      "name": "owasp-dependency-check",
+      "scope": ["dependencies"],
+      "result": "not_executed",
+      "thresholds": { "cvssFailThreshold": 7 }
+    },
+    {
+      "name": "codeql",
+      "scope": ["sast"],
+      "result": "not_executed"
+    },
+    {
+      "name": "gitleaks",
+      "scope": ["secrets"],
+      "result": "not_executed"
+    }
+  ],
+  "links": [
+    { "type": "workflow", "path": ".github/workflows/security.yml" },
+    { "type": "policy", "path": "SECURITY.md" }
+  ]
+}
+
