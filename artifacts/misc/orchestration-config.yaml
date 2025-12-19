@@ -1,0 +1,21 @@
+# Continuous AI Agent Coordination System (Sprint 0)
+#
+# This is a configuration placeholder for AUTOMATION-001.
+# Replace with your chosen orchestration runtime (GitHub Actions, scheduler, etc).
+
+version: 1
+taskId: AUTOMATION-001
+qualityGates:
+  - id: sprint0_validation
+    command: pnpm run validate:sprint0
+    required: true
+  - id: lint
+    command: pnpm run lint
+    required: true
+  - id: typecheck
+    command: pnpm run typecheck
+    required: true
+handoffMetrics:
+  enabled: true
+  outputPath: artifacts/metrics/handoff-metrics.json
+
