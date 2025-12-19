@@ -19,7 +19,16 @@ The prompt references a `Task(name, description)` tool for sub-agent spawning; t
 
 ## Sprint 0 tasks completed in this run
 
-The remaining Sprint 0 tasks were completed by creating the missing artifacts/configs and syncing the project-tracker plan/metrics to `DONE`.
+Sprint 0 completion work was finished by committing the missing core scaffolding/configuration (monorepo + AI tooling + dev tooling), adding the remaining placeholder artifacts, and syncing the project-tracker plan/metrics.
+
+Core scaffolding/tasks completed:
+
+- `ENV-001-AI`: Monorepo scaffolding (pnpm workspace + Turbo + baseline apps/packages/tools layout)
+- `ENV-002-AI`: Dev tooling wiring (lint/format/quality scripts) + `validate:sprint-data`
+- `AI-SETUP-001`: `.claude/commands/*` + hooks scaffolding
+- `AI-SETUP-002`: Copilot scaffolding (`docs/shared/copilot-instructions.md`, `.github/copilot/*`)
+- `AI-SETUP-003`: External AI tools scaffolding (`tools/integrations/codex/*`, `tools/integrations/jules/*`)
+- Docs/test fixes: root `README.md` tracked with correct casing; integration tests tracked under `tests/integration/`; artifact dirs ensured via `.gitkeep`
 
 - `ENV-008-AI`: Baseline OTEL + alerting placeholders
 - `ENV-010-AI`: Coverage/test-generation artifact placeholders
@@ -38,10 +47,11 @@ The remaining Sprint 0 tasks were completed by creating the missing artifacts/co
 Command run:
 
 - `pnpm run validate:sprint0`
+- `pnpm run validate:sprint-data`
 
 Result:
 
-- Passed (58/58). Full output captured in `artifacts/sprint0/codex-run/validation-output.txt`.
+- Passed. Full output captured in `artifacts/sprint0/codex-run/validation-output.txt`.
 
 ## Git branches and patches
 
@@ -51,6 +61,9 @@ Primary working branch:
 
 Per-change-set branch pointers:
 
+- `sprint0/AI-SETUP-codex`
+- `sprint0/ENV-001-AI-codex`
+- `sprint0/ENV-002-AI-codex`
 - `sprint0/ENV-008-AI-codex`
 - `sprint0/ENV-010-AI-codex`
 - `sprint0/ENV-013-AI-codex`
@@ -67,6 +80,9 @@ Per-change-set branch pointers:
 
 Patch exports:
 
+- `artifacts/sprint0/codex-run/patches/SPRINT0-core-scaffolding.patch`
+- `artifacts/sprint0/codex-run/patches/SPRINT0-sprint-data-validation.patch`
+- `artifacts/sprint0/codex-run/patches/REPO-ignore-python-cache.patch`
 - `artifacts/sprint0/codex-run/patches/ENV-008-AI.patch`
 - `artifacts/sprint0/codex-run/patches/ENV-010-AI.patch`
 - `artifacts/sprint0/codex-run/patches/ENV-013-AI.patch`
@@ -84,7 +100,6 @@ Patch exports:
 ## Human review / next steps
 
 1. Review PR drafts under `artifacts/sprint0/codex-run/pr-drafts/`.
-2. Review patches under `artifacts/sprint0/codex-run/patches/` (largest is `SPRINT0-metrics-sync.patch`).
+2. Review patches under `artifacts/sprint0/codex-run/patches/` (largest are `SPRINT0-core-scaffolding.patch` and `SPRINT0-metrics-sync.patch`).
 3. If approved, push the branch(es) manually (no pushes were performed in this run). Example:
    - `git push -u origin sprint0/codex-run`
-

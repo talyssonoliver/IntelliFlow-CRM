@@ -5,6 +5,9 @@
       "type": "branches",
       "created": [
         "sprint0/codex-run",
+        "sprint0/AI-SETUP-codex",
+        "sprint0/ENV-001-AI-codex",
+        "sprint0/ENV-002-AI-codex",
         "sprint0/ENV-008-AI-codex",
         "sprint0/ENV-010-AI-codex",
         "sprint0/ENV-013-AI-codex",
@@ -48,4 +51,3 @@
     "PR drafts written per task"
   ]
 }
-
