@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "1.0",
+  "taskId": "AUTOMATION-002",
+  "generatedAt": "2025-12-19T00:00:00Z",
+  "dora": {
+    "lead_time_days": null,
+    "deploy_frequency_per_day": null,
+    "change_failure_rate": null,
+    "mttr_minutes": null
+  },
+  "quality": {
+    "lint_errors": null,
+    "typecheck_errors": null,
+    "test_failures": null
+  },
+  "ai": {
+    "cost_usd": null,
+    "latency_p95_ms": null
+  },
+  "notes": "Populate from CI and runtime observability once the dashboard pipeline is wired."
+}
+

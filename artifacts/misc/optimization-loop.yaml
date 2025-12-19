@@ -1,0 +1,21 @@
+# AI optimization loop contract (Sprint 0)
+#
+# This file captures the inputs/outputs expected for weekly optimization review.
+
+version: 1
+taskId: AUTOMATION-002
+cadence: weekly
+inputs:
+  - artifacts/metrics/metrics-realtime.json
+  - artifacts/misc/roi-tracking.csv
+outputs:
+  - artifacts/logs/quality-gates.log
+  - artifacts/logs/optimization-log.csv
+actions:
+  - id: review_top_regressions
+    owner: devops-team
+  - id: review_ai_cost_spikes
+    owner: ai-team
+  - id: publish_action_items
+    owner: tech-lead
+

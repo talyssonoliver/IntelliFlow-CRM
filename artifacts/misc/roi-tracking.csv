@@ -1,0 +1,5 @@
+measured_at_utc,task_id,metric,value,unit,notes
+2025-12-19T00:00:00Z,AUTOMATION-002,engineering_hours_saved,,,Placeholder
+2025-12-19T00:00:00Z,AUTOMATION-002,ai_cost_usd,,,Placeholder
+2025-12-19T00:00:00Z,AUTOMATION-002,roi,,,Placeholder
+
