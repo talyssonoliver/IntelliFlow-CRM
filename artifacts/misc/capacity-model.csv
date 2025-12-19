@@ -1,0 +1,5 @@
+role,fte,available_days,focus_factor,notes
+Engineering,1.0,10,0.7,"Placeholder capacity model"
+QA,0.5,10,0.6,"Placeholder capacity model"
+DevOps,0.25,10,0.5,"Placeholder capacity model"
+

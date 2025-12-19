@@ -1,0 +1,19 @@
+RISK MATRIX (PLACEHOLDER - NOT A REAL XLSX)
+==========================================
+
+Task: ENV-018-AI - Sprint Planning and Velocity Prediction
+Generated: 2025-12-19
+
+Replace this file with a real Excel risk matrix export once risks are reviewed
+and tracked in a formal register.
+
+Suggested columns:
+- Risk ID
+- Description
+- Likelihood (1-5)
+- Impact (1-5)
+- Score
+- Mitigation
+- Owner
+- Status
+
