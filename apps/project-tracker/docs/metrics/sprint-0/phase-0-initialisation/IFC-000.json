@@ -1,0 +1,32 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "IFC-000",
+  "description": "IntelliFlow CRM Feasibility Assessment",
+  "owner": "CEO + CTO + CFO",
+  "status": "PLANNED",
+  "sprint": "sprint-0",
+  "phase": "phase-0-initialisation",
+  "stream": null,
+  "dependencies": [],
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 480,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "decision_confidence": {
+      "target": 80,
+      "actual": null,
+      "unit": "percent"
+    }
+  },
+  "artifacts": [
+    "artifacts/reports/business-case.pdf",
+    "artifacts/reports/swot-analysis.xlsx",
+    "artifacts/reports/financial-model.xlsx",
+    "docs/planning/ADR-000-feasibility.md"
+  ],
+  "validation_steps": [],
+  "notes": "Leadership alignment and go/no-go decision for IntelliFlow CRM project",
+  "blockers": []
+}

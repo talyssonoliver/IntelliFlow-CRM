@@ -162,6 +162,7 @@ function updateTaskRegistry(tasks: any[], metricsDir: string): void {
     IN_PROGRESS: [],
     BLOCKED: [],
     PLANNED: [],
+    BACKLOG: [],
     FAILED: [],
   };
 
@@ -329,6 +330,11 @@ function mapCsvStatusToRegistry(status: string): string {
   if (status === 'Done' || status === 'Completed') return 'DONE';
   if (status === 'In Progress') return 'IN_PROGRESS';
   if (status === 'Blocked') return 'BLOCKED';
+  if (status === 'Planned') return 'PLANNED';
+  if (status === 'Backlog') return 'BACKLOG';
+  
+  // Validation: Warn on unknown status
+  console.warn(`⚠️  Unknown status "${status}" - defaulting to PLANNED`);
   return 'PLANNED';
 }
 
@@ -373,4 +379,70 @@ export function formatSyncResult(result: SyncResult): string {
   lines.push('='.repeat(80));
 
   return lines.join('\n');
+}
+
+interface ValidationResult {
+  passed: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+/**
+ * Validate metrics consistency after sync
+ */
+export function validateMetricsConsistency(csvPath: string, metricsDir: string): ValidationResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  
+  try {
+    const csvContent = readFileSync(csvPath, 'utf-8');
+    const { data } = Papa.parse(csvContent, { header: true, skipEmptyLines: true });
+    const tasks = data as any[];
+    
+    const sprint0Tasks = tasks.filter(t => String(t['Target Sprint']) === '0');
+    const csvTaskIds = new Set(sprint0Tasks.map(t => t['Task ID']));
+    
+    // Find all JSON files
+    const sprint0Dir = join(metricsDir, 'sprint-0');
+    const taskJsonFiles = findAllTaskJsons(sprint0Dir);
+    
+    // Check for orphaned files
+    for (const jsonFile of taskJsonFiles) {
+      const content = readFileSync(jsonFile, 'utf-8');
+      const taskData = JSON.parse(content);
+      const taskId = taskData.task_id || taskData.taskId;
+      
+      if (!csvTaskIds.has(taskId)) {
+        warnings.push(`Orphaned file detected: ${taskId} - not in CSV or not Sprint 0`);
+      }
+    }
+    
+    return { passed: errors.length === 0, errors, warnings };
+  } catch (err) {
+    return {
+      passed: false,
+      errors: [`Validation error: ${err instanceof Error ? err.message : String(err)}`],
+      warnings: [],
+    };
+  }
+}
+
+function findAllTaskJsons(dir: string): string[] {
+  const results: string[] = [];
+  
+  if (!existsSync(dir)) return results;
+
+  const entries = readdirSync(dir, { withFileTypes: true });
+  
+  for (const entry of entries) {
+    const fullPath = join(dir, entry.name);
+    
+    if (entry.isDirectory()) {
+      results.push(...findAllTaskJsons(fullPath));
+    } else if (entry.isFile() && entry.name.endsWith('.json') && !entry.name.startsWith('_')) {
+      results.push(fullPath);
+    }
+  }
+  
+  return results;
 }

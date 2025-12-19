@@ -3,7 +3,7 @@
   "task_id": "AUTOMATION-002",
   "description": "AI Performance Dashboard and Optimization Loop",
   "owner": "DevOps + AI Monitoring",
-  "status": "PLANNED",
+  "status": "BACKLOG",
   "sprint": "sprint-0",
   "phase": "phase-5-completion",
   "stream": null,

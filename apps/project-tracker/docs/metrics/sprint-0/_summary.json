@@ -41,10 +41,10 @@
 
   "task_summary": {
     "total": 27,
-    "done": 11,
-    "in_progress": 7,
+    "done": 7,
+    "in_progress": 4,
     "blocked": 0,
-    "not_started": 9,
+    "not_started": 16,
     "failed": 0
   },
 

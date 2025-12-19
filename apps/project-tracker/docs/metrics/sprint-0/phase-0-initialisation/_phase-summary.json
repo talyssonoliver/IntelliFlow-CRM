@@ -4,14 +4,14 @@
   "description": "Initial project setup and repository configuration",
   "streams": [],
   "aggregated_metrics": {
-    "total_tasks": 1,
+    "total_tasks": 2,
     "done": 1,
     "in_progress": 0,
     "blocked": 0,
-    "not_started": 0
+    "not_started": 1
   },
   "started_at": "2025-12-14T20:00:00Z",
-  "completed_at": "2025-12-14T23:44:01.255Z",
+  "completed_at": "2025-12-15T20:01:42.087Z",
   "target_duration_minutes": 15,
   "actual_duration_minutes": 5
 }

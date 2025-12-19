@@ -4,9 +4,9 @@
   "description": "Setup external dependencies and integrations",
   "streams": [],
   "aggregated_metrics": {
-    "total_tasks": 7,
+    "total_tasks": 8,
     "done": 0,
-    "in_progress": 6,
+    "in_progress": 3,
     "blocked": 0,
     "not_started": 1
   },

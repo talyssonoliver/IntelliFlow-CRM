@@ -51,6 +51,8 @@
     "docs:build": "pnpm --filter docs build",
     "docs:api": "pnpm --filter api docs:generate",
     "tracker": "pnpm --filter @intelliflow/project-tracker dev",
+    "validate:sprint0": "tsx tools/scripts/sprint0-validation.ts",
+    "sync:metrics": "cd apps/project-tracker && npx tsx scripts/sync-metrics.ts",
     "ci": "pnpm run lint && pnpm run typecheck && pnpm run test",
     "postinstall": "pnpm run db:generate"
   },

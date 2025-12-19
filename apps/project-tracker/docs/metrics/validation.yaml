@@ -1,0 +1,157 @@
+# =============================================================================
+# IntelliFlow CRM - Validation Rules v1.0
+# =============================================================================
+# MERGE NOTE:
+#   [x] Restored KPI Checks
+#   [x] Restored Manual Checks
+#   [x] Restored Conditional Logic
+#   [x] Added Global Spec/Security Gates
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# GLOBAL CHECKS
+# -----------------------------------------------------------------------------
+global_spec_check:
+  validation_commands:
+    - command: "test -f .specify/specifications/${TASK_ID}.md"
+      description: "Spec Document Exists"
+      type: auto
+      required: true
+    - command: "test -f .specify/planning/${TASK_ID}.md"
+      description: "Plan Document Exists"
+      type: auto
+      required: true
+
+global_security_check:
+  validation_commands:
+    - command: "! grep -rE '(sk-[a-zA-Z0-9]{48}|eyJ[a-zA-Z0-9_-]{10,})' . --exclude-dir={node_modules,.git} --exclude={*.lock,*.env*}"
+      description: "Deep scan for High-Entropy Secrets"
+      type: auto
+      required: true
+
+# -----------------------------------------------------------------------------
+# SPRINT 0: AI Foundation (Original Logic Restored)
+# -----------------------------------------------------------------------------
+
+EXC-INIT-001:
+  validation_commands:
+    - command: "test -d .claude && echo 'Claude directory exists'"
+      description: "Check Claude Code directory structure"
+      type: auto
+      required: true
+    - command: "test -f artifacts/metrics/automation-metrics.json"
+      description: "Check automation metrics artifact"
+      type: auto
+      required: true
+  kpi_checks:
+    - metric: "setup_time_hours"
+      operator: "<"
+      threshold: 4
+
+AI-SETUP-001:
+  validation_commands:
+    - command: "ls -la .claude/commands/*.sh | wc -l | grep -v '^0$'"
+      description: "Count Claude commands (>0)"
+      type: auto
+      required: true
+    - command: "test -f artifacts/misc/command-test-results.csv"
+      description: "Command test results"
+      type: auto
+      required: true
+
+AI-SETUP-002:
+  validation_commands:
+    - command: "test -f docs/shared/copilot-instructions.md"
+      description: "Copilot instructions exist"
+      type: auto
+      required: true
+  manual_checks:
+    - description: "Verify team members have Copilot access"
+      priority: high
+
+# -----------------------------------------------------------------------------
+# SPRINT 0: Foundation Setup (Detailed Functional Checks)
+# -----------------------------------------------------------------------------
+
+ENV-001-AI:
+  validation_commands:
+    - command: "test -f turbo.json"
+      description: "Turborepo configuration"
+      type: auto
+      required: true
+    - command: "pnpm install --dry-run"
+      description: "Dependencies resolvable (Dry Run)"
+      type: auto
+      required: true
+    - command: "test -d packages && test -d apps"
+      description: "Monorepo structure valid"
+      type: auto
+      required: true
+
+ENV-003-AI:
+  validation_commands:
+    - command: "docker compose config -q"
+      description: "Docker Compose Config Valid"
+      type: auto
+      required: true
+    - command: "docker compose ps 2>/dev/null || echo 'MANUAL: Start Docker'"
+      description: "Docker containers status"
+      type: manual
+      required: false
+
+ENV-004-AI:
+  validation_commands:
+    - command: "test -f infra/supabase/config.toml"
+      description: "Supabase Config Exists"
+      type: auto
+      required: true
+  manual_checks:
+    - description: "Verify Supabase connection < 30ms"
+      priority: high
+
+ENV-005-AI:
+  validation_commands:
+    - command: "test -f .github/workflows/ci.yml"
+      description: "CI Workflow Exists"
+      type: auto
+      required: true
+
+ENV-010-AI:
+  validation_commands:
+    - command: "test -d tests/e2e"
+      description: "E2E tests directory"
+      type: auto
+      required: true
+    - command: "pnpm test --passWithNoTests"
+      description: "Run test suite"
+      type: conditional
+      required: false
+  kpi_checks:
+    - metric: "test_coverage"
+      operator: ">="
+      threshold: 95
+
+# -----------------------------------------------------------------------------
+# SPRINT 0: Security & Planning
+# -----------------------------------------------------------------------------
+
+EXC-SEC-001:
+  validation_commands:
+    - command: "test -f artifacts/misc/vault-config.yaml"
+      description: "Vault configuration"
+      type: auto
+      required: true
+    - command: "! grep -r 'API_KEY=' . --include='.env*'"
+      description: "Ensure NO secrets in env files"
+      type: auto
+      required: true
+  manual_checks:
+    - description: "Run security audit to confirm no secrets in repository"
+      priority: critical
+
+IFC-160:
+  validation_commands:
+    - command: "test -f docs/architecture/repo-layout.md"
+      description: "Repo layout doc exists"
+      type: auto
+      required: true

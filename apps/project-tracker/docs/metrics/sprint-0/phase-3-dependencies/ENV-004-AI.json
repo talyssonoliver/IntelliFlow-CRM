@@ -12,7 +12,7 @@
     "all_satisfied": true,
     "notes": "ENV-003-AI completed - Docker containers healthy, proceeding with schema setup"
   },
-  "status": "DONE",
+  "status": "IN_PROGRESS",
   "status_history": [
     {
       "status": "PLANNED",
@@ -90,7 +90,7 @@
     },
     {
       "name": "tables_created",
-      "command": "\dt (9 tables verified)",
+      "command": "\\dt (9 tables verified)",
       "executed_at": "2025-12-14T23:37:00Z",
       "exit_code": 0,
       "passed": true

@@ -3,7 +3,7 @@
   "task_id": "AUTOMATION-001",
   "description": "Continuous AI Agent Coordination System",
   "owner": "AI Specialist",
-  "status": "PLANNED",
+  "status": "BACKLOG",
   "sprint": "sprint-0",
   "phase": "phase-5-completion",
   "stream": null,

@@ -3,7 +3,7 @@
   "task_id": "IFC-160",
   "description": "Artifact path conventions + CI lint to prevent repo drift",
   "owner": "Tech Lead",
-  "status": "DONE",
+  "status": "PLANNED",
   "sprint": "sprint-0",
   "phase": "phase-2-parallel",
   "stream": "parallel-c",

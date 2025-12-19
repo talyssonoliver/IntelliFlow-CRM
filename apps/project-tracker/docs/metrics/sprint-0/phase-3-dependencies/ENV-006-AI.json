@@ -3,7 +3,7 @@
   "task_id": "ENV-006-AI",
   "description": "Prisma Schema with Generated Optimizations",
   "owner": "Backend Dev + Copilot",
-  "status": "DONE",
+  "status": "IN_PROGRESS",
   "sprint": "sprint-0",
   "phase": "phase-3-dependencies",
   "stream": null,
