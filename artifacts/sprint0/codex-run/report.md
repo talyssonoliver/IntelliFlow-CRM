@@ -51,7 +51,7 @@ Command run:
 
 Result:
 
-- Passed. Full output captured in `artifacts/sprint0/codex-run/validation-output.txt`.
+- Passed. Output captured in `artifacts/sprint0/codex-run/validation-output.txt` (ANSI-stripped for readability).
 
 ## Git branches and patches
 
@@ -83,6 +83,7 @@ Patch exports:
 - `artifacts/sprint0/codex-run/patches/SPRINT0-core-scaffolding.patch`
 - `artifacts/sprint0/codex-run/patches/SPRINT0-sprint-data-validation.patch`
 - `artifacts/sprint0/codex-run/patches/REPO-ignore-python-cache.patch`
+- `artifacts/sprint0/codex-run/patches/SPRINT0-validation-output-human-readable.patch`
 - `artifacts/sprint0/codex-run/patches/ENV-008-AI.patch`
 - `artifacts/sprint0/codex-run/patches/ENV-010-AI.patch`
 - `artifacts/sprint0/codex-run/patches/ENV-013-AI.patch`
