@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "IntelliFlow Analytics Event",
+  "type": "object",
+  "required": ["eventId", "occurredAt", "eventName", "context"],
+  "properties": {
+    "eventId": { "type": "string", "description": "UUIDv4" },
+    "occurredAt": { "type": "string", "format": "date-time" },
+    "eventName": { "type": "string" },
+    "context": {
+      "type": "object",
+      "required": ["environment"],
+      "properties": {
+        "environment": { "type": "string", "enum": ["development", "test", "staging", "production"] },
+        "app": { "type": "string" },
+        "sessionId": { "type": "string" },
+        "subjectId": {
+          "type": "string",
+          "description": "Non-PII stable identifier (UUID). Do not use email/name."
+        }
+      },
+      "additionalProperties": true
+    },
+    "properties": {
+      "type": "object",
+      "description": "Event-specific fields (must not include PII)",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}
+

@@ -1,0 +1,3 @@
+metric_id,task_id,measured_at_utc,value,unit,notes
+insights_accuracy,ENV-016-AI,2025-12-19T00:00:00Z,,percent,"Placeholder. Populate once insight generation is implemented."
+
