@@ -18,11 +18,11 @@ groups:
         for: 2m
         labels:
           severity: critical
-          sprint: "0"
-          service: "{{ $labels.job }}"
+          sprint: '0'
+          service: '{{ $labels.job }}'
         annotations:
-          summary: "Service down ({{ $labels.job }})"
-          description: "No scrape targets are up for {{ $labels.job }} for >2m."
+          summary: 'Service down ({{ $labels.job }})'
+          description: 'No scrape targets are up for {{ $labels.job }} for >2m.'
 
       - alert: IntelliFlowHighErrorRate
         expr: |
@@ -34,10 +34,10 @@ groups:
         for: 10m
         labels:
           severity: high
-          sprint: "0"
+          sprint: '0'
         annotations:
-          summary: "High 5xx error rate (>2%)"
-          description: "HTTP 5xx rate exceeded 2% for 10m across IntelliFlow services."
+          summary: 'High 5xx error rate (>2%)'
+          description: 'HTTP 5xx rate exceeded 2% for 10m across IntelliFlow services.'
 
       - alert: IntelliFlowP99LatencyBudgetExceeded
         expr: |
@@ -48,10 +48,10 @@ groups:
         for: 10m
         labels:
           severity: high
-          sprint: "0"
+          sprint: '0'
         annotations:
-          summary: "p99 latency budget exceeded (>200ms)"
-          description: "p99 request latency exceeded 200ms for 10m (Sprint 0 budget)."
+          summary: 'p99 latency budget exceeded (>200ms)'
+          description: 'p99 request latency exceeded 200ms for 10m (Sprint 0 budget).'
 
       - alert: IntelliFlowHighCPU
         expr: |
@@ -59,8 +59,7 @@ groups:
         for: 15m
         labels:
           severity: medium
-          sprint: "0"
+          sprint: '0'
         annotations:
-          summary: "High CPU (>80%)"
-          description: "Process CPU usage above 80% for 15m on {{ $labels.instance }}."
-
+          summary: 'High CPU (>80%)'
+          description: 'Process CPU usage above 80% for 15m on {{ $labels.instance }}.'

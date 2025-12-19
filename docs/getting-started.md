@@ -1,6 +1,7 @@
 # Getting Started
 
-This guide will help you set up your local development environment for IntelliFlow CRM.
+This guide will help you set up your local development environment for
+IntelliFlow CRM.
 
 ## Prerequisites
 
@@ -12,6 +13,7 @@ Before you begin, ensure you have the following installed on your system:
 - **Git** (for version control)
 
 Optional but recommended:
+
 - **VS Code** with recommended extensions
 - **Ollama** (for local AI development)
 
@@ -31,7 +33,8 @@ cd intelliflow-crm
 pnpm install
 ```
 
-This will install dependencies for all packages and applications in the monorepo.
+This will install dependencies for all packages and applications in the
+monorepo.
 
 ### 3. Set Up Environment Variables
 
@@ -104,6 +107,7 @@ pnpm run dev
 ```
 
 This will start:
+
 - Web app on http://localhost:3000
 - API server on http://localhost:4000
 - AI worker on http://localhost:5000
@@ -128,6 +132,7 @@ pnpm run tracker
 ### 7. Verify Installation
 
 Open your browser and navigate to:
+
 - **Web App**: http://localhost:3000
 - **API Health Check**: http://localhost:4000/health
 - **Project Tracker**: http://localhost:3002
@@ -259,6 +264,7 @@ git commit -m "docs: update getting started guide"
 ```
 
 The pre-commit hook will automatically:
+
 - Run linting
 - Run type checking
 - Format code
@@ -323,8 +329,10 @@ pnpm run typecheck
 
 Now that you have your development environment set up:
 
-1. **Explore the Architecture**: Read the [Architecture Overview](./architecture/overview.md)
-2. **Understand Domain Models**: Check out [Domain-Driven Design](./architecture/ddd.md)
+1. **Explore the Architecture**: Read the
+   [Architecture Overview](./architecture/overview.md)
+2. **Understand Domain Models**: Check out
+   [Domain-Driven Design](./architecture/ddd.md)
 3. **Learn the API**: Browse the [API Reference](./api/overview.md)
 4. **Build Features**: Follow the [Development Guide](./development/overview.md)
 5. **Work with AI**: Explore [AI Integration](./ai/overview.md)
@@ -332,9 +340,11 @@ Now that you have your development environment set up:
 ## Getting Help
 
 If you encounter issues:
+
 - Check the [Troubleshooting](#troubleshooting) section above
 - Search [GitHub Issues](https://github.com/yourusername/intelliflow-crm/issues)
-- Ask in [GitHub Discussions](https://github.com/yourusername/intelliflow-crm/discussions)
+- Ask in
+  [GitHub Discussions](https://github.com/yourusername/intelliflow-crm/discussions)
 - Review the [CLAUDE.md](../CLAUDE.md) file for AI-assisted development tips
 
 Happy coding!

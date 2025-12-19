@@ -770,7 +770,7 @@ ${description}
 
 ### Claude Code CLI:
 \`\`\`bash
-claude run --print --no-session-persistence -p "Review these files for security, architecture compliance, and code quality: ${artifacts}"
+claude --print --no-session-persistence -p "Review these files for security, architecture compliance, and code quality: ${artifacts}"
 \`\`\`
 
 ### Manual Review Prompt:
@@ -934,7 +934,7 @@ Context: ${q_context}
 Provide a concise, actionable answer based on the project's architecture and conventions."
 
                 local agent_answer
-                agent_answer=$(claude run --permission-mode bypassPermissions --print --no-session-persistence -p "${agent_prompt}" 2>/dev/null | head -50)
+                agent_answer=$(claude --permission-mode bypassPermissions --print --no-session-persistence -p "${agent_prompt}" 2>/dev/null | head -50)
 
                 if [[ -n "${agent_answer}" ]]; then
                     echo "**Answer (from agent):**" >> "${answers_file}"
@@ -1813,7 +1813,7 @@ Do not include any other text, explanations, or formatting. Just one word: APPRO
 
     # Use Claude Code CLI with print mode for non-interactive output
     local audit_tmp="${TASKS_DIR}/${task_id}_audit.tmp"
-    claude run --permission-mode bypassPermissions --print --no-session-persistence -p "${prompt}" > "${audit_tmp}" 2>&1 || true
+    claude --permission-mode bypassPermissions --print --no-session-persistence -p "${prompt}" > "${audit_tmp}" 2>&1 || true
 
     # Check for authentication errors
     if grep -qiE "\b401\b|OAuth token has expired|authentication_error|Please run \/login" "${audit_tmp}"; then
@@ -2506,7 +2506,8 @@ execute_task() {
     CURRENT_TASK_ID="${task_id}"
 
     # EXIT trap: mark task as crashed if we exit non-zero before completion
-    local task_completed=false
+    # Note: Using global variable because trap handlers can't access local variables
+    task_completed=false
     trap_handler() {
         local exit_code=$?
         if [[ "$task_completed" != "true" ]] && [[ "$exit_code" -ne 0 ]]; then
@@ -2771,7 +2772,7 @@ Use these answers to complete your specification. Do not ask the same questions 
             ((question_round++))
             log INFO "Spec generation attempt ${question_round}/${max_question_rounds}..."
 
-            claude run --permission-mode bypassPermissions --print --no-session-persistence -p "${spec_prompt}" > "${spec_tmp}" 2>&1 || true
+            claude --permission-mode bypassPermissions --print --no-session-persistence -p "${spec_prompt}" > "${spec_tmp}" 2>&1 || true
 
             # Detect authentication errors
             if grep -qiE "\b401\b|OAuth token has expired|authentication_error|Please run \/login" "${spec_tmp}"; then
@@ -2983,7 +2984,7 @@ Use these answers to complete your implementation plan. Do not ask the same ques
             ((question_round++))
             log INFO "Plan generation attempt ${question_round}/${max_question_rounds}..."
 
-            claude run --permission-mode bypassPermissions --print --no-session-persistence -p "${plan_prompt}" > "${plan_tmp}" 2>&1 || true
+            claude --permission-mode bypassPermissions --print --no-session-persistence -p "${plan_prompt}" > "${plan_tmp}" 2>&1 || true
 
             # Detect authentication errors
             if grep -qiE "\b401\b|OAuth token has expired|authentication_error|Please run \/login" "${plan_tmp}"; then
@@ -3143,7 +3144,7 @@ ${err_msg}"
         # Execute Claude with print mode for non-interactive output
         # Guard with || true to prevent set -e exit, capture output for auth check
         local claude_output="${TASKS_DIR}/${task_id}_phase3.tmp"
-        claude run --print --no-session-persistence -p "$prompt" > "${claude_output}" 2>&1 || true
+        claude --print --no-session-persistence -p "$prompt" > "${claude_output}" 2>&1 || true
 
         # Check for authentication errors
         if grep -qiE "\b401\b|OAuth token has expired|authentication_error|Please run \/login" "${claude_output}" 2>/dev/null; then

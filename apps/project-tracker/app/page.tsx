@@ -1,7 +1,19 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { Upload, BarChart3, Kanban, Settings, FileText, RefreshCw, Activity } from 'lucide-react';
+import Link from 'next/link';
+import {
+  Upload,
+  BarChart3,
+  Kanban,
+  Settings,
+  FileText,
+  RefreshCw,
+  Activity,
+  Server,
+  Shield,
+  Terminal,
+} from 'lucide-react';
 import { parseCSV, parseCSVText, type ParsedCSVData } from '@/lib/csv-parser';
 import type { Task, SprintNumber } from '@/lib/types';
 import DashboardView from '@/components/DashboardView';
@@ -9,9 +21,11 @@ import KanbanView from '@/components/KanbanView';
 import AnalyticsView from '@/components/AnalyticsView';
 import SettingsView from '@/components/SettingsView';
 import MetricsView from '@/components/MetricsView';
+import GovernanceView from '@/components/GovernanceView';
+import AuditView from '@/components/AuditView';
 import TaskModal from '@/components/TaskModal';
 
-type Page = 'dashboard' | 'kanban' | 'analytics' | 'metrics' | 'settings';
+type Page = 'dashboard' | 'kanban' | 'analytics' | 'metrics' | 'governance' | 'audit' | 'settings';
 
 export default function Home() {
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
@@ -59,7 +73,7 @@ export default function Home() {
         method: 'POST',
         cache: 'no-store',
       });
-      
+
       if (response.ok) {
         const result = await response.json();
         console.log('Metrics synced successfully:', result);
@@ -84,7 +98,7 @@ export default function Home() {
         cache: 'no-store',
         headers: {
           'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache',
+          Pragma: 'no-cache',
         },
       });
       if (!response.ok) {
@@ -97,10 +111,10 @@ export default function Home() {
       console.log('CSV loaded at:', new Date().toLocaleTimeString());
       console.log('Total tasks:', data.tasks.length);
       console.log('Task statuses:', {
-        planned: data.tasks.filter(t => t.status === 'Planned').length,
-        inProgress: data.tasks.filter(t => t.status === 'In Progress').length,
-        completed: data.tasks.filter(t => t.status === 'Completed').length,
-        blocked: data.tasks.filter(t => t.status === 'Blocked').length,
+        planned: data.tasks.filter((t) => t.status === 'Planned').length,
+        inProgress: data.tasks.filter((t) => t.status === 'In Progress').length,
+        completed: data.tasks.filter((t) => t.status === 'Completed').length,
+        blocked: data.tasks.filter((t) => t.status === 'Blocked').length,
       });
 
       setAllTasks(data.tasks);
@@ -127,9 +141,8 @@ export default function Home() {
     loadSprintPlan();
   }, [loadSprintPlan]);
 
-  const filteredTasks = currentSprint === 'all'
-    ? allTasks
-    : allTasks.filter(t => t.sprint === currentSprint);
+  const filteredTasks =
+    currentSprint === 'all' ? allTasks : allTasks.filter((t) => t.sprint === currentSprint);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -167,9 +180,9 @@ export default function Home() {
                   className="bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">All Sprints</option>
-                  {sprints.map(sprint => (
+                  {sprints.map((sprint) => (
                     <option key={sprint} value={sprint}>
-                      Sprint {sprint} ({allTasks.filter(t => t.sprint === sprint).length})
+                      Sprint {sprint} ({allTasks.filter((t) => t.sprint === sprint).length})
                     </option>
                   ))}
                 </select>
@@ -192,12 +205,7 @@ export default function Home() {
                   <Upload className="w-4 h-4" />
                   <span className="font-medium">Upload CSV</span>
                 </div>
-                <input
-                  type="file"
-                  accept=".csv"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
+                <input type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
               </label>
             </div>
           </div>
@@ -249,6 +257,28 @@ export default function Home() {
               Metrics
             </button>
             <button
+              onClick={() => setCurrentPage('governance')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
+                currentPage === 'governance'
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              <Shield className="w-4 h-4" />
+              Governance
+            </button>
+            <button
+              onClick={() => setCurrentPage('audit')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
+                currentPage === 'audit'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              <Terminal className="w-4 h-4" />
+              Audit
+            </button>
+            <button
               onClick={() => setCurrentPage('settings')}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
                 currentPage === 'settings'
@@ -259,6 +289,13 @@ export default function Home() {
               <Settings className="w-4 h-4" />
               Settings
             </button>
+            <Link
+              href="/swarm"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold shadow-lg"
+            >
+              <Server className="w-4 h-4" />
+              Swarm Control
+            </Link>
           </nav>
         </div>
       </header>
@@ -280,12 +317,7 @@ export default function Home() {
               <div className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors">
                 Choose File
               </div>
-              <input
-                type="file"
-                accept=".csv"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
+              <input type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
             </label>
           </div>
         )}
@@ -300,31 +332,21 @@ export default function Home() {
               />
             )}
             {currentPage === 'kanban' && (
-              <KanbanView
-                tasks={filteredTasks}
-                onTaskClick={handleTaskClick}
-              />
+              <KanbanView tasks={filteredTasks} onTaskClick={handleTaskClick} />
             )}
             {currentPage === 'analytics' && (
-              <AnalyticsView
-                tasks={filteredTasks}
-                sections={sections}
-              />
+              <AnalyticsView tasks={filteredTasks} sections={sections} />
             )}
-            {currentPage === 'metrics' && (
-              <MetricsView />
-            )}
-            {currentPage === 'settings' && (
-              <SettingsView />
-            )}
+            {currentPage === 'metrics' && <MetricsView />}
+            {currentPage === 'governance' && <GovernanceView />}
+            {currentPage === 'audit' && <AuditView />}
+            {currentPage === 'settings' && <SettingsView />}
           </>
         )}
       </main>
 
       {/* Task Modal */}
-      {selectedTask && (
-        <TaskModal task={selectedTask} onClose={handleCloseModal} />
-      )}
+      {selectedTask && <TaskModal task={selectedTask} onClose={handleCloseModal} />}
     </div>
   );
 }

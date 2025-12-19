@@ -1,0 +1,29 @@
+# Task Context: IFC-037
+
+## Description
+Analytics Dashboard Design
+
+## Dependencies
+None
+
+## Prerequisites
+None
+
+## Definition of Done
+null
+
+## KPIs
+  - N/A
+
+## Expected Artifacts
+  - N/A
+
+## Validation Method
+null
+
+---
+
+## Upstream Context
+
+---
+Generated: 2025-12-16T02:27:20+00:00

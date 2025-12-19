@@ -1,0 +1,3 @@
+Task ID,Section,Description,Owner,Dependencies,CleanDependencies,CrossQuarterDeps,Pre-requisites,Definition of Done,Status,KPIs,Target Sprint,Artifacts To Track,Validation Method
+EARLY-001,Foundation,Early task,DevOps,LATE-001,LATE-001,,,Done,Planned,,1,,
+LATE-001,Foundation,Late task,DevOps,,,,,Done,Planned,,2,,

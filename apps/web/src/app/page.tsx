@@ -5,12 +5,10 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <div className="container mx-auto px-4 py-16">
         <header className="text-center mb-16">
-          <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            IntelliFlow CRM
-          </h1>
+          <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4">IntelliFlow CRM</h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            AI-powered customer relationship management for intelligent sales
-            automation and lead scoring
+            AI-powered customer relationship management for intelligent sales automation and lead
+            scoring
           </p>
         </header>
 
@@ -41,12 +39,7 @@ export default function HomePage() {
             className="inline-flex items-center px-8 py-4 bg-primary text-primary-foreground rounded-lg font-semibold hover:opacity-90 transition-opacity"
           >
             Go to Dashboard
-            <svg
-              className="ml-2 w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -105,18 +98,11 @@ function FeatureCard({
       className="block p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow"
     >
       <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-        <svg
-          className="w-6 h-6 text-primary"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           {icons[icon]}
         </svg>
       </div>
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-        {title}
-      </h3>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{title}</h3>
       <p className="text-gray-600 dark:text-gray-300">{description}</p>
     </Link>
   );

@@ -16,7 +16,16 @@
  * - Generates audit logs
  */
 
-import { PrismaClient, UserRole, LeadSource, LeadStatus, OpportunityStage, TaskPriority, TaskStatus, EventStatus } from '@prisma/client';
+import {
+  PrismaClient,
+  UserRole,
+  LeadSource,
+  LeadStatus,
+  OpportunityStage,
+  TaskPriority,
+  TaskStatus,
+  EventStatus,
+} from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -533,6 +542,8 @@ async function seedTasks() {
 async function seedAuditLogs() {
   console.log('📝 Seeding audit logs...');
 
+  // NOSONAR: Hardcoded private IPs (192.168.x.x) are safe here - this is mock seed data
+  // for development/testing only. These are RFC 1918 private addresses, not real user IPs.
   const auditLogs = [
     {
       id: 'seed-audit-001',
@@ -541,7 +552,7 @@ async function seedAuditLogs() {
       entityId: SEED_IDS.leads.lead1,
       oldValue: null,
       newValue: { status: LeadStatus.NEW, score: 85 },
-      ipAddress: '192.168.1.100',
+      ipAddress: '192.168.1.100', // NOSONAR - mock seed data
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
       userId: SEED_IDS.users.salesRep1,
     },
@@ -552,7 +563,7 @@ async function seedAuditLogs() {
       entityId: SEED_IDS.leads.lead2,
       oldValue: { status: LeadStatus.NEW },
       newValue: { status: LeadStatus.CONTACTED },
-      ipAddress: '192.168.1.100',
+      ipAddress: '192.168.1.100', // NOSONAR - mock seed data
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
       userId: SEED_IDS.users.salesRep1,
     },
@@ -563,7 +574,7 @@ async function seedAuditLogs() {
       entityId: SEED_IDS.opportunities.opp1,
       oldValue: null,
       newValue: { stage: OpportunityStage.PROPOSAL, value: 250000 },
-      ipAddress: '192.168.1.101',
+      ipAddress: '192.168.1.101', // NOSONAR - mock seed data
       userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
       userId: SEED_IDS.users.salesRep1,
     },

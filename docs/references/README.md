@@ -1,10 +1,13 @@
 # IntelliFlow CRM - Technical References
 
-This directory contains technical documentation and references for the tech stack used in IntelliFlow CRM.
+This directory contains technical documentation and references for the tech
+stack used in IntelliFlow CRM.
 
 ## Purpose
 
-The Model Context Protocol (MCP) uses this directory to provide AI agents with accurate, up-to-date information about:
+The Model Context Protocol (MCP) uses this directory to provide AI agents with
+accurate, up-to-date information about:
+
 - Next.js 16 App Router patterns
 - React 19 Server Components
 - tRPC v11 API conventions
@@ -25,6 +28,7 @@ references/
 ## Adding References
 
 When adding new references:
+
 1. Create a subdirectory for the technology
 2. Include practical examples and patterns
 3. Focus on project-specific implementations
@@ -32,7 +36,9 @@ When adding new references:
 
 ## MCP Integration
 
-This directory is exposed to Claude via MCP filesystem server, allowing Phase 1 (Architect) of the orchestrator to:
+This directory is exposed to Claude via MCP filesystem server, allowing Phase 1
+(Architect) of the orchestrator to:
+
 - Read local documentation
 - Understand project conventions
 - Generate context-aware task implementations

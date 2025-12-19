@@ -3,11 +3,13 @@
 Generate and validate Prisma schema with AI-optimized indexes and relations.
 
 ## Usage
+
 ```
 /generate-schema [entity] [--validate] [--migrate]
 ```
 
 ## Arguments
+
 - `entity`: Name of the domain entity (e.g., Lead, Contact, Account)
 - `--validate`: Run schema validation without changes
 - `--migrate`: Create and apply migration after generation
@@ -20,6 +22,7 @@ Generate and validate Prisma schema with AI-optimized indexes and relations.
    - Map to Prisma schema types
 
 2. **Generate schema additions**
+
    ```prisma
    model Lead {
      id          String   @id @default(cuid())
@@ -42,11 +45,13 @@ Generate and validate Prisma schema with AI-optimized indexes and relations.
    - Update Prisma client
 
 ## Output
+
 - Schema diff
 - Validation results
 - Migration status (if applicable)
 
 ## Example
+
 ```bash
 # Generate Lead schema
 /generate-schema Lead --migrate

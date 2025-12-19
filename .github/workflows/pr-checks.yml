@@ -1,0 +1,333 @@
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main, develop]
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8.15.0'
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+
+jobs:
+  pr-validation:
+    name: PR Validation
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate PR title
+        uses: amannn/action-semantic-pull-request@v5
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check branch name
+        run: |
+          branch="${{ github.head_ref }}"
+          if [[ ! "$branch" =~ ^(feat|fix|docs|refactor|test|chore)/.+ ]]; then
+            echo "Branch name must follow pattern: feat/*, fix/*, docs/*, refactor/*, test/*, chore/*"
+            exit 1
+          fi
+
+      - name: Validate PR size
+        run: |
+          changes=$(git diff --stat origin/${{ github.base_ref }}...HEAD | tail -n1 | grep -oP '\d+(?= insertion)|\d+(?= deletion)' | awk '{sum+=$1} END {print sum}')
+          if [ "$changes" -gt 1000 ]; then
+            echo "::warning::PR is large ($changes lines changed). Consider breaking it into smaller PRs."
+          fi
+
+  quality-checks:
+    name: Quality Checks
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Type check
+        run: pnpm run typecheck
+
+      - name: Check formatting
+        run: pnpm run format:check
+
+      - name: Artifact path linting
+        run: pnpm run lint:artifacts
+        continue-on-error: true
+
+  test-coverage:
+    name: Test Coverage
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests with coverage
+        run: pnpm run test:coverage
+
+      - name: Generate coverage report
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./artifacts/coverage/coverage-report.json
+          flags: pr-tests
+          fail_ci_if_error: false
+
+      - name: Comment coverage on PR
+        uses: romeovs/lcov-reporter-action@v0.3.1
+        with:
+          lcov-file: ./artifacts/coverage/lcov.info
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          delete-old-comments: true
+        continue-on-error: true
+
+  build-preview:
+    name: Build Preview
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all packages
+        run: pnpm run build
+        env:
+          NODE_ENV: production
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-build-${{ github.event.pull_request.number }}
+          path: |
+            apps/*/dist
+            apps/*/.next
+          retention-days: 3
+
+  deploy-preview:
+    name: Deploy Preview
+    runs-on: ubuntu-latest
+    needs: [build-preview]
+    if: github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository
+    environment:
+      name: preview-pr-${{ github.event.pull_request.number }}
+      url: https://intelliflow-pr-${{ github.event.pull_request.number }}.vercel.app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: pr-build-${{ github.event.pull_request.number }}
+
+      - name: Deploy to Vercel Preview
+        id: deploy
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          github-comment: true
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+
+      - name: Comment preview URL
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const output = `#### Preview Deployment
+
+            Preview URL: ${{ steps.deploy.outputs.preview-url }}
+
+            Status: ✅ Deployed successfully`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Audit dependencies
+        run: pnpm audit --audit-level=high
+        continue-on-error: true
+
+      - name: Scan for secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.pull_request.base.sha }}
+          head: ${{ github.event.pull_request.head.sha }}
+          extra_args: --only-verified
+
+  lighthouse:
+    name: Lighthouse Performance
+    runs-on: ubuntu-latest
+    needs: [deploy-preview]
+    if: github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v11
+        with:
+          urls: |
+            https://intelliflow-pr-${{ github.event.pull_request.number }}.vercel.app
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+          runs: 3
+
+      - name: Comment Lighthouse scores
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            const fs = require('fs');
+            const resultsPath = '.lighthouseci';
+
+            if (fs.existsSync(resultsPath)) {
+              const output = `#### Lighthouse Performance Report
+
+              View full report in artifacts.
+
+              Performance, Accessibility, Best Practices, and SEO scores are available in the CI artifacts.`;
+
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: output
+              });
+            }
+
+  pr-summary:
+    name: PR Summary
+    runs-on: ubuntu-latest
+    needs: [pr-validation, quality-checks, test-coverage, build-preview]
+    if: always() && github.event.pull_request.draft == false
+    steps:
+      - name: Generate summary
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const validationStatus = '${{ needs.pr-validation.result }}';
+            const qualityStatus = '${{ needs.quality-checks.result }}';
+            const coverageStatus = '${{ needs.test-coverage.result }}';
+            const buildStatus = '${{ needs.build-preview.result }}';
+
+            const statusIcon = (status) => {
+              if (status === 'success') return '✅';
+              if (status === 'failure') return '❌';
+              return '⏭️';
+            };
+
+            const output = `## PR Check Summary
+
+            | Check | Status |
+            |-------|--------|
+            | PR Validation | ${statusIcon(validationStatus)} ${validationStatus} |
+            | Quality Checks | ${statusIcon(qualityStatus)} ${qualityStatus} |
+            | Test Coverage | ${statusIcon(coverageStatus)} ${coverageStatus} |
+            | Build Preview | ${statusIcon(buildStatus)} ${buildStatus} |
+
+            ${validationStatus === 'success' && qualityStatus === 'success' && coverageStatus === 'success' && buildStatus === 'success' ? '✅ All checks passed! Ready for review.' : '⚠️ Some checks failed. Please review the logs.'}`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });

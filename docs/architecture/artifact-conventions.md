@@ -1,23 +1,26 @@
 # Artifact Path Conventions
 
-**Version:** 1.0.0
-**Last Updated:** 2025-12-14
-**Status:** Active
+**Version:** 1.0.0 **Last Updated:** 2025-12-14 **Status:** Active
 **Enforcement:** Automated via CI/CD
 
 ## Overview
 
-This document defines strict conventions for artifact organization in the IntelliFlow CRM monorepo. Artifacts are non-source files generated during development, testing, building, and deployment processes.
+This document defines strict conventions for artifact organization in the
+IntelliFlow CRM monorepo. Artifacts are non-source files generated during
+development, testing, building, and deployment processes.
 
-**Key Principle:** Artifacts are **ephemeral** and **never committed** to version control.
+**Key Principle:** Artifacts are **ephemeral** and **never committed** to
+version control.
 
 ## Artifact Categories
 
 ### 1. Logs (`artifacts/logs/`)
 
-**Purpose:** Store log files generated during development, testing, and operations.
+**Purpose:** Store log files generated during development, testing, and
+operations.
 
 **Conventions:**
+
 ```
 artifacts/logs/
 ├── build/              # Build process logs
@@ -28,6 +31,7 @@ artifacts/logs/
 ```
 
 **Naming Pattern:**
+
 ```
 {process}-{timestamp}.log
 {service}-{environment}-{date}.log
@@ -40,11 +44,13 @@ Examples:
 ```
 
 **Retention:**
+
 - Development: 7 days
 - CI/CD: 30 days
 - Production: 90 days (then archive to S3/GCS)
 
 **Prohibited:**
+
 - ❌ No secrets or credentials in logs
 - ❌ No PII (personally identifiable information)
 - ❌ No sensitive business data
@@ -54,6 +60,7 @@ Examples:
 **Purpose:** Generated analysis reports and documentation.
 
 **Conventions:**
+
 ```
 artifacts/reports/
 ├── coverage/           # Test coverage reports
@@ -73,6 +80,7 @@ artifacts/reports/
 ```
 
 **Naming Pattern:**
+
 ```
 {report-type}-{scope}-{timestamp}.{format}
 
@@ -84,12 +92,14 @@ Examples:
 ```
 
 **Formats:**
+
 - HTML for human-readable reports
 - JSON for machine-readable data
 - CSV for tabular data
 - PDF for formal documentation
 
 **Retention:**
+
 - Keep last 10 reports per type
 - Archive monthly summaries
 
@@ -98,6 +108,7 @@ Examples:
 **Purpose:** Collected metrics data for analysis and monitoring.
 
 **Conventions:**
+
 ```
 artifacts/metrics/
 ├── dora/               # DORA metrics (DevOps)
@@ -119,6 +130,7 @@ artifacts/metrics/
 ```
 
 **Naming Pattern:**
+
 ```
 {metric-name}-{date-range}.{format}
 
@@ -129,6 +141,7 @@ Examples:
 ```
 
 **Data Format:**
+
 ```json
 {
   "metric": "deployment-frequency",
@@ -144,6 +157,7 @@ Examples:
 **Purpose:** Other generated artifacts that don't fit above categories.
 
 **Conventions:**
+
 ```
 artifacts/misc/
 ├── schemas/            # Generated schemas (OpenAPI, GraphQL)
@@ -154,10 +168,12 @@ artifacts/misc/
 ```
 
 **Naming Pattern:**
+
 - Descriptive names with context
 - Include version or timestamp when applicable
 
 **Examples:**
+
 ```
 openapi-spec-v1.2.3.json
 test-failure-screenshot-2025-12-14-103045.png
@@ -170,6 +186,7 @@ access-policy.json
 ### Allowed Paths
 
 **Artifacts Directory:**
+
 ```
 ✅ artifacts/logs/{category}/{filename}.log
 ✅ artifacts/reports/{type}/{filename}.{html|json|pdf}
@@ -178,6 +195,7 @@ access-policy.json
 ```
 
 **Temporary Build Outputs:**
+
 ```
 ✅ dist/
 ✅ .next/
@@ -188,6 +206,7 @@ access-policy.json
 ### Prohibited Paths
 
 **Never Place Artifacts In:**
+
 ```
 ❌ src/**/*                    # Source code directories
 ❌ packages/*/src/**/*         # Package source
@@ -198,6 +217,7 @@ access-policy.json
 ```
 
 **Never Create:**
+
 ```
 ❌ *.secret.*                  # Files with "secret" in name
 ❌ *.private.*                 # Files with "private" in name
@@ -211,13 +231,13 @@ access-policy.json
 
 To prevent repository bloat:
 
-| File Type | Max Size | Action if Exceeded |
-|-----------|----------|-------------------|
-| Logs | 10 MB | Compress or split |
-| Reports (HTML) | 5 MB | Optimize or paginate |
-| Reports (JSON) | 20 MB | Split or compress |
-| Screenshots | 2 MB | Compress images |
-| Videos | Not allowed | Link to external storage |
+| File Type      | Max Size    | Action if Exceeded       |
+| -------------- | ----------- | ------------------------ |
+| Logs           | 10 MB       | Compress or split        |
+| Reports (HTML) | 5 MB        | Optimize or paginate     |
+| Reports (JSON) | 20 MB       | Split or compress        |
+| Screenshots    | 2 MB        | Compress images          |
+| Videos         | Not allowed | Link to external storage |
 
 ## Automated Enforcement
 
@@ -226,6 +246,7 @@ To prevent repository bloat:
 Location: `tools/lint/artifact-paths.ts`
 
 **Checks:**
+
 1. Artifacts are in correct directories
 2. No prohibited patterns exist
 3. File sizes within limits
@@ -233,11 +254,13 @@ Location: `tools/lint/artifact-paths.ts`
 5. Proper naming conventions
 
 **Run Manually:**
+
 ```bash
 pnpm tsx tools/lint/artifact-paths.ts
 ```
 
 **CI Integration:**
+
 ```bash
 # Runs on every PR
 .github/workflows/artifact-lint.yml
@@ -268,6 +291,7 @@ For existing repositories with misplaced artifacts:
 5. **Clean:** Remove old artifact locations
 
 **Migration Script:**
+
 ```bash
 pnpm run artifacts:migrate
 ```
@@ -277,12 +301,14 @@ pnpm run artifacts:migrate
 ### .gitignore Patterns
 
 **Entire Artifacts Directory:**
+
 ```
 # Artifacts (never commit)
 artifacts/
 ```
 
 **Build Outputs:**
+
 ```
 # Build artifacts
 dist/
@@ -292,6 +318,7 @@ dist/
 ```
 
 **Cache Directories:**
+
 ```
 # Caches
 .cache/
@@ -300,6 +327,7 @@ node_modules/.cache/
 ```
 
 **Environment Files:**
+
 ```
 # Environment files
 .env
@@ -340,6 +368,7 @@ For artifacts that might be committed in special cases:
 - Long-term storage in S3/GCS with lifecycle policies
 
 **Storage Lifecycle:**
+
 ```
 Day 0-7:   Hot storage (fast access)
 Day 8-30:  Warm storage (moderate access)
@@ -359,6 +388,7 @@ git-secrets --scan artifacts/
 ```
 
 **Common Patterns to Block:**
+
 - API keys (regex: `[A-Za-z0-9]{32,}`)
 - AWS keys (regex: `AKIA[0-9A-Z]{16}`)
 - Private keys (`-----BEGIN PRIVATE KEY-----`)
@@ -374,6 +404,7 @@ Before archiving logs:
 4. **Anonymize IPs:** Replace with hashed values
 
 **Sanitization Script:**
+
 ```bash
 pnpm run artifacts:sanitize
 ```
@@ -390,6 +421,7 @@ du -sh artifacts/
 ```
 
 **Automated Cleanup:**
+
 ```bash
 # Cron job to clean old artifacts
 0 2 * * * /scripts/cleanup-artifacts.sh
@@ -426,20 +458,21 @@ Alert on artifact linter failures:
 
 ## Frequently Asked Questions
 
-**Q: Can I commit artifacts for documentation purposes?**
-A: No. Use examples in `docs/examples/` instead. Link to CI artifacts if needed.
+**Q: Can I commit artifacts for documentation purposes?** A: No. Use examples in
+`docs/examples/` instead. Link to CI artifacts if needed.
 
-**Q: What about generated code (e.g., Prisma client)?**
-A: Generated source code goes in `node_modules/` or package-specific `generated/` directories, not `artifacts/`.
+**Q: What about generated code (e.g., Prisma client)?** A: Generated source code
+goes in `node_modules/` or package-specific `generated/` directories, not
+`artifacts/`.
 
-**Q: How do I share test results with team?**
-A: CI uploads artifacts automatically. For local runs, use CI platform's artifact upload feature.
+**Q: How do I share test results with team?** A: CI uploads artifacts
+automatically. For local runs, use CI platform's artifact upload feature.
 
-**Q: What if artifact size exceeds limits?**
-A: Compress, split into chunks, or upload to external storage (S3) and link.
+**Q: What if artifact size exceeds limits?** A: Compress, split into chunks, or
+upload to external storage (S3) and link.
 
-**Q: Can I create custom artifact categories?**
-A: Yes, but document in this file and update linter rules.
+**Q: Can I create custom artifact categories?** A: Yes, but document in this
+file and update linter rules.
 
 ## References
 
@@ -449,10 +482,11 @@ A: Yes, but document in this file and update linter rules.
 
 ## Change Log
 
-| Date       | Version | Changes                              | Author      |
-|------------|---------|--------------------------------------|-------------|
+| Date       | Version | Changes                                    | Author      |
+| ---------- | ------- | ------------------------------------------ | ----------- |
 | 2025-12-14 | 1.0.0   | Initial artifact conventions documentation | DevOps Team |
 
 ---
 
-**Enforcement:** This document is enforced by automated linting in CI/CD. Violations will block PR merges.
+**Enforcement:** This document is enforced by automated linting in CI/CD.
+Violations will block PR merges.

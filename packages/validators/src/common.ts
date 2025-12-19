@@ -6,11 +6,7 @@ export const idSchema = z.string().cuid();
 export const uuidSchema = z.string().uuid();
 
 // Common string schemas
-export const emailSchema = z
-  .string()
-  .email('Invalid email address')
-  .toLowerCase()
-  .trim();
+export const emailSchema = z.string().email('Invalid email address').toLowerCase().trim();
 
 export const phoneSchema = z
   .string()
@@ -30,13 +26,12 @@ export const paginationSchema = z.object({
 export type PaginationInput = z.infer<typeof paginationSchema>;
 
 // Date range schema
-export const dateRangeSchema = z.object({
-  start: z.coerce.date(),
-  end: z.coerce.date(),
-}).refine(
-  (data) => data.start <= data.end,
-  { message: 'Start date must be before end date' }
-);
+export const dateRangeSchema = z
+  .object({
+    start: z.coerce.date(),
+    end: z.coerce.date(),
+  })
+  .refine((data) => data.start <= data.end, { message: 'Start date must be before end date' });
 
 export type DateRangeInput = z.infer<typeof dateRangeSchema>;
 

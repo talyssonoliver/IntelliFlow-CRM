@@ -4,7 +4,8 @@ This folder captures Sprint 0 security deliverables for IntelliFlow CRM.
 
 ## What exists in Sprint 0
 
-- CI security workflows and baseline thresholds (see `.github/workflows/security.yml`).
+- CI security workflows and baseline thresholds (see
+  `.github/workflows/security.yml`).
 - Repository-level security policy (`SECURITY.md`).
 - Configuration stubs and artifact tracking for:
   - scan results (`artifacts/misc/security-scan-results.json`)
@@ -24,4 +25,3 @@ later sprints.
 - Ensure secret scanning is enabled at the Git hosting layer (GitHub Advanced
   Security) and that team access is configured appropriately.
 - Replace placeholder artifacts with real scan outputs once CI is running.
-

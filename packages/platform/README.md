@@ -19,4 +19,3 @@ feature-flag evaluator (no external service required).
 - Real A/B test statistical analysis.
 
 Those are tracked as follow-up work in later sprints.
-

@@ -1,0 +1,280 @@
+# =============================================================================
+# Technical Debt Ledger v1.0
+# =============================================================================
+# This file tracks all technical debt items with expiry dates and remediation plans.
+# Items with debt_allowed=yes in plan-overrides.yaml must have an entry here.
+#
+# RULES:
+# - Maximum waiver period: 90 days from creation
+# - Expiry alerts generated at 30 days before expiry
+# - All entries must have remediation_plan
+# - Status must be updated weekly
+# =============================================================================
+
+schema_version: '1.0.0'
+last_updated: '2025-12-17'
+maintainer: 'Tech Lead'
+
+# -----------------------------------------------------------------------------
+# DEBT ITEMS
+# -----------------------------------------------------------------------------
+
+items:
+  DEBT-001:
+    origin_task: 'AI-SETUP-003'
+    owner: 'AI Specialist'
+    severity: medium
+    description: |
+      External AI tools (Codex, Jules) integration deferred full security audit.
+      Sandbox security validated but comprehensive penetration testing pending.
+    created_at: '2025-12-17'
+    expiry_date: '2026-01-31'
+    remediation_plan: |
+      1. Complete security audit of Codex integration
+      2. Complete security audit of Jules integration
+      3. Run penetration tests on sandbox environment
+      4. Document security findings and mitigations
+    remediation_sprint: 2
+    status: open
+    notes: 'Sandbox security.json created. Full audit in Sprint 2.'
+
+  DEBT-002:
+    origin_task: 'ENV-008-AI'
+    owner: 'DevOps Engineer'
+    severity: medium
+    description: |
+      Predictive monitoring and self-healing features deferred.
+      Basic OpenTelemetry configuration in place, advanced features pending.
+    created_at: '2025-12-17'
+    expiry_date: '2026-02-28'
+    remediation_plan: |
+      1. Implement anomaly detection rules
+      2. Configure predictive alerting
+      3. Set up self-healing automation
+      4. Create monitoring runbooks
+    remediation_sprint: 3
+    status: open
+    notes: 'Basic OTEL config sufficient for Sprint 0. Predictive features are Sprint 2+.'
+
+  DEBT-003:
+    origin_task: 'ENV-010-AI'
+    owner: 'QA Lead'
+    severity: low
+    description: |
+      AI-generated tests coverage target (>95%) not fully met.
+      Manual test writing required to reach target.
+    created_at: '2025-12-17'
+    expiry_date: '2026-01-31'
+    remediation_plan: |
+      1. Review AI-generated test quality
+      2. Add manual tests for edge cases
+      3. Reach 95% coverage target
+      4. Document test generation patterns
+    remediation_sprint: 2
+    status: open
+    notes: 'Current coverage may be lower. AI test generation is MVP.'
+
+  DEBT-004:
+    origin_task: 'ENV-011-AI'
+    owner: 'AI Specialist'
+    severity: low
+    description: |
+      LangChain cost optimization and predictive scaling deferred.
+      Basic rate limiting in place, advanced optimization pending.
+    created_at: '2025-12-17'
+    expiry_date: '2026-01-31'
+    remediation_plan: |
+      1. Implement cost prediction model
+      2. Configure auto-scaling rules
+      3. Set up cost alerting
+      4. Optimize chain execution paths
+    remediation_sprint: 2
+    status: open
+    notes: 'Basic cost logging enabled. Optimization is post-MVP.'
+
+  DEBT-005:
+    origin_task: 'ENV-012-AI'
+    owner: 'Tech Writer'
+    severity: low
+    description: |
+      Documentation auto-generation and multi-language support deferred.
+      Manual documentation structure in place.
+    created_at: '2025-12-17'
+    expiry_date: '2026-02-28'
+    remediation_plan: |
+      1. Implement doc auto-generation pipeline
+      2. Add multi-language support
+      3. Create LLM-optimized templates
+      4. Set up auto-update workflows
+    remediation_sprint: 4
+    status: open
+    notes: 'Docusaurus setup complete. Auto-generation is enhancement.'
+
+  DEBT-006:
+    origin_task: 'ENV-014-AI'
+    owner: 'Performance Engineer'
+    severity: medium
+    description: |
+      AI-driven performance profiling and predictive caching deferred.
+      Basic profiling tools configured.
+    created_at: '2025-12-17'
+    expiry_date: '2026-02-28'
+    remediation_plan: |
+      1. Implement AI profiling integration
+      2. Configure predictive caching
+      3. Set up performance regression alerts
+      4. Document optimization patterns
+    remediation_sprint: 3
+    status: open
+    notes: 'Basic Lighthouse/k6 setup. AI profiling is Sprint 3+.'
+
+  DEBT-007:
+    origin_task: 'ENV-015-AI'
+    owner: 'Backend Dev'
+    severity: low
+    description: |
+      AI-managed feature flags with predictive rollout deferred.
+      Basic feature flag framework in place.
+    created_at: '2025-12-17'
+    expiry_date: '2026-02-28'
+    remediation_plan: |
+      1. Implement AI rollout prediction
+      2. Configure A/B test automation
+      3. Set up gradual rollout rules
+      4. Document flag management process
+    remediation_sprint: 4
+    status: open
+    notes: 'Basic feature flags sufficient for Sprint 0.'
+
+  DEBT-008:
+    origin_task: 'ENV-016-AI'
+    owner: 'Frontend Dev'
+    severity: low
+    description: |
+      AI-generated insights and predictions for analytics deferred.
+      Basic privacy-first analytics configured.
+    created_at: '2025-12-17'
+    expiry_date: '2026-02-28'
+    remediation_plan: |
+      1. Implement AI insight generation
+      2. Add prediction models
+      3. Ensure GDPR compliance for AI features
+      4. Document privacy controls
+    remediation_sprint: 4
+    status: open
+    notes: 'Privacy baseline established. AI insights are enhancement.'
+
+  DEBT-009:
+    origin_task: 'ENV-017-AI'
+    owner: 'Tech Lead'
+    severity: medium
+    description: |
+      Full integration testing with IFC-001 (Architecture Spike) deferred.
+      Stub contract in place for Sprint 0, full integration in Sprint 1+.
+    created_at: '2025-12-17'
+    expiry_date: '2026-01-15'
+    remediation_plan: |
+      1. Complete IFC-001 in Sprint 1
+      2. Integrate ENV-017-AI with architecture decisions
+      3. Run full integration test suite
+      4. Remove stub contract exception
+    remediation_sprint: 1
+    status: open
+    notes: 'Cross-sprint dependency resolved via stub_contract. See PLAN-FIX-001.'
+
+  DEBT-010:
+    origin_task: 'ENV-018-AI'
+    owner: 'PM'
+    severity: low
+    description: |
+      AI-driven velocity prediction and capacity optimization deferred.
+      Basic sprint metrics in place.
+    created_at: '2025-12-17'
+    expiry_date: '2026-01-31'
+    remediation_plan: |
+      1. Implement velocity prediction model
+      2. Configure capacity optimization
+      3. Set up risk identification alerts
+      4. Document planning automation
+    remediation_sprint: 2
+    status: open
+    notes: 'Basic metrics sufficient. AI prediction is post-Sprint 0.'
+
+  DEBT-011:
+    origin_task: 'AUTOMATION-001'
+    owner: 'AI Specialist'
+    severity: medium
+    description: |
+      Full multi-agent orchestration and autonomous task handoff deferred.
+      Basic agent coordination in place.
+    created_at: '2025-12-17'
+    expiry_date: '2026-02-28'
+    remediation_plan: |
+      1. Implement multi-agent orchestration
+      2. Configure autonomous handoffs
+      3. Add quality gate automation
+      4. Document agent interaction patterns
+    remediation_sprint: 3
+    status: open
+    notes: 'Basic agent setup. Full orchestration is Sprint 2+.'
+
+  DEBT-012:
+    origin_task: 'AUTOMATION-002'
+    owner: 'DevOps Engineer'
+    severity: low
+    description: |
+      AI performance dashboard and optimization loop deferred.
+      Basic metrics collection in place.
+    created_at: '2025-12-17'
+    expiry_date: '2026-02-28'
+    remediation_plan: |
+      1. Build AI performance dashboard
+      2. Implement optimization suggestion engine
+      3. Configure ROI tracking
+      4. Set up automated reporting
+    remediation_sprint: 3
+    status: open
+    notes: 'Basic DORA metrics. AI dashboard is enhancement.'
+
+# -----------------------------------------------------------------------------
+# SUMMARY
+# -----------------------------------------------------------------------------
+
+summary:
+  total_items: 12
+  by_severity:
+    critical: 0
+    high: 0
+    medium: 4
+    low: 8
+  by_status:
+    open: 12
+    in_progress: 0
+    resolved: 0
+  expiring_soon: # Within 30 days
+    - DEBT-009 # 2026-01-15
+
+# -----------------------------------------------------------------------------
+# REVIEW SCHEDULE
+# -----------------------------------------------------------------------------
+
+review_schedule:
+  cadence: weekly
+  next_review: '2025-12-24'
+  reviewers:
+    - Tech Lead
+    - PM
+  escalation_path:
+    - severity_critical: CTO
+    - severity_high: Tech Lead
+    - expiring_soon: PM
+
+# -----------------------------------------------------------------------------
+# ALERTS
+# -----------------------------------------------------------------------------
+
+alerts:
+  expiry_warning_days: 30
+  notification_channels:
+    - slack: '#tech-debt'
+    - email: tech-lead@intelliflow.dev

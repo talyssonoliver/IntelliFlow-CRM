@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { emailSchema, phoneSchema, idSchema, paginationSchema } from './common';
 
+// Re-export common schemas used by API routers
+export { idSchema } from './common';
+
 // Enums
 export const leadSourceSchema = z.enum([
   'WEBSITE',
@@ -56,11 +59,13 @@ export type UpdateLeadInput = z.infer<typeof updateLeadSchema>;
 export const leadScoreSchema = z.object({
   score: z.number().int().min(0).max(100),
   confidence: z.number().min(0).max(1),
-  factors: z.array(z.object({
-    name: z.string(),
-    impact: z.number(),
-    reasoning: z.string(),
-  })),
+  factors: z.array(
+    z.object({
+      name: z.string(),
+      impact: z.number(),
+      reasoning: z.string(),
+    })
+  ),
   modelVersion: z.string(),
 });
 

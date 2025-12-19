@@ -5,10 +5,7 @@
   "streams": [
     {
       "name": "parallel-a",
-      "tasks": [
-        "AI-SETUP-002",
-        "AI-SETUP-003"
-      ],
+      "tasks": ["AI-SETUP-002", "AI-SETUP-003"],
       "status": "DONE"
     },
     {
@@ -24,10 +21,7 @@
     },
     {
       "name": "parallel-c",
-      "tasks": [
-        "EXC-SEC-001",
-        "IFC-160"
-      ],
+      "tasks": ["EXC-SEC-001", "IFC-160"],
       "status": "IN_PROGRESS"
     }
   ],

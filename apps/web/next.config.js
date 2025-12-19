@@ -1,15 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Output configuration for Docker deployment
-  output: 'standalone',
+  // Set `NEXT_OUTPUT=standalone` for Docker/CI builds (Windows requires symlink support)
+  ...(process.env.NEXT_OUTPUT === 'standalone' ? { output: 'standalone' } : {}),
 
   // Enable strict mode for better error detection
   reactStrictMode: true,
-
-  // Disable telemetry
-  telemetry: {
-    disabled: true,
-  },
 
   // Compiler options
   compiler: {
@@ -149,12 +144,6 @@ const nextConfig = {
   typescript: {
     // Only run type checking in CI
     ignoreBuildErrors: process.env.CI !== 'true',
-  },
-
-  // ESLint configuration
-  eslint: {
-    // Only run linting in CI
-    ignoreDuringBuilds: process.env.CI !== 'true',
   },
 
   // Power features

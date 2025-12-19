@@ -1,11 +1,10 @@
 import { ChatOpenAI } from '@langchain/openai';
-import { ChatOllama } from '@langchain/community/chat_models/ollama';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { StructuredOutputParser } from 'langchain/output_parsers';
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
 import { costTracker } from '../utils/cost-tracker';
-import { leadScoreSchema } from '@intelliflow/validators/lead';
+import { leadScoreSchema } from '@intelliflow/validators';
 import pino from 'pino';
 
 const logger = pino({
@@ -39,9 +38,11 @@ export type ScoringResult = z.infer<typeof leadScoreSchema>;
  * Uses LangChain to score leads based on multiple factors with structured output
  */
 export class LeadScoringChain {
-  private model: ChatOpenAI | ChatOllama;
-  private parser: StructuredOutputParser<ScoringResult>;
-  private prompt: PromptTemplate;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private readonly model: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private readonly parser: StructuredOutputParser<any>;
+  private readonly prompt: PromptTemplate;
 
   constructor() {
     // Initialize the appropriate model based on configuration
@@ -72,11 +73,10 @@ export class LeadScoringChain {
           : undefined,
       });
     } else {
-      this.model = new ChatOllama({
-        baseUrl: aiConfig.ollama.baseUrl,
-        model: aiConfig.ollama.model,
-        temperature: aiConfig.ollama.temperature,
-      });
+      // Ollama support - would use dynamic import at runtime:
+      // const { ChatOllama } = await import('@langchain/community/chat_models/ollama');
+      // this.model = new ChatOllama({ baseUrl, model, temperature });
+      throw new Error('Ollama support requires dynamic import - not yet implemented');
     }
 
     // Create structured output parser
@@ -142,7 +142,10 @@ Be thorough but concise. Each factor should have a clear impact score and reason
       const response = await this.model.invoke(formattedPrompt);
 
       // Parse the structured output
-      const result = await this.parser.parse(response.content as string);
+      const result = (await this.parser.parse(response.content as string)) as Omit<
+        ScoringResult,
+        'modelVersion'
+      >;
 
       // Add model version
       const scoringResult: ScoringResult = {

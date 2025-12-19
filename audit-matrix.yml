@@ -1,0 +1,404 @@
+schema_version: '1.0.0'
+last_updated: '2025-12-18'
+maintainer: 'Tech Lead'
+
+# Canonical tool matrix for system audits.
+# - tier 1: blockers (fail PR if required=true and tool fails)
+# - tier 2: warnings (do not fail PR unless --fail-on-warn)
+# - tier 3: scheduled (nightly/manual)
+#
+# Notes:
+# - Some tools are defined but disabled until the repo/team standardizes installation.
+# - Enable/disable and enforcement are controlled here; the runner is deterministic.
+tools:
+  # ---------------------------------------------------------------------------
+  # Tier 1 blockers
+  # ---------------------------------------------------------------------------
+  - id: turbo-typecheck
+    tier: 1
+    enabled: true
+    required: true
+    owner: 'Tech Lead'
+    scope: 'workspace'
+    command: 'pnpm run typecheck'
+    thresholds: {}
+    expected_outputs: ['log']
+
+  - id: turbo-build
+    tier: 1
+    enabled: true
+    required: true
+    owner: 'Tech Lead'
+    scope: 'workspace'
+    command: 'pnpm run build'
+    thresholds: {}
+    expected_outputs: ['log']
+
+  - id: turbo-test-coverage
+    tier: 1
+    enabled: true
+    required: true
+    owner: 'QA Lead'
+    scope: 'workspace'
+    command: 'pnpm exec turbo run test:coverage'
+    thresholds:
+      coverage_min: 90
+    expected_outputs: ['log']
+
+  - id: eslint-max-warnings-0
+    tier: 1
+    enabled: true
+    required: true
+    owner: 'Frontend Dev'
+    scope: 'workspace'
+    command: 'pnpm exec eslint --max-warnings=0 .'
+    thresholds:
+      max_warnings: 0
+    expected_outputs: ['log']
+
+  - id: prettier-check
+    tier: 1
+    enabled: true
+    required: true
+    owner: 'Tech Lead'
+    scope: 'workspace'
+    command: 'pnpm run format:check'
+    thresholds: {}
+    expected_outputs: ['log']
+
+  # SonarQube: kept in Tier 1 but not required until CI secrets + server are configured.
+  - id: sonarqube-scanner
+    tier: 1
+    enabled: true
+    required: false
+    owner: 'DevOps Engineer'
+    scope: 'workspace'
+    command: 'node scripts/sonarqube-helper.js analyze'
+    thresholds:
+      quality_gate: 'A'
+      technical_debt_ratio_max: 3
+    expected_outputs: ['log']
+    requires_env: ['SONAR_TOKEN']
+
+  - id: sonarqube-quality-gate
+    tier: 1
+    enabled: true
+    required: false
+    owner: 'DevOps Engineer'
+    scope: 'workspace'
+    command: 'node scripts/sonar-status.js'
+    thresholds: {}
+    expected_outputs: ['log']
+    requires_env: ['SONAR_TOKEN']
+
+  # Commit linting: implemented as a deterministic repo script (avoids global installs).
+  - id: commitlint
+    tier: 1
+    enabled: true
+    required: true
+    owner: 'Tech Lead'
+    scope: 'git'
+    command: 'python tools/audit/commit_msg_lint.py --count 20'
+    thresholds: {}
+    expected_outputs: ['log']
+
+  # Security/scanning tools (defined, but disabled by default until standardized installs land).
+  - id: gitleaks
+    tier: 1
+    enabled: false
+    required: true
+    owner: 'Security'
+    scope: 'repo'
+    command: 'gitleaks detect --source . --redact'
+    thresholds:
+      findings_max: 0
+    expected_outputs: ['log', 'json']
+
+  - id: pnpm-audit-high
+    tier: 1
+    enabled: false
+    required: true
+    owner: 'Security'
+    scope: 'workspace'
+    command: 'pnpm audit --audit-level=high'
+    thresholds:
+      max_high: 0
+      max_critical: 0
+    expected_outputs: ['log', 'json']
+
+  - id: snyk
+    tier: 1
+    enabled: false
+    required: true
+    owner: 'Security'
+    scope: 'workspace'
+    command: 'snyk test --severity-threshold=high'
+    thresholds:
+      max_high: 0
+      max_critical: 0
+    expected_outputs: ['log', 'json']
+    requires_env: ['SNYK_TOKEN']
+
+  - id: trivy-image
+    tier: 1
+    enabled: false
+    required: true
+    owner: 'Security'
+    scope: 'workspace'
+    command: 'trivy image --severity HIGH,CRITICAL --exit-code 1 intelliflow-crm:latest'
+    thresholds:
+      max_high: 0
+      max_critical: 0
+    expected_outputs: ['log']
+
+  - id: semgrep-security-audit
+    tier: 1
+    enabled: false
+    required: true
+    owner: 'Security'
+    scope: 'repo'
+    command: 'semgrep --config=p/security-audit --error'
+    thresholds:
+      max_findings: 0
+    expected_outputs: ['log', 'json']
+
+  - id: dependency-cruiser-validate
+    tier: 1
+    enabled: false
+    required: true
+    owner: 'Architecture'
+    scope: 'repo'
+    command: 'dependency-cruiser --validate'
+    thresholds: {}
+    expected_outputs: ['log']
+
+  # ---------------------------------------------------------------------------
+  # Tier 2 warnings
+  # ---------------------------------------------------------------------------
+  - id: knip
+    tier: 2
+    enabled: false
+    required: false
+    owner: 'Tech Lead'
+    scope: 'workspace'
+    command: "pnpm exec knip --exclude 'unlisted,unresolved'"
+    thresholds: {}
+    expected_outputs: ['log']
+
+  - id: ts-prune
+    tier: 2
+    enabled: false
+    required: false
+    owner: 'Tech Lead'
+    scope: 'workspace'
+    command: 'pnpm exec ts-prune'
+    thresholds: {}
+    expected_outputs: ['log']
+
+  - id: depcheck
+    tier: 2
+    enabled: false
+    required: false
+    owner: 'Tech Lead'
+    scope: 'workspace'
+    command: 'pnpm exec depcheck'
+    thresholds: {}
+    expected_outputs: ['log', 'json']
+
+  - id: cspell
+    tier: 2
+    enabled: false
+    required: false
+    owner: 'Tech Writer'
+    scope: 'repo'
+    command: 'pnpm exec cspell lint .'
+    thresholds: {}
+    expected_outputs: ['log']
+
+  - id: markdownlint
+    tier: 2
+    enabled: false
+    required: false
+    owner: 'Tech Writer'
+    scope: 'repo'
+    command: 'pnpm exec markdownlint "**/*.md"'
+    thresholds: {}
+    expected_outputs: ['log']
+
+  - id: codeql-analysis
+    tier: 2
+    enabled: false
+    required: false
+    owner: 'Security'
+    scope: 'repo'
+    command: null
+    thresholds: {}
+    expected_outputs: ['sarif']
+    ci_workflow: '.github/workflows/security.yml#codeql-analysis'
+
+  - id: bearer
+    tier: 2
+    enabled: false
+    required: false
+    owner: 'Security'
+    scope: 'repo'
+    command: 'bearer scan .'
+    thresholds: {}
+    expected_outputs: ['log', 'json']
+
+  - id: osv-scanner
+    tier: 2
+    enabled: false
+    required: false
+    owner: 'Security'
+    scope: 'repo'
+    command: 'osv-scanner -r .'
+    thresholds: {}
+    expected_outputs: ['log', 'json']
+
+  - id: stryker
+    tier: 2
+    enabled: false
+    required: false
+    owner: 'QA Lead'
+    scope: 'workspace'
+    command: 'pnpm exec stryker run'
+    thresholds:
+      mutation_score_min: 80
+    expected_outputs: ['log', 'json']
+
+  - id: madge-circular
+    tier: 2
+    enabled: false
+    required: false
+    owner: 'Architecture'
+    scope: 'repo'
+    command: 'pnpm exec madge --circular .'
+    thresholds: {}
+    expected_outputs: ['log']
+
+  # ---------------------------------------------------------------------------
+  # Tier 3 scheduled/manual
+  # ---------------------------------------------------------------------------
+  - id: lighthouse-ci
+    tier: 3
+    enabled: false
+    required: false
+    owner: 'Performance Engineer'
+    scope: 'workspace'
+    command: 'pnpm exec lighthouse-ci autorun'
+    thresholds:
+      performance_min: 90
+    expected_outputs: ['log', 'json']
+
+  - id: k6
+    tier: 3
+    enabled: false
+    required: false
+    owner: 'Performance Engineer'
+    scope: 'workspace'
+    command: 'k6 run tests/perf/*.js'
+    thresholds: {}
+    expected_outputs: ['log', 'json']
+
+  - id: pnpm-outdated
+    tier: 3
+    enabled: false
+    required: false
+    owner: 'Tech Lead'
+    scope: 'workspace'
+    command: 'pnpm outdated'
+    thresholds: {}
+    expected_outputs: ['log']
+
+  - id: license-checker
+    tier: 3
+    enabled: false
+    required: false
+    owner: 'Tech Lead'
+    scope: 'workspace'
+    command: 'pnpm exec license-checker --json'
+    thresholds: {}
+    expected_outputs: ['log', 'json']
+
+  - id: grype
+    tier: 3
+    enabled: false
+    required: false
+    owner: 'Security'
+    scope: 'repo'
+    command: 'grype dir:.'
+    thresholds: {}
+    expected_outputs: ['log', 'json']
+
+  - id: owasp-zap
+    tier: 3
+    enabled: false
+    required: false
+    owner: 'Security'
+    scope: 'workspace'
+    command: 'zap-baseline.py -t http://localhost:3000'
+    thresholds: {}
+    expected_outputs: ['log', 'json']
+
+  - id: clinic-js
+    tier: 3
+    enabled: false
+    required: false
+    owner: 'Performance Engineer'
+    scope: 'workspace'
+    command: 'clinic doctor -- node server.js'
+    thresholds: {}
+    expected_outputs: ['log']
+
+  - id: syft
+    tier: 3
+    enabled: false
+    required: false
+    owner: 'Security'
+    scope: 'repo'
+    command: 'syft dir:. -o json'
+    thresholds:
+      sbom_coverage: 100
+    expected_outputs: ['log', 'json']
+
+  - id: cosign
+    tier: 3
+    enabled: false
+    required: false
+    owner: 'Security'
+    scope: 'repo'
+    command: 'cosign version'
+    thresholds: {}
+    expected_outputs: ['log']
+
+  - id: size-limit
+    tier: 3
+    enabled: false
+    required: false
+    owner: 'Performance Engineer'
+    scope: 'workspace'
+    command: 'pnpm exec size-limit'
+    thresholds: {}
+    expected_outputs: ['log']
+
+  - id: langfuse-audit
+    tier: 3
+    enabled: false
+    required: false
+    owner: 'AI Specialist'
+    scope: 'workspace'
+    command: 'echo "langfuse audit: run via ops playbook"'
+    thresholds:
+      hallucination_rate_max: 5
+    expected_outputs: ['log']
+
+  - id: garak
+    tier: 3
+    enabled: false
+    required: false
+    owner: 'AI Specialist'
+    scope: 'workspace'
+    command: 'echo "garak: run via ops playbook"'
+    thresholds: {}
+    expected_outputs: ['log']

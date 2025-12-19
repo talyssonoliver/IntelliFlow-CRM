@@ -72,17 +72,20 @@ pnpm run dev:worker   # AI worker only
 ### Root Package Scripts
 
 #### Development
+
 - `pnpm run dev` - Start all applications in development mode
 - `pnpm run dev:web` - Start Next.js frontend only
 - `pnpm run dev:api` - Start tRPC API server only
 - `pnpm run dev:worker` - Start AI worker only
 
 #### Build
+
 - `pnpm run build` - Build all packages
 - `pnpm run build:web` - Build Next.js frontend only
 - `pnpm run build:api` - Build API server only
 
 #### Testing
+
 - `pnpm run test` - Run all tests
 - `pnpm run test:unit` - Run unit tests only
 - `pnpm run test:integration` - Run integration tests
@@ -91,6 +94,7 @@ pnpm run dev:worker   # AI worker only
 - `pnpm run test:coverage` - Run tests with coverage report
 
 #### Code Quality
+
 - `pnpm run lint` - Lint all code
 - `pnpm run lint:fix` - Lint and auto-fix issues
 - `pnpm run format` - Format code with Prettier
@@ -98,6 +102,7 @@ pnpm run dev:worker   # AI worker only
 - `pnpm run typecheck` - Run TypeScript type checking
 
 #### Database
+
 - `pnpm run db:generate` - Generate Prisma client
 - `pnpm run db:migrate` - Run database migrations
 - `pnpm run db:migrate:create` - Create a new migration
@@ -108,16 +113,19 @@ pnpm run dev:worker   # AI worker only
 - `pnpm run db:push` - Push schema changes without migration
 
 #### Docker
+
 - `pnpm run docker:up` - Start all Docker services
 - `pnpm run docker:down` - Stop all Docker services
 - `pnpm run docker:logs` - View Docker logs
 - `pnpm run docker:reset` - Reset Docker services (removes volumes)
 
 #### AI/LLM
+
 - `pnpm run ai:benchmark` - Run AI performance benchmarks
 - `pnpm run ai:test-chains` - Test AI chains
 
 #### Utilities
+
 - `pnpm run clean` - Clean build artifacts
 - `pnpm run clean:deps` - Remove all node_modules
 - `pnpm run clean:cache` - Clean Turbo cache
@@ -148,19 +156,24 @@ cp .env.development .env
 ### Key Environment Variables
 
 #### Database
+
 - `DATABASE_URL` - PostgreSQL connection string
 - `DIRECT_URL` - Direct database connection (for migrations)
 
 #### AI/LLM
+
 - `AI_PROVIDER` - Choose 'ollama' (local) or 'openai' (cloud)
 - `OLLAMA_BASE_URL` - Ollama server URL (default: http://localhost:11434)
 - `OPENAI_API_KEY` - OpenAI API key (only if using OpenAI)
 
 #### Authentication
-- `NEXTAUTH_SECRET` - Secret for NextAuth.js (generate with `openssl rand -base64 32`)
+
+- `NEXTAUTH_SECRET` - Secret for NextAuth.js (generate with
+  `openssl rand -base64 32`)
 - `JWT_SECRET` - Secret for JWT tokens
 
 #### Redis
+
 - `REDIS_URL` - Redis connection string
 
 ## Database Setup
@@ -193,6 +206,7 @@ pnpm run db:seed
 ```
 
 **What gets seeded:**
+
 - 4 users (1 admin, 1 manager, 2 sales reps)
 - 3 accounts
 - 5 leads with various statuses
@@ -203,6 +217,7 @@ pnpm run db:seed
 - Sample audit logs and domain events
 
 **Credentials for seeded users:**
+
 - Admin: `admin@intelliflow.dev`
 - Manager: `manager@intelliflow.dev`
 - Sales Rep 1: `john.sales@intelliflow.dev`

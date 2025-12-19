@@ -55,28 +55,43 @@ check_command pnpm "pnpm" || { log ERROR "pnpm is required"; exit 1; }
 check_command docker "Docker" || log WARN "Docker required for SonarQube"
 
 echo ""
-log INFO "Installing quality tools globally..."
+log INFO "Installing quality tools..."
 
-# Install SonarQube Scanner
+# Check if we should install globally or locally
+if command -v npm >/dev/null 2>&1; then
+    INSTALL_CMD="npm install -g"
+    log INFO "Installing globally with npm..."
+else
+    log WARN "npm not found, will use npx for tools"
+fi
+
+# Install SonarQube Scanner globally
 if ! check_command sonar-scanner "SonarQube Scanner"; then
-    log INFO "Installing sonarqube-scanner..."
-    npm install -g sonarqube-scanner
-    check_command sonar-scanner "SonarQube Scanner" && log SUCCESS "SonarQube Scanner installed"
+    log INFO "Installing sonarqube-scanner globally..."
+    npm install -g sonarqube-scanner || {
+        log WARN "Global install failed, will use npx sonarqube-scanner"
+    }
 fi
 
-# Install depcheck
+# Install depcheck globally (or use npx)
 if ! check_command depcheck "depcheck"; then
-    log INFO "Installing depcheck..."
-    npm install -g depcheck
-    check_command depcheck "depcheck" && log SUCCESS "depcheck installed"
+    log INFO "Installing depcheck globally..."
+    npm install -g depcheck || {
+        log WARN "Global install failed, will use npx depcheck"
+    }
 fi
 
-# Install knip
+# Install knip globally (or use npx)
 if ! check_command knip "knip"; then
-    log INFO "Installing knip..."
-    npm install -g knip
-    check_command knip "knip" && log SUCCESS "knip installed"
+    log INFO "Installing knip globally..."
+    npm install -g knip || {
+        log WARN "Global install failed, will use npx knip"
+    }
 fi
+
+log INFO ""
+log INFO "NOTE: Tools installed globally in: $(npm root -g)"
+log INFO "If you don't have global npm permissions, tools will use 'npx' instead"
 
 echo ""
 log INFO "Setting up SonarQube server..."
@@ -186,21 +201,56 @@ echo "  - Docker:             $(docker --version)"
 echo ""
 log SUCCESS "Quality tools setup complete!"
 echo ""
-echo "Next steps:"
-echo "  1. Configure SonarQube token:"
-echo "     - Visit: http://localhost:9000"
-echo "     - Login: admin/admin (change password)"
-echo "     - Create token: My Account > Security > Generate Tokens"
-echo "     - Set environment: export SONAR_TOKEN='your-token-here'"
+echo "=========================================="
+echo "  IMPORTANT: SonarQube Token Setup"
+echo "=========================================="
 echo ""
-echo "  2. Run quality checks:"
-echo "     pnpm run typecheck"
-echo "     pnpm run lint"
-echo "     pnpm test"
-echo "     npx depcheck"
-echo "     npx knip"
-echo "     sonar-scanner"
+echo "You have 2 options for SonarQube:"
 echo ""
-echo "  3. Integrate into orchestrator:"
-echo "     ./apps/project-tracker/docs/metrics/orchestrator.sh run ENV-014-AI"
+echo "OPTION 1: Use LOCAL SonarQube (Recommended for this project)"
+echo "  1. Visit: http://localhost:9000"
+echo "  2. Login: admin/admin (change password on first login)"
+echo "  3. Create NEW project token:"
+echo "     - My Account > Security > Generate Tokens"
+echo "     - Token Name: intelliflow-crm-local"
+echo "     - Type: Project Analysis Token"
+echo "  4. Add to .env.local:"
+echo "     echo 'SONAR_TOKEN=squ_your_new_token_here' >> .env.local"
+echo ""
+echo "OPTION 2: Reuse existing e-commerce-bags token (NOT RECOMMENDED)"
+echo "  - Your existing token is project-specific"
+echo "  - If same SonarQube server, copy token from your e-commerce-bags .env"
+echo "  - Add to .env.local:"
+echo "     echo 'SONAR_TOKEN=<your-existing-token>' >> .env.local"
+echo ""
+echo "=========================================="
+echo "  Available Commands"
+echo "=========================================="
+echo ""
+echo "Run quality checks:"
+echo "  pnpm run typecheck          # TypeScript type checking"
+echo "  pnpm run lint               # ESLint analysis"
+echo "  pnpm test                   # Run tests"
+echo "  pnpm run quality:deps       # Check unused dependencies"
+echo "  pnpm run quality:security   # Security audit"
+echo "  pnpm run quality:deadcode   # Dead code detection"
+echo "  pnpm run quality:sonar      # SonarQube analysis"
+echo "  pnpm run quality:check      # Run all checks"
+echo ""
+echo "Orchestrator integration:"
+echo "  ./apps/project-tracker/docs/metrics/orchestrator.sh run ENV-014-AI"
+echo ""
+echo "=========================================="
+echo "  Token Information"
+echo "=========================================="
+echo ""
+echo "Your e-commerce-bags tokens are for DIFFERENT services:"
+echo "  - SUPABASE tokens: For Supabase database/auth"
+echo "  - STRIPE tokens: For payment processing"
+echo "  - SONAR_TOKEN: For SonarQube code analysis (can be reused)"
+echo "  - SONARCLOUD_TOKEN: For SonarCloud.io (cloud service)"
+echo ""
+echo "For IntelliFlow CRM, you should:"
+echo "  1. Create NEW local SonarQube token (recommended)"
+echo "  2. OR reuse SONAR_TOKEN if same SonarQube server"
 echo ""

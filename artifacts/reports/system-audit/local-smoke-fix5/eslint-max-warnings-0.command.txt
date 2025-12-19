@@ -1,0 +1,1 @@
+pnpm exec eslint --max-warnings=0 .

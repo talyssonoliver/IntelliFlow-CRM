@@ -23,4 +23,3 @@ export const featureFlagsConfigSchema = z.object({
 });
 
 export type FeatureFlagsConfigInput = z.input<typeof featureFlagsConfigSchema>;
-

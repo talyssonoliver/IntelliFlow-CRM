@@ -43,6 +43,10 @@ export class LeadScoredEvent extends DomainEvent {
     super();
   }
 
+  get newScore(): LeadScore {
+    return this.score;
+  }
+
   toPayload(): Record<string, unknown> {
     return {
       leadId: this.leadId.value,

@@ -3,11 +3,13 @@
 Initialize or enhance the IntelliFlow CRM Turborepo monorepo structure.
 
 ## Usage
+
 ```
 /setup-monorepo [--dry-run] [--preset=intelliflow-crm]
 ```
 
 ## Arguments
+
 - `--dry-run`: Show what would be created without making changes
 - `--preset`: Use predefined configuration (default: intelliflow-crm)
 
@@ -19,6 +21,7 @@ Initialize or enhance the IntelliFlow CRM Turborepo monorepo structure.
    - Validate package.json configurations
 
 2. **Create missing directories**
+
    ```
    apps/
    ├── web/           # Next.js frontend
@@ -45,11 +48,13 @@ Initialize or enhance the IntelliFlow CRM Turborepo monorepo structure.
    - Execute `turbo run build --dry-run`
 
 ## Output
+
 - Summary of actions taken
 - List of created/modified files
 - Next steps for development
 
 ## Example
+
 ```bash
 # Full setup
 /setup-monorepo --preset=intelliflow-crm

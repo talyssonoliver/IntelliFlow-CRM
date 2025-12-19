@@ -29,27 +29,38 @@ const logger = pino({
 export { aiConfig, loadAIConfig, calculateCost } from './config/ai.config';
 export { costTracker, CostTracker } from './utils/cost-tracker';
 export { leadScoringChain, LeadScoringChain } from './chains/scoring.chain';
+export { embeddingChain, EmbeddingChain } from './chains/embedding.chain';
 export { BaseAgent } from './agents/base.agent';
 export {
   qualificationAgent,
   LeadQualificationAgent,
   createQualificationTask,
 } from './agents/qualification.agent';
+export { createLogger, withContext, withTiming } from './utils/logger';
+export {
+  withRetry,
+  withTimeout,
+  withRetryAndTimeout,
+  CircuitBreaker,
+  RetryableError,
+  RateLimitError,
+  TimeoutError,
+  NetworkError,
+} from './utils/retry';
 
 // Export types
 export type { AIConfig, AIProvider, ModelName } from './config/ai.config';
 export type { UsageMetrics, CostStatistics } from './utils/cost-tracker';
 export type { LeadInput, ScoringResult } from './chains/scoring.chain';
 export type {
-  AgentContext,
-  AgentTask,
-  AgentResult,
-  BaseAgentConfig,
-} from './agents/base.agent';
-export type {
-  QualificationInput,
-  QualificationOutput,
-} from './agents/qualification.agent';
+  EmbeddingInput,
+  EmbeddingResult,
+  BatchEmbeddingResult,
+} from './chains/embedding.chain';
+export type { AgentContext, AgentTask, AgentResult, BaseAgentConfig } from './agents/base.agent';
+export type { QualificationInput, QualificationOutput } from './agents/qualification.agent';
+export type { LoggerContext, LogLevel } from './utils/logger';
+export type { RetryConfig } from './utils/retry';
 
 /**
  * Initialize the AI Worker
@@ -59,13 +70,12 @@ async function initializeWorker() {
 
   try {
     // Validate configuration
-    const { aiConfig } = await import('./config/ai.config');
+    const { aiConfig } = await import('./config/ai.config.js');
 
     logger.info(
       {
         provider: aiConfig.provider,
-        model:
-          aiConfig.provider === 'openai' ? aiConfig.openai.model : aiConfig.ollama.model,
+        model: aiConfig.provider === 'openai' ? aiConfig.openai.model : aiConfig.ollama.model,
         costTrackingEnabled: aiConfig.costTracking.enabled,
         cacheEnabled: aiConfig.performance.cacheEnabled,
       },
@@ -73,15 +83,18 @@ async function initializeWorker() {
     );
 
     // Initialize cost tracker
-    const { costTracker } = await import('./utils/cost-tracker');
+    const { costTracker } = await import('./utils/cost-tracker.js');
     logger.info('Cost tracker initialized');
 
     // Initialize chains
-    const { leadScoringChain } = await import('./chains/scoring.chain');
+    const { leadScoringChain } = await import('./chains/scoring.chain.js');
     logger.info('Lead scoring chain initialized');
 
+    const { embeddingChain } = await import('./chains/embedding.chain.js');
+    logger.info('Embedding chain initialized');
+
     // Initialize agents
-    const { qualificationAgent } = await import('./agents/qualification.agent');
+    const { qualificationAgent } = await import('./agents/qualification.agent.js');
     logger.info('Qualification agent initialized');
 
     logger.info('✅ AI Worker initialized successfully');
@@ -91,6 +104,7 @@ async function initializeWorker() {
       aiConfig,
       costTracker,
       leadScoringChain,
+      embeddingChain,
       qualificationAgent,
     };
   } catch (error) {
@@ -113,7 +127,7 @@ async function shutdown() {
 
   try {
     // Generate final cost report
-    const { costTracker } = await import('./utils/cost-tracker');
+    const { costTracker } = await import('./utils/cost-tracker.js');
     const report = costTracker.generateReport();
     logger.info('\n' + report);
 
@@ -173,7 +187,7 @@ async function main() {
   setupSignalHandlers();
 
   try {
-    const worker = await initializeWorker();
+    await initializeWorker();
 
     // Keep the process running
     logger.info('AI Worker is ready and waiting for tasks...');
@@ -196,11 +210,18 @@ async function main() {
 }
 
 // Run the worker if this file is executed directly
+// NOSONAR: S7785 - Top-level await not available in CommonJS modules
 if (require.main === module) {
-  main().catch((error) => {
-    console.error('Fatal error:', error);
-    process.exit(1);
-  });
+  // eslint-disable-next-line @typescript-eslint/no-floating-promises
+  (async () => {
+    // NOSONAR
+    try {
+      await main();
+    } catch (error: unknown) {
+      console.error('Fatal error:', error);
+      process.exit(1);
+    }
+  })();
 }
 
 // Export initialize function for programmatic use

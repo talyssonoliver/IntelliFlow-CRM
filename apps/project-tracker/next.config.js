@@ -5,9 +5,6 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
   typedRoutes: true,
-  eslint: {
-    dirs: ['app', 'components', 'lib'],
-  },
-}
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

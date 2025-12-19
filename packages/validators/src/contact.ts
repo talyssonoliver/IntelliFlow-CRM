@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { emailSchema, phoneSchema, idSchema, paginationSchema } from './common';
 
+// Re-export common schemas used by API routers
+export { idSchema } from './common';
+
 // Create Contact Schema
 export const createContactSchema = z.object({
   email: emailSchema,

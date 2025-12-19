@@ -12,9 +12,9 @@
  *   pnpm tsx tools/lint/artifact-paths.ts --audit
  */
 
-import { glob } from 'glob'
-import * as fs from 'fs'
-import * as path from 'path'
+import { glob } from 'glob';
+import * as fs from 'fs';
+import * as path from 'path';
 
 // Configuration
 const CONFIG = {
@@ -47,8 +47,11 @@ const CONFIG = {
     '**/docker-compose*.yaml',
     'artifacts/misc/*.yml',
     'artifacts/misc/*.yaml',
+    'logs/**/*',
+    'artifacts/logs/**/*',
+    '**/*.log',
   ],
-}
+};
 
 // Validation rules
 const RULES = {
@@ -57,6 +60,7 @@ const RULES = {
     'artifacts/reports/**/*',
     'artifacts/metrics/**/*',
     'artifacts/misc/**/*',
+    'artifacts/attestations/**/*',
   ],
   allowedBuildOutputs: [
     'dist/**/*',
@@ -98,7 +102,7 @@ const RULES = {
     /\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/g, // Phone numbers (US format)
     /\b\d{3}-\d{2}-\d{4}\b/g, // SSN (US format)
   ],
-}
+};
 
 // Colors for terminal output
 const colors = {
@@ -108,67 +112,67 @@ const colors = {
   yellow: '\x1b[33m',
   blue: '\x1b[34m',
   cyan: '\x1b[36m',
-}
+};
 
 interface LintResult {
-  file: string
-  violations: Violation[]
+  file: string;
+  violations: Violation[];
 }
 
 interface Violation {
-  rule: string
-  severity: 'error' | 'warning'
-  message: string
-  line?: number
+  rule: string;
+  severity: 'error' | 'warning';
+  message: string;
+  line?: number;
 }
 
 interface LintStats {
-  totalFiles: number
-  violations: number
-  errors: number
-  warnings: number
-  filesWithViolations: number
+  totalFiles: number;
+  violations: number;
+  errors: number;
+  warnings: number;
+  filesWithViolations: number;
 }
 
 /**
  * Main linter class
  */
 class ArtifactPathLinter {
-  private results: LintResult[] = []
+  private results: LintResult[] = [];
   private stats: LintStats = {
     totalFiles: 0,
     violations: 0,
     errors: 0,
     warnings: 0,
     filesWithViolations: 0,
-  }
+  };
 
   /**
    * Run the linter
    */
   async run(options: { fix?: boolean; audit?: boolean } = {}): Promise<boolean> {
-    console.log(`${colors.cyan}🔍 IntelliFlow CRM - Artifact Path Linter${colors.reset}\n`)
+    console.log(`${colors.cyan}🔍 IntelliFlow CRM - Artifact Path Linter${colors.reset}\n`);
 
     if (options.audit) {
-      return this.runAudit()
+      return this.runAudit();
     }
 
-    const files = await this.findFiles()
-    this.stats.totalFiles = files.length
+    const files = await this.findFiles();
+    this.stats.totalFiles = files.length;
 
-    console.log(`Found ${files.length} files to check\n`)
+    console.log(`Found ${files.length} files to check\n`);
 
     for (const file of files) {
-      await this.lintFile(file)
+      await this.lintFile(file);
     }
 
-    this.printResults()
+    this.printResults();
 
     if (options.fix) {
-      this.applyFixes()
+      this.applyFixes();
     }
 
-    return this.stats.errors === 0
+    return this.stats.errors === 0;
   }
 
   /**
@@ -182,7 +186,7 @@ class ArtifactPathLinter {
       '**/*.csv',
       '**/*.txt',
       'artifacts/**/*',
-    ]
+    ];
 
     const ignore = [
       '**/node_modules/**',
@@ -192,28 +196,28 @@ class ArtifactPathLinter {
       '**/.turbo/**',
       '**/pnpm-lock.yaml',
       '**/package-lock.json',
-    ]
+    ];
 
-    const allFiles: string[] = []
+    const allFiles: string[] = [];
 
     for (const pattern of patterns) {
       const files = await glob(pattern, {
         cwd: CONFIG.rootDir,
         ignore,
         nodir: true,
-      })
-      allFiles.push(...files)
+      });
+      allFiles.push(...files);
     }
 
     // Remove duplicates
-    return [...new Set(allFiles)]
+    return [...new Set(allFiles)];
   }
 
   /**
    * Lint a single file
    */
   private async lintFile(file: string): Promise<void> {
-    const violations: Violation[] = []
+    const violations: Violation[] = [];
 
     // Check if file is in prohibited location
     if (this.isProhibitedLocation(file)) {
@@ -221,7 +225,7 @@ class ArtifactPathLinter {
         rule: 'prohibited-location',
         severity: 'error',
         message: `Artifact file in prohibited location. Move to artifacts/ directory.`,
-      })
+      });
     }
 
     // Check for prohibited patterns in filename
@@ -230,7 +234,7 @@ class ArtifactPathLinter {
         rule: 'prohibited-pattern',
         severity: 'error',
         message: `Filename contains prohibited pattern (secret, credential, .key, .pem, .env)`,
-      })
+      });
     }
 
     // Check if artifact is in wrong category
@@ -239,29 +243,29 @@ class ArtifactPathLinter {
         rule: 'invalid-artifact-path',
         severity: 'warning',
         message: `Artifact not in standard category (logs/, reports/, metrics/, misc/)`,
-      })
+      });
     }
 
     // Check file size
-    const sizeViolation = await this.checkFileSize(file)
+    const sizeViolation = await this.checkFileSize(file);
     if (sizeViolation) {
-      violations.push(sizeViolation)
+      violations.push(sizeViolation);
     }
 
     // Check file contents for secrets
-    const secretViolations = await this.scanForSecrets(file)
-    violations.push(...secretViolations)
+    const secretViolations = await this.scanForSecrets(file);
+    violations.push(...secretViolations);
 
     // Check file contents for PII
-    const piiViolations = await this.scanForPII(file)
-    violations.push(...piiViolations)
+    const piiViolations = await this.scanForPII(file);
+    violations.push(...piiViolations);
 
     if (violations.length > 0) {
-      this.results.push({ file, violations })
-      this.stats.filesWithViolations++
-      this.stats.violations += violations.length
-      this.stats.errors += violations.filter((v) => v.severity === 'error').length
-      this.stats.warnings += violations.filter((v) => v.severity === 'warning').length
+      this.results.push({ file, violations });
+      this.stats.filesWithViolations++;
+      this.stats.violations += violations.length;
+      this.stats.errors += violations.filter((v) => v.severity === 'error').length;
+      this.stats.warnings += violations.filter((v) => v.severity === 'warning').length;
     }
   }
 
@@ -271,59 +275,53 @@ class ArtifactPathLinter {
   private isProhibitedLocation(file: string): boolean {
     // Files in artifacts/ are allowed
     if (file.startsWith('artifacts/')) {
-      return false
+      return false;
     }
 
     // Build outputs are allowed
     for (const pattern of RULES.allowedBuildOutputs) {
-      const regex = this.globToRegex(pattern)
+      const regex = this.globToRegex(pattern);
       if (regex.test(file)) {
-        return false
+        return false;
       }
     }
 
     // Check against prohibited locations
     for (const pattern of RULES.prohibitedLocations) {
-      const regex = this.globToRegex(pattern)
+      const regex = this.globToRegex(pattern);
       if (regex.test(file)) {
-        return true
+        return true;
       }
     }
 
-    return false
+    return false;
   }
 
   /**
    * Check if filename has prohibited patterns
    */
   private hasProhibitedPattern(file: string): boolean {
-    const basename = path.basename(file)
+    const basename = path.basename(file);
 
     // Check for prohibited patterns
-    const prohibited = [
-      /\.secret\./i,
-      /\.private\./i,
-      /credential/i,
-      /\.pem$/,
-      /\.key$/,
-    ]
+    const prohibited = [/\.secret\./i, /\.private\./i, /credential/i, /\.pem$/, /\.key$/];
 
     // Special case: .env files are prohibited except .env.example
-    if (basename === '.env' || basename.startsWith('.env.') && !basename.endsWith('.example')) {
-      return true
+    if (basename === '.env' || (basename.startsWith('.env.') && !basename.endsWith('.example'))) {
+      return true;
     }
 
-    return prohibited.some((pattern) => pattern.test(basename))
+    return prohibited.some((pattern) => pattern.test(basename));
   }
 
   /**
    * Check if artifact is in valid path
    */
   private isValidArtifactPath(file: string): boolean {
-    const validCategories = ['logs/', 'reports/', 'metrics/', 'misc/']
-    const relativePath = file.replace(/^artifacts\//, '')
+    const validCategories = ['logs/', 'reports/', 'metrics/', 'misc/'];
+    const relativePath = file.replace(/^artifacts\//, '');
 
-    return validCategories.some((category) => relativePath.startsWith(category))
+    return validCategories.some((category) => relativePath.startsWith(category));
   }
 
   /**
@@ -331,19 +329,19 @@ class ArtifactPathLinter {
    */
   private async checkFileSize(file: string): Promise<Violation | null> {
     try {
-      const stats = await fs.promises.stat(path.join(CONFIG.rootDir, file))
-      const sizeMB = stats.size / (1024 * 1024)
+      const stats = await fs.promises.stat(path.join(CONFIG.rootDir, file));
+      const sizeMB = stats.size / (1024 * 1024);
 
-      let maxSize = CONFIG.maxFileSizeMB.default
+      let maxSize = CONFIG.maxFileSizeMB.default;
 
       if (file.endsWith('.log')) {
-        maxSize = CONFIG.maxFileSizeMB.logs
+        maxSize = CONFIG.maxFileSizeMB.logs;
       } else if (file.endsWith('.html')) {
-        maxSize = CONFIG.maxFileSizeMB.reportsHtml
+        maxSize = CONFIG.maxFileSizeMB.reportsHtml;
       } else if (file.endsWith('.json')) {
-        maxSize = CONFIG.maxFileSizeMB.reportsJson
+        maxSize = CONFIG.maxFileSizeMB.reportsJson;
       } else if (file.match(/\.(png|jpg|jpeg|gif)$/)) {
-        maxSize = CONFIG.maxFileSizeMB.screenshots
+        maxSize = CONFIG.maxFileSizeMB.screenshots;
       }
 
       if (sizeMB > maxSize) {
@@ -351,13 +349,13 @@ class ArtifactPathLinter {
           rule: 'file-size',
           severity: 'warning',
           message: `File size (${sizeMB.toFixed(2)}MB) exceeds limit (${maxSize}MB). Consider compressing or splitting.`,
-        }
+        };
       }
     } catch (error) {
       // File doesn't exist or can't be read, skip
     }
 
-    return null
+    return null;
   }
 
   /**
@@ -365,38 +363,38 @@ class ArtifactPathLinter {
    */
   private isExcludedFromSecretScan(file: string): boolean {
     // Normalize path to forward slashes for consistent matching
-    const normalizedFile = file.replace(/\\/g, '/')
+    const normalizedFile = file.replace(/\\/g, '/');
     for (const pattern of CONFIG.secretScanExclusions) {
-      const regex = this.globToRegex(pattern)
+      const regex = this.globToRegex(pattern);
       if (regex.test(normalizedFile)) {
-        return true
+        return true;
       }
     }
-    return false
+    return false;
   }
 
   /**
    * Scan file contents for secrets
    */
   private async scanForSecrets(file: string): Promise<Violation[]> {
-    const violations: Violation[] = []
+    const violations: Violation[] = [];
 
     // Only scan text files
     if (!this.isTextFile(file)) {
-      return violations
+      return violations;
     }
 
     // Skip excluded files (documentation that discusses security concepts)
     if (this.isExcludedFromSecretScan(file)) {
-      return violations
+      return violations;
     }
 
     try {
-      const content = await fs.promises.readFile(path.join(CONFIG.rootDir, file), 'utf-8')
-      const lines = content.split('\n')
+      const content = await fs.promises.readFile(path.join(CONFIG.rootDir, file), 'utf-8');
+      const lines = content.split('\n');
 
       for (let i = 0; i < lines.length; i++) {
-        const line = lines[i]
+        const line = lines[i];
 
         for (const pattern of RULES.secretPatterns) {
           if (pattern.test(line)) {
@@ -405,7 +403,7 @@ class ArtifactPathLinter {
               severity: 'error',
               message: `Potential secret detected: ${pattern.source.substring(0, 50)}...`,
               line: i + 1,
-            })
+            });
           }
         }
       }
@@ -413,31 +411,31 @@ class ArtifactPathLinter {
       // Can't read file, skip
     }
 
-    return violations
+    return violations;
   }
 
   /**
    * Scan file contents for PII
    */
   private async scanForPII(file: string): Promise<Violation[]> {
-    const violations: Violation[] = []
+    const violations: Violation[] = [];
 
     // Only scan text files
     if (!this.isTextFile(file)) {
-      return violations
+      return violations;
     }
 
     // Don't scan log files for PII (too many false positives)
     if (file.endsWith('.log')) {
-      return violations
+      return violations;
     }
 
     try {
-      const content = await fs.promises.readFile(path.join(CONFIG.rootDir, file), 'utf-8')
-      const lines = content.split('\n')
+      const content = await fs.promises.readFile(path.join(CONFIG.rootDir, file), 'utf-8');
+      const lines = content.split('\n');
 
       for (let i = 0; i < lines.length; i++) {
-        const line = lines[i]
+        const line = lines[i];
 
         for (const pattern of RULES.piiPatterns) {
           if (pattern.test(line)) {
@@ -446,8 +444,8 @@ class ArtifactPathLinter {
               severity: 'warning',
               message: `Potential PII detected. Review and sanitize if needed.`,
               line: i + 1,
-            })
-            break // Only report once per line
+            });
+            break; // Only report once per line
           }
         }
       }
@@ -455,15 +453,25 @@ class ArtifactPathLinter {
       // Can't read file, skip
     }
 
-    return violations
+    return violations;
   }
 
   /**
    * Check if file is likely a text file
    */
   private isTextFile(file: string): boolean {
-    const textExtensions = ['.log', '.txt', '.json', '.html', '.xml', '.csv', '.md', '.yml', '.yaml']
-    return textExtensions.some((ext) => file.endsWith(ext))
+    const textExtensions = [
+      '.log',
+      '.txt',
+      '.json',
+      '.html',
+      '.xml',
+      '.csv',
+      '.md',
+      '.yml',
+      '.yaml',
+    ];
+    return textExtensions.some((ext) => file.endsWith(ext));
   }
 
   /**
@@ -475,49 +483,55 @@ class ArtifactPathLinter {
       .replace(/\*\*/g, '§§') // Temporary placeholder
       .replace(/\*/g, '[^/]*')
       .replace(/§§/g, '.*')
-      .replace(/\?/g, '[^/]')
+      .replace(/\?/g, '[^/]');
 
-    return new RegExp(`^${regex}$`)
+    return new RegExp(`^${regex}$`);
   }
 
   /**
    * Print linting results
    */
   private printResults(): void {
-    console.log('\n' + '='.repeat(80))
-    console.log('LINTING RESULTS')
-    console.log('='.repeat(80) + '\n')
+    console.log('\n' + '='.repeat(80));
+    console.log('LINTING RESULTS');
+    console.log('='.repeat(80) + '\n');
 
     if (this.results.length === 0) {
-      console.log(`${colors.green}✓ No violations found!${colors.reset}\n`)
-      this.printStats()
-      return
+      console.log(`${colors.green}✓ No violations found!${colors.reset}\n`);
+      this.printStats();
+      return;
     }
 
     for (const result of this.results) {
-      const errorCount = result.violations.filter((v) => v.severity === 'error').length
-      const warningCount = result.violations.filter((v) => v.severity === 'warning').length
+      const errorCount = result.violations.filter((v) => v.severity === 'error').length;
+      const warningCount = result.violations.filter((v) => v.severity === 'warning').length;
 
-      const fileColor = errorCount > 0 ? colors.red : colors.yellow
-      console.log(`${fileColor}${result.file}${colors.reset}`)
+      const fileColor = errorCount > 0 ? colors.red : colors.yellow;
+      console.log(`${fileColor}${result.file}${colors.reset}`);
 
       for (const violation of result.violations) {
-        const icon = violation.severity === 'error' ? '✗' : '⚠'
-        const color = violation.severity === 'error' ? colors.red : colors.yellow
-        const location = violation.line ? `:${violation.line}` : ''
+        const icon = violation.severity === 'error' ? '✗' : '⚠';
+        const color = violation.severity === 'error' ? colors.red : colors.yellow;
+        const location = violation.line ? `:${violation.line}` : '';
 
-        console.log(`  ${color}${icon} [${violation.rule}]${location} ${violation.message}${colors.reset}`)
+        console.log(
+          `  ${color}${icon} [${violation.rule}]${location} ${violation.message}${colors.reset}`
+        );
       }
 
-      console.log('')
+      console.log('');
     }
 
-    this.printStats()
+    this.printStats();
 
     if (this.stats.errors > 0) {
-      console.log(`${colors.red}✗ Linting failed with ${this.stats.errors} error(s)${colors.reset}\n`)
+      console.log(
+        `${colors.red}✗ Linting failed with ${this.stats.errors} error(s)${colors.reset}\n`
+      );
     } else {
-      console.log(`${colors.yellow}⚠ Linting passed with ${this.stats.warnings} warning(s)${colors.reset}\n`)
+      console.log(
+        `${colors.yellow}⚠ Linting passed with ${this.stats.warnings} warning(s)${colors.reset}\n`
+      );
     }
   }
 
@@ -525,79 +539,79 @@ class ArtifactPathLinter {
    * Print statistics
    */
   private printStats(): void {
-    console.log('Statistics:')
-    console.log(`  Total files checked: ${this.stats.totalFiles}`)
-    console.log(`  Files with violations: ${this.stats.filesWithViolations}`)
-    console.log(`  Total violations: ${this.stats.violations}`)
-    console.log(`  Errors: ${colors.red}${this.stats.errors}${colors.reset}`)
-    console.log(`  Warnings: ${colors.yellow}${this.stats.warnings}${colors.reset}`)
-    console.log('')
+    console.log('Statistics:');
+    console.log(`  Total files checked: ${this.stats.totalFiles}`);
+    console.log(`  Files with violations: ${this.stats.filesWithViolations}`);
+    console.log(`  Total violations: ${this.stats.violations}`);
+    console.log(`  Errors: ${colors.red}${this.stats.errors}${colors.reset}`);
+    console.log(`  Warnings: ${colors.yellow}${this.stats.warnings}${colors.reset}`);
+    console.log('');
   }
 
   /**
    * Apply automatic fixes (placeholder for future implementation)
    */
   private applyFixes(): void {
-    console.log(`${colors.blue}ℹ Auto-fix not yet implemented${colors.reset}\n`)
-    console.log('Suggestions:')
-    console.log('  1. Move misplaced artifacts to artifacts/ directory')
-    console.log('  2. Remove files with prohibited patterns')
-    console.log('  3. Compress files exceeding size limits')
-    console.log('  4. Sanitize files containing secrets/PII')
-    console.log('')
+    console.log(`${colors.blue}ℹ Auto-fix not yet implemented${colors.reset}\n`);
+    console.log('Suggestions:');
+    console.log('  1. Move misplaced artifacts to artifacts/ directory');
+    console.log('  2. Remove files with prohibited patterns');
+    console.log('  3. Compress files exceeding size limits');
+    console.log('  4. Sanitize files containing secrets/PII');
+    console.log('');
   }
 
   /**
    * Run audit mode (generate migration map)
    */
   private async runAudit(): Promise<boolean> {
-    console.log(`${colors.cyan}Running audit mode...${colors.reset}\n`)
+    console.log(`${colors.cyan}Running audit mode...${colors.reset}\n`);
 
-    const files = await this.findFiles()
-    const misplacedFiles: Array<{ from: string; to: string; reason: string }> = []
+    const files = await this.findFiles();
+    const misplacedFiles: Array<{ from: string; to: string; reason: string }> = [];
 
     for (const file of files) {
       if (this.isProhibitedLocation(file) && !file.startsWith('artifacts/')) {
-        const suggestedPath = this.suggestArtifactPath(file)
+        const suggestedPath = this.suggestArtifactPath(file);
         misplacedFiles.push({
           from: file,
           to: suggestedPath,
           reason: 'File in prohibited location',
-        })
+        });
       }
     }
 
     if (misplacedFiles.length === 0) {
-      console.log(`${colors.green}✓ No misplaced artifacts found${colors.reset}\n`)
-      return true
+      console.log(`${colors.green}✓ No misplaced artifacts found${colors.reset}\n`);
+      return true;
     }
 
-    console.log(`Found ${misplacedFiles.length} misplaced artifacts\n`)
+    console.log(`Found ${misplacedFiles.length} misplaced artifacts\n`);
 
     // Generate migration CSV
-    const migrationMapPath = path.join(CONFIG.rootDir, 'scripts/migration/artifact-move-map.csv')
-    await this.generateMigrationMap(misplacedFiles, migrationMapPath)
+    const migrationMapPath = path.join(CONFIG.rootDir, 'scripts/migration/artifact-move-map.csv');
+    await this.generateMigrationMap(misplacedFiles, migrationMapPath);
 
-    console.log(`${colors.green}✓ Migration map generated: ${migrationMapPath}${colors.reset}\n`)
+    console.log(`${colors.green}✓ Migration map generated: ${migrationMapPath}${colors.reset}\n`);
 
-    return true
+    return true;
   }
 
   /**
    * Suggest correct artifact path for a file
    */
   private suggestArtifactPath(file: string): string {
-    const basename = path.basename(file)
-    const ext = path.extname(file)
+    const basename = path.basename(file);
+    const ext = path.extname(file);
 
     if (ext === '.log') {
-      return `artifacts/logs/migration/${basename}`
+      return `artifacts/logs/migration/${basename}`;
     } else if (ext === '.html' || ext === '.json') {
-      return `artifacts/reports/migration/${basename}`
+      return `artifacts/reports/migration/${basename}`;
     } else if (ext === '.csv') {
-      return `artifacts/metrics/migration/${basename}`
+      return `artifacts/metrics/migration/${basename}`;
     } else {
-      return `artifacts/misc/migration/${basename}`
+      return `artifacts/misc/migration/${basename}`;
     }
   }
 
@@ -611,34 +625,34 @@ class ArtifactPathLinter {
     const csv = [
       'from,to,reason,status',
       ...files.map((f) => `"${f.from}","${f.to}","${f.reason}",pending`),
-    ].join('\n')
+    ].join('\n');
 
-    await fs.promises.mkdir(path.dirname(outputPath), { recursive: true })
-    await fs.promises.writeFile(outputPath, csv, 'utf-8')
+    await fs.promises.mkdir(path.dirname(outputPath), { recursive: true });
+    await fs.promises.writeFile(outputPath, csv, 'utf-8');
   }
 }
 
 // CLI Entry Point
 async function main() {
-  const args = process.argv.slice(2)
+  const args = process.argv.slice(2);
   const options = {
     fix: args.includes('--fix'),
     audit: args.includes('--audit'),
-  }
+  };
 
-  const linter = new ArtifactPathLinter()
-  const success = await linter.run(options)
+  const linter = new ArtifactPathLinter();
+  const success = await linter.run(options);
 
-  process.exit(success ? 0 : 1)
+  process.exit(success ? 0 : 1);
 }
 
 // Export for testing
-export { ArtifactPathLinter, RULES, CONFIG }
+export { ArtifactPathLinter, RULES, CONFIG };
 
 // Run if called directly
 if (require.main === module) {
   main().catch((error) => {
-    console.error(`${colors.red}Fatal error:${colors.reset}`, error)
-    process.exit(1)
-  })
+    console.error(`${colors.red}Fatal error:${colors.reset}`, error);
+    process.exit(1);
+  });
 }

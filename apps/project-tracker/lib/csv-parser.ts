@@ -23,9 +23,11 @@ export async function parseCSV(file: File): Promise<ParsedCSVData> {
       complete: (results) => {
         try {
           const tasks = normalizeCSVData(results.data as any[]);
-          const sections = [...new Set(tasks.map(t => t.section))].sort((a, b) => a.localeCompare(b));
-          const owners = [...new Set(tasks.map(t => t.owner))].sort((a, b) => a.localeCompare(b));
-          const sprints = [...new Set(tasks.map(t => t.sprint))].sort((a, b) => {
+          const sections = [...new Set(tasks.map((t) => t.section))].sort((a, b) =>
+            a.localeCompare(b)
+          );
+          const owners = [...new Set(tasks.map((t) => t.owner))].sort((a, b) => a.localeCompare(b));
+          const sprints = [...new Set(tasks.map((t) => t.sprint))].sort((a, b) => {
             if (a === 'Continuous') return 1;
             if (b === 'Continuous') return -1;
             return (a as number) - (b as number);
@@ -53,9 +55,9 @@ export function parseCSVText(csvText: string): ParsedCSVData {
   });
 
   const tasks = normalizeCSVData(results.data as any[]);
-  const sections = [...new Set(tasks.map(t => t.section))].sort((a, b) => a.localeCompare(b));
-  const owners = [...new Set(tasks.map(t => t.owner))].sort((a, b) => a.localeCompare(b));
-  const sprints = [...new Set(tasks.map(t => t.sprint))].sort((a, b) => {
+  const sections = [...new Set(tasks.map((t) => t.section))].sort((a, b) => a.localeCompare(b));
+  const owners = [...new Set(tasks.map((t) => t.owner))].sort((a, b) => a.localeCompare(b));
+  const sprints = [...new Set(tasks.map((t) => t.sprint))].sort((a, b) => {
     if (a === 'Continuous') return 1;
     if (b === 'Continuous') return -1;
     return (a as number) - (b as number);
@@ -94,7 +96,10 @@ function normalizeCSVData(rows: any[]): Task[] {
  */
 function parseDependencies(deps: string): string[] {
   if (!deps || deps.trim() === '') return [];
-  return deps.split(',').map(d => d.trim()).filter(Boolean);
+  return deps
+    .split(',')
+    .map((d) => d.trim())
+    .filter(Boolean);
 }
 
 /**
@@ -102,7 +107,10 @@ function parseDependencies(deps: string): string[] {
  */
 function parseArtifacts(artifacts: string): string[] {
   if (!artifacts || artifacts.trim() === '') return [];
-  return artifacts.split(',').map(a => a.trim()).filter(Boolean);
+  return artifacts
+    .split(',')
+    .map((a) => a.trim())
+    .filter(Boolean);
 }
 
 /**
@@ -173,19 +181,25 @@ export function groupTasksBySprint(tasks: Task[]): Map<SprintNumber, Task[]> {
  * Count tasks by status
  */
 export function countTasksByStatus(tasks: Task[]) {
-  const backlog = tasks.filter(t => t.status === 'Backlog').length;
-  const planned = tasks.filter(t => t.status === 'Planned').length;
-  const inProgress = tasks.filter(t => t.status === 'In Progress').length;
-  const completed = tasks.filter(t => t.status === 'Completed').length;
-  const blocked = tasks.filter(t => t.status === 'Blocked').length;
-  
+  const backlog = tasks.filter((t) => t.status === 'Backlog' || t.status === 'In Review').length;
+  const planned = tasks.filter((t) => t.status === 'Planned').length;
+  const inProgress = tasks.filter(
+    (t) => t.status === 'In Progress' || t.status === 'Validating'
+  ).length;
+  const completed = tasks.filter((t) => t.status === 'Completed' || t.status === 'Done').length;
+  const blocked = tasks.filter((t) => t.status === 'Blocked').length;
+  const failed = tasks.filter((t) => t.status === 'Failed').length;
+  const needsHuman = tasks.filter((t) => t.status === 'Needs Human').length;
+
   return {
     backlog,
     planned,
     inProgress,
     completed,
     blocked,
-    total: backlog + planned + inProgress + completed + blocked,
+    failed,
+    needsHuman,
+    total: tasks.length,
   };
 }
 
@@ -194,6 +208,6 @@ export function countTasksByStatus(tasks: Task[]) {
  */
 export function calculateCompletionRate(tasks: Task[]): number {
   if (tasks.length === 0) return 0;
-  const completed = tasks.filter(t => t.status === 'Completed').length;
+  const completed = tasks.filter((t) => t.status === 'Completed' || t.status === 'Done').length;
   return Math.round((completed / tasks.length) * 100);
 }

@@ -11,13 +11,7 @@ import {
   LeadConvertedEvent,
 } from './LeadEvents';
 
-export type LeadStatus =
-  | 'NEW'
-  | 'CONTACTED'
-  | 'QUALIFIED'
-  | 'UNQUALIFIED'
-  | 'CONVERTED'
-  | 'LOST';
+export type LeadStatus = 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'UNQUALIFIED' | 'CONVERTED' | 'LOST';
 
 export type LeadSource =
   | 'WEBSITE'
@@ -94,9 +88,7 @@ export class Lead extends AggregateRoot<LeadId> {
   }
 
   get fullName(): string {
-    return [this.props.firstName, this.props.lastName]
-      .filter(Boolean)
-      .join(' ');
+    return [this.props.firstName, this.props.lastName].filter(Boolean).join(' ');
   }
 
   get company(): string | undefined {
@@ -168,14 +160,7 @@ export class Lead extends AggregateRoot<LeadId> {
       updatedAt: now,
     });
 
-    lead.addDomainEvent(
-      new LeadCreatedEvent(
-        leadId,
-        emailResult.value,
-        lead.source,
-        lead.ownerId
-      )
-    );
+    lead.addDomainEvent(new LeadCreatedEvent(leadId, emailResult.value, lead.source, lead.ownerId));
 
     return Result.ok(lead);
   }
@@ -219,9 +204,7 @@ export class Lead extends AggregateRoot<LeadId> {
     this.props.status = newStatus;
     this.props.updatedAt = new Date();
 
-    this.addDomainEvent(
-      new LeadStatusChangedEvent(this.id, previousStatus, newStatus, changedBy)
-    );
+    this.addDomainEvent(new LeadStatusChangedEvent(this.id, previousStatus, newStatus, changedBy));
 
     return Result.ok(undefined);
   }
@@ -243,7 +226,11 @@ export class Lead extends AggregateRoot<LeadId> {
     return Result.ok(undefined);
   }
 
-  convert(contactId: string, accountId: string | null, convertedBy: string): Result<void, LeadAlreadyConvertedError> {
+  convert(
+    contactId: string,
+    accountId: string | null,
+    convertedBy: string
+  ): Result<void, LeadAlreadyConvertedError> {
     if (this.isConverted) {
       return Result.fail(new LeadAlreadyConvertedError());
     }
@@ -251,14 +238,14 @@ export class Lead extends AggregateRoot<LeadId> {
     this.props.status = 'CONVERTED';
     this.props.updatedAt = new Date();
 
-    this.addDomainEvent(
-      new LeadConvertedEvent(this.id, contactId, accountId, convertedBy)
-    );
+    this.addDomainEvent(new LeadConvertedEvent(this.id, contactId, accountId, convertedBy));
 
     return Result.ok(undefined);
   }
 
-  updateContactInfo(props: Partial<Pick<LeadProps, 'firstName' | 'lastName' | 'company' | 'title' | 'phone'>>): void {
+  updateContactInfo(
+    props: Partial<Pick<LeadProps, 'firstName' | 'lastName' | 'company' | 'title' | 'phone'>>
+  ): void {
     Object.assign(this.props, props);
     this.props.updatedAt = new Date();
   }

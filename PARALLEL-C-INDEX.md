@@ -1,34 +1,36 @@
 # Sprint 0 PARALLEL-C - Deliverables Index
 
-**Date:** 2025-12-14
-**Status:** ✅ COMPLETE
-**Tasks:** EXC-SEC-001, IFC-160
+**Date:** 2025-12-14 **Status:** ✅ COMPLETE **Tasks:** EXC-SEC-001, IFC-160
 
 ---
 
 ## Quick Navigation
 
-| Document | Purpose | Location |
-|----------|---------|----------|
-| **Quick Start** | Get started in 5 minutes | [PARALLEL-C-QUICKSTART.md](./PARALLEL-C-QUICKSTART.md) |
+| Document               | Purpose                    | Location                                                                                             |
+| ---------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------- |
+| **Quick Start**        | Get started in 5 minutes   | [PARALLEL-C-QUICKSTART.md](./PARALLEL-C-QUICKSTART.md)                                               |
 | **Completion Summary** | Detailed completion report | [artifacts/misc/PARALLEL-C-COMPLETION-SUMMARY.md](./artifacts/misc/PARALLEL-C-COMPLETION-SUMMARY.md) |
-| **This Index** | Navigate all deliverables | [PARALLEL-C-INDEX.md](./PARALLEL-C-INDEX.md) |
+| **This Index**         | Navigate all deliverables  | [PARALLEL-C-INDEX.md](./PARALLEL-C-INDEX.md)                                                         |
 
 ---
 
 ## EXC-SEC-001: Secrets Management (HashiCorp Vault)
 
 ### Overview
-Complete HashiCorp Vault configuration for secure secrets management across all IntelliFlow CRM services.
+
+Complete HashiCorp Vault configuration for secure secrets management across all
+IntelliFlow CRM services.
 
 ### Deliverables
 
 #### 1. Vault Configuration
-**File:** [`artifacts/misc/vault-config.yaml`](./artifacts/misc/vault-config.yaml)
-**Size:** 1.4KB
-**Purpose:** HashiCorp Vault server configuration
+
+**File:**
+[`artifacts/misc/vault-config.yaml`](./artifacts/misc/vault-config.yaml)
+**Size:** 1.4KB **Purpose:** HashiCorp Vault server configuration
 
 **Contents:**
+
 - Storage backend configuration
 - HTTPS listener setup
 - Telemetry (Prometheus integration)
@@ -37,6 +39,7 @@ Complete HashiCorp Vault configuration for secure secrets management across all 
 - Security configurations
 
 **Key Features:**
+
 - TLS enabled
 - UI enabled
 - OpenTelemetry integration
@@ -46,30 +49,30 @@ Complete HashiCorp Vault configuration for secure secrets management across all 
 ---
 
 #### 2. Access Policies
-**File:** [`artifacts/misc/access-policy.json`](./artifacts/misc/access-policy.json)
-**Size:** 7.5KB
-**Purpose:** Service-level access control policies for Vault
+
+**File:**
+[`artifacts/misc/access-policy.json`](./artifacts/misc/access-policy.json)
+**Size:** 7.5KB **Purpose:** Service-level access control policies for Vault
 
 **Contents:**
+
 - 8 service policies (api-service, ai-worker, web-app, etc.)
 - 3 authentication methods (Kubernetes, AppRole, GitHub)
 - 3 secret engines (KV v2, database, transit)
 - 1 audit device (file-based)
 - Secret rotation policies
 
-**Service Policies:**
-| Policy | Services | Access |
-|--------|----------|--------|
-| api-service-policy | API Server | Database, API keys, JWT |
-| ai-worker-policy | AI Worker | OpenAI, Ollama, LangChain |
-| web-app-policy | Web App | NextAuth, session |
-| database-admin-policy | DB Admins | Full database access |
-| ci-cd-policy | CI/CD | Deployment secrets |
-| monitoring-policy | Monitoring | Sentry, Grafana |
-| supabase-integration-policy | Supabase | Supabase credentials |
-| admin-policy | Admins | Emergency full access |
+**Service Policies:** | Policy | Services | Access |
+|--------|----------|--------| | api-service-policy | API Server | Database, API
+keys, JWT | | ai-worker-policy | AI Worker | OpenAI, Ollama, LangChain | |
+web-app-policy | Web App | NextAuth, session | | database-admin-policy | DB
+Admins | Full database access | | ci-cd-policy | CI/CD | Deployment secrets | |
+monitoring-policy | Monitoring | Sentry, Grafana | | supabase-integration-policy
+| Supabase | Supabase credentials | | admin-policy | Admins | Emergency full
+access |
 
 **Rotation Periods:**
+
 - Database: 30 days
 - API Keys: 90 days
 - JWT Secrets: 180 days
@@ -77,11 +80,13 @@ Complete HashiCorp Vault configuration for secure secrets management across all 
 ---
 
 #### 3. Test Log
-**File:** [`artifacts/logs/secret-retrieval-test.log`](./artifacts/logs/secret-retrieval-test.log)
-**Size:** 7.7KB
-**Purpose:** Vault secret retrieval validation test results
+
+**File:**
+[`artifacts/logs/secret-retrieval-test.log`](./artifacts/logs/secret-retrieval-test.log)
+**Size:** 7.7KB **Purpose:** Vault secret retrieval validation test results
 
 **Test Coverage:**
+
 - ✅ Database credentials retrieval
 - ✅ OpenAI API key retrieval
 - ✅ JWT secret retrieval
@@ -94,6 +99,7 @@ Complete HashiCorp Vault configuration for secure secrets management across all 
 - ✅ Error handling
 
 **Results:**
+
 - 10/10 tests passed
 - 100% success rate
 - 2.38s total execution time
@@ -102,11 +108,12 @@ Complete HashiCorp Vault configuration for secure secrets management across all 
 ---
 
 #### 4. Environment Template
-**File:** [`.env.example`](./.env.example)
-**Size:** 6.8KB
-**Purpose:** Template for environment variables (no secrets)
+
+**File:** [`.env.example`](./.env.example) **Size:** 6.8KB **Purpose:** Template
+for environment variables (no secrets)
 
 **Coverage:**
+
 - 91 environment variables documented
 - 13 categories
 - Vault integration
@@ -118,6 +125,7 @@ Complete HashiCorp Vault configuration for secure secrets management across all 
 - And more...
 
 **Key Sections:**
+
 1. Vault configuration (8 vars)
 2. Database configuration (10 vars)
 3. AI/LLM configuration (12 vars)
@@ -137,16 +145,20 @@ Complete HashiCorp Vault configuration for secure secrets management across all 
 ## IFC-160: Artifact Path Conventions + CI Lint
 
 ### Overview
-Automated enforcement of artifact organization standards with comprehensive documentation and tooling.
+
+Automated enforcement of artifact organization standards with comprehensive
+documentation and tooling.
 
 ### Deliverables
 
 #### 1. Repository Layout Documentation
-**File:** [`docs/architecture/repo-layout.md`](./docs/architecture/repo-layout.md)
-**Size:** 14KB
-**Purpose:** Complete repository structure documentation
+
+**File:**
+[`docs/architecture/repo-layout.md`](./docs/architecture/repo-layout.md)
+**Size:** 14KB **Purpose:** Complete repository structure documentation
 
 **Contents:**
+
 - Full directory tree with descriptions
 - Directory conventions and rules
 - File naming conventions
@@ -157,6 +169,7 @@ Automated enforcement of artifact organization standards with comprehensive docu
 - Maintenance guidelines
 
 **Documented Directories:**
+
 - `apps/` - Applications (web, api, ai-worker)
 - `packages/` - Shared packages (db, domain, validators, ui)
 - `infra/` - Infrastructure (Docker, Kubernetes, Supabase)
@@ -169,11 +182,13 @@ Automated enforcement of artifact organization standards with comprehensive docu
 ---
 
 #### 2. Artifact Conventions Documentation
-**File:** [`docs/architecture/artifact-conventions.md`](./docs/architecture/artifact-conventions.md)
-**Size:** 11KB
-**Purpose:** Artifact organization standards and conventions
+
+**File:**
+[`docs/architecture/artifact-conventions.md`](./docs/architecture/artifact-conventions.md)
+**Size:** 11KB **Purpose:** Artifact organization standards and conventions
 
 **Contents:**
+
 - 4 artifact categories (logs, reports, metrics, misc)
 - Path validation rules
 - File size limits
@@ -186,25 +201,30 @@ Automated enforcement of artifact organization standards with comprehensive docu
 **Artifact Categories:**
 
 **Logs** (`artifacts/logs/`)
+
 - Build, test, deployment, AI, error logs
 - Retention: 7-90 days
 - Format: `{process}-{timestamp}.log`
 
 **Reports** (`artifacts/reports/`)
+
 - Coverage, bundle, performance, security, accessibility
 - Formats: HTML, JSON, CSV, PDF
 - Retention: Last 10 per type
 
 **Metrics** (`artifacts/metrics/`)
+
 - DORA, AI, business, technical metrics
 - Formats: JSON, CSV
 - Time-series data
 
 **Miscellaneous** (`artifacts/misc/`)
+
 - Schemas, configs, screenshots, recordings
 - Temporary files (cleaned daily)
 
 **Security Features:**
+
 - Secret pattern detection
 - PII detection
 - Data sanitization
@@ -213,11 +233,12 @@ Automated enforcement of artifact organization standards with comprehensive docu
 ---
 
 #### 3. TypeScript Linter
+
 **File:** [`tools/lint/artifact-paths.ts`](./tools/lint/artifact-paths.ts)
-**Size:** 16KB
-**Purpose:** Automated artifact path validation tool
+**Size:** 16KB **Purpose:** Automated artifact path validation tool
 
 **Capabilities:**
+
 - Glob-based file discovery
 - Multi-rule validation
 - Security scanning (secrets & PII)
@@ -228,6 +249,7 @@ Automated enforcement of artifact organization standards with comprehensive docu
 - Statistics tracking
 
 **Validation Rules:**
+
 1. `prohibited-location` - Files in src/, docs/, etc.
 2. `prohibited-pattern` - .secret., .private., .key, .pem
 3. `invalid-artifact-path` - Wrong artifact category
@@ -236,20 +258,23 @@ Automated enforcement of artifact organization standards with comprehensive docu
 6. `pii-detected` - Email, phone, SSN
 
 **Secret Patterns (6):**
+
 - Generic API keys (32+ chars)
 - AWS access keys (AKIA...)
 - Private keys (PEM format)
 - Passwords
 - OpenAI keys (sk-...)
-- GitHub tokens (ghp_...)
+- GitHub tokens (ghp\_...)
 - PostgreSQL connection strings
 
 **PII Patterns (3):**
+
 - Email addresses
 - Phone numbers (US)
 - Social Security Numbers (US)
 
 **CLI Modes:**
+
 ```bash
 pnpm run lint:artifacts          # Run linter
 pnpm run lint:artifacts:fix      # Auto-fix (planned)
@@ -259,40 +284,47 @@ pnpm run lint:artifacts:audit    # Generate migration map
 ---
 
 #### 4. GitHub Action Workflow
-**File:** [`.github/workflows/artifact-lint.yml`](./github/workflows/artifact-lint.yml)
-**Size:** 8.0KB
-**Purpose:** CI/CD artifact validation workflow
+
+**File:**
+[`.github/workflows/artifact-lint.yml`](./github/workflows/artifact-lint.yml)
+**Size:** 8.0KB **Purpose:** CI/CD artifact validation workflow
 
 **Jobs:**
 
 **1. Lint Artifact Paths**
+
 - Runs TypeScript linter
 - Uploads results as artifacts
 - Comments on PRs with violations
 - Provides fix suggestions
 
 **2. Security Scan**
+
 - Installs git-secrets
 - Scans artifacts/ for secrets
 - Checks for .env files
 - Blocks PRs if secrets found
 
 **3. Artifact Size Check**
+
 - Monitors directory size
 - Warns if >100MB
 - Errors if >500MB
 - Reports oversized files
 
 **4. Validate .gitignore**
+
 - Verifies artifacts/ ignored
 - Checks for committed artifacts
 - Ensures proper patterns
 
 **5. Summary**
+
 - Aggregates results
 - Reports pass/fail
 
 **Triggers:**
+
 - Pull requests (main/develop)
 - Direct pushes (main/develop)
 - Manual dispatch
@@ -300,22 +332,26 @@ pnpm run lint:artifacts:audit    # Generate migration map
 ---
 
 #### 5. Migration Map
-**File:** [`scripts/migration/artifact-move-map.csv`](./scripts/migration/artifact-move-map.csv)
-**Size:** 1.1KB
-**Purpose:** Artifact relocation mapping for migration
+
+**File:**
+[`scripts/migration/artifact-move-map.csv`](./scripts/migration/artifact-move-map.csv)
+**Size:** 1.1KB **Purpose:** Artifact relocation mapping for migration
 
 **Format:**
+
 ```csv
 from,to,reason,status
 "old/path","new/path","reason","pending|completed|failed"
 ```
 
 **Sample Entries:**
+
 - 10 example migration mappings
 - Common misplaced artifact patterns
 - Suggested target locations
 
 **Generation:**
+
 ```bash
 pnpm run lint:artifacts:audit
 ```
@@ -323,11 +359,12 @@ pnpm run lint:artifacts:audit
 ---
 
 #### 6. Migration README
+
 **File:** [`scripts/migration/README.md`](./scripts/migration/README.md)
-**Size:** 4.9KB
-**Purpose:** Migration guide and documentation
+**Size:** 4.9KB **Purpose:** Migration guide and documentation
 
 **Contents:**
+
 - Audit mode usage
 - Manual migration steps
 - Automated migration (planned)
@@ -337,6 +374,7 @@ pnpm run lint:artifacts:audit
 - Post-migration verification
 
 **Process:**
+
 1. Run audit to generate map
 2. Review suggested migrations
 3. Manually migrate files
@@ -349,11 +387,13 @@ pnpm run lint:artifacts:audit
 ## Additional Documentation
 
 #### Completion Summary
-**File:** [`artifacts/misc/PARALLEL-C-COMPLETION-SUMMARY.md`](./artifacts/misc/PARALLEL-C-COMPLETION-SUMMARY.md)
-**Size:** 16KB
-**Purpose:** Detailed completion report with statistics
+
+**File:**
+[`artifacts/misc/PARALLEL-C-COMPLETION-SUMMARY.md`](./artifacts/misc/PARALLEL-C-COMPLETION-SUMMARY.md)
+**Size:** 16KB **Purpose:** Detailed completion report with statistics
 
 **Contents:**
+
 - Complete deliverables overview
 - Detailed feature descriptions
 - Statistics and metrics
@@ -363,6 +403,7 @@ pnpm run lint:artifacts:audit
 - Conclusion
 
 **Key Statistics:**
+
 - 12 files created
 - 1 file updated
 - 72,500+ total characters
@@ -372,11 +413,12 @@ pnpm run lint:artifacts:audit
 ---
 
 #### Quick Start Guide
-**File:** [`PARALLEL-C-QUICKSTART.md`](./PARALLEL-C-QUICKSTART.md)
-**Size:** 8.2KB
-**Purpose:** Get started in 5 minutes
+
+**File:** [`PARALLEL-C-QUICKSTART.md`](./PARALLEL-C-QUICKSTART.md) **Size:**
+8.2KB **Purpose:** Get started in 5 minutes
 
 **Contents:**
+
 - Quick start (5 minutes)
 - Common tasks
 - Developer guide
@@ -392,12 +434,13 @@ pnpm run lint:artifacts:audit
 ## Updated Files
 
 #### package.json
-**File:** [`package.json`](./package.json)
-**Status:** ✅ Updated
+
+**File:** [`package.json`](./package.json) **Status:** ✅ Updated
 
 **Changes:**
 
 **New Scripts:**
+
 ```json
 {
   "lint:artifacts": "tsx tools/lint/artifact-paths.ts",
@@ -407,6 +450,7 @@ pnpm run lint:artifacts:audit
 ```
 
 **New Dependencies:**
+
 ```json
 {
   "@types/node": "^20.11.0",
@@ -423,11 +467,13 @@ pnpm run lint:artifacts:audit
 ### For Developers
 
 **Before Committing:**
+
 ```bash
 pnpm run lint:artifacts
 ```
 
 **Working with Secrets:**
+
 - ✅ Use `.env.example` for placeholders
 - ✅ Reference Vault in production
 - ❌ Never commit `.env` files
@@ -436,6 +482,7 @@ pnpm run lint:artifacts
 ### For DevOps
 
 **Setting Up Vault:**
+
 1. Review `artifacts/misc/vault-config.yaml`
 2. Review `artifacts/misc/access-policy.json`
 3. Deploy Vault server
@@ -443,6 +490,7 @@ pnpm run lint:artifacts
 5. Test retrieval
 
 **Monitoring Artifacts:**
+
 ```bash
 du -sh artifacts/
 find artifacts/ -type f -size +10M
@@ -452,16 +500,19 @@ find artifacts/logs/ -type f -mtime +7 -delete
 ### For Everyone
 
 **Install Dependencies:**
+
 ```bash
 pnpm install
 ```
 
 **Run Linter:**
+
 ```bash
 pnpm run lint:artifacts
 ```
 
 **Generate Migration Map:**
+
 ```bash
 pnpm run lint:artifacts:audit
 cat scripts/migration/artifact-move-map.csv
@@ -512,12 +563,11 @@ C:\taly\intelliFlow-CRM\
 
 ### Statistics
 
-**Files Created:** 12
-**Files Updated:** 1 (package.json)
-**Total Size:** ~102KB
+**Files Created:** 12 **Files Updated:** 1 (package.json) **Total Size:** ~102KB
 **Total Content:** 72,500+ characters
 
 **Breakdown by Task:**
+
 - EXC-SEC-001: 4 files (23.4KB)
 - IFC-160: 6 files (55.0KB)
 - Documentation: 3 files (40.2KB)
@@ -534,16 +584,19 @@ C:\taly\intelliFlow-CRM\
 ### Next Steps
 
 **Immediate:**
+
 1. Run `pnpm install`
 2. Run `pnpm run lint:artifacts`
 3. Review documentation
 
 **Short-term:**
+
 1. Deploy Vault (dev)
 2. Test CI/CD workflow
 3. Team training
 
 **Long-term:**
+
 1. Production Vault
 2. All services using Vault
 3. Custom linting rules
@@ -553,6 +606,7 @@ C:\taly\intelliFlow-CRM\
 ## Support
 
 ### Documentation
+
 - [Quick Start](./PARALLEL-C-QUICKSTART.md)
 - [Completion Summary](./artifacts/misc/PARALLEL-C-COMPLETION-SUMMARY.md)
 - [Repository Layout](./docs/architecture/repo-layout.md)
@@ -560,14 +614,16 @@ C:\taly\intelliFlow-CRM\
 - [Migration Guide](./scripts/migration/README.md)
 
 ### Testing
-- Vault: [`artifacts/logs/secret-retrieval-test.log`](./artifacts/logs/secret-retrieval-test.log)
+
+- Vault:
+  [`artifacts/logs/secret-retrieval-test.log`](./artifacts/logs/secret-retrieval-test.log)
 - Linter: [`tools/lint/artifact-paths.ts`](./tools/lint/artifact-paths.ts)
-- CI: [`.github/workflows/artifact-lint.yml`](./.github/workflows/artifact-lint.yml)
+- CI:
+  [`.github/workflows/artifact-lint.yml`](./.github/workflows/artifact-lint.yml)
 
 ---
 
 **Status:** ✅ ALL DELIVERABLES COMPLETE
 
-**Completed:** 2025-12-14
-**Sprint:** 0 PARALLEL-C
-**Tasks:** EXC-SEC-001, IFC-160
+**Completed:** 2025-12-14 **Sprint:** 0 PARALLEL-C **Tasks:** EXC-SEC-001,
+IFC-160

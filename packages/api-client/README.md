@@ -4,19 +4,23 @@ Type-safe tRPC API client for IntelliFlow CRM.
 
 ## Overview
 
-This package provides fully typed API clients for consuming the IntelliFlow CRM API. It includes both vanilla JavaScript/TypeScript clients and React Query hooks for seamless integration with React applications.
+This package provides fully typed API clients for consuming the IntelliFlow CRM
+API. It includes both vanilla JavaScript/TypeScript clients and React Query
+hooks for seamless integration with React applications.
 
 ## Features
 
 - **End-to-End Type Safety**: Full TypeScript inference from API to client
-- **React Query Integration**: Automatic caching, refetching, and state management
+- **React Query Integration**: Automatic caching, refetching, and state
+  management
 - **Optimistic Updates**: Built-in support for optimistic UI updates
 - **Vanilla Client**: For server-side, testing, or non-React usage
 - **Type Exports**: All input/output types exported for easy reuse
 
 ## Installation
 
-This package is part of the IntelliFlow CRM monorepo and uses workspace dependencies.
+This package is part of the IntelliFlow CRM monorepo and uses workspace
+dependencies.
 
 ## Usage
 

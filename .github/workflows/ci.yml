@@ -41,7 +41,7 @@ jobs:
         run: pnpm run lint
 
       - name: Format check
-        run: pnpm run format --check
+        run: pnpm run format:check
 
   typecheck:
     name: Type Check
@@ -151,6 +151,44 @@ jobs:
           path: ./
           base: ${{ github.event.repository.default_branch }}
           extra_args: --only-verified
+
+  plan-lint:
+    name: Sprint Plan Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: tools/plan/pyproject.toml
+
+      - name: Install plan-lint dependencies
+        run: |
+          cd tools/plan
+          pip install -e .
+
+      - name: Run plan linter (Sprint 0)
+        run: |
+          cd tools/plan
+          python -m src.adapters.cli lint --sprint 0 --verbose
+
+      - name: Run plan lint tests
+        run: |
+          cd tools/plan
+          python -m pytest tests/ -v --tb=short
+
+      - name: Upload lint reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: plan-lint-report
+          path: |
+            apps/project-tracker/docs/metrics/review-queue.json
+            artifacts/reports/plan-lint-report.json
+          retention-days: 30
 
   e2e:
     name: E2E Tests

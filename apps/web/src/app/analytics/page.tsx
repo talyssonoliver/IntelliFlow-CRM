@@ -10,9 +10,15 @@ export default function AnalyticsPage() {
               IntelliFlow CRM
             </a>
             <div className="flex items-center space-x-4">
-              <a href="/leads" className="text-gray-600 dark:text-gray-300">Leads</a>
-              <a href="/contacts" className="text-gray-600 dark:text-gray-300">Contacts</a>
-              <a href="/analytics" className="text-primary font-medium">Analytics</a>
+              <a href="/leads" className="text-gray-600 dark:text-gray-300">
+                Leads
+              </a>
+              <a href="/contacts" className="text-gray-600 dark:text-gray-300">
+                Contacts
+              </a>
+              <a href="/analytics" className="text-primary font-medium">
+                Analytics
+              </a>
             </div>
           </div>
         </div>
@@ -20,9 +26,7 @@ export default function AnalyticsPage() {
 
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            Analytics
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Analytics</h2>
           <p className="text-gray-600 dark:text-gray-300">
             AI-powered insights and sales pipeline analytics
           </p>
@@ -104,18 +108,14 @@ function MetricCard({
   trend: string;
   description: string;
 }) {
-  const isPositive = trend.startsWith('+') || trend.startsWith('-') && title.includes('Cycle');
+  const isPositive = trend.startsWith('+') || (trend.startsWith('-') && title.includes('Cycle'));
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{title}</p>
       <div className="flex items-baseline space-x-2 mb-2">
         <p className="text-3xl font-bold text-gray-900 dark:text-white">{value}</p>
-        <span
-          className={`text-sm font-medium ${
-            isPositive ? 'text-green-600' : 'text-red-600'
-          }`}
-        >
+        <span className={`text-sm font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
           {trend}
         </span>
       </div>
@@ -143,9 +143,7 @@ function RecommendationItem({
     <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
       <div className="flex items-center justify-between mb-1">
         <h4 className="font-medium text-gray-900 dark:text-white text-sm">{title}</h4>
-        <span
-          className={`text-xs px-2 py-0.5 rounded-full ${priorityColors[priority]}`}
-        >
+        <span className={`text-xs px-2 py-0.5 rounded-full ${priorityColors[priority]}`}>
           {priority}
         </span>
       </div>

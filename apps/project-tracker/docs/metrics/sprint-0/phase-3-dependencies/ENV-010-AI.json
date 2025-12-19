@@ -10,15 +10,9 @@
   "dependencies": {
     "all_satisfied": false,
     "verified_at": "2025-12-16T00:41:57Z",
-    "required": [
-      "ENV-007-AI",
-      "ENV-009-AI"
-    ]
+    "required": ["ENV-007-AI", "ENV-009-AI"]
   },
-  "dependencies_resolved": [
-    "ENV-007-AI",
-    "ENV-009-AI"
-  ],
+  "dependencies_resolved": ["ENV-007-AI", "ENV-009-AI"],
   "target_duration_minutes": 1,
   "kpis": {
     "coverage": {

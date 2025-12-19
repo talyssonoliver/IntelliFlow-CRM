@@ -3,13 +3,13 @@
 
 packages:
   # Applications
-  - "apps/*"
+  - 'apps/*'
 
   # Shared packages
-  - "packages/*"
+  - 'packages/*'
 
   # Infrastructure tooling
-  - "tools/*"
+  - 'tools/*'
 
   # Testing utilities
-  - "tests/*"
+  - 'tests/*'

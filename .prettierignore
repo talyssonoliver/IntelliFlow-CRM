@@ -1,0 +1,5 @@
+artifacts/**
+.scannerwork/**
+.specify/**
+apps/project-tracker/docs/metrics/.locks/**
+apps/project-tracker/docs/metrics/backups/**

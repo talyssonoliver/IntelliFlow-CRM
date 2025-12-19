@@ -1,4 +1,4 @@
-import { calculateCost, ModelName, aiConfig } from '../config/ai.config';
+import { calculateCost, aiConfig } from '../config/ai.config';
 import pino from 'pino';
 
 const logger = pino({
@@ -44,8 +44,8 @@ export class CostTracker {
   private lastResetDate: Date = new Date();
 
   constructor(
-    private warningThreshold: number = aiConfig.costTracking.warningThreshold,
-    private dailyLimit?: number
+    private readonly warningThreshold: number = aiConfig.costTracking.warningThreshold,
+    private readonly dailyLimit?: number
   ) {
     this.resetDailyCounters();
   }
@@ -113,15 +113,15 @@ export class CostTracker {
 
     // Group by model
     const costByModel: Record<string, number> = {};
-    filteredUsage.forEach((u) => {
+    for (const u of filteredUsage) {
       costByModel[u.model] = (costByModel[u.model] || 0) + u.cost;
-    });
+    }
 
     // Group by operation type
     const costByOperation: Record<string, number> = {};
-    filteredUsage.forEach((u) => {
+    for (const u of filteredUsage) {
       costByOperation[u.operationType] = (costByOperation[u.operationType] || 0) + u.cost;
-    });
+    }
 
     return {
       totalCost,
@@ -130,8 +130,7 @@ export class CostTracker {
       totalOutputTokens,
       costByModel,
       costByOperation,
-      averageCostPerOperation:
-        filteredUsage.length > 0 ? totalCost / filteredUsage.length : 0,
+      averageCostPerOperation: filteredUsage.length > 0 ? totalCost / filteredUsage.length : 0,
       startTime: start,
       endTime: end,
     };
@@ -240,14 +239,14 @@ export class CostTracker {
     report += `Total Output Tokens: ${stats.totalOutputTokens.toLocaleString()}\n\n`;
 
     report += 'Cost by Model:\n';
-    Object.entries(stats.costByModel).forEach(([model, cost]) => {
+    for (const [model, cost] of Object.entries(stats.costByModel)) {
       report += `  ${model}: $${cost.toFixed(4)}\n`;
-    });
+    }
 
     report += '\nCost by Operation:\n';
-    Object.entries(stats.costByOperation).forEach(([op, cost]) => {
+    for (const [op, cost] of Object.entries(stats.costByOperation)) {
       report += `  ${op}: $${cost.toFixed(4)}\n`;
-    });
+    }
 
     return report;
   }

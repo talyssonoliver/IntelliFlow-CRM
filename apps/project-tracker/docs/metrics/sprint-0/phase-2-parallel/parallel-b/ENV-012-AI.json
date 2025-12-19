@@ -9,9 +9,7 @@
   "phase": "phase-2-parallel",
   "stream": "parallel-b",
   "dependencies": {
-    "required": [
-      "ENV-001-AI"
-    ],
+    "required": ["ENV-001-AI"],
     "verified_at": "2025-12-16T00:00:00Z",
     "all_satisfied": false
   },

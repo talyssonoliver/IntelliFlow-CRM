@@ -3,11 +3,13 @@
 Scaffold a new DDD aggregate with all required components and tests.
 
 ## Usage
+
 ```
 /create-aggregate <name> [--context=<bounded-context>]
 ```
 
 ## Arguments
+
 - `name`: Aggregate name (PascalCase, e.g., Lead, Contact, Account)
 - `--context`: Bounded context (crm, intelligence, platform)
 
@@ -64,6 +66,7 @@ export class Lead extends AggregateRoot<LeadId> {
 ```
 
 ## Example
+
 ```bash
 # Create Lead aggregate in CRM context
 /create-aggregate Lead --context=crm

@@ -2,11 +2,14 @@
 
 ## Overview
 
-The IntelliFlow CRM Tracker uses **Sprint_plan.csv as the single source of truth** for all task data. All other metrics files (JSON files, phase summaries, task registry) are **derived** from this CSV file.
+The IntelliFlow CRM Tracker uses **Sprint_plan.csv as the single source of
+truth** for all task data. All other metrics files (JSON files, phase summaries,
+task registry) are **derived** from this CSV file.
 
 ## The Problem
 
 Previously, manual edits to individual JSON files created inconsistencies:
+
 - CSV showed 11 tasks "In Progress" but `_summary.json` showed 3
 - Task statuses were out of sync between different files
 - No automatic propagation of CSV changes to dependent files
@@ -56,17 +59,20 @@ When sync runs, it updates:
 ### Manual Sync Options
 
 #### Option 1: Via UI (Easiest)
+
 1. Go to the **Metrics** page
 2. Click the green **"Sync"** button
 3. Wait for sync to complete
 4. Click **"Refresh"** to see updated data
 
 #### Option 2: Via API
+
 ```bash
 curl -X POST http://localhost:3002/api/sync-metrics
 ```
 
 #### Option 3: Via Script
+
 ```bash
 cd apps/project-tracker
 npx tsx scripts/sync-metrics.ts
@@ -76,7 +82,8 @@ npx tsx scripts/sync-metrics.ts
 
 ### When You Edit Sprint_plan.csv
 
-1. **Edit the CSV** - Make your changes to `docs/metrics/_global/Sprint_plan.csv`
+1. **Edit the CSV** - Make your changes to
+   `docs/metrics/_global/Sprint_plan.csv`
 2. **Trigger Sync** - Click "Refresh" button or the "Sync" button
 3. **Sync Runs** - Updates all derived JSON files
 4. **View Updated Data** - Refresh the page to see changes
@@ -84,23 +91,27 @@ npx tsx scripts/sync-metrics.ts
 ### What Gets Synced
 
 #### Task Status Mapping
+
 - CSV: `Done` or `Completed` → JSON: `DONE`
 - CSV: `In Progress` → JSON: `IN_PROGRESS`
 - CSV: `Blocked` → JSON: `BLOCKED`
 - CSV: `Planned` → JSON: `PLANNED`
 
 #### Task Registry
+
 - Updates `tasks_by_status` arrays
 - Updates `task_details` objects
 - Preserves existing fields not in CSV
 - Calculates sprint statistics
 
 #### Individual Task Files
+
 - Updates status, description, owner
 - Sets timestamps for completed tasks
 - Preserves custom fields like notes, duration
 
 #### Phase Summaries
+
 - Counts tasks by status per phase
 - Updates completion timestamps
 - Calculates aggregated metrics
@@ -112,6 +123,7 @@ npx tsx scripts/sync-metrics.ts
 **Problem:** You edited the CSV but the Metrics page shows old data.
 
 **Solution:**
+
 1. Click the green "Sync" button on the Metrics page
 2. Then click "Refresh"
 3. Verify the numbers match your CSV
@@ -121,11 +133,13 @@ npx tsx scripts/sync-metrics.ts
 **Problem:** Sync completes but shows errors for some tasks.
 
 **Common causes:**
+
 - Task file doesn't exist (e.g., `IFC-000.json`)
 - Invalid task ID in CSV
 - File permissions issue
 
 **Solution:**
+
 - Check the browser console for specific errors
 - Create missing task files if needed
 - Fix any typos in task IDs
@@ -135,12 +149,14 @@ npx tsx scripts/sync-metrics.ts
 **Problem:** After sync, totals still look wrong.
 
 **Debug steps:**
+
 1. Open browser console
 2. Look for "Metrics synced:" message
 3. Check `filesUpdated` count
 4. Verify CSV has correct Target Sprint values (0 for Sprint 0)
 
 **Manual verification:**
+
 ```powershell
 # Count Sprint 0 tasks by status
 $csv = Import-Csv "docs\metrics\_global\Sprint_plan.csv"
@@ -183,11 +199,13 @@ $sprint0 | Group-Object Status | Select-Object Name, Count
 **POST /api/sync-metrics**
 
 Request:
+
 ```bash
 curl -X POST http://localhost:3002/api/sync-metrics
 ```
 
 Response (Success):
+
 ```json
 {
   "success": true,
@@ -197,15 +215,12 @@ Response (Success):
     "filesWritten": 29,
     "timeElapsed": 346
   },
-  "filesUpdated": [
-    "Sprint_plan.json",
-    "task-registry.json",
-    "..."
-  ]
+  "filesUpdated": ["Sprint_plan.json", "task-registry.json", "..."]
 }
 ```
 
 Response (Partial Failure):
+
 ```json
 {
   "success": false,

@@ -17,6 +17,7 @@ playwright-report/
 !artifacts/coverage/**
 !artifacts/test-results/
 !artifacts/test-results/**
+artifacts/coverage/.tmp/
 
 # next.js
 /.next/
@@ -34,6 +35,10 @@ dist/
 
 # turbo
 .turbo/
+
+# SonarQube / scanner outputs
+.scannerwork/
+sonar-reports/
 
 # misc
 .DS_Store
@@ -90,3 +95,16 @@ logs/
 !artifacts/logs/
 !artifacts/logs/**
 !artifacts/logs/**/*.log
+artifacts/logs/execution-*.log
+artifacts/logs/swarm/
+
+# Tooling scratch space
+.specify/
+artifacts/misc/.locks/
+apps/project-tracker/docs/artifacts/
+apps/tree_intelliflow.txt
+
+# Project tracker generated backups/artifacts
+apps/project-tracker/docs/metrics/backups/
+apps/project-tracker/docs/metrics/artifacts/
+apps/project-tracker/docs/metrics/_global/*.tmp

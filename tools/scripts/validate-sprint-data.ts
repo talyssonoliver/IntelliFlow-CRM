@@ -2,7 +2,7 @@
 /**
  * Sprint Data Validation Script
  * Prevents data inconsistencies before committing Sprint metrics
- * 
+ *
  * Validates:
  * 1. CSV status values are from allowed list
  * 2. JSON files match CSV data (status, description, sprint)
@@ -47,21 +47,23 @@ function validateSprintData(): ValidationResult {
     const status = task.Status;
     if (status && !ALLOWED_STATUSES.includes(status)) {
       invalidStatuses.add(status);
-      errors.push(`Task ${task['Task ID']}: Invalid status "${status}". Allowed: ${ALLOWED_STATUSES.join(', ')}`);
+      errors.push(
+        `Task ${task['Task ID']}: Invalid status "${status}". Allowed: ${ALLOWED_STATUSES.join(', ')}`
+      );
     }
   }
 
   // 2. Validate Sprint 0 tasks
-  const sprint0Tasks = tasks.filter(t => String(t['Target Sprint']) === '0');
+  const sprint0Tasks = tasks.filter((t) => String(t['Target Sprint']) === '0');
   console.log(`🎯 Found ${sprint0Tasks.length} Sprint 0 tasks`);
 
   // Count by status
   const statusCounts = {
-    done: sprint0Tasks.filter(t => t.Status === 'Done' || t.Status === 'Completed').length,
-    in_progress: sprint0Tasks.filter(t => t.Status === 'In Progress').length,
-    blocked: sprint0Tasks.filter(t => t.Status === 'Blocked').length,
-    planned: sprint0Tasks.filter(t => t.Status === 'Planned').length,
-    backlog: sprint0Tasks.filter(t => t.Status === 'Backlog').length,
+    done: sprint0Tasks.filter((t) => t.Status === 'Done' || t.Status === 'Completed').length,
+    in_progress: sprint0Tasks.filter((t) => t.Status === 'In Progress').length,
+    blocked: sprint0Tasks.filter((t) => t.Status === 'Blocked').length,
+    planned: sprint0Tasks.filter((t) => t.Status === 'Planned').length,
+    backlog: sprint0Tasks.filter((t) => t.Status === 'Backlog').length,
   };
 
   console.log(`   ✅ Completed: ${statusCounts.done}`);
@@ -80,18 +82,24 @@ function validateSprintData(): ValidationResult {
     const summaryNotStarted = summary.task_summary?.not_started || 0;
 
     if (summaryTotal !== sprint0Tasks.length) {
-      errors.push(`_summary.json total (${summaryTotal}) doesn't match CSV (${sprint0Tasks.length})`);
+      errors.push(
+        `_summary.json total (${summaryTotal}) doesn't match CSV (${sprint0Tasks.length})`
+      );
     }
     if (summaryDone !== statusCounts.done) {
       errors.push(`_summary.json done (${summaryDone}) doesn't match CSV (${statusCounts.done})`);
     }
     if (summaryInProgress !== statusCounts.in_progress) {
-      errors.push(`_summary.json in_progress (${summaryInProgress}) doesn't match CSV (${statusCounts.in_progress})`);
+      errors.push(
+        `_summary.json in_progress (${summaryInProgress}) doesn't match CSV (${statusCounts.in_progress})`
+      );
     }
 
     const expectedNotStarted = statusCounts.planned + statusCounts.backlog + statusCounts.blocked;
     if (summaryNotStarted !== expectedNotStarted) {
-      warnings.push(`_summary.json not_started (${summaryNotStarted}) should be ${expectedNotStarted} (planned + backlog + blocked)`);
+      warnings.push(
+        `_summary.json not_started (${summaryNotStarted}) should be ${expectedNotStarted} (planned + backlog + blocked)`
+      );
     }
   } else {
     warnings.push(`_summary.json not found at ${summaryPath}`);
@@ -100,7 +108,7 @@ function validateSprintData(): ValidationResult {
   // 4. Validate individual task JSON files
   const sprint0Dir = join(METRICS_DIR, 'sprint-0');
   const taskJsonFiles = findAllTaskJsons(sprint0Dir);
-  const csvTaskIds = new Set(sprint0Tasks.map(t => t['Task ID']));
+  const csvTaskIds = new Set(sprint0Tasks.map((t) => t['Task ID']));
 
   console.log(`📄 Found ${taskJsonFiles.length} task JSON files`);
 
@@ -118,7 +126,7 @@ function validateSprintData(): ValidationResult {
   // Check for missing JSON files
   for (const task of sprint0Tasks) {
     const taskId = task['Task ID'];
-    const hasJsonFile = taskJsonFiles.some(f => {
+    const hasJsonFile = taskJsonFiles.some((f) => {
       const content = readFileSync(f, 'utf-8');
       const data = JSON.parse(content);
       return (data.task_id || data.taskId) === taskId;
@@ -132,7 +140,7 @@ function validateSprintData(): ValidationResult {
   // 5. Cross-validate task data
   for (const task of sprint0Tasks) {
     const taskId = task['Task ID'];
-    const taskFile = taskJsonFiles.find(f => {
+    const taskFile = taskJsonFiles.find((f) => {
       try {
         const content = readFileSync(f, 'utf-8');
         const data = JSON.parse(content);
@@ -148,7 +156,9 @@ function validateSprintData(): ValidationResult {
       const csvStatus = mapCsvToJsonStatus(task.Status);
 
       if (jsonStatus !== csvStatus) {
-        errors.push(`${taskId}: Status mismatch - CSV: "${task.Status}" → JSON should be: "${csvStatus}" but got: "${jsonStatus}"`);
+        errors.push(
+          `${taskId}: Status mismatch - CSV: "${task.Status}" → JSON should be: "${csvStatus}" but got: "${jsonStatus}"`
+        );
       }
 
       // Validate description if present
@@ -163,21 +173,21 @@ function validateSprintData(): ValidationResult {
 
 function findAllTaskJsons(dir: string): string[] {
   const results: string[] = [];
-  
+
   if (!existsSync(dir)) return results;
 
   const entries = readdirSync(dir, { withFileTypes: true });
-  
+
   for (const entry of entries) {
     const fullPath = join(dir, entry.name);
-    
+
     if (entry.isDirectory()) {
       results.push(...findAllTaskJsons(fullPath));
     } else if (entry.isFile() && entry.name.endsWith('.json') && !entry.name.startsWith('_')) {
       results.push(fullPath);
     }
   }
-  
+
   return results;
 }
 
@@ -206,7 +216,9 @@ if (result.errors.length > 0) {
   for (const error of result.errors) {
     console.log(`   ${error}`);
   }
-  console.log('\n💡 Fix: Run "cd apps/project-tracker && npx tsx scripts/sync-metrics.ts" to sync data\n');
+  console.log(
+    '\n💡 Fix: Run "cd apps/project-tracker && npx tsx scripts/sync-metrics.ts" to sync data\n'
+  );
   process.exit(1);
 }
 

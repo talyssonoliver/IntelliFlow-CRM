@@ -21,98 +21,94 @@ export const contactRouter = router({
   /**
    * Create a new contact
    */
-  create: protectedProcedure
-    .input(createContactSchema)
-    .mutation(async ({ ctx, input }) => {
-      // Check if email already exists
-      const existingContact = await ctx.prisma.contact.findUnique({
-        where: { email: input.email },
+  create: protectedProcedure.input(createContactSchema).mutation(async ({ ctx, input }) => {
+    // Check if email already exists
+    const existingContact = await ctx.prisma.contact.findUnique({
+      where: { email: input.email },
+    });
+
+    if (existingContact) {
+      throw new TRPCError({
+        code: 'CONFLICT',
+        message: `Contact with email ${input.email} already exists`,
+      });
+    }
+
+    // Validate account exists if provided
+    if (input.accountId) {
+      const account = await ctx.prisma.account.findUnique({
+        where: { id: input.accountId },
       });
 
-      if (existingContact) {
+      if (!account) {
         throw new TRPCError({
-          code: 'CONFLICT',
-          message: `Contact with email ${input.email} already exists`,
+          code: 'NOT_FOUND',
+          message: `Account with ID ${input.accountId} not found`,
         });
       }
+    }
 
-      // Validate account exists if provided
-      if (input.accountId) {
-        const account = await ctx.prisma.account.findUnique({
-          where: { id: input.accountId },
-        });
+    const contact = await ctx.prisma.contact.create({
+      data: {
+        ...input,
+        ownerId: ctx.user.userId,
+      },
+    });
 
-        if (!account) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: `Account with ID ${input.accountId} not found`,
-          });
-        }
-      }
-
-      const contact = await ctx.prisma.contact.create({
-        data: {
-          ...input,
-          ownerId: ctx.user.userId,
-        },
-      });
-
-      return contact;
-    }),
+    return contact;
+  }),
 
   /**
    * Get a single contact by ID
    */
-  getById: protectedProcedure
-    .input(z.object({ id: idSchema }))
-    .query(async ({ ctx, input }) => {
-      const contact = await ctx.prisma.contact.findUnique({
-        where: { id: input.id },
-        include: {
-          owner: {
-            select: {
-              id: true,
-              email: true,
-              name: true,
-              avatarUrl: true,
-            },
+  getById: protectedProcedure.input(z.object({ id: idSchema })).query(async ({ ctx, input }) => {
+    const contact = await ctx.prisma.contact.findUnique({
+      where: { id: input.id },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            avatarUrl: true,
           },
-          account: true,
-          lead: {
-            select: {
-              id: true,
-              email: true,
-              status: true,
-              score: true,
-            },
+        },
+        account: true,
+        lead: {
+          select: {
+            id: true,
+            email: true,
+            status: true,
+            score: true,
           },
-          opportunities: {
-            orderBy: { createdAt: 'desc' },
-            include: {
-              account: {
-                select: {
-                  id: true,
-                  name: true,
-                },
+        },
+        opportunities: {
+          orderBy: { createdAt: 'desc' },
+          include: {
+            account: {
+              select: {
+                id: true,
+                name: true,
               },
             },
           },
-          tasks: {
-            where: { status: { not: 'COMPLETED' } },
-            orderBy: { dueDate: 'asc' },
-          },
         },
+        tasks: {
+          where: { status: { not: 'COMPLETED' } },
+          orderBy: { dueDate: 'asc' },
+        },
+      },
+    });
+
+    if (!contact) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Contact with ID ${input.id} not found`,
       });
+    }
 
-      if (!contact) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: `Contact with ID ${input.id} not found`,
-        });
-      }
-
-      return contact;
-    }),
+    return contact;
+  }),
 
   /**
    * Get a contact by email
@@ -147,175 +143,169 @@ export const contactRouter = router({
   /**
    * List contacts with filtering and pagination
    */
-  list: protectedProcedure
-    .input(contactQuerySchema)
-    .query(async ({ ctx, input }) => {
-      const {
-        page = 1,
-        limit = 20,
-        search,
-        accountId,
-        ownerId,
-        department,
-        sortBy = 'createdAt',
-        sortOrder = 'desc',
-      } = input;
+  list: protectedProcedure.input(contactQuerySchema).query(async ({ ctx, input }) => {
+    const {
+      page = 1,
+      limit = 20,
+      search,
+      accountId,
+      ownerId,
+      department,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+    } = input;
 
-      const skip = (page - 1) * limit;
+    const skip = (page - 1) * limit;
 
-      // Build where clause
-      const where: any = {};
+    // Build where clause
+    const where: any = {};
 
-      if (search) {
-        where.OR = [
-          { email: { contains: search, mode: 'insensitive' } },
-          { firstName: { contains: search, mode: 'insensitive' } },
-          { lastName: { contains: search, mode: 'insensitive' } },
-          { title: { contains: search, mode: 'insensitive' } },
-          { department: { contains: search, mode: 'insensitive' } },
-        ];
-      }
+    if (search) {
+      where.OR = [
+        { email: { contains: search, mode: 'insensitive' } },
+        { firstName: { contains: search, mode: 'insensitive' } },
+        { lastName: { contains: search, mode: 'insensitive' } },
+        { title: { contains: search, mode: 'insensitive' } },
+        { department: { contains: search, mode: 'insensitive' } },
+      ];
+    }
 
-      if (accountId) {
-        where.accountId = accountId;
-      }
+    if (accountId) {
+      where.accountId = accountId;
+    }
 
-      if (ownerId) {
-        where.ownerId = ownerId;
-      }
+    if (ownerId) {
+      where.ownerId = ownerId;
+    }
 
-      if (department) {
-        where.department = { contains: department, mode: 'insensitive' };
-      }
+    if (department) {
+      where.department = { contains: department, mode: 'insensitive' };
+    }
 
-      // Execute queries in parallel
-      const [contacts, total] = await Promise.all([
-        ctx.prisma.contact.findMany({
-          where,
-          skip,
-          take: limit,
-          orderBy: { [sortBy]: sortOrder },
-          include: {
-            owner: {
-              select: {
-                id: true,
-                email: true,
-                name: true,
-              },
-            },
-            account: {
-              select: {
-                id: true,
-                name: true,
-                industry: true,
-              },
-            },
-            _count: {
-              select: {
-                opportunities: true,
-                tasks: true,
-              },
+    // Execute queries in parallel
+    const [contacts, total] = await Promise.all([
+      ctx.prisma.contact.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { [sortBy]: sortOrder },
+        include: {
+          owner: {
+            select: {
+              id: true,
+              email: true,
+              name: true,
             },
           },
-        }),
-        ctx.prisma.contact.count({ where }),
-      ]);
+          account: {
+            select: {
+              id: true,
+              name: true,
+              industry: true,
+            },
+          },
+          _count: {
+            select: {
+              opportunities: true,
+              tasks: true,
+            },
+          },
+        },
+      }),
+      ctx.prisma.contact.count({ where }),
+    ]);
 
-      return {
-        contacts,
-        total,
-        page,
-        limit,
-        hasMore: skip + contacts.length < total,
-      };
-    }),
+    return {
+      contacts,
+      total,
+      page,
+      limit,
+      hasMore: skip + contacts.length < total,
+    };
+  }),
 
   /**
    * Update a contact
    */
-  update: protectedProcedure
-    .input(updateContactSchema)
-    .mutation(async ({ ctx, input }) => {
-      const { id, accountId, ...data } = input;
+  update: protectedProcedure.input(updateContactSchema).mutation(async ({ ctx, input }) => {
+    const { id, accountId, ...data } = input;
 
-      // Check if contact exists
-      const existingContact = await ctx.prisma.contact.findUnique({
-        where: { id },
+    // Check if contact exists
+    const existingContact = await ctx.prisma.contact.findUnique({
+      where: { id },
+    });
+
+    if (!existingContact) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Contact with ID ${id} not found`,
+      });
+    }
+
+    // Validate account exists if provided
+    if (accountId !== undefined && accountId !== null) {
+      const account = await ctx.prisma.account.findUnique({
+        where: { id: accountId },
       });
 
-      if (!existingContact) {
+      if (!account) {
         throw new TRPCError({
           code: 'NOT_FOUND',
-          message: `Contact with ID ${id} not found`,
+          message: `Account with ID ${accountId} not found`,
         });
       }
+    }
 
-      // Validate account exists if provided
-      if (accountId !== undefined && accountId !== null) {
-        const account = await ctx.prisma.account.findUnique({
-          where: { id: accountId },
-        });
+    // Update the contact
+    const contact = await ctx.prisma.contact.update({
+      where: { id },
+      data: {
+        ...data,
+        ...(accountId !== undefined && { accountId }),
+      },
+    });
 
-        if (!account) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: `Account with ID ${accountId} not found`,
-          });
-        }
-      }
-
-      // Update the contact
-      const contact = await ctx.prisma.contact.update({
-        where: { id },
-        data: {
-          ...data,
-          ...(accountId !== undefined && { accountId }),
-        },
-      });
-
-      return contact;
-    }),
+    return contact;
+  }),
 
   /**
    * Delete a contact
    */
-  delete: protectedProcedure
-    .input(z.object({ id: idSchema }))
-    .mutation(async ({ ctx, input }) => {
-      // Check if contact exists
-      const existingContact = await ctx.prisma.contact.findUnique({
-        where: { id: input.id },
-        include: {
-          _count: {
-            select: {
-              opportunities: true,
-            },
+  delete: protectedProcedure.input(z.object({ id: idSchema })).mutation(async ({ ctx, input }) => {
+    // Check if contact exists
+    const existingContact = await ctx.prisma.contact.findUnique({
+      where: { id: input.id },
+      include: {
+        _count: {
+          select: {
+            opportunities: true,
           },
         },
+      },
+    });
+
+    if (!existingContact) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Contact with ID ${input.id} not found`,
       });
+    }
 
-      if (!existingContact) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: `Contact with ID ${input.id} not found`,
-        });
-      }
-
-      // Warn if contact has opportunities
-      if (existingContact._count.opportunities > 0) {
-        throw new TRPCError({
-          code: 'PRECONDITION_FAILED',
-          message: `Contact has ${existingContact._count.opportunities} associated opportunities. Please reassign or delete them first.`,
-        });
-      }
-
-      // Delete the contact
-      await ctx.prisma.contact.delete({
-        where: { id: input.id },
+    // Warn if contact has opportunities
+    if (existingContact._count.opportunities > 0) {
+      throw new TRPCError({
+        code: 'PRECONDITION_FAILED',
+        message: `Contact has ${existingContact._count.opportunities} associated opportunities. Please reassign or delete them first.`,
       });
+    }
 
-      return { success: true, id: input.id };
-    }),
+    // Delete the contact
+    await ctx.prisma.contact.delete({
+      where: { id: input.id },
+    });
+
+    return { success: true, id: input.id };
+  }),
 
   /**
    * Link a contact to an account
@@ -414,12 +404,15 @@ export const contactRouter = router({
 
     return {
       total,
-      byDepartment: byDepartment.reduce((acc, item) => {
-        if (item.department) {
-          acc[item.department] = item._count;
-        }
-        return acc;
-      }, {} as Record<string, number>),
+      byDepartment: byDepartment.reduce(
+        (acc, item) => {
+          if (item.department) {
+            acc[item.department] = item._count;
+          }
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
       withAccounts,
       withoutAccounts: total - withAccounts,
     };

@@ -6,12 +6,12 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const encoder = new TextEncoder();
-  
+
   const stream = new ReadableStream({
     start(controller) {
       // Watch the metrics directory for changes
       const metricsPath = join(process.cwd(), 'docs', 'metrics', 'sprint-0');
-      
+
       const sendUpdate = () => {
         const data = `data: ${JSON.stringify({ timestamp: Date.now() })}\n\n`;
         controller.enqueue(encoder.encode(data));
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
+      Connection: 'keep-alive',
     },
   });
 }

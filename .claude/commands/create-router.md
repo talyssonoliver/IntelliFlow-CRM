@@ -3,11 +3,13 @@
 Generate a tRPC router for a domain entity with full type safety.
 
 ## Usage
+
 ```
 /create-router <entity> [--crud] [--subscriptions]
 ```
 
 ## Arguments
+
 - `entity`: Entity name to create router for
 - `--crud`: Include all CRUD operations
 - `--subscriptions`: Include real-time subscriptions
@@ -29,7 +31,11 @@ apps/api/src/modules/<entity>/
 ```typescript
 // lead.router.ts
 import { router, publicProcedure, protectedProcedure } from '@/trpc';
-import { createLeadSchema, updateLeadSchema, leadIdSchema } from './lead.schema';
+import {
+  createLeadSchema,
+  updateLeadSchema,
+  leadIdSchema,
+} from './lead.schema';
 import { LeadService } from './lead.service';
 
 export const leadRouter = router({
@@ -39,16 +45,13 @@ export const leadRouter = router({
       return LeadService.create(input, ctx.userId);
     }),
 
-  getById: protectedProcedure
-    .input(leadIdSchema)
-    .query(async ({ input }) => {
-      return LeadService.findById(input.id);
-    }),
+  getById: protectedProcedure.input(leadIdSchema).query(async ({ input }) => {
+    return LeadService.findById(input.id);
+  }),
 
-  list: protectedProcedure
-    .query(async ({ ctx }) => {
-      return LeadService.findAll(ctx.userId);
-    }),
+  list: protectedProcedure.query(async ({ ctx }) => {
+    return LeadService.findAll(ctx.userId);
+  }),
 
   update: protectedProcedure
     .input(updateLeadSchema)
@@ -56,21 +59,19 @@ export const leadRouter = router({
       return LeadService.update(input);
     }),
 
-  delete: protectedProcedure
-    .input(leadIdSchema)
-    .mutation(async ({ input }) => {
-      return LeadService.delete(input.id);
-    }),
+  delete: protectedProcedure.input(leadIdSchema).mutation(async ({ input }) => {
+    return LeadService.delete(input.id);
+  }),
 
   // Real-time subscription (if --subscriptions)
-  onUpdate: protectedProcedure
-    .subscription(() => {
-      return LeadService.subscribeToUpdates();
-    }),
+  onUpdate: protectedProcedure.subscription(() => {
+    return LeadService.subscribeToUpdates();
+  }),
 });
 ```
 
 ## Example
+
 ```bash
 # Create full CRUD router for Lead
 /create-router Lead --crud

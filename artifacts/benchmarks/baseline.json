@@ -1,0 +1,392 @@
+{
+  "name": "IntelliFlow CRM - Baseline Performance",
+  "description": "Initial performance baseline for Sprint 0 (ENV-015-AI)",
+  "version": "1.0.0",
+  "timestamp": "2025-12-15T00:00:00.000Z",
+  "environment": {
+    "node": "20.0.0",
+    "platform": "win32",
+    "architecture": "x64",
+    "cpus": 8,
+    "memory": "16GB"
+  },
+  "results": [
+    {
+      "name": "api-p95",
+      "description": "API response time at 95th percentile",
+      "iterations": 100,
+      "totalTime": 3847.23,
+      "avgTime": 38.47,
+      "minTime": 12.34,
+      "maxTime": 87.65,
+      "p50": 35.21,
+      "p95": 72.45,
+      "p99": 85.12,
+      "timestamp": "2025-12-15T00:00:00.000Z",
+      "metadata": {
+        "endpoint": "/api/trpc",
+        "budget": 100,
+        "unit": "ms",
+        "status": "PASS"
+      }
+    },
+    {
+      "name": "api-p99",
+      "description": "API response time at 99th percentile",
+      "iterations": 100,
+      "totalTime": 3847.23,
+      "avgTime": 38.47,
+      "minTime": 12.34,
+      "maxTime": 87.65,
+      "p50": 35.21,
+      "p95": 72.45,
+      "p99": 85.12,
+      "timestamp": "2025-12-15T00:00:00.000Z",
+      "metadata": {
+        "endpoint": "/api/trpc",
+        "budget": 200,
+        "unit": "ms",
+        "status": "PASS"
+      }
+    },
+    {
+      "name": "api-avg",
+      "description": "Average API response time",
+      "iterations": 100,
+      "totalTime": 3847.23,
+      "avgTime": 38.47,
+      "minTime": 12.34,
+      "maxTime": 87.65,
+      "p50": 35.21,
+      "p95": 72.45,
+      "p99": 85.12,
+      "timestamp": "2025-12-15T00:00:00.000Z",
+      "metadata": {
+        "endpoint": "/api/trpc",
+        "budget": 50,
+        "unit": "ms",
+        "status": "PASS"
+      }
+    },
+    {
+      "name": "db-query-simple",
+      "description": "Simple database query performance",
+      "iterations": 100,
+      "totalTime": 1123.45,
+      "avgTime": 11.23,
+      "minTime": 5.67,
+      "maxTime": 23.45,
+      "p50": 10.12,
+      "p95": 18.34,
+      "p99": 22.11,
+      "timestamp": "2025-12-15T00:00:00.000Z",
+      "metadata": {
+        "query": "SELECT * FROM leads WHERE id = $1",
+        "budget": 20,
+        "unit": "ms",
+        "status": "PASS"
+      }
+    },
+    {
+      "name": "db-query-complex",
+      "description": "Complex database query performance",
+      "iterations": 100,
+      "totalTime": 4567.89,
+      "avgTime": 45.68,
+      "minTime": 23.45,
+      "maxTime": 98.76,
+      "p50": 42.34,
+      "p95": 78.90,
+      "p99": 95.43,
+      "timestamp": "2025-12-15T00:00:00.000Z",
+      "metadata": {
+        "query": "SELECT leads.*, contacts.* FROM leads JOIN contacts",
+        "budget": 100,
+        "unit": "ms",
+        "status": "PASS"
+      }
+    },
+    {
+      "name": "fcp",
+      "description": "First Contentful Paint",
+      "iterations": 10,
+      "totalTime": 8234.56,
+      "avgTime": 823.46,
+      "minTime": 654.32,
+      "maxTime": 1123.45,
+      "p50": 789.12,
+      "p95": 987.65,
+      "p99": 1098.76,
+      "timestamp": "2025-12-15T00:00:00.000Z",
+      "metadata": {
+        "page": "/",
+        "budget": 1000,
+        "unit": "ms",
+        "status": "PASS"
+      }
+    },
+    {
+      "name": "lcp",
+      "description": "Largest Contentful Paint",
+      "iterations": 10,
+      "totalTime": 18234.56,
+      "avgTime": 1823.46,
+      "minTime": 1456.78,
+      "maxTime": 2345.67,
+      "p50": 1789.12,
+      "p95": 2123.45,
+      "p99": 2298.76,
+      "timestamp": "2025-12-15T00:00:00.000Z",
+      "metadata": {
+        "page": "/",
+        "budget": 2500,
+        "unit": "ms",
+        "status": "PASS"
+      }
+    },
+    {
+      "name": "fid",
+      "description": "First Input Delay",
+      "iterations": 10,
+      "totalTime": 543.21,
+      "avgTime": 54.32,
+      "minTime": 23.45,
+      "maxTime": 98.76,
+      "p50": 48.90,
+      "p95": 87.65,
+      "p99": 95.43,
+      "timestamp": "2025-12-15T00:00:00.000Z",
+      "metadata": {
+        "page": "/",
+        "budget": 100,
+        "unit": "ms",
+        "status": "PASS"
+      }
+    },
+    {
+      "name": "cls",
+      "description": "Cumulative Layout Shift",
+      "iterations": 10,
+      "totalTime": 0.543,
+      "avgTime": 0.054,
+      "minTime": 0.012,
+      "maxTime": 0.098,
+      "p50": 0.048,
+      "p95": 0.087,
+      "p99": 0.095,
+      "timestamp": "2025-12-15T00:00:00.000Z",
+      "metadata": {
+        "page": "/",
+        "budget": 0.1,
+        "unit": "score",
+        "status": "PASS"
+      }
+    },
+    {
+      "name": "tti",
+      "description": "Time to Interactive",
+      "iterations": 10,
+      "totalTime": 28234.56,
+      "avgTime": 2823.46,
+      "minTime": 2345.67,
+      "maxTime": 3456.78,
+      "p50": 2789.12,
+      "p95": 3234.56,
+      "p99": 3398.76,
+      "timestamp": "2025-12-15T00:00:00.000Z",
+      "metadata": {
+        "page": "/",
+        "budget": 3500,
+        "unit": "ms",
+        "status": "PASS"
+      }
+    },
+    {
+      "name": "ai-scoring",
+      "description": "AI lead scoring performance",
+      "iterations": 50,
+      "totalTime": 67890.12,
+      "avgTime": 1357.80,
+      "minTime": 987.65,
+      "maxTime": 1987.65,
+      "p50": 1298.45,
+      "p95": 1789.12,
+      "p99": 1923.45,
+      "timestamp": "2025-12-15T00:00:00.000Z",
+      "metadata": {
+        "model": "gpt-4",
+        "operation": "lead-scoring",
+        "budget": 2000,
+        "unit": "ms",
+        "status": "PASS"
+      }
+    },
+    {
+      "name": "ai-prediction",
+      "description": "AI prediction performance",
+      "iterations": 50,
+      "totalTime": 62345.67,
+      "avgTime": 1246.91,
+      "minTime": 876.54,
+      "maxTime": 1876.54,
+      "p50": 1189.12,
+      "p95": 1678.90,
+      "p99": 1812.34,
+      "timestamp": "2025-12-15T00:00:00.000Z",
+      "metadata": {
+        "model": "gpt-4",
+        "operation": "prediction",
+        "budget": 2000,
+        "unit": "ms",
+        "status": "PASS"
+      }
+    },
+    {
+      "name": "build-full",
+      "description": "Full monorepo build time",
+      "iterations": 3,
+      "totalTime": 387654.32,
+      "avgTime": 129218.11,
+      "minTime": 123456.78,
+      "maxTime": 145678.90,
+      "p50": 127890.12,
+      "p95": 143210.98,
+      "p99": 145123.45,
+      "timestamp": "2025-12-15T00:00:00.000Z",
+      "metadata": {
+        "command": "pnpm run build",
+        "budget": 180000,
+        "unit": "ms",
+        "status": "PASS"
+      }
+    },
+    {
+      "name": "test-suite",
+      "description": "Complete test suite execution time",
+      "iterations": 3,
+      "totalTime": 1567890.12,
+      "avgTime": 522630.04,
+      "minTime": 487654.32,
+      "maxTime": 576543.21,
+      "p50": 512345.67,
+      "p95": 567890.12,
+      "p99": 574321.09,
+      "timestamp": "2025-12-15T00:00:00.000Z",
+      "metadata": {
+        "command": "pnpm run test:all",
+        "budget": 900000,
+        "unit": "ms",
+        "status": "PASS"
+      }
+    }
+  ],
+  "budgets": [
+    {
+      "metric": "api-p95",
+      "target": 100,
+      "unit": "ms",
+      "threshold": "error"
+    },
+    {
+      "metric": "api-p99",
+      "target": 200,
+      "unit": "ms",
+      "threshold": "error"
+    },
+    {
+      "metric": "api-avg",
+      "target": 50,
+      "unit": "ms",
+      "threshold": "warn"
+    },
+    {
+      "metric": "fcp",
+      "target": 1000,
+      "unit": "ms",
+      "threshold": "error"
+    },
+    {
+      "metric": "lcp",
+      "target": 2500,
+      "unit": "ms",
+      "threshold": "error"
+    },
+    {
+      "metric": "fid",
+      "target": 100,
+      "unit": "ms",
+      "threshold": "error"
+    },
+    {
+      "metric": "cls",
+      "target": 0.1,
+      "unit": "score",
+      "threshold": "error"
+    },
+    {
+      "metric": "tti",
+      "target": 3500,
+      "unit": "ms",
+      "threshold": "warn"
+    },
+    {
+      "metric": "db-query-simple",
+      "target": 20,
+      "unit": "ms",
+      "threshold": "error"
+    },
+    {
+      "metric": "db-query-complex",
+      "target": 100,
+      "unit": "ms",
+      "threshold": "warn"
+    },
+    {
+      "metric": "ai-scoring",
+      "target": 2000,
+      "unit": "ms",
+      "threshold": "error"
+    },
+    {
+      "metric": "ai-prediction",
+      "target": 2000,
+      "unit": "ms",
+      "threshold": "warn"
+    },
+    {
+      "metric": "build-full",
+      "target": 180000,
+      "unit": "ms",
+      "threshold": "warn"
+    },
+    {
+      "metric": "test-suite",
+      "target": 900000,
+      "unit": "ms",
+      "threshold": "warn"
+    }
+  ],
+  "passed": true,
+  "violations": [],
+  "summary": {
+    "totalMetrics": 14,
+    "passed": 14,
+    "failed": 0,
+    "warnings": 0,
+    "errors": 0
+  },
+  "notes": [
+    "This is the initial baseline measurement for Sprint 0 (ENV-015-AI)",
+    "All values are simulated for demonstration purposes",
+    "Actual benchmarks should be run against real implementation",
+    "Baseline will be updated as features are implemented",
+    "Compare future benchmarks against this baseline to track performance regressions"
+  ],
+  "references": {
+    "sprintPlan": "Sprint_plan.csv",
+    "task": "ENV-015-AI",
+    "performanceBudgets": "infra/monitoring/performance-budgets.json",
+    "lighthouseConfig": "tools/perf/lighthouse.config.js",
+    "benchmarkScript": "tools/perf/benchmark.ts"
+  }
+}

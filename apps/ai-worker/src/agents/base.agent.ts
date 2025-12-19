@@ -1,5 +1,4 @@
 import { ChatOpenAI } from '@langchain/openai';
-import { ChatOllama } from '@langchain/community/chat_models/ollama';
 import { BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
@@ -64,7 +63,8 @@ export interface BaseAgentConfig {
  * Provides common functionality for agent execution, error handling, and monitoring
  */
 export abstract class BaseAgent<TInput = unknown, TOutput = unknown> {
-  protected model: ChatOpenAI | ChatOllama;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  protected model: any;
   protected config: BaseAgentConfig;
   protected executionCount: number = 0;
 
@@ -86,11 +86,10 @@ export abstract class BaseAgent<TInput = unknown, TOutput = unknown> {
         openAIApiKey: aiConfig.openai.apiKey,
       });
     } else {
-      this.model = new ChatOllama({
-        baseUrl: aiConfig.ollama.baseUrl,
-        model: aiConfig.ollama.model,
-        temperature: aiConfig.ollama.temperature,
-      });
+      // Ollama support - would use dynamic import at runtime:
+      // const { ChatOllama } = await import('@langchain/community/chat_models/ollama');
+      // this.model = new ChatOllama({ baseUrl, model, temperature });
+      throw new Error('Ollama support requires dynamic import - not yet implemented');
     }
 
     logger.info(
@@ -200,8 +199,8 @@ export abstract class BaseAgent<TInput = unknown, TOutput = unknown> {
    * Can be overridden by subclasses for custom confidence calculation
    */
   protected async calculateConfidence(
-    task: AgentTask<TInput, TOutput>,
-    output: TOutput
+    _task: AgentTask<TInput, TOutput>,
+    _output: TOutput
   ): Promise<number> {
     // Default confidence calculation
     // Subclasses should override this for more sophisticated confidence scoring

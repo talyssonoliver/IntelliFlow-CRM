@@ -8,30 +8,37 @@
 import { router } from './server';
 import { leadRouter } from './modules/lead/lead.router';
 import { contactRouter } from './modules/contact/contact.router';
+import { accountRouter } from './modules/account/account.router';
+import { opportunityRouter } from './modules/opportunity/opportunity.router';
+import { taskRouter } from './modules/task/task.router';
 
 /**
  * Main application router
  *
  * All module routers are namespaced under their respective keys:
- * - lead.*    - Lead management endpoints
- * - contact.* - Contact management endpoints
+ * - lead.*         - Lead management endpoints
+ * - contact.*      - Contact management endpoints
+ * - account.*      - Account management endpoints
+ * - opportunity.*  - Opportunity/deal management endpoints
+ * - task.*         - Task management endpoints
  *
  * Future routers to add:
- * - account.* - Account management
- * - opportunity.* - Opportunity/deal management
- * - task.* - Task management
- * - ai.* - AI/intelligence endpoints
- * - analytics.* - Analytics and reporting
+ * - ai.*           - AI/intelligence endpoints
+ * - analytics.*    - Analytics and reporting
+ * - workflow.*     - Workflow automation
+ * - email.*        - Email integration
  */
 export const appRouter = router({
   lead: leadRouter,
   contact: contactRouter,
+  account: accountRouter,
+  opportunity: opportunityRouter,
+  task: taskRouter,
   // Future routers will be added here:
-  // account: accountRouter,
-  // opportunity: opportunityRouter,
-  // task: taskRouter,
   // ai: aiRouter,
   // analytics: analyticsRouter,
+  // workflow: workflowRouter,
+  // email: emailRouter,
 });
 
 /**

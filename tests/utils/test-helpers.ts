@@ -149,10 +149,7 @@ export class MockUtils {
   /**
    * Create a spy on an object method
    */
-  static spyOn<T, K extends keyof T>(
-    object: T,
-    method: K
-  ): ReturnType<typeof vi.spyOn> {
+  static spyOn<T, K extends keyof T>(object: T, method: K): ReturnType<typeof vi.spyOn> {
     return vi.spyOn(object, method as any);
   }
 }
@@ -235,14 +232,10 @@ export class ErrorTestUtils {
 
     if (message) {
       const messageMatches =
-        typeof message === 'string'
-          ? error.message === message
-          : message.test(error.message);
+        typeof message === 'string' ? error.message === message : message.test(error.message);
 
       if (!messageMatches) {
-        throw new Error(
-          `Expected error message to match "${message}", but got "${error.message}"`
-        );
+        throw new Error(`Expected error message to match "${message}", but got "${error.message}"`);
       }
     }
   }
@@ -273,10 +266,7 @@ export class EnvTestUtils {
   /**
    * Run a test with specific environment variables
    */
-  static async withEnv<T>(
-    env: Record<string, string>,
-    fn: () => T | Promise<T>
-  ): Promise<T> {
+  static async withEnv<T>(env: Record<string, string>, fn: () => T | Promise<T>): Promise<T> {
     this.setEnv(env);
     try {
       return await fn();
@@ -325,20 +315,9 @@ export interface TestUser {
   updatedAt: Date;
 }
 
-export type MockFn<T extends (...args: any[]) => any> = ReturnType<typeof vi.fn> &
-  T;
+export type MockFn<T extends (...args: any[]) => any> = ReturnType<typeof vi.fn> & T;
 
 /**
  * Re-export commonly used vitest utilities
  */
-export {
-  describe,
-  it,
-  test,
-  expect,
-  beforeAll,
-  afterAll,
-  beforeEach,
-  afterEach,
-  vi,
-} from 'vitest';
+export { describe, it, test, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest';

@@ -1,0 +1,151 @@
+# =============================================================================
+# IntelliFlow Attestation Schema v1.0
+# =============================================================================
+# A task attestation is a small, per-task JSON document that links a task to a
+# specific system-audit run bundle and records who attested it.
+#
+# Location (by convention):
+# - artifacts/attestations/<TASK_ID>.json
+#
+# This schema is used by:
+# - tools/audit/attestation.py (generator + validator)
+# - tools/audit/sprint0_audit.py (post-cutover completion enforcement)
+# =============================================================================
+
+$schema: 'http://json-schema.org/draft-07/schema#'
+$id: 'https://intelliflow-crm.dev/schemas/attestation.schema.json'
+title: 'Task Attestation'
+description: 'Schema for per-task attestations that bind completion to an audit run bundle'
+type: object
+
+required:
+  - schema_version
+  - task_id
+  - generated_at
+  - attested_by
+  - audit
+
+properties:
+  schema_version:
+    type: string
+    const: '1.0.0'
+    description: 'Attestation schema version'
+
+  task_id:
+    type: string
+    description: 'Task ID from Sprint_plan.csv (also matches the filename)'
+    pattern: '^[A-Z0-9]+(?:-[A-Z0-9]+)+$'
+    examples:
+      - 'ENV-001-AI'
+      - 'AI-SETUP-001'
+      - 'IFC-160'
+
+  generated_at:
+    type: string
+    format: date-time
+    description: 'ISO-8601 timestamp when the attestation was generated'
+
+  attested_by:
+    type: string
+    minLength: 1
+    description: 'Human who attested the task (e.g., name or role)'
+    examples:
+      - 'Tech Lead'
+      - 'Talysson'
+
+  notes:
+    type: string
+    description: 'Optional free-form notes'
+
+  cutover:
+    type: object
+    description: 'Optional snapshot of audit-cutover.yml at attestation time'
+    properties:
+      policy_version:
+        type: string
+      cutover_sha:
+        type:
+          - string
+          - 'null'
+      cutover_time:
+        type:
+          - string
+          - 'null'
+
+  audit:
+    type: object
+    description: 'Audit run bundle linkage and integrity'
+    required:
+      - run_id
+      - bundle_dir
+      - summary_json
+      - summary_sha256
+      - commit_sha
+      - matrix_sha256
+      - overall_status
+      - tier1_required_passed
+    properties:
+      run_id:
+        type: string
+        description: 'System audit run-id (artifacts/reports/system-audit/<run_id>/)'
+        pattern: '^[A-Za-z0-9][A-Za-z0-9._-]+$'
+        examples:
+          - 'local-smoke'
+          - 'ui-audit-20251219T004254Z-abc123'
+
+      bundle_dir:
+        type: string
+        description: 'Relative path to the audit bundle directory'
+        pattern: '^artifacts/reports/system-audit/[^/]+$'
+
+      summary_json:
+        type: string
+        description: 'Relative path to the audit summary JSON'
+        pattern: '^artifacts/reports/system-audit/[^/]+/summary\\.json$'
+
+      summary_sha256:
+        type: string
+        description: 'SHA256 of the summary.json contents'
+        pattern: '^[a-f0-9]{64}$'
+
+      commit_sha:
+        type: string
+        description: 'Git commit SHA that was audited'
+        pattern: '^[a-fA-F0-9]{7,40}$'
+
+      matrix_sha256:
+        type: string
+        description: 'SHA256 of audit-matrix.yml used for the run'
+        pattern: '^[a-f0-9]{64}$'
+
+      overall_status:
+        type: string
+        description: 'Overall audit status for that run'
+        enum:
+          - pass
+          - fail
+          - warn
+
+      tier1_required_passed:
+        type: boolean
+        description: 'Whether Tier 1 required tools passed for the run'
+
+examples:
+  - schema_version: '1.0.0'
+    task_id: 'IFC-160'
+    generated_at: '2025-12-19T00:42:54Z'
+    attested_by: 'Tech Lead'
+    notes: 'Manual review done; gates green.'
+    cutover:
+      policy_version: 'v1'
+      cutover_sha: '15c538ed6294b64e6875e14c3efd318c661e2bb7'
+      cutover_time: null
+    audit:
+      run_id: 'local-smoke'
+      bundle_dir: 'artifacts/reports/system-audit/local-smoke'
+      summary_json: 'artifacts/reports/system-audit/local-smoke/summary.json'
+      summary_sha256: '0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f'
+      commit_sha: '15c538ed6294b64e6875e14c3efd318c661e2bb7'
+      matrix_sha256: '2dee9886863e0e45fbd288f16f012349818f6f1b37f647e9e2a36bd070b887b5'
+      overall_status: 'pass'
+      tier1_required_passed: true

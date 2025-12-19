@@ -4,9 +4,63 @@
  * Automatically updates all derived files
  */
 
+import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import Papa from 'papaparse';
+
+// Read a JSON file that may be wrapped in Markdown code fences (```json ... ```)
+function readJsonTolerant(path: string): any {
+  let content = readFileSync(path, 'utf-8');
+  // Remove ```json or ``` markers if present
+  content = content.replace(/^```\s*json\s*/i, '');
+  content = content.replace(/^```\s*/i, '');
+  content = content.replace(/```\s*$/i, '');
+  content = content.trim();
+  return JSON.parse(content);
+}
+
+function writeJsonFile(path: string, data: unknown, space = 2): void {
+  writeFileSync(path, `${JSON.stringify(data, null, space)}\n`, 'utf-8');
+}
+
+function findRepoRoot(startDir: string): string | null {
+  let dir = startDir;
+
+  while (true) {
+    if (existsSync(join(dir, 'pnpm-workspace.yaml')) || existsSync(join(dir, '.git'))) {
+      return dir;
+    }
+
+    const parent = dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
+  }
+}
+
+function tryFormatMetricsJson(metricsDir: string): void {
+  if (process.env.NODE_ENV === 'production') return;
+  if (process.env.INTELLIFLOW_SKIP_PRETTIER === '1') return;
+
+  const repoRoot = findRepoRoot(metricsDir) ?? process.cwd();
+  const glob = `${metricsDir.replaceAll('\\', '/')}/**/*.json`;
+
+  const result = spawnSync('pnpm', ['exec', 'prettier', '--write', glob], {
+    cwd: repoRoot,
+    encoding: 'utf-8',
+  });
+
+  if (result.error) {
+    console.warn(`[data-sync] Prettier formatting skipped: ${result.error.message}`);
+    return;
+  }
+
+  if (result.status !== 0) {
+    console.warn(
+      `[data-sync] Prettier formatting failed (exit ${result.status}).\n${result.stderr || result.stdout}`
+    );
+  }
+}
 
 export interface SyncResult {
   success: boolean;
@@ -35,6 +89,7 @@ export function syncMetricsFromCSV(csvPath: string, metricsDir: string): SyncRes
 
     // Update all metrics files
     updateAllMetricsFiles(tasks, metricsDir, filesUpdated, errors);
+    tryFormatMetricsJson(metricsDir);
 
     const timeElapsed = Date.now() - startTime;
 
@@ -69,7 +124,10 @@ function updateAllMetricsFiles(
   errors: string[]
 ): void {
   // Update Sprint_plan.json
-  const updateResult = safeUpdate(() => updateSprintPlanJson(tasks, metricsDir), 'Sprint_plan.json');
+  const updateResult = safeUpdate(
+    () => updateSprintPlanJson(tasks, metricsDir),
+    'Sprint_plan.json'
+  );
   if (updateResult.success) {
     filesUpdated.push(updateResult.file);
   } else {
@@ -77,7 +135,10 @@ function updateAllMetricsFiles(
   }
 
   // Update task-registry.json
-  const registryResult = safeUpdate(() => updateTaskRegistry(tasks, metricsDir), 'task-registry.json');
+  const registryResult = safeUpdate(
+    () => updateTaskRegistry(tasks, metricsDir),
+    'task-registry.json'
+  );
   if (registryResult.success) {
     filesUpdated.push(registryResult.file);
   } else {
@@ -85,9 +146,12 @@ function updateAllMetricsFiles(
   }
 
   // Update individual task files for Sprint 0
-  const sprint0Tasks = tasks.filter(t => String(t['Target Sprint']) === '0');
+  const sprint0Tasks = tasks.filter((t) => String(t['Target Sprint']) === '0');
   for (const task of sprint0Tasks) {
-    const taskResult = safeUpdate(() => updateIndividualTaskFile(task, metricsDir), `${task['Task ID']}.json`);
+    const taskResult = safeUpdate(
+      () => updateIndividualTaskFile(task, metricsDir),
+      `${task['Task ID']}.json`
+    );
     if (taskResult.success) {
       filesUpdated.push(taskResult.file);
     } else {
@@ -96,20 +160,41 @@ function updateAllMetricsFiles(
   }
 
   // Update phase summaries
-  const phaseResult = safeUpdate(() => updatePhaseSummaries(sprint0Tasks, metricsDir), 'phase summaries');
+  const phaseResult = safeUpdate(
+    () => updatePhaseSummaries(sprint0Tasks, metricsDir),
+    'phase summaries'
+  );
   if (phaseResult.success) {
     filesUpdated.push(phaseResult.file);
   } else {
     errors.push(`${phaseResult.file}: ${phaseResult.error}`);
   }
+
+  // Update sprint summary
+  const summaryResult = safeUpdate(
+    () => updateSprintSummary(sprint0Tasks, metricsDir),
+    '_summary.json'
+  );
+  if (summaryResult.success) {
+    filesUpdated.push(summaryResult.file);
+  } else {
+    errors.push(`${summaryResult.file}: ${summaryResult.error}`);
+  }
 }
 
-function safeUpdate(fn: () => void, filename: string): { success: boolean; file: string; error?: string } {
+function safeUpdate(
+  fn: () => void,
+  filename: string
+): { success: boolean; file: string; error?: string } {
   try {
     fn();
     return { success: true, file: filename };
   } catch (err) {
-    return { success: false, file: filename, error: err instanceof Error ? err.message : String(err) };
+    return {
+      success: false,
+      file: filename,
+      error: err instanceof Error ? err.message : String(err),
+    };
   }
 }
 
@@ -127,16 +212,16 @@ function updateSprintPlanJson(tasks: any[], metricsDir: string): void {
     // Map CSV fields to JSON format
     tasksBySection[section].push({
       'Task ID': task['Task ID'],
-      'Section': task.Section,
-      'Description': task.Description,
-      'Owner': task.Owner,
-      'Dependencies': task.Dependencies,
-      'CleanDependencies': task.CleanDependencies,
-      'CrossQuarterDeps': task.CrossQuarterDeps,
+      Section: task.Section,
+      Description: task.Description,
+      Owner: task.Owner,
+      Dependencies: task.Dependencies,
+      CleanDependencies: task.CleanDependencies,
+      CrossQuarterDeps: task.CrossQuarterDeps,
       'Pre-requisites': task['Pre-requisites'],
       'Definition of Done': task['Definition of Done'],
-      'Status': task.Status,
-      'KPIs': task.KPIs,
+      Status: task.Status,
+      KPIs: task.KPIs,
       'Target Sprint': task['Target Sprint'],
       'Artifacts To Track': task['Artifacts To Track'],
       'Validation Method': task['Validation Method'],
@@ -144,7 +229,7 @@ function updateSprintPlanJson(tasks: any[], metricsDir: string): void {
   }
 
   // Write back
-  writeFileSync(jsonPath, JSON.stringify(tasksBySection, null, 4), 'utf-8');
+  writeJsonFile(jsonPath, tasksBySection, 2);
 }
 
 function updateTaskRegistry(tasks: any[], metricsDir: string): void {
@@ -153,17 +238,20 @@ function updateTaskRegistry(tasks: any[], metricsDir: string): void {
 
   // Read existing registry
   if (existsSync(registryPath)) {
-    registry = JSON.parse(readFileSync(registryPath, 'utf-8'));
+    registry = readJsonTolerant(registryPath);
   }
 
   // Update tasks_by_status
   const tasksByStatus: { [key: string]: string[] } = {
     DONE: [],
     IN_PROGRESS: [],
+    VALIDATING: [],
     BLOCKED: [],
     PLANNED: [],
     BACKLOG: [],
     FAILED: [],
+    NEEDS_HUMAN: [],
+    IN_REVIEW: [],
   };
 
   const taskDetails: { [key: string]: any } = {};
@@ -174,33 +262,71 @@ function updateTaskRegistry(tasks: any[], metricsDir: string): void {
 
     tasksByStatus[status].push(taskId);
 
+    // Parse dependencies from CSV (CleanDependencies field, comma-separated)
+    const depsString = task.CleanDependencies || task.Dependencies || '';
+    const dependencies = depsString
+      .split(',')
+      .map((d: string) => d.trim())
+      .filter((d: string) => d.length > 0);
+
+    // Parse artifacts from CSV
+    const artifactsString = task['Artifacts To Track'] || '';
+    const artifacts = artifactsString
+      .split(',')
+      .map((a: string) => a.trim())
+      .filter((a: string) => a.length > 0);
+
     // Update task details (preserve additional fields if they exist)
     const existingDetails = registry.task_details?.[taskId];
-    taskDetails[taskId] = existingDetails ? {
-      ...existingDetails,
-      section: task.Section,
-      description: task.Description,
-      owner: task.Owner,
-      status,
-      sprint: Number.parseInt(task['Target Sprint'], 10) || 0,
-    } : {
-      section: task.Section,
-      description: task.Description,
-      owner: task.Owner,
-      status,
-      sprint: Number.parseInt(task['Target Sprint'], 10) || 0,
-    };
+    taskDetails[taskId] = existingDetails
+      ? {
+          ...existingDetails,
+          section: task.Section,
+          description: task.Description,
+          owner: task.Owner,
+          status,
+          sprint:
+            task['Target Sprint'] === 'Continuous'
+              ? -1
+              : Number.parseInt(task['Target Sprint'], 10) || 0,
+          dependencies,
+          artifacts,
+          kpis: task.KPIs || '',
+          definition_of_done: task['Definition of Done'] || '',
+          validation: task['Validation Method'] || '',
+          prerequisites: task['Pre-requisites'] || '',
+        }
+      : {
+          section: task.Section,
+          description: task.Description,
+          owner: task.Owner,
+          status,
+          sprint:
+            task['Target Sprint'] === 'Continuous'
+              ? -1
+              : Number.parseInt(task['Target Sprint'], 10) || 0,
+          dependencies,
+          artifacts,
+          kpis: task.KPIs || '',
+          definition_of_done: task['Definition of Done'] || '',
+          validation: task['Validation Method'] || '',
+          prerequisites: task['Pre-requisites'] || '',
+        };
   }
 
   // Update sprint stats for sprint 0
-  const sprint0Tasks = tasks.filter(t => String(t['Target Sprint']) === '0');
+  const sprint0Tasks = tasks.filter((t) => String(t['Target Sprint']) === '0');
   const sprint0Stats = {
     total_tasks: sprint0Tasks.length,
-    completed: sprint0Tasks.filter(t => t.Status === 'Done' || t.Status === 'Completed').length,
-    in_progress: sprint0Tasks.filter(t => t.Status === 'In Progress').length,
-    blocked: sprint0Tasks.filter(t => t.Status === 'Blocked').length,
-    planned: sprint0Tasks.filter(t => t.Status === 'Planned').length,
-    backlog: sprint0Tasks.filter(t => t.Status === 'Backlog').length,
+    completed: sprint0Tasks.filter((t) => t.Status === 'Done' || t.Status === 'Completed').length,
+    in_progress: sprint0Tasks.filter((t) => t.Status === 'In Progress').length,
+    validating: sprint0Tasks.filter((t) => t.Status === 'Validating').length,
+    blocked: sprint0Tasks.filter((t) => t.Status === 'Blocked').length,
+    planned: sprint0Tasks.filter((t) => t.Status === 'Planned').length,
+    backlog: sprint0Tasks.filter((t) => t.Status === 'Backlog').length,
+    failed: sprint0Tasks.filter((t) => t.Status === 'Failed').length,
+    needs_human: sprint0Tasks.filter((t) => t.Status === 'Needs Human').length,
+    in_review: sprint0Tasks.filter((t) => t.Status === 'In Review').length,
   };
 
   // Merge with existing registry
@@ -211,12 +337,12 @@ function updateTaskRegistry(tasks: any[], metricsDir: string): void {
   if (!registry.sprints) registry.sprints = {};
   registry.sprints['sprint-0'] = sprint0Stats;
 
-  writeFileSync(registryPath, JSON.stringify(registry, null, 2), 'utf-8');
+  writeJsonFile(registryPath, registry, 2);
 }
 
 function updateIndividualTaskFile(task: any, metricsDir: string): void {
   const taskId = task['Task ID'];
-  
+
   // Find the task file
   const sprint0Dir = join(metricsDir, 'sprint-0');
   const taskFile = findTaskFile(taskId, sprint0Dir);
@@ -226,7 +352,7 @@ function updateIndividualTaskFile(task: any, metricsDir: string): void {
   }
 
   // Read existing task data
-  const taskData = JSON.parse(readFileSync(taskFile, 'utf-8'));
+  const taskData = readJsonTolerant(taskFile);
 
   // Update status
   const newStatus = mapCsvStatusToIndividual(task.Status);
@@ -246,16 +372,16 @@ function updateIndividualTaskFile(task: any, metricsDir: string): void {
     taskData.description = task.Description;
   }
 
-  writeFileSync(taskFile, JSON.stringify(taskData, null, 2), 'utf-8');
+  writeJsonFile(taskFile, taskData, 2);
 }
 
 function findTaskFile(taskId: string, baseDir: string): string | null {
   const search = (dir: string): string | null => {
     const entries = readdirSync(dir, { withFileTypes: true });
-    
+
     for (const entry of entries) {
       const fullPath = join(dir, entry.name);
-      
+
       if (entry.isDirectory()) {
         const found = search(fullPath);
         if (found) return found;
@@ -263,7 +389,7 @@ function findTaskFile(taskId: string, baseDir: string): string | null {
         return fullPath;
       }
     }
-    
+
     return null;
   };
 
@@ -273,8 +399,14 @@ function findTaskFile(taskId: string, baseDir: string): string | null {
 function updatePhaseSummaries(tasks: any[], metricsDir: string): void {
   // Group tasks by phase
   const sprint0Dir = join(metricsDir, 'sprint-0');
-  const phases = ['phase-0-initialisation', 'phase-1-ai-foundation', 'phase-2-parallel', 
-                  'phase-3-dependencies', 'phase-4-integration', 'phase-5-completion'];
+  const phases = [
+    'phase-0-initialisation',
+    'phase-1-ai-foundation',
+    'phase-2-parallel',
+    'phase-3-dependencies',
+    'phase-4-integration',
+    'phase-5-completion',
+  ];
 
   for (const phase of phases) {
     const phaseDir = join(sprint0Dir, phase);
@@ -282,7 +414,7 @@ function updatePhaseSummaries(tasks: any[], metricsDir: string): void {
 
     if (!existsSync(summaryPath)) continue;
 
-    const summary = JSON.parse(readFileSync(summaryPath, 'utf-8'));
+    const summary = readJsonTolerant(summaryPath);
 
     // Count tasks in this phase
     const phaseTasks: any[] = [];
@@ -290,8 +422,12 @@ function updatePhaseSummaries(tasks: any[], metricsDir: string): void {
       const entries = readdirSync(dir, { withFileTypes: true });
       for (const entry of entries) {
         const fullPath = join(dir, entry.name);
-        if (entry.isFile() && entry.name.endsWith('.json') && entry.name !== '_phase-summary.json') {
-          const taskData = JSON.parse(readFileSync(fullPath, 'utf-8'));
+        if (
+          entry.isFile() &&
+          entry.name.endsWith('.json') &&
+          entry.name !== '_phase-summary.json'
+        ) {
+          const taskData = readJsonTolerant(fullPath);
           if (taskData.phase === phase) {
             phaseTasks.push(taskData);
           }
@@ -304,10 +440,20 @@ function updatePhaseSummaries(tasks: any[], metricsDir: string): void {
     searchPhase(phaseDir);
 
     // Calculate aggregated metrics
-    const done = phaseTasks.filter(t => t.status === 'DONE').length;
-    const in_progress = phaseTasks.filter(t => t.status === 'IN_PROGRESS').length;
-    const blocked = phaseTasks.filter(t => t.status === 'BLOCKED').length;
-    const not_started = phaseTasks.filter(t => t.status === 'PLANNED' || t.status === 'NOT_STARTED').length;
+    const done = phaseTasks.filter((t) => t.status === 'DONE').length;
+    const in_progress = phaseTasks.filter(
+      (t) => t.status === 'IN_PROGRESS' || t.status === 'VALIDATING'
+    ).length;
+    const blocked = phaseTasks.filter(
+      (t) => t.status === 'BLOCKED' || t.status === 'NEEDS_HUMAN' || t.status === 'FAILED'
+    ).length;
+    const not_started = phaseTasks.filter(
+      (t) =>
+        t.status === 'PLANNED' ||
+        t.status === 'NOT_STARTED' ||
+        t.status === 'BACKLOG' ||
+        t.status === 'IN_REVIEW'
+    ).length;
 
     summary.aggregated_metrics = {
       total_tasks: phaseTasks.length,
@@ -322,17 +468,21 @@ function updatePhaseSummaries(tasks: any[], metricsDir: string): void {
       summary.completed_at = new Date().toISOString();
     }
 
-    writeFileSync(summaryPath, JSON.stringify(summary, null, 2), 'utf-8');
+    writeJsonFile(summaryPath, summary, 2);
   }
 }
 
 function mapCsvStatusToRegistry(status: string): string {
   if (status === 'Done' || status === 'Completed') return 'DONE';
   if (status === 'In Progress') return 'IN_PROGRESS';
+  if (status === 'Validating') return 'VALIDATING';
   if (status === 'Blocked') return 'BLOCKED';
   if (status === 'Planned') return 'PLANNED';
   if (status === 'Backlog') return 'BACKLOG';
-  
+  if (status === 'Failed') return 'FAILED';
+  if (status === 'Needs Human') return 'NEEDS_HUMAN';
+  if (status === 'In Review') return 'IN_REVIEW';
+
   // Validation: Warn on unknown status
   console.warn(`⚠️  Unknown status "${status}" - defaulting to PLANNED`);
   return 'PLANNED';
@@ -393,30 +543,30 @@ interface ValidationResult {
 export function validateMetricsConsistency(csvPath: string, metricsDir: string): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
-  
+
   try {
     const csvContent = readFileSync(csvPath, 'utf-8');
     const { data } = Papa.parse(csvContent, { header: true, skipEmptyLines: true });
     const tasks = data as any[];
-    
-    const sprint0Tasks = tasks.filter(t => String(t['Target Sprint']) === '0');
-    const csvTaskIds = new Set(sprint0Tasks.map(t => t['Task ID']));
-    
+
+    const sprint0Tasks = tasks.filter((t) => String(t['Target Sprint']) === '0');
+    const csvTaskIds = new Set(sprint0Tasks.map((t) => t['Task ID']));
+
     // Find all JSON files
     const sprint0Dir = join(metricsDir, 'sprint-0');
     const taskJsonFiles = findAllTaskJsons(sprint0Dir);
-    
+
     // Check for orphaned files
     for (const jsonFile of taskJsonFiles) {
       const content = readFileSync(jsonFile, 'utf-8');
       const taskData = JSON.parse(content);
       const taskId = taskData.task_id || taskData.taskId;
-      
+
       if (!csvTaskIds.has(taskId)) {
         warnings.push(`Orphaned file detected: ${taskId} - not in CSV or not Sprint 0`);
       }
     }
-    
+
     return { passed: errors.length === 0, errors, warnings };
   } catch (err) {
     return {
@@ -429,20 +579,109 @@ export function validateMetricsConsistency(csvPath: string, metricsDir: string):
 
 function findAllTaskJsons(dir: string): string[] {
   const results: string[] = [];
-  
+
   if (!existsSync(dir)) return results;
 
   const entries = readdirSync(dir, { withFileTypes: true });
-  
+
   for (const entry of entries) {
     const fullPath = join(dir, entry.name);
-    
+
     if (entry.isDirectory()) {
       results.push(...findAllTaskJsons(fullPath));
     } else if (entry.isFile() && entry.name.endsWith('.json') && !entry.name.startsWith('_')) {
       results.push(fullPath);
     }
   }
-  
+
   return results;
+}
+
+function updateSprintSummary(tasks: any[], metricsDir: string): void {
+  const summaryPath = join(metricsDir, 'sprint-0', '_summary.json');
+
+  if (!existsSync(summaryPath)) {
+    throw new Error('Sprint summary file not found');
+  }
+
+  const summary = readJsonTolerant(summaryPath);
+
+  // Calculate task counts from CSV
+  const done = tasks.filter((t) => t.Status === 'Done' || t.Status === 'Completed').length;
+  const inProgress = tasks.filter(
+    (t) => t.Status === 'In Progress' || t.Status === 'Validating'
+  ).length;
+  const blocked = tasks.filter((t) => t.Status === 'Blocked').length;
+  const backlog = tasks.filter((t) => t.Status === 'Backlog').length;
+  const planned = tasks.filter((t) => t.Status === 'Planned').length;
+  const failed = tasks.filter((t) => t.Status === 'Failed').length;
+  const needsHuman = tasks.filter((t) => t.Status === 'Needs Human').length;
+  const inReview = tasks.filter((t) => t.Status === 'In Review').length;
+  const notStarted = backlog + planned + inReview;
+
+  // Update task_summary
+  summary.task_summary = {
+    total: tasks.length,
+    done,
+    in_progress: inProgress,
+    blocked: blocked + needsHuman,
+    not_started: notStarted,
+    failed,
+  };
+
+  // Update KPI for tasks completed
+  if (summary.kpi_summary?.tasks_completed) {
+    summary.kpi_summary.tasks_completed.actual = done;
+    summary.kpi_summary.tasks_completed.status =
+      done >= summary.kpi_summary.tasks_completed.target ? 'ON_TARGET' : 'BELOW_TARGET';
+  }
+
+  // Update automation percentage
+  if (summary.kpi_summary?.automation_percentage) {
+    const automationPct = tasks.length > 0 ? (done / tasks.length) * 100 : 0;
+    summary.kpi_summary.automation_percentage.actual = Math.round(automationPct * 10) / 10;
+  }
+
+  // Update completed_tasks list from individual task files
+  const sprint0Dir = join(metricsDir, 'sprint-0');
+  const completedTasks: Array<{ task_id: string; completed_at: string; duration_minutes: number }> =
+    [];
+
+  const searchForCompleted = (dir: string): void => {
+    const entries = readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = join(dir, entry.name);
+      if (entry.isFile() && entry.name.endsWith('.json') && !entry.name.startsWith('_')) {
+        try {
+          const taskData = readJsonTolerant(fullPath);
+          if (taskData.status === 'DONE' && taskData.completed_at) {
+            completedTasks.push({
+              task_id: taskData.task_id || taskData.taskId || entry.name.replace('.json', ''),
+              completed_at: taskData.completed_at,
+              duration_minutes:
+                taskData.actual_duration_minutes || taskData.target_duration_minutes || 15,
+            });
+          }
+        } catch {
+          // Skip invalid files
+        }
+      } else if (entry.isDirectory()) {
+        searchForCompleted(fullPath);
+      }
+    }
+  };
+
+  searchForCompleted(sprint0Dir);
+
+  // Sort by completion time
+  completedTasks.sort(
+    (a, b) => new Date(a.completed_at).getTime() - new Date(b.completed_at).getTime()
+  );
+  summary.completed_tasks = completedTasks;
+
+  // Update notes
+  const pct = tasks.length > 0 ? Math.round((done / tasks.length) * 100) : 0;
+  summary.notes = `${done}/${tasks.length} tasks DONE (${pct}%). Last synced: ${new Date().toISOString()}`;
+
+  writeJsonFile(summaryPath, summary, 2);
 }

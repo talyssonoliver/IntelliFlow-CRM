@@ -10,12 +10,7 @@
   "dependencies": {
     "all_satisfied": false,
     "verified_at": "2025-12-16T00:41:57Z",
-    "required": [
-      "ENV-001-AI",
-      "ENV-003-AI",
-      "ENV-005-AI",
-      "ENV-010-AI"
-    ]
+    "required": ["ENV-001-AI", "ENV-003-AI", "ENV-005-AI", "ENV-010-AI"]
   },
   "dependencies_resolved": [
     "ENV-001-AI",

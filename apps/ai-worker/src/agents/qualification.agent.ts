@@ -62,11 +62,8 @@ export type QualificationOutput = z.infer<typeof qualificationOutputSchema>;
  * Analyzes leads to determine if they should be qualified for sales follow-up
  * Provides detailed reasoning and recommended next steps
  */
-export class LeadQualificationAgent extends BaseAgent<
-  QualificationInput,
-  QualificationOutput
-> {
-  private parser: StructuredOutputParser<QualificationOutput>;
+export class LeadQualificationAgent extends BaseAgent<QualificationInput, QualificationOutput> {
+  private readonly parser: StructuredOutputParser<any>;
 
   constructor(config?: Partial<BaseAgentConfig>) {
     super({
@@ -110,16 +107,13 @@ Your recommendations are data-driven, actionable, and focused on conversion opti
     const systemPrompt = this.generateSystemPrompt();
 
     // Invoke the LLM
-    const messages = [
-      this.createSystemMessage(systemPrompt),
-      this.createHumanMessage(prompt),
-    ];
+    const messages = [this.createSystemMessage(systemPrompt), this.createHumanMessage(prompt)];
 
     const response = await this.invokeLLM(messages);
 
     // Parse structured output
     try {
-      const result = await this.parser.parse(response);
+      const result = (await this.parser.parse(response)) as QualificationOutput;
 
       logger.info(
         {
@@ -164,93 +158,93 @@ Your recommendations are data-driven, actionable, and focused on conversion opti
   }
 
   /**
+   * Build company data section for prompt
+   */
+  private buildCompanyDataSection(
+    companyData: NonNullable<QualificationInput['companyData']>
+  ): string[] {
+    const lines: string[] = ['\nCOMPANY DATA:'];
+    if (companyData.industry) lines.push(`Industry: ${companyData.industry}`);
+    if (companyData.size) lines.push(`Size: ${companyData.size}`);
+    if (companyData.revenue) lines.push(`Revenue: ${companyData.revenue}`);
+    if (companyData.location) lines.push(`Location: ${companyData.location}`);
+    return lines;
+  }
+
+  /**
+   * Build activities section for prompt
+   */
+  private buildActivitiesSection(activities: string[]): string[] {
+    const lines: string[] = ['\nRECENT ACTIVITIES:'];
+    for (const [index, activity] of activities.entries()) {
+      lines.push(`${index + 1}. ${activity}`);
+    }
+    return lines;
+  }
+
+  /**
    * Build the qualification prompt
    */
   private buildQualificationPrompt(lead: QualificationInput): string {
     const sections: string[] = [];
 
-    sections.push('=== LEAD QUALIFICATION REQUEST ===\n');
+    // Lead info header
+    sections.push(
+      '=== LEAD QUALIFICATION REQUEST ===\n',
+      'LEAD INFORMATION:',
+      `ID: ${lead.leadId}`,
+      `Email: ${lead.email}`
+    );
 
-    sections.push('LEAD INFORMATION:');
-    sections.push(`ID: ${lead.leadId}`);
-    sections.push(`Email: ${lead.email}`);
-
+    // Optional contact fields
     if (lead.firstName || lead.lastName) {
       const name = [lead.firstName, lead.lastName].filter(Boolean).join(' ');
       sections.push(`Name: ${name}`);
     }
-
-    if (lead.company) {
-      sections.push(`Company: ${lead.company}`);
-    }
-
-    if (lead.title) {
-      sections.push(`Title: ${lead.title}`);
-    }
-
+    if (lead.company) sections.push(`Company: ${lead.company}`);
+    if (lead.title) sections.push(`Title: ${lead.title}`);
     sections.push(`Source: ${lead.source}`);
+    if (lead.score !== undefined) sections.push(`Current Score: ${lead.score}/100`);
+    if (lead.phone) sections.push('Phone: Available');
 
-    if (lead.score !== undefined) {
-      sections.push(`Current Score: ${lead.score}/100`);
-    }
-
-    if (lead.phone) {
-      sections.push('Phone: Available');
-    }
-
+    // Company data section
     if (lead.companyData) {
-      sections.push('\nCOMPANY DATA:');
-      if (lead.companyData.industry) {
-        sections.push(`Industry: ${lead.companyData.industry}`);
-      }
-      if (lead.companyData.size) {
-        sections.push(`Size: ${lead.companyData.size}`);
-      }
-      if (lead.companyData.revenue) {
-        sections.push(`Revenue: ${lead.companyData.revenue}`);
-      }
-      if (lead.companyData.location) {
-        sections.push(`Location: ${lead.companyData.location}`);
-      }
+      sections.push(...this.buildCompanyDataSection(lead.companyData));
     }
 
+    // Activities section
     if (lead.recentActivities && lead.recentActivities.length > 0) {
-      sections.push('\nRECENT ACTIVITIES:');
-      lead.recentActivities.forEach((activity, index) => {
-        sections.push(`${index + 1}. ${activity}`);
-      });
+      sections.push(...this.buildActivitiesSection(lead.recentActivities));
     }
 
-    sections.push('\n=== QUALIFICATION CRITERIA ===\n');
-    sections.push('Analyze this lead using the following framework:');
-    sections.push('\n1. BANT Assessment:');
-    sections.push('   - Budget: Does the lead likely have budget authority?');
-    sections.push('   - Authority: Is this person a decision-maker?');
-    sections.push('   - Need: Is there evidence of product/service need?');
-    sections.push('   - Timeline: Are there urgency indicators?');
-
-    sections.push('\n2. Engagement Quality:');
-    sections.push('   - How engaged is this lead?');
-    sections.push('   - Quality of the lead source');
-    sections.push('   - Recent activity patterns');
-
-    sections.push('\n3. Profile Completeness:');
-    sections.push('   - Availability of key contact information');
-    sections.push('   - Quality of professional details');
-
-    sections.push('\n4. Conversion Potential:');
-    sections.push('   - Overall likelihood to convert');
-    sections.push('   - Risk factors or red flags');
-
-    sections.push('\n=== REQUIRED OUTPUT ===\n');
-    sections.push(this.parser.getFormatInstructions());
-
-    sections.push('\nIMPORTANT GUIDELINES:');
-    sections.push('- Be specific and data-driven in your reasoning');
-    sections.push('- Identify both strengths AND concerns');
-    sections.push('- Provide actionable recommended actions');
-    sections.push('- Suggest concrete next steps for the sales team');
-    sections.push('- Base your confidence score on available data quality');
+    // Qualification criteria and output format
+    sections.push(
+      '\n=== QUALIFICATION CRITERIA ===\n',
+      'Analyze this lead using the following framework:',
+      '\n1. BANT Assessment:',
+      '   - Budget: Does the lead likely have budget authority?',
+      '   - Authority: Is this person a decision-maker?',
+      '   - Need: Is there evidence of product/service need?',
+      '   - Timeline: Are there urgency indicators?',
+      '\n2. Engagement Quality:',
+      '   - How engaged is this lead?',
+      '   - Quality of the lead source',
+      '   - Recent activity patterns',
+      '\n3. Profile Completeness:',
+      '   - Availability of key contact information',
+      '   - Quality of professional details',
+      '\n4. Conversion Potential:',
+      '   - Overall likelihood to convert',
+      '   - Risk factors or red flags',
+      '\n=== REQUIRED OUTPUT ===\n',
+      this.parser.getFormatInstructions(),
+      '\nIMPORTANT GUIDELINES:',
+      '- Be specific and data-driven in your reasoning',
+      '- Identify both strengths AND concerns',
+      '- Provide actionable recommended actions',
+      '- Suggest concrete next steps for the sales team',
+      '- Base your confidence score on available data quality'
+    );
 
     return sections.join('\n');
   }

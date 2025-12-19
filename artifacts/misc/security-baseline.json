@@ -1,0 +1,420 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "createdAt": "2025-12-15T00:00:00Z",
+    "createdBy": "ENV-014-AI",
+    "taskId": "ENV-014-AI",
+    "description": "Security baseline configuration for IntelliFlow CRM",
+    "purpose": "Defines security standards, thresholds, and validation criteria for automated security scanning",
+    "lastUpdated": "2025-12-15T00:00:00Z",
+    "sprint": "Sprint 0 - Foundation"
+  },
+  "securityStandards": {
+    "frameworks": [
+      "OWASP Top 10 2021",
+      "OWASP ASVS 4.0",
+      "CWE Top 25",
+      "NIST Cybersecurity Framework",
+      "ISO 27001",
+      "SOC 2 Type II"
+    ],
+    "complianceRequirements": [
+      "GDPR",
+      "ISO 42001 (AI Management)",
+      "PCI DSS Level 1 (future)"
+    ],
+    "maturityLevel": "Level 2 - Managed",
+    "targetMaturityLevel": "Level 4 - Measured"
+  },
+  "vulnerabilityThresholds": {
+    "maxAllowedVulnerabilities": {
+      "critical": 0,
+      "high": 5,
+      "medium": 20,
+      "low": 50,
+      "total": 75
+    },
+    "cvssScoring": {
+      "version": "3.1",
+      "failOnScore": 7.0,
+      "criticalThreshold": 9.0,
+      "highThreshold": 7.0,
+      "mediumThreshold": 4.0,
+      "lowThreshold": 0.1
+    },
+    "responseTimeSLA": {
+      "critical": {
+        "initialResponse": "immediate",
+        "patchDeployment": "1-7 days",
+        "maxDays": 7
+      },
+      "high": {
+        "initialResponse": "24 hours",
+        "patchDeployment": "7-14 days",
+        "maxDays": 14
+      },
+      "medium": {
+        "initialResponse": "3 days",
+        "patchDeployment": "14-30 days",
+        "maxDays": 30
+      },
+      "low": {
+        "initialResponse": "7 days",
+        "patchDeployment": "30-90 days",
+        "maxDays": 90
+      }
+    }
+  },
+  "scanningConfiguration": {
+    "trivy": {
+      "enabled": true,
+      "scanTypes": ["vuln", "config", "secret", "license"],
+      "severities": ["CRITICAL", "HIGH", "MEDIUM", "LOW"],
+      "skipDirs": ["node_modules", ".git", ".next", ".turbo", "dist", "build", "coverage", "artifacts"],
+      "skipFiles": ["*.lock", "pnpm-lock.yaml", "package-lock.json", "yarn.lock"],
+      "configFile": "infra/security/trivy.yaml",
+      "scanSchedule": "daily",
+      "reportFormat": ["json", "sarif", "table"]
+    },
+    "dependencyCheck": {
+      "enabled": true,
+      "analyzers": {
+        "node": true,
+        "retirejs": true,
+        "experimental": false
+      },
+      "cvssFailThreshold": 7.0,
+      "configFile": "infra/security/dependency-check.yaml",
+      "scanSchedule": "daily",
+      "reportFormat": ["HTML", "JSON", "XML", "SARIF"]
+    },
+    "npmAudit": {
+      "enabled": true,
+      "auditLevel": "moderate",
+      "scanSchedule": "on-commit",
+      "excludeDevDependencies": false
+    },
+    "codeQL": {
+      "enabled": true,
+      "languages": ["javascript", "typescript"],
+      "queries": ["security-extended", "security-and-quality"],
+      "scanSchedule": "on-pull-request"
+    },
+    "secretScanning": {
+      "enabled": true,
+      "tool": "gitleaks",
+      "scanSchedule": "on-commit",
+      "scanDepth": "full-history"
+    },
+    "dockerScanning": {
+      "enabled": true,
+      "scanTrigger": "on-docker-changes",
+      "baseImages": ["node:20-alpine", "postgres:16"]
+    }
+  },
+  "requiredSecurityFiles": [
+    "SECURITY.md",
+    ".github/CODEOWNERS",
+    ".github/workflows/security.yml",
+    "infra/security/trivy.yaml",
+    "infra/security/dependency-check.yaml",
+    "artifacts/misc/security-baseline.json"
+  ],
+  "securityPolicies": {
+    "authentication": {
+      "mfaRequired": true,
+      "passwordMinLength": 12,
+      "passwordComplexity": true,
+      "passwordHashAlgorithm": "bcrypt",
+      "bcryptCostFactor": 12,
+      "sessionTimeout": "30 minutes",
+      "tokenExpiry": "15 minutes",
+      "refreshTokenExpiry": "7 days"
+    },
+    "authorization": {
+      "model": "RBAC",
+      "principleOfLeastPrivilege": true,
+      "rowLevelSecurity": true,
+      "zeroTrustArchitecture": true
+    },
+    "encryption": {
+      "atRest": {
+        "algorithm": "AES-256",
+        "enabled": true
+      },
+      "inTransit": {
+        "tlsVersion": "1.3",
+        "minimumTlsVersion": "1.2",
+        "enabled": true
+      },
+      "databaseFieldLevel": true
+    },
+    "secretsManagement": {
+      "vault": "HashiCorp Vault",
+      "environmentVariables": true,
+      "noSecretsInCode": true,
+      "secretRotationPeriod": "90 days"
+    },
+    "inputValidation": {
+      "schemaValidation": "Zod",
+      "sanitization": true,
+      "xssProtection": true,
+      "sqlInjectionPrevention": true,
+      "csrfProtection": true
+    }
+  },
+  "aiSecurity": {
+    "promptInjectionPrevention": true,
+    "outputValidation": true,
+    "modelSecurity": true,
+    "piiProtection": {
+      "enabled": true,
+      "noPiiToExternalServices": true,
+      "piiRedaction": true
+    },
+    "auditLogging": true,
+    "humanInTheLoop": true,
+    "confidenceThresholds": {
+      "minimum": 0.7,
+      "humanReviewRequired": 0.85
+    }
+  },
+  "networkSecurity": {
+    "firewalls": true,
+    "waf": true,
+    "ddosProtection": true,
+    "rateLimiting": {
+      "enabled": true,
+      "defaultLimit": "100 requests/minute",
+      "burstLimit": "200 requests/minute"
+    },
+    "corsPolicy": {
+      "enabled": true,
+      "strictMode": true
+    }
+  },
+  "monitoringAndLogging": {
+    "securityMonitoring": {
+      "enabled": true,
+      "tools": ["OpenTelemetry", "Sentry"],
+      "realTimeAlerts": true
+    },
+    "auditLogging": {
+      "enabled": true,
+      "logAllDataAccess": true,
+      "logRetention": "7 years",
+      "logEncryption": true
+    },
+    "incidentResponse": {
+      "planExists": true,
+      "automatedAlerting": true,
+      "escalationProcedure": true,
+      "maxResponseTime": "4 hours"
+    }
+  },
+  "testingRequirements": {
+    "securityTestCoverage": {
+      "minimum": 85,
+      "target": 95
+    },
+    "penetrationTesting": {
+      "frequency": "quarterly",
+      "scope": "full-application"
+    },
+    "staticAnalysis": {
+      "onEveryCommit": true,
+      "tools": ["CodeQL", "ESLint security rules"]
+    },
+    "dynamicAnalysis": {
+      "frequency": "monthly",
+      "tools": ["OWASP ZAP"]
+    }
+  },
+  "dependencyManagement": {
+    "allowedLicenses": [
+      "MIT",
+      "Apache-2.0",
+      "BSD-2-Clause",
+      "BSD-3-Clause",
+      "ISC",
+      "0BSD"
+    ],
+    "forbiddenLicenses": [
+      "GPL-2.0",
+      "GPL-3.0",
+      "AGPL-1.0",
+      "AGPL-3.0"
+    ],
+    "updatePolicy": {
+      "security": "immediate",
+      "major": "monthly",
+      "minor": "bi-weekly",
+      "patch": "weekly"
+    },
+    "deprecatedPackages": {
+      "blockNew": true,
+      "removeExisting": true
+    }
+  },
+  "dataProtection": {
+    "dataClassification": {
+      "levels": ["Public", "Internal", "Confidential", "Restricted"],
+      "defaultLevel": "Internal"
+    },
+    "dataRetention": {
+      "userDataMaxAge": "7 years",
+      "logDataMaxAge": "2 years",
+      "backupRetention": "30 days"
+    },
+    "privacyByDesign": true,
+    "dataMinimization": true,
+    "rightToErasure": true,
+    "dataPortability": true
+  },
+  "securityHeaders": {
+    "contentSecurityPolicy": {
+      "enabled": true,
+      "strictMode": true
+    },
+    "hsts": {
+      "enabled": true,
+      "maxAge": 31536000,
+      "includeSubDomains": true,
+      "preload": true
+    },
+    "xFrameOptions": "DENY",
+    "xContentTypeOptions": "nosniff",
+    "referrerPolicy": "strict-origin-when-cross-origin",
+    "permissionsPolicy": {
+      "enabled": true,
+      "restrictedFeatures": ["geolocation", "microphone", "camera"]
+    }
+  },
+  "backupAndRecovery": {
+    "backupFrequency": "daily",
+    "backupEncryption": true,
+    "offSiteBackup": true,
+    "backupTesting": "monthly",
+    "rto": "4 hours",
+    "rpo": "1 hour"
+  },
+  "validationChecks": {
+    "requiredFiles": {
+      "securityPolicy": "SECURITY.md",
+      "codeowners": ".github/CODEOWNERS",
+      "securityWorkflow": ".github/workflows/security.yml",
+      "trivyConfig": "infra/security/trivy.yaml",
+      "dependencyCheckConfig": "infra/security/dependency-check.yaml"
+    },
+    "securityPolicySections": [
+      "Reporting a Vulnerability",
+      "Supported Versions",
+      "Security Update Policy"
+    ],
+    "automatedValidation": true,
+    "ciEnforcement": true
+  },
+  "metrics": {
+    "kpis": {
+      "timeToDetect": {
+        "target": "< 1 hour",
+        "unit": "hours"
+      },
+      "timeToPatch": {
+        "critical": "< 7 days",
+        "high": "< 14 days",
+        "medium": "< 30 days",
+        "low": "< 90 days"
+      },
+      "falsePositiveRate": {
+        "target": "< 10%",
+        "unit": "percentage"
+      },
+      "securityTestCoverage": {
+        "target": "> 90%",
+        "unit": "percentage"
+      },
+      "vulnerabilityRecurrence": {
+        "target": "< 5%",
+        "unit": "percentage"
+      }
+    },
+    "reporting": {
+      "frequency": "weekly",
+      "dashboardUrl": "https://security-dashboard.intelliflow-crm.com",
+      "stakeholders": [
+        "security-team",
+        "devops-team",
+        "core-team"
+      ]
+    }
+  },
+  "exemptions": {
+    "process": "Document in security-baseline.json with justification",
+    "approvalRequired": true,
+    "approvers": ["security-team", "architecture-team"],
+    "reviewFrequency": "quarterly",
+    "currentExemptions": []
+  },
+  "trainingRequirements": {
+    "securityTraining": {
+      "frequency": "annual",
+      "topics": [
+        "Secure Coding",
+        "OWASP Top 10",
+        "Privacy & GDPR",
+        "Incident Response"
+      ]
+    },
+    "completionRate": {
+      "target": 100,
+      "unit": "percentage"
+    }
+  },
+  "thirdPartyRisk": {
+    "vendorAssessment": {
+      "required": true,
+      "frequency": "annual",
+      "criteria": [
+        "Security certifications",
+        "Data processing agreements",
+        "Incident response capability",
+        "Compliance standards"
+      ]
+    },
+    "approvedVendors": [
+      "Supabase",
+      "Vercel",
+      "Railway",
+      "OpenAI",
+      "Sentry"
+    ]
+  },
+  "changeManagement": {
+    "securityReview": {
+      "required": true,
+      "triggers": [
+        "New third-party integration",
+        "Authentication changes",
+        "Authorization changes",
+        "Data model changes",
+        "Infrastructure changes"
+      ]
+    },
+    "rollbackPlan": {
+      "required": true,
+      "tested": true
+    }
+  },
+  "contactInformation": {
+    "securityTeam": "security@intelliflow-crm.com",
+    "incidentResponse": "incidents@intelliflow-crm.com",
+    "bugBounty": "bugbounty@intelliflow-crm.com",
+    "disclosurePolicy": "https://intelliflow-crm.com/security/disclosure"
+  },
+  "reviewSchedule": {
+    "nextReview": "2025-03-15",
+    "frequency": "quarterly",
+    "reviewers": ["security-team", "architecture-team"]
+  }
+}

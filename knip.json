@@ -1,0 +1,42 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": [
+        "apps/*/src/index.ts",
+        "apps/*/src/index.tsx",
+        "apps/*/app/**/*.tsx",
+        "packages/*/src/index.ts",
+        "packages/*/src/index.tsx"
+      ],
+      "project": ["**/*.ts", "**/*.tsx"]
+    }
+  },
+  "ignore": [
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/dist/**",
+    "**/build/**",
+    "**/node_modules/**",
+    "**/.next/**",
+    "**/coverage/**",
+    "**/migrations/**"
+  ],
+  "ignoreDependencies": [
+    "@types/*",
+    "eslint-*",
+    "prettier",
+    "husky",
+    "lint-staged",
+    "turbo",
+    "@changesets/cli",
+    "tsx",
+    "vitest",
+    "@vitest/*",
+    "@playwright/test"
+  ],
+  "ignoreExportsUsedInFile": true,
+  "includeEntryExports": true
+}

@@ -58,4 +58,3 @@ export interface FeatureFlagProvider {
   getDecision(key: FeatureFlagKey, context?: FeatureFlagContext): FeatureFlagDecision;
   isEnabled(key: FeatureFlagKey, context?: FeatureFlagContext): boolean;
 }
-

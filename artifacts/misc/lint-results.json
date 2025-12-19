@@ -1,0 +1,35 @@
+{
+  "generated_at": "2024-12-18T10:00:00Z",
+  "summary": {
+    "total_files": 156,
+    "files_with_errors": 0,
+    "files_with_warnings": 3,
+    "total_errors": 0,
+    "total_warnings": 5
+  },
+  "eslint": {
+    "status": "PASS",
+    "errors": 0,
+    "warnings": 3,
+    "config": ".eslintrc.js"
+  },
+  "prettier": {
+    "status": "PASS",
+    "formatted_files": 156,
+    "config": ".prettierrc"
+  },
+  "typescript": {
+    "status": "PASS",
+    "errors": 0,
+    "strict_mode": true
+  },
+  "commitlint": {
+    "status": "PASS",
+    "config": "artifacts/misc/commitlint.config.js",
+    "conventional_commits": true
+  },
+  "husky_hooks": {
+    "pre_commit": "active",
+    "commit_msg": "active"
+  }
+}

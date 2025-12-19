@@ -1,10 +1,12 @@
 # Supabase Edge Functions for IntelliFlow CRM
 
-This directory contains Supabase Edge Functions that run on Deno Deploy's global edge network.
+This directory contains Supabase Edge Functions that run on Deno Deploy's global
+edge network.
 
 ## Overview
 
 Edge Functions provide serverless compute for IntelliFlow CRM with:
+
 - Low latency (runs close to users globally)
 - TypeScript/JavaScript support via Deno runtime
 - Direct Supabase integration
@@ -28,11 +30,13 @@ functions/
 ### Prerequisites
 
 1. Install Supabase CLI:
+
    ```bash
    npm install -g supabase
    ```
 
 2. Install Deno (for local testing):
+
    ```bash
    # macOS/Linux
    curl -fsSL https://deno.land/x/install/install.sh | sh
@@ -44,12 +48,14 @@ functions/
 ### Local Development
 
 1. Start Supabase locally:
+
    ```bash
    cd C:\taly\intelliFlow-CRM
    supabase start
    ```
 
 2. Serve a function locally:
+
    ```bash
    supabase functions serve hello --env-file ./infra/supabase/.env.local
    ```
@@ -64,23 +70,26 @@ functions/
 ### Creating New Functions
 
 1. Create function directory:
+
    ```bash
    mkdir -p infra/supabase/functions/my-function
    ```
 
 2. Create `index.ts`:
+
    ```typescript
-   import { serve } from "https://deno.land/std@0.177.0/http/server.ts"
+   import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 
    serve(async (req) => {
      return new Response(
-       JSON.stringify({ message: "Hello from my-function" }),
-       { headers: { "Content-Type": "application/json" } }
-     )
-   })
+       JSON.stringify({ message: 'Hello from my-function' }),
+       { headers: { 'Content-Type': 'application/json' } }
+     );
+   });
    ```
 
 3. Test locally:
+
    ```bash
    supabase functions serve my-function
    ```
@@ -124,13 +133,11 @@ Trigger AI scoring when a new lead is created:
 
 ```typescript
 // Database webhook trigger
-const { data, error } = await supabase
-  .from('leads')
-  .on('INSERT', payload => {
-    supabase.functions.invoke('ai-score-webhook', {
-      body: { leadId: payload.new.id }
-    })
-  })
+const { data, error } = await supabase.from('leads').on('INSERT', (payload) => {
+  supabase.functions.invoke('ai-score-webhook', {
+    body: { leadId: payload.new.id },
+  });
+});
 ```
 
 ### 2. Email Sending
@@ -142,9 +149,9 @@ const { data, error } = await supabase.functions.invoke('email-sender', {
   body: {
     to: 'user@example.com',
     template: 'welcome',
-    variables: { name: 'John' }
-  }
-})
+    variables: { name: 'John' },
+  },
+});
 ```
 
 ### 3. Data Enrichment
@@ -155,9 +162,9 @@ Enrich lead data with external APIs (Clearbit, ZoomInfo):
 const { data, error } = await supabase.functions.invoke('data-enrichment', {
   body: {
     email: 'lead@company.com',
-    enrichmentSource: 'clearbit'
-  }
-})
+    enrichmentSource: 'clearbit',
+  },
+});
 ```
 
 ## Best Practices
@@ -170,11 +177,10 @@ Always wrap your code in try-catch:
 try {
   // Your code
 } catch (error) {
-  console.error("Function error:", error)
-  return new Response(
-    JSON.stringify({ error: "Internal server error" }),
-    { status: 500 }
-  )
+  console.error('Function error:', error);
+  return new Response(JSON.stringify({ error: 'Internal server error' }), {
+    status: 500,
+  });
 }
 ```
 
@@ -184,13 +190,14 @@ Include CORS headers for browser requests:
 
 ```typescript
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-}
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type',
+};
 
 // Handle OPTIONS
-if (req.method === "OPTIONS") {
-  return new Response("ok", { headers: corsHeaders })
+if (req.method === 'OPTIONS') {
+  return new Response('ok', { headers: corsHeaders });
 }
 ```
 
@@ -199,14 +206,15 @@ if (req.method === "OPTIONS") {
 Verify user authentication:
 
 ```typescript
-const authHeader = req.headers.get("Authorization")
+const authHeader = req.headers.get('Authorization');
 if (!authHeader) {
-  return new Response("Unauthorized", { status: 401 })
+  return new Response('Unauthorized', { status: 401 });
 }
 
-const { data: { user }, error } = await supabase.auth.getUser(
-  authHeader.replace("Bearer ", "")
-)
+const {
+  data: { user },
+  error,
+} = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
 ```
 
 ### 4. Input Validation
@@ -214,13 +222,12 @@ const { data: { user }, error } = await supabase.auth.getUser(
 Validate all inputs:
 
 ```typescript
-const body = await req.json()
+const body = await req.json();
 
-if (!body.email || !body.email.includes("@")) {
-  return new Response(
-    JSON.stringify({ error: "Invalid email" }),
-    { status: 400 }
-  )
+if (!body.email || !body.email.includes('@')) {
+  return new Response(JSON.stringify({ error: 'Invalid email' }), {
+    status: 400,
+  });
 }
 ```
 
@@ -229,9 +236,9 @@ if (!body.email || !body.email.includes("@")) {
 Use idempotency keys for critical operations:
 
 ```typescript
-const idempotencyKey = req.headers.get("Idempotency-Key")
+const idempotencyKey = req.headers.get('Idempotency-Key');
 if (!idempotencyKey) {
-  return new Response("Idempotency-Key header required", { status: 400 })
+  return new Response('Idempotency-Key header required', { status: 400 });
 }
 
 // Check if operation already completed
@@ -239,10 +246,10 @@ const { data: existing } = await supabase
   .from('operations')
   .select()
   .eq('idempotency_key', idempotencyKey)
-  .single()
+  .single();
 
 if (existing) {
-  return new Response(JSON.stringify(existing.result), { status: 200 })
+  return new Response(JSON.stringify(existing.result), { status: 200 });
 }
 ```
 
@@ -269,9 +276,9 @@ Cache frequently accessed data:
 
 ```typescript
 // Use Supabase Realtime or external cache (Redis)
-const cached = await redis.get(`lead:${leadId}`)
+const cached = await redis.get(`lead:${leadId}`);
 if (cached) {
-  return new Response(cached)
+  return new Response(cached);
 }
 ```
 
@@ -284,9 +291,9 @@ Never expose service role key to frontend:
 ```typescript
 // ✅ Good: Use in edge function (server-side)
 const supabase = createClient(
-  Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-)
+  Deno.env.get('SUPABASE_URL')!,
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+);
 
 // ❌ Bad: Never send to frontend
 ```
@@ -296,13 +303,13 @@ const supabase = createClient(
 Implement rate limiting for public endpoints:
 
 ```typescript
-const rateLimitKey = `ratelimit:${userId}:${functionName}`
-const count = await redis.incr(rateLimitKey)
+const rateLimitKey = `ratelimit:${userId}:${functionName}`;
+const count = await redis.incr(rateLimitKey);
 if (count === 1) {
-  await redis.expire(rateLimitKey, 60) // 1 minute window
+  await redis.expire(rateLimitKey, 60); // 1 minute window
 }
 if (count > 100) {
-  return new Response("Rate limit exceeded", { status: 429 })
+  return new Response('Rate limit exceeded', { status: 429 });
 }
 ```
 
@@ -311,9 +318,9 @@ if (count > 100) {
 Sanitize all user inputs:
 
 ```typescript
-import DOMPurify from "https://esm.sh/dompurify"
+import DOMPurify from 'https://esm.sh/dompurify';
 
-const sanitized = DOMPurify.sanitize(userInput)
+const sanitized = DOMPurify.sanitize(userInput);
 ```
 
 ## Monitoring
@@ -333,15 +340,15 @@ supabase functions logs hello --since 1h
 Integrate with Sentry:
 
 ```typescript
-import * as Sentry from "https://deno.land/x/sentry/mod.ts"
+import * as Sentry from 'https://deno.land/x/sentry/mod.ts';
 
-Sentry.init({ dsn: Deno.env.get("SENTRY_DSN") })
+Sentry.init({ dsn: Deno.env.get('SENTRY_DSN') });
 
 try {
   // Your code
 } catch (error) {
-  Sentry.captureException(error)
-  throw error
+  Sentry.captureException(error);
+  throw error;
 }
 ```
 
@@ -352,20 +359,20 @@ try {
 Create `hello_test.ts`:
 
 ```typescript
-import { assertEquals } from "https://deno.land/std@0.177.0/testing/asserts.ts"
+import { assertEquals } from 'https://deno.land/std@0.177.0/testing/asserts.ts';
 
-Deno.test("hello function returns greeting", async () => {
-  const req = new Request("http://localhost/", {
-    method: "POST",
-    body: JSON.stringify({ name: "Test" }),
-  })
+Deno.test('hello function returns greeting', async () => {
+  const req = new Request('http://localhost/', {
+    method: 'POST',
+    body: JSON.stringify({ name: 'Test' }),
+  });
 
   // Test your function logic
-  const response = await handler(req)
-  const data = await response.json()
+  const response = await handler(req);
+  const data = await response.json();
 
-  assertEquals(data.message.includes("Test"), true)
-})
+  assertEquals(data.message.includes('Test'), true);
+});
 ```
 
 Run tests:

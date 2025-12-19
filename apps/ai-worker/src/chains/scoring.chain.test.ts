@@ -103,9 +103,7 @@ describe('LeadScoringChain', () => {
       const validation = chain.validateScoringResult(result);
 
       expect(validation.valid).toBe(false);
-      expect(validation.issues.some((issue) => issue.includes('Low confidence'))).toBe(
-        true
-      );
+      expect(validation.issues.some((issue) => issue.includes('Low confidence'))).toBe(true);
     });
 
     it('should flag missing factors', () => {
@@ -119,9 +117,7 @@ describe('LeadScoringChain', () => {
       const validation = chain.validateScoringResult(result);
 
       expect(validation.valid).toBe(false);
-      expect(validation.issues.some((issue) => issue.includes('No scoring factors'))).toBe(
-        true
-      );
+      expect(validation.issues.some((issue) => issue.includes('No scoring factors'))).toBe(true);
     });
   });
 

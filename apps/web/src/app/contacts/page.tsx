@@ -57,9 +57,15 @@ export default function ContactsPage() {
               IntelliFlow CRM
             </a>
             <div className="flex items-center space-x-4">
-              <a href="/leads" className="text-gray-600 dark:text-gray-300">Leads</a>
-              <a href="/contacts" className="text-primary font-medium">Contacts</a>
-              <a href="/analytics" className="text-gray-600 dark:text-gray-300">Analytics</a>
+              <a href="/leads" className="text-gray-600 dark:text-gray-300">
+                Leads
+              </a>
+              <a href="/contacts" className="text-primary font-medium">
+                Contacts
+              </a>
+              <a href="/analytics" className="text-gray-600 dark:text-gray-300">
+                Analytics
+              </a>
             </div>
           </div>
         </div>
@@ -68,9 +74,7 @@ export default function ContactsPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Contacts
-            </h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Contacts</h2>
             <p className="text-gray-600 dark:text-gray-300">
               Manage your customer contacts and relationships
             </p>

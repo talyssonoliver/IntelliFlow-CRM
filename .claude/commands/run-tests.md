@@ -3,11 +3,13 @@
 Execute tests across the monorepo with coverage and reporting.
 
 ## Usage
+
 ```
 /run-tests [scope] [--coverage] [--watch] [--e2e]
 ```
 
 ## Arguments
+
 - `scope`: Workspace or test path filter
 - `--coverage`: Generate coverage report
 - `--watch`: Run in watch mode (TDD)
@@ -16,6 +18,7 @@ Execute tests across the monorepo with coverage and reporting.
 ## Test Types
 
 ### Unit Tests (Vitest)
+
 ```bash
 # All unit tests
 /run-tests
@@ -28,6 +31,7 @@ Execute tests across the monorepo with coverage and reporting.
 ```
 
 ### Integration Tests
+
 ```bash
 # API integration tests
 /run-tests apps/api --coverage
@@ -37,6 +41,7 @@ Execute tests across the monorepo with coverage and reporting.
 ```
 
 ### E2E Tests (Playwright)
+
 ```bash
 # All E2E tests
 /run-tests --e2e
@@ -47,12 +52,12 @@ Execute tests across the monorepo with coverage and reporting.
 
 ## Coverage Targets
 
-| Layer | Target |
-|-------|--------|
-| Domain | >95% |
-| Application | >90% |
-| API Routes | >85% |
-| Overall | >90% |
+| Layer       | Target |
+| ----------- | ------ |
+| Domain      | >95%   |
+| Application | >90%   |
+| API Routes  | >85%   |
+| Overall     | >90%   |
 
 ## Output
 
@@ -62,6 +67,7 @@ Execute tests across the monorepo with coverage and reporting.
 - Performance metrics
 
 ## Example
+
 ```bash
 # TDD workflow
 /run-tests packages/domain --watch

@@ -1,0 +1,715 @@
+# =============================================================================
+# IntelliFlow CRM - Plan Overrides v1.0
+# =============================================================================
+# PURPOSE: Surgical overlay on Sprint_plan.csv to fix cycles, define gates,
+#          and handle cross-sprint dependencies WITHOUT modifying the baseline CSV.
+#
+# USAGE: This file is read by the plan-linter alongside Sprint_plan.csv and
+#        validation.yaml to produce a composite view of the sprint plan.
+#
+# FIELDS:
+#   tier: A|B|C - Task priority tier
+#     - A: Critical unblockers, high fan-out tasks (require explicit gates)
+#     - B: Important tasks (recommended gates)
+#     - C: Standard tasks (default gates)
+#   gate_profile: List of validation gates to run
+#   override_deps_add: Dependencies to add (breaks cycles, adds missing deps)
+#   override_deps_remove: Dependencies to remove (breaks cycles)
+#   sprint_override: Override target sprint (for cross-sprint fixes)
+#   exception_policy: Documented exception (waiver, stub, contract)
+#   acceptance_owner: Who signs off on completion
+#   debt_allowed: yes|no - Whether technical debt is acceptable
+#   waiver_expiry: ISO date when waiver expires (requires re-evaluation)
+#   evidence_required: List of required evidence artifacts
+#   notes: Additional context or ADR references
+# =============================================================================
+
+schema_version: '1.0.0'
+last_updated: '2025-12-17'
+maintainer: 'Tech Lead'
+
+# -----------------------------------------------------------------------------
+# TIER A: Critical Unblockers and High Fan-Out Tasks
+# These tasks have many dependents and require explicit validation gates
+# -----------------------------------------------------------------------------
+
+IFC-000:
+  tier: A
+  gate_profile:
+    - spec_check
+    - manual_review
+  acceptance_owner: 'CEO + CTO + CFO'
+  debt_allowed: no
+  evidence_required:
+    - artifacts/reports/business-case.pdf
+    - artifacts/reports/swot-analysis.xlsx
+    - docs/planning/ADR-000-feasibility.md
+  acceptance_criteria:
+    - Business case document reviewed and approved
+    - SWOT analysis covers all key risks
+    - Feasibility ADR signed by all stakeholders
+    - Budget allocation confirmed
+  notes: 'Go/No-Go gate for entire project. No automation - requires leadership sign-off.'
+
+EXC-INIT-001:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - spec_check
+    - artifact_check
+  acceptance_owner: 'Tech Lead'
+  debt_allowed: no
+  evidence_required:
+    - docs/agent/setup-complete-checklist.md
+    - artifacts/metrics/automation-metrics.json
+    - artifacts/misc/pipeline-status.yaml
+  acceptance_criteria:
+    - Setup checklist 100% complete
+    - All automation metrics captured
+    - Pipeline status shows green
+    - No manual interventions required
+  notes: 'Root task for Sprint 0. Must complete before any other Sprint 0 task.'
+
+AI-SETUP-001:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - artifact_check
+    - command_test
+  acceptance_owner: 'AI Specialist'
+  debt_allowed: no
+  evidence_required:
+    - .claude/commands/*
+    - .claude/hooks/*
+    - artifacts/misc/command-test-results.csv
+  acceptance_criteria:
+    - All Claude commands functional and tested
+    - Hooks execute without errors
+    - Command test results show 100% pass rate
+  notes: 'High fan-out: 4 direct dependents (AI-SETUP-002, AI-SETUP-003, ENV-001-AI, AUTOMATION-001)'
+
+AI-SETUP-002:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - manual_review
+  acceptance_owner: 'DevOps Engineer'
+  debt_allowed: no
+  evidence_required:
+    - docs/shared/copilot-instructions.md
+    - .github/copilot/*
+    - artifacts/misc/team-licenses.csv
+  acceptance_criteria:
+    - Copilot instructions documented
+    - All team members have valid licenses
+    - Copilot suggestions working in IDE
+  notes: 'Copilot setup for team. Manual verification of team access required.'
+
+AI-SETUP-003:
+  tier: B
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - security_scan
+  acceptance_owner: 'AI Specialist'
+  debt_allowed: yes
+  waiver_expiry: '2026-01-31'
+  evidence_required:
+    - tools/integrations/codex/*
+    - tools/integrations/jules/*
+    - artifacts/misc/sandbox-security.json
+  notes: 'External tool integration. Sandbox security is critical.'
+
+ENV-001-AI:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - turbo_validate
+  acceptance_owner: 'Tech Lead'
+  debt_allowed: no
+  evidence_required:
+    - turbo.json
+    - pnpm-workspace.yaml
+    - packages/*
+    - apps/*
+  acceptance_criteria:
+    - pnpm build succeeds for all packages
+    - Turbo caching is working
+    - All workspace packages resolve correctly
+  notes: 'High fan-out: 6 direct dependents. Monorepo foundation.'
+
+ENV-002-AI:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - commit_hooks_test
+  acceptance_owner: 'DevOps Engineer'
+  debt_allowed: no
+  evidence_required:
+    - .eslintrc.js
+    - .prettierrc
+    - .husky/*
+    - artifacts/misc/commitlint.config.js
+  acceptance_criteria:
+    - ESLint runs without config errors
+    - Prettier formats code correctly
+    - Pre-commit hooks execute on git commit
+  notes: 'Linting and formatting foundation. Direct dependent: ENV-005-AI'
+
+ENV-003-AI:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - docker_validate
+    - health_check
+  acceptance_owner: 'DevOps Engineer'
+  debt_allowed: no
+  evidence_required:
+    - docker-compose.yml
+    - infra/docker/*
+    - artifacts/misc/health-check.yaml
+  acceptance_criteria:
+    - docker compose up starts all services
+    - All containers healthy after 60 seconds
+    - Services accessible on expected ports
+  notes: 'Docker environment. Direct dependent: ENV-004-AI'
+
+ENV-004-AI:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - supabase_connection
+  acceptance_owner: 'Backend Dev'
+  debt_allowed: no
+  evidence_required:
+    - supabase/config.toml
+    - supabase/.gitignore
+  acceptance_criteria:
+    - supabase status returns healthy
+    - Database connection string works
+    - Supabase Studio accessible locally
+  notes: 'Supabase integration. Direct dependent: ENV-006-AI'
+
+ENV-005-AI:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - ci_workflow_validate
+  acceptance_owner: 'DevOps Engineer'
+  debt_allowed: no
+  evidence_required:
+    - .github/workflows/ci.yml
+    - .github/workflows/cd.yml
+  acceptance_criteria:
+    - CI workflow syntax is valid
+    - Workflow runs on push to main
+    - All jobs complete successfully
+  notes: 'CI/CD pipeline. Direct dependents: ENV-008-AI, ENV-013-AI'
+
+ENV-006-AI:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - db_migrate
+    - prisma_validate
+  acceptance_owner: 'Backend Dev'
+  debt_allowed: no
+  evidence_required:
+    - packages/db/prisma/schema.prisma
+    - packages/db/prisma/seed.ts
+  acceptance_criteria:
+    - Prisma schema is valid (prisma validate)
+    - Prisma client generates without errors
+    - Seed script runs successfully
+  notes: 'Prisma schema. Direct dependent: ENV-007-AI'
+
+ENV-007-AI:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - trpc_validate
+  acceptance_owner: 'Tech Lead'
+  debt_allowed: no
+  evidence_required:
+    - apps/api/src/modules/*
+    - packages/api-client/*
+  acceptance_criteria:
+    - tRPC router types are generated
+    - API client connects to server
+    - End-to-end type safety verified
+  notes: 'tRPC foundation. High fan-out: ENV-010-AI, ENV-011-AI, ENV-013-AI, ENV-015-AI'
+
+ENV-008-AI:
+  tier: B
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - otel_validate
+  acceptance_owner: 'DevOps Engineer'
+  debt_allowed: yes
+  waiver_expiry: '2026-02-28'
+  evidence_required:
+    - infra/monitoring/*
+    - artifacts/misc/otel-config.yaml
+  notes: 'Observability setup. Predictive monitoring can be MVP-first.'
+
+ENV-009-AI:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - lighthouse
+    - a11y_audit
+  acceptance_owner: 'Frontend Dev'
+  debt_allowed: no
+  evidence_required:
+    - apps/web/*
+    - apps/web/src/components/*
+    - packages/ui/src/components/*
+  acceptance_criteria:
+    - shadcn/ui components installed and themed
+    - Lighthouse score > 90
+    - No accessibility violations (axe-core)
+  notes: 'Frontend foundation. High fan-out: ENV-010-AI, ENV-012-AI, ENV-013-AI, ENV-014-AI, ENV-016-AI'
+
+ENV-010-AI:
+  tier: B
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - coverage_check
+  acceptance_owner: 'QA Lead'
+  debt_allowed: yes
+  waiver_expiry: '2026-01-31'
+  evidence_required:
+    - tests/*
+    - tests/e2e/*
+    - artifacts/coverage/coverage-report.html
+  notes: 'Test automation. Coverage target >95%.'
+
+ENV-011-AI:
+  tier: B
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - chain_test
+  acceptance_owner: 'AI Specialist'
+  debt_allowed: yes
+  waiver_expiry: '2026-01-31'
+  evidence_required:
+    - apps/ai-worker/src/chains/*
+  notes: 'LangChain integration. Cost tracking required.'
+
+ENV-012-AI:
+  tier: C
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - docs_build
+  acceptance_owner: 'Tech Writer'
+  debt_allowed: yes
+  waiver_expiry: '2026-02-28'
+  evidence_required:
+    - docs/*
+    - artifacts/misc/docusaurus.config.js
+  notes: 'Documentation generation.'
+
+ENV-013-AI:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - security_scan
+    - owasp_check
+  acceptance_owner: 'Security Engineer'
+  debt_allowed: no
+  evidence_required:
+    - docs/security/*
+    - artifacts/misc/security-scan-results.json
+  acceptance_criteria:
+    - Zero high/critical vulnerabilities in pnpm audit
+    - OWASP ZAP scan passes
+    - Security documentation complete
+  notes: 'Security implementation. Zero high vulnerabilities required.'
+
+ENV-014-AI:
+  tier: B
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - sonar_scan
+  acceptance_owner: 'Performance Engineer'
+  debt_allowed: yes
+  waiver_expiry: '2026-02-28'
+  evidence_required:
+    - sonar-project.properties
+    - artifacts/performance/*
+  notes: 'SonarQube integration.'
+
+ENV-015-AI:
+  tier: C
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+  acceptance_owner: 'Backend Dev'
+  debt_allowed: yes
+  waiver_expiry: '2026-02-28'
+  evidence_required:
+    - packages/platform/src/feature-flags/*
+  notes: 'Feature flags. Predictive rollout can be deferred.'
+
+ENV-016-AI:
+  tier: C
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - privacy_check
+  acceptance_owner: 'Frontend Dev'
+  debt_allowed: yes
+  waiver_expiry: '2026-02-28'
+  evidence_required:
+    - artifacts/misc/analytics/*
+    - artifacts/misc/privacy-config.json
+  notes: 'Privacy-first analytics.'
+
+# -----------------------------------------------------------------------------
+# CROSS-SPRINT DEPENDENCY OVERRIDE
+# ENV-017-AI depends on IFC-001 (Sprint 1). This creates a Sprint 0 → Sprint 1
+# violation. Resolution: Remove IFC-001 dependency, replace with stub contract.
+# -----------------------------------------------------------------------------
+
+ENV-017-AI:
+  tier: B
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - integration_test
+  acceptance_owner: 'Tech Lead'
+  debt_allowed: yes
+  waiver_expiry: '2026-01-15'
+  override_deps_remove:
+    - IFC-001 # Remove cross-sprint dependency
+  exception_policy: 'stub_contract'
+  evidence_required:
+    - tests/integration/*
+    - artifacts/misc/test-orchestration.json
+  notes: |
+    CROSS-SPRINT FIX: Original dependency on IFC-001 (Sprint 1) removed.
+    Replaced with stub contract: ENV-017-AI runs with existing Sprint 0
+    infrastructure. Full IFC-001 integration deferred to Sprint 1.
+    See: ADR-PLAN-001-env017-dependency.md
+
+ENV-018-AI:
+  tier: B
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - metrics_validate
+  acceptance_owner: 'PM'
+  debt_allowed: yes
+  waiver_expiry: '2026-01-31'
+  evidence_required:
+    - artifacts/misc/sprint-planning/*
+    - artifacts/misc/velocity-prediction.json
+  notes: 'Sprint planning. Depends on ENV-017-AI completing.'
+
+AUTOMATION-001:
+  tier: B
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - agent_test
+  acceptance_owner: 'AI Specialist'
+  debt_allowed: yes
+  waiver_expiry: '2026-02-28'
+  evidence_required:
+    - artifacts/misc/agent-coordination/*
+    - artifacts/misc/orchestration-config.yaml
+  notes: 'AI agent coordination. Multi-agent orchestration.'
+
+AUTOMATION-002:
+  tier: B
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - dashboard_test
+  acceptance_owner: 'DevOps Engineer'
+  debt_allowed: yes
+  waiver_expiry: '2026-02-28'
+  evidence_required:
+    - artifacts/misc/ai-dashboard/*
+    - artifacts/misc/optimization-loop.yaml
+  notes: 'AI performance dashboard. Depends on AUTOMATION-001.'
+
+EXC-SEC-001:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - security_scan
+    - vault_check
+  acceptance_owner: 'Security Engineer'
+  debt_allowed: no
+  evidence_required:
+    - artifacts/misc/vault-config.yaml
+  acceptance_criteria:
+    - Vault server responds to health check
+    - Secrets are encrypted at rest
+    - Access policies documented and applied
+  notes: 'HashiCorp Vault setup. Critical security foundation.'
+
+IFC-160:
+  tier: B
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - artifact_path_lint
+  acceptance_owner: 'Tech Lead'
+  debt_allowed: no
+  evidence_required:
+    - docs/architecture/repo-layout.md
+  notes: 'Repository layout documentation and artifact path conventions.'
+
+# -----------------------------------------------------------------------------
+# GATE PROFILE DEFINITIONS
+# Mapping of gate_profile names to actual validation commands
+# -----------------------------------------------------------------------------
+
+gate_profiles:
+  build:
+    command: 'pnpm run build'
+    description: 'Build all packages'
+    required: true
+    timeout: 300
+
+  typecheck:
+    command: 'pnpm run typecheck'
+    description: 'TypeScript type checking'
+    required: true
+    timeout: 180
+
+  lint:
+    command: 'pnpm run lint'
+    description: 'ESLint code quality'
+    required: true
+    timeout: 120
+
+  unit:
+    command: 'pnpm test --run'
+    description: 'Unit test suite'
+    required: true
+    timeout: 300
+
+  coverage_check:
+    command: 'pnpm test --coverage --run'
+    description: 'Test coverage validation'
+    required: false
+    threshold:
+      global: 90
+      domain: 95
+
+  security_scan:
+    command: 'pnpm audit --audit-level=high'
+    description: 'Security vulnerability scan'
+    required: true
+    timeout: 180
+
+  owasp_check:
+    command: 'npx @zaproxy/cli quick-scan'
+    description: 'OWASP ZAP scan'
+    required: false
+    timeout: 600
+
+  spec_check:
+    command: 'test -f .specify/specifications/${TASK_ID}.md'
+    description: 'Specification document exists'
+    required: true
+
+  artifact_check:
+    command: 'tools/plan-linter/check-artifacts.sh ${TASK_ID}'
+    description: 'Verify required artifacts exist'
+    required: true
+
+  manual_review:
+    command: null
+    description: 'Requires human review and sign-off'
+    required: true
+    type: manual
+
+  turbo_validate:
+    command: 'npx turbo run build --dry-run'
+    description: 'Turborepo configuration validation'
+    required: true
+
+  docker_validate:
+    command: 'docker compose config -q'
+    description: 'Docker Compose validation'
+    required: true
+
+  health_check:
+    command: 'docker compose ps --format json | grep -q running'
+    description: 'Docker container health'
+    required: false
+
+  supabase_connection:
+    command: 'npx supabase status'
+    description: 'Supabase connection test'
+    required: true
+
+  ci_workflow_validate:
+    command: 'actionlint .github/workflows/*.yml'
+    description: 'GitHub Actions validation'
+    required: false
+
+  db_migrate:
+    command: 'pnpm --filter @intelliflow/db run db:migrate:status'
+    description: 'Database migration status'
+    required: true
+
+  prisma_validate:
+    command: 'pnpm --filter @intelliflow/db run db:generate'
+    description: 'Prisma schema validation'
+    required: true
+
+  trpc_validate:
+    command: 'pnpm --filter api run typecheck'
+    description: 'tRPC router type validation'
+    required: true
+
+  otel_validate:
+    command: 'test -f infra/monitoring/otel-collector.yaml'
+    description: 'OpenTelemetry configuration exists'
+    required: true
+
+  lighthouse:
+    command: 'npx lighthouse-ci autorun'
+    description: 'Lighthouse performance audit'
+    required: false
+    threshold:
+      performance: 90
+      accessibility: 100
+
+  a11y_audit:
+    command: 'npx axe-cli apps/web'
+    description: 'Accessibility audit'
+    required: false
+
+  docs_build:
+    command: 'pnpm --filter docs run build'
+    description: 'Documentation build'
+    required: true
+
+  sonar_scan:
+    command: 'sonar-scanner'
+    description: 'SonarQube analysis'
+    required: false
+    timeout: 600
+
+  privacy_check:
+    command: 'test -f artifacts/misc/privacy-config.json'
+    description: 'Privacy configuration exists'
+    required: true
+
+  integration_test:
+    command: 'pnpm test:integration --run'
+    description: 'Integration test suite'
+    required: false
+    timeout: 600
+
+  metrics_validate:
+    command: 'test -f artifacts/misc/velocity-prediction.json'
+    description: 'Sprint metrics exist'
+    required: true
+
+  agent_test:
+    command: 'pnpm --filter ai-worker test:agents'
+    description: 'AI agent tests'
+    required: false
+
+  dashboard_test:
+    command: 'test -d artifacts/misc/ai-dashboard'
+    description: 'Dashboard artifacts exist'
+    required: true
+
+  vault_check:
+    command: 'vault status || test -f artifacts/misc/vault-config.yaml'
+    description: 'Vault configuration'
+    required: true
+
+  artifact_path_lint:
+    command: 'pnpm run lint:artifacts'
+    description: 'Artifact path validation'
+    required: true
+
+  commit_hooks_test:
+    command: 'test -x .husky/pre-commit'
+    description: 'Git hooks executable'
+    required: true
+
+  chain_test:
+    command: 'pnpm --filter ai-worker test:chains'
+    description: 'LangChain tests'
+    required: false
+
+  command_test:
+    command: 'test -f artifacts/misc/command-test-results.csv'
+    description: 'Claude command tests'
+    required: true
+
+# -----------------------------------------------------------------------------
+# METADATA
+# -----------------------------------------------------------------------------
+
+_meta:
+  description: 'Plan overrides for Sprint 0 validation and governance'
+  created: '2025-12-17'
+  author: 'Plan Linter System'
+  version: '1.0.0'
+  sprint_scope: '0'
+  total_tasks: 27
+  tier_a_count: 14
+  tier_b_count: 10
+  tier_c_count: 3

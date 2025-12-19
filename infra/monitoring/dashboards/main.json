@@ -11,7 +11,18 @@
       "to": "now"
     },
     "timepicker": {
-      "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"]
+      "refresh_intervals": [
+        "5s",
+        "10s",
+        "30s",
+        "1m",
+        "5m",
+        "15m",
+        "30m",
+        "1h",
+        "2h",
+        "1d"
+      ]
     },
     "panels": [
       {
@@ -25,10 +36,7 @@
             "legendFormat": "{{method}} {{endpoint}}"
           }
         ],
-        "yaxes": [
-          { "label": "Requests/sec", "show": true },
-          { "show": false }
-        ]
+        "yaxes": [{ "label": "Requests/sec", "show": true }, { "show": false }]
       },
       {
         "id": 2,
@@ -41,10 +49,7 @@
             "legendFormat": "{{endpoint}} p95"
           }
         ],
-        "yaxes": [
-          { "label": "Latency (ms)", "show": true },
-          { "show": false }
-        ]
+        "yaxes": [{ "label": "Latency (ms)", "show": true }, { "show": false }]
       },
       {
         "id": 3,
@@ -151,10 +156,7 @@
             "legendFormat": "p99"
           }
         ],
-        "yaxes": [
-          { "label": "Score", "show": true },
-          { "show": false }
-        ]
+        "yaxes": [{ "label": "Score", "show": true }, { "show": false }]
       },
       {
         "id": 8,
@@ -171,10 +173,7 @@
             "legendFormat": "{{model}} p95"
           }
         ],
-        "yaxes": [
-          { "label": "Latency (ms)", "show": true },
-          { "show": false }
-        ]
+        "yaxes": [{ "label": "Latency (ms)", "show": true }, { "show": false }]
       },
       {
         "id": 9,
@@ -187,10 +186,7 @@
             "legendFormat": "{{operation}} {{table}}"
           }
         ],
-        "yaxes": [
-          { "label": "Queries/sec", "show": true },
-          { "show": false }
-        ]
+        "yaxes": [{ "label": "Queries/sec", "show": true }, { "show": false }]
       },
       {
         "id": 10,
@@ -218,10 +214,7 @@
             "expr": "intelliflow_users_active"
           }
         ],
-        "yaxes": [
-          { "label": "Users", "show": true },
-          { "show": false }
-        ]
+        "yaxes": [{ "label": "Users", "show": true }, { "show": false }]
       },
       {
         "id": 12,
@@ -233,10 +226,7 @@
             "expr": "intelliflow_system_memory_usage / 1024 / 1024"
           }
         ],
-        "yaxes": [
-          { "label": "MB", "show": true },
-          { "show": false }
-        ]
+        "yaxes": [{ "label": "MB", "show": true }, { "show": false }]
       },
       {
         "id": 13,
@@ -307,10 +297,7 @@
             "legendFormat": "{{stage}}"
           }
         ],
-        "yaxes": [
-          { "label": "Value (USD)", "show": true },
-          { "show": false }
-        ]
+        "yaxes": [{ "label": "Value (USD)", "show": true }, { "show": false }]
       }
     ],
     "annotations": {

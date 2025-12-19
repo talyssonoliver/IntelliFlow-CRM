@@ -5,6 +5,7 @@ import { countTasksByStatus, calculateCompletionRate } from '@/lib/csv-parser';
 import { groupBy } from '@/lib/utils';
 import React from 'react';
 import { Clock, CheckCircle2, PlayCircle } from 'lucide-react';
+import SwarmMonitor from './SwarmMonitor';
 
 interface DashboardViewProps {
   readonly tasks: Task[];
@@ -84,11 +85,14 @@ export default function DashboardView({ tasks, sections, onTaskClick }: Dashboar
         </div>
       </div>
 
+      {/* Swarm Monitor */}
+      <SwarmMonitor />
+
       {/* Section Breakdown */}
       <div className="bg-white rounded-lg shadow p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Tasks by Section</h3>
         <div className="space-y-4">
-          {sections.map(section => {
+          {sections.map((section) => {
             const sectionTasks = tasksBySection[section] || [];
             const sectionStats = countTasksByStatus(sectionTasks);
             const sectionCompletion = calculateCompletionRate(sectionTasks);
@@ -135,7 +139,7 @@ export default function DashboardView({ tasks, sections, onTaskClick }: Dashboar
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {tasks.slice(0, 10).map(task => (
+              {tasks.slice(0, 10).map((task) => (
                 <tr
                   key={task.id}
                   onClick={() => onTaskClick(task)}
@@ -145,20 +149,27 @@ export default function DashboardView({ tasks, sections, onTaskClick }: Dashboar
                     <span className="text-sm font-medium text-blue-600">{task.id}</span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-sm text-gray-900">{task.description.substring(0, 60)}...</span>
+                    <span className="text-sm text-gray-900">
+                      {task.description.substring(0, 60)}...
+                    </span>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <span className="text-sm text-gray-600">{task.owner}</span>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      (() => {
-                        if (task.status === 'Completed') return 'bg-green-100 text-green-800';
-                        if (task.status === 'In Progress') return 'bg-blue-100 text-blue-800';
+                    <span
+                      className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${(() => {
+                        if (task.status === 'Completed' || task.status === 'Done')
+                          return 'bg-green-100 text-green-800';
+                        if (task.status === 'In Progress' || task.status === 'Validating')
+                          return 'bg-blue-100 text-blue-800';
                         if (task.status === 'Blocked') return 'bg-red-100 text-red-800';
+                        if (task.status === 'Failed') return 'bg-red-200 text-red-900';
+                        if (task.status === 'Needs Human') return 'bg-orange-100 text-orange-800';
+                        if (task.status === 'In Review') return 'bg-purple-100 text-purple-800';
                         return 'bg-gray-100 text-gray-800';
-                      })()
-                    }`}>
+                      })()}`}
+                    >
                       {task.status}
                     </span>
                   </td>

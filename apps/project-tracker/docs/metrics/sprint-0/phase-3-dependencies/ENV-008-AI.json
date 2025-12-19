@@ -9,9 +9,7 @@
   "phase": "phase-3-dependencies",
   "stream": null,
   "dependencies": {
-    "required": [
-      "ENV-005-AI"
-    ],
+    "required": ["ENV-005-AI"],
     "verified_at": "2025-12-16T00:00:00Z",
     "all_satisfied": false
   },

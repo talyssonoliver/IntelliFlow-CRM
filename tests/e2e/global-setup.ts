@@ -18,9 +18,7 @@ async function globalSetup(config: FullConfig) {
   const missingEnvVars = requiredEnvVars.filter((varName) => !process.env[varName]);
 
   if (missingEnvVars.length > 0) {
-    console.warn(
-      `⚠️  Warning: Missing environment variables: ${missingEnvVars.join(', ')}`
-    );
+    console.warn(`⚠️  Warning: Missing environment variables: ${missingEnvVars.join(', ')}`);
   }
 
   // Optional: Create test users or seed data

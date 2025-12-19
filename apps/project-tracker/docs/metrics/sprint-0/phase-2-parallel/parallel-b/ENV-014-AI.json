@@ -10,10 +10,7 @@
   "dependencies": {
     "all_satisfied": false,
     "verified_at": "2025-12-16T00:41:57Z",
-    "required": [
-      "ENV-001-AI",
-      "ENV-002-AI"
-    ]
+    "required": ["ENV-001-AI", "ENV-002-AI"]
   },
   "artifacts": {
     "created": [
@@ -164,36 +161,19 @@
   },
   "securityFeatures": {
     "vulnerabilityScanning": {
-      "tools": [
-        "Trivy",
-        "OWASP Dependency-Check",
-        "npm audit"
-      ],
+      "tools": ["Trivy", "OWASP Dependency-Check", "npm audit"],
       "coverage": [
         "OS packages",
         "application dependencies",
         "container images"
       ],
       "schedule": "daily + on-commit",
-      "reportFormats": [
-        "SARIF",
-        "JSON",
-        "HTML",
-        "table"
-      ]
+      "reportFormats": ["SARIF", "JSON", "HTML", "table"]
     },
     "staticAnalysis": {
-      "tools": [
-        "CodeQL"
-      ],
-      "languages": [
-        "javascript",
-        "typescript"
-      ],
-      "queries": [
-        "security-extended",
-        "security-and-quality"
-      ],
+      "tools": ["CodeQL"],
+      "languages": ["javascript", "typescript"],
+      "queries": ["security-extended", "security-and-quality"],
       "schedule": "on-pull-request"
     },
     "secretScanning": {
@@ -309,12 +289,7 @@
     "complianceFrameworks": 8,
     "protectedTeams": 12
   },
-  "relatedTasks": [
-    "ENV-001-AI",
-    "ENV-002-AI",
-    "ENV-013-AI",
-    "IFC-072"
-  ],
+  "relatedTasks": ["ENV-001-AI", "ENV-002-AI", "ENV-013-AI", "IFC-072"],
   "documentation": {
     "inline": "All configuration files include comprehensive inline documentation",
     "external": "SECURITY.md provides complete security policy and procedures",

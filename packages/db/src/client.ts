@@ -8,10 +8,7 @@ declare global {
 
 const createPrismaClient = () => {
   return new PrismaClient({
-    log:
-      process.env.NODE_ENV === 'development'
-        ? ['query', 'error', 'warn']
-        : ['error'],
+    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
   });
 };
 
@@ -24,7 +21,12 @@ if (process.env.NODE_ENV !== 'production') {
 
 // Utility for transactions
 export async function withTransaction<T>(
-  fn: (tx: Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>) => Promise<T>
+  fn: (
+    tx: Omit<
+      PrismaClient,
+      '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'
+    >
+  ) => Promise<T>
 ): Promise<T> {
   return prisma.$transaction(fn);
 }

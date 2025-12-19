@@ -11,16 +11,16 @@ export async function GET() {
   try {
     // Sprint_plan.csv is now in the metrics _global folder
     const csvPath = join(process.cwd(), 'docs', 'metrics', '_global', 'Sprint_plan.csv');
-    
+
     // Debug logging
     console.log('Looking for CSV at:', csvPath);
     console.log('File exists:', existsSync(csvPath));
     console.log('Current working directory:', process.cwd());
-    
+
     if (!existsSync(csvPath)) {
       throw new Error(`File not found at: ${csvPath}`);
     }
-    
+
     const csvContent = await readFile(csvPath, 'utf-8');
 
     return new NextResponse(csvContent, {
@@ -28,8 +28,8 @@ export async function GET() {
         'Content-Type': 'text/csv',
         'Content-Disposition': 'inline; filename="Sprint_plan.csv"',
         'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-        'Pragma': 'no-cache',
-        'Expires': '0',
+        Pragma: 'no-cache',
+        Expires: '0',
       },
     });
   } catch (error) {

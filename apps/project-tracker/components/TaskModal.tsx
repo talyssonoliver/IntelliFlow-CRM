@@ -10,15 +10,18 @@ interface TaskModalProps {
 
 export default function TaskModal({ task, onClose }: TaskModalProps) {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={onClose}>
-      <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-gray-900">{task.id}</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -43,12 +46,17 @@ export default function TaskModal({ task, onClose }: TaskModalProps) {
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-500 mb-1">Status</h3>
-              <span className={`px-3 py-1 inline-flex text-sm font-semibold rounded-full ${
-                task.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                task.status === 'In Progress' ? 'bg-blue-100 text-blue-800' :
-                task.status === 'Blocked' ? 'bg-red-100 text-red-800' :
-                'bg-gray-100 text-gray-800'
-              }`}>
+              <span
+                className={`px-3 py-1 inline-flex text-sm font-semibold rounded-full ${
+                  task.status === 'Completed'
+                    ? 'bg-green-100 text-green-800'
+                    : task.status === 'In Progress'
+                      ? 'bg-blue-100 text-blue-800'
+                      : task.status === 'Blocked'
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-gray-100 text-gray-800'
+                }`}
+              >
                 {task.status}
               </span>
             </div>
@@ -87,7 +95,7 @@ export default function TaskModal({ task, onClose }: TaskModalProps) {
             <div>
               <h3 className="text-sm font-medium text-gray-500 mb-2">Dependencies</h3>
               <div className="flex flex-wrap gap-2">
-                {task.dependencies.map(dep => (
+                {task.dependencies.map((dep) => (
                   <span key={dep} className="px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded">
                     {dep}
                   </span>
@@ -102,7 +110,9 @@ export default function TaskModal({ task, onClose }: TaskModalProps) {
               <h3 className="text-sm font-medium text-gray-500 mb-2">Artifacts</h3>
               <div className="bg-gray-50 rounded p-3 font-mono text-sm space-y-1">
                 {task.artifacts.map((artifact, i) => (
-                  <div key={i} className="text-gray-700">{artifact}</div>
+                  <div key={i} className="text-gray-700">
+                    {artifact}
+                  </div>
                 ))}
               </div>
             </div>

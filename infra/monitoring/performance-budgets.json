@@ -1,0 +1,339 @@
+{
+  "$schema": "https://json.schemastore.org/performance-budget.json",
+  "description": "Performance budgets for IntelliFlow CRM (Sprint Plan ENV-015-AI)",
+  "version": "1.0.0",
+  "lastUpdated": "2025-12-15T00:00:00.000Z",
+  "budgets": [
+    {
+      "category": "API Performance",
+      "description": "Backend API response time targets from Sprint Plan",
+      "metrics": [
+        {
+          "name": "api-response-p95",
+          "target": 100,
+          "unit": "ms",
+          "threshold": "error",
+          "description": "95th percentile API response time must be under 100ms"
+        },
+        {
+          "name": "api-response-p99",
+          "target": 200,
+          "unit": "ms",
+          "threshold": "error",
+          "description": "99th percentile API response time must be under 200ms"
+        },
+        {
+          "name": "api-response-avg",
+          "target": 50,
+          "unit": "ms",
+          "threshold": "warn",
+          "description": "Average API response time should be under 50ms"
+        },
+        {
+          "name": "api-response-max",
+          "target": 500,
+          "unit": "ms",
+          "threshold": "warn",
+          "description": "Maximum API response time should be under 500ms"
+        }
+      ]
+    },
+    {
+      "category": "Frontend Performance (Core Web Vitals)",
+      "description": "Frontend load time and interaction metrics from Sprint Plan",
+      "metrics": [
+        {
+          "name": "first-contentful-paint",
+          "target": 1000,
+          "unit": "ms",
+          "threshold": "error",
+          "description": "First Contentful Paint (FCP) must be under 1s - Sprint Plan requirement"
+        },
+        {
+          "name": "largest-contentful-paint",
+          "target": 2500,
+          "unit": "ms",
+          "threshold": "error",
+          "description": "Largest Contentful Paint (LCP) must be under 2.5s - Sprint Plan requirement"
+        },
+        {
+          "name": "first-input-delay",
+          "target": 100,
+          "unit": "ms",
+          "threshold": "error",
+          "description": "First Input Delay (FID) must be under 100ms - Sprint Plan requirement"
+        },
+        {
+          "name": "cumulative-layout-shift",
+          "target": 0.1,
+          "unit": "score",
+          "threshold": "error",
+          "description": "Cumulative Layout Shift (CLS) must be under 0.1"
+        },
+        {
+          "name": "time-to-interactive",
+          "target": 3500,
+          "unit": "ms",
+          "threshold": "warn",
+          "description": "Time to Interactive (TTI) should be under 3.5s"
+        },
+        {
+          "name": "total-blocking-time",
+          "target": 300,
+          "unit": "ms",
+          "threshold": "warn",
+          "description": "Total Blocking Time (TBT) should be under 300ms"
+        },
+        {
+          "name": "speed-index",
+          "target": 3000,
+          "unit": "ms",
+          "threshold": "warn",
+          "description": "Speed Index should be under 3s"
+        }
+      ]
+    },
+    {
+      "category": "Database Performance",
+      "description": "Database query performance targets from Sprint Plan",
+      "metrics": [
+        {
+          "name": "db-query-simple",
+          "target": 20,
+          "unit": "ms",
+          "threshold": "error",
+          "description": "Simple database queries must complete in under 20ms - Sprint Plan requirement"
+        },
+        {
+          "name": "db-query-complex",
+          "target": 100,
+          "unit": "ms",
+          "threshold": "warn",
+          "description": "Complex database queries should complete in under 100ms"
+        },
+        {
+          "name": "db-connection-pool",
+          "target": 50,
+          "unit": "connections",
+          "threshold": "warn",
+          "description": "Database connection pool should not exceed 50 connections"
+        }
+      ]
+    },
+    {
+      "category": "AI Performance",
+      "description": "AI processing time targets from Sprint Plan",
+      "metrics": [
+        {
+          "name": "ai-lead-scoring",
+          "target": 2000,
+          "unit": "ms",
+          "threshold": "error",
+          "description": "AI lead scoring must complete in under 2s - Sprint Plan requirement"
+        },
+        {
+          "name": "ai-prediction",
+          "target": 2000,
+          "unit": "ms",
+          "threshold": "warn",
+          "description": "AI predictions should complete in under 2s"
+        },
+        {
+          "name": "ai-embedding-generation",
+          "target": 1000,
+          "unit": "ms",
+          "threshold": "warn",
+          "description": "Vector embedding generation should complete in under 1s"
+        },
+        {
+          "name": "ai-rag-query",
+          "target": 3000,
+          "unit": "ms",
+          "threshold": "warn",
+          "description": "RAG queries should complete in under 3s"
+        }
+      ]
+    },
+    {
+      "category": "Build & Test Performance",
+      "description": "CI/CD pipeline performance targets from Sprint Plan",
+      "metrics": [
+        {
+          "name": "build-full-monorepo",
+          "target": 180000,
+          "unit": "ms",
+          "threshold": "warn",
+          "description": "Full monorepo build should complete in under 3 minutes - Sprint Plan requirement"
+        },
+        {
+          "name": "test-suite-complete",
+          "target": 900000,
+          "unit": "ms",
+          "threshold": "warn",
+          "description": "Complete test suite should run in under 15 minutes - Sprint Plan requirement"
+        },
+        {
+          "name": "test-unit",
+          "target": 60000,
+          "unit": "ms",
+          "threshold": "warn",
+          "description": "Unit tests should complete in under 1 minute"
+        },
+        {
+          "name": "test-integration",
+          "target": 300000,
+          "unit": "ms",
+          "threshold": "warn",
+          "description": "Integration tests should complete in under 5 minutes"
+        },
+        {
+          "name": "test-e2e",
+          "target": 600000,
+          "unit": "ms",
+          "threshold": "warn",
+          "description": "E2E tests should complete in under 10 minutes"
+        }
+      ]
+    },
+    {
+      "category": "Resource Budgets",
+      "description": "Asset size and resource budgets for optimal loading",
+      "metrics": [
+        {
+          "name": "bundle-javascript",
+          "target": 300,
+          "unit": "KB",
+          "threshold": "error",
+          "description": "Total JavaScript bundle size must be under 300KB"
+        },
+        {
+          "name": "bundle-css",
+          "target": 50,
+          "unit": "KB",
+          "threshold": "error",
+          "description": "Total CSS bundle size must be under 50KB"
+        },
+        {
+          "name": "page-total-size",
+          "target": 1000,
+          "unit": "KB",
+          "threshold": "error",
+          "description": "Total page size must be under 1MB"
+        },
+        {
+          "name": "images-total",
+          "target": 500,
+          "unit": "KB",
+          "threshold": "warn",
+          "description": "Total image size should be under 500KB"
+        },
+        {
+          "name": "fonts-total",
+          "target": 100,
+          "unit": "KB",
+          "threshold": "warn",
+          "description": "Total font files should be under 100KB"
+        },
+        {
+          "name": "third-party-resources",
+          "target": 200,
+          "unit": "KB",
+          "threshold": "warn",
+          "description": "Third-party resources should be under 200KB"
+        },
+        {
+          "name": "http-requests",
+          "target": 50,
+          "unit": "requests",
+          "threshold": "warn",
+          "description": "Total HTTP requests should be under 50"
+        }
+      ]
+    },
+    {
+      "category": "Lighthouse Scores",
+      "description": "Lighthouse audit scores (0-100 scale)",
+      "metrics": [
+        {
+          "name": "lighthouse-performance",
+          "target": 90,
+          "unit": "score",
+          "threshold": "error",
+          "description": "Lighthouse Performance score must be 90 or higher - Sprint Plan requirement"
+        },
+        {
+          "name": "lighthouse-accessibility",
+          "target": 90,
+          "unit": "score",
+          "threshold": "warn",
+          "description": "Lighthouse Accessibility score should be 90 or higher"
+        },
+        {
+          "name": "lighthouse-best-practices",
+          "target": 90,
+          "unit": "score",
+          "threshold": "warn",
+          "description": "Lighthouse Best Practices score should be 90 or higher"
+        },
+        {
+          "name": "lighthouse-seo",
+          "target": 90,
+          "unit": "score",
+          "threshold": "warn",
+          "description": "Lighthouse SEO score should be 90 or higher"
+        }
+      ]
+    },
+    {
+      "category": "Server Performance",
+      "description": "Server-side performance metrics",
+      "metrics": [
+        {
+          "name": "server-response-time",
+          "target": 200,
+          "unit": "ms",
+          "threshold": "error",
+          "description": "Server response time (TTFB) must be under 200ms"
+        },
+        {
+          "name": "server-cpu-usage",
+          "target": 70,
+          "unit": "percent",
+          "threshold": "warn",
+          "description": "Server CPU usage should stay below 70%"
+        },
+        {
+          "name": "server-memory-usage",
+          "target": 80,
+          "unit": "percent",
+          "threshold": "warn",
+          "description": "Server memory usage should stay below 80%"
+        },
+        {
+          "name": "server-error-rate",
+          "target": 1,
+          "unit": "percent",
+          "threshold": "error",
+          "description": "Server error rate must be under 1%"
+        }
+      ]
+    }
+  ],
+  "references": {
+    "sprintPlan": "Sprint_plan.csv",
+    "tasks": ["ENV-015-AI"],
+    "documentation": ["docs/planning/adr/", "CLAUDE.md"],
+    "externalStandards": [
+      "https://web.dev/vitals/",
+      "https://web.dev/performance-scoring/",
+      "https://github.com/GoogleChrome/lighthouse/blob/main/docs/performance-budgets.md"
+    ]
+  },
+  "notes": [
+    "All metrics aligned with IntelliFlow CRM Sprint Plan requirements",
+    "Error thresholds will fail CI/CD pipeline if exceeded",
+    "Warning thresholds will generate alerts but allow pipeline to continue",
+    "Budgets should be reviewed and adjusted after each sprint",
+    "Baseline measurements are stored in artifacts/benchmarks/baseline.json"
+  ]
+}

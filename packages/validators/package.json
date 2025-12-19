@@ -8,24 +8,44 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     },
     "./lead": {
+      "types": "./dist/lead.d.ts",
       "import": "./dist/lead.mjs",
-      "require": "./dist/lead.js",
-      "types": "./dist/lead.d.ts"
+      "require": "./dist/lead.js"
     },
     "./contact": {
+      "types": "./dist/contact.d.ts",
       "import": "./dist/contact.mjs",
-      "require": "./dist/contact.js",
-      "types": "./dist/contact.d.ts"
+      "require": "./dist/contact.js"
+    },
+    "./account": {
+      "types": "./dist/account.d.ts",
+      "import": "./dist/account.mjs",
+      "require": "./dist/account.js"
+    },
+    "./opportunity": {
+      "types": "./dist/opportunity.d.ts",
+      "import": "./dist/opportunity.mjs",
+      "require": "./dist/opportunity.js"
+    },
+    "./task": {
+      "types": "./dist/task.d.ts",
+      "import": "./dist/task.mjs",
+      "require": "./dist/task.js"
+    },
+    "./common": {
+      "types": "./dist/common.d.ts",
+      "import": "./dist/common.mjs",
+      "require": "./dist/common.js"
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts src/lead.ts src/contact.ts --format cjs,esm --dts",
-    "dev": "tsup src/index.ts src/lead.ts src/contact.ts --format cjs,esm --dts --watch",
+    "build": "tsup src/index.ts src/lead.ts src/contact.ts src/account.ts src/opportunity.ts src/task.ts src/common.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts src/lead.ts src/contact.ts src/account.ts src/opportunity.ts src/task.ts src/common.ts --format cjs,esm --dts --watch",
     "clean": "rm -rf dist .turbo",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/",

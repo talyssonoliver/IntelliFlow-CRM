@@ -3,11 +3,13 @@
 Create and validate a Prisma database migration.
 
 ## Usage
+
 ```
 /create-migration <name> [--validate-only] [--apply]
 ```
 
 ## Arguments
+
 - `name`: Migration name (snake_case, descriptive)
 - `--validate-only`: Validate schema without creating migration
 - `--apply`: Apply migration after creation
@@ -44,6 +46,7 @@ infra/supabase/migrations/
 ```
 
 ## Example
+
 ```bash
 # Create migration for adding lead scoring
 /create-migration add_lead_scoring --apply

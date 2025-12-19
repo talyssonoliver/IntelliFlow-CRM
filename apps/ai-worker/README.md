@@ -8,15 +8,19 @@ The AI Worker handles all AI-powered features in IntelliFlow CRM:
 
 - **Lead Scoring**: Automated lead quality scoring using LLM analysis
 - **Lead Qualification**: Intelligent lead qualification with BANT framework
+- **Embedding Generation**: Vector embeddings for semantic search with pgvector
 - **Agent Framework**: Extensible multi-agent system for complex workflows
 - **Cost Tracking**: Built-in cost monitoring and limits
 - **Structured Outputs**: Type-safe AI responses using Zod schemas
+- **Retry & Resilience**: Exponential backoff, circuit breakers, and error
+  handling
 
 ## Features
 
 ### 1. Lead Scoring Chain
 
 LangChain-based pipeline that scores leads from 0-100 based on:
+
 - Contact information completeness
 - Engagement indicators
 - Qualification signals
@@ -30,7 +34,7 @@ const result = await leadScoringChain.scoreLead({
   firstName: 'John',
   company: 'Acme Corp',
   title: 'VP Sales',
-  source: 'WEBSITE'
+  source: 'WEBSITE',
 });
 
 console.log(result.score); // 85
@@ -43,14 +47,17 @@ console.log(result.factors); // Detailed scoring factors
 Specialized agent for lead qualification with detailed analysis:
 
 ```typescript
-import { qualificationAgent, createQualificationTask } from '@intelliflow/ai-worker';
+import {
+  qualificationAgent,
+  createQualificationTask,
+} from '@intelliflow/ai-worker';
 
 const task = createQualificationTask({
   leadId: 'lead-123',
   email: 'john@acme.com',
   company: 'Acme Corp',
   title: 'VP Sales',
-  source: 'WEBSITE'
+  source: 'WEBSITE',
 });
 
 const result = await qualificationAgent.execute(task);
@@ -60,7 +67,46 @@ console.log(result.output.qualificationLevel); // 'HIGH'
 console.log(result.output.recommendedActions); // Next steps
 ```
 
-### 3. Base Agent Framework
+### 3. Embedding Chain
+
+Generate vector embeddings for semantic search and RAG:
+
+```typescript
+import { embeddingChain } from '@intelliflow/ai-worker';
+
+// Generate single embedding
+const result = await embeddingChain.generateEmbedding({
+  text: 'IntelliFlow CRM is an AI-powered customer relationship management system',
+  metadata: { type: 'product_description' },
+});
+
+console.log(result.vector); // [0.1, 0.2, ..., 1536 dimensions]
+console.log(result.dimensions); // 1536
+
+// Batch processing
+const batchResult = await embeddingChain.generateBatchEmbeddings([
+  { text: 'Document 1' },
+  { text: 'Document 2' },
+  { text: 'Document 3' },
+]);
+
+// Semantic search
+const similar = await embeddingChain.findMostSimilar({
+  query: 'CRM features',
+  documents: [
+    { text: 'Lead management and scoring' },
+    { text: 'Email marketing campaigns' },
+    { text: 'Sales pipeline tracking' },
+  ],
+  topK: 2,
+});
+
+// Format for pgvector
+const pgvectorString = embeddingChain.formatForPgvector(result.vector);
+// Store in Supabase: INSERT INTO documents (embedding) VALUES (pgvectorString)
+```
+
+### 4. Base Agent Framework
 
 Extensible framework for building custom agents:
 
@@ -68,13 +114,40 @@ Extensible framework for building custom agents:
 import { BaseAgent, AgentTask } from '@intelliflow/ai-worker';
 
 class CustomAgent extends BaseAgent<InputType, OutputType> {
-  protected async executeTask(task: AgentTask<InputType, OutputType>): Promise<OutputType> {
+  protected async executeTask(
+    task: AgentTask<InputType, OutputType>
+  ): Promise<OutputType> {
     // Your agent logic here
   }
 }
 ```
 
-### 4. Cost Tracking
+### 5. Retry & Resilience
+
+Built-in retry logic with exponential backoff and circuit breakers:
+
+```typescript
+import { withRetry, withTimeout, CircuitBreaker } from '@intelliflow/ai-worker';
+
+// Retry with exponential backoff
+const result = await withRetry(async () => await someApiCall(), {
+  maxAttempts: 3,
+  initialDelay: 1000,
+  backoffMultiplier: 2,
+});
+
+// With timeout
+const resultWithTimeout = await withTimeout(
+  async () => await longRunningTask(),
+  5000 // 5 second timeout
+);
+
+// Circuit breaker
+const breaker = new CircuitBreaker(5, 60000); // 5 failures, 60s reset
+const result = await breaker.execute(async () => await apiCall());
+```
+
+### 6. Cost Tracking
 
 Automatic tracking of AI costs with limits:
 
@@ -200,16 +273,26 @@ apps/ai-worker/
 │   │   ├── qualification.agent.ts  # Lead qualification agent
 │   │   └── crew.ts                 # Multi-agent crew framework
 │   ├── chains/           # LangChain pipelines
-│   │   └── scoring.chain.ts        # Lead scoring chain
+│   │   ├── scoring.chain.ts        # Lead scoring chain
+│   │   ├── scoring.chain.test.ts   # Scoring tests
+│   │   ├── embedding.chain.ts      # Embedding generation
+│   │   └── embedding.chain.test.ts # Embedding tests
 │   ├── config/           # Configuration
 │   │   └── ai.config.ts            # AI config and model pricing
 │   ├── utils/            # Utilities
-│   │   └── cost-tracker.ts         # Cost tracking service
+│   │   ├── cost-tracker.ts         # Cost tracking service
+│   │   ├── logger.ts               # Structured logging
+│   │   └── retry.ts                # Retry logic & circuit breaker
 │   ├── types/            # TypeScript types
 │   │   └── index.ts
+│   ├── scripts/          # Utility scripts
+│   │   └── benchmark.ts            # Performance benchmarks
+│   ├── examples/         # Usage examples
+│   │   └── usage.ts
 │   └── index.ts          # Entry point
 ├── package.json
 ├── tsconfig.json
+├── vitest.config.ts
 └── README.md
 ```
 
@@ -223,7 +306,7 @@ All AI responses use Zod schemas for type safety:
 const outputSchema = z.object({
   score: z.number().min(0).max(100),
   confidence: z.number().min(0).max(1),
-  reasoning: z.string()
+  reasoning: z.string(),
 });
 
 type Output = z.infer<typeof outputSchema>;
@@ -241,6 +324,7 @@ Every AI operation includes a confidence score (0-1):
 #### 3. Cost Tracking
 
 Automatic tracking of:
+
 - Token usage per operation
 - Cost per model
 - Daily spending
@@ -249,6 +333,7 @@ Automatic tracking of:
 #### 4. Human-in-the-Loop
 
 Support for human oversight:
+
 - Confidence thresholds trigger manual review
 - All decisions are auditable
 - Feedback improves future predictions
@@ -264,19 +349,20 @@ const crew = createLeadProcessingCrew([
   scoringAgent,
   qualificationAgent,
   enrichmentAgent,
-  emailAgent
+  emailAgent,
 ]);
 
 const result = await crew.execute({
   id: 'task-123',
   description: 'Process new lead',
-  expectedOutput: 'Qualified lead with personalized email'
+  expectedOutput: 'Qualified lead with personalized email',
 });
 ```
 
 ## Performance
 
 Target metrics:
+
 - Lead scoring: <2s per lead
 - Lead qualification: <3s per lead
 - Batch processing: 30 leads/minute
@@ -285,6 +371,7 @@ Target metrics:
 ## Monitoring
 
 The AI Worker automatically logs:
+
 - Execution times
 - Token usage
 - Cost metrics
@@ -298,7 +385,7 @@ import pino from 'pino';
 
 const logger = pino({
   name: 'ai-worker',
-  level: 'info'
+  level: 'info',
 });
 ```
 

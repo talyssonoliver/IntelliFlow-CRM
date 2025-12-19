@@ -10,11 +10,7 @@ export const metadata: Metadata = {
   description: 'AI-Native Project Management Dashboard for IntelliFlow CRM',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>

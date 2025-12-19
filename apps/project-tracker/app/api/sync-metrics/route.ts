@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { syncMetricsFromCSV } from '@/lib/data-sync';
 import { join } from 'node:path';
+import { PATHS } from '@/lib/paths';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -11,8 +12,8 @@ export const revalidate = 0;
  */
 export async function POST() {
   try {
-    const csvPath = join(process.cwd(), 'docs', 'metrics', '_global', 'Sprint_plan.csv');
-    const metricsDir = join(process.cwd(), 'docs', 'metrics');
+    const csvPath = join(PATHS.sprintTracking.global, 'Sprint_plan.csv');
+    const metricsDir = PATHS.sprintTracking.root;
 
     console.log('Starting metrics sync...');
     const result = syncMetricsFromCSV(csvPath, metricsDir);
@@ -27,21 +28,24 @@ export async function POST() {
       });
     } else {
       console.error('❌ Sync failed:', result.errors);
-      return NextResponse.json({
-        success: false,
-        message: 'Sync completed with errors',
-        summary: result.summary,
-        filesUpdated: result.filesUpdated,
-        errors: result.errors,
-      }, { status: 207 }); // 207 Multi-Status (partial success)
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Sync completed with errors',
+          summary: result.summary,
+          filesUpdated: result.filesUpdated,
+          errors: result.errors,
+        },
+        { status: 207 }
+      ); // 207 Multi-Status (partial success)
     }
   } catch (error) {
     console.error('Error syncing metrics:', error);
     return NextResponse.json(
-      { 
+      {
         success: false,
         error: 'Failed to sync metrics',
-        details: error instanceof Error ? error.message : String(error)
+        details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
     );
@@ -56,6 +60,6 @@ export async function GET() {
   return NextResponse.json({
     message: 'Use POST to trigger metrics synchronization',
     endpoint: '/api/sync-metrics',
-    method: 'POST'
+    method: 'POST',
   });
 }

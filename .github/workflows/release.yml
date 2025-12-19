@@ -1,0 +1,383 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      release-type:
+        description: 'Release type (major, minor, patch, prerelease)'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+          - prerelease
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8.15.0'
+
+jobs:
+  check-release:
+    name: Check Release Needed
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.check.outputs.should_release }}
+      new_version: ${{ steps.check.outputs.new_version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check if release needed
+        id: check
+        run: |
+          # Get the latest tag
+          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "Latest tag: $latest_tag"
+
+          # Check if there are commits since last tag
+          commits_since_tag=$(git rev-list ${latest_tag}..HEAD --count)
+          echo "Commits since tag: $commits_since_tag"
+
+          if [ "$commits_since_tag" -gt 0 ] || [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "should_release=true" >> $GITHUB_OUTPUT
+
+            # Parse version
+            version=${latest_tag#v}
+            IFS='.' read -r major minor patch <<< "$version"
+
+            # Increment based on commit messages or manual input
+            release_type="${{ github.event.inputs.release-type }}"
+            if [ -z "$release_type" ]; then
+              # Auto-detect from commit messages
+              if git log ${latest_tag}..HEAD --format=%s | grep -qE '^feat!:|^fix!:|BREAKING CHANGE:'; then
+                release_type="major"
+              elif git log ${latest_tag}..HEAD --format=%s | grep -qE '^feat:'; then
+                release_type="minor"
+              else
+                release_type="patch"
+              fi
+            fi
+
+            # Calculate new version
+            case "$release_type" in
+              major)
+                major=$((major + 1))
+                minor=0
+                patch=0
+                ;;
+              minor)
+                minor=$((minor + 1))
+                patch=0
+                ;;
+              patch)
+                patch=$((patch + 1))
+                ;;
+              prerelease)
+                patch=$((patch + 1))
+                new_version="${major}.${minor}.${patch}-rc.$(date +%s)"
+                echo "new_version=$new_version" >> $GITHUB_OUTPUT
+                exit 0
+                ;;
+            esac
+
+            new_version="${major}.${minor}.${patch}"
+            echo "new_version=$new_version" >> $GITHUB_OUTPUT
+          else
+            echo "should_release=false" >> $GITHUB_OUTPUT
+          fi
+
+  generate-changelog:
+    name: Generate Changelog
+    runs-on: ubuntu-latest
+    needs: [check-release]
+    if: needs.check-release.outputs.should_release == 'true'
+    outputs:
+      changelog: ${{ steps.changelog.outputs.changelog }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+          if [ -z "$latest_tag" ]; then
+            # First release
+            changelog=$(git log --format="* %s (%h)" --reverse)
+          else
+            # Generate changelog since last tag
+            changelog=$(git log ${latest_tag}..HEAD --format="* %s (%h)" --reverse)
+          fi
+
+          # Categorize commits
+          features=$(echo "$changelog" | grep -E '^\* feat:' || true)
+          fixes=$(echo "$changelog" | grep -E '^\* fix:' || true)
+          docs=$(echo "$changelog" | grep -E '^\* docs:' || true)
+          chores=$(echo "$changelog" | grep -E '^\* (chore|ci|build|refactor|perf|test):' || true)
+          breaking=$(echo "$changelog" | grep -E '^\* .*!:' || true)
+
+          # Build structured changelog
+          structured_changelog="## What's Changed"
+
+          if [ -n "$breaking" ]; then
+            structured_changelog="${structured_changelog}\n\n### Breaking Changes\n${breaking}"
+          fi
+
+          if [ -n "$features" ]; then
+            structured_changelog="${structured_changelog}\n\n### Features\n${features}"
+          fi
+
+          if [ -n "$fixes" ]; then
+            structured_changelog="${structured_changelog}\n\n### Bug Fixes\n${fixes}"
+          fi
+
+          if [ -n "$docs" ]; then
+            structured_changelog="${structured_changelog}\n\n### Documentation\n${docs}"
+          fi
+
+          if [ -n "$chores" ]; then
+            structured_changelog="${structured_changelog}\n\n### Other Changes\n${chores}"
+          fi
+
+          # Save to file for artifact
+          echo "$structured_changelog" > CHANGELOG_DRAFT.md
+
+          # Save to output (escape newlines)
+          {
+            echo 'changelog<<EOF'
+            echo "$structured_changelog"
+            echo EOF
+          } >> $GITHUB_OUTPUT
+
+      - name: Upload changelog draft
+        uses: actions/upload-artifact@v4
+        with:
+          name: changelog-draft
+          path: CHANGELOG_DRAFT.md
+          retention-days: 7
+
+  build-release:
+    name: Build Release
+    runs-on: ubuntu-latest
+    needs: [check-release, generate-changelog]
+    if: needs.check-release.outputs.should_release == 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests
+        run: pnpm run test
+
+      - name: Build
+        run: pnpm run build
+        env:
+          NODE_ENV: production
+
+      - name: Create release archive
+        run: |
+          mkdir -p release-artifacts
+          tar -czf release-artifacts/intelliflow-crm-${{ needs.check-release.outputs.new_version }}.tar.gz \
+            apps/*/dist \
+            apps/*/.next \
+            package.json \
+            pnpm-lock.yaml \
+            turbo.json
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-build
+          path: release-artifacts/
+          retention-days: 90
+
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [check-release, generate-changelog, build-release]
+    if: needs.check-release.outputs.should_release == 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-build
+          path: release-artifacts
+
+      - name: Update version in package.json
+        run: |
+          version="${{ needs.check-release.outputs.new_version }}"
+          sed -i "s/\"version\": \".*\"/\"version\": \"$version\"/" package.json
+
+          # Update all workspace packages
+          find packages apps -name "package.json" -type f -exec sed -i "s/\"version\": \".*\"/\"version\": \"$version\"/" {} \;
+
+      - name: Commit version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json packages/*/package.json apps/*/package.json
+          git commit -m "chore(release): v${{ needs.check-release.outputs.new_version }}"
+          git push
+
+      - name: Create git tag
+        run: |
+          git tag -a "v${{ needs.check-release.outputs.new_version }}" -m "Release v${{ needs.check-release.outputs.new_version }}"
+          git push origin "v${{ needs.check-release.outputs.new_version }}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ needs.check-release.outputs.new_version }}
+          name: Release v${{ needs.check-release.outputs.new_version }}
+          body: |
+            # IntelliFlow CRM v${{ needs.check-release.outputs.new_version }}
+
+            ${{ needs.generate-changelog.outputs.changelog }}
+
+            ---
+
+            **Full Changelog**: https://github.com/${{ github.repository }}/compare/v${{ needs.check-release.outputs.new_version }}...HEAD
+          files: |
+            release-artifacts/*.tar.gz
+          draft: false
+          prerelease: ${{ contains(needs.check-release.outputs.new_version, 'rc') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  update-changelog:
+    name: Update CHANGELOG.md
+    runs-on: ubuntu-latest
+    needs: [check-release, generate-changelog, create-release]
+    if: needs.check-release.outputs.should_release == 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: main
+
+      - name: Update CHANGELOG.md
+        run: |
+          version="${{ needs.check-release.outputs.new_version }}"
+          date=$(date +%Y-%m-%d)
+
+          # Create or update CHANGELOG.md
+          if [ ! -f CHANGELOG.md ]; then
+            echo "# Changelog" > CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            echo "All notable changes to IntelliFlow CRM will be documented in this file." >> CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            echo "The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)," >> CHANGELOG.md
+            echo "and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)." >> CHANGELOG.md
+            echo "" >> CHANGELOG.md
+          fi
+
+          # Prepare new entry
+          cat > new_entry.txt << 'ENTRY_EOF'
+          ## [${version}] - ${date}
+
+          ${{ needs.generate-changelog.outputs.changelog }}
+
+          ENTRY_EOF
+
+          # Replace variables in the entry
+          sed -i "s/\${version}/${version}/g" new_entry.txt
+          sed -i "s/\${date}/${date}/g" new_entry.txt
+
+          # Insert after header
+          if grep -q "^## \[" CHANGELOG.md; then
+            # Insert before first existing version
+            awk '/^## \[/{if(!inserted){system("cat new_entry.txt");inserted=1}}{print}' CHANGELOG.md > CHANGELOG.md.tmp
+          else
+            # Append at the end
+            cat CHANGELOG.md new_entry.txt > CHANGELOG.md.tmp
+          fi
+          mv CHANGELOG.md.tmp CHANGELOG.md
+          rm new_entry.txt
+
+      - name: Commit CHANGELOG
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "docs: update CHANGELOG.md for v${{ needs.check-release.outputs.new_version }}" || echo "No changes to commit"
+          git push || echo "No changes to push"
+
+  notify-release:
+    name: Notify Release
+    runs-on: ubuntu-latest
+    needs: [check-release, create-release]
+    if: needs.check-release.outputs.should_release == 'true' && success()
+    steps:
+      - name: Send Slack notification
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          payload: |
+            {
+              "text": "New release published: v${{ needs.check-release.outputs.new_version }}",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "New Release: v${{ needs.check-release.outputs.new_version }}"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "IntelliFlow CRM has been released!"
+                  }
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View Release"
+                      },
+                      "url": "https://github.com/${{ github.repository }}/releases/tag/v${{ needs.check-release.outputs.new_version }}"
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+        continue-on-error: true

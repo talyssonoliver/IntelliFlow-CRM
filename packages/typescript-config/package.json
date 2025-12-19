@@ -3,5 +3,10 @@
   "version": "0.0.1",
   "private": true,
   "main": "index.js",
-  "files": ["base.json", "nextjs.json", "react.json"]
+  "files": [
+    "base.json",
+    "nextjs.json",
+    "react.json",
+    "react-library.json"
+  ]
 }

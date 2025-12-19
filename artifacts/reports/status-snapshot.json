@@ -1,0 +1,3057 @@
+{
+  "counts": {
+    "by_status": {
+      "Backlog": 10,
+      "Completed": 16,
+      "Planned": 278
+    },
+    "total": 304
+  },
+  "generated_at": "2025-12-18T21:08:56+00:00",
+  "source": {
+    "path": "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv",
+    "type": "csv"
+  },
+  "tasks": [
+    {
+      "artifacts_to_track": "docs/agent/setup-complete-checklist.md, artifacts/metrics/automation-metrics.json, artifacts/misc/pipeline-status.yaml",
+      "description": "Sprint 0 - Environment Setup with Agent Ecosystem",
+      "owner": "Tech Lead",
+      "section": "AI Foundation",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "All automation tests passing, metrics dashboard live, zero manual interventions"
+    },
+    {
+      "artifacts_to_track": ".claude/commands/*, artifacts/misc/command-test-results.csv",
+      "description": "Configure Claude Code with Custom Commands and Hooks",
+      "owner": "AI Specialist",
+      "section": "AI Foundation",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "All commands executable, performance <100ms verified"
+    },
+    {
+      "artifacts_to_track": "docs/shared/copilot-instructions.md, .github/copilot/*, artifacts/misc/team-licenses.csv, artifacts/misc/workflow-automation.yaml",
+      "description": "GitHub Copilot Enterprise Automation Setup",
+      "owner": "DevOps Engineer",
+      "section": "AI Foundation",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Response time benchmarked, all team members verified, workflows triggered"
+    },
+    {
+      "artifacts_to_track": "tools/integrations/codex/*, tools/integrations/jules/*, artifacts/misc/sandbox-security.json, artifacts/metrics/response-metrics.csv",
+      "description": "External AI Tools Integration (Codex, Jules)",
+      "owner": "AI Specialist",
+      "section": "AI Foundation",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "All integrations tested, security scan passed, performance measured"
+    },
+    {
+      "artifacts_to_track": "turbo.json, pnpm-workspace.yaml, packages/*, apps/*",
+      "description": "Automated Monorepo Creation",
+      "owner": "Tech Lead + Claude Code",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Structure validated, builds passing, all workspaces linked"
+    },
+    {
+      "artifacts_to_track": ".eslintrc.js, .prettierrc, .husky/*, artifacts/misc/commitlint.config.js, artifacts/misc/lint-results.json",
+      "description": "Automated Development Tools Configuration",
+      "owner": "DevOps + Copilot",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Linting passing, hooks executing, commits validated"
+    },
+    {
+      "artifacts_to_track": "docker-compose.yml, infra/docker/*, artifacts/misc/health-check.yaml",
+      "description": "Docker Environment with Optimized Configuration",
+      "owner": "DevOps + Claude Code",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "All containers running, resources optimized, health checks passing"
+    },
+    {
+      "artifacts_to_track": "supabase/config.toml, supabase/.gitignore, apps/project-tracker/docs/metrics/*",
+      "description": "Supabase Integration with Automated Schema Design",
+      "owner": "Backend Dev + AI Agents",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Supabase initialized successfully, config.toml created, directory structure verified"
+    },
+    {
+      "artifacts_to_track": ".github/workflows/ci.yml, .github/workflows/cd.yml",
+      "description": "CI/CD Pipeline with Predictive Optimization",
+      "owner": "DevOps + Claude Code",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Pipeline executing, cache hits >95%, optimizations measured"
+    },
+    {
+      "artifacts_to_track": "packages/db/prisma/schema.prisma, packages/db/prisma/seed.ts",
+      "description": "Prisma Schema with Generated Optimizations",
+      "owner": "Backend Dev + Copilot",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Migrations running, queries optimized, seed data loaded"
+    },
+    {
+      "artifacts_to_track": "apps/api/src/modules/*, apps/api/src/router.ts, apps/web/src/lib/trpc.ts",
+      "description": "tRPC Setup with Automated Type Generation",
+      "owner": "Tech Lead + Claude Code",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Types generated, no errors, contracts validated"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/otel-config.yaml, infra/monitoring/alerts/*, artifacts/misc/anomaly-detection.json, artifacts/misc/self-healing-rules.yaml",
+      "description": "Automated Observability with Predictive Monitoring",
+      "owner": "DevOps + AI Agents",
+      "section": "Foundation Setup",
+      "status": "Backlog",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Monitoring active, predictions accurate, healing working"
+    },
+    {
+      "artifacts_to_track": "apps/web/*, apps/web/src/components/*, packages/ui/src/components/*",
+      "description": "Frontend with Generated Components and Optimization",
+      "owner": "Frontend Dev + Claude Code",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Lighthouse passing, components rendering, load time verified"
+    },
+    {
+      "artifacts_to_track": "tests/*, tests/e2e/*, artifacts/coverage/coverage-report.html, artifacts/logs/test-generation-log.json",
+      "description": "Automated Test Generation and Automation",
+      "owner": "QA Lead + AI Testing Suite",
+      "section": "Foundation Setup",
+      "status": "Backlog",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Coverage >95%, tests passing, scenarios validated"
+    },
+    {
+      "artifacts_to_track": "apps/ai-worker/src/chains/*",
+      "description": "LangChain Integration with Optimized Chains",
+      "owner": "AI Specialist + Claude Code",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Chains executing, costs optimized, scaling working"
+    },
+    {
+      "artifacts_to_track": "docs/*, docs/docusaurus.config.js",
+      "description": "Documentation with Auto-Generation",
+      "owner": "Tech Writer + AI Agents",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Docs generated, coverage complete, readability high"
+    },
+    {
+      "artifacts_to_track": "docs/security/*, artifacts/misc/security-scan-results.json, artifacts/reports/compliance-report.pdf, artifacts/logs/patch-log.csv",
+      "description": "Automated Security Implementation",
+      "owner": "Security Eng + AI Security Tools",
+      "section": "Foundation Setup",
+      "status": "Backlog",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Scan clean, score A+, compliance verified"
+    },
+    {
+      "artifacts_to_track": "artifacts/performance/*, artifacts/misc/profiling-results.json, artifacts/logs/optimization-log.csv, artifacts/misc/cache-config.yaml",
+      "description": "Performance Optimization with AI Profiling",
+      "owner": "Performance Eng + AI Tools",
+      "section": "Foundation Setup",
+      "status": "Backlog",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Performance improved, bundles optimized, caching active"
+    },
+    {
+      "artifacts_to_track": "packages/platform/src/feature-flags/*, artifacts/misc/rollout-config.json, artifacts/misc/ab-test-results.csv, artifacts/metrics/prediction-accuracy.json",
+      "description": "AI-Managed Feature Flags with Predictive Rollout",
+      "owner": "Backend Dev + AI Agents",
+      "section": "Foundation Setup",
+      "status": "Backlog",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Flags deploying, rollouts optimized, predictions accurate"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/analytics/*, artifacts/misc/privacy-config.json, artifacts/metrics/insights-accuracy.csv, artifacts/reports/gdpr-compliance.pdf",
+      "description": "Privacy-First Analytics with AI Insights",
+      "owner": "Frontend Dev + AI Analytics",
+      "section": "Foundation Setup",
+      "status": "Backlog",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Analytics working, insights accurate, privacy compliant"
+    },
+    {
+      "artifacts_to_track": "tests/integration/*, artifacts/misc/test-orchestration.json, artifacts/logs/bug-fixes.log, artifacts/metrics/confidence-metrics.csv",
+      "description": "Automated Integration Testing",
+      "owner": "All Teams + AI Orchestrator",
+      "section": "Foundation Setup",
+      "status": "Backlog",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Tests passing, bugs fixed, confidence high"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/sprint-planning/*, artifacts/misc/velocity-prediction.json, artifacts/misc/capacity-model.csv, artifacts/reports/risk-matrix.xlsx",
+      "description": "Sprint Planning and Velocity Prediction",
+      "owner": "PM + AI Planning Tools",
+      "section": "Foundation Setup",
+      "status": "Backlog",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Planning optimized, velocity predicted, risks identified"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/agent-coordination/*, artifacts/misc/orchestration-config.yaml, artifacts/metrics/handoff-metrics.json, artifacts/logs/quality-gates.log",
+      "description": "Continuous AI Agent Coordination System",
+      "owner": "AI Specialist",
+      "section": "AI Foundation",
+      "status": "Backlog",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Coordination working, coverage complete, handoffs smooth"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/ai-dashboard/*, artifacts/misc/optimization-loop.yaml, artifacts/misc/roi-tracking.csv, artifacts/metrics/metrics-realtime.json",
+      "description": "AI Performance Dashboard and Optimization Loop",
+      "owner": "DevOps + AI Monitoring",
+      "section": "AI Foundation",
+      "status": "Backlog",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Dashboard live, ROI tracked, optimizations active"
+    },
+    {
+      "artifacts_to_track": "artifacts/reports/business-case.pdf, artifacts/reports/swot-analysis.xlsx, artifacts/reports/financial-model.xlsx, docs/planning/ADR-000-feasibility.md",
+      "description": "IntelliFlow CRM Feasibility Assessment",
+      "owner": "CEO + CTO + CFO",
+      "section": "Planning",
+      "status": "Planned",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Leadership review complete, decision signed, risks documented"
+    },
+    {
+      "artifacts_to_track": "docs/planning/ADR-001-modern-stack.md, artifacts/misc/architecture-spike/*, artifacts/misc/poc-branch, artifacts/benchmarks/performance-benchmark.json",
+      "description": "Technical Architecture Spike - Modern Stack",
+      "owner": "CTO + Tech Lead",
+      "section": "Validation",
+      "status": "Planned",
+      "target_sprint": "1",
+      "task_id": "",
+      "validation_method": "POC working, performance verified, architecture approved"
+    },
+    {
+      "artifacts_to_track": "packages/db/prisma/schema.prisma, packages/domain/src/*, packages/validators/*, docs/planning/DDD-context-map.puml",
+      "description": "Domain Model Design (DDD)",
+      "owner": "Tech Lead + DA",
+      "section": "Validation",
+      "status": "Planned",
+      "target_sprint": "1",
+      "task_id": "",
+      "validation_method": "Schema validated, types checked, domain model complete"
+    },
+    {
+      "artifacts_to_track": "apps/api/src/modules/misc/*, apps/api/src/trpc.ts, apps/api/src/shared/e2e-type-safety-test.ts, apps/api/src/shared/subscription-demo.ts",
+      "description": "tRPC API Foundation",
+      "owner": "DevOps + Backend Dev",
+      "section": "Validation",
+      "status": "Planned",
+      "target_sprint": "1",
+      "task_id": "",
+      "validation_method": "tRPC working, types safe, subscriptions active"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/leads/*, apps/web/components/lead-form.tsx, artifacts/lighthouse/lighthouse-report.html, artifacts/misc/mobile-screenshots/*",
+      "description": "Next.js 16.0.10 Lead Capture UI",
+      "owner": "Frontend Dev + UX",
+      "section": "Validation",
+      "status": "Planned",
+      "target_sprint": "2",
+      "task_id": "",
+      "validation_method": "Lighthouse passing, form working, mobile tested"
+    },
+    {
+      "artifacts_to_track": "apps/ai-worker/src/chains/scoring.chain.ts, apps/ai-worker/src/prompts/*, apps/api/src/shared/scoring-output-schema.zod.ts",
+      "description": "LangChain AI Scoring Prototype",
+      "owner": "AI Specialist + Backend Dev",
+      "section": "Validation",
+      "status": "Planned",
+      "target_sprint": "2",
+      "task_id": "",
+      "validation_method": "AI scoring working, output validated, performance measured"
+    },
+    {
+      "artifacts_to_track": "apps/api/src/lib/supabase.ts, infra/supabase/migrations/*, apps/api/src/shared/auth-flow-test.e2e.ts, apps/api/src/shared/vector-search-demo.ts",
+      "description": "Supabase Integration Test",
+      "owner": "Backend Dev + DevOps",
+      "section": "Validation",
+      "status": "Planned",
+      "target_sprint": "3",
+      "task_id": "",
+      "validation_method": "Auth tested, real-time working, vectors enabled"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/k6/scripts/load-test.js, artifacts/benchmarks/performance-report.html, artifacts/misc/grafana-dashboard.json, artifacts/metrics/baseline-metrics.csv",
+      "description": "Performance Benchmarks - Modern Stack",
+      "owner": "Performance Eng + DevOps",
+      "section": "Validation",
+      "status": "Planned",
+      "target_sprint": "3",
+      "task_id": "",
+      "validation_method": "Load tests passing, p99 measured, baselines set"
+    },
+    {
+      "artifacts_to_track": "artifacts/reports/security-assessment-report.pdf, artifacts/reports/owasp-checklist.xlsx, docs/planning/iso42001-gap-analysis.md, artifacts/reports/zap-scan-report.html",
+      "description": "Security Assessment - OWASP + ISO 42001 Prep",
+      "owner": "Security Eng + CTO",
+      "section": "Validation",
+      "status": "Planned",
+      "target_sprint": "2",
+      "task_id": "",
+      "validation_method": "Security scan clean, compliance mapped, roadmap created"
+    },
+    {
+      "artifacts_to_track": "artifacts/reports/team-skills-matrix.xlsx, docs/planning/training-plan.md, artifacts/misc/competency-test-results.csv, artifacts/reports/confidence-survey.pdf",
+      "description": "Team Capability Assessment - Modern Stack",
+      "owner": "PM + Tech Lead",
+      "section": "Validation",
+      "status": "Planned",
+      "target_sprint": "4",
+      "task_id": "",
+      "validation_method": "Skills assessed, training planned, confidence measured"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/decision-gate-1.pptx, artifacts/reports/risk-assessment.xlsx, artifacts/reports/go-decision-minutes.pdf, artifacts/reports/budget-approval.pdf",
+      "description": "Phase 1 Go/No-Go Decision",
+      "owner": "CEO + Leadership",
+      "section": "Decision Gate",
+      "status": "Planned",
+      "target_sprint": "4",
+      "task_id": "",
+      "validation_method": "Decision documented, budget approved, risks accepted"
+    },
+    {
+      "artifacts_to_track": "artifacts/reports/supabase-usage-report.json, artifacts/reports/cost-projection.xlsx, docs/shared/optimization-guide.md, artifacts/misc/upgrade-triggers.yaml",
+      "description": "Supabase Free Tier Optimization",
+      "owner": "DevOps + PM",
+      "section": "Parallel Track",
+      "status": "Planned",
+      "target_sprint": "3",
+      "task_id": "",
+      "validation_method": "Usage optimized, costs projected, triggers defined"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/turbo.json, .github/workflows/ci.yml, artifacts/misc/pnpm-workspace.yaml, packages/tsconfig/*",
+      "description": "Turborepo Monorepo Setup",
+      "owner": "DevOps + Tech Lead",
+      "section": "MVP Week 1",
+      "status": "Planned",
+      "target_sprint": "6",
+      "task_id": "",
+      "validation_method": "Builds cached, time <3min, workspaces linked"
+    },
+    {
+      "artifacts_to_track": "apps/api/src/modules/crm/leads.router.ts, packages/api-client/*, artifacts/misc/coverage/lcov-report/index.html",
+      "description": "tRPC Router Implementation",
+      "owner": "Backend Dev + Tech Lead",
+      "section": "MVP Week 1",
+      "status": "Planned",
+      "target_sprint": "7",
+      "task_id": "",
+      "validation_method": "Types covered, response fast, client working"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(dashboard)/*, apps/web/components/ui/*, artifacts/reports/web-vitals-report.json, artifacts/misc/axe-audit-results.json",
+      "description": "Next.js 16.0.10 App Router UI",
+      "owner": "Frontend Dev + UX",
+      "section": "MVP Week 1",
+      "status": "Planned",
+      "target_sprint": "8",
+      "task_id": "",
+      "validation_method": "Vitals green, a11y passed, UI responsive"
+    },
+    {
+      "artifacts_to_track": "apps/ai-worker/src/workers/*, apps/api/src/queues/*, artifacts/misc/bull-board-screenshot.png, artifacts/metrics/job-metrics.json",
+      "description": "BullMQ Job Queue Setup",
+      "owner": "Backend Dev + DevOps",
+      "section": "MVP Week 1",
+      "status": "Planned",
+      "target_sprint": "8",
+      "task_id": "",
+      "validation_method": "Queue working, retries tested, dashboard live"
+    },
+    {
+      "artifacts_to_track": "apps/api/src/subscriptions/*, apps/web/hooks/use-subscription.ts, artifacts/misc/websocket-test-results.json",
+      "description": "Real-time Subscriptions",
+      "owner": "Frontend Dev + Backend Dev",
+      "section": "MVP Week 1",
+      "status": "Planned",
+      "target_sprint": "9",
+      "task_id": "",
+      "validation_method": "WebSockets working, latency low, reconnection tested"
+    },
+    {
+      "artifacts_to_track": "packages/db/prisma/migrations/*, packages/db/src/client.ts, artifacts/benchmarks/query-performance.csv, artifacts/misc/pgvector-test.sql",
+      "description": "Prisma + Supabase Data Layer",
+      "owner": "Backend Dev + DA",
+      "section": "MVP Week 1",
+      "status": "Planned",
+      "target_sprint": "9",
+      "task_id": "",
+      "validation_method": "Migrations applied, queries fast, vectors working"
+    },
+    {
+      "artifacts_to_track": "apps/api/src/shared/vitest.config.ts, artifacts/misc/coverage/coverage-summary.json, artifacts/reports/test-report.html, artifacts/misc/ci-test-results.xml",
+      "description": "Vitest Testing Suite",
+      "owner": "QA + Whole Team",
+      "section": "MVP Week 1",
+      "status": "Planned",
+      "target_sprint": "11",
+      "task_id": "",
+      "validation_method": "Tests passing, coverage >80%, CI integrated"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/investment-gate-1-deck.pptx, artifacts/metrics/week-1-metrics.xlsx, artifacts/reports/roi-projection.pdf, artifacts/misc/cfo-approval.email",
+      "description": "Gate 1 Review - \u00a3500 Investment",
+      "owner": "CFO + CEO",
+      "section": "Investment Gate",
+      "status": "Planned",
+      "target_sprint": "11",
+      "task_id": "",
+      "validation_method": "ROI validated, budget approved, continue decision"
+    },
+    {
+      "artifacts_to_track": "apps/ai-worker/src/pipelines/*, docs/ai-architecture.md, artifacts/misc/langchain-flow-diagram.mermaid",
+      "description": "LangChain Pipeline Design",
+      "owner": "AI Specialist + Data Scientist",
+      "section": "Intelligence",
+      "status": "Planned",
+      "target_sprint": "12",
+      "task_id": "",
+      "validation_method": "Pipeline designed, architecture documented, extensible"
+    },
+    {
+      "artifacts_to_track": "apps/ai-worker/src/agents/*, artifacts/misc/crew-config.yaml, artifacts/logs/agent-interaction-logs.json, apps/api/src/agent/orchestration-test.ts",
+      "description": "CrewAI Agent Framework",
+      "owner": "Backend Dev + AI Specialist",
+      "section": "Intelligence",
+      "status": "Planned",
+      "target_sprint": "12",
+      "task_id": "",
+      "validation_method": "Agents working, tasks orchestrated, cooperation tested"
+    },
+    {
+      "artifacts_to_track": "packages/validators/src/ai-outputs/*, apps/api/src/shared/output-validation-test.ts, artifacts/misc/confidence-calibration.json",
+      "description": "Structured AI Output Implementation",
+      "owner": "AI Specialist + Backend Dev",
+      "section": "Intelligence",
+      "status": "Planned",
+      "target_sprint": "13",
+      "task_id": "",
+      "validation_method": "Outputs structured, validation working, confidence calibrated"
+    },
+    {
+      "artifacts_to_track": "apps/web/components/ai-explainability/*, artifacts/reports/user-test-results.pdf, artifacts/misc/explainability-screenshots/*",
+      "description": "AI Explainability UI",
+      "owner": "Frontend Dev + UX",
+      "section": "Intelligence",
+      "status": "Planned",
+      "target_sprint": "13",
+      "task_id": "",
+      "validation_method": "Explanations clear, trust high, UI intuitive"
+    },
+    {
+      "artifacts_to_track": "apps/api/src/feedback/*, apps/web/components/feedback/*, artifacts/misc/feedback-analytics.json",
+      "description": "Human-in-the-Loop Feedback",
+      "owner": "Full Stack Dev",
+      "section": "Intelligence",
+      "status": "Planned",
+      "target_sprint": "14",
+      "task_id": "",
+      "validation_method": "Feedback captured, model improving, loop closed"
+    },
+    {
+      "artifacts_to_track": "packages/experiments/*, artifacts/misc/ab-test-config.json, artifacts/misc/statistical-analysis.ipynb, artifacts/misc/experiment-dashboard.png",
+      "description": "A/B Testing Framework",
+      "owner": "Data Scientist + Backend Dev",
+      "section": "Intelligence",
+      "status": "Planned",
+      "target_sprint": "14",
+      "task_id": "",
+      "validation_method": "Experiments running, statistics valid, dashboard live"
+    },
+    {
+      "artifacts_to_track": "tests/e2e/tests/*, artifacts/misc/playwright-report/index.html, artifacts/misc/visual-snapshots/*, artifacts/misc/test-videos/*",
+      "description": "Playwright E2E Testing",
+      "owner": "QA + AI Specialist",
+      "section": "Intelligence",
+      "status": "Planned",
+      "target_sprint": "15",
+      "task_id": "",
+      "validation_method": "E2E passing, visuals matched, videos recorded"
+    },
+    {
+      "artifacts_to_track": "artifacts/reports/investment-gate-2-analysis.xlsx, artifacts/reports/ai-roi-report.pdf, artifacts/misc/customer-feedback.docx, artifacts/misc/board-presentation.pptx",
+      "description": "Gate 2 Review - \u00a32000 Investment",
+      "owner": "CFO + CEO",
+      "section": "Investment Gate",
+      "status": "Planned",
+      "target_sprint": "15",
+      "task_id": "",
+      "validation_method": "AI value proven, ROI positive, expansion approved"
+    },
+    {
+      "artifacts_to_track": "apps/api/src/workflows/*, artifacts/misc/workflow-definitions/*, apps/api/src/workflow/state-machine-tests.ts, artifacts/misc/workflow-ui-demo.mp4",
+      "description": "Workflow Engine with LangGraph",
+      "owner": "Backend Dev + Architect",
+      "section": "Automation",
+      "status": "Planned",
+      "target_sprint": "16",
+      "task_id": "",
+      "validation_method": "Workflows working, state persisted, UI functional"
+    },
+    {
+      "artifacts_to_track": "apps/api/src/auto-response/*, artifacts/misc/approval-workflow.bpmn, artifacts/metrics/response-quality-metrics.json",
+      "description": "Auto-Response with Approval Gate",
+      "owner": "Backend Dev + AI Specialist",
+      "section": "Automation",
+      "status": "Planned",
+      "target_sprint": "16",
+      "task_id": "",
+      "validation_method": "Responses generating, approvals tracked, quality measured"
+    },
+    {
+      "artifacts_to_track": "apps/api/src/routing/*, artifacts/misc/routing-rules-config.yaml, artifacts/misc/routing-simulation-results.csv, artifacts/reports/sla-compliance.pdf",
+      "description": "Smart Lead Routing",
+      "owner": "Backend Dev + Sales Ops",
+      "section": "Automation",
+      "status": "Planned",
+      "target_sprint": "17",
+      "task_id": "",
+      "validation_method": "Routing optimal, load balanced, SLA met"
+    },
+    {
+      "artifacts_to_track": "apps/web/components/workflow-builder/*, artifacts/misc/workflow-templates/*, artifacts/misc/usability-test-video.mp4",
+      "description": "Workflow Builder UI (React Flow)",
+      "owner": "Frontend Dev + UX",
+      "section": "Automation",
+      "status": "Planned",
+      "target_sprint": "17",
+      "task_id": "",
+      "validation_method": "Builder intuitive, templates working, users successful"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/otel-collector-config.yaml, artifacts/misc/grafana/dashboards/*, artifacts/misc/alerts/rules/*, artifacts/misc/trace-examples.json",
+      "description": "OpenTelemetry Monitoring",
+      "owner": "DevOps + SRE",
+      "section": "Automation",
+      "status": "Planned",
+      "target_sprint": "18",
+      "task_id": "",
+      "validation_method": "Traces flowing, dashboards created, alerts firing"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/k6/scenarios/*, artifacts/reports/load-test-report.html, docs/shared/bottleneck-analysis.md, artifacts/misc/grafana-load-test.png",
+      "description": "Load Testing with k6",
+      "owner": "Performance Eng + DevOps",
+      "section": "Automation",
+      "status": "Planned",
+      "target_sprint": "19",
+      "task_id": "",
+      "validation_method": "Load handled, bottlenecks found, optimizations identified"
+    },
+    {
+      "artifacts_to_track": "artifacts/reports/automation-roi-analysis.xlsx, artifacts/reports/stability-report.pdf, artifacts/misc/scale-plan.pptx, artifacts/misc/investment-recommendation.docx",
+      "description": "Gate 3 Review - \u00a33000 Investment",
+      "owner": "CFO + CEO",
+      "section": "Investment Gate",
+      "status": "Planned",
+      "target_sprint": "19",
+      "task_id": "",
+      "validation_method": "ROI calculated, stability proven, scale approved"
+    },
+    {
+      "artifacts_to_track": "docs/shared/whatsapp-api-research.md, docs/shared/integration-design.puml, artifacts/reports/cost-analysis.xlsx, artifacts/misc/poc-results.json",
+      "description": "WhatsApp Business API Research",
+      "owner": "Integration Eng + PM",
+      "section": "Enhancement",
+      "status": "Planned",
+      "target_sprint": "20",
+      "task_id": "",
+      "validation_method": "Feasibility confirmed, costs analyzed, approach validated"
+    },
+    {
+      "artifacts_to_track": "packages/adapters/src/whatsapp/*, artifacts/misc/webhook-test-results.json, docs/shared/message-flow-diagram.svg",
+      "description": "WhatsApp + tRPC Integration",
+      "owner": "Backend Dev + Integration Eng",
+      "section": "Enhancement",
+      "status": "Planned",
+      "target_sprint": "21",
+      "task_id": "",
+      "validation_method": "Messages flowing, latency <1s, reliability tested"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/figma-dashboard-designs.url, artifacts/misc/kpi-definitions.yaml, docs/dashboard/user-feedback-notes.md, artifacts/misc/design-tokens.json",
+      "description": "Analytics Dashboard Design",
+      "owner": "Data Analyst + UX",
+      "section": "Enhancement",
+      "status": "Planned",
+      "target_sprint": "21",
+      "task_id": "",
+      "validation_method": "Designs approved, KPIs defined, tokens exported"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/analytics/*, packages/application/src/analytics/*, artifacts/misc/real-time-test-video.mp4",
+      "description": "Analytics Implementation",
+      "owner": "Frontend Dev + Data Eng",
+      "section": "Enhancement",
+      "status": "Planned",
+      "target_sprint": "22",
+      "task_id": "",
+      "validation_method": "Dashboard working, updates real-time, insights clear"
+    },
+    {
+      "artifacts_to_track": "apps/ai-worker/src/rag/*, artifacts/misc/embeddings-quality-test.json, artifacts/metrics/sentiment-accuracy.csv, artifacts/misc/nba-demo.mp4",
+      "description": "Advanced AI Features (RAG)",
+      "owner": "AI Specialist + Full Team",
+      "section": "Enhancement",
+      "status": "Planned",
+      "target_sprint": "23",
+      "task_id": "",
+      "validation_method": "RAG working, sentiment accurate, NBA relevant"
+    },
+    {
+      "artifacts_to_track": "docs/shared/production-checklist.md, artifacts/reports/security-scan-final.pdf, artifacts/benchmarks/performance-baseline.json, docs/shared/monitoring-runbook.md",
+      "description": "Production Hardening",
+      "owner": "DevOps + Security",
+      "section": "Enhancement",
+      "status": "Planned",
+      "target_sprint": "24",
+      "task_id": "",
+      "validation_method": "Production ready, security certified, monitoring active"
+    },
+    {
+      "artifacts_to_track": "docs/user-manual/*, artifacts/misc/codesandbox-examples.json, artifacts/coverage/feature-coverage-matrix.xlsx",
+      "description": "User Manual with Interactive Examples",
+      "owner": "Tech Writer + PM",
+      "section": "Documentation",
+      "status": "Planned",
+      "target_sprint": "Continuous",
+      "task_id": "",
+      "validation_method": "Manual complete, examples working, coverage 100%"
+    },
+    {
+      "artifacts_to_track": "packages/sdk/README.md, artifacts/misc/sdk-examples/*, artifacts/misc/npm-publish-log.txt, artifacts/misc/autocomplete-demo.gif",
+      "description": "tRPC API Client SDK Docs",
+      "owner": "Backend Dev + Tech Writer",
+      "section": "Documentation",
+      "status": "Planned",
+      "target_sprint": "Continuous",
+      "task_id": "",
+      "validation_method": "SDK published, examples running, autocomplete working"
+    },
+    {
+      "artifacts_to_track": "docs/operations/runbooks/*, docs/operations/incident-response-flowchart.svg, docs/operations/deployment-checklist.md, artifacts/logs/rollback-test.log",
+      "description": "Operational runbooks (deploy, rollback, incident response, backup/restore, access requests)",
+      "owner": "DevOps + Tech Lead",
+      "section": "Documentation",
+      "status": "Planned",
+      "target_sprint": "20",
+      "task_id": "",
+      "validation_method": "Runbooks tested, MTTR <30min, procedures clear"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/coverage/lcov.info, artifacts/logs/test-execution-time.log, artifacts/misc/tdd-compliance.csv, artifacts/misc/mutation-test.html",
+      "description": "Unit Tests (Vitest + TDD)",
+      "owner": "All Developers",
+      "section": "Testing",
+      "status": "Planned",
+      "target_sprint": "Continuous",
+      "task_id": "",
+      "validation_method": "Coverage >90%, tests <30s, mutations tested"
+    },
+    {
+      "artifacts_to_track": "tests/integration/*, artifacts/misc/msw-handlers/*, artifacts/misc/test-data-factories/*, artifacts/coverage/integration-coverage.json",
+      "description": "Integration Tests (Vitest + MSW)",
+      "owner": "QA + Backend Dev",
+      "section": "Testing",
+      "status": "Planned",
+      "target_sprint": "Continuous",
+      "task_id": "",
+      "validation_method": "APIs mocked, factories working, tests reliable"
+    },
+    {
+      "artifacts_to_track": ".github/workflows/security.yml, artifacts/misc/zap-report.xml, artifacts/reports/snyk-report.json, docs/security/security-baseline.md",
+      "description": "Security Tests (OWASP ZAP + Snyk)",
+      "owner": "Security Eng + QA",
+      "section": "Testing",
+      "status": "Planned",
+      "target_sprint": "Continuous",
+      "task_id": "",
+      "validation_method": "Scans clean, CI working, baseline set"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/k6/tests/*, .lighthouserc.js, artifacts/benchmarks/performance-budgets.json, artifacts/misc/regression-alerts.yaml",
+      "description": "Performance Tests (k6 + Lighthouse)",
+      "owner": "Performance Eng",
+      "section": "Testing",
+      "status": "Planned",
+      "target_sprint": "Continuous",
+      "task_id": "",
+      "validation_method": "p99 maintained, vitals green, alerts configured"
+    },
+    {
+      "artifacts_to_track": "artifacts/reports/uat-test-scenarios.xlsx, artifacts/misc/uat-results.csv, artifacts/misc/user-recordings/*, docs/shared/feedback-action-items.md",
+      "description": "User Acceptance Testing",
+      "owner": "PM + Sales Team",
+      "section": "Testing",
+      "status": "Planned",
+      "target_sprint": "25",
+      "task_id": "",
+      "validation_method": "UAT passed, satisfaction >90%, feedback addressed"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/final-investment-review.pptx, artifacts/reports/market-validation.pdf, artifacts/reports/product-roadmap-2025.xlsx, artifacts/reports/board-resolution.pdf",
+      "description": "Gate 4 Review - \u00a35000 Investment",
+      "owner": "CEO + Board",
+      "section": "Investment Gate",
+      "status": "Planned",
+      "target_sprint": "26",
+      "task_id": "",
+      "validation_method": "Strategy approved, market validated, investment authorized"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/training-materials/*, artifacts/misc/team-quiz-results.csv, docs/shared/onboarding-checklist.md, artifacts/reports/launch-readiness.pdf",
+      "description": "Internal Launch Preparation",
+      "owner": "PM + Marketing",
+      "section": "Launch",
+      "status": "Planned",
+      "target_sprint": "26",
+      "task_id": "",
+      "validation_method": "Team trained, docs complete, launch ready"
+    },
+    {
+      "artifacts_to_track": "docs/shared/pilot-customer-criteria.md, artifacts/misc/signed-ndas/*, artifacts/misc/pilot-agreements/*, artifacts/reports/expectations-matrix.xlsx",
+      "description": "Pilot Customer Selection",
+      "owner": "Sales + CEO",
+      "section": "Launch",
+      "status": "Planned",
+      "target_sprint": "27",
+      "task_id": "",
+      "validation_method": "Pilots selected, NDAs signed, expectations set"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/deployment-log.txt, artifacts/misc/feature-flags-config.json, artifacts/misc/monitoring-dashboard.url, artifacts/logs/rollback-test.log",
+      "description": "Production Deployment",
+      "owner": "DevOps + Whole Team",
+      "section": "Launch",
+      "status": "Planned",
+      "target_sprint": "27",
+      "task_id": "",
+      "validation_method": "Deployed successfully, monitoring active, rollback tested"
+    },
+    {
+      "artifacts_to_track": "artifacts/reports/hypercare-schedule.xlsx, artifacts/logs/incident-log.csv, artifacts/reports/response-time-report.pdf, artifacts/misc/uptime-dashboard.png",
+      "description": "Hypercare Period",
+      "owner": "Support Team + DevOps",
+      "section": "Launch",
+      "status": "Planned",
+      "target_sprint": "Continuous",
+      "task_id": "",
+      "validation_method": "Support active, response <15min, uptime >99%"
+    },
+    {
+      "artifacts_to_track": "artifacts/reports/sonarqube-debt-report.html, artifacts/metrics/complexity-metrics.json, docs/shared/refactoring-backlog.md, artifacts/misc/team-velocity.csv",
+      "description": "Technical Complexity Monitoring",
+      "owner": "CTO + Tech Lead",
+      "section": "Risk Mgmt",
+      "status": "Planned",
+      "target_sprint": "Continuous",
+      "task_id": "",
+      "validation_method": "Debt <10%, complexity managed, velocity stable"
+    },
+    {
+      "artifacts_to_track": "artifacts/reports/weekly-cost-report.xlsx, artifacts/misc/usage-alerts-config.yaml, docs/shared/cost-optimization-actions.md, artifacts/misc/invoice-tracker.csv",
+      "description": "Budget Tracking with FinOps",
+      "owner": "CFO + PM",
+      "section": "Risk Mgmt",
+      "status": "Planned",
+      "target_sprint": "Continuous",
+      "task_id": "",
+      "validation_method": "Costs tracked, alerts configured, variance <10%"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/learning-paths/*, artifacts/misc/skill-assessment-results.csv, artifacts/reports/training-completion.xlsx, artifacts/reports/confidence-survey.pdf",
+      "description": "Team Upskilling Program",
+      "owner": "HR + Tech Lead",
+      "section": "Risk Mgmt",
+      "status": "Planned",
+      "target_sprint": "Continuous",
+      "task_id": "",
+      "validation_method": "Skills improving, training completed, confidence >4/5"
+    },
+    {
+      "artifacts_to_track": "docs/shared/vendor-abstraction-layers.md, artifacts/misc/migration-test-plan.yaml, artifacts/logs/portability-test.log, artifacts/reports/alternatives.xlsx",
+      "description": "Vendor Lock-in Mitigation",
+      "owner": "PM + Tech Lead",
+      "section": "Risk Mgmt",
+      "status": "Planned",
+      "target_sprint": "Continuous",
+      "task_id": "",
+      "validation_method": "Abstractions documented, migration <1 week, alternatives ready"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/rls-policies/*, artifacts/misc/data-flow-diagrams/*, artifacts/reports/gdpr-compliance-checklist.xlsx, artifacts/misc/audit-trail-test.json",
+      "description": "GDPR baseline controls: Supabase RLS policies, data minimisation, retention hooks",
+      "owner": "DPO + Legal",
+      "section": "Compliance",
+      "status": "Planned",
+      "target_sprint": "11",
+      "task_id": "",
+      "validation_method": "RLS working, GDPR compliant, audit complete"
+    },
+    {
+      "artifacts_to_track": "artifacts/reports/iso42001-assessment.pdf, docs/shared/ai-governance-framework.md, artifacts/misc/certification-roadmap.gantt, artifacts/reports/gap-remediation.xlsx",
+      "description": "ISO 42001 Readiness Assessment",
+      "owner": "External Auditor + CTO",
+      "section": "Compliance",
+      "status": "Planned",
+      "target_sprint": "25",
+      "task_id": "",
+      "validation_method": "Assessment complete, framework ready, roadmap approved"
+    },
+    {
+      "artifacts_to_track": "artifacts/metrics/success-metrics-dashboard.pdf, artifacts/reports/roi-calculation.xlsx, artifacts/misc/phase-2-proposal.pptx, docs/shared/lessons-learned.md",
+      "description": "Success Metrics Review",
+      "owner": "CEO + All Leads",
+      "section": "Success",
+      "status": "Planned",
+      "target_sprint": "33",
+      "task_id": "",
+      "validation_method": "Metrics met, ROI validated, Phase 2 planned"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/migration-scripts/*, artifacts/reports/data-validation-report.csv, artifacts/misc/migration-log.txt, docs/shared/rollback-procedure.md",
+      "description": "Data Migration from Legacy",
+      "owner": "DA + DevOps",
+      "section": "Migration",
+      "status": "Planned",
+      "target_sprint": "18",
+      "task_id": "",
+      "validation_method": "Data migrated, validation passed, rollback ready"
+    },
+    {
+      "artifacts_to_track": "docs/shared/multi-region-architecture.puml, artifacts/metrics/replication-lag-metrics.json, artifacts/misc/dr-test-results/*, artifacts/reports/cost-comparison.xlsx",
+      "description": "Multi-Region Setup",
+      "owner": "DevOps + DBA",
+      "section": "Resilience",
+      "status": "Planned",
+      "target_sprint": "24",
+      "task_id": "",
+      "validation_method": "Replication working, RPO/RTO met, tests passed"
+    },
+    {
+      "artifacts_to_track": "docs/security/zero-trust-design.md, artifacts/misc/rls-implementation/*, artifacts/misc/mtls-certificates/*, artifacts/reports/pentest-report.pdf",
+      "description": "Zero Trust Security Model",
+      "owner": "Security Eng + CTO",
+      "section": "Security",
+      "status": "Planned",
+      "target_sprint": "1",
+      "task_id": "",
+      "validation_method": "Zero trust implemented, pentest passed, endpoints secured"
+    },
+    {
+      "artifacts_to_track": "artifacts/reports/dpia-report.pdf, artifacts/reports/risk-mitigation-controls.xlsx, artifacts/misc/data-flow-maps/*, artifacts/reports/legal-review.pdf",
+      "description": "Privacy Impact Assessment",
+      "owner": "DPO + Legal",
+      "section": "Compliance",
+      "status": "Planned",
+      "target_sprint": "1",
+      "task_id": "",
+      "validation_method": "DPIA complete, risks mitigated, controls documented"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/otel-implementation/*, artifacts/misc/sentry-project-config.json, artifacts/misc/correlation-test.csv, artifacts/misc/mttr-baseline.json",
+      "description": "Full Stack Observability",
+      "owner": "SRE Lead + DevOps",
+      "section": "Observability",
+      "status": "Planned",
+      "target_sprint": "1",
+      "task_id": "",
+      "validation_method": "Traces correlating, MTTD <2min, root cause found"
+    },
+    {
+      "artifacts_to_track": "infra/terraform/*, artifacts/misc/terraform.tfstate, artifacts/misc/drift-detection-config.yaml, artifacts/logs/destroy-rebuild-test.log",
+      "description": "IaC with Terraform",
+      "owner": "DevOps",
+      "section": "Infrastructure",
+      "status": "Planned",
+      "target_sprint": "1",
+      "task_id": "",
+      "validation_method": "IaC working, drift detected, reproducible"
+    },
+    {
+      "artifacts_to_track": "apps/web/components/ui/*, artifacts/misc/storybook-static/*, artifacts/misc/accessibility-audit.json, artifacts/misc/component-usage.csv",
+      "description": "Component Library (shadcn/ui)",
+      "owner": "Frontend Dev + UX",
+      "section": "Quality",
+      "status": "Planned",
+      "target_sprint": "10",
+      "task_id": "",
+      "validation_method": "Components built, Storybook deployed, a11y passed"
+    },
+    {
+      "artifacts_to_track": "apps/api/src/middleware/rate-limit.ts, artifacts/misc/rate-limit-config.yaml, artifacts/misc/load-test-with-limits.json, artifacts/misc/false-positive.csv",
+      "description": "API Rate Limiting (tRPC + Upstash)",
+      "owner": "Backend Dev + Security Eng",
+      "section": "Security",
+      "status": "Planned",
+      "target_sprint": "1",
+      "task_id": "",
+      "validation_method": "Rate limits working, DDoS protected, false positives <0.1%"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/platform/golden-paths/*, artifacts/misc/developer-portal-poc/*, artifacts/metrics/self-service-metrics.json, artifacts/reports/satisfaction-survey.pdf",
+      "description": "Platform Engineering Foundation",
+      "owner": "DevOps + Tech Lead",
+      "section": "Platform",
+      "status": "Planned",
+      "target_sprint": "18",
+      "task_id": "",
+      "validation_method": "Golden paths defined, portal working, satisfaction >4/5"
+    },
+    {
+      "artifacts_to_track": "docs/docusaurus.config.js, docs/sidebars.js, .github/workflows/deploy-docs.yml, artifacts/misc/search-index.json",
+      "description": "Docusaurus Setup",
+      "owner": "Tech Writer + DevOps",
+      "section": "Documentation",
+      "status": "Planned",
+      "target_sprint": "2",
+      "task_id": "",
+      "validation_method": "Docs deployed, search working, LLM optimized"
+    },
+    {
+      "artifacts_to_track": "docs/templates/*, docs/glossary.md, docs/templates/chunking-strategy.md, artifacts/reports/llm-optimization-report.json",
+      "description": "LLM-Friendly Documentation Templates",
+      "owner": "Tech Writer + AI Specialist",
+      "section": "Documentation",
+      "status": "Planned",
+      "target_sprint": "2",
+      "task_id": "",
+      "validation_method": "Templates created, glossary complete, chunks optimized"
+    },
+    {
+      "artifacts_to_track": "apps/api/openapi.json, artifacts/misc/postman-collection.json, artifacts/misc/api-docs/*, artifacts/misc/example-requests/*",
+      "description": "API Documentation (tRPC + OpenAPI)",
+      "owner": "Backend Dev + Tech Writer",
+      "section": "Documentation",
+      "status": "Planned",
+      "target_sprint": "Continuous",
+      "task_id": "",
+      "validation_method": "API documented, Postman working, examples tested"
+    },
+    {
+      "artifacts_to_track": "docs/domain/*, artifacts/misc/domain-model-diagrams/*, artifacts/misc/knowledge-graph.json, docs/shared/context-map.puml",
+      "description": "Domain Knowledge Base",
+      "owner": "Tech Lead + Team",
+      "section": "Documentation",
+      "status": "Planned",
+      "target_sprint": "4",
+      "task_id": "",
+      "validation_method": "Domain documented, graph searchable, contexts mapped"
+    },
+    {
+      "artifacts_to_track": "packages/ai/src/rag/docs/*, artifacts/misc/rag-test-questions.json, artifacts/metrics/accuracy-evaluation.csv, artifacts/misc/response-time.png",
+      "description": "RAG Integration for Docs",
+      "owner": "AI Specialist + Tech Writer",
+      "section": "Documentation",
+      "status": "Planned",
+      "target_sprint": "23",
+      "task_id": "",
+      "validation_method": "RAG working, accuracy >90%, response <2s"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/video-scripts/*, artifacts/misc/video-links.json, artifacts/misc/viewer-analytics.csv, docs/shared/feedback-summary.md",
+      "description": "Video Tutorials & Demos",
+      "owner": "Tech Writer + Marketing",
+      "section": "Documentation",
+      "status": "Planned",
+      "target_sprint": "25",
+      "task_id": "",
+      "validation_method": "Videos created, satisfaction >80%, embedded in docs"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/ollama-setup.sh, artifacts/misc/model-comparison.csv, artifacts/reports/cost-savings-report.xlsx, artifacts/benchmarks/accuracy-benchmarks.json",
+      "description": "Ollama Local Development",
+      "owner": "AI Specialist + DevOps",
+      "section": "AI/ML",
+      "status": "Planned",
+      "target_sprint": "2",
+      "task_id": "",
+      "validation_method": "Ollama running, costs reduced 90%, accuracy maintained"
+    },
+    {
+      "artifacts_to_track": "apps/ai-worker/src/versioning/*, artifacts/misc/prompt-versions.json, artifacts/logs/rollback-test.log, artifacts/misc/ab-test-config.yaml",
+      "description": "Model Versioning with Zep",
+      "owner": "AI Specialist + Backend Dev",
+      "section": "AI/ML",
+      "status": "Planned",
+      "target_sprint": "14",
+      "task_id": "",
+      "validation_method": "Versioning working, rollback tested, A/B configured"
+    },
+    {
+      "artifacts_to_track": "apps/web/api/edge/*, artifacts/benchmarks/edge-performance-map.json, artifacts/reports/cost-analysis-edge.xlsx, artifacts/misc/global-latency.csv",
+      "description": "Edge Functions Optimization",
+      "owner": "Frontend Dev + DevOps",
+      "section": "Performance",
+      "status": "Planned",
+      "target_sprint": "20",
+      "task_id": "",
+      "validation_method": "Edge deployed, TTFB <50ms, costs optimized"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/sonarqube-project.properties, artifacts/misc/quality-gate-config.json, artifacts/reports/debt-trending.pdf, docs/shared/action-items.md",
+      "description": "Continuous Quality Metrics",
+      "owner": "QA Lead + PM",
+      "section": "Quality",
+      "status": "Planned",
+      "target_sprint": "Continuous",
+      "task_id": "",
+      "validation_method": "Quality A rating, debt <3%, trends improving"
+    },
+    {
+      "artifacts_to_track": "packages/domain/src/contacts/*, apps/api/src/modules/crm/contacts.router.ts, apps/web/app/contacts/*",
+      "description": "Contacts Module - Create/Edit/Search",
+      "owner": "Frontend Dev + Backend Dev",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "5",
+      "task_id": "",
+      "validation_method": "CRUD working, search <200ms, UI responsive"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/contacts/[id]/*, artifacts/misc/contact-360-components/*, artifacts/lighthouse/lighthouse-360-report.html",
+      "description": "Contact 360 Page - Full Detail View",
+      "owner": "Frontend Dev + UX Designer",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "6",
+      "task_id": "",
+      "validation_method": "360 view working, Lighthouse >90, tabs functional"
+    },
+    {
+      "artifacts_to_track": "apps/web/components/deals-kanban/*, apps/api/src/modules/crm/deals.router.ts, apps/web/lib/deals/drag-drop-test.e2e.ts",
+      "description": "Deals Pipeline - Kanban Board",
+      "owner": "Frontend Dev + Backend Dev",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "6",
+      "task_id": "",
+      "validation_method": "Kanban working, drag-drop smooth, persistence <300ms"
+    },
+    {
+      "artifacts_to_track": "packages/application/src/analytics/forecasting/*, apps/api/src/shared/forecast-algorithm-tests.ts, artifacts/metrics/accuracy-backtest.csv",
+      "description": "Deal Forecasting & Reporting",
+      "owner": "Data Eng + Backend Dev",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "7",
+      "task_id": "",
+      "validation_method": "Forecast accurate \u226585%, KPIs calculated, reports generated"
+    },
+    {
+      "artifacts_to_track": "packages/domain/src/tickets/*, apps/web/components/ticket-sla/*, apps/web/lib/tickets/sla-notification-test.ts",
+      "description": "Tickets Module - SLA Tracking",
+      "owner": "Backend Dev + Frontend Dev",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "7",
+      "task_id": "",
+      "validation_method": "Tickets working, SLA alerts <1m, badges correct"
+    },
+    {
+      "artifacts_to_track": "packages/adapters/src/docusign/*, apps/web/components/document-viewer/*, artifacts/reports/e-signature-test.pdf",
+      "description": "Documents Management - Upload & Sign",
+      "owner": "Backend Dev + Integrations Eng",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "8",
+      "task_id": "",
+      "validation_method": "DocuSign integrated, preview working, versions tracked"
+    },
+    {
+      "artifacts_to_track": "apps/ai-worker/src/models/churn/*, apps/web/components/ai-insights/*, artifacts/misc/model-evaluation.ipynb",
+      "description": "Churn Risk & Next Best Action",
+      "owner": "AI Specialist + Backend Dev",
+      "section": "AI Insights",
+      "status": "Planned",
+      "target_sprint": "8",
+      "task_id": "",
+      "validation_method": "Model accurate >80%, predictions <2s, UI integrated"
+    },
+    {
+      "artifacts_to_track": "apps/web/components/report-builder/*, apps/api/src/exports/*, artifacts/misc/sample-exports/*",
+      "description": "Custom Reports & Dashboards",
+      "owner": "Frontend Dev + Data Eng",
+      "section": "Reports",
+      "status": "Planned",
+      "target_sprint": "9",
+      "task_id": "",
+      "validation_method": "Builder working, widgets ready, exports functional"
+    },
+    {
+      "artifacts_to_track": "infra/monitoring/*, artifacts/misc/grafana/provisioning/*, artifacts/coverage/trace-coverage-report.json, docs/shared/dashboard-catalog.md",
+      "description": "Distributed Tracing & Logging",
+      "owner": "DevOps + SRE",
+      "section": "Ops & Observability",
+      "status": "Planned",
+      "target_sprint": "9",
+      "task_id": "",
+      "validation_method": "Traces flowing, coverage >99%, dashboards created"
+    },
+    {
+      "artifacts_to_track": "apps/api/src/auth/rbac/*, packages/db/prisma/schema-audit.prisma, apps/api/src/security/audit-coverage-test.ts",
+      "description": "RBAC/ABAC & Audit Trail",
+      "owner": "Security Eng + Backend Dev",
+      "section": "Security",
+      "status": "Planned",
+      "target_sprint": "9",
+      "task_id": "",
+      "validation_method": "RBAC working, audit 100%, permissions tested"
+    },
+    {
+      "artifacts_to_track": "packages/adapters/src/*, tests/integration/*, artifacts/misc/connector-status-dashboard.json",
+      "description": "ERP/Payment/Email Connectors",
+      "owner": "Integrations Eng + Backend Dev",
+      "section": "Integrations",
+      "status": "Planned",
+      "target_sprint": "10",
+      "task_id": "",
+      "validation_method": "Connectors tested, payments working, emails sent"
+    },
+    {
+      "artifacts_to_track": "docs/adr/*, artifacts/misc/compliance/*, docs/shared/adr-index.md, artifacts/misc/compliance-dashboard-mockup.png",
+      "description": "ADR Registry & Compliance Reporting",
+      "owner": "PM + CTO",
+      "section": "Governance",
+      "status": "Planned",
+      "target_sprint": "10",
+      "task_id": "",
+      "validation_method": "ADRs documented, compliance tracked, templates ready"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(public)/page.tsx, apps/web/app/(public)/loading.tsx, apps/web/app/(public)/error.tsx, artifacts/misc/seo-meta.json",
+      "description": "Home Page",
+      "owner": "Growth FE",
+      "section": "Public Pages",
+      "status": "Planned",
+      "target_sprint": "11",
+      "task_id": "",
+      "validation_method": "Page rendering, Lighthouse >90, SEO verified"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(public)/features/page.tsx, artifacts/misc/features-content.json, artifacts/misc/conversion-tracking.js",
+      "description": "Features Page",
+      "owner": "Growth FE",
+      "section": "Public Pages",
+      "status": "Planned",
+      "target_sprint": "11",
+      "task_id": "",
+      "validation_method": "Features displayed, CTAs tracked, performance met"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(public)/pricing/page.tsx, apps/web/components/pricing/pricing-calculator.tsx, apps/web/lib/pricing/stripe-integration.ts",
+      "description": "Pricing Page",
+      "owner": "Growth FE",
+      "section": "Public Pages",
+      "status": "Planned",
+      "target_sprint": "11",
+      "task_id": "",
+      "validation_method": "Pricing displayed, calculator working, Stripe connected"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(public)/about/page.tsx, artifacts/misc/team-data.json, docs/about/about-content.md",
+      "description": "About Page",
+      "owner": "Growth FE",
+      "section": "Public Pages",
+      "status": "Planned",
+      "target_sprint": "11",
+      "task_id": "",
+      "validation_method": "About content live, team displayed, culture shown"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(public)/contact/page.tsx, apps/web/components/shared/contact-form.tsx, apps/web/lib/shared/email-handler.ts",
+      "description": "Contact Page",
+      "owner": "Growth FE",
+      "section": "Public Pages",
+      "status": "Planned",
+      "target_sprint": "11",
+      "task_id": "",
+      "validation_method": "Form working, validation active, emails sending"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(public)/partners/page.tsx, artifacts/misc/partner-logos/*, artifacts/misc/partner-benefits.json",
+      "description": "Partners Page",
+      "owner": "Growth FE",
+      "section": "Public Pages",
+      "status": "Planned",
+      "target_sprint": "11",
+      "task_id": "",
+      "validation_method": "Partners displayed, benefits clear, CTAs active"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(public)/press/page.tsx, artifacts/misc/press-releases/*, artifacts/misc/media-kit.zip",
+      "description": "Press Page",
+      "owner": "Growth FE",
+      "section": "Public Pages",
+      "status": "Planned",
+      "target_sprint": "11",
+      "task_id": "",
+      "validation_method": "Press content live, downloads working, kit available"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(public)/security/page.tsx, artifacts/misc/security-badges/*, artifacts/misc/security-features.json",
+      "description": "Security Page",
+      "owner": "Growth FE",
+      "section": "Public Pages",
+      "status": "Planned",
+      "target_sprint": "11",
+      "task_id": "",
+      "validation_method": "Security detailed, badges shown, trust established"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(public)/blog/page.tsx, apps/web/components/blog/blog-pagination.tsx, artifacts/logs/blog-categories.json",
+      "description": "Blog Index",
+      "owner": "Growth FE",
+      "section": "Public Pages",
+      "status": "Planned",
+      "target_sprint": "12",
+      "task_id": "",
+      "validation_method": "Blog indexed, pagination working, categories filterable"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(public)/blog/[slug]/page.tsx, apps/web/components/blog/markdown-renderer.tsx, apps/web/components/blog/comments-widget.tsx",
+      "description": "Blog Post",
+      "owner": "Growth FE",
+      "section": "Public Pages",
+      "status": "Planned",
+      "target_sprint": "12",
+      "task_id": "",
+      "validation_method": "Posts rendering, markdown parsed, comments working"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(public)/careers/page.tsx, artifacts/misc/job-listings.json, apps/web/components/shared/application-form.tsx",
+      "description": "Careers Page",
+      "owner": "Growth FE",
+      "section": "Public Pages",
+      "status": "Planned",
+      "target_sprint": "12",
+      "task_id": "",
+      "validation_method": "Jobs displayed, applications working, ATS connected"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(public)/careers/[id]/page.tsx, apps/web/components/shared/job-detail-template.tsx, apps/web/components/shared/apply-button.tsx",
+      "description": "Career Detail",
+      "owner": "Growth FE",
+      "section": "Public Pages",
+      "status": "Planned",
+      "target_sprint": "12",
+      "task_id": "",
+      "validation_method": "Details rendering, requirements shown, apply functional"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(public)/lp/[slug]/page.tsx, apps/web/components/shared/landing-builder.tsx, apps/web/lib/shared/ab-test-framework.ts",
+      "description": "Landing Page Template",
+      "owner": "Growth FE",
+      "section": "Marketing Pages",
+      "status": "Planned",
+      "target_sprint": "12",
+      "task_id": "",
+      "validation_method": "Landing pages live, A/B testing, conversions tracked"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(public)/status/page.tsx, apps/web/components/status/status-monitor.tsx, apps/web/lib/status/incident-tracker.ts",
+      "description": "Status Page",
+      "owner": "Growth FE",
+      "section": "Public Pages",
+      "status": "Planned",
+      "target_sprint": "12",
+      "task_id": "",
+      "validation_method": "Status showing, incidents tracked, updates live"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(auth)/login/page.tsx, apps/web/components/shared/auth-providers.tsx, apps/web/lib/shared/login-security.ts",
+      "description": "Sign In",
+      "owner": "Platform FE",
+      "section": "Auth Pages",
+      "status": "Planned",
+      "target_sprint": "13",
+      "task_id": "",
+      "validation_method": "Login working, SSO functional, security tested"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(auth)/signup/page.tsx, apps/web/components/shared/registration-form.tsx, apps/web/lib/shared/welcome-email.ts",
+      "description": "Sign Up",
+      "owner": "Platform FE",
+      "section": "Auth Pages",
+      "status": "Planned",
+      "target_sprint": "13",
+      "task_id": "",
+      "validation_method": "Signup functional, validation working, emails sending"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(auth)/signup/success/page.tsx, apps/web/components/shared/onboarding-flow.tsx, apps/web/lib/shared/tracking-pixel.ts",
+      "description": "Sign Up Success",
+      "owner": "Platform FE",
+      "section": "Auth Pages",
+      "status": "Planned",
+      "target_sprint": "13",
+      "task_id": "",
+      "validation_method": "Success displayed, onboarding started, tracking working"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(auth)/logout/page.tsx, apps/web/lib/shared/session-cleanup.ts, apps/web/lib/shared/logout-redirect.ts",
+      "description": "Logout",
+      "owner": "Platform FE",
+      "section": "Auth Pages",
+      "status": "Planned",
+      "target_sprint": "13",
+      "task_id": "",
+      "validation_method": "Logout functional, session cleared, redirect working"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(auth)/forgot-password/page.tsx, apps/web/components/shared/reset-email.tsx, apps/web/lib/shared/reset-token.ts",
+      "description": "Forgot Password",
+      "owner": "Platform FE",
+      "section": "Auth Pages",
+      "status": "Planned",
+      "target_sprint": "13",
+      "task_id": "",
+      "validation_method": "Reset working, emails sending, tokens valid"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(auth)/reset-password/[token]/page.tsx, apps/web/components/shared/password-reset.tsx, apps/web/lib/shared/password-validation.ts",
+      "description": "Reset Password",
+      "owner": "Platform FE",
+      "section": "Auth Pages",
+      "status": "Planned",
+      "target_sprint": "13",
+      "task_id": "",
+      "validation_method": "Reset functional, validation working, password updated"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(auth)/mfa/setup/page.tsx, apps/web/components/shared/mfa-qr-generator.tsx, apps/web/lib/shared/backup-codes.ts",
+      "description": "MFA Setup",
+      "owner": "Platform FE",
+      "section": "Auth Pages",
+      "status": "Planned",
+      "target_sprint": "13",
+      "task_id": "",
+      "validation_method": "MFA setup working, QR generated, codes created"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(auth)/mfa/verify/page.tsx, apps/web/components/shared/mfa-verification.tsx, apps/web/lib/shared/code-validator.ts",
+      "description": "MFA Verify",
+      "owner": "Platform FE",
+      "section": "Auth Pages",
+      "status": "Planned",
+      "target_sprint": "13",
+      "task_id": "",
+      "validation_method": "Verification working, codes validated, access granted"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(auth)/verify-email/[token]/page.tsx, apps/web/components/shared/email-verification.tsx, apps/web/lib/shared/account-activation.ts",
+      "description": "Email Verification",
+      "owner": "Platform FE",
+      "section": "Auth Pages",
+      "status": "Planned",
+      "target_sprint": "13",
+      "task_id": "",
+      "validation_method": "Verification working, account activated, email confirmed"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(auth)/auth/callback/page.tsx, apps/web/components/shared/oauth-callback.tsx, apps/web/lib/shared/token-exchange.ts",
+      "description": "SSO Callback",
+      "owner": "Platform FE",
+      "section": "Auth Pages",
+      "status": "Planned",
+      "target_sprint": "13",
+      "task_id": "",
+      "validation_method": "Callback working, tokens exchanged, login complete"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(billing)/billing/page.tsx, apps/web/components/billing/billing-portal.tsx, apps/web/lib/billing/stripe-portal.ts",
+      "description": "Billing Portal",
+      "owner": "Platform BE",
+      "section": "Billing Pages",
+      "status": "Planned",
+      "target_sprint": "14",
+      "task_id": "",
+      "validation_method": "Portal functional, subscriptions shown, Stripe connected"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(billing)/billing/checkout/page.tsx, apps/web/components/billing/checkout-form.tsx, apps/web/lib/billing/payment-processor.ts",
+      "description": "Checkout",
+      "owner": "Platform BE",
+      "section": "Billing Pages",
+      "status": "Planned",
+      "target_sprint": "14",
+      "task_id": "",
+      "validation_method": "Checkout functional, payments processing, receipts generated"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(billing)/billing/invoices/page.tsx, apps/web/components/billing/invoice-list.tsx, apps/web/lib/billing/pdf-generator.ts",
+      "description": "Invoices",
+      "owner": "Platform BE",
+      "section": "Billing Pages",
+      "status": "Planned",
+      "target_sprint": "14",
+      "task_id": "",
+      "validation_method": "Invoices listed, PDFs generated, downloads working"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(billing)/billing/invoices/[id]/page.tsx, apps/web/components/billing/invoice-detail.tsx, apps/web/lib/billing/invoice-actions.ts",
+      "description": "Invoice Detail",
+      "owner": "Platform BE",
+      "section": "Billing Pages",
+      "status": "Planned",
+      "target_sprint": "14",
+      "task_id": "",
+      "validation_method": "Details shown, line items displayed, actions working"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(billing)/billing/settings/page.tsx, apps/web/components/billing/payment-methods.tsx, apps/web/lib/billing/card-manager.ts",
+      "description": "Payment Methods",
+      "owner": "Platform BE",
+      "section": "Billing Pages",
+      "status": "Planned",
+      "target_sprint": "14",
+      "task_id": "",
+      "validation_method": "Cards managed, defaults working, updates processed"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(billing)/billing/subscriptions/page.tsx, apps/web/components/billing/subscription-manager.tsx, apps/web/lib/billing/plan-changes.ts",
+      "description": "Subscriptions",
+      "owner": "Platform BE",
+      "section": "Billing Pages",
+      "status": "Planned",
+      "target_sprint": "14",
+      "task_id": "",
+      "validation_method": "Subscriptions managed, changes working, prorations correct"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(billing)/billing/receipts/page.tsx, apps/web/components/billing/receipt-list.tsx, apps/web/lib/billing/receipt-emailer.ts",
+      "description": "Receipts",
+      "owner": "Platform BE",
+      "section": "Billing Pages",
+      "status": "Planned",
+      "target_sprint": "14",
+      "task_id": "",
+      "validation_method": "Receipts listed, emails sent, downloads working"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(developer)/docs/page.tsx, apps/web/components/shared/docs-search.tsx, apps/web/components/shared/docs-navigation.tsx",
+      "description": "Docs Index",
+      "owner": "DevRel",
+      "section": "Developer Pages",
+      "status": "Planned",
+      "target_sprint": "15",
+      "task_id": "",
+      "validation_method": "Docs indexed, search functional, navigation working"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(developer)/docs/api/page.tsx, apps/web/components/shared/api-reference.tsx, apps/web/components/shared/api-playground.tsx",
+      "description": "API Docs",
+      "owner": "DevRel",
+      "section": "Developer Pages",
+      "status": "Planned",
+      "target_sprint": "15",
+      "task_id": "",
+      "validation_method": "API documented, examples running, playground working"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(developer)/docs/webhooks/page.tsx, apps/web/components/shared/webhook-docs.tsx, apps/web/components/shared/webhook-tester.tsx",
+      "description": "Webhooks Docs",
+      "owner": "DevRel",
+      "section": "Developer Pages",
+      "status": "Planned",
+      "target_sprint": "15",
+      "task_id": "",
+      "validation_method": "Webhooks documented, examples shown, tester working"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(developer)/docs/changelog/page.tsx, apps/web/components/shared/changelog-display.tsx, apps/web/lib/shared/rss-feed.ts",
+      "description": "Changelog",
+      "owner": "DevRel",
+      "section": "Developer Pages",
+      "status": "Planned",
+      "target_sprint": "15",
+      "task_id": "",
+      "validation_method": "Changelog displayed, versions tracked, RSS working"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(developer)/docs/sdk/page.tsx, apps/web/components/shared/sdk-guides.tsx, apps/web/lib/shared/sdk-downloads.ts",
+      "description": "SDK Guides",
+      "owner": "DevRel",
+      "section": "Developer Pages",
+      "status": "Planned",
+      "target_sprint": "15",
+      "task_id": "",
+      "validation_method": "SDKs documented, guides clear, downloads working"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(developer)/docs/cli/page.tsx, apps/web/components/shared/cli-docs.tsx, apps/web/components/shared/cli-examples.tsx",
+      "description": "CLI Docs",
+      "owner": "DevRel",
+      "section": "Developer Pages",
+      "status": "Planned",
+      "target_sprint": "15",
+      "task_id": "",
+      "validation_method": "CLI documented, commands listed, examples working"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(developer)/docs/auth/page.tsx, apps/web/components/shared/auth-guides.tsx, apps/web/components/shared/auth-examples.tsx",
+      "description": "Auth Guides",
+      "owner": "DevRel",
+      "section": "Developer Pages",
+      "status": "Planned",
+      "target_sprint": "15",
+      "task_id": "",
+      "validation_method": "Auth documented, flows explained, examples shown"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(developer)/developers/apps/page.tsx, apps/web/components/shared/app-list.tsx, apps/web/lib/shared/api-key-generator.ts",
+      "description": "Dev Apps",
+      "owner": "DevRel",
+      "section": "Developer Pages",
+      "status": "Planned",
+      "target_sprint": "15",
+      "task_id": "",
+      "validation_method": "Apps listed, keys generated, settings working"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(developer)/developers/apps/new/page.tsx, apps/web/components/shared/app-creator.tsx, apps/web/lib/shared/oauth-setup.ts",
+      "description": "New Dev App",
+      "owner": "DevRel",
+      "section": "Developer Pages",
+      "status": "Planned",
+      "target_sprint": "15",
+      "task_id": "",
+      "validation_method": "Apps created, OAuth working, webhooks configured"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(developer)/developers/apps/[id]/page.tsx, apps/web/components/shared/app-dashboard.tsx, apps/web/components/shared/app-metrics.tsx",
+      "description": "Dev App Detail",
+      "owner": "DevRel",
+      "section": "Developer Pages",
+      "status": "Planned",
+      "target_sprint": "15",
+      "task_id": "",
+      "validation_method": "Details shown, metrics displayed, logs accessible"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(developer)/developers/apps/[id]/edit/page.tsx, apps/web/components/shared/app-editor.tsx, apps/web/components/shared/webhook-config.tsx",
+      "description": "Dev App Edit",
+      "owner": "DevRel",
+      "section": "Developer Pages",
+      "status": "Planned",
+      "target_sprint": "15",
+      "task_id": "",
+      "validation_method": "Settings editable, webhooks working, changes saved"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(support)/help-center/page.tsx, apps/web/components/shared/help-categories.tsx, apps/web/components/shared/help-search.tsx",
+      "description": "Help Center Index",
+      "owner": "Support Eng",
+      "section": "Support Pages",
+      "status": "Planned",
+      "target_sprint": "16",
+      "task_id": "",
+      "validation_method": "Help center live, categories shown, search working"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(support)/help-center/search/page.tsx, apps/web/components/shared/search-algorithm.tsx, apps/web/components/shared/search-filters.tsx",
+      "description": "Help Search",
+      "owner": "Support Eng",
+      "section": "Support Pages",
+      "status": "Planned",
+      "target_sprint": "16",
+      "task_id": "",
+      "validation_method": "Search functional, results relevant, filters working"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(support)/help-center/[article]/page.tsx, apps/web/components/shared/article-renderer.tsx, apps/web/components/shared/feedback-widget.tsx",
+      "description": "Help Article",
+      "owner": "Support Eng",
+      "section": "Support Pages",
+      "status": "Planned",
+      "target_sprint": "16",
+      "task_id": "",
+      "validation_method": "Articles rendered, feedback working, related shown"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(support)/support/tickets/page.tsx, apps/web/components/tickets/ticket-list.tsx, apps/web/components/tickets/sla-display.tsx",
+      "description": "Support Tickets",
+      "owner": "Support Eng",
+      "section": "Support Pages",
+      "status": "Planned",
+      "target_sprint": "16",
+      "task_id": "",
+      "validation_method": "Tickets listed, filters functional, SLA displayed"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(support)/support/tickets/new/page.tsx, apps/web/components/shared/ticket-form.tsx, apps/web/components/shared/file-uploader.tsx",
+      "description": "New Ticket",
+      "owner": "Support Eng",
+      "section": "Support Pages",
+      "status": "Planned",
+      "target_sprint": "16",
+      "task_id": "",
+      "validation_method": "Tickets created, categories selected, files uploaded"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(support)/support/tickets/[id]/page.tsx, apps/web/components/shared/ticket-thread.tsx, apps/web/components/shared/status-updater.tsx",
+      "description": "Ticket Detail",
+      "owner": "Support Eng",
+      "section": "Support Pages",
+      "status": "Planned",
+      "target_sprint": "16",
+      "task_id": "",
+      "validation_method": "Details shown, thread working, updates real-time"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(support)/support/chat/page.tsx, apps/web/components/shared/chat-widget.tsx, apps/web/lib/shared/agent-router.ts",
+      "description": "Support Chat",
+      "owner": "Support Eng",
+      "section": "Support Pages",
+      "status": "Planned",
+      "target_sprint": "16",
+      "task_id": "",
+      "validation_method": "Chat functional, agents connected, messages sent"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(legal)/privacy/page.tsx, docs/shared/privacy-content.md, apps/web/lib/shared/consent-tracker.ts",
+      "description": "Privacy Policy",
+      "owner": "Legal Counsel",
+      "section": "Legal Pages",
+      "status": "Planned",
+      "target_sprint": "17",
+      "task_id": "",
+      "validation_method": "Policy displayed, versions tracked, consent logged"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(legal)/terms/page.tsx, docs/shared/terms-content.md, apps/web/lib/shared/acceptance-tracker.ts",
+      "description": "Terms of Service",
+      "owner": "Legal Counsel",
+      "section": "Legal Pages",
+      "status": "Planned",
+      "target_sprint": "17",
+      "task_id": "",
+      "validation_method": "Terms displayed, acceptance tracked, updates sent"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(legal)/cookie-policy/page.tsx, docs/shared/cookie-content.md, apps/web/components/shared/cookie-banner.tsx",
+      "description": "Cookie Policy",
+      "owner": "Legal Counsel",
+      "section": "Legal Pages",
+      "status": "Planned",
+      "target_sprint": "17",
+      "task_id": "",
+      "validation_method": "Policy shown, banner working, preferences saved"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(legal)/dpa/page.tsx, artifacts/reports/dpa-template.pdf, apps/web/lib/shared/signature-handler.ts",
+      "description": "Data Processing Addendum",
+      "owner": "Legal Counsel",
+      "section": "Legal Pages",
+      "status": "Planned",
+      "target_sprint": "17",
+      "task_id": "",
+      "validation_method": "DPA available, signatures working, records maintained"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(legal)/aup/page.tsx, docs/shared/aup-content.md, apps/web/lib/shared/violation-tracker.ts",
+      "description": "Acceptable Use Policy",
+      "owner": "Legal Counsel",
+      "section": "Legal Pages",
+      "status": "Planned",
+      "target_sprint": "17",
+      "task_id": "",
+      "validation_method": "AUP displayed, violations tracked, enforcement ready"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(system)/404/page.tsx, apps/web/components/shared/search-suggestions.tsx, apps/web/lib/shared/error-analytics.ts",
+      "description": "404 Not Found",
+      "owner": "SRE",
+      "section": "System Pages",
+      "status": "Planned",
+      "target_sprint": "17",
+      "task_id": "",
+      "validation_method": "404 working, suggestions shown, analytics tracked"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(system)/500/page.tsx, apps/web/lib/shared/incident-creator.ts, apps/web/lib/shared/error-notifier.ts",
+      "description": "500 Error",
+      "owner": "SRE",
+      "section": "System Pages",
+      "status": "Planned",
+      "target_sprint": "17",
+      "task_id": "",
+      "validation_method": "Error shown, incidents created, notifications sent"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(system)/maintenance/page.tsx, apps/web/lib/shared/maintenance-mode.ts, apps/web/lib/shared/status-updater.ts",
+      "description": "Maintenance",
+      "owner": "SRE",
+      "section": "System Pages",
+      "status": "Planned",
+      "target_sprint": "17",
+      "task_id": "",
+      "validation_method": "Maintenance shown, updates displayed, ETA visible"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(dashboard)/dashboard/page.tsx, artifacts/misc/dashboard-widgets/*, apps/web/lib/dashboard/kpi-calculator.ts",
+      "description": "Dashboard",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "18",
+      "task_id": "",
+      "validation_method": "Dashboard live, KPIs shown, updates real-time"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/leads/page.tsx, apps/web/components/leads/lead-list.tsx, apps/web/lib/leads/bulk-actions.ts",
+      "description": "Leads List",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "18",
+      "task_id": "",
+      "validation_method": "Leads listed, filters working, bulk actions functional"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/leads/new/page.tsx, apps/web/components/shared/lead-form.tsx, apps/web/lib/shared/lead-enrichment.ts",
+      "description": "New Lead",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "18",
+      "task_id": "",
+      "validation_method": "Leads created, enriched, assigned automatically"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/leads/[id]/page.tsx, apps/web/components/shared/lead-detail.tsx, apps/web/components/shared/lead-timeline.tsx",
+      "description": "Lead Detail",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "18",
+      "task_id": "",
+      "validation_method": "Details shown, timeline working, actions functional"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/leads/[id]/edit/page.tsx, apps/web/components/shared/lead-editor.tsx, apps/web/lib/shared/change-tracker.ts",
+      "description": "Edit Lead",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "18",
+      "task_id": "",
+      "validation_method": "Edits saving, changes tracked, history recorded"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/leads/import/page.tsx, apps/web/components/leads/csv-importer.tsx, apps/web/lib/leads/field-mapper.ts",
+      "description": "Import Leads",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "18",
+      "task_id": "",
+      "validation_method": "Imports working, mapping functional, validation active"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/contacts/page.tsx, apps/web/components/contacts/contact-list.tsx, apps/web/lib/contacts/contact-search.ts",
+      "description": "Contacts List",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "19",
+      "task_id": "",
+      "validation_method": "Contacts listed, search fast, segments working"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/contacts/[id]/page.tsx, apps/web/components/shared/contact-360.tsx, apps/web/components/shared/contact-insights.tsx",
+      "description": "Contact 360",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "19",
+      "task_id": "",
+      "validation_method": "360 view complete, data shown, insights displayed"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/contacts/[id]/edit/page.tsx, apps/web/components/shared/contact-editor.tsx, apps/web/lib/shared/duplicate-detector.ts",
+      "description": "Edit Contact",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "19",
+      "task_id": "",
+      "validation_method": "Edits saving, duplicates detected, merge working"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/contacts/import/page.tsx, apps/web/components/contacts/contact-importer.tsx, apps/web/lib/contacts/deduplicator.ts",
+      "description": "Import Contacts",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "19",
+      "task_id": "",
+      "validation_method": "Imports working, deduplication active, data clean"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/contacts/merge/page.tsx, apps/web/components/contacts/merge-wizard.tsx, apps/web/lib/contacts/conflict-resolver.ts",
+      "description": "Merge Contacts",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "19",
+      "task_id": "",
+      "validation_method": "Merges working, conflicts resolved, history kept"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/accounts/page.tsx, apps/web/components/shared/account-list.tsx, apps/web/components/shared/hierarchy-view.tsx",
+      "description": "Accounts List",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "19",
+      "task_id": "",
+      "validation_method": "Accounts listed, hierarchy shown, relationships linked"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/accounts/[id]/page.tsx, apps/web/components/shared/account-detail.tsx, apps/web/components/shared/subsidiary-list.tsx",
+      "description": "Account Detail",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "20",
+      "task_id": "",
+      "validation_method": "Details shown, subsidiaries listed, contacts linked"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/accounts/[id]/edit/page.tsx, apps/web/components/shared/account-editor.tsx, apps/web/components/shared/parent-selector.tsx",
+      "description": "Edit Account",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "20",
+      "task_id": "",
+      "validation_method": "Edits saving, hierarchy updated, changes tracked"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/accounts/import/page.tsx, apps/web/components/shared/account-importer.tsx, apps/web/lib/shared/hierarchy-mapper.ts",
+      "description": "Import Accounts",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "20",
+      "task_id": "",
+      "validation_method": "Imports working, hierarchy preserved, relationships set"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/opportunities/page.tsx, apps/web/components/shared/opportunity-list.tsx, apps/web/components/shared/pipeline-view.tsx",
+      "description": "Opportunities List",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "20",
+      "task_id": "",
+      "validation_method": "Opportunities listed, pipeline visible, stages shown"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/opportunities/[id]/page.tsx, apps/web/components/shared/opportunity-detail.tsx, apps/web/components/shared/product-list.tsx",
+      "description": "Opportunity Detail",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "20",
+      "task_id": "",
+      "validation_method": "Details shown, products listed, timeline visible"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/opportunities/[id]/edit/page.tsx, apps/web/components/shared/opportunity-editor.tsx, apps/web/lib/shared/probability-calc.ts",
+      "description": "Edit Opportunity",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "20",
+      "task_id": "",
+      "validation_method": "Edits saving, probability calculated, forecast updated"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/pipeline/page.tsx, apps/web/components/pipeline/pipeline-board.tsx, apps/web/lib/pipeline/drag-drop-handler.ts",
+      "description": "Pipeline Board",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "21",
+      "task_id": "",
+      "validation_method": "Board working, drag-drop smooth, filters active"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/pipeline/stages/page.tsx, apps/web/components/pipeline/stage-config.tsx, apps/web/lib/pipeline/conversion-calculator.ts",
+      "description": "Pipeline Stages",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "21",
+      "task_id": "",
+      "validation_method": "Stages configured, rates calculated, insights displayed"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/pipeline/stages/[id]/page.tsx, apps/web/components/shared/stage-analytics.tsx, apps/web/lib/shared/bottleneck-analyzer.ts",
+      "description": "Stage Detail",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "21",
+      "task_id": "",
+      "validation_method": "Analytics shown, bottlenecks found, actions suggested"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/forecasts/page.tsx, apps/web/components/shared/forecast-display.tsx, apps/web/lib/shared/accuracy-tracker.ts",
+      "description": "Forecasts",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "21",
+      "task_id": "",
+      "validation_method": "Forecasts shown, accuracy tracked, adjustments working"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/activities/page.tsx, apps/web/components/shared/activity-timeline.tsx, apps/web/components/shared/activity-filters.tsx",
+      "description": "Activities",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "21",
+      "task_id": "",
+      "validation_method": "Activities shown, timeline smooth, filters functional"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/tasks/page.tsx, apps/web/components/shared/task-manager.tsx, apps/web/lib/shared/task-reminder.ts",
+      "description": "Tasks",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "21",
+      "task_id": "",
+      "validation_method": "Tasks managed, assignments working, reminders active"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/tasks/[id]/page.tsx, apps/web/components/shared/task-detail.tsx, apps/web/components/shared/task-comments.tsx",
+      "description": "Task Detail",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "22",
+      "task_id": "",
+      "validation_method": "Details shown, subtasks working, comments active"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/calendar/page.tsx, apps/web/components/calendar/calendar-view.tsx, apps/web/lib/calendar/event-scheduler.ts",
+      "description": "Calendar",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "22",
+      "task_id": "",
+      "validation_method": "Calendar displayed, events synced, scheduling working"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/emails/page.tsx, apps/web/components/shared/email-client.tsx, apps/web/lib/shared/email-tracker.ts",
+      "description": "Emails",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "22",
+      "task_id": "",
+      "validation_method": "Emails shown, threads organized, tracking working"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/templates/email/page.tsx, apps/web/components/templates/template-builder.tsx, apps/web/lib/templates/personalization.ts",
+      "description": "Email Templates",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "22",
+      "task_id": "",
+      "validation_method": "Templates created, personalization working, sending active"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/templates/sms/page.tsx, apps/web/components/templates/sms-builder.tsx, apps/web/lib/templates/compliance-checker.ts",
+      "description": "SMS Templates",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "22",
+      "task_id": "",
+      "validation_method": "SMS created, compliance checked, sending working"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/calls/page.tsx, apps/web/components/shared/call-logger.tsx, apps/web/components/shared/recording-player.tsx",
+      "description": "Calls",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "22",
+      "task_id": "",
+      "validation_method": "Calls logged, recordings linked, analytics displayed"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/notes/page.tsx, apps/web/components/shared/note-editor.tsx, apps/web/lib/shared/mention-handler.ts",
+      "description": "Notes",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "23",
+      "task_id": "",
+      "validation_method": "Notes saved, mentions working, sharing active"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/files/page.tsx, apps/web/components/shared/file-manager.tsx, apps/web/lib/shared/version-control.ts",
+      "description": "Files",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "23",
+      "task_id": "",
+      "validation_method": "Files uploaded, versions tracked, sharing enabled"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/files/[id]/page.tsx, apps/web/components/shared/file-preview.tsx, apps/web/lib/shared/file-sharer.ts",
+      "description": "File Detail",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "23",
+      "task_id": "",
+      "validation_method": "Previews working, metadata shown, sharing active"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/products/page.tsx, apps/web/components/shared/product-catalog.tsx, apps/web/lib/shared/product-search.ts",
+      "description": "Products",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "23",
+      "task_id": "",
+      "validation_method": "Products listed, categories organized, search working"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/products/[id]/page.tsx, apps/web/components/shared/product-detail.tsx, apps/web/lib/shared/availability-checker.ts",
+      "description": "Product Detail",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "23",
+      "task_id": "",
+      "validation_method": "Details shown, pricing displayed, availability tracked"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/price-books/page.tsx, apps/web/components/shared/price-book-manager.tsx, apps/web/lib/shared/discount-engine.ts",
+      "description": "Price Books",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "23",
+      "task_id": "",
+      "validation_method": "Price books created, discounts working, rules applied"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/price-books/[id]/page.tsx, apps/web/components/shared/price-book-detail.tsx, apps/web/lib/shared/price-history.ts",
+      "description": "Price Book Detail",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "24",
+      "task_id": "",
+      "validation_method": "Prices displayed, dates effective, history maintained"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/quotes/page.tsx, apps/web/components/shared/quote-list.tsx, apps/web/lib/shared/quote-generator.ts",
+      "description": "Quotes",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "24",
+      "task_id": "",
+      "validation_method": "Quotes listed, generation working, PDFs created"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/quotes/new/page.tsx, apps/web/components/shared/quote-builder.tsx, apps/web/lib/shared/quote-calculator.ts",
+      "description": "New Quote",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "24",
+      "task_id": "",
+      "validation_method": "Quotes built, products added, calculations correct"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/quotes/[id]/page.tsx, apps/web/components/shared/quote-detail.tsx, apps/web/components/shared/quote-versions.tsx",
+      "description": "Quote Detail",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "24",
+      "task_id": "",
+      "validation_method": "Details shown, versions tracked, actions enabled"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/quotes/[id]/edit/page.tsx, apps/web/components/shared/quote-editor.tsx, apps/web/lib/shared/recalculator.ts",
+      "description": "Edit Quote",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "24",
+      "task_id": "",
+      "validation_method": "Edits saving, recalculation working, history kept"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/orders/page.tsx, apps/web/components/shared/order-list.tsx, apps/web/lib/shared/fulfillment-tracker.ts",
+      "description": "Orders",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "24",
+      "task_id": "",
+      "validation_method": "Orders listed, fulfillment tracked, status current"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/orders/[id]/page.tsx, apps/web/components/shared/order-detail.tsx, apps/web/lib/shared/shipment-tracker.ts",
+      "description": "Order Detail",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "25",
+      "task_id": "",
+      "validation_method": "Details shown, shipments tracked, updates live"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/reports/page.tsx, apps/web/components/reports/report-library.tsx, apps/web/lib/reports/report-favorites.ts",
+      "description": "Reports",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "25",
+      "task_id": "",
+      "validation_method": "Reports listed, favorites working, generation fast"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/reports/custom/page.tsx, apps/web/components/reports/report-builder.tsx, apps/web/lib/reports/visualization-engine.ts",
+      "description": "Custom Reports",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "25",
+      "task_id": "",
+      "validation_method": "Builder functional, visualizations working, exports enabled"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(crm)/reports/schedules/page.tsx, apps/web/components/shared/schedule-manager.tsx, apps/web/lib/shared/distribution-engine.ts",
+      "description": "Report Schedules",
+      "owner": "CRM FE+BE",
+      "section": "Core CRM",
+      "status": "Planned",
+      "target_sprint": "25",
+      "task_id": "",
+      "validation_method": "Schedules created, distribution working, history kept"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(settings)/settings/page.tsx, apps/web/components/shared/settings-nav.tsx, apps/web/lib/shared/settings-search.ts",
+      "description": "Settings Home",
+      "owner": "Platform FE+BE",
+      "section": "Settings",
+      "status": "Planned",
+      "target_sprint": "25",
+      "task_id": "",
+      "validation_method": "Settings organized, search working, changes tracked"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(settings)/settings/profile/page.tsx, apps/web/components/shared/profile-editor.tsx, apps/web/lib/shared/avatar-uploader.ts",
+      "description": "Profile Settings",
+      "owner": "Platform FE+BE",
+      "section": "Settings",
+      "status": "Planned",
+      "target_sprint": "25",
+      "task_id": "",
+      "validation_method": "Profile editable, avatar working, preferences saved"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(settings)/settings/account/page.tsx, apps/web/components/shared/account-manager.tsx, apps/web/lib/shared/account-export.ts",
+      "description": "Account Settings",
+      "owner": "Platform FE+BE",
+      "section": "Settings",
+      "status": "Planned",
+      "target_sprint": "26",
+      "task_id": "",
+      "validation_method": "Account managed, deletion working, export enabled"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(settings)/settings/organization/page.tsx, apps/web/components/shared/org-config.tsx, apps/web/lib/shared/branding-manager.ts",
+      "description": "Organization Settings",
+      "owner": "Platform FE+BE",
+      "section": "Settings",
+      "status": "Planned",
+      "target_sprint": "26",
+      "task_id": "",
+      "validation_method": "Org configured, branding applied, settings saved"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(settings)/settings/users/page.tsx, apps/web/components/shared/user-manager.tsx, apps/web/lib/shared/invite-sender.ts",
+      "description": "Users",
+      "owner": "Platform FE+BE",
+      "section": "Settings",
+      "status": "Planned",
+      "target_sprint": "26",
+      "task_id": "",
+      "validation_method": "Users managed, invites sent, roles assigned"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(settings)/settings/roles/page.tsx, apps/web/components/shared/role-editor.tsx, apps/web/lib/shared/permission-manager.ts",
+      "description": "Roles",
+      "owner": "Platform FE+BE",
+      "section": "Settings",
+      "status": "Planned",
+      "target_sprint": "26",
+      "task_id": "",
+      "validation_method": "Roles created, permissions set, inheritance working"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(settings)/settings/permissions/page.tsx, apps/web/components/shared/permission-matrix.tsx, apps/web/lib/shared/permission-tester.ts",
+      "description": "Permissions",
+      "owner": "Platform FE+BE",
+      "section": "Settings",
+      "status": "Planned",
+      "target_sprint": "26",
+      "task_id": "",
+      "validation_method": "Permissions set, testing working, enforcement active"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(settings)/settings/teams/page.tsx, apps/web/components/shared/team-manager.tsx, apps/web/lib/shared/hierarchy-builder.ts",
+      "description": "Teams",
+      "owner": "Platform FE+BE",
+      "section": "Settings",
+      "status": "Planned",
+      "target_sprint": "26",
+      "task_id": "",
+      "validation_method": "Teams created, hierarchy set, members assigned"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(settings)/settings/audit-log/page.tsx, apps/web/components/shared/audit-viewer.tsx, apps/web/lib/shared/log-exporter.ts",
+      "description": "Audit Log",
+      "owner": "Platform FE+BE",
+      "section": "Settings",
+      "status": "Planned",
+      "target_sprint": "27",
+      "task_id": "",
+      "validation_method": "Logs captured, filtering working, export enabled"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(settings)/settings/api-keys/page.tsx, apps/web/components/shared/key-generator.tsx, apps/web/lib/shared/scope-manager.ts",
+      "description": "API Keys",
+      "owner": "Platform FE+BE",
+      "section": "Settings",
+      "status": "Planned",
+      "target_sprint": "27",
+      "task_id": "",
+      "validation_method": "Keys generated, scopes enforced, rotation working"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(settings)/settings/webhooks/page.tsx, apps/web/components/shared/webhook-config.tsx, apps/web/lib/shared/webhook-tester.ts",
+      "description": "Webhooks",
+      "owner": "Platform FE+BE",
+      "section": "Settings",
+      "status": "Planned",
+      "target_sprint": "27",
+      "task_id": "",
+      "validation_method": "Webhooks configured, testing working, logs available"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(settings)/settings/integrations/page.tsx, apps/web/components/shared/integration-catalog.tsx, apps/web/lib/shared/oauth-handler.ts",
+      "description": "Integrations",
+      "owner": "Platform FE+BE",
+      "section": "Settings",
+      "status": "Planned",
+      "target_sprint": "27",
+      "task_id": "",
+      "validation_method": "Integrations listed, OAuth working, sync active"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(settings)/settings/notifications/page.tsx, apps/web/components/notifications/notification-prefs.tsx, apps/web/lib/notifications/channel-config.ts",
+      "description": "Notifications",
+      "owner": "Platform FE+BE",
+      "section": "Settings",
+      "status": "Planned",
+      "target_sprint": "27",
+      "task_id": "",
+      "validation_method": "Preferences set, channels configured, delivery working"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(settings)/settings/localization/page.tsx, apps/web/components/shared/language-selector.tsx, apps/web/lib/shared/translation-manager.ts",
+      "description": "Localization",
+      "owner": "Platform FE+BE",
+      "section": "Settings",
+      "status": "Planned",
+      "target_sprint": "27",
+      "task_id": "",
+      "validation_method": "Languages set, translations loaded, switching smooth"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(settings)/settings/data-retention/page.tsx, apps/web/components/shared/retention-policy.tsx, apps/web/lib/shared/data-purger.ts",
+      "description": "Data Retention",
+      "owner": "Platform FE+BE",
+      "section": "Settings",
+      "status": "Planned",
+      "target_sprint": "28",
+      "task_id": "",
+      "validation_method": "Policies set, automation working, compliance met"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(settings)/settings/compliance/page.tsx, apps/web/components/shared/compliance-dashboard.tsx, apps/web/lib/shared/audit-reporter.ts",
+      "description": "Compliance",
+      "owner": "Platform FE+BE",
+      "section": "Settings",
+      "status": "Planned",
+      "target_sprint": "28",
+      "task_id": "",
+      "validation_method": "Dashboard live, reports generated, audits passed"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(settings)/settings/security/page.tsx, apps/web/components/security/security-config.tsx, apps/web/lib/security/2fa-manager.ts",
+      "description": "Security",
+      "owner": "Platform FE+BE",
+      "section": "Settings",
+      "status": "Planned",
+      "target_sprint": "28",
+      "task_id": "",
+      "validation_method": "Settings configured, 2FA working, policies enforced"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(settings)/settings/import-export/page.tsx, apps/web/components/shared/data-importer.tsx, apps/web/lib/shared/data-exporter.ts",
+      "description": "Import/Export",
+      "owner": "Platform FE+BE",
+      "section": "Settings",
+      "status": "Planned",
+      "target_sprint": "28",
+      "task_id": "",
+      "validation_method": "Imports working, exports generated, mappings saved"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(settings)/settings/privacy/export/page.tsx, apps/web/components/shared/privacy-exporter.tsx, apps/web/lib/shared/gdpr-packager.ts",
+      "description": "Privacy Export",
+      "owner": "Platform FE+BE",
+      "section": "Settings",
+      "status": "Planned",
+      "target_sprint": "28",
+      "task_id": "",
+      "validation_method": "Exports generated, packages complete, GDPR met"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(settings)/settings/privacy/delete/page.tsx, apps/web/components/shared/data-eraser.tsx, apps/web/lib/shared/deletion-audit.ts",
+      "description": "Privacy Delete",
+      "owner": "Platform FE+BE",
+      "section": "Settings",
+      "status": "Planned",
+      "target_sprint": "28",
+      "task_id": "",
+      "validation_method": "Deletion working, confirmation required, audit logged"
+    },
+    {
+      "artifacts_to_track": "packages/domain/src/leads/*, packages/db/leads-repository.ts, tests/domain/leads/*.test.ts",
+      "description": "Lead Aggregate and Value Objects",
+      "owner": "Backend Dev + Tech Lead",
+      "section": "Validation",
+      "status": "Planned",
+      "target_sprint": "2",
+      "task_id": "",
+      "validation_method": "Tests passing, design reviewed, integration with tRPC works"
+    },
+    {
+      "artifacts_to_track": "packages/domain/src/contacts/*, packages/db/contacts-repository.ts, tests/domain/contacts/*.test.ts",
+      "description": "Contact Aggregate and Value Objects",
+      "owner": "Backend Dev + Tech Lead",
+      "section": "Validation",
+      "status": "Planned",
+      "target_sprint": "2",
+      "task_id": "",
+      "validation_method": "Tests pass, design reviewed"
+    },
+    {
+      "artifacts_to_track": "packages/domain/src/accounts/*, packages/db/accounts-repository.ts, tests/domain/accounts/*.test.ts",
+      "description": "Account Aggregate and Value Objects",
+      "owner": "Backend Dev + Tech Lead",
+      "section": "Validation",
+      "status": "Planned",
+      "target_sprint": "2",
+      "task_id": "",
+      "validation_method": "Tests pass, design reviewed"
+    },
+    {
+      "artifacts_to_track": "packages/domain/src/opportunities/*, packages/db/opportunities-repository.ts, tests/domain/opportunities/*.test.ts",
+      "description": "Opportunity Aggregate and Value Objects",
+      "owner": "Backend Dev + Tech Lead",
+      "section": "Validation",
+      "status": "Planned",
+      "target_sprint": "3",
+      "task_id": "",
+      "validation_method": "Tests pass, design reviewed"
+    },
+    {
+      "artifacts_to_track": "packages/domain/src/tasks/*, packages/db/tasks-repository.ts, tests/domain/tasks/*.test.ts",
+      "description": "Task Aggregate and Value Objects",
+      "owner": "Backend Dev + Tech Lead",
+      "section": "Validation",
+      "status": "Planned",
+      "target_sprint": "3",
+      "task_id": "",
+      "validation_method": "Tests pass, design reviewed"
+    },
+    {
+      "artifacts_to_track": "packages/application/src/ports/*, packages/application/src/usecases/*, packages/adapters/src/*, tests/architecture/*, docs/architecture/hex-boundaries.md, docs/architecture/repo-layout.md",
+      "description": "Define Hexagonal module boundaries + create canonical packages/application + packages/adapters skeleton",
+      "owner": "Tech Lead + Backend Dev",
+      "section": "Architecture",
+      "status": "Planned",
+      "target_sprint": "1",
+      "task_id": "",
+      "validation_method": "Tests pass, architecture review"
+    },
+    {
+      "artifacts_to_track": "packages/db/repositories/*, packages/factories/*, tests/repositories/*.test.ts",
+      "description": "Implement Repositories and Factories",
+      "owner": "Backend Dev",
+      "section": "Infrastructure",
+      "status": "Planned",
+      "target_sprint": "3",
+      "task_id": "",
+      "validation_method": "Unit tests pass, queries optimized"
+    },
+    {
+      "artifacts_to_track": "packages/domain/src/services/*, tests/services/*.test.ts",
+      "description": "Implement Domain Services & Business Logic",
+      "owner": "Backend Dev",
+      "section": "Validation",
+      "status": "Planned",
+      "target_sprint": "4",
+      "task_id": "",
+      "validation_method": "Integration tests pass"
+    },
+    {
+      "artifacts_to_track": "docs/tdd-guidelines.md, artifacts/misc/ci-coverage-config.yml, docs/shared/review-checklist.md",
+      "description": "Define TDD Process, Coverage & Review Checklist",
+      "owner": "QA Lead + Tech Lead",
+      "section": "Testing",
+      "status": "Planned",
+      "target_sprint": "2",
+      "task_id": "",
+      "validation_method": "CI fails when coverage <90%, guidelines published"
+    },
+    {
+      "artifacts_to_track": "tests/domain/*",
+      "description": "Write Unit & Integration Tests for Domain Entities",
+      "owner": "QA + Backend Dev",
+      "section": "Testing",
+      "status": "Planned",
+      "target_sprint": "4",
+      "task_id": "",
+      "validation_method": "Test reports, coverage metrics"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/sonar-project.properties, artifacts/misc/ci-sonar.yml, docs/shared/sonar-dashboard.md",
+      "description": "Set up SonarQube and integrate static analysis into CI/CD",
+      "owner": "DevOps + QA Lead",
+      "section": "Quality",
+      "status": "Planned",
+      "target_sprint": "5",
+      "task_id": "",
+      "validation_method": "Sonar reports show A rating, pipeline passes when quality gate satisfied"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/deployment-configs/*.yaml, artifacts/misc/rollback-scripts/*.sh, artifacts/metrics/blue-green-metrics.csv",
+      "description": "Implement blue/green deployment and rollback strategy",
+      "owner": "DevOps",
+      "section": "Infrastructure",
+      "status": "Planned",
+      "target_sprint": "6",
+      "task_id": "",
+      "validation_method": "Canary tested, rollback verified"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/vault-config.yml, artifacts/misc/encryption-keys/*, docs/security/encryption-tests.md",
+      "description": "Implement secrets management and encryption at rest and in transit",
+      "owner": "Security Eng + DevOps",
+      "section": "Security",
+      "status": "Planned",
+      "target_sprint": "6",
+      "task_id": "",
+      "validation_method": "Secrets scan passes, encryption verified"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/api/rate-limit.ts, artifacts/misc/waf-config.json, artifacts/misc/ddos-test-report.txt",
+      "description": "Implement API rate limiting and DDoS protection",
+      "owner": "Backend Dev + DevOps",
+      "section": "Security",
+      "status": "Planned",
+      "target_sprint": "7",
+      "task_id": "",
+      "validation_method": "Load tests show throttling, WAF blocks malicious traffic"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/backup-scripts.sh, docs/shared/dr-plan.md, artifacts/reports/restore-test-report.csv",
+      "description": "Setup backups and disaster recovery plan",
+      "owner": "DevOps + DBA",
+      "section": "Resilience",
+      "status": "Planned",
+      "target_sprint": "8",
+      "task_id": "",
+      "validation_method": "Simulated recovery successful"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/otel-config.yaml, docs/security/log-schema.md, artifacts/misc/dashboards.json, artifacts/misc/alert-rules.yml",
+      "description": "Instrument application with OpenTelemetry, unify logs, metrics and traces",
+      "owner": "DevOps + SRE",
+      "section": "Observability",
+      "status": "Planned",
+      "target_sprint": "9",
+      "task_id": "",
+      "validation_method": "Observability shows complete traces, alerts triggered on anomalies"
+    },
+    {
+      "artifacts_to_track": "artifacts/metrics/ai-metrics.json, artifacts/misc/drift-dashboard.png, artifacts/misc/alert-config.yml",
+      "description": "Monitor AI models for drift, latency, hallucination and ROI",
+      "owner": "AI Specialist + SRE",
+      "section": "AI Insights",
+      "status": "Planned",
+      "target_sprint": "10",
+      "task_id": "",
+      "validation_method": "Drift simulation triggers alert; dashboard displays metrics"
+    },
+    {
+      "artifacts_to_track": "artifacts/reports/risk-register.xlsx, docs/shared/risk-mitigation-plan.md, docs/shared/risk-review-agenda.md",
+      "description": "Establish and maintain a risk register with mitigation actions",
+      "owner": "PM + Tech Lead",
+      "section": "Risk Mgmt",
+      "status": "Planned",
+      "target_sprint": "2",
+      "task_id": "",
+      "validation_method": "Risk review sessions held; register updated; no untracked risks"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/ceremony-calendar.ics, artifacts/misc/templates/*.md, artifacts/reports/retro-action-items.xlsx",
+      "description": "Define recurring backlog refinement, sprint planning, review and retrospective ceremonies",
+      "owner": "Scrum Master + PM",
+      "section": "Planning",
+      "status": "Planned",
+      "target_sprint": "1",
+      "task_id": "",
+      "validation_method": "Meetings occur on schedule; backlog ready; actions tracked"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(auth)/reset/page.tsx, artifacts/misc/api/auth/reset.ts, artifacts/misc/email-templates/reset.html, apps/web/lib/shared/verification-mailer.ts",
+      "description": "Implement password reset and email verification flows",
+      "owner": "Frontend Dev + Backend Dev",
+      "section": "Auth Pages",
+      "status": "Planned",
+      "target_sprint": "14",
+      "task_id": "",
+      "validation_method": "E2E tests pass, tokens expire, emails delivered"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(auth)/sso/page.tsx, apps/web/lib/shared/sso-handler.ts, artifacts/misc/provider-config.json",
+      "description": "Implement SSO (SAML/OAuth) and social login providers",
+      "owner": "Frontend Dev + Backend Dev",
+      "section": "Auth Pages",
+      "status": "Planned",
+      "target_sprint": "15",
+      "task_id": "",
+      "validation_method": "E2E tests pass; identity tokens validated; scopes correct"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/(auth)/mfa/page.tsx, apps/web/lib/security/mfa-service.ts, apps/web/lib/security/backup-codes.ts, tests/mfa.spec.ts",
+      "description": "Add MFA using TOTP or SMS and allow users to enable/disable from security settings",
+      "owner": "Frontend Dev + Backend Dev",
+      "section": "Auth Pages",
+      "status": "Planned",
+      "target_sprint": "16",
+      "task_id": "",
+      "validation_method": "E2E tests simulate MFA flows; backup codes regenerate; bypass blocked"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/rotation-schedule.yaml, docs/security/dependency-scan-report.md",
+      "description": "Schedule periodic secret rotation and dependency vulnerability updates",
+      "owner": "DevOps + Security",
+      "section": "Security",
+      "status": "Planned",
+      "target_sprint": "10",
+      "task_id": "",
+      "validation_method": "Rotation logs verified; dependency updates merge automatically; no stale secrets"
+    },
+    {
+      "artifacts_to_track": "packages/platform/src/resilience/circuit-breaker.ts, apps/api/src/shared/retry-policy.ts, tests/circuit-breaker.spec.ts",
+      "description": "Implement circuit breaker and retry policies for external service calls",
+      "owner": "Backend Dev",
+      "section": "Resilience",
+      "status": "Planned",
+      "target_sprint": "7",
+      "task_id": "",
+      "validation_method": "Chaos tests show successful failover; metrics confirm improvements"
+    },
+    {
+      "artifacts_to_track": "apps/api/src/shared/cache-config.ts, artifacts/benchmarks/performance-benchmarks.csv, docs/shared/cache-invalidation.md",
+      "description": "Design caching strategy (Redis/CDN) and tune Prisma queries",
+      "owner": "Backend Dev + SRE",
+      "section": "Performance",
+      "status": "Planned",
+      "target_sprint": "8",
+      "task_id": "",
+      "validation_method": "Benchmarks confirm improvements; no stale data"
+    },
+    {
+      "artifacts_to_track": "apps/api/src/shared/audit-encryption-module.ts, artifacts/misc/compliance-report-scripts/*.ts, docs/shared/retention-policy.md",
+      "description": "Encrypt and aggregate audit logs; automate compliance reporting",
+      "owner": "Security Eng + Compliance",
+      "section": "Compliance",
+      "status": "Planned",
+      "target_sprint": "9",
+      "task_id": "",
+      "validation_method": "Compliance auditor verifies reports; logs decryptable by authorized roles only"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/onboarding-config.json, apps/web/components/shared/tour-components.tsx, apps/web/lib/shared/feedback-service.ts",
+      "description": "Add in\u2011app onboarding, guided product tours and feedback collection",
+      "owner": "UX Designer + Frontend Dev",
+      "section": "Public Pages",
+      "status": "Planned",
+      "target_sprint": "17",
+      "task_id": "",
+      "validation_method": "User testing shows clarity; analytics confirm completion rate"
+    },
+    {
+      "artifacts_to_track": "apps/api/src/shared/prompt-sanitizer.ts, artifacts/metrics/bias-metrics.csv, docs/shared/ai-guardrails-report.md",
+      "description": "Implement guardrails for prompt injection, data leakage, and monitor AI bias",
+      "owner": "AI Specialist + Security",
+      "section": "AI Foundation",
+      "status": "Planned",
+      "target_sprint": "11",
+      "task_id": "",
+      "validation_method": "Security tests simulate injections; bias tests executed; logs verified"
+    },
+    {
+      "artifacts_to_track": "docs/adr/*.md, docs/dev-guide.md, artifacts/misc/adr-index.csv",
+      "description": "Continuously maintain ADR registry and developer guide updates",
+      "owner": "Tech Writer + PM",
+      "section": "Documentation",
+      "status": "Planned",
+      "target_sprint": "3",
+      "task_id": "",
+      "validation_method": "ADR reviews complete; doc site updated"
+    },
+    {
+      "artifacts_to_track": "infra/supabase/rls-policies.sql, apps/api/src/security/tenant-context.ts, artifacts/misc/isolation-tests/*.spec.ts",
+      "description": "Implement tenant isolation at database and application layers",
+      "owner": "Backend Dev + DevOps",
+      "section": "Security",
+      "status": "Planned",
+      "target_sprint": "10",
+      "task_id": "",
+      "validation_method": "Penetration tests confirm isolation"
+    },
+    {
+      "artifacts_to_track": "docs/shared/ai-review-checklist.md, docs/shared/fallback-procedure.md, artifacts/misc/review-logs/*",
+      "description": "Establish AI output review and manual fallback processes",
+      "owner": "QA Lead + Tech Lead",
+      "section": "AI Foundation",
+      "status": "Planned",
+      "target_sprint": "3",
+      "task_id": "",
+      "validation_method": "Review logs show compliance; fallback used when necessary"
+    },
+    {
+      "artifacts_to_track": "tests/ui/*, tests/contract/*, artifacts/misc/coverage-reports/ui-coverage.html",
+      "description": "Write UI and contract tests for core pages and tRPC endpoints",
+      "owner": "QA + Frontend Dev",
+      "section": "Testing",
+      "status": "Planned",
+      "target_sprint": "6",
+      "task_id": "",
+      "validation_method": "Test suites pass; coverage reports meet thresholds"
+    },
+    {
+      "artifacts_to_track": "docs/release/promotion-policy.md, .github/workflows/release.yml, docs/operations/runbooks/release-checklist.md",
+      "description": "Release governance: staging auto-deploy, promotion policy, quality/security gates, rollback criteria",
+      "owner": "DevOps Lead",
+      "section": "Validation",
+      "status": "Planned",
+      "target_sprint": "5",
+      "task_id": "",
+      "validation_method": "Dry-run release executed to staging; simulated rollback executed; checklist reviewed"
+    },
+    {
+      "artifacts_to_track": "tools/arch-rules/*, tests/architecture/*, docs/architecture/hex-boundaries.md, artifacts/misc/ADR-###",
+      "description": "Architecture boundary enforcement: domain/infrastructure dependency rules + architecture tests in CI",
+      "owner": "Tech Lead",
+      "section": "Foundation Setup",
+      "status": "Planned",
+      "target_sprint": "4",
+      "task_id": "",
+      "validation_method": "Introduce intentional violation and confirm CI fails; review with architecture checklist"
+    },
+    {
+      "artifacts_to_track": "artifacts/sbom/*.json, .github/workflows/security-sbom.yml, docs/security/supply-chain.md",
+      "description": "Supply chain security: dependency pinning + SBOM generation in CI (npm/pnpm + container)",
+      "owner": "Security Engineer + DevOps",
+      "section": "Security",
+      "status": "Planned",
+      "target_sprint": "6",
+      "task_id": "",
+      "validation_method": "CI run produces SBOM; verify SBOM content and retention; review policy"
+    },
+    {
+      "artifacts_to_track": "docs/security/signing.md, .github/workflows/signing.yml, scripts/verify-signature.*",
+      "description": "Supply chain security: artifact signing + provenance for build outputs (images + releases)",
+      "owner": "DevOps Engineer",
+      "section": "Security",
+      "status": "Planned",
+      "target_sprint": "6",
+      "task_id": "",
+      "validation_method": "Signed artifact verified in CI and deployment; tamper test fails as expected"
+    },
+    {
+      "artifacts_to_track": "docs/security/image-scanning.md, .github/workflows/image-scan.yml",
+      "description": "Container/image scanning in CI and registry with fail-on-critical policy",
+      "owner": "Security Engineer",
+      "section": "Security",
+      "status": "Planned",
+      "target_sprint": "6",
+      "task_id": "",
+      "validation_method": "CI blocks image with known critical vuln; report archived"
+    },
+    {
+      "artifacts_to_track": "docs/adr/adr-multi-tenancy.md, docs/adr/adr-workflow-engine.md, docs/adr/adr-agent-tools.md, docs/adr/adr-data-governance.md, docs/adr/adr-audit-logging.md, artifacts/misc/adr-index.csv",
+      "description": "Create ADR pack for multi-tenancy; workflow engine choice; agent tool-calling; data classification & retention; audit logging",
+      "owner": "Tech Lead + Architect",
+      "section": "Architecture",
+      "status": "Planned",
+      "target_sprint": "1",
+      "task_id": "",
+      "validation_method": "ADR review meeting minutes; stakeholder approval recorded"
+    },
+    {
+      "artifacts_to_track": "packages/domain/src/legal/cases/case.ts, packages/domain/src/legal/cases/task.ts, packages/db/prisma/case.sql, apps/api/src/modules/legal/cases.router.ts, tests/case/*",
+      "description": "Implement Case/Matter aggregate root with tasks; deadlines; parties; lawyer assignments",
+      "owner": "Backend Dev + Domain Architect",
+      "section": "Domain",
+      "status": "Planned",
+      "target_sprint": "3",
+      "task_id": "",
+      "validation_method": "Integration tests passing; manual QA of CRUD flows; review by domain architect"
+    },
+    {
+      "artifacts_to_track": "packages/domain/src/legal/appointments/appointment.ts, packages/application/src/usecases/scheduling.ts, apps/api/src/modules/legal/appointments.router.ts, artifacts/misc/scheduling-tests/*",
+      "description": "Develop Appointment aggregate with conflict detection; buffers; recurrence; linkage to cases and calendars",
+      "owner": "Backend Dev + Calendar Specialist",
+      "section": "Scheduling",
+      "status": "Planned",
+      "target_sprint": "4",
+      "task_id": "",
+      "validation_method": "Conflict scenarios tested; load tests confirm latency; manual booking flows validated"
+    },
+    {
+      "artifacts_to_track": "packages/adapters/src/calendar/google/client.ts, packages/adapters/src/calendar/microsoft/client.ts, artifacts/misc/sync-engine/*, artifacts/misc/webhooks-config.yaml, tests/integration/calendar/*",
+      "description": "Integrate external calendar providers (Google/Microsoft) with bidirectional sync; webhook handling; idempotency; reconciliation",
+      "owner": "Backend Dev + DevOps",
+      "section": "Integration",
+      "status": "Planned",
+      "target_sprint": "5",
+      "task_id": "",
+      "validation_method": "Simulated event sync and conflict resolution; reliability metrics monitored"
+    },
+    {
+      "artifacts_to_track": "packages/ai/tools/*, apps/web/app/agent-approvals/*, artifacts/misc/approval-flow-tests/*, artifacts/misc/logs/agent-actions.log",
+      "description": "Expose application services as agent tools and implement human approval flows with preview and rollback for high-risk actions",
+      "owner": "AI Specialist + Backend Dev",
+      "section": "AI Assistant",
+      "status": "Planned",
+      "target_sprint": "6",
+      "task_id": "",
+      "validation_method": "End-to-end tests simulate agent actions; manual review; audit logs inspected"
+    },
+    {
+      "artifacts_to_track": "docs/data-governance/dsar-process.md, docs/data-governance/retention-policy.md, artifacts/misc/kms-key-config.json, apps/api/src/workflow/dsar-workflow.ts, artifacts/misc/compliance-tests/data-governance.spec.ts",
+      "description": "Implement data governance workflows: DSAR requests; retention & legal hold policies; tenant-specific encryption key management; data residency compliance",
+      "owner": "Legal Ops + Security Eng",
+      "section": "Compliance",
+      "status": "Planned",
+      "target_sprint": "7",
+      "task_id": "",
+      "validation_method": "Mock DSAR processed; retention jobs run; encryption keys rotated; compliance audit passes"
+    },
+    {
+      "artifacts_to_track": "docs/adr/adr-workflow-decision.md, artifacts/misc/workflow-poc/*, artifacts/misc/events-spec.yaml, artifacts/misc/simple-workflow-tests/*",
+      "description": "Evaluate n8n; custom engine; and Temporal; document decision via ADR; build event-driven minimal rules engine and integrate selected workflow engine",
+      "owner": "Tech Lead + DevOps + Product Manager",
+      "section": "Workflow",
+      "status": "Planned",
+      "target_sprint": "4",
+      "task_id": "",
+      "validation_method": "ADR reviewed; POC results documented; event-driven flow tested"
+    },
+    {
+      "artifacts_to_track": "docs/operations/slo-definitions.md, artifacts/misc/alerts-config.yaml, artifacts/misc/oncall-schedule.json, docs/operations/incident-runbook.md, docs/operations/restore-drill-report.md, artifacts/reports/cost-budget.xlsx",
+      "description": "Define SLOs/SLIs and alerting; establish on-call and incident management process; conduct restore drills; create capacity and cost budgets for AI inference and search",
+      "owner": "SRE Lead + DevOps + Finance",
+      "section": "Operations",
+      "status": "Planned",
+      "target_sprint": "8",
+      "task_id": "",
+      "validation_method": "Drills executed; metrics dashboards confirm SLOs; budgets reviewed; incident simulation completed"
+    },
+    {
+      "artifacts_to_track": "docs/security/threat-model.puml, docs/security/abuse-cases.md, artifacts/reports/pen-test-report.pdf, artifacts/logs/mitigation-backlog.csv, artifacts/misc/cookie-consent-component.tsx",
+      "description": "Perform threat modeling and abuse-case analysis for multi-tenancy and agent tool-calling; design mitigations; schedule penetration test; implement cookie consent mechanism",
+      "owner": "Security Lead + AI Specialist",
+      "section": "Security",
+      "status": "Planned",
+      "target_sprint": "6",
+      "task_id": "",
+      "validation_method": "Threat model reviewed; pen test results validated; cookie banner tested across browsers; compliance attestation"
+    },
+    {
+      "artifacts_to_track": "packages/adapters/src/messaging/email/outbound.ts, packages/adapters/src/messaging/email/inbound.ts, artifacts/misc/webhooks/framework.ts, artifacts/misc/api-spec/openapi-v1.yaml, artifacts/misc/email-tests/*",
+      "description": "Design and implement inbound/outbound email flows: SPF/DKIM/DMARC; inbound parsing; attachments; implement general webhook handling with idempotency and retries; publish public API specification (OpenAPI) with versioning; baseline inbound email feature delivered",
+      "owner": "Integration Lead + Backend Dev",
+      "section": "Integration",
+      "status": "Planned",
+      "target_sprint": "7",
+      "task_id": "",
+      "validation_method": "Emails delivered and parsed; DMARC reports show pass; webhook tests simulate duplicates; API spec validated by tools"
+    },
+    {
+      "artifacts_to_track": "scripts/migration/mapping.xlsx, scripts/migration/scripts/*, scripts/migration/rehearsal-report.md, scripts/migration/cutover-plan.md, artifacts/misc/reconciliation-results.csv",
+      "description": "Plan and execute legacy system migration: discover and map data; assess data quality; design migration scripts; run rehearsals and reconciliation reporting; finalize cutover with rollback plan",
+      "owner": "Data Engineer + DBA + PM",
+      "section": "Migration",
+      "status": "Planned",
+      "target_sprint": "9",
+      "task_id": "",
+      "validation_method": "Rehearsal results reviewed; final migration verified by stakeholders; rollback procedure tested"
+    },
+    {
+      "artifacts_to_track": "docs/planning/prd-template.md, docs/planning/user-journey-template.md, docs/planning/definition-of-ready.md, artifacts/reports/traceability-matrix.xlsx, artifacts/logs/backlog-updates-log.csv",
+      "description": "Define PRD and user journey templates; create Definition of Ready criteria; develop traceability matrix linking capabilities to domain services; APIs; UIs; and tests",
+      "owner": "Product Manager + Tech Lead",
+      "section": "Planning",
+      "status": "Planned",
+      "target_sprint": "2",
+      "task_id": "",
+      "validation_method": "Sample stories reviewed; DoR used; traceability matrix cross-checked; training session feedback"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/cases/timeline.tsx, packages/domain/src/legal/deadlines/deadline-engine.ts, apps/web/lib/cases/reminders-service.ts, artifacts/misc/timeline-tests/*",
+      "description": "Develop Case timeline UI with deadline engine: display tasks; deadlines; events; implement deadline engine to compute legal deadlines and reminders; integrate with scheduling",
+      "owner": "Frontend Dev + Backend Dev",
+      "section": "UI/Domain",
+      "status": "Planned",
+      "target_sprint": "5",
+      "task_id": "",
+      "validation_method": "User testing; functional tests; performance analysis; legal accuracy review"
+    },
+    {
+      "artifacts_to_track": "packages/db/prisma/conversation.sql, apps/api/src/modules/conversation.ts, artifacts/misc/search/conversation-index.ts, artifacts/misc/conversations-tests/*, artifacts/misc/data-retention-config.yaml",
+      "description": "Implement conversation record entity: store chat transcripts; tool calls; actions per case; enable search and retrieval; integrate audit logging and data retention policies",
+      "owner": "Backend Dev + AI Specialist",
+      "section": "AI Assistant",
+      "status": "Planned",
+      "target_sprint": "6",
+      "task_id": "",
+      "validation_method": "Unit and integration tests; manual search; DSAR deletion tested; audit logs verified"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/agent-approvals/preview.tsx, apps/web/lib/agent/rollback-service.ts, artifacts/misc/approval-tests/*, artifacts/misc/analytics/approvals-metrics.csv",
+      "description": "Implement action preview and rollback UI for agent-initiated changes; integrated with approval flows",
+      "owner": "Frontend Dev + AI Specialist",
+      "section": "AI Assistant",
+      "status": "Planned",
+      "target_sprint": "6",
+      "task_id": "",
+      "validation_method": "Manual testing of diff preview; rollback tested; analytics dashboards review"
+    },
+    {
+      "artifacts_to_track": "artifacts/misc/vault-config.yaml, infra/security/*",
+      "description": "Implement Secrets Management (e.g., HashiCorp Vault) for API Keys (OpenAI, etc.).",
+      "owner": "Security Eng + DevOps",
+      "section": "AI Foundation",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Vault server running in dev mode, API accessible, root token generated"
+    },
+    {
+      "artifacts_to_track": "docs/events/contracts-v1.yaml, packages/platform/outbox/*, packages/platform/events/*, tests/events/*, docs/shared/ADR-###-events.md",
+      "description": "Domain events infrastructure: event contracts + versioning + outbox pattern + idempotent publishing",
+      "owner": "Backend Dev + Architect",
+      "section": "Platform",
+      "status": "Planned",
+      "target_sprint": "3",
+      "task_id": "",
+      "validation_method": "Integration tests validate outbox consistency; duplicate publish prevented; dashboards show event flow"
+    },
+    {
+      "artifacts_to_track": "packages/platform/consumers/*, packages/platform/dlq/*, docs/operations/runbooks/dlq-triage.md, artifacts/misc/chaos-tests/events/*, artifacts/misc/alerts/events/*",
+      "description": "Event consumers framework: retries + DLQ + backoff + observability; standard webhook/idempotency utilities",
+      "owner": "Backend Dev + SRE",
+      "section": "Platform",
+      "status": "Planned",
+      "target_sprint": "4",
+      "task_id": "",
+      "validation_method": "Chaos tests inject failures; DLQ receives poison messages; alerts fire; handlers remain idempotent"
+    },
+    {
+      "artifacts_to_track": "packages/domain/src/legal/cases/case-document.ts, packages/db/prisma/case-document.sql, apps/api/src/modules/crm/documents.router.ts, tests/case-document/*",
+      "description": "Case document model: storage metadata, versioning, ACL mapping (tenant + case + role), and audit hooks",
+      "owner": "Backend Dev + Domain Architect",
+      "section": "Case Docs",
+      "status": "Planned",
+      "target_sprint": "6",
+      "task_id": "",
+      "validation_method": "Isolation tests prove tenant/case scoping; audit entries present for all actions; API contract tests pass"
+    },
+    {
+      "artifacts_to_track": "apps/api/src/ingestion/*, packages/adapters/src/messaging/email/attachments/*, docs/security/av-scan/*, tests/ingestion/*, docs/operations/runbooks/ingestion.md",
+      "description": "Ingestion pipeline for case files: upload/email attachment intake, antivirus scan, metadata extraction, storage, and indexing triggers",
+      "owner": "Backend Dev + Integration Eng",
+      "section": "Case Docs",
+      "status": "Planned",
+      "target_sprint": "7",
+      "task_id": "",
+      "validation_method": "E2E ingest from UI + inbound email; malicious sample blocked; retries succeed; ingestion metrics visible"
+    },
+    {
+      "artifacts_to_track": "apps/workers/ocr/*, artifacts/benchmarks/ocr-quality-benchmarks.csv, artifacts/misc/extracted-text-schema.json, tests/ocr/*",
+      "description": "OCR + text extraction worker for scanned PDFs/images; normalized text artifacts stored for search and RAG",
+      "owner": "Backend Dev + AI Specialist",
+      "section": "Case Docs",
+      "status": "Planned",
+      "target_sprint": "8",
+      "task_id": "",
+      "validation_method": "Benchmark run against sample corpus; extraction stored and searchable; retries verified"
+    },
+    {
+      "artifacts_to_track": "packages/search/case-index/*, packages/search/retrieval.ts, artifacts/misc/reindex-jobs/*, tests/search-permissions/*, artifacts/misc/relevance-eval.json",
+      "description": "Permissioned indexing for case documents and notes: full-text + embeddings with tenant/case ACL filters",
+      "owner": "Backend Dev + AI Specialist",
+      "section": "Search/AI",
+      "status": "Planned",
+      "target_sprint": "8",
+      "task_id": "",
+      "validation_method": "Automated tests prove ACL enforcement; relevance suite runs in CI; load test meets latency"
+    },
+    {
+      "artifacts_to_track": "packages/ai/tools/retrieve-case-context.ts, artifacts/misc/evals/case-rag/*, docs/security/prompt-injection-tests/*, docs/agent/case-rag.md",
+      "description": "Case RAG tool: agent retrieval tool constrained by tenant/case permissions; citations + source trace; prompt-injection hardening for retrieved content",
+      "owner": "AI Specialist + Security",
+      "section": "AI Assistant",
+      "status": "Planned",
+      "target_sprint": "9",
+      "task_id": "",
+      "validation_method": "Red-team prompts blocked; eval suite passes; tool logs show tenant/case scoping"
+    },
+    {
+      "artifacts_to_track": "packages/notifications/*, artifacts/misc/templates/*, tests/notifications/*, docs/operations/runbooks/notifications.md",
+      "description": "Notification service MVP: unified delivery (in-app + email) with preference model (backend), templates, and audit logging",
+      "owner": "Backend Dev + SRE",
+      "section": "Notifications",
+      "status": "Planned",
+      "target_sprint": "7",
+      "task_id": "",
+      "validation_method": "Send test notifications; simulate provider failure; retries succeed; audit logs validated"
+    },
+    {
+      "artifacts_to_track": "packages/scheduling/invites/*, packages/scheduling/reminders/*, artifacts/misc/ics-fixtures/*, tests/scheduling-comms/*",
+      "description": "Scheduling communications: ICS invites, reschedule/cancel flows, reminders; integrated with notification service and calendar sync",
+      "owner": "Backend Dev + Calendar Specialist",
+      "section": "Scheduling",
+      "status": "Planned",
+      "target_sprint": "8",
+      "task_id": "",
+      "validation_method": "E2E booking sends invite; reschedule updates; cancel notifies; retry does not duplicate"
+    },
+    {
+      "artifacts_to_track": "apps/web/app/cases/timeline/*, apps/api/src/modules/misc/timeline.ts, apps/web/lib/documents/timeline-event-model.ts, tests/ui/case-timeline/*",
+      "description": "Case timeline enrichment: include documents/versions, communications (email/WhatsApp), and agent actions/approvals as timeline events",
+      "owner": "Frontend Dev + Backend Dev",
+      "section": "UI/Domain",
+      "status": "Planned",
+      "target_sprint": "9",
+      "task_id": "",
+      "validation_method": "User testing validates readability; E2E tests cover permissions; performance checks pass"
+    },
+    {
+      "artifacts_to_track": "docs/architecture/repo-layout.md, docs/architecture/artifact-conventions.md, tools/lint/artifact-paths.ts, .github/workflows/artifact-lint.yml, scripts/migration/artifact-move-map.csv",
+      "description": "Artifact path conventions + CI lint to prevent repo drift",
+      "owner": "Tech Lead + DevOps",
+      "section": "Planning",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Run artifact-lint in CI; introduce an invalid artifact path and confirm CI fails; review migration map completeness"
+    },
+    {
+      "artifacts_to_track": "apps/workers/events-worker/src/main.ts, apps/workers/events-worker/src/outbox/pollOutbox.ts, apps/workers/ingestion-worker/src/main.ts, apps/workers/ingestion-worker/src/jobs/extractText.job.ts, apps/workers/notifications-worker/src/main.ts, apps/workers/notifications-worker/src/channels/email.ts, packages/platform/src/telemetry/*, infra/monitoring/dashboards/workers.json, docs/operations/workers-runbook.md",
+      "description": "Standardize worker runtime under apps/workers (events, ingestion, notifications) with shared job framework, metrics, and deployment packaging",
+      "owner": "SRE Lead + Backend Dev",
+      "section": "Platform",
+      "status": "Planned",
+      "target_sprint": "6",
+      "task_id": "",
+      "validation_method": "Run workers locally via docker-compose; simulate outbox publish and ingestion triggers; verify dashboards populate; chaos test restart and confirm idempotent resume"
+    }
+  ]
+}

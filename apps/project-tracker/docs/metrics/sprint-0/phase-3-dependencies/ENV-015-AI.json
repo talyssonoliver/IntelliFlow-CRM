@@ -10,15 +10,9 @@
   "dependencies": {
     "all_satisfied": false,
     "verified_at": "2025-12-16T00:41:57Z",
-    "required": [
-      "ENV-004-AI",
-      "ENV-006-AI"
-    ]
+    "required": ["ENV-004-AI", "ENV-006-AI"]
   },
-  "dependencies_resolved": [
-    "ENV-004-AI",
-    "ENV-006-AI"
-  ],
+  "dependencies_resolved": ["ENV-004-AI", "ENV-006-AI"],
   "target_duration_minutes": 10,
   "kpis": {
     "lighthouse_config_created": {

@@ -1,0 +1,78 @@
+name: System Audit (Tier 3 Nightly)
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: system-audit-nightly
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8.15.0'
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+  TURBO_CACHE_DIR: .turbo
+
+jobs:
+  system-audit-tier3:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Cache Turbo
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ hashFiles('pnpm-lock.yaml', 'turbo.json') }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+
+      - name: Cache SonarQube
+        uses: actions/cache@v4
+        with:
+          path: .sonar/cache
+          key: ${{ runner.os }}-sonar-${{ hashFiles('sonar-project.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-sonar-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python deps
+        run: pip install pyyaml pytest
+
+      - name: Run audit tool tests
+        run: python -m pytest tools/audit/tests -q
+
+      - name: Run nightly audit (Tier 1 + Tier 2 + Tier 3, full scope)
+        run: |
+          RUN_ID="nightly-${{ github.run_id }}-${{ github.run_attempt }}"
+          python tools/audit/run_audit.py --mode nightly --run-id "$RUN_ID" --concurrency 2
+
+      - name: Upload Tier 3 audit bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: system-audit-tier3-${{ github.run_id }}
+          path: artifacts/reports/system-audit/nightly-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 30

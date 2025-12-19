@@ -9,7 +9,7 @@ services:
     image: pgvector/pgvector:pg16
     container_name: intelliflow-postgres
     ports:
-      - "5432:5432"
+      - '5432:5432'
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -18,7 +18,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./infra/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,7 +30,7 @@ services:
     image: pgvector/pgvector:pg16
     container_name: intelliflow-postgres-test
     ports:
-      - "5433:5432"
+      - '5433:5432'
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -38,7 +38,7 @@ services:
     volumes:
       - postgres_test_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -50,12 +50,12 @@ services:
     image: redis:7-alpine
     container_name: intelliflow-redis
     ports:
-      - "6379:6379"
+      - '6379:6379'
     command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -67,10 +67,10 @@ services:
     image: redis:7-alpine
     container_name: intelliflow-redis-test
     ports:
-      - "6380:6379"
+      - '6380:6379'
     command: redis-server --appendonly no
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -82,7 +82,7 @@ services:
     image: adminer:latest
     container_name: intelliflow-adminer
     ports:
-      - "8080:8080"
+      - '8080:8080'
     environment:
       ADMINER_DEFAULT_SERVER: postgres
     depends_on:
@@ -97,7 +97,7 @@ services:
     image: redislabs/redisinsight:latest
     container_name: intelliflow-redis-insight
     ports:
-      - "8001:8001"
+      - '8001:8001'
     volumes:
       - redis_insight_data:/db
     depends_on:
@@ -112,8 +112,8 @@ services:
     image: mailhog/mailhog:latest
     container_name: intelliflow-mailhog
     ports:
-      - "1025:1025"  # SMTP
-      - "8025:8025"  # Web UI
+      - '1025:1025' # SMTP
+      - '8025:8025' # Web UI
     networks:
       - intelliflow
     profiles:

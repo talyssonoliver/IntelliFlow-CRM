@@ -95,4 +95,3 @@ export class InMemoryFeatureFlagProvider implements FeatureFlagProvider {
     return this.getDecision(key, context).enabled;
   }
 }
-

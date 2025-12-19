@@ -10,22 +10,22 @@ interface KanbanViewProps {
 
 export default function KanbanView({ tasks, onTaskClick }: KanbanViewProps) {
   const columns = [
-    { id: 'backlog', title: 'Backlog', status: 'Backlog' },
-    { id: 'planned', title: 'Planned', status: 'Planned' },
-    { id: 'inprogress', title: 'In Progress', status: 'In Progress' },
-    { id: 'blocked', title: 'Blocked', status: 'Blocked' },
-    { id: 'completed', title: 'Completed', status: 'Completed' },
+    { id: 'backlog', title: 'Backlog', statuses: ['Backlog', 'In Review'] },
+    { id: 'planned', title: 'Planned', statuses: ['Planned'] },
+    { id: 'inprogress', title: 'In Progress', statuses: ['In Progress', 'Validating'] },
+    { id: 'blocked', title: 'Blocked', statuses: ['Blocked', 'Needs Human', 'Failed'] },
+    { id: 'completed', title: 'Completed', statuses: ['Completed', 'Done'] },
   ];
 
-  const getTasksForColumn = (columnId: string, status: string) => {
-    return tasks.filter(t => t.status === status);
+  const getTasksForColumn = (statuses: string[]) => {
+    return tasks.filter((t) => statuses.includes(t.status));
   };
 
   return (
     <div className="w-full">
       <div className="grid grid-cols-5 gap-2">
-        {columns.map(column => {
-          const columnTasks = getTasksForColumn(column.id, column.status);
+        {columns.map((column) => {
+          const columnTasks = getTasksForColumn(column.statuses);
 
           return (
             <div key={column.id} className="min-w-0">
@@ -40,7 +40,7 @@ export default function KanbanView({ tasks, onTaskClick }: KanbanViewProps) {
 
                 {/* Tasks */}
                 <div className="space-y-2 min-h-[200px]">
-                  {columnTasks.map(task => {
+                  {columnTasks.map((task) => {
                     // Determine priority based on section
                     let priority: 'high' | 'medium' | 'low';
                     if (task.section.includes('Security')) {

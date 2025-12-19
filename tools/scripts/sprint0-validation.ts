@@ -171,7 +171,7 @@ function validateMonorepoStructure() {
 function validateConfigFiles() {
   log('\n⚙️  Validating Configuration Files...', 'cyan');
 
-    const configFiles = [
+  const configFiles = [
     'tsconfig.json',
     'vitest.config.ts',
     'playwright.config.ts',
@@ -182,13 +182,7 @@ function validateConfigFiles() {
   ];
 
   for (const file of configFiles) {
-    validate(
-      file,
-      'config',
-      () => fileExists(file),
-      `${file} exists`,
-      `${file} missing`
-    );
+    validate(file, 'config', () => fileExists(file), `${file} exists`, `${file} missing`);
   }
 }
 
@@ -306,13 +300,7 @@ function validatePackages() {
   ];
 
   for (const pkg of requiredPackages) {
-    validate(
-      pkg,
-      'packages',
-      () => dirExists(pkg),
-      `${pkg} exists`,
-      `${pkg} missing`
-    );
+    validate(pkg, 'packages', () => dirExists(pkg), `${pkg} exists`, `${pkg} missing`);
 
     const packageJsonPath = `${pkg}/package.json`;
     validate(
@@ -464,7 +452,8 @@ function validateTaskMetrics() {
   validate(
     'ENV-017-AI metrics',
     'metrics',
-    () => fileExists('apps/project-tracker/docs/metrics/sprint-0/phase-4-final-setup/ENV-017-AI.json'),
+    () =>
+      fileExists('apps/project-tracker/docs/metrics/sprint-0/phase-4-final-setup/ENV-017-AI.json'),
     'ENV-017-AI metrics file exists',
     'ENV-017-AI metrics file missing'
   );
@@ -472,7 +461,8 @@ function validateTaskMetrics() {
   validate(
     'ENV-018-AI metrics',
     'metrics',
-    () => fileExists('apps/project-tracker/docs/metrics/sprint-0/phase-5-completion/ENV-018-AI.json'),
+    () =>
+      fileExists('apps/project-tracker/docs/metrics/sprint-0/phase-5-completion/ENV-018-AI.json'),
     'ENV-018-AI metrics file exists',
     'ENV-018-AI metrics file missing'
   );

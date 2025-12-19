@@ -36,7 +36,8 @@ guardrails.
 
 ### Positive Consequences
 
-- Single cohesive platform and developer experience (monorepo + shared packages).
+- Single cohesive platform and developer experience (monorepo + shared
+  packages).
 - Early instrumentation and governance make AI impact measurable.
 - Feature flags allow controlled release and rapid rollback.
 
@@ -57,4 +58,3 @@ guardrails.
 - [ ] Business case reviewed and signed by CEO/CFO
 - [ ] Risks documented and owned
 - [ ] Budget and timeline approved
-

@@ -17,12 +17,15 @@ interface SprintSummary {
     not_started: number;
     failed: number;
   };
-  kpi_summary: Record<string, {
-    target: any;
-    actual: any;
-    status: string;
-    unit?: string;
-  }>;
+  kpi_summary: Record<
+    string,
+    {
+      target: any;
+      actual: any;
+      status: string;
+      unit?: string;
+    }
+  >;
   blockers: Array<{
     task_id: string;
     blocker: string;
@@ -65,7 +68,7 @@ export default function MetricsView() {
         method: 'POST',
         cache: 'no-store',
       });
-      
+
       if (response.ok) {
         const result = await response.json();
         console.log('Metrics synced:', result);
@@ -85,7 +88,7 @@ export default function MetricsView() {
     setIsLoading(true);
     try {
       const timestamp = Date.now();
-      
+
       const [sprintRes, phasesRes] = await Promise.all([
         fetch(`/api/metrics/sprint?t=${timestamp}`, { cache: 'no-store' }),
         fetch(`/api/metrics/phases?t=${timestamp}`, { cache: 'no-store' }),
@@ -111,20 +114,20 @@ export default function MetricsView() {
 
   useEffect(() => {
     loadMetrics();
-    
+
     // Watch for file changes using Server-Sent Events
     const eventSource = new EventSource('/api/metrics/watch');
-    
+
     eventSource.onmessage = () => {
       console.log('Metrics files changed, reloading...');
       loadMetrics();
     };
-    
+
     eventSource.onerror = (error) => {
       console.error('EventSource error:', error);
       eventSource.close();
     };
-    
+
     return () => {
       eventSource.close();
     };
@@ -173,14 +176,11 @@ export default function MetricsView() {
   }
 
   if (!sprintSummary) {
-    return (
-      <div className="text-center text-gray-500 p-8">
-        No metrics data available
-      </div>
-    );
+    return <div className="text-center text-gray-500 p-8">No metrics data available</div>;
   }
 
-  const progressPercentage = (sprintSummary.task_summary.done / sprintSummary.task_summary.total) * 100;
+  const progressPercentage =
+    (sprintSummary.task_summary.done / sprintSummary.task_summary.total) * 100;
 
   return (
     <div className="space-y-6">
@@ -188,7 +188,10 @@ export default function MetricsView() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">{sprintSummary.name}</h1>
-          <p className="text-gray-600">Sprint {sprintSummary.sprint} • Target: {new Date(sprintSummary.target_date).toLocaleDateString()}</p>
+          <p className="text-gray-600">
+            Sprint {sprintSummary.sprint} • Target:{' '}
+            {new Date(sprintSummary.target_date).toLocaleDateString()}
+          </p>
         </div>
         <div className="flex gap-2">
           <button
@@ -212,9 +215,7 @@ export default function MetricsView() {
       </div>
 
       {lastUpdated && (
-        <p className="text-sm text-gray-500">
-          Last updated: {lastUpdated.toLocaleTimeString()}
-        </p>
+        <p className="text-sm text-gray-500">Last updated: {lastUpdated.toLocaleTimeString()}</p>
       )}
 
       {/* Overall Progress */}
@@ -224,7 +225,10 @@ export default function MetricsView() {
           <div>
             <div className="flex justify-between text-sm mb-2">
               <span>Completion</span>
-              <span className="font-semibold">{sprintSummary.task_summary.done} / {sprintSummary.task_summary.total} tasks ({progressPercentage.toFixed(1)}%)</span>
+              <span className="font-semibold">
+                {sprintSummary.task_summary.done} / {sprintSummary.task_summary.total} tasks (
+                {progressPercentage.toFixed(1)}%)
+              </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3">
               <div
@@ -280,9 +284,10 @@ export default function MetricsView() {
         <div className="space-y-4">
           {phases.map((phase) => {
             const status = getPhaseStatus(phase);
-            const phaseProgress = phase.aggregated_metrics.total_tasks > 0
-              ? (phase.aggregated_metrics.done / phase.aggregated_metrics.total_tasks) * 100
-              : 0;
+            const phaseProgress =
+              phase.aggregated_metrics.total_tasks > 0
+                ? (phase.aggregated_metrics.done / phase.aggregated_metrics.total_tasks) * 100
+                : 0;
 
             return (
               <div key={phase.phase} className="border rounded-lg p-4">
@@ -314,17 +319,17 @@ export default function MetricsView() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Object.entries(sprintSummary.kpi_summary).map(([key, kpi]) => (
             <div key={key} className={`p-4 rounded-lg ${getStatusColor(kpi.status)}`}>
-              <h3 className="font-semibold text-sm mb-2 capitalize">
-                {key.replaceAll('_', ' ')}
-              </h3>
+              <h3 className="font-semibold text-sm mb-2 capitalize">{key.replaceAll('_', ' ')}</h3>
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-bold">
-                  {typeof kpi.actual === 'number' ? kpi.actual.toFixed(1) : kpi.actual ?? 'N/A'}
+                  {typeof kpi.actual === 'number' ? kpi.actual.toFixed(1) : (kpi.actual ?? 'N/A')}
                 </span>
                 {kpi.unit && <span className="text-sm">{kpi.unit}</span>}
               </div>
               <p className="text-xs mt-1">
-                Target: {typeof kpi.target === 'number' ? kpi.target.toFixed(1) : kpi.target ?? 'N/A'} {kpi.unit}
+                Target:{' '}
+                {typeof kpi.target === 'number' ? kpi.target.toFixed(1) : (kpi.target ?? 'N/A')}{' '}
+                {kpi.unit}
               </p>
               <p className="text-xs font-semibold mt-1">{kpi.status.replaceAll('_', ' ')}</p>
             </div>
@@ -338,16 +343,17 @@ export default function MetricsView() {
           <h2 className="text-xl font-semibold mb-4">Recently Completed Tasks</h2>
           <div className="space-y-3">
             {sprintSummary.completed_tasks.map((task) => (
-              <div key={task.task_id} className="flex items-center justify-between border-l-4 border-green-500 pl-4 py-2">
+              <div
+                key={task.task_id}
+                className="flex items-center justify-between border-l-4 border-green-500 pl-4 py-2"
+              >
                 <div>
                   <p className="font-semibold">{task.task_id}</p>
                   <p className="text-sm text-gray-600">
                     Completed: {new Date(task.completed_at).toLocaleString()}
                   </p>
                 </div>
-                <span className="text-sm text-gray-600">
-                  {task.duration_minutes} min
-                </span>
+                <span className="text-sm text-gray-600">{task.duration_minutes} min</span>
               </div>
             ))}
           </div>
@@ -371,7 +377,8 @@ export default function MetricsView() {
                     <p className="font-semibold">{blocker.task_id}</p>
                     <p className="text-sm text-gray-700 mt-1">{blocker.blocker}</p>
                     <p className="text-xs text-gray-600 mt-2">
-                      Owner: {blocker.owner} • Raised: {new Date(blocker.raised_at).toLocaleString()}
+                      Owner: {blocker.owner} • Raised:{' '}
+                      {new Date(blocker.raised_at).toLocaleString()}
                     </p>
                     {blocker.resolved_at && (
                       <p className="text-xs text-green-700 mt-1 font-semibold">

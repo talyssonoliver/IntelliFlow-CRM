@@ -56,9 +56,15 @@ export default function LeadsPage() {
               IntelliFlow CRM
             </a>
             <div className="flex items-center space-x-4">
-              <a href="/leads" className="text-primary font-medium">Leads</a>
-              <a href="/contacts" className="text-gray-600 dark:text-gray-300">Contacts</a>
-              <a href="/analytics" className="text-gray-600 dark:text-gray-300">Analytics</a>
+              <a href="/leads" className="text-primary font-medium">
+                Leads
+              </a>
+              <a href="/contacts" className="text-gray-600 dark:text-gray-300">
+                Contacts
+              </a>
+              <a href="/analytics" className="text-gray-600 dark:text-gray-300">
+                Analytics
+              </a>
             </div>
           </div>
         </div>
@@ -67,9 +73,7 @@ export default function LeadsPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Leads
-            </h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Leads</h2>
             <p className="text-gray-600 dark:text-gray-300">
               Manage and score your sales leads with AI
             </p>
@@ -83,21 +87,19 @@ export default function LeadsPage() {
           <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-500 dark:text-gray-400">Filter:</span>
-              {(['ALL', 'NEW', 'CONTACTED', 'QUALIFIED', 'CONVERTED'] as const).map(
-                (status) => (
-                  <button
-                    key={status}
-                    onClick={() => setStatusFilter(status)}
-                    className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                      statusFilter === status
-                        ? 'bg-primary text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                    }`}
-                  >
-                    {status}
-                  </button>
-                )
-              )}
+              {(['ALL', 'NEW', 'CONTACTED', 'QUALIFIED', 'CONVERTED'] as const).map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setStatusFilter(status)}
+                  className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                    statusFilter === status
+                      ? 'bg-primary text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {status}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -129,9 +131,7 @@ export default function LeadsPage() {
                       <p className="font-medium text-gray-900 dark:text-white">
                         {lead.firstName} {lead.lastName}
                       </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {lead.email}
-                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{lead.email}</p>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-gray-700 dark:text-gray-300">
@@ -144,9 +144,7 @@ export default function LeadsPage() {
                     <ScoreBadge score={lead.score} />
                   </td>
                   <td className="px-6 py-4">
-                    <button className="text-primary hover:underline text-sm">
-                      View Details
-                    </button>
+                    <button className="text-primary hover:underline text-sm">View Details</button>
                   </td>
                 </tr>
               ))}
@@ -169,9 +167,7 @@ function StatusBadge({ status }: { status: LeadStatus }) {
   };
 
   return (
-    <span className={`px-2 py-1 text-xs font-medium rounded-full ${colors[status]}`}>
-      {status}
-    </span>
+    <span className={`px-2 py-1 text-xs font-medium rounded-full ${colors[status]}`}>{status}</span>
   );
 }
 

@@ -29,7 +29,15 @@
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { Resource } from '@opentelemetry/resources';
-import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
+
+// Use stable string literals to avoid version compatibility issues with semantic-conventions
+const SEMRESATTR_SERVICE_NAME = 'service.name';
+const SEMRESATTR_SERVICE_VERSION = 'service.version';
+
+/**
+ * Type for span/event attributes
+ */
+export type AttributeValue = Record<string, string | number | boolean>;
 import {
   Span,
   SpanStatusCode,
@@ -77,20 +85,25 @@ export function initTracing(config: TracingConfig): void {
   }
 
   const resource = new Resource({
-    [ATTR_SERVICE_NAME]: config.serviceName,
-    [ATTR_SERVICE_VERSION]: config.serviceVersion || process.env.SERVICE_VERSION || '0.1.0',
+    [SEMRESATTR_SERVICE_NAME]: config.serviceName,
+    [SEMRESATTR_SERVICE_VERSION]: config.serviceVersion || process.env.SERVICE_VERSION || '0.1.0',
     'deployment.environment': config.environment || process.env.ENVIRONMENT || 'development',
     'service.namespace': 'intelliflow',
   });
 
+  // Type assertions needed due to OTel package version mismatches across dependencies
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const traceExporter = new OTLPTraceExporter({
     url: config.endpoint || process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4317',
-  });
+  }) as any;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const spanProcessor = new BatchSpanProcessor(traceExporter) as any;
 
   sdk = new NodeSDK({
     resource,
     traceExporter,
-    spanProcessor: new BatchSpanProcessor(traceExporter),
+    spanProcessor,
     instrumentations: [
       getNodeAutoInstrumentations({
         // Automatic instrumentation configuration
@@ -100,7 +113,7 @@ export function initTracing(config: TracingConfig): void {
         '@opentelemetry/instrumentation-http': {
           ignoreIncomingRequestHook: (req) => {
             // Ignore health checks
-            return req.url?.includes('/health') || req.url?.includes('/metrics');
+            return !!(req.url?.includes('/health') || req.url?.includes('/metrics'));
           },
         },
         '@opentelemetry/instrumentation-express': {
@@ -174,7 +187,7 @@ export async function trace<T>(
   fn: (span: Span) => Promise<T> | T,
   options?: {
     kind?: SpanKind;
-    attributes?: Record<string, string | number | boolean>;
+    attributes?: AttributeValue;
   }
 ): Promise<T> {
   const currentTracer = getTracer();
@@ -218,7 +231,7 @@ export function createSpan(
   name: string,
   options?: {
     kind?: SpanKind;
-    attributes?: Record<string, string | number | boolean>;
+    attributes?: AttributeValue;
   }
 ): Span {
   const currentTracer = getTracer();
@@ -237,7 +250,7 @@ export function createSpan(
  * @param name - Event name
  * @param attributes - Event attributes
  */
-export function addEvent(name: string, attributes?: Record<string, string | number | boolean>): void {
+export function addEvent(name: string, attributes?: AttributeValue): void {
   const span = otelTrace.getActiveSpan();
   if (span) {
     span.addEvent(name, attributes);
@@ -251,7 +264,7 @@ export function addEvent(name: string, attributes?: Record<string, string | numb
  *
  * @param attributes - Attributes to add
  */
-export function addAttributes(attributes: Record<string, string | number | boolean>): void {
+export function addAttributes(attributes: AttributeValue): void {
   const span = otelTrace.getActiveSpan();
   if (span) {
     span.setAttributes(attributes);

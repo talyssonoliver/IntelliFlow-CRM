@@ -8,19 +8,19 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     },
     "./crm/*": {
+      "types": "./dist/crm/*.d.ts",
       "import": "./dist/crm/*.mjs",
-      "require": "./dist/crm/*.js",
-      "types": "./dist/crm/*.d.ts"
+      "require": "./dist/crm/*.js"
     },
     "./shared/*": {
+      "types": "./dist/shared/*.d.ts",
       "import": "./dist/shared/*.mjs",
-      "require": "./dist/shared/*.js",
-      "types": "./dist/shared/*.d.ts"
+      "require": "./dist/shared/*.js"
     }
   },
   "scripts": {

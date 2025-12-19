@@ -142,11 +142,7 @@
   "dependencies": {
     "prerequisiteTasks": [],
     "blockedTasks": [],
-    "relatedTasks": [
-      "ENV-001-AI",
-      "ENV-002-AI",
-      "ENV-003-AI"
-    ]
+    "relatedTasks": ["ENV-001-AI", "ENV-002-AI", "ENV-003-AI"]
   },
   "notes": "All three validation scripts provide comprehensive coverage of environment setup\n\nvalidate-env.ts includes security checks for sensitive variables and detects placeholder values\n\ncheck-dependencies.ts scans all workspaces and detects version inconsistencies\n\nhealth-check.ts supports selective service checks and configurable timeouts\n\n.env.local.example optimized for local development with Ollama instead of OpenAI\n\nScripts use color-coded terminal output for better developer experience\n\nAll scripts support CLI arguments for flexible usage\n\nGenerated validation artifact demonstrates script functionality",
   "section": "Other",

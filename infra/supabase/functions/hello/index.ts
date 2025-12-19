@@ -2,147 +2,143 @@
 // Example edge function demonstrating best practices for IntelliFlow CRM
 // Runs on Deno runtime with TypeScript support
 
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0"
+import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
 
 // CORS headers for cross-origin requests
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-}
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 // Type definitions
 interface HelloRequest {
-  name?: string
-  userId?: string
+  name?: string;
+  userId?: string;
 }
 
 interface HelloResponse {
-  message: string
-  timestamp: string
+  message: string;
+  timestamp: string;
   user?: {
-    id: string
-    email: string
-    role: string
-  }
-  metadata?: Record<string, unknown>
+    id: string;
+    email: string;
+    role: string;
+  };
+  metadata?: Record<string, unknown>;
 }
 
 interface ErrorResponse {
-  error: string
-  details?: string
+  error: string;
+  details?: string;
 }
 
 // Main handler function
 serve(async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders })
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
     // Initialize Supabase client with user context
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
     if (!supabaseUrl || !supabaseKey) {
-      throw new Error("Missing Supabase configuration")
+      throw new Error('Missing Supabase configuration');
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Get authorization header for user authentication
-    const authHeader = req.headers.get("Authorization")
-    let currentUser = null
+    const authHeader = req.headers.get('Authorization');
+    let currentUser = null;
 
     if (authHeader) {
       // Verify JWT and get user
-      const token = authHeader.replace("Bearer ", "")
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+      const token = authHeader.replace('Bearer ', '');
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser(token);
 
       if (authError) {
-        console.error("Auth error:", authError)
+        console.error('Auth error:', authError);
       } else {
-        currentUser = user
+        currentUser = user;
       }
     }
 
     // Parse request body
-    const requestBody = await req.json() as HelloRequest
-    const { name = "World", userId } = requestBody
+    const requestBody = (await req.json()) as HelloRequest;
+    const { name = 'World', userId } = requestBody;
 
     // Build response
     const response: HelloResponse = {
       message: `Hello, ${name}! Welcome to IntelliFlow CRM Edge Functions.`,
       timestamp: new Date().toISOString(),
-    }
+    };
 
     // If user is authenticated, include user details
     if (currentUser) {
       // Fetch user details from database
       const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("id, email, role")
-        .eq("id", currentUser.id)
-        .single()
+        .from('users')
+        .select('id, email, role')
+        .eq('id', currentUser.id)
+        .single();
 
       if (!userError && userData) {
         response.user = {
           id: userData.id,
           email: userData.email,
           role: userData.role,
-        }
-        response.message = `Hello, ${userData.name || name}! You are authenticated as ${userData.role}.`
+        };
+        response.message = `Hello, ${userData.name || name}! You are authenticated as ${userData.role}.`;
       }
     }
 
     // Add metadata about the edge function
     response.metadata = {
-      functionVersion: "1.0.0",
-      runtime: "Deno",
-      region: Deno.env.get("DENO_REGION") || "unknown",
+      functionVersion: '1.0.0',
+      runtime: 'Deno',
+      region: Deno.env.get('DENO_REGION') || 'unknown',
       executionId: crypto.randomUUID(),
-    }
+    };
 
     // Log successful execution
-    console.log("Edge function executed successfully", {
+    console.log('Edge function executed successfully', {
       userId: currentUser?.id,
       timestamp: response.timestamp,
-    })
+    });
 
     // Return JSON response with CORS headers
-    return new Response(
-      JSON.stringify(response),
-      {
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json",
-        },
-        status: 200,
-      }
-    )
-
+    return new Response(JSON.stringify(response), {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json',
+      },
+      status: 200,
+    });
   } catch (error) {
     // Error handling
-    console.error("Edge function error:", error)
+    console.error('Edge function error:', error);
 
     const errorResponse: ErrorResponse = {
-      error: "Internal server error",
-      details: error instanceof Error ? error.message : "Unknown error",
-    }
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    };
 
-    return new Response(
-      JSON.stringify(errorResponse),
-      {
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json",
-        },
-        status: 500,
-      }
-    )
+    return new Response(JSON.stringify(errorResponse), {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json',
+      },
+      status: 500,
+    });
   }
-})
+});
 
 /* Edge Function Usage Examples:
 
