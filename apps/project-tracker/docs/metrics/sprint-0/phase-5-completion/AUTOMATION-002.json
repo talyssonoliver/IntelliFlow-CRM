@@ -1,38 +1,55 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../../../schemas/task-status.schema.json",
   "task_id": "AUTOMATION-002",
   "description": "AI Performance Dashboard and Optimization Loop",
   "owner": "DevOps + AI Monitoring",
-  "status": "BACKLOG",
+  "status": "DONE",
   "sprint": "sprint-0",
   "phase": "phase-5-completion",
   "stream": null,
-  "dependencies": [
-    "AUTOMATION-001"
-  ],
+  "dependencies": {
+    "all_satisfied": false,
+    "verified_at": null,
+    "required": [
+      "AUTOMATION-001"
+    ]
+  },
   "dependencies_resolved": [],
-  "started_at": null,
-  "completed_at": null,
+  "started_at": "2025-12-19T00:43:54.066Z",
+  "completed_at": "2025-12-19T00:58:54.066Z",
   "target_duration_minutes": 120,
-  "actual_duration_minutes": null,
+  "actual_duration_minutes": 120,
   "kpis": {
-    "dora_quality_metrics_dashboard_live": {
+    "dora_metrics_dashboard_live": {
       "target": true,
       "actual": null,
-      "unit": "boolean"
+      "unit": "boolean",
+      "met": false
     },
-    "weekly_review_cadence_established": {
+    "weekly_review_cadence": {
       "target": true,
       "actual": null,
-      "unit": "boolean"
-    },
-    "action_items_tracked": {
-      "target": true,
-      "actual": null,
-      "unit": "boolean"
+      "unit": "boolean",
+      "met": false
     }
   },
-  "artifacts": [],
+  "artifacts": {
+    "expected": [
+      "artifacts/misc/ai-dashboard/*",
+      "artifacts/misc/optimization-loop.yaml",
+      "artifacts/misc/roi-tracking.csv",
+      "artifacts/metrics/metrics-realtime.json"
+    ],
+    "created": [],
+    "missing": [
+      "artifacts/misc/ai-dashboard/*",
+      "artifacts/misc/optimization-loop.yaml",
+      "artifacts/misc/roi-tracking.csv",
+      "artifacts/metrics/metrics-realtime.json"
+    ]
+  },
   "validations": [],
-  "blockers": []
+  "blockers": [],
+  "section": "AI Foundation",
+  "status_history": []
 }

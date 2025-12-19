@@ -1,15 +1,19 @@
 {
-  "$schema": "../../../schemas/task-status.schema.json",
+  "$schema": "../../schemas/task-status.schema.json",
   "task_id": "ENV-006-AI",
   "description": "Prisma Schema with Generated Optimizations",
   "owner": "Backend Dev + Copilot",
-  "status": "IN_PROGRESS",
+  "status": "DONE",
   "sprint": "sprint-0",
   "phase": "phase-3-dependencies",
   "stream": null,
-  "dependencies": [
-    "ENV-004-AI"
-  ],
+  "dependencies": {
+    "all_satisfied": true,
+    "verified_at": "2025-12-16T04:30:00Z",
+    "required": [
+      "ENV-004-AI"
+    ]
+  },
   "dependencies_resolved": [
     "ENV-004-AI"
   ],
@@ -49,51 +53,73 @@
       "unit": "boolean"
     }
   },
-  "artifacts": [
-    {
-      "path": "packages/db/prisma/schema.prisma",
-      "sha256": "2622efbb0ac90592143d5302699348c6d6a246911bf87b2f219f234a9cb5cbeb",
-      "created_at": "2025-12-14T23:40:00Z"
-    },
-    {
-      "path": "packages/db/dist/index.js",
-      "sha256": "verified",
-      "created_at": "2025-12-14T23:45:00Z"
-    },
-    {
-      "path": "packages/db/dist/client.js",
-      "sha256": "verified",
-      "created_at": "2025-12-14T23:45:00Z"
-    },
-    {
-      "path": "artifacts/logs/prisma-validation-test.log",
-      "sha256": "6eaf6efd1d4ea55ca72b483f138a470a6274221ca0946e9cdd6078d59dda9f55",
-      "created_at": "2025-12-14T23:50:00Z"
-    }
-  ],
+  "artifacts": {
+    "expected": [
+      "packages/db/prisma/schema.prisma",
+      "packages/db/dist/index.js",
+      "packages/db/dist/client.js",
+      "artifacts/logs/prisma-validation-test.log"
+    ],
+    "created": [
+      {
+        "created_at": "2025-12-14T23:40:00Z",
+        "path": "packages/db/prisma/schema.prisma",
+        "sha256": "2622efbb0ac90592143d5302699348c6d6a246911bf87b2f219f234a9cb5cbeb"
+      },
+      {
+        "created_at": "2025-12-14T23:45:00Z",
+        "path": "packages/db/dist/index.js",
+        "sha256": "25499732589dc3a76b8ab30fe865f305b10a56727b6f74b49f77002fb700f7fc"
+      },
+      {
+        "created_at": "2025-12-14T23:45:00Z",
+        "path": "packages/db/dist/client.js",
+        "sha256": "555f6977c7bab8ef52a78e90822f091af7ef26d03784386d0e8aafce1a8c6fbb"
+      },
+      {
+        "created_at": "2025-12-14T23:50:00Z",
+        "path": "artifacts/logs/prisma-validation-test.log",
+        "sha256": "6eaf6efd1d4ea55ca72b483f138a470a6274221ca0946e9cdd6078d59dda9f55"
+      }
+    ],
+    "missing": []
+  },
   "validations": [
     {
-      "name": "prisma_generate",
-      "command": "pnpm db:generate",
       "executed_at": "2025-12-14T23:42:00Z",
-      "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "command": "pnpm db:generate",
+      "name": "prisma_generate",
+      "exit_code": 0
     },
     {
-      "name": "package_build",
+      "executed_at": "2025-12-14T23:45:00Z",
+      "passed": true,
       "command": "pnpm build",
-      "executed_at": "2025-12-14T23:45:00Z",
-      "exit_code": 0,
-      "passed": true
+      "name": "package_build",
+      "exit_code": 0
     },
     {
-      "name": "dts_generation",
-      "command": "tsup --dts",
       "executed_at": "2025-12-14T23:45:00Z",
-      "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "command": "tsup --dts",
+      "name": "dts_generation",
+      "exit_code": 0
     }
   ],
   "blockers": [],
-  "notes": "Prisma schema fully aligned with Supabase migration. 9 models with 28 indexes. pgvector embeddings configured for Lead and Contact. Package builds successfully with TypeScript declarations. Client generated to node_modules/@prisma/client."
+  "notes": "Prisma schema fully aligned with Supabase migration. 9 models with 28 indexes. pgvector embeddings configured for Lead and Contact. Package builds successfully with TypeScript declarations. Client generated to node_modules/@prisma/client.",
+  "section": "Environment Setup",
+  "status_history": [
+    {
+      "status": "IN_PROGRESS",
+      "note": "Execution started",
+      "at": "2025-12-14T23:40:00Z"
+    },
+    {
+      "status": "DONE",
+      "note": "Task completed successfully",
+      "at": "2025-12-14T23:50:00Z"
+    }
+  ]
 }

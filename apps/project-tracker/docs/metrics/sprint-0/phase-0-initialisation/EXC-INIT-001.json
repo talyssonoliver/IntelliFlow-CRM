@@ -7,7 +7,11 @@
   "sprint": "sprint-0",
   "phase": "phase-0-initialisation",
   "stream": null,
-  "dependencies": [],
+  "dependencies": {
+    "all_satisfied": false,
+    "verified_at": "2025-12-16T00:41:56Z",
+    "required": []
+  },
   "dependencies_resolved": [],
   "started_at": "2025-12-14T20:00:00Z",
   "completed_at": "2025-12-14T20:05:00Z",
@@ -17,20 +21,40 @@
     "setup_time_hours": {
       "target": 4,
       "actual": null,
-      "unit": "hours"
+      "unit": "hours",
+      "met": false
     },
     "automation_percentage": {
       "target": 80,
       "actual": null,
-      "unit": "percent"
+      "unit": "percent",
+      "met": false
     },
     "manual_configuration_errors": {
       "target": 0,
       "actual": null,
-      "unit": "count"
+      "unit": "count",
+      "met": false
     }
   },
-  "artifacts": [],
+  "artifacts": {
+    "expected": [],
+    "created": [],
+    "missing": []
+  },
   "validations": [],
-  "blockers": []
+  "blockers": [],
+  "section": "Excellence & Quality",
+  "status_history": [
+    {
+      "status": "IN_PROGRESS",
+      "note": "Execution started",
+      "at": "2025-12-14T20:00:00Z"
+    },
+    {
+      "status": "DONE",
+      "note": "Task completed successfully",
+      "at": "2025-12-14T20:05:00Z"
+    }
+  ]
 }

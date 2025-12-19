@@ -12,7 +12,7 @@
     "all_satisfied": true,
     "notes": "ENV-003-AI completed - Docker containers healthy, proceeding with schema setup"
   },
-  "status": "IN_PROGRESS",
+  "status": "DONE",
   "status_history": [
     {
       "status": "PLANNED",
@@ -44,7 +44,7 @@
     "created": [
       {
         "path": "infra/supabase/config.toml",
-        "sha256": "verified",
+        "sha256": "32adbbe238c8335338722e42580efe81d1d04ee34833da9742b44734a280a8ff",
         "created_at": "2025-12-14T23:11:00Z"
       },
       {
@@ -54,7 +54,7 @@
       },
       {
         "path": "infra/supabase/rls-policies.sql",
-        "sha256": "verified",
+        "sha256": "2f737be743ce17e48ee9edb2fefdf99570b2e11c6f9da53e8d42a36a4a97e8a8",
         "created_at": "2025-12-14T23:11:00Z"
       },
       {
@@ -67,54 +67,54 @@
   },
   "validations": [
     {
-      "name": "supabase_init",
-      "command": "npx supabase init",
       "executed_at": "2025-12-14T20:30:00Z",
-      "exit_code": 0,
       "duration_ms": 15000,
-      "passed": true
+      "passed": true,
+      "command": "npx supabase init",
+      "name": "supabase_init",
+      "exit_code": 0
     },
     {
-      "name": "pgvector_installed",
-      "command": "CREATE EXTENSION IF NOT EXISTS vector",
       "executed_at": "2025-12-14T23:35:00Z",
-      "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "command": "CREATE EXTENSION IF NOT EXISTS vector",
+      "name": "pgvector_installed",
+      "exit_code": 0
     },
     {
-      "name": "schema_migration",
-      "command": "psql < 20250101000000_initial_schema.sql",
       "executed_at": "2025-12-14T23:36:00Z",
-      "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "command": "psql < 20250101000000_initial_schema.sql",
+      "name": "schema_migration",
+      "exit_code": 0
     },
     {
-      "name": "tables_created",
-      "command": "\\dt (9 tables verified)",
       "executed_at": "2025-12-14T23:37:00Z",
-      "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "command": "\\dt (9 tables verified)",
+      "name": "tables_created",
+      "exit_code": 0
     },
     {
-      "name": "vector_column_verified",
-      "command": "SELECT column_name FROM information_schema.columns WHERE column_name = 'embedding'",
       "executed_at": "2025-12-14T23:37:30Z",
-      "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "command": "SELECT column_name FROM information_schema.columns WHERE column_name = 'embedding'",
+      "name": "vector_column_verified",
+      "exit_code": 0
     },
     {
-      "name": "vector_similarity_test",
-      "command": "'[1,2,3]'::vector(3) <=> '[4,5,6]'::vector(3) = 0.0254",
       "executed_at": "2025-12-14T23:38:00Z",
-      "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "command": "'[1,2,3]'::vector(3) <=> '[4,5,6]'::vector(3) = 0.0254",
+      "name": "vector_similarity_test",
+      "exit_code": 0
     },
     {
-      "name": "test_db_migration",
-      "command": "psql (port 5433) < 20250101000000_initial_schema.sql",
       "executed_at": "2025-12-14T23:39:00Z",
-      "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "command": "psql (port 5433) < 20250101000000_initial_schema.sql",
+      "name": "test_db_migration",
+      "exit_code": 0
     }
   ],
   "kpis": {
@@ -163,5 +163,8 @@
       "resolution": "Docker containers now healthy - postgres, redis, postgres-test, redis-test all running"
     }
   ],
-  "notes": "Full schema deployed to both dev (port 5432) and test (port 5433) databases. pgvector v0.6.0+ working with 1536-dimension embeddings. 9 CRM tables with AI scoring support. Vector similarity search functions operational. All foreign keys, indexes, and triggers in place."
+  "notes": "Full schema deployed to both dev (port 5432) and test (port 5433) databases. pgvector v0.6.0+ working with 1536-dimension embeddings. 9 CRM tables with AI scoring support. Vector similarity search functions operational. All foreign keys, indexes, and triggers in place.",
+  "completed_at": "2025-12-16T04:28:03.319Z",
+  "started_at": "2025-12-16T04:13:03.320Z",
+  "actual_duration_minutes": 15
 }

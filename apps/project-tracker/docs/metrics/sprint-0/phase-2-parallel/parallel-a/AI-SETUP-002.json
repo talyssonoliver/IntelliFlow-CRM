@@ -7,9 +7,13 @@
   "sprint": "sprint-0",
   "phase": "phase-2-parallel",
   "stream": "parallel-a",
-  "dependencies": [
-    "AI-SETUP-001"
-  ],
+  "dependencies": {
+    "all_satisfied": false,
+    "verified_at": "2025-12-16T00:41:56Z",
+    "required": [
+      "AI-SETUP-001"
+    ]
+  },
   "dependencies_resolved": [
     "AI-SETUP-001"
   ],
@@ -21,20 +25,40 @@
     "copilot_response_time": {
       "target": 2,
       "actual": null,
-      "unit": "seconds"
+      "unit": "seconds",
+      "met": false
     },
     "team_access": {
       "target": 100,
       "actual": null,
-      "unit": "percent"
+      "unit": "percent",
+      "met": false
     },
     "automation_workflows_active": {
       "target": true,
       "actual": null,
-      "unit": "boolean"
+      "unit": "boolean",
+      "met": false
     }
   },
-  "artifacts": [],
+  "artifacts": {
+    "expected": [],
+    "created": [],
+    "missing": []
+  },
   "validations": [],
-  "blockers": []
+  "blockers": [],
+  "section": "AI Integration",
+  "status_history": [
+    {
+      "status": "IN_PROGRESS",
+      "note": "Execution started",
+      "at": "2025-12-14T20:20:00Z"
+    },
+    {
+      "status": "DONE",
+      "note": "Task completed successfully",
+      "at": "2025-12-14T20:35:00Z"
+    }
+  ]
 }

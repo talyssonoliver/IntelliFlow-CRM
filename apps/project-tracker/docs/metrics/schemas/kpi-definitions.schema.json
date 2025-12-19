@@ -33,7 +33,13 @@
             "type": "object",
             "additionalProperties": {
               "type": "object",
-              "required": ["name", "description", "unit", "targets", "measurement_method"],
+              "required": [
+                "name",
+                "description",
+                "unit",
+                "targets",
+                "measurement_method"
+              ],
               "properties": {
                 "name": {
                   "type": "string"
@@ -43,7 +49,15 @@
                 },
                 "unit": {
                   "type": "string",
-                  "enum": ["milliseconds", "seconds", "minutes", "percent", "count", "boolean", "dollars"]
+                  "enum": [
+                    "milliseconds",
+                    "seconds",
+                    "minutes",
+                    "percent",
+                    "count",
+                    "boolean",
+                    "dollars"
+                  ]
                 },
                 "targets": {
                   "type": "object",

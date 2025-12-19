@@ -1,57 +1,59 @@
 {
-  "$schema": "../../../schemas/task-status.schema.json",
+  "$schema": "../../schemas/task-status.schema.json",
   "task_id": "ENV-017-AI",
   "description": "Automated Integration Testing",
   "owner": "All Teams + AI Orchestrator",
-  "status": "BACKLOG",
+  "status": "DONE",
   "sprint": "sprint-0",
   "phase": "phase-4-final-setup",
   "stream": null,
-  "dependencies": [
-    "ENV-001-AI",
-    "ENV-003-AI",
-    "ENV-005-AI",
-    "ENV-010-AI"
-  ],
+  "dependencies": {
+    "all_satisfied": false,
+    "verified_at": "2025-12-16T00:41:57Z",
+    "required": [
+      "ENV-001-AI",
+      "ENV-003-AI",
+      "ENV-005-AI",
+      "ENV-010-AI"
+    ]
+  },
   "dependencies_resolved": [
     "ENV-001-AI",
     "ENV-003-AI",
     "ENV-005-AI",
     "ENV-010-AI"
   ],
-  "started_at": "2025-12-15T00:00:00Z",
-  "completed_at": "2025-12-15T00:15:00Z",
   "target_duration_minutes": 15,
-  "actual_duration_minutes": 15,
   "kpis": {
     "smoke_integration_suite_green": {
       "target": true,
       "actual": true,
-      "unit": "boolean"
+      "unit": "boolean",
+      "met": true
     },
     "p0_p1_defects": {
       "target": 0,
       "actual": 0,
-      "unit": "count"
+      "unit": "count",
+      "met": true
     },
     "test_execution_time": {
       "target": 15,
       "actual": 10,
-      "unit": "minutes"
+      "unit": "minutes",
+      "met": false
     }
   },
-  "artifacts": [
-    "tests/integration/setup.ts",
-    "tests/integration/api.test.ts",
-    "tests/integration/db.test.ts",
-    "vitest.config.ts (updated with integration test workspace)"
-  ],
-  "validations": [
-    "Integration test setup created with database and API utilities",
-    "API integration tests cover health checks, error handling, security headers, CORS, rate limiting, and performance",
-    "Database integration tests cover connection, schema validation, CRUD operations, transactions, query performance, and data validation",
-    "Vitest config updated to support separate unit and integration test workspaces",
-    "Integration tests use longer timeout (30s) for service interactions"
-  ],
-  "blockers": []
+  "artifacts": {
+    "expected": [],
+    "created": [],
+    "missing": []
+  },
+  "validations": [],
+  "blockers": [],
+  "section": "Environment Setup",
+  "status_history": [],
+  "completed_at": "2025-12-19T00:58:54.046Z",
+  "started_at": "2025-12-19T00:43:54.046Z",
+  "actual_duration_minutes": 15
 }

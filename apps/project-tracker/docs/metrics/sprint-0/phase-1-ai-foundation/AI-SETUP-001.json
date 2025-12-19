@@ -7,9 +7,13 @@
   "sprint": "sprint-0",
   "phase": "phase-1-ai-foundation",
   "stream": null,
-  "dependencies": [
-    "EXC-INIT-001"
-  ],
+  "dependencies": {
+    "all_satisfied": false,
+    "verified_at": "2025-12-16T00:41:56Z",
+    "required": [
+      "EXC-INIT-001"
+    ]
+  },
   "dependencies_resolved": [
     "EXC-INIT-001"
   ],
@@ -21,20 +25,40 @@
     "commands_functional": {
       "target": 100,
       "actual": null,
-      "unit": "percent"
+      "unit": "percent",
+      "met": false
     },
     "hook_trigger_time": {
       "target": 100,
       "actual": null,
-      "unit": "milliseconds"
+      "unit": "milliseconds",
+      "met": false
     },
     "github_integration_verified": {
       "target": true,
       "actual": null,
-      "unit": "boolean"
+      "unit": "boolean",
+      "met": false
     }
   },
-  "artifacts": [],
+  "artifacts": {
+    "expected": [],
+    "created": [],
+    "missing": []
+  },
   "validations": [],
-  "blockers": []
+  "blockers": [],
+  "section": "AI Integration",
+  "status_history": [
+    {
+      "status": "IN_PROGRESS",
+      "note": "Execution started",
+      "at": "2025-12-14T20:05:00Z"
+    },
+    {
+      "status": "DONE",
+      "note": "Task completed successfully",
+      "at": "2025-12-14T20:20:00Z"
+    }
+  ]
 }

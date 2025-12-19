@@ -4,7 +4,13 @@
   "title": "Task Registry Schema",
   "description": "Schema for task-registry.json - all tasks across sprints",
   "type": "object",
-  "required": ["version", "last_updated", "total_tasks", "sprints", "tasks_by_status"],
+  "required": [
+    "version",
+    "last_updated",
+    "total_tasks",
+    "sprints",
+    "tasks_by_status"
+  ],
   "properties": {
     "$schema": {
       "type": "string"
@@ -26,7 +32,7 @@
       "patternProperties": {
         "^sprint-\\d+$": {
           "type": "object",
-          "required": ["name", "total_tasks", "completed", "in_progress", "blocked", "not_started", "tasks"],
+          "required": ["total_tasks", "completed", "in_progress", "blocked"],
           "properties": {
             "name": {
               "type": "string"
@@ -43,7 +49,31 @@
               "type": "integer",
               "minimum": 0
             },
+            "validating": {
+              "type": "integer",
+              "minimum": 0
+            },
             "blocked": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "planned": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "backlog": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "failed": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "needs_human": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "in_review": {
               "type": "integer",
               "minimum": 0
             },
@@ -93,6 +123,30 @@
           "items": {
             "type": "string"
           }
+        },
+        "BACKLOG": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "VALIDATING": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "NEEDS_HUMAN": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "IN_REVIEW": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -122,7 +176,17 @@
           },
           "status": {
             "type": "string",
-            "enum": ["DONE", "IN_PROGRESS", "BLOCKED", "PLANNED", "FAILED"]
+            "enum": [
+              "DONE",
+              "IN_PROGRESS",
+              "BLOCKED",
+              "PLANNED",
+              "FAILED",
+              "BACKLOG",
+              "VALIDATING",
+              "NEEDS_HUMAN",
+              "IN_REVIEW"
+            ]
           },
           "sprint": {
             "type": "integer"

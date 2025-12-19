@@ -4,14 +4,14 @@
   "description": "Setup external dependencies and integrations",
   "streams": [],
   "aggregated_metrics": {
-    "total_tasks": 8,
-    "done": 0,
-    "in_progress": 3,
+    "total_tasks": 7,
+    "done": 7,
+    "in_progress": 0,
     "blocked": 0,
-    "not_started": 1
+    "not_started": 0
   },
   "started_at": "2025-12-14T20:20:00Z",
-  "completed_at": null,
+  "completed_at": "2025-12-19T00:58:54.132Z",
   "target_duration_minutes": 120,
   "actual_duration_minutes": null
 }

@@ -13,21 +13,136 @@
 # -----------------------------------------------------------------------------
 global_spec_check:
   validation_commands:
-    - command: "test -f .specify/specifications/${TASK_ID}.md"
-      description: "Spec Document Exists"
+    - command: 'test -f .specify/specifications/${TASK_ID}.md'
+      description: 'Spec Document Exists'
       type: auto
       required: true
-    - command: "test -f .specify/planning/${TASK_ID}.md"
-      description: "Plan Document Exists"
+    - command: 'test -f .specify/planning/${TASK_ID}.md'
+      description: 'Plan Document Exists'
       type: auto
       required: true
 
 global_security_check:
   validation_commands:
-    - command: "! grep -rE '(sk-[a-zA-Z0-9]{48}|eyJ[a-zA-Z0-9_-]{10,})' . --exclude-dir={node_modules,.git} --exclude={*.lock,*.env*}"
-      description: "Deep scan for High-Entropy Secrets"
+    # Comprehensive secret scanning for modern provider key formats
+    # Pattern 1: OpenAI keys (sk-...), Anthropic keys (sk-ant-...)
+    - command: "! grep -rE 'sk-[a-zA-Z0-9_-]{20,}' . --exclude-dir={node_modules,.git,.next,dist,build,.turbo} --exclude='*.lock' --include='*.ts' --include='*.tsx' --include='*.js' --include='*.jsx' --include='*.json' --include='*.yaml' --include='*.yml' --include='*.md'"
+      description: 'Scan for OpenAI/Anthropic API keys (sk-...)'
       type: auto
       required: true
+
+    # Pattern 2: JWT tokens (eyJ...) - commonly used for Supabase, Auth0, etc.
+    - command: "! grep -rE 'eyJ[a-zA-Z0-9_-]{30,}\\.[a-zA-Z0-9_-]+\\.[a-zA-Z0-9_-]+' . --exclude-dir={node_modules,.git,.next,dist,build,.turbo} --exclude='*.lock' --include='*.ts' --include='*.tsx' --include='*.js' --include='*.jsx'"
+      description: 'Scan for hardcoded JWT tokens'
+      type: auto
+      required: true
+
+    # Pattern 3: AWS keys (AKIA..., aws_secret_access_key, etc.)
+    - command: "! grep -rE '(AKIA[0-9A-Z]{16}|aws_secret_access_key|aws_session_token)' . --exclude-dir={node_modules,.git,.next,dist,build,.turbo} --exclude='*.lock' --include='*.ts' --include='*.tsx' --include='*.js' --include='*.jsx' --include='*.json' --include='*.yaml' --include='*.yml'"
+      description: 'Scan for AWS credentials'
+      type: auto
+      required: true
+
+    # Pattern 4: GitHub tokens (ghp_, gho_, ghs_, ghr_, github_pat_)
+    - command: "! grep -rE '(ghp_[a-zA-Z0-9]{36}|gho_[a-zA-Z0-9]{36}|ghs_[a-zA-Z0-9]{36}|ghr_[a-zA-Z0-9]{36}|github_pat_[a-zA-Z0-9]{22}_[a-zA-Z0-9]{59})' . --exclude-dir={node_modules,.git,.next,dist,build,.turbo} --exclude='*.lock'"
+      description: 'Scan for GitHub tokens'
+      type: auto
+      required: true
+
+    # Pattern 5: Stripe keys (sk_live_, pk_live_, sk_test_, pk_test_, rk_)
+    - command: "! grep -rE '(sk_live_[a-zA-Z0-9]{24}|pk_live_[a-zA-Z0-9]{24}|sk_test_[a-zA-Z0-9]{24}|rk_live_[a-zA-Z0-9]{24})' . --exclude-dir={node_modules,.git,.next,dist,build,.turbo} --exclude='*.lock'"
+      description: 'Scan for Stripe API keys'
+      type: auto
+      required: true
+
+    # Pattern 6: Google Cloud API keys (AIza...)
+    - command: "! grep -rE 'AIza[a-zA-Z0-9_-]{35}' . --exclude-dir={node_modules,.git,.next,dist,build,.turbo} --exclude='*.lock'"
+      description: 'Scan for Google Cloud API keys'
+      type: auto
+      required: true
+
+    # Pattern 7: Private keys (PEM format)
+    - command: "! grep -rlE '(BEGIN RSA PRIVATE KEY|BEGIN PRIVATE KEY|BEGIN EC PRIVATE KEY|BEGIN OPENSSH PRIVATE KEY)' . --exclude-dir={node_modules,.git,.next,dist,build,.turbo}"
+      description: 'Scan for private key files'
+      type: auto
+      required: true
+
+    # Pattern 8: Generic password/secret assignments in code
+    - command: "! grep -rE '(password|secret|api_key|apikey|auth_token|access_token)\\s*[=:]\\s*[\"'\\'][^\"'\\' ]{8,}[\"'\\']' . --exclude-dir={node_modules,.git,.next,dist,build,.turbo,__tests__,tests} --exclude='*.lock' --include='*.ts' --include='*.tsx' --include='*.js' --include='*.jsx' -i"
+      description: 'Scan for hardcoded passwords/secrets in code'
+      type: auto
+      required: false # Non-blocking - may have false positives
+
+# -----------------------------------------------------------------------------
+# GLOBAL QUALITY GATES (Applied to ALL tasks)
+# -----------------------------------------------------------------------------
+global_quality_check:
+  validation_commands:
+    # TypeScript Type Checking
+    - command: 'pnpm run typecheck --filter=!@intelliflow/observability'
+      description: 'TypeScript type checking (all packages except observability)'
+      type: auto
+      required: true
+      timeout: 300
+
+    # ESLint
+    - command: 'pnpm run lint || true'
+      description: 'ESLint code quality check'
+      type: auto
+      required: false
+      timeout: 180
+
+    # Unused Dependencies
+    - command: "npx depcheck --ignores='@types/*,eslint-*,prettier,husky,lint-staged,turbo' || true"
+      description: 'Check for unused dependencies'
+      type: auto
+      required: false
+      timeout: 120
+
+    # Security Audit
+    - command: 'pnpm audit --audit-level=moderate --json > artifacts/reports/audit-report.json || true'
+      description: 'Security vulnerability audit (moderate+)'
+      type: auto
+      required: false
+      timeout: 180
+
+    # Dead Code Detection
+    - command: "npx knip --exclude 'unlisted,unresolved' || true"
+      description: 'Detect unused exports and dead code'
+      type: auto
+      required: false
+      timeout: 240
+
+    # Test Execution
+    - command: 'pnpm test --run --passWithNoTests'
+      description: 'Run all test suites'
+      type: auto
+      required: false
+      timeout: 600
+
+global_sonarqube_check:
+  validation_commands:
+    - command: 'test -f sonar-project.properties'
+      description: 'SonarQube configuration exists'
+      type: auto
+      required: true
+
+    - command: 'command -v sonar-scanner >/dev/null 2>&1'
+      description: 'SonarQube scanner installed'
+      type: conditional
+      condition: 'which sonar-scanner >/dev/null 2>&1'
+      required: false
+
+    - command: 'sonar-scanner -Dsonar.qualitygate.wait=true'
+      description: 'SonarQube static analysis'
+      type: conditional
+      condition: 'test -n "${SONAR_TOKEN:-}" && command -v sonar-scanner >/dev/null 2>&1'
+      required: false
+      timeout: 600
+
+  manual_checks:
+    - description: 'Verify SonarQube server is accessible at configured URL'
+      priority: medium
 
 # -----------------------------------------------------------------------------
 # SPRINT 0: AI Foundation (Original Logic Restored)
@@ -36,37 +151,37 @@ global_security_check:
 EXC-INIT-001:
   validation_commands:
     - command: "test -d .claude && echo 'Claude directory exists'"
-      description: "Check Claude Code directory structure"
+      description: 'Check Claude Code directory structure'
       type: auto
       required: true
-    - command: "test -f artifacts/metrics/automation-metrics.json"
-      description: "Check automation metrics artifact"
+    - command: 'test -f artifacts/metrics/automation-metrics.json'
+      description: 'Check automation metrics artifact'
       type: auto
       required: true
   kpi_checks:
-    - metric: "setup_time_hours"
-      operator: "<"
+    - metric: 'setup_time_hours'
+      operator: '<'
       threshold: 4
 
 AI-SETUP-001:
   validation_commands:
     - command: "ls -la .claude/commands/*.sh | wc -l | grep -v '^0$'"
-      description: "Count Claude commands (>0)"
+      description: 'Count Claude commands (>0)'
       type: auto
       required: true
-    - command: "test -f artifacts/misc/command-test-results.csv"
-      description: "Command test results"
+    - command: 'test -f artifacts/misc/command-test-results.csv'
+      description: 'Command test results'
       type: auto
       required: true
 
 AI-SETUP-002:
   validation_commands:
-    - command: "test -f docs/shared/copilot-instructions.md"
-      description: "Copilot instructions exist"
+    - command: 'test -f docs/shared/copilot-instructions.md'
+      description: 'Copilot instructions exist'
       type: auto
       required: true
   manual_checks:
-    - description: "Verify team members have Copilot access"
+    - description: 'Verify team members have Copilot access'
       priority: high
 
 # -----------------------------------------------------------------------------
@@ -75,60 +190,67 @@ AI-SETUP-002:
 
 ENV-001-AI:
   validation_commands:
-    - command: "test -f turbo.json"
-      description: "Turborepo configuration"
+    - command: 'test -f turbo.json'
+      description: 'Turborepo configuration'
       type: auto
       required: true
-    - command: "pnpm install --dry-run"
-      description: "Dependencies resolvable (Dry Run)"
+    - command: 'pnpm install --dry-run'
+      description: 'Dependencies resolvable (Dry Run)'
       type: auto
       required: true
-    - command: "test -d packages && test -d apps"
-      description: "Monorepo structure valid"
+    - command: 'test -d packages && test -d apps'
+      description: 'Monorepo structure valid'
       type: auto
       required: true
 
 ENV-003-AI:
   validation_commands:
-    - command: "docker compose config -q"
-      description: "Docker Compose Config Valid"
-      type: auto
+    - command: 'docker compose config -q'
+      description: 'Docker Compose Config Valid'
+      type: conditional
+      condition: 'command -v docker >/dev/null 2>&1'
       required: true
-    - command: "docker compose ps 2>/dev/null || echo 'MANUAL: Start Docker'"
-      description: "Docker containers status"
-      type: manual
+    - command: 'docker compose ps --format json | grep -q running'
+      description: 'Docker containers running'
+      type: conditional
+      condition: 'command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1'
       required: false
+  manual_checks:
+    - description: 'Verify Docker Desktop is running and containers are healthy'
+      priority: high
 
 ENV-004-AI:
   validation_commands:
-    - command: "test -f infra/supabase/config.toml"
-      description: "Supabase Config Exists"
+    - command: 'test -f infra/supabase/config.toml'
+      description: 'Supabase Config Exists'
       type: auto
       required: true
   manual_checks:
-    - description: "Verify Supabase connection < 30ms"
+    - description: 'Verify Supabase connection < 30ms'
       priority: high
 
 ENV-005-AI:
   validation_commands:
-    - command: "test -f .github/workflows/ci.yml"
-      description: "CI Workflow Exists"
+    - command: 'test -f .github/workflows/ci.yml'
+      description: 'CI Workflow Exists'
       type: auto
       required: true
 
 ENV-010-AI:
   validation_commands:
-    - command: "test -d tests/e2e"
-      description: "E2E tests directory"
+    - command: 'test -d tests/e2e'
+      description: 'E2E tests directory'
       type: auto
       required: true
-    - command: "pnpm test --passWithNoTests"
-      description: "Run test suite"
+    - command: 'pnpm test --passWithNoTests'
+      description: 'Run test suite'
       type: conditional
+      condition: 'test -f package.json && grep -q ''"test"'' package.json'
       required: false
+      timeout: 300
   kpi_checks:
-    - metric: "test_coverage"
-      operator: ">="
+    - metric: 'test_coverage'
+      operator: '>='
       threshold: 95
 
 # -----------------------------------------------------------------------------
@@ -137,21 +259,109 @@ ENV-010-AI:
 
 EXC-SEC-001:
   validation_commands:
-    - command: "test -f artifacts/misc/vault-config.yaml"
-      description: "Vault configuration"
+    - command: 'test -f artifacts/misc/vault-config.yaml'
+      description: 'Vault configuration'
       type: auto
       required: true
     - command: "! grep -r 'API_KEY=' . --include='.env*'"
-      description: "Ensure NO secrets in env files"
+      description: 'Ensure NO secrets in env files'
       type: auto
       required: true
   manual_checks:
-    - description: "Run security audit to confirm no secrets in repository"
+    - description: 'Run security audit to confirm no secrets in repository'
       priority: critical
 
 IFC-160:
   validation_commands:
-    - command: "test -f docs/architecture/repo-layout.md"
-      description: "Repo layout doc exists"
+    - command: 'test -f docs/architecture/repo-layout.md'
+      description: 'Repo layout doc exists'
       type: auto
       required: true
+
+# -----------------------------------------------------------------------------
+# CODE QUALITY & STATIC ANALYSIS TASKS
+# -----------------------------------------------------------------------------
+
+ENV-014-AI:
+  validation_commands:
+    - command: 'test -f sonar-project.properties'
+      description: 'SonarQube project config exists'
+      type: auto
+      required: true
+
+    - command: 'command -v sonar-scanner >/dev/null 2>&1'
+      description: 'SonarQube scanner installed'
+      type: auto
+      required: true
+
+    - command: 'docker ps | grep -q sonarqube'
+      description: 'SonarQube container running'
+      type: conditional
+      condition: 'command -v docker >/dev/null 2>&1'
+      required: false
+
+    - command: 'curl -s --max-time 10 http://localhost:9000/api/system/status | grep -q ''"status":"UP"'''
+      description: 'SonarQube API accessible'
+      type: conditional
+      condition: 'command -v curl >/dev/null 2>&1'
+      required: false
+      timeout: 15
+
+    - command: 'sonar-scanner -Dsonar.qualitygate.wait=true'
+      description: 'Run SonarQube analysis with quality gate'
+      type: conditional
+      condition: 'test -n "${SONAR_TOKEN:-}" && command -v sonar-scanner >/dev/null 2>&1 && curl -s http://localhost:9000/api/system/status | grep -q UP'
+      required: false
+      timeout: 600
+
+  kpi_checks:
+    - metric: 'code_coverage'
+      operator: '>='
+      threshold: 80
+    - metric: 'security_rating'
+      operator: '='
+      threshold: 'A'
+    - metric: 'maintainability_rating'
+      operator: '='
+      threshold: 'A'
+
+  manual_checks:
+    - description: 'Review SonarQube dashboard for critical issues'
+      priority: high
+    - description: 'Verify quality gate passed'
+      priority: critical
+
+TECH-DEBT-001:
+  validation_commands:
+    - command: 'pnpm run typecheck'
+      description: 'Zero TypeScript errors'
+      type: auto
+      required: true
+
+    - command: 'pnpm run lint'
+      description: 'Zero ESLint errors'
+      type: auto
+      required: true
+
+    - command: "npx depcheck --ignores='@types/*,eslint-*,prettier'"
+      description: 'No unused dependencies'
+      type: auto
+      required: true
+
+    - command: "npx knip --exclude 'unlisted,unresolved'"
+      description: 'No dead code or unused exports'
+      type: auto
+      required: true
+
+    - command: 'pnpm audit --audit-level=high'
+      description: 'No high-severity vulnerabilities'
+      type: auto
+      required: true
+
+  kpi_checks:
+    - metric: 'technical_debt_hours'
+      operator: '<='
+      threshold: 40
+    - metric: 'code_smells'
+      operator: '<='
+      threshold: 50

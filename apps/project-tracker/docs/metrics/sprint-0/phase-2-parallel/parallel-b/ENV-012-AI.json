@@ -1,38 +1,51 @@
 {
   "$schema": "../../../schemas/task-status.schema.json",
   "task_id": "ENV-012-AI",
+  "section": "Environment & Setup",
   "description": "Documentation with Auto-Generation",
   "owner": "Tech Writer + AI Agents",
-  "status": "IN_PROGRESS",
+  "status": "DONE",
   "sprint": "sprint-0",
   "phase": "phase-2-parallel",
   "stream": "parallel-b",
-  "dependencies": [
-    "ENV-001-AI"
-  ],
-  "dependencies_resolved": [],
-  "started_at": null,
-  "completed_at": null,
+  "dependencies": {
+    "required": [
+      "ENV-001-AI"
+    ],
+    "verified_at": "2025-12-16T00:00:00Z",
+    "all_satisfied": false
+  },
+  "status_history": [],
+  "dependencies_resolved": {},
+  "started_at": "2025-12-16T21:34:01.167Z",
+  "completed_at": "2025-12-16T21:49:01.167Z",
   "target_duration_minutes": 30,
-  "actual_duration_minutes": null,
+  "actual_duration_minutes": 30,
   "kpis": {
     "doc_generation_time": {
       "target": 30,
       "actual": null,
-      "unit": "seconds"
+      "unit": "seconds",
+      "met": false
     },
     "coverage": {
       "target": 100,
       "actual": null,
-      "unit": "percent"
+      "unit": "percent",
+      "met": false
     },
     "readability_score": {
       "target": 90,
       "actual": null,
-      "unit": "score"
+      "unit": "score",
+      "met": false
     }
   },
-  "artifacts": [],
+  "artifacts": {
+    "expected": [],
+    "created": [],
+    "missing": []
+  },
   "validations": [],
   "blockers": []
 }

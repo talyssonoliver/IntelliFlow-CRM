@@ -1,32 +1,71 @@
 {
   "$schema": "../../schemas/task-status.schema.json",
   "task_id": "IFC-000",
+  "section": "Initialisation",
   "description": "IntelliFlow CRM Feasibility Assessment",
   "owner": "CEO + CTO + CFO",
-  "status": "PLANNED",
-  "sprint": "sprint-0",
-  "phase": "phase-0-initialisation",
-  "stream": null,
-  "dependencies": [],
-  "dependencies_resolved": [],
-  "started_at": null,
-  "completed_at": null,
-  "target_duration_minutes": 480,
-  "actual_duration_minutes": null,
+  "dependencies": {
+    "required": [],
+    "verified_at": "2025-12-14T10:00:00Z",
+    "all_satisfied": true
+  },
+  "status": "DONE",
+  "status_history": [
+    {
+      "status": "PLANNED",
+      "at": "2025-12-14T10:00:00Z",
+      "note": "Initial planning phase"
+    },
+    {
+      "status": "In Progress",
+      "at": "2025-12-18T23:55:05+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2025-12-19T00:11:17+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2025-12-19T00:12:17+00:00",
+      "note": "Task execution started"
+    }
+  ],
+  "artifacts": {
+    "expected": [
+      "artifacts/reports/business-case.pdf",
+      "artifacts/reports/swot-analysis.xlsx",
+      "artifacts/reports/financial-model.xlsx",
+      "docs/planning/ADR-000-feasibility.md"
+    ],
+    "created": [],
+    "missing": [
+      "artifacts/reports/business-case.pdf",
+      "artifacts/reports/swot-analysis.xlsx",
+      "artifacts/reports/financial-model.xlsx",
+      "docs/planning/ADR-000-feasibility.md"
+    ]
+  },
+  "validations": [],
   "kpis": {
     "decision_confidence": {
       "target": 80,
       "actual": null,
+      "met": false,
       "unit": "percent"
     }
   },
-  "artifacts": [
-    "artifacts/reports/business-case.pdf",
-    "artifacts/reports/swot-analysis.xlsx",
-    "artifacts/reports/financial-model.xlsx",
-    "docs/planning/ADR-000-feasibility.md"
-  ],
-  "validation_steps": [],
+  "blockers": [],
   "notes": "Leadership alignment and go/no-go decision for IntelliFlow CRM project",
-  "blockers": []
+  "current_phase": "ARCHITECT_SPEC",
+  "updated_at": "2025-12-19T00:12:22+00:00",
+  "attempt": 0,
+  "execution": {
+    "retry_count": 0,
+    "last_error": null
+  },
+  "started_at": "2025-12-18T23:55:05+00:00",
+  "completed_at": "2025-12-19T00:58:54.068Z",
+  "actual_duration_minutes": 15
 }

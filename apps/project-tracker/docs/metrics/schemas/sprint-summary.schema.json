@@ -4,13 +4,7 @@
   "title": "Sprint Summary Schema",
   "description": "Schema for aggregating metrics across an entire sprint",
   "type": "object",
-  "required": [
-    "sprint",
-    "name",
-    "target_date",
-    "phases",
-    "task_summary"
-  ],
+  "required": ["sprint", "name", "target_date", "phases", "task_summary"],
   "properties": {
     "sprint": {
       "type": "string",
@@ -100,7 +94,13 @@
           "actual": {},
           "status": {
             "type": "string",
-            "enum": ["MEASURING", "ON_TARGET", "BELOW_TARGET", "ABOVE_TARGET", "MET"]
+            "enum": [
+              "MEASURING",
+              "ON_TARGET",
+              "BELOW_TARGET",
+              "ABOVE_TARGET",
+              "MET"
+            ]
           },
           "unit": {
             "type": "string"

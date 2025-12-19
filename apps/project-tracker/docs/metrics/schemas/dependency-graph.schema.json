@@ -4,7 +4,13 @@
   "title": "Dependency Graph Schema",
   "description": "Schema for dependency-graph.json - cross-sprint dependencies",
   "type": "object",
-  "required": ["version", "last_updated", "nodes", "critical_paths", "ready_to_start"],
+  "required": [
+    "version",
+    "last_updated",
+    "nodes",
+    "critical_paths",
+    "ready_to_start"
+  ],
   "properties": {
     "$schema": {
       "type": "string"
@@ -24,7 +30,13 @@
       "type": "object",
       "additionalProperties": {
         "type": "object",
-        "required": ["task_id", "sprint", "status", "dependencies", "dependents"],
+        "required": [
+          "task_id",
+          "sprint",
+          "status",
+          "dependencies",
+          "dependents"
+        ],
         "properties": {
           "task_id": {
             "type": "string"
@@ -55,7 +67,13 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["name", "tasks", "total_duration_estimate_minutes", "completion_percentage", "blocking_status"],
+        "required": [
+          "name",
+          "tasks",
+          "total_duration_estimate_minutes",
+          "completion_percentage",
+          "blocking_status"
+        ],
         "properties": {
           "name": {
             "type": "string"
@@ -85,7 +103,13 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["from_task", "to_task", "from_sprint", "to_sprint", "dependency_type"],
+        "required": [
+          "from_task",
+          "to_task",
+          "from_sprint",
+          "to_sprint",
+          "dependency_type"
+        ],
         "properties": {
           "from_task": {
             "type": "string"

@@ -72,48 +72,48 @@
   },
   "validations": [
     {
-      "name": "vault_installation",
-      "command": "choco install vault -y",
       "executed_at": "2025-12-14T20:38:00Z",
-      "exit_code": 0,
       "duration_ms": 120000,
+      "passed": true,
+      "command": "choco install vault -y",
+      "name": "vault_installation",
       "stdout_hash": "sha256:pending",
-      "passed": true
+      "exit_code": 0
     },
     {
-      "name": "vault_server_start",
-      "command": "vault server -dev",
       "executed_at": "2025-12-14T20:40:51Z",
-      "exit_code": 0,
+      "passed": true,
+      "command": "vault server -dev",
+      "name": "vault_server_start",
       "stdout_hash": "sha256:pending",
-      "passed": true
+      "exit_code": 0
     },
     {
-      "name": "vault_api_accessible",
-      "command": "curl http://127.0.0.1:8200/v1/sys/health",
       "executed_at": "2025-12-14T20:41:00Z",
-      "exit_code": 0,
       "duration_ms": 100,
+      "passed": true,
+      "command": "curl http://127.0.0.1:8200/v1/sys/health",
+      "name": "vault_api_accessible",
       "stdout_hash": "sha256:pending",
-      "passed": true
+      "exit_code": 0
     },
     {
-      "name": "secret_retrieval_test",
-      "command": "vault kv get secret/intelliflow/config",
       "executed_at": "2025-12-14T23:11:05Z",
-      "exit_code": 0,
       "duration_ms": 50,
+      "passed": true,
+      "command": "vault kv get secret/intelliflow/config",
+      "name": "secret_retrieval_test",
       "stdout_hash": "sha256:3752495d656169ed179e69c73a8d04b6e8b7dd2226fa141f273239f8cafa73cc",
-      "passed": true
+      "exit_code": 0
     },
     {
-      "name": "artifacts_created",
-      "command": "ls artifacts/misc/vault-config.yaml artifacts/misc/access-policy.json artifacts/logs/secret-retrieval-test.log",
       "executed_at": "2025-12-14T23:11:10Z",
-      "exit_code": 0,
       "duration_ms": 10,
+      "passed": true,
+      "command": "ls artifacts/misc/vault-config.yaml artifacts/misc/access-policy.json artifacts/logs/secret-retrieval-test.log",
+      "name": "artifacts_created",
       "stdout_hash": "sha256:verified",
-      "passed": true
+      "exit_code": 0
     }
   ],
   "kpis": {

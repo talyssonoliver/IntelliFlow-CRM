@@ -4,12 +4,7 @@
   "title": "Phase Summary Schema",
   "description": "Schema for aggregating metrics across a sprint phase",
   "type": "object",
-  "required": [
-    "phase",
-    "sprint",
-    "description",
-    "aggregated_metrics"
-  ],
+  "required": ["phase", "sprint", "description", "aggregated_metrics"],
   "properties": {
     "phase": {
       "type": "string",
@@ -37,7 +32,7 @@
           },
           "tasks": {
             "type": "array",
-            "items": {"type": "string"},
+            "items": { "type": "string" },
             "description": "Task IDs in this stream"
           },
           "status": {
@@ -50,7 +45,13 @@
     },
     "aggregated_metrics": {
       "type": "object",
-      "required": ["total_tasks", "done", "in_progress", "blocked", "not_started"],
+      "required": [
+        "total_tasks",
+        "done",
+        "in_progress",
+        "blocked",
+        "not_started"
+      ],
       "properties": {
         "total_tasks": {
           "type": "integer",
@@ -99,7 +100,7 @@
         "properties": {
           "target": {},
           "actual": {},
-          "met": {"type": "boolean"}
+          "met": { "type": "boolean" }
         }
       }
     }

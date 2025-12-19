@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "last_updated": "2025-12-14T22:05:00Z",
   "description": "Cross-sprint dependency tracking for all tasks",
-  
+
   "nodes": {
     "ENV-004-AI": {
       "task_id": "ENV-004-AI",
@@ -83,7 +83,7 @@
       "dependents": []
     }
   },
-  
+
   "critical_paths": [
     {
       "name": "Database Setup Path",
@@ -107,7 +107,7 @@
       "blocking_status": "ENV-013-AI"
     }
   ],
-  
+
   "cross_sprint_dependencies": [
     {
       "from_task": "ENV-004-AI",
@@ -126,22 +126,23 @@
       "description": "tRPC API foundation requires completed setup"
     }
   ],
-  
+
   "blocked_tasks": [],
-  
-  "ready_to_start": [
-    "ENV-005-AI",
-    "ENV-007-AI",
-    "ENV-010-AI",
-    "ENV-012-AI"
-  ],
-  
+
+  "ready_to_start": ["ENV-005-AI", "ENV-007-AI", "ENV-010-AI", "ENV-012-AI"],
+
   "dependency_violations": [],
-  
+
   "parallel_execution_groups": {
     "phase-2-parallel": {
       "parallel-a": ["AI-SETUP-002", "AI-SETUP-003"],
-      "parallel-b": ["ENV-001-AI", "ENV-002-AI", "ENV-003-AI", "ENV-009-AI", "ENV-012-AI"],
+      "parallel-b": [
+        "ENV-001-AI",
+        "ENV-002-AI",
+        "ENV-003-AI",
+        "ENV-009-AI",
+        "ENV-012-AI"
+      ],
       "parallel-c": ["EXC-SEC-001", "IFC-160"]
     }
   }

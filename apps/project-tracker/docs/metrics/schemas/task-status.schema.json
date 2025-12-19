@@ -4,15 +4,7 @@
   "title": "Task Status Schema",
   "description": "Schema for tracking individual task execution, artifacts, validations, and KPIs",
   "type": "object",
-  "required": [
-    "task_id",
-    "section",
-    "description",
-    "owner",
-    "dependencies",
-    "status",
-    "status_history"
-  ],
+  "required": ["task_id", "status"],
   "properties": {
     "$schema": {
       "type": "string"
@@ -34,30 +26,88 @@
       "type": "string",
       "description": "Task owner or responsible party"
     },
+    "sprint": {
+      "type": "string",
+      "description": "Sprint identifier (e.g., sprint-0)"
+    },
+    "phase": {
+      "type": "string",
+      "description": "Phase within the sprint (e.g., phase-1-ai-foundation)"
+    },
+    "stream": {
+      "type": ["string", "null"],
+      "description": "Parallel stream identifier (e.g., parallel-a, parallel-b, parallel-c)"
+    },
     "dependencies": {
       "type": "object",
-      "required": ["required", "verified_at", "all_satisfied"],
+      "required": ["required", "all_satisfied"],
       "properties": {
         "required": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": { "type": "string" },
           "description": "List of prerequisite task IDs"
         },
         "verified_at": {
-          "type": "string",
+          "type": ["string", "null"],
           "format": "date-time",
-          "description": "ISO 8601 timestamp when dependencies were verified"
+          "description": "ISO 8601 timestamp when dependencies were verified (null if not yet verified)"
         },
         "all_satisfied": {
           "type": "boolean",
           "description": "Whether all dependencies are satisfied"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes about dependency status"
         }
       }
     },
+    "dependencies_resolved": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of resolved dependency task IDs (legacy compatibility)"
+    },
     "status": {
       "type": "string",
-      "enum": ["PLANNED", "IN_PROGRESS", "VALIDATING", "DONE", "BLOCKED", "FAILED"],
+      "enum": [
+        "PLANNED",
+        "Planned",
+        "BACKLOG",
+        "Backlog",
+        "IN_PROGRESS",
+        "In Progress",
+        "VALIDATING",
+        "Validating",
+        "DONE",
+        "Completed",
+        "BLOCKED",
+        "Blocked",
+        "FAILED",
+        "Failed",
+        "NEEDS_HUMAN",
+        "Needs Human",
+        "IN_REVIEW",
+        "In Review"
+      ],
       "description": "Current task status"
+    },
+    "started_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when task execution started (null if not started)"
+    },
+    "completed_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when task was completed (null if not completed)"
+    },
+    "target_duration_minutes": {
+      "type": ["number", "null"],
+      "description": "Expected duration in minutes"
+    },
+    "actual_duration_minutes": {
+      "type": ["number", "null"],
+      "description": "Actual duration in minutes"
     },
     "status_history": {
       "type": "array",
@@ -67,7 +117,26 @@
         "properties": {
           "status": {
             "type": "string",
-            "enum": ["PLANNED", "IN_PROGRESS", "VALIDATING", "DONE", "BLOCKED", "FAILED"]
+            "enum": [
+              "PLANNED",
+              "Planned",
+              "BACKLOG",
+              "Backlog",
+              "IN_PROGRESS",
+              "In Progress",
+              "VALIDATING",
+              "Validating",
+              "DONE",
+              "Completed",
+              "BLOCKED",
+              "Blocked",
+              "FAILED",
+              "Failed",
+              "NEEDS_HUMAN",
+              "Needs Human",
+              "IN_REVIEW",
+              "In Review"
+            ]
           },
           "at": {
             "type": "string",
@@ -84,23 +153,45 @@
       "type": "object",
       "properties": {
         "started_at": {
-          "type": "string",
-          "format": "date-time"
+          "type": ["string", "null"],
+          "format": "date-time",
+          "description": "When execution started (null if not started)"
         },
         "completed_at": {
           "type": ["string", "null"],
-          "format": "date-time"
+          "format": "date-time",
+          "description": "When execution completed (null if not completed)"
         },
         "duration_minutes": {
-          "type": ["number", "null"]
+          "type": ["number", "null"],
+          "description": "Execution duration in minutes"
         },
         "executor": {
           "type": "string",
           "description": "Who/what executed the task (human, agent, etc.)"
         },
+        "agents": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of AI agents involved in execution"
+        },
         "execution_log": {
           "type": "string",
           "description": "Path to detailed execution log file"
+        },
+        "log_path": {
+          "type": "string",
+          "description": "Alternative path to execution log (alias for execution_log)"
+        },
+        "retry_count": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Number of retry attempts"
+        },
+        "last_error": {
+          "type": ["string", "null"],
+          "description": "Last error message if task failed (null if no error)"
         }
       }
     },
@@ -109,7 +200,7 @@
       "properties": {
         "expected": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": { "type": "string" },
           "description": "List of expected file paths or patterns"
         },
         "created": {
@@ -135,7 +226,7 @@
         },
         "missing": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": { "type": "string" },
           "description": "Expected artifacts that were not created"
         }
       }
