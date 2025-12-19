@@ -12,6 +12,12 @@ coverage/
 test-results/
 playwright-report/
 
+# Keep Sprint artifact outputs under artifacts/
+!artifacts/coverage/
+!artifacts/coverage/**
+!artifacts/test-results/
+!artifacts/test-results/**
+
 # next.js
 /.next/
 /out/
@@ -79,3 +85,8 @@ tmp/
 # logs
 logs/
 *.log
+
+# Keep Sprint artifact logs under artifacts/
+!artifacts/logs/
+!artifacts/logs/**
+!artifacts/logs/**/*.log
