@@ -1,0 +1,5 @@
+metric_id,task_id,measured_at_utc,value,unit,notes
+integration_suite_green,ENV-017-AI,2025-12-19T00:00:00Z,true,boolean,"Placeholder; update after running pnpm run test:integration in CI."
+p0_p1_defects,ENV-017-AI,2025-12-19T00:00:00Z,0,count,"Placeholder; update as defects are triaged."
+execution_time_minutes,ENV-017-AI,2025-12-19T00:00:00Z,,minutes,"Populate with CI runtime for integration suite."
+
