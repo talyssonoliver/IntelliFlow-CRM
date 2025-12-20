@@ -11,10 +11,12 @@
  * Usage:
  *   pnpm run validate:sprint0:report
  *   pnpm tsx tools/scripts/capture-validation-output.ts --output artifacts/reports/validation-output.txt
+ *   pnpm tsx tools/scripts/capture-validation-output.ts --sprint 1 --output artifacts/reports/validation/sprint-1.txt
  */
 
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { EOL } from 'node:os';
 import path from 'node:path';
 
 type CommandSpec = {
@@ -25,13 +27,42 @@ type CommandSpec = {
 
 function getArgValue(names: string[]): string | undefined {
   const argv = process.argv.slice(2);
+  let value: string | undefined;
   for (let index = 0; index < argv.length; index += 1) {
     const current = argv[index];
-    if (current && names.includes(current)) {
-      return argv[index + 1];
+    if (!current) continue;
+    if (names.includes(current)) {
+      value = argv[index + 1];
+      continue;
+    }
+
+    for (const name of names) {
+      if (current.startsWith(`${name}=`)) {
+        value = current.slice(name.length + 1);
+      }
     }
   }
-  return undefined;
+  return value;
+}
+
+function hasFlag(names: string[]): boolean {
+  const argv = process.argv.slice(2);
+  return argv.some((arg) => names.includes(arg));
+}
+
+function resolveTargetSprint(): { sprint: string; error?: string } {
+  const raw = getArgValue(['--sprint']);
+  if (!raw) return { sprint: '0' };
+
+  const trimmed = raw.trim();
+  const withoutPrefix = trimmed.startsWith('sprint-') ? trimmed.slice('sprint-'.length) : trimmed;
+  if (!/^\d+$/.test(withoutPrefix)) {
+    return {
+      sprint: '0',
+      error: `Invalid --sprint "${raw}" (expected an integer like 0, 1, 2...)`,
+    };
+  }
+  return { sprint: withoutPrefix };
 }
 
 function stripAnsi(input: string): string {
@@ -62,6 +93,10 @@ function downlevelUnicodeToAscii(input: string): string {
   return output;
 }
 
+function normalizeEol(input: string): string {
+  return input.replace(/\r\n/g, '\n').replace(/\n/g, EOL);
+}
+
 function runCommand(command: string, args: string[]): { code: number; output: string } {
   const result = spawnSync(command, args, {
     encoding: 'utf8',
@@ -87,17 +122,36 @@ function formatSection(label: string, code: number, output: string): string {
 }
 
 function main() {
-  const outputPath =
-    getArgValue(['--output', '--out']) ?? 'artifacts/sprint0/codex-run/validation-output.txt';
+  const sprintArg = resolveTargetSprint();
+  if (sprintArg.error) {
+    // Keep output consistent with other validators
+    console.error(`[FAIL] ${sprintArg.error}`);
+    process.exit(1);
+  }
+
+  const strict = hasFlag(['--strict', '-s']);
+
+  const defaultOutput =
+    sprintArg.sprint === '0'
+      ? 'artifacts/sprint0/codex-run/validation-output.txt'
+      : `artifacts/reports/validation/sprint-${sprintArg.sprint}-validation-output.txt`;
+
+  const outputPath = getArgValue(['--output', '--out']) ?? defaultOutput;
 
   mkdirSync(path.dirname(outputPath), { recursive: true });
 
+  const forwardArgs = ['--', '--sprint', sprintArg.sprint, ...(strict ? ['--strict'] : [])];
+
   const commands: CommandSpec[] = [
-    { label: 'pnpm run validate:sprint0', command: 'pnpm', args: ['run', 'validate:sprint0'] },
     {
-      label: 'pnpm run validate:sprint-data',
+      label: `pnpm run validate:sprint (sprint-${sprintArg.sprint}${strict ? ', strict' : ''})`,
       command: 'pnpm',
-      args: ['run', 'validate:sprint-data'],
+      args: ['run', 'validate:sprint', ...forwardArgs],
+    },
+    {
+      label: `pnpm run validate:sprint-data (sprint-${sprintArg.sprint}${strict ? ', strict' : ''})`,
+      command: 'pnpm',
+      args: ['run', 'validate:sprint-data', ...forwardArgs],
     },
   ];
 
@@ -116,9 +170,10 @@ function main() {
     sections.push(formatSection(spec.label, result.code, result.output));
   }
 
-  writeFileSync(outputPath, sections.join('\n'), { encoding: 'utf8' });
+  const normalized = normalizeEol(sections.join('\n'));
+  const withTrailingNewline = normalized.endsWith(EOL) ? normalized : normalized + EOL;
+  writeFileSync(outputPath, withTrailingNewline, { encoding: 'utf8' });
   process.exit(allPassed ? 0 : 1);
 }
 
 main();
-

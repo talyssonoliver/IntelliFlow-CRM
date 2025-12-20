@@ -1,0 +1,104 @@
+# IntelliFlow CRM - Grafana Datasources Configuration
+# Deployed on EasyPanel / Local Docker
+#
+# Auto-provisions Prometheus, Loki, and Tempo datasources
+# Includes trace-to-log correlation for full observability
+# Config hash tracked in EP-001-AI.json for audit
+
+apiVersion: 1
+
+deleteDatasources: []
+
+datasources:
+  # Prometheus - Metrics
+  - name: Prometheus
+    type: prometheus
+    uid: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      httpMethod: POST
+      manageAlerts: true
+      prometheusType: Prometheus
+      prometheusVersion: '2.48.0'
+      cacheLevel: 'High'
+      disableRecordingRules: false
+      incrementalQueryOverlapWindow: 10m
+      exemplarTraceIdDestinations:
+        - name: traceId
+          datasourceUid: tempo
+    version: 1
+
+  # Loki - Logs
+  - name: Loki
+    type: loki
+    uid: loki
+    access: proxy
+    url: http://loki:3100
+    isDefault: false
+    editable: false
+    jsonData:
+      maxLines: 1000
+      derivedFields:
+        # Link trace IDs in logs to Tempo traces
+        - name: TraceID
+          matcherRegex: '"traceId":"([a-f0-9]+)"'
+          url: '${__value.raw}'
+          datasourceUid: tempo
+          urlDisplayLabel: 'View Trace'
+        - name: TraceID_Alt
+          matcherRegex: 'trace_id=([a-f0-9]+)'
+          url: '${__value.raw}'
+          datasourceUid: tempo
+          urlDisplayLabel: 'View Trace'
+    version: 1
+
+  # Tempo - Distributed Tracing
+  - name: Tempo
+    type: tempo
+    uid: tempo
+    access: proxy
+    url: http://tempo:3200
+    isDefault: false
+    editable: false
+    jsonData:
+      # Link traces to logs in Loki
+      tracesToLogs:
+        datasourceUid: loki
+        tags: ['service.name', 'deployment.environment']
+        mapTagNamesEnabled: true
+        mappedTags:
+          - key: service.name
+            value: service_name
+        spanStartTimeShift: '-1h'
+        spanEndTimeShift: '1h'
+        filterByTraceID: true
+        filterBySpanID: false
+        lokiSearch: true
+      # Link traces to metrics in Prometheus
+      tracesToMetrics:
+        datasourceUid: prometheus
+        tags:
+          - key: service.name
+            value: service_name
+        queries:
+          - name: 'Request Rate'
+            query: 'sum(rate(http_server_request_duration_seconds_count{$$__tags}[5m]))'
+          - name: 'Error Rate'
+            query: 'sum(rate(http_server_request_duration_seconds_count{$$__tags, http_status_code=~"5.."}[5m]))'
+      # Service map powered by Prometheus metrics from Tempo
+      serviceMap:
+        datasourceUid: prometheus
+      # Node graph visualization
+      nodeGraph:
+        enabled: true
+      # Span bar visualization
+      spanBar:
+        type: 'Tag'
+        tag: 'http.status_code'
+      # Search configuration
+      search:
+        hide: false
+    version: 1

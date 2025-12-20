@@ -1,284 +1,33 @@
 {
   "meta": {
-    "generated_at": "2025-12-19T00:02:42.626762Z",
+    "generated_at": "2025-12-20T20:55:37.878450Z",
     "schema_version": "1.0.0",
     "sprint_scope": "all"
   },
   "summary": {
-    "total_tasks": 27,
+    "total_tasks": 35,
     "tier_breakdown": {
       "A": 14,
       "B": 10,
-      "C": 3
+      "C": 11
     },
     "error_count": 0,
-    "warning_count": 25,
+    "warning_count": 0,
     "review_queue_size": 26,
     "validation_coverage": {
-      "tasks_with_validation": 11,
-      "tasks_without_validation": 16,
-      "coverage_percentage": 41
+      "tasks_with_validation": 35,
+      "tasks_without_validation": 0,
+      "coverage_percentage": 100
     },
     "dependency_stats": {
-      "total_dependencies": 36,
-      "tasks_with_dependencies": 25,
-      "tasks_with_dependents": 16,
+      "total_dependencies": 50,
+      "tasks_with_dependencies": 32,
+      "tasks_with_dependents": 20,
       "orphan_tasks": 1
     }
   },
   "errors": [],
-  "warnings": [
-    {
-      "rule": "HIGH_FANOUT",
-      "severity": "info",
-      "message": "Task ENV-005-AI has 9 direct dependents (high fan-out)",
-      "tasks": [
-        "ENV-005-AI"
-      ],
-      "fix": "",
-      "priority": "high"
-    },
-    {
-      "rule": "HIGH_FANOUT",
-      "severity": "info",
-      "message": "Task ENV-007-AI has 4 direct dependents (high fan-out)",
-      "tasks": [
-        "ENV-007-AI"
-      ],
-      "fix": "",
-      "priority": "high"
-    },
-    {
-      "rule": "HIGH_FANOUT",
-      "severity": "info",
-      "message": "Task ENV-008-AI has 4 direct dependents (high fan-out)",
-      "tasks": [
-        "ENV-008-AI"
-      ],
-      "fix": "",
-      "priority": "high"
-    },
-    {
-      "rule": "HIGH_FANOUT",
-      "severity": "info",
-      "message": "Task IFC-000 has 4 direct dependents (high fan-out)",
-      "tasks": [
-        "IFC-000"
-      ],
-      "fix": "",
-      "priority": "high"
-    },
-    {
-      "rule": "HIGH_FANOUT",
-      "severity": "info",
-      "message": "Task ENV-003-AI has 3 direct dependents (high fan-out)",
-      "tasks": [
-        "ENV-003-AI"
-      ],
-      "fix": "",
-      "priority": "high"
-    },
-    {
-      "rule": "HIGH_FANOUT",
-      "severity": "info",
-      "message": "Task ENV-001-AI has 6 direct dependents (high fan-out)",
-      "tasks": [
-        "ENV-001-AI"
-      ],
-      "fix": "",
-      "priority": "high"
-    },
-    {
-      "rule": "HIGH_FANOUT",
-      "severity": "info",
-      "message": "Task AI-SETUP-001 has 4 direct dependents (high fan-out)",
-      "tasks": [
-        "AI-SETUP-001"
-      ],
-      "fix": "",
-      "priority": "high"
-    },
-    {
-      "rule": "HIGH_FANOUT",
-      "severity": "info",
-      "message": "Task ENV-009-AI has 4 direct dependents (high fan-out)",
-      "tasks": [
-        "ENV-009-AI"
-      ],
-      "fix": "",
-      "priority": "high"
-    },
-    {
-      "rule": "MISSING_VALIDATION",
-      "severity": "warning",
-      "message": "Task AI-SETUP-003 has no validation commands in validation.yaml",
-      "tasks": [
-        "AI-SETUP-003"
-      ],
-      "fix": "",
-      "priority": "medium"
-    },
-    {
-      "rule": "MISSING_VALIDATION",
-      "severity": "warning",
-      "message": "Task ENV-002-AI has no validation commands in validation.yaml",
-      "tasks": [
-        "ENV-002-AI"
-      ],
-      "fix": "",
-      "priority": "medium"
-    },
-    {
-      "rule": "MISSING_VALIDATION",
-      "severity": "warning",
-      "message": "Task ENV-006-AI has no validation commands in validation.yaml",
-      "tasks": [
-        "ENV-006-AI"
-      ],
-      "fix": "",
-      "priority": "medium"
-    },
-    {
-      "rule": "MISSING_VALIDATION",
-      "severity": "warning",
-      "message": "Task ENV-007-AI has no validation commands in validation.yaml",
-      "tasks": [
-        "ENV-007-AI"
-      ],
-      "fix": "",
-      "priority": "medium"
-    },
-    {
-      "rule": "MISSING_VALIDATION",
-      "severity": "warning",
-      "message": "Task ENV-008-AI has no validation commands in validation.yaml",
-      "tasks": [
-        "ENV-008-AI"
-      ],
-      "fix": "",
-      "priority": "medium"
-    },
-    {
-      "rule": "MISSING_VALIDATION",
-      "severity": "warning",
-      "message": "Task ENV-009-AI has no validation commands in validation.yaml",
-      "tasks": [
-        "ENV-009-AI"
-      ],
-      "fix": "",
-      "priority": "medium"
-    },
-    {
-      "rule": "MISSING_VALIDATION",
-      "severity": "warning",
-      "message": "Task ENV-011-AI has no validation commands in validation.yaml",
-      "tasks": [
-        "ENV-011-AI"
-      ],
-      "fix": "",
-      "priority": "medium"
-    },
-    {
-      "rule": "MISSING_VALIDATION",
-      "severity": "warning",
-      "message": "Task ENV-012-AI has no validation commands in validation.yaml",
-      "tasks": [
-        "ENV-012-AI"
-      ],
-      "fix": "",
-      "priority": "medium"
-    },
-    {
-      "rule": "MISSING_VALIDATION",
-      "severity": "warning",
-      "message": "Task ENV-013-AI has no validation commands in validation.yaml",
-      "tasks": [
-        "ENV-013-AI"
-      ],
-      "fix": "",
-      "priority": "medium"
-    },
-    {
-      "rule": "MISSING_VALIDATION",
-      "severity": "warning",
-      "message": "Task ENV-015-AI has no validation commands in validation.yaml",
-      "tasks": [
-        "ENV-015-AI"
-      ],
-      "fix": "",
-      "priority": "medium"
-    },
-    {
-      "rule": "MISSING_VALIDATION",
-      "severity": "warning",
-      "message": "Task ENV-016-AI has no validation commands in validation.yaml",
-      "tasks": [
-        "ENV-016-AI"
-      ],
-      "fix": "",
-      "priority": "medium"
-    },
-    {
-      "rule": "MISSING_VALIDATION",
-      "severity": "warning",
-      "message": "Task ENV-017-AI has no validation commands in validation.yaml",
-      "tasks": [
-        "ENV-017-AI"
-      ],
-      "fix": "",
-      "priority": "medium"
-    },
-    {
-      "rule": "MISSING_VALIDATION",
-      "severity": "warning",
-      "message": "Task ENV-018-AI has no validation commands in validation.yaml",
-      "tasks": [
-        "ENV-018-AI"
-      ],
-      "fix": "",
-      "priority": "medium"
-    },
-    {
-      "rule": "MISSING_VALIDATION",
-      "severity": "warning",
-      "message": "Task AUTOMATION-001 has no validation commands in validation.yaml",
-      "tasks": [
-        "AUTOMATION-001"
-      ],
-      "fix": "",
-      "priority": "medium"
-    },
-    {
-      "rule": "MISSING_VALIDATION",
-      "severity": "warning",
-      "message": "Task AUTOMATION-002 has no validation commands in validation.yaml",
-      "tasks": [
-        "AUTOMATION-002"
-      ],
-      "fix": "",
-      "priority": "medium"
-    },
-    {
-      "rule": "MISSING_VALIDATION",
-      "severity": "warning",
-      "message": "Task IFC-000 has no validation commands in validation.yaml",
-      "tasks": [
-        "IFC-000"
-      ],
-      "fix": "",
-      "priority": "medium"
-    },
-    {
-      "rule": "WAIVER_EXPIRING",
-      "severity": "warning",
-      "message": "Task ENV-017-AI waiver expires in 26 days",
-      "tasks": [
-        "ENV-017-AI"
-      ],
-      "fix": "",
-      "priority": "high"
-    }
-  ],
+  "warnings": [],
   "review_queue": [
     {
       "task_id": "EXC-INIT-001",
@@ -300,8 +49,7 @@
       "status": "Completed",
       "owner": "AI Specialist",
       "reasons": [
-        "Tier A task - requires explicit validation",
-        "High fan-out (4 dependents)"
+        "Tier A task - requires explicit validation"
       ],
       "dependent_count": 4,
       "waiver_expiry": null,
@@ -327,8 +75,7 @@
       "status": "Completed",
       "owner": "Tech Lead",
       "reasons": [
-        "Tier A task - requires explicit validation",
-        "High fan-out (6 dependents)"
+        "Tier A task - requires explicit validation"
       ],
       "dependent_count": 6,
       "waiver_expiry": null,
@@ -341,10 +88,9 @@
       "status": "Completed",
       "owner": "DevOps Engineer",
       "reasons": [
-        "Tier A task - requires explicit validation",
-        "Missing validation.yaml entry"
+        "Tier A task - requires explicit validation"
       ],
-      "dependent_count": 2,
+      "dependent_count": 4,
       "waiver_expiry": null,
       "priority": "critical"
     },
@@ -355,10 +101,9 @@
       "status": "Completed",
       "owner": "DevOps Engineer",
       "reasons": [
-        "Tier A task - requires explicit validation",
-        "High fan-out (3 dependents)"
+        "Tier A task - requires explicit validation"
       ],
-      "dependent_count": 3,
+      "dependent_count": 4,
       "waiver_expiry": null,
       "priority": "critical"
     },
@@ -382,10 +127,9 @@
       "status": "Completed",
       "owner": "DevOps Engineer",
       "reasons": [
-        "Tier A task - requires explicit validation",
-        "High fan-out (9 dependents)"
+        "Tier A task - requires explicit validation"
       ],
-      "dependent_count": 9,
+      "dependent_count": 11,
       "waiver_expiry": null,
       "priority": "critical"
     },
@@ -396,8 +140,7 @@
       "status": "Completed",
       "owner": "Backend Dev",
       "reasons": [
-        "Tier A task - requires explicit validation",
-        "Missing validation.yaml entry"
+        "Tier A task - requires explicit validation"
       ],
       "dependent_count": 1,
       "waiver_expiry": null,
@@ -410,9 +153,7 @@
       "status": "Completed",
       "owner": "Tech Lead",
       "reasons": [
-        "Tier A task - requires explicit validation",
-        "High fan-out (4 dependents)",
-        "Missing validation.yaml entry"
+        "Tier A task - requires explicit validation"
       ],
       "dependent_count": 4,
       "waiver_expiry": null,
@@ -425,9 +166,7 @@
       "status": "Completed",
       "owner": "Frontend Dev",
       "reasons": [
-        "Tier A task - requires explicit validation",
-        "High fan-out (4 dependents)",
-        "Missing validation.yaml entry"
+        "Tier A task - requires explicit validation"
       ],
       "dependent_count": 4,
       "waiver_expiry": null,
@@ -437,11 +176,10 @@
       "task_id": "ENV-013-AI",
       "tier": "A",
       "section": "Foundation Setup",
-      "status": "Backlog",
+      "status": "Completed",
       "owner": "Security Engineer",
       "reasons": [
-        "Tier A task - requires explicit validation",
-        "Missing validation.yaml entry"
+        "Tier A task - requires explicit validation"
       ],
       "dependent_count": 1,
       "waiver_expiry": null,
@@ -451,12 +189,10 @@
       "task_id": "IFC-000",
       "tier": "A",
       "section": "Planning",
-      "status": "Planned",
+      "status": "Completed",
       "owner": "CEO + CTO + CFO",
       "reasons": [
-        "Tier A task - requires explicit validation",
-        "High fan-out (4 dependents)",
-        "Missing validation.yaml entry"
+        "Tier A task - requires explicit validation"
       ],
       "dependent_count": 4,
       "waiver_expiry": null,
@@ -482,8 +218,7 @@
       "status": "Completed",
       "owner": "AI Specialist",
       "reasons": [
-        "Has waiver or debt_allowed",
-        "Missing validation.yaml entry"
+        "Has waiver or debt_allowed"
       ],
       "dependent_count": 0,
       "waiver_expiry": "2026-01-31",
@@ -493,14 +228,12 @@
       "task_id": "ENV-008-AI",
       "tier": "B",
       "section": "Foundation Setup",
-      "status": "Backlog",
+      "status": "Completed",
       "owner": "DevOps Engineer",
       "reasons": [
-        "High fan-out (4 dependents)",
-        "Has waiver or debt_allowed",
-        "Missing validation.yaml entry"
+        "Has waiver or debt_allowed"
       ],
-      "dependent_count": 4,
+      "dependent_count": 5,
       "waiver_expiry": "2026-02-28",
       "priority": "medium"
     },
@@ -508,12 +241,12 @@
       "task_id": "ENV-010-AI",
       "tier": "B",
       "section": "Foundation Setup",
-      "status": "Backlog",
+      "status": "Completed",
       "owner": "QA Lead",
       "reasons": [
         "Has waiver or debt_allowed"
       ],
-      "dependent_count": 2,
+      "dependent_count": 3,
       "waiver_expiry": "2026-01-31",
       "priority": "medium"
     },
@@ -524,8 +257,7 @@
       "status": "Completed",
       "owner": "AI Specialist",
       "reasons": [
-        "Has waiver or debt_allowed",
-        "Missing validation.yaml entry"
+        "Has waiver or debt_allowed"
       ],
       "dependent_count": 0,
       "waiver_expiry": "2026-01-31",
@@ -538,8 +270,7 @@
       "status": "Completed",
       "owner": "Tech Writer",
       "reasons": [
-        "Has waiver or debt_allowed",
-        "Missing validation.yaml entry"
+        "Has waiver or debt_allowed"
       ],
       "dependent_count": 0,
       "waiver_expiry": "2026-02-28",
@@ -549,7 +280,7 @@
       "task_id": "ENV-014-AI",
       "tier": "B",
       "section": "Foundation Setup",
-      "status": "Backlog",
+      "status": "Completed",
       "owner": "Performance Engineer",
       "reasons": [
         "Has waiver or debt_allowed"
@@ -562,11 +293,10 @@
       "task_id": "ENV-015-AI",
       "tier": "C",
       "section": "Foundation Setup",
-      "status": "Backlog",
+      "status": "Completed",
       "owner": "Backend Dev",
       "reasons": [
-        "Has waiver or debt_allowed",
-        "Missing validation.yaml entry"
+        "Has waiver or debt_allowed"
       ],
       "dependent_count": 0,
       "waiver_expiry": "2026-02-28",
@@ -576,11 +306,10 @@
       "task_id": "ENV-016-AI",
       "tier": "C",
       "section": "Foundation Setup",
-      "status": "Backlog",
+      "status": "Completed",
       "owner": "Frontend Dev",
       "reasons": [
-        "Has waiver or debt_allowed",
-        "Missing validation.yaml entry"
+        "Has waiver or debt_allowed"
       ],
       "dependent_count": 0,
       "waiver_expiry": "2026-02-28",
@@ -590,25 +319,23 @@
       "task_id": "ENV-017-AI",
       "tier": "B",
       "section": "Foundation Setup",
-      "status": "Backlog",
+      "status": "Completed",
       "owner": "Tech Lead",
       "reasons": [
-        "Has waiver or debt_allowed",
-        "Missing validation.yaml entry"
+        "Has waiver or debt_allowed"
       ],
       "dependent_count": 2,
-      "waiver_expiry": "2026-01-15",
+      "waiver_expiry": "2026-02-28",
       "priority": "medium"
     },
     {
       "task_id": "ENV-018-AI",
       "tier": "B",
       "section": "Foundation Setup",
-      "status": "Backlog",
+      "status": "Completed",
       "owner": "PM",
       "reasons": [
-        "Has waiver or debt_allowed",
-        "Missing validation.yaml entry"
+        "Has waiver or debt_allowed"
       ],
       "dependent_count": 1,
       "waiver_expiry": "2026-01-31",
@@ -618,13 +345,12 @@
       "task_id": "AUTOMATION-001",
       "tier": "B",
       "section": "AI Foundation",
-      "status": "Backlog",
+      "status": "Completed",
       "owner": "AI Specialist",
       "reasons": [
-        "Has waiver or debt_allowed",
-        "Missing validation.yaml entry"
+        "Has waiver or debt_allowed"
       ],
-      "dependent_count": 1,
+      "dependent_count": 2,
       "waiver_expiry": "2026-02-28",
       "priority": "medium"
     },
@@ -632,11 +358,10 @@
       "task_id": "AUTOMATION-002",
       "tier": "B",
       "section": "AI Foundation",
-      "status": "Backlog",
+      "status": "Completed",
       "owner": "DevOps Engineer",
       "reasons": [
-        "Has waiver or debt_allowed",
-        "Missing validation.yaml entry"
+        "Has waiver or debt_allowed"
       ],
       "dependent_count": 1,
       "waiver_expiry": "2026-02-28",

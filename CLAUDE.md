@@ -121,6 +121,25 @@ intelliFlow-CRM/
 - Configuration: `artifacts/misc/` (access-policy.json, vault-config.yaml, etc.)
 - Metrics: `artifacts/metrics/` (sprint metrics, KPI tracking)
 - Reports: `artifacts/reports/`
+- Swarm state: `artifacts/blockers.json`,
+  `artifacts/human-intervention-required.json`
+
+**Runtime State Files** (used by swarm orchestrator):
+
+The swarm orchestrator (`scripts/swarm/orchestrator.sh`) uses these JSON files
+to track task execution state:
+
+- `artifacts/blockers.json` - Tracks blocked tasks requiring resolution
+- `artifacts/human-intervention-required.json` - Tracks tasks needing human
+  review
+- `artifacts/qualitative-reviews/` - Stores qualitative review outputs
+
+These files are:
+
+- **Generated at runtime** by the orchestrator
+- **Not versioned** (listed in `.gitignore`)
+- **Read/written** during swarm task execution
+- **Located in `artifacts/`** (NOT under `docs/`)
 
 **⚠️ CRITICAL FILE LOCATIONS** (Do NOT move without updating references):
 

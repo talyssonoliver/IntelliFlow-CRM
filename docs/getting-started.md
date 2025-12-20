@@ -48,7 +48,7 @@ Edit the `.env` file and configure the following variables:
 
 ```env
 # Database
-DATABASE_URL="postgresql://intelliflow:dev_password@localhost:5432/intelliflow_dev"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/intelliflow_dev?schema=public"
 
 # Redis
 REDIS_URL="redis://localhost:6379"
@@ -69,16 +69,37 @@ SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
 
 ### 4. Start Docker Services
 
-Start the required infrastructure services (PostgreSQL, Redis, Ollama):
+Start the base infrastructure services (PostgreSQL, Redis):
 
 ```bash
-docker-compose -f artifacts/misc/docker-compose.yml up -d postgres redis ollama
+docker compose up -d postgres redis
+```
+
+For the recommended base + overlays workflow (especially on low-RAM machines),
+see `docs/setup/docker-compose-overlays.md`.
+
+Optional: start test containers (used by integration tests):
+
+```bash
+docker compose up -d postgres-test redis-test
+```
+
+Optional: start Ollama (local AI dev, persisted via named volume):
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.ollama.yml up -d ollama
+```
+
+Optional: start admin tools (Adminer, RedisInsight, Mailhog):
+
+```bash
+docker compose --profile tools up -d adminer redis-insight mailhog
 ```
 
 Verify services are running:
 
 ```bash
-docker-compose -f artifacts/misc/docker-compose.yml ps
+docker compose ps
 ```
 
 ### 5. Initialize Database
@@ -288,13 +309,13 @@ kill -9 $(lsof -t -i:3000)
 
 ```bash
 # Check if PostgreSQL is running
-docker-compose -f artifacts/misc/docker-compose.yml ps postgres
+docker compose ps postgres
 
 # View PostgreSQL logs
-docker-compose -f artifacts/misc/docker-compose.yml logs postgres
+docker compose logs postgres
 
 # Restart PostgreSQL
-docker-compose -f artifacts/misc/docker-compose.yml restart postgres
+docker compose restart postgres
 ```
 
 ### Prisma Client Errors

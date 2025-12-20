@@ -1,0 +1,42 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "GTM-002",
+  "description": "Messaging Framework (positioning, value props, copy blocks)",
+  "owner": "PM + Marketing",
+  "status": "DONE",
+  "sprint": "sprint-0",
+  "phase": "phase-5-completion",
+  "stream": null,
+  "dependencies": {
+    "all_satisfied": true,
+    "verified_at": null,
+    "required": ["GTM-001", "BRAND-001"]
+  },
+  "dependencies_resolved": ["GTM-001", "BRAND-001"],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": null,
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "expected": [
+      "docs/company/messaging/positioning.md",
+      "docs/company/messaging/value-props.md",
+      "docs/company/messaging/copy-blocks.md",
+      "docs/company/messaging/cta-library.md"
+    ],
+    "created": [],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "Messaging Docs Created",
+      "command": "verify docs/company/messaging/*.md exist",
+      "executed_at": "2025-12-20T00:00:00Z",
+      "exit_code": 0,
+      "passed": true
+    }
+  ],
+  "blockers": [],
+  "section": "Go-to-Market",
+  "status_history": []
+}

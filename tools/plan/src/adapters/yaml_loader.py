@@ -85,3 +85,22 @@ class YamlConfigLoader:
             data = yaml.safe_load(f) or {}
 
         return data.get("gate_profiles", {})
+
+    def load_linter_config(self, file_path: Path) -> dict[str, Any]:
+        """Load linter configuration from plan-overrides.yaml.
+
+        Returns config dict with keys:
+          - fanout_threshold: int (default 3)
+          - waiver_warning_days: int (default 30)
+        """
+        if not file_path.exists():
+            return {"fanout_threshold": 3, "waiver_warning_days": 30}
+
+        with open(file_path, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f) or {}
+
+        config = data.get("linter_config", {})
+        return {
+            "fanout_threshold": config.get("fanout_threshold", 3),
+            "waiver_warning_days": config.get("waiver_warning_days", 30),
+        }

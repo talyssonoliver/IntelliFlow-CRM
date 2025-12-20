@@ -1,17 +1,17 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2025-12-19T00:58:53.911Z",
+  "last_updated": "2025-12-20T21:36:45.366Z",
   "total_tasks": 305,
   "sprints": {
     "sprint-0": {
-      "total_tasks": 27,
-      "completed": 27,
+      "total_tasks": 35,
+      "completed": 28,
       "in_progress": 0,
       "validating": 0,
       "blocked": 0,
       "planned": 0,
-      "backlog": 0,
+      "backlog": 7,
       "failed": 0,
       "needs_human": 0,
       "in_review": 0
@@ -41,6 +41,7 @@
       "ENV-016-AI",
       "ENV-017-AI",
       "ENV-018-AI",
+      "EP-001-AI",
       "AUTOMATION-001",
       "AUTOMATION-002",
       "IFC-000",
@@ -50,7 +51,8 @@
     "IN_PROGRESS": [],
     "VALIDATING": [],
     "BLOCKED": [],
-    "PLANNED": [
+    "PLANNED": [],
+    "BACKLOG": [
       "IFC-001",
       "IFC-002",
       "IFC-003",
@@ -224,6 +226,17 @@
       "PG-080",
       "PG-081",
       "PG-082",
+      "DOC-001",
+      "BRAND-001",
+      "BRAND-002",
+      "GTM-001",
+      "GTM-002",
+      "SALES-001",
+      "SALES-002",
+      "PM-OPS-001",
+      "ENG-OPS-001",
+      "GOV-001",
+      "ANALYTICS-001",
       "PG-083",
       "PG-084",
       "PG-085",
@@ -329,7 +342,6 @@
       "IFC-159",
       "IFC-163"
     ],
-    "BACKLOG": [],
     "FAILED": [],
     "NEEDS_HUMAN": [],
     "IN_REVIEW": []
@@ -694,7 +706,7 @@
       "owner": "Frontend Dev + AI Analytics",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["ENV-009-AI"],
+      "dependencies": ["ENV-009-AI", "ANALYTICS-001"],
       "artifacts": [
         "artifacts/misc/analytics/*",
         "artifacts/misc/privacy-config.json",
@@ -747,6 +759,28 @@
       "definition_of_done": "Backlog AI-prioritized, velocity AI-predicted, capacity AI-optimized, risks AI-identified",
       "validation": "Planning optimized, velocity predicted, risks identified",
       "prerequisites": "Sprint 0 complete, AI analytics ready"
+    },
+    "EP-001-AI": {
+      "section": "Foundation Setup",
+      "description": "EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline)",
+      "owner": "DevOps + Claude Code",
+      "status": "DONE",
+      "sprint": 0,
+      "dependencies": ["ENV-003-AI", "ENV-008-AI"],
+      "artifacts": [
+        "infra/monitoring/otel-collector.yaml",
+        "infra/monitoring/tempo-config.yml",
+        "infra/monitoring/docker-compose.monitoring.yml",
+        "infra/monitoring/prometheus.yml",
+        "infra/monitoring/loki-config.yml",
+        "infra/monitoring/grafana/provisioning/*",
+        "artifacts/monitoring-config-hashes.txt",
+        "docs/operations/monitoring-runbook.md"
+      ],
+      "kpis": "Setup <30 min, zero manual SSL config, 100% services behind access control, 30-day metrics/logs retention, 7-day traces retention, OTLP push working from Railway",
+      "definition_of_done": "Week 1: OTel Collector + Prometheus + Grafana deployed behind access control; Week 2: Loki + Tempo deployed with trace-to-log correlation; Week 3: SonarQube deployed with GitHub Actions integration; All configs git-versioned and shared between local Docker and EasyPanel",
+      "validation": "Health endpoints return 200, services not publicly accessible (403 or timeout), configs SHA256 hashed, audit evidence collected",
+      "prerequisites": "Server provisioned, Tailscale or Cloudflare Access configured, EasyPanel installed"
     },
     "AUTOMATION-001": {
       "section": "AI Foundation",
@@ -812,7 +846,7 @@
       "section": "Validation",
       "description": "Technical Architecture Spike - Modern Stack",
       "owner": "CTO + Tech Lead",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 1,
       "dependencies": ["IFC-000"],
       "artifacts": [
@@ -830,7 +864,7 @@
       "section": "Validation",
       "description": "Domain Model Design (DDD)",
       "owner": "Tech Lead + DA",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 1,
       "dependencies": ["IFC-000"],
       "artifacts": [
@@ -848,7 +882,7 @@
       "section": "Validation",
       "description": "tRPC API Foundation",
       "owner": "DevOps + Backend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 1,
       "dependencies": ["IFC-002"],
       "artifacts": [
@@ -866,7 +900,7 @@
       "section": "Validation",
       "description": "Next.js 16.0.10 Lead Capture UI",
       "owner": "Frontend Dev + UX",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 2,
       "dependencies": ["IFC-003"],
       "artifacts": [
@@ -884,7 +918,7 @@
       "section": "Validation",
       "description": "LangChain AI Scoring Prototype",
       "owner": "AI Specialist + Backend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 2,
       "dependencies": ["IFC-004"],
       "artifacts": [
@@ -901,7 +935,7 @@
       "section": "Validation",
       "description": "Supabase Integration Test",
       "owner": "Backend Dev + DevOps",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 3,
       "dependencies": ["IFC-003"],
       "artifacts": [
@@ -919,7 +953,7 @@
       "section": "Validation",
       "description": "Performance Benchmarks - Modern Stack",
       "owner": "Performance Eng + DevOps",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 3,
       "dependencies": ["IFC-004", "IFC-005"],
       "artifacts": [
@@ -937,7 +971,7 @@
       "section": "Validation",
       "description": "Security Assessment - OWASP + ISO 42001 Prep",
       "owner": "Security Eng + CTO",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 2,
       "dependencies": ["IFC-001"],
       "artifacts": [
@@ -955,7 +989,7 @@
       "section": "Validation",
       "description": "Team Capability Assessment - Modern Stack",
       "owner": "PM + Tech Lead",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 4,
       "dependencies": ["IFC-001", "IFC-005"],
       "artifacts": [
@@ -973,7 +1007,7 @@
       "section": "Decision Gate",
       "description": "Phase 1 Go/No-Go Decision",
       "owner": "CEO + Leadership",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 4,
       "dependencies": [
         "IFC-001",
@@ -1001,7 +1035,7 @@
       "section": "Parallel Track",
       "description": "Supabase Free Tier Optimization",
       "owner": "DevOps + PM",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 3,
       "dependencies": ["IFC-000"],
       "artifacts": [
@@ -1019,7 +1053,7 @@
       "section": "MVP Week 1",
       "description": "Turborepo Monorepo Setup",
       "owner": "DevOps + Tech Lead",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 6,
       "dependencies": ["IFC-010"],
       "artifacts": [
@@ -1037,7 +1071,7 @@
       "section": "MVP Week 1",
       "description": "tRPC Router Implementation",
       "owner": "Backend Dev + Tech Lead",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 7,
       "dependencies": ["IFC-012"],
       "artifacts": [
@@ -1054,7 +1088,7 @@
       "section": "MVP Week 1",
       "description": "Next.js 16.0.10 App Router UI",
       "owner": "Frontend Dev + UX",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 8,
       "dependencies": ["IFC-013"],
       "artifacts": [
@@ -1072,7 +1106,7 @@
       "section": "MVP Week 1",
       "description": "BullMQ Job Queue Setup",
       "owner": "Backend Dev + DevOps",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 8,
       "dependencies": ["IFC-013"],
       "artifacts": [
@@ -1090,7 +1124,7 @@
       "section": "MVP Week 1",
       "description": "Real-time Subscriptions",
       "owner": "Frontend Dev + Backend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 9,
       "dependencies": ["IFC-014"],
       "artifacts": [
@@ -1107,7 +1141,7 @@
       "section": "MVP Week 1",
       "description": "Prisma + Supabase Data Layer",
       "owner": "Backend Dev + DA",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 9,
       "dependencies": ["IFC-012", "IFC-013"],
       "artifacts": [
@@ -1125,7 +1159,7 @@
       "section": "MVP Week 1",
       "description": "Vitest Testing Suite",
       "owner": "QA + Whole Team",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 11,
       "dependencies": ["IFC-014", "IFC-015", "IFC-016"],
       "artifacts": [
@@ -1143,7 +1177,7 @@
       "section": "Investment Gate",
       "description": "Gate 1 Review - £500 Investment",
       "owner": "CFO + CEO",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 11,
       "dependencies": ["IFC-018"],
       "artifacts": [
@@ -1161,7 +1195,7 @@
       "section": "Intelligence",
       "description": "LangChain Pipeline Design",
       "owner": "AI Specialist + Data Scientist",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 12,
       "dependencies": ["IFC-019"],
       "artifacts": [
@@ -1178,7 +1212,7 @@
       "section": "Intelligence",
       "description": "CrewAI Agent Framework",
       "owner": "Backend Dev + AI Specialist",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 12,
       "dependencies": ["IFC-020"],
       "artifacts": [
@@ -1196,7 +1230,7 @@
       "section": "Intelligence",
       "description": "Structured AI Output Implementation",
       "owner": "AI Specialist + Backend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 13,
       "dependencies": ["IFC-021"],
       "artifacts": [
@@ -1213,7 +1247,7 @@
       "section": "Intelligence",
       "description": "AI Explainability UI",
       "owner": "Frontend Dev + UX",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 13,
       "dependencies": ["IFC-022"],
       "artifacts": [
@@ -1230,7 +1264,7 @@
       "section": "Intelligence",
       "description": "Human-in-the-Loop Feedback",
       "owner": "Full Stack Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 14,
       "dependencies": ["IFC-023"],
       "artifacts": [
@@ -1247,7 +1281,7 @@
       "section": "Intelligence",
       "description": "A/B Testing Framework",
       "owner": "Data Scientist + Backend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 14,
       "dependencies": ["IFC-022"],
       "artifacts": [
@@ -1265,7 +1299,7 @@
       "section": "Intelligence",
       "description": "Playwright E2E Testing",
       "owner": "QA + AI Specialist",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 15,
       "dependencies": ["IFC-022", "IFC-024"],
       "artifacts": [
@@ -1283,7 +1317,7 @@
       "section": "Investment Gate",
       "description": "Gate 2 Review - £2000 Investment",
       "owner": "CFO + CEO",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 15,
       "dependencies": ["IFC-026"],
       "artifacts": [
@@ -1301,7 +1335,7 @@
       "section": "Automation",
       "description": "Workflow Engine with LangGraph",
       "owner": "Backend Dev + Architect",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 16,
       "dependencies": ["IFC-027"],
       "artifacts": [
@@ -1319,7 +1353,7 @@
       "section": "Automation",
       "description": "Auto-Response with Approval Gate",
       "owner": "Backend Dev + AI Specialist",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 16,
       "dependencies": ["IFC-028"],
       "artifacts": [
@@ -1336,7 +1370,7 @@
       "section": "Automation",
       "description": "Smart Lead Routing",
       "owner": "Backend Dev + Sales Ops",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 17,
       "dependencies": ["IFC-029"],
       "artifacts": [
@@ -1354,7 +1388,7 @@
       "section": "Automation",
       "description": "Workflow Builder UI (React Flow)",
       "owner": "Frontend Dev + UX",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 17,
       "dependencies": ["IFC-028"],
       "artifacts": [
@@ -1371,7 +1405,7 @@
       "section": "Automation",
       "description": "OpenTelemetry Monitoring",
       "owner": "DevOps + SRE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 18,
       "dependencies": ["IFC-030"],
       "artifacts": [
@@ -1389,7 +1423,7 @@
       "section": "Automation",
       "description": "Load Testing with k6",
       "owner": "Performance Eng + DevOps",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 19,
       "dependencies": ["IFC-030", "IFC-032"],
       "artifacts": [
@@ -1407,7 +1441,7 @@
       "section": "Investment Gate",
       "description": "Gate 3 Review - £3000 Investment",
       "owner": "CFO + CEO",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 19,
       "dependencies": ["IFC-033"],
       "artifacts": [
@@ -1425,7 +1459,7 @@
       "section": "Enhancement",
       "description": "WhatsApp Business API Research",
       "owner": "Integration Eng + PM",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 20,
       "dependencies": ["IFC-034"],
       "artifacts": [
@@ -1443,7 +1477,7 @@
       "section": "Enhancement",
       "description": "WhatsApp + tRPC Integration",
       "owner": "Backend Dev + Integration Eng",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 21,
       "dependencies": ["IFC-035", "IFC-106"],
       "artifacts": [
@@ -1460,9 +1494,9 @@
       "section": "Enhancement",
       "description": "Analytics Dashboard Design",
       "owner": "Data Analyst + UX",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 21,
-      "dependencies": ["IFC-032"],
+      "dependencies": ["IFC-032", "ANALYTICS-001"],
       "artifacts": [
         "artifacts/misc/figma-dashboard-designs.url",
         "artifacts/misc/kpi-definitions.yaml",
@@ -1478,9 +1512,9 @@
       "section": "Enhancement",
       "description": "Analytics Implementation",
       "owner": "Frontend Dev + Data Eng",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 22,
-      "dependencies": ["IFC-037"],
+      "dependencies": ["IFC-037", "ANALYTICS-001"],
       "artifacts": [
         "apps/web/app/analytics/*",
         "packages/application/src/analytics/*",
@@ -1495,7 +1529,7 @@
       "section": "Enhancement",
       "description": "Advanced AI Features (RAG)",
       "owner": "AI Specialist + Full Team",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 23,
       "dependencies": ["IFC-025"],
       "artifacts": [
@@ -1513,7 +1547,7 @@
       "section": "Enhancement",
       "description": "Production Hardening",
       "owner": "DevOps + Security",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 24,
       "dependencies": [
         "IFC-046",
@@ -1545,7 +1579,7 @@
       "section": "Documentation",
       "description": "User Manual with Interactive Examples",
       "owner": "Tech Writer + PM",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": -1,
       "dependencies": ["IFC-018", "IFC-026", "IFC-033"],
       "artifacts": [
@@ -1562,7 +1596,7 @@
       "section": "Documentation",
       "description": "tRPC API Client SDK Docs",
       "owner": "Backend Dev + Tech Writer",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": -1,
       "dependencies": ["IFC-013"],
       "artifacts": [
@@ -1580,7 +1614,7 @@
       "section": "Documentation",
       "description": "Operational runbooks (deploy, rollback, incident response, backup/restore, access requests)",
       "owner": "DevOps + Tech Lead",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 20,
       "dependencies": [
         "ENV-008-AI",
@@ -1604,7 +1638,7 @@
       "section": "Testing",
       "description": "Unit Tests (Vitest + TDD)",
       "owner": "All Developers",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": -1,
       "dependencies": [],
       "artifacts": [
@@ -1622,7 +1656,7 @@
       "section": "Testing",
       "description": "Integration Tests (Vitest + MSW)",
       "owner": "QA + Backend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": -1,
       "dependencies": ["IFC-044"],
       "artifacts": [
@@ -1640,7 +1674,7 @@
       "section": "Testing",
       "description": "Security Tests (OWASP ZAP + Snyk)",
       "owner": "Security Eng + QA",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": -1,
       "dependencies": ["IFC-008"],
       "artifacts": [
@@ -1658,7 +1692,7 @@
       "section": "Testing",
       "description": "Performance Tests (k6 + Lighthouse)",
       "owner": "Performance Eng",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": -1,
       "dependencies": ["IFC-007"],
       "artifacts": [
@@ -1676,7 +1710,7 @@
       "section": "Testing",
       "description": "User Acceptance Testing",
       "owner": "PM + Sales Team",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 25,
       "dependencies": ["IFC-039"],
       "artifacts": [
@@ -1694,7 +1728,7 @@
       "section": "Investment Gate",
       "description": "Gate 4 Review - £5000 Investment",
       "owner": "CEO + Board",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 26,
       "dependencies": ["IFC-048"],
       "artifacts": [
@@ -1712,7 +1746,7 @@
       "section": "Launch",
       "description": "Internal Launch Preparation",
       "owner": "PM + Marketing",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 26,
       "dependencies": ["IFC-048"],
       "artifacts": [
@@ -1730,7 +1764,7 @@
       "section": "Launch",
       "description": "Pilot Customer Selection",
       "owner": "Sales + CEO",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 27,
       "dependencies": ["IFC-049"],
       "artifacts": [
@@ -1748,7 +1782,7 @@
       "section": "Launch",
       "description": "Production Deployment",
       "owner": "DevOps + Whole Team",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 27,
       "dependencies": ["IFC-040", "IFC-050"],
       "artifacts": [
@@ -1766,7 +1800,7 @@
       "section": "Launch",
       "description": "Hypercare Period",
       "owner": "Support Team + DevOps",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": -1,
       "dependencies": ["IFC-052"],
       "artifacts": [
@@ -1784,7 +1818,7 @@
       "section": "Risk Mgmt",
       "description": "Technical Complexity Monitoring",
       "owner": "CTO + Tech Lead",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": -1,
       "dependencies": [],
       "artifacts": [
@@ -1802,7 +1836,7 @@
       "section": "Risk Mgmt",
       "description": "Budget Tracking with FinOps",
       "owner": "CFO + PM",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": -1,
       "dependencies": [],
       "artifacts": [
@@ -1820,7 +1854,7 @@
       "section": "Risk Mgmt",
       "description": "Team Upskilling Program",
       "owner": "HR + Tech Lead",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": -1,
       "dependencies": ["IFC-009"],
       "artifacts": [
@@ -1838,7 +1872,7 @@
       "section": "Risk Mgmt",
       "description": "Vendor Lock-in Mitigation",
       "owner": "PM + Tech Lead",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": -1,
       "dependencies": ["IFC-011"],
       "artifacts": [
@@ -1856,7 +1890,7 @@
       "section": "Compliance",
       "description": "GDPR baseline controls: Supabase RLS policies, data minimisation, retention hooks",
       "owner": "DPO + Legal",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 11,
       "dependencies": ["IFC-017", "IFC-127", "IFC-008"],
       "artifacts": [
@@ -1874,7 +1908,7 @@
       "section": "Compliance",
       "description": "ISO 42001 Readiness Assessment",
       "owner": "External Auditor + CTO",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 25,
       "dependencies": ["IFC-040"],
       "artifacts": [
@@ -1892,7 +1926,7 @@
       "section": "Success",
       "description": "Success Metrics Review",
       "owner": "CEO + All Leads",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 33,
       "dependencies": ["IFC-052"],
       "artifacts": [
@@ -1910,7 +1944,7 @@
       "section": "Migration",
       "description": "Data Migration from Legacy",
       "owner": "DA + DevOps",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 18,
       "dependencies": ["IFC-017"],
       "artifacts": [
@@ -1928,7 +1962,7 @@
       "section": "Resilience",
       "description": "Multi-Region Setup",
       "owner": "DevOps + DBA",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 24,
       "dependencies": ["IFC-040"],
       "artifacts": [
@@ -1946,7 +1980,7 @@
       "section": "Security",
       "description": "Zero Trust Security Model",
       "owner": "Security Eng + CTO",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 1,
       "dependencies": ["IFC-001", "IFC-008"],
       "artifacts": [
@@ -1964,7 +1998,7 @@
       "section": "Compliance",
       "description": "Privacy Impact Assessment",
       "owner": "DPO + Legal",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 1,
       "dependencies": ["IFC-072"],
       "artifacts": [
@@ -1982,7 +2016,7 @@
       "section": "Observability",
       "description": "Full Stack Observability",
       "owner": "SRE Lead + DevOps",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 1,
       "dependencies": ["IFC-003"],
       "artifacts": [
@@ -2000,7 +2034,7 @@
       "section": "Infrastructure",
       "description": "IaC with Terraform",
       "owner": "DevOps",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 1,
       "dependencies": ["IFC-001"],
       "artifacts": [
@@ -2018,9 +2052,9 @@
       "section": "Quality",
       "description": "Component Library (shadcn/ui)",
       "owner": "Frontend Dev + UX",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 10,
-      "dependencies": ["IFC-014"],
+      "dependencies": ["IFC-014", "BRAND-002"],
       "artifacts": [
         "apps/web/components/ui/*",
         "artifacts/misc/storybook-static/*",
@@ -2036,7 +2070,7 @@
       "section": "Security",
       "description": "API Rate Limiting (tRPC + Upstash)",
       "owner": "Backend Dev + Security Eng",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 1,
       "dependencies": ["IFC-013"],
       "artifacts": [
@@ -2054,7 +2088,7 @@
       "section": "Platform",
       "description": "Platform Engineering Foundation",
       "owner": "DevOps + Tech Lead",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 18,
       "dependencies": ["IFC-012"],
       "artifacts": [
@@ -2072,7 +2106,7 @@
       "section": "Documentation",
       "description": "Docusaurus Setup",
       "owner": "Tech Writer + DevOps",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 2,
       "dependencies": ["IFC-012"],
       "artifacts": [
@@ -2090,7 +2124,7 @@
       "section": "Documentation",
       "description": "LLM-Friendly Documentation Templates",
       "owner": "Tech Writer + AI Specialist",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 2,
       "dependencies": ["IFC-079"],
       "artifacts": [
@@ -2108,7 +2142,7 @@
       "section": "Documentation",
       "description": "API Documentation (tRPC + OpenAPI)",
       "owner": "Backend Dev + Tech Writer",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": -1,
       "dependencies": ["IFC-013"],
       "artifacts": [
@@ -2126,7 +2160,7 @@
       "section": "Documentation",
       "description": "Domain Knowledge Base",
       "owner": "Tech Lead + Team",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 4,
       "dependencies": ["IFC-080"],
       "artifacts": [
@@ -2144,7 +2178,7 @@
       "section": "Documentation",
       "description": "RAG Integration for Docs",
       "owner": "AI Specialist + Tech Writer",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 23,
       "dependencies": ["IFC-039", "IFC-082"],
       "artifacts": [
@@ -2162,9 +2196,9 @@
       "section": "Documentation",
       "description": "Video Tutorials & Demos",
       "owner": "Tech Writer + Marketing",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 25,
-      "dependencies": ["IFC-050"],
+      "dependencies": ["IFC-050", "SALES-002"],
       "artifacts": [
         "artifacts/misc/video-scripts/*",
         "artifacts/misc/video-links.json",
@@ -2180,7 +2214,7 @@
       "section": "AI/ML",
       "description": "Ollama Local Development",
       "owner": "AI Specialist + DevOps",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 2,
       "dependencies": ["IFC-005"],
       "artifacts": [
@@ -2198,7 +2232,7 @@
       "section": "AI/ML",
       "description": "Model Versioning with Zep",
       "owner": "AI Specialist + Backend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 14,
       "dependencies": ["IFC-020"],
       "artifacts": [
@@ -2216,7 +2250,7 @@
       "section": "Performance",
       "description": "Edge Functions Optimization",
       "owner": "Frontend Dev + DevOps",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 20,
       "dependencies": ["IFC-014"],
       "artifacts": [
@@ -2234,7 +2268,7 @@
       "section": "Quality",
       "description": "Continuous Quality Metrics",
       "owner": "QA Lead + PM",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": -1,
       "dependencies": ["IFC-044"],
       "artifacts": [
@@ -2252,7 +2286,7 @@
       "section": "Core CRM",
       "description": "Contacts Module - Create/Edit/Search",
       "owner": "Frontend Dev + Backend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 5,
       "dependencies": ["IFC-002", "IFC-004"],
       "artifacts": [
@@ -2269,7 +2303,7 @@
       "section": "Core CRM",
       "description": "Contact 360 Page - Full Detail View",
       "owner": "Frontend Dev + UX Designer",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 6,
       "dependencies": ["IFC-089"],
       "artifacts": [
@@ -2286,7 +2320,7 @@
       "section": "Core CRM",
       "description": "Deals Pipeline - Kanban Board",
       "owner": "Frontend Dev + Backend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 6,
       "dependencies": ["IFC-002", "IFC-004"],
       "artifacts": [
@@ -2303,7 +2337,7 @@
       "section": "Core CRM",
       "description": "Deal Forecasting & Reporting",
       "owner": "Data Eng + Backend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 7,
       "dependencies": ["IFC-091"],
       "artifacts": [
@@ -2320,7 +2354,7 @@
       "section": "Core CRM",
       "description": "Tickets Module - SLA Tracking",
       "owner": "Backend Dev + Frontend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 7,
       "dependencies": ["IFC-002", "IFC-004"],
       "artifacts": [
@@ -2337,7 +2371,7 @@
       "section": "Core CRM",
       "description": "Documents Management - Upload & Sign",
       "owner": "Backend Dev + Integrations Eng",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 8,
       "dependencies": ["IFC-090", "IFC-106"],
       "artifacts": [
@@ -2354,7 +2388,7 @@
       "section": "AI Insights",
       "description": "Churn Risk & Next Best Action",
       "owner": "AI Specialist + Backend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 8,
       "dependencies": ["IFC-005", "IFC-090"],
       "artifacts": [
@@ -2371,7 +2405,7 @@
       "section": "Reports",
       "description": "Custom Reports & Dashboards",
       "owner": "Frontend Dev + Data Eng",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 9,
       "dependencies": ["IFC-091", "IFC-092"],
       "artifacts": [
@@ -2388,7 +2422,7 @@
       "section": "Ops & Observability",
       "description": "Distributed Tracing & Logging",
       "owner": "DevOps + SRE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 9,
       "dependencies": ["IFC-007"],
       "artifacts": [
@@ -2406,7 +2440,7 @@
       "section": "Security",
       "description": "RBAC/ABAC & Audit Trail",
       "owner": "Security Eng + Backend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 9,
       "dependencies": ["IFC-008"],
       "artifacts": [
@@ -2423,7 +2457,7 @@
       "section": "Integrations",
       "description": "ERP/Payment/Email Connectors",
       "owner": "Integrations Eng + Backend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 10,
       "dependencies": ["IFC-006", "IFC-106"],
       "artifacts": [
@@ -2440,9 +2474,9 @@
       "section": "Governance",
       "description": "ADR Registry & Compliance Reporting",
       "owner": "PM + CTO",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 10,
-      "dependencies": ["IFC-008"],
+      "dependencies": ["IFC-008", "GOV-001"],
       "artifacts": [
         "docs/adr/*",
         "artifacts/misc/compliance/*",
@@ -2458,9 +2492,9 @@
       "section": "Public Pages",
       "description": "Home Page",
       "owner": "Growth FE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 11,
-      "dependencies": ["IFC-076"],
+      "dependencies": ["IFC-076", "GTM-002", "BRAND-001"],
       "artifacts": [
         "apps/web/app/(public)/page.tsx",
         "apps/web/app/(public)/loading.tsx",
@@ -2476,9 +2510,9 @@
       "section": "Public Pages",
       "description": "Features Page",
       "owner": "Growth FE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 11,
-      "dependencies": ["PG-001"],
+      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
       "artifacts": [
         "apps/web/app/(public)/features/page.tsx",
         "artifacts/misc/features-content.json",
@@ -2493,9 +2527,9 @@
       "section": "Public Pages",
       "description": "Pricing Page",
       "owner": "Growth FE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 11,
-      "dependencies": ["PG-001"],
+      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
       "artifacts": [
         "apps/web/app/(public)/pricing/page.tsx",
         "apps/web/components/pricing/pricing-calculator.tsx",
@@ -2510,9 +2544,9 @@
       "section": "Public Pages",
       "description": "About Page",
       "owner": "Growth FE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 11,
-      "dependencies": ["PG-001"],
+      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
       "artifacts": [
         "apps/web/app/(public)/about/page.tsx",
         "artifacts/misc/team-data.json",
@@ -2527,9 +2561,9 @@
       "section": "Public Pages",
       "description": "Contact Page",
       "owner": "Growth FE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 11,
-      "dependencies": ["PG-001"],
+      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
       "artifacts": [
         "apps/web/app/(public)/contact/page.tsx",
         "apps/web/components/shared/contact-form.tsx",
@@ -2544,9 +2578,9 @@
       "section": "Public Pages",
       "description": "Partners Page",
       "owner": "Growth FE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 11,
-      "dependencies": ["PG-001"],
+      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
       "artifacts": [
         "apps/web/app/(public)/partners/page.tsx",
         "artifacts/misc/partner-logos/*",
@@ -2561,9 +2595,9 @@
       "section": "Public Pages",
       "description": "Press Page",
       "owner": "Growth FE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 11,
-      "dependencies": ["PG-001"],
+      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
       "artifacts": [
         "apps/web/app/(public)/press/page.tsx",
         "artifacts/misc/press-releases/*",
@@ -2578,9 +2612,9 @@
       "section": "Public Pages",
       "description": "Security Page",
       "owner": "Growth FE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 11,
-      "dependencies": ["PG-001"],
+      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
       "artifacts": [
         "apps/web/app/(public)/security/page.tsx",
         "artifacts/misc/security-badges/*",
@@ -2595,9 +2629,9 @@
       "section": "Public Pages",
       "description": "Blog Index",
       "owner": "Growth FE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 12,
-      "dependencies": ["PG-001"],
+      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
       "artifacts": [
         "apps/web/app/(public)/blog/page.tsx",
         "apps/web/components/blog/blog-pagination.tsx",
@@ -2612,9 +2646,9 @@
       "section": "Public Pages",
       "description": "Blog Post",
       "owner": "Growth FE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 12,
-      "dependencies": ["PG-009"],
+      "dependencies": ["PG-009", "GTM-002", "BRAND-001"],
       "artifacts": [
         "apps/web/app/(public)/blog/[slug]/page.tsx",
         "apps/web/components/blog/markdown-renderer.tsx",
@@ -2629,9 +2663,9 @@
       "section": "Public Pages",
       "description": "Careers Page",
       "owner": "Growth FE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 12,
-      "dependencies": ["PG-001"],
+      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
       "artifacts": [
         "apps/web/app/(public)/careers/page.tsx",
         "artifacts/misc/job-listings.json",
@@ -2646,9 +2680,9 @@
       "section": "Public Pages",
       "description": "Career Detail",
       "owner": "Growth FE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 12,
-      "dependencies": ["PG-011"],
+      "dependencies": ["PG-011", "GTM-002", "BRAND-001"],
       "artifacts": [
         "apps/web/app/(public)/careers/[id]/page.tsx",
         "apps/web/components/shared/job-detail-template.tsx",
@@ -2663,9 +2697,9 @@
       "section": "Marketing Pages",
       "description": "Landing Page Template",
       "owner": "Growth FE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 12,
-      "dependencies": ["PG-001"],
+      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
       "artifacts": [
         "apps/web/app/(public)/lp/[slug]/page.tsx",
         "apps/web/components/shared/landing-builder.tsx",
@@ -2680,9 +2714,9 @@
       "section": "Public Pages",
       "description": "Status Page",
       "owner": "Growth FE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 12,
-      "dependencies": ["PG-001"],
+      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
       "artifacts": [
         "apps/web/app/(public)/status/page.tsx",
         "apps/web/components/status/status-monitor.tsx",
@@ -2697,7 +2731,7 @@
       "section": "Auth Pages",
       "description": "Sign In",
       "owner": "Platform FE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 13,
       "dependencies": ["IFC-076", "IFC-098"],
       "artifacts": [
@@ -2714,7 +2748,7 @@
       "section": "Auth Pages",
       "description": "Sign Up",
       "owner": "Platform FE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 13,
       "dependencies": ["PG-015"],
       "artifacts": [
@@ -2731,7 +2765,7 @@
       "section": "Auth Pages",
       "description": "Sign Up Success",
       "owner": "Platform FE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 13,
       "dependencies": ["PG-016"],
       "artifacts": [
@@ -2748,7 +2782,7 @@
       "section": "Auth Pages",
       "description": "Logout",
       "owner": "Platform FE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 13,
       "dependencies": ["PG-015"],
       "artifacts": [
@@ -2765,7 +2799,7 @@
       "section": "Auth Pages",
       "description": "Forgot Password",
       "owner": "Platform FE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 13,
       "dependencies": ["PG-015"],
       "artifacts": [
@@ -2782,7 +2816,7 @@
       "section": "Auth Pages",
       "description": "Reset Password",
       "owner": "Platform FE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 13,
       "dependencies": ["PG-019"],
       "artifacts": [
@@ -2799,7 +2833,7 @@
       "section": "Auth Pages",
       "description": "MFA Setup",
       "owner": "Platform FE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 13,
       "dependencies": ["PG-015"],
       "artifacts": [
@@ -2816,7 +2850,7 @@
       "section": "Auth Pages",
       "description": "MFA Verify",
       "owner": "Platform FE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 13,
       "dependencies": ["PG-021"],
       "artifacts": [
@@ -2833,7 +2867,7 @@
       "section": "Auth Pages",
       "description": "Email Verification",
       "owner": "Platform FE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 13,
       "dependencies": ["PG-016"],
       "artifacts": [
@@ -2850,7 +2884,7 @@
       "section": "Auth Pages",
       "description": "SSO Callback",
       "owner": "Platform FE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 13,
       "dependencies": ["PG-015"],
       "artifacts": [
@@ -2867,7 +2901,7 @@
       "section": "Billing Pages",
       "description": "Billing Portal",
       "owner": "Platform BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 14,
       "dependencies": ["IFC-099"],
       "artifacts": [
@@ -2884,7 +2918,7 @@
       "section": "Billing Pages",
       "description": "Checkout",
       "owner": "Platform BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 14,
       "dependencies": ["PG-025"],
       "artifacts": [
@@ -2901,7 +2935,7 @@
       "section": "Billing Pages",
       "description": "Invoices",
       "owner": "Platform BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 14,
       "dependencies": ["PG-025"],
       "artifacts": [
@@ -2918,7 +2952,7 @@
       "section": "Billing Pages",
       "description": "Invoice Detail",
       "owner": "Platform BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 14,
       "dependencies": ["PG-027"],
       "artifacts": [
@@ -2935,7 +2969,7 @@
       "section": "Billing Pages",
       "description": "Payment Methods",
       "owner": "Platform BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 14,
       "dependencies": ["PG-025"],
       "artifacts": [
@@ -2952,7 +2986,7 @@
       "section": "Billing Pages",
       "description": "Subscriptions",
       "owner": "Platform BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 14,
       "dependencies": ["PG-025"],
       "artifacts": [
@@ -2969,7 +3003,7 @@
       "section": "Billing Pages",
       "description": "Receipts",
       "owner": "Platform BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 14,
       "dependencies": ["PG-025"],
       "artifacts": [
@@ -2986,7 +3020,7 @@
       "section": "Developer Pages",
       "description": "Docs Index",
       "owner": "DevRel",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 15,
       "dependencies": ["IFC-079"],
       "artifacts": [
@@ -3003,7 +3037,7 @@
       "section": "Developer Pages",
       "description": "API Docs",
       "owner": "DevRel",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 15,
       "dependencies": ["PG-032"],
       "artifacts": [
@@ -3020,7 +3054,7 @@
       "section": "Developer Pages",
       "description": "Webhooks Docs",
       "owner": "DevRel",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 15,
       "dependencies": ["PG-032"],
       "artifacts": [
@@ -3037,7 +3071,7 @@
       "section": "Developer Pages",
       "description": "Changelog",
       "owner": "DevRel",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 15,
       "dependencies": ["PG-032"],
       "artifacts": [
@@ -3054,7 +3088,7 @@
       "section": "Developer Pages",
       "description": "SDK Guides",
       "owner": "DevRel",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 15,
       "dependencies": ["PG-032"],
       "artifacts": [
@@ -3071,7 +3105,7 @@
       "section": "Developer Pages",
       "description": "CLI Docs",
       "owner": "DevRel",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 15,
       "dependencies": ["PG-032"],
       "artifacts": [
@@ -3088,7 +3122,7 @@
       "section": "Developer Pages",
       "description": "Auth Guides",
       "owner": "DevRel",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 15,
       "dependencies": ["PG-032"],
       "artifacts": [
@@ -3105,7 +3139,7 @@
       "section": "Developer Pages",
       "description": "Dev Apps",
       "owner": "DevRel",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 15,
       "dependencies": ["PG-032"],
       "artifacts": [
@@ -3122,7 +3156,7 @@
       "section": "Developer Pages",
       "description": "New Dev App",
       "owner": "DevRel",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 15,
       "dependencies": ["PG-039"],
       "artifacts": [
@@ -3139,7 +3173,7 @@
       "section": "Developer Pages",
       "description": "Dev App Detail",
       "owner": "DevRel",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 15,
       "dependencies": ["PG-039"],
       "artifacts": [
@@ -3156,7 +3190,7 @@
       "section": "Developer Pages",
       "description": "Dev App Edit",
       "owner": "DevRel",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 15,
       "dependencies": ["PG-041"],
       "artifacts": [
@@ -3173,7 +3207,7 @@
       "section": "Support Pages",
       "description": "Help Center Index",
       "owner": "Support Eng",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 16,
       "dependencies": ["IFC-076"],
       "artifacts": [
@@ -3190,7 +3224,7 @@
       "section": "Support Pages",
       "description": "Help Search",
       "owner": "Support Eng",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 16,
       "dependencies": ["PG-043"],
       "artifacts": [
@@ -3207,7 +3241,7 @@
       "section": "Support Pages",
       "description": "Help Article",
       "owner": "Support Eng",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 16,
       "dependencies": ["PG-043"],
       "artifacts": [
@@ -3224,7 +3258,7 @@
       "section": "Support Pages",
       "description": "Support Tickets",
       "owner": "Support Eng",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 16,
       "dependencies": ["IFC-093"],
       "artifacts": [
@@ -3241,7 +3275,7 @@
       "section": "Support Pages",
       "description": "New Ticket",
       "owner": "Support Eng",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 16,
       "dependencies": ["PG-046"],
       "artifacts": [
@@ -3258,7 +3292,7 @@
       "section": "Support Pages",
       "description": "Ticket Detail",
       "owner": "Support Eng",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 16,
       "dependencies": ["PG-046"],
       "artifacts": [
@@ -3275,7 +3309,7 @@
       "section": "Support Pages",
       "description": "Support Chat",
       "owner": "Support Eng",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 16,
       "dependencies": ["IFC-036"],
       "artifacts": [
@@ -3292,7 +3326,7 @@
       "section": "Legal Pages",
       "description": "Privacy Policy",
       "owner": "Legal Counsel",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 17,
       "dependencies": ["IFC-058"],
       "artifacts": [
@@ -3309,7 +3343,7 @@
       "section": "Legal Pages",
       "description": "Terms of Service",
       "owner": "Legal Counsel",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 17,
       "dependencies": ["PG-050"],
       "artifacts": [
@@ -3326,7 +3360,7 @@
       "section": "Legal Pages",
       "description": "Cookie Policy",
       "owner": "Legal Counsel",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 17,
       "dependencies": ["PG-050"],
       "artifacts": [
@@ -3343,7 +3377,7 @@
       "section": "Legal Pages",
       "description": "Data Processing Addendum",
       "owner": "Legal Counsel",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 17,
       "dependencies": ["PG-050"],
       "artifacts": [
@@ -3360,7 +3394,7 @@
       "section": "Legal Pages",
       "description": "Acceptable Use Policy",
       "owner": "Legal Counsel",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 17,
       "dependencies": ["PG-050"],
       "artifacts": [
@@ -3377,7 +3411,7 @@
       "section": "System Pages",
       "description": "404 Not Found",
       "owner": "SRE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 17,
       "dependencies": ["IFC-076"],
       "artifacts": [
@@ -3394,7 +3428,7 @@
       "section": "System Pages",
       "description": "500 Error",
       "owner": "SRE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 17,
       "dependencies": ["PG-055"],
       "artifacts": [
@@ -3411,7 +3445,7 @@
       "section": "System Pages",
       "description": "Maintenance",
       "owner": "SRE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 17,
       "dependencies": ["PG-055"],
       "artifacts": [
@@ -3428,7 +3462,7 @@
       "section": "Core CRM",
       "description": "Dashboard",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 18,
       "dependencies": ["IFC-089", "IFC-091", "IFC-095"],
       "artifacts": [
@@ -3445,7 +3479,7 @@
       "section": "Core CRM",
       "description": "Leads List",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 18,
       "dependencies": ["IFC-089"],
       "artifacts": [
@@ -3462,7 +3496,7 @@
       "section": "Core CRM",
       "description": "New Lead",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 18,
       "dependencies": ["PG-059"],
       "artifacts": [
@@ -3479,7 +3513,7 @@
       "section": "Core CRM",
       "description": "Lead Detail",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 18,
       "dependencies": ["PG-059"],
       "artifacts": [
@@ -3496,7 +3530,7 @@
       "section": "Core CRM",
       "description": "Edit Lead",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 18,
       "dependencies": ["PG-061"],
       "artifacts": [
@@ -3513,7 +3547,7 @@
       "section": "Core CRM",
       "description": "Import Leads",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 18,
       "dependencies": ["PG-059"],
       "artifacts": [
@@ -3530,7 +3564,7 @@
       "section": "Core CRM",
       "description": "Contacts List",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 19,
       "dependencies": ["IFC-089"],
       "artifacts": [
@@ -3547,7 +3581,7 @@
       "section": "Core CRM",
       "description": "Contact 360",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 19,
       "dependencies": ["IFC-090"],
       "artifacts": [
@@ -3564,7 +3598,7 @@
       "section": "Core CRM",
       "description": "Edit Contact",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 19,
       "dependencies": ["PG-065"],
       "artifacts": [
@@ -3581,7 +3615,7 @@
       "section": "Core CRM",
       "description": "Import Contacts",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 19,
       "dependencies": ["PG-064"],
       "artifacts": [
@@ -3598,7 +3632,7 @@
       "section": "Core CRM",
       "description": "Merge Contacts",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 19,
       "dependencies": ["PG-064"],
       "artifacts": [
@@ -3615,7 +3649,7 @@
       "section": "Core CRM",
       "description": "Accounts List",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 19,
       "dependencies": ["IFC-089"],
       "artifacts": [
@@ -3632,7 +3666,7 @@
       "section": "Core CRM",
       "description": "Account Detail",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 20,
       "dependencies": ["PG-069"],
       "artifacts": [
@@ -3649,7 +3683,7 @@
       "section": "Core CRM",
       "description": "Edit Account",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 20,
       "dependencies": ["PG-070"],
       "artifacts": [
@@ -3666,7 +3700,7 @@
       "section": "Core CRM",
       "description": "Import Accounts",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 20,
       "dependencies": ["PG-069"],
       "artifacts": [
@@ -3683,7 +3717,7 @@
       "section": "Core CRM",
       "description": "Opportunities List",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 20,
       "dependencies": ["IFC-091"],
       "artifacts": [
@@ -3700,7 +3734,7 @@
       "section": "Core CRM",
       "description": "Opportunity Detail",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 20,
       "dependencies": ["PG-073"],
       "artifacts": [
@@ -3717,7 +3751,7 @@
       "section": "Core CRM",
       "description": "Edit Opportunity",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 20,
       "dependencies": ["PG-074"],
       "artifacts": [
@@ -3734,7 +3768,7 @@
       "section": "Core CRM",
       "description": "Pipeline Board",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 21,
       "dependencies": ["IFC-091"],
       "artifacts": [
@@ -3751,7 +3785,7 @@
       "section": "Core CRM",
       "description": "Pipeline Stages",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 21,
       "dependencies": ["PG-076"],
       "artifacts": [
@@ -3768,7 +3802,7 @@
       "section": "Core CRM",
       "description": "Stage Detail",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 21,
       "dependencies": ["PG-077"],
       "artifacts": [
@@ -3785,7 +3819,7 @@
       "section": "Core CRM",
       "description": "Forecasts",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 21,
       "dependencies": ["IFC-092"],
       "artifacts": [
@@ -3802,7 +3836,7 @@
       "section": "Core CRM",
       "description": "Activities",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 21,
       "dependencies": ["IFC-089"],
       "artifacts": [
@@ -3819,7 +3853,7 @@
       "section": "Core CRM",
       "description": "Tasks",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 21,
       "dependencies": ["PG-080"],
       "artifacts": [
@@ -3836,7 +3870,7 @@
       "section": "Core CRM",
       "description": "Task Detail",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 22,
       "dependencies": ["PG-081"],
       "artifacts": [
@@ -3849,11 +3883,176 @@
       "validation": "Details shown, subtasks working, comments active",
       "prerequisites": "Task view, subtasks, comments"
     },
+    "DOC-001": {
+      "section": "Strategy & Documentation",
+      "description": "Company & Product Master Brief (single source of truth)",
+      "owner": "CEO + All Leads",
+      "status": "BACKLOG",
+      "sprint": 0,
+      "dependencies": [],
+      "artifacts": [
+        "docs/company/master-brief.md; docs/company/product/product-vision.md; docs/company/go-to-market/icp-personas.md; docs/company/messaging/tone-of-voice.md; docs/company/brand/visual-identity.md"
+      ],
+      "kpis": "100% required sections filled; ≤5 open questions; referenced by agents/CI docs checks; updated_at + owner present",
+      "definition_of_done": "Master brief created and reviewed covering: product definition, vision, target customers (ICP), personas, positioning, value proposition, differentiation, success metrics, scope/out-of-scope, tone of voice, and visual identity direction; published as tracked docs and referenced from CLAUDE.md/README as grounding source",
+      "validation": "Manual sign-off by CEO + leads; markdownlint + cspell pass on created docs; links present in CLAUDE.md/README",
+      "prerequisites": "Stakeholder workshop (CEO/PM/Tech Lead); access to existing notes, competitive context, and current product scope"
+    },
+    "BRAND-001": {
+      "section": "Brand & Design",
+      "description": "Visual Identity System (palette, typography, spacing, logo usage)",
+      "owner": "UX Designer + Frontend Dev",
+      "status": "BACKLOG",
+      "sprint": 0,
+      "dependencies": ["DOC-001"],
+      "artifacts": [
+        "docs/company/brand/visual-identity.md; docs/company/brand/palette.tokens.json; docs/company/brand/typography.tokens.json; docs/company/brand/spacing.tokens.json"
+      ],
+      "kpis": "Palette + type scale defined; tokens generated; 1 review iteration max; consistency checklist created",
+      "definition_of_done": "Defined palette (primary/secondary/neutral), typography scale, spacing system, iconography guidance, and basic component styling principles; includes do/don’t examples; exported as machine-readable tokens (JSON) and documented usage guidance",
+      "validation": "Design review sign-off; markdownlint/cspell pass; token files valid JSON",
+      "prerequisites": "Access to any existing brand assets; decision-maker availability for final selection"
+    },
+    "BRAND-002": {
+      "section": "Design System",
+      "description": "Design Tokens Integration Plan (Tailwind/shadcn theme mapping)",
+      "owner": "Frontend Dev + UX Designer",
+      "status": "BACKLOG",
+      "sprint": 1,
+      "dependencies": ["BRAND-001", "ENV-002-AI"],
+      "artifacts": [
+        "docs/design-system/token-mapping.md; docs/design-system/theme-reference-spec.md; docs/design-system/token-naming.md"
+      ],
+      "kpis": "Token mapping coverage ≥90% of components used in Sprint 0/1; zero ambiguous token names; theme reference spec approved",
+      "definition_of_done": "Mapping document from brand tokens to Tailwind/shadcn variables created; includes light/dark theme rules, semantic color tokens, component states, and migration guidelines; produces a minimal “theme reference” page spec",
+      "validation": "Frontend + UX sign-off; markdownlint/cspell pass; linted JSON snippets if included",
+      "prerequisites": "Tailwind + shadcn/ui baseline present; agreement on token naming convention"
+    },
+    "GTM-001": {
+      "section": "Go-to-Market",
+      "description": "ICP & Personas Pack (target customers, job stories, objections)",
+      "owner": "PM + Marketing",
+      "status": "BACKLOG",
+      "sprint": 0,
+      "dependencies": ["DOC-001"],
+      "artifacts": [
+        "docs/company/go-to-market/icp.md; docs/company/go-to-market/personas.md; docs/company/go-to-market/objections.md"
+      ],
+      "kpis": "ICP + ≥2 personas complete; ≥10 objections/answers; clear “not ICP” list; referenced by Sales assets",
+      "definition_of_done": "ICP definition (firmographics/technographics/constraints), 2–4 personas with job stories, triggers, pains, gains, buying process, and objections; includes “not ICP” exclusions; stored as tracked docs",
+      "validation": "PM + Marketing sign-off; markdownlint/cspell pass; cross-linking to master brief",
+      "prerequisites": "Access to intended market assumptions; any existing customer discovery notes"
+    },
+    "GTM-002": {
+      "section": "Go-to-Market",
+      "description": "Messaging Framework (positioning, value props, copy blocks)",
+      "owner": "PM + Marketing",
+      "status": "BACKLOG",
+      "sprint": 0,
+      "dependencies": ["GTM-001", "BRAND-001"],
+      "artifacts": [
+        "docs/company/messaging/positioning.md; docs/company/messaging/value-props.md; docs/company/messaging/copy-blocks.md; docs/company/messaging/cta-library.md"
+      ],
+      "kpis": "Copy blocks cover all PG pages; tone guide ≤2 pages and actionable; ≤1 unresolved positioning decision",
+      "definition_of_done": "Positioning statement, elevator pitch, key messages by persona, CTA library, website copy blocks (hero, features, pricing, security), and tone-of-voice rules; includes examples for consistent writing",
+      "validation": "PM + Marketing + CEO spot-check; markdownlint/cspell pass; links to personas",
+      "prerequisites": "Approval of ICP/personas; preliminary visual identity direction"
+    },
+    "SALES-001": {
+      "section": "Commercial Assets",
+      "description": "Commercial Narrative + Pitch Deck Outline + One-Pager",
+      "owner": "PM + Sales Team",
+      "status": "BACKLOG",
+      "sprint": 1,
+      "dependencies": ["GTM-002", "BRAND-001"],
+      "artifacts": [
+        "docs/sales/pitch-deck-outline.md; docs/sales/one-pager.md; artifacts/misc/sales/pitch-deck-source-link.txt"
+      ],
+      "kpis": "Deck outline complete; one-pager complete; 1 internal review cycle; aligns with ICP/personas",
+      "definition_of_done": "Deck outline (10–12 slides) with story arc, slide-by-slide content, and visual guidelines; plus one-pager (problem → solution → proof → CTA); includes a single canonical link to design source (Figma/Canva)",
+      "validation": "Sales + PM sign-off; markdownlint/cspell pass; link accessible",
+      "prerequisites": "Agreement on positioning and visuals; selected distribution channel (web/demo/outreach)"
+    },
+    "SALES-002": {
+      "section": "Commercial Assets",
+      "description": "Sales Motion Playbook (outreach sequences, discovery + demo scripts)",
+      "owner": "Sales + CEO",
+      "status": "BACKLOG",
+      "sprint": 2,
+      "dependencies": ["SALES-001", "GTM-002"],
+      "artifacts": [
+        "docs/sales/sales-motion-playbook.md; docs/sales/discovery-script.md; docs/sales/demo-script.md; docs/sales/outreach-sequences.md"
+      ],
+      "kpis": "≥2 sequences ready; discovery+demo scripts usable end-to-end; first pilot run documented",
+      "definition_of_done": "Defined sales motion: lead sources, qualification steps, discovery script, demo script, objection handling, follow-up cadence; includes at least 2 outreach sequences (email + LinkedIn) and a handoff policy to implementation/support",
+      "validation": "Sales leadership sign-off; markdownlint/cspell pass; pilot review notes captured",
+      "prerequisites": "Agreement on commercial narrative; chosen qualification framework (BANT/MEDDIC/etc.)"
+    },
+    "PM-OPS-001": {
+      "section": "Project Operations",
+      "description": "Project Operating Model & Delivery Playbook (cadence, WIP, ticket sizing, ABC)",
+      "owner": "Tech Lead + DevOps + Product Manager",
+      "status": "BACKLOG",
+      "sprint": 0,
+      "dependencies": ["AUTOMATION-001", "ENV-005-AI"],
+      "artifacts": [
+        "docs/operations/project-playbook.md; docs/operations/wip-policy.md; docs/operations/ticket-sizing.md; docs/operations/abc-classification.md; docs/operations/raci.md"
+      ],
+      "kpis": "WIP policy defined; ticket sizing heuristic defined; ABC coverage 100% of task types; RACI approved",
+      "definition_of_done": "Documented end-to-end delivery model: stages, sequencing, WIP policy, ticket sizing guidance, ABC classification of work, acceptance criteria rules, and escalation path; includes RACI for Sprint 0–2; referenced by tracker UI/help pages",
+      "validation": "Leadership sign-off; markdownlint/cspell pass; referenced from tracker/README",
+      "prerequisites": "Agreement on repo workflow and tracker usage; availability of team roles and responsibilities"
+    },
+    "ENG-OPS-001": {
+      "section": "Engineering Operations",
+      "description": "Engineering Playbook (SDLC, PR rules, quality gates, release/rollback)",
+      "owner": "Tech Lead + DevOps + QA Lead",
+      "status": "BACKLOG",
+      "sprint": 0,
+      "dependencies": ["ENV-002-AI", "ENV-005-AI", "ENV-010-AI"],
+      "artifacts": [
+        "docs/operations/engineering-playbook.md; docs/operations/quality-gates.md; docs/operations/pr-checklist.md; docs/operations/release-rollback.md"
+      ],
+      "kpis": "PR checklist adopted; gate mapping complete; rollback procedure documented; ≤1 page “fast path” summary included",
+      "definition_of_done": "Engineering handbook written: branching strategy, PR checklist, code review standards, required gates (audit-matrix Tier 1), release flow, rollback steps, incident basics, and docs conventions; includes “strict vs local” policy for WARN/FAIL",
+      "validation": "Team sign-off; markdownlint/cspell pass; PR template updated (if applicable)",
+      "prerequisites": "CI pipeline baseline; lint/typecheck/test scripts present"
+    },
+    "GOV-001": {
+      "section": "Architecture Governance",
+      "description": "Architecture Governance Pack (ADR + ARP templates, decision workflow, flowcharts)",
+      "owner": "Backend Dev + Architect",
+      "status": "BACKLOG",
+      "sprint": 1,
+      "dependencies": ["ENG-OPS-001"],
+      "artifacts": [
+        "docs/architecture/adr/000-template.md; docs/architecture/arp/000-template.md; docs/architecture/decision-workflow.md; docs/architecture/diagrams/README.md; docs/architecture/flowcharts/README.md"
+      ],
+      "kpis": "Templates published; workflow clear; at least 1 example ADR/ARP; adoption guide ≤1 page",
+      "definition_of_done": "Created ADR template, ARP template, decision workflow, and diagram/flowchart conventions; includes folder structure, naming, and example ADR/ARP; defines when decisions are required and how to approve",
+      "validation": "Architect sign-off; markdownlint/cspell pass; links referenced from engineering playbook",
+      "prerequisites": "Agreement on architecture conventions (C4/diagrams); decision authority clarified"
+    },
+    "ANALYTICS-001": {
+      "section": "Analytics & Segmentation",
+      "description": "Customer Segmentation Spec (RFM + ABC) + Event Taxonomy",
+      "owner": "PM + DA",
+      "status": "BACKLOG",
+      "sprint": 0,
+      "dependencies": ["DOC-001", "GTM-001"],
+      "artifacts": [
+        "docs/analytics/rfm-abc-spec.md; docs/analytics/event-taxonomy.md; docs/analytics/dashboards-requirements.md"
+      ],
+      "kpis": "RFM/ABC spec complete; event taxonomy covers core flows; requirements mapped to ENV-016-AI + IFC-037/038; ≤5 open questions",
+      "definition_of_done": "Defines RFM inputs/outputs, ABC curve methodology, segmentation thresholds, and event taxonomy; specifies dashboards, KPIs, and minimal instrumentation requirements to support CRM prioritization; includes data privacy notes and open questions log",
+      "validation": "PM + Marketing + DA sign-off; markdownlint/cspell pass; traceability links to ENV-016-AI/IFC-037/038",
+      "prerequisites": "Access to ICP/personas; agreement on CRM prioritization goals; any existing analytics assumptions"
+    },
     "PG-083": {
       "section": "Core CRM",
       "description": "Calendar",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 22,
       "dependencies": ["PG-080"],
       "artifacts": [
@@ -3870,7 +4069,7 @@
       "section": "Core CRM",
       "description": "Emails",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 22,
       "dependencies": ["IFC-099"],
       "artifacts": [
@@ -3887,7 +4086,7 @@
       "section": "Core CRM",
       "description": "Email Templates",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 22,
       "dependencies": ["PG-084"],
       "artifacts": [
@@ -3904,7 +4103,7 @@
       "section": "Core CRM",
       "description": "SMS Templates",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 22,
       "dependencies": ["PG-085"],
       "artifacts": [
@@ -3921,7 +4120,7 @@
       "section": "Core CRM",
       "description": "Calls",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 22,
       "dependencies": ["IFC-099"],
       "artifacts": [
@@ -3938,7 +4137,7 @@
       "section": "Core CRM",
       "description": "Notes",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 23,
       "dependencies": ["PG-080"],
       "artifacts": [
@@ -3955,7 +4154,7 @@
       "section": "Core CRM",
       "description": "Files",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 23,
       "dependencies": ["IFC-094"],
       "artifacts": [
@@ -3972,7 +4171,7 @@
       "section": "Core CRM",
       "description": "File Detail",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 23,
       "dependencies": ["PG-089"],
       "artifacts": [
@@ -3989,7 +4188,7 @@
       "section": "Core CRM",
       "description": "Products",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 23,
       "dependencies": ["IFC-089"],
       "artifacts": [
@@ -4006,7 +4205,7 @@
       "section": "Core CRM",
       "description": "Product Detail",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 23,
       "dependencies": ["PG-091"],
       "artifacts": [
@@ -4023,7 +4222,7 @@
       "section": "Core CRM",
       "description": "Price Books",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 23,
       "dependencies": ["PG-091"],
       "artifacts": [
@@ -4040,7 +4239,7 @@
       "section": "Core CRM",
       "description": "Price Book Detail",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 24,
       "dependencies": ["PG-093"],
       "artifacts": [
@@ -4057,7 +4256,7 @@
       "section": "Core CRM",
       "description": "Quotes",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 24,
       "dependencies": ["PG-093"],
       "artifacts": [
@@ -4074,7 +4273,7 @@
       "section": "Core CRM",
       "description": "New Quote",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 24,
       "dependencies": ["PG-095"],
       "artifacts": [
@@ -4091,7 +4290,7 @@
       "section": "Core CRM",
       "description": "Quote Detail",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 24,
       "dependencies": ["PG-095"],
       "artifacts": [
@@ -4108,7 +4307,7 @@
       "section": "Core CRM",
       "description": "Edit Quote",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 24,
       "dependencies": ["PG-097"],
       "artifacts": [
@@ -4125,7 +4324,7 @@
       "section": "Core CRM",
       "description": "Orders",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 24,
       "dependencies": ["PG-095"],
       "artifacts": [
@@ -4142,7 +4341,7 @@
       "section": "Core CRM",
       "description": "Order Detail",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 25,
       "dependencies": ["PG-099"],
       "artifacts": [
@@ -4159,7 +4358,7 @@
       "section": "Core CRM",
       "description": "Reports",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 25,
       "dependencies": ["IFC-096"],
       "artifacts": [
@@ -4176,7 +4375,7 @@
       "section": "Core CRM",
       "description": "Custom Reports",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 25,
       "dependencies": ["IFC-096"],
       "artifacts": [
@@ -4193,7 +4392,7 @@
       "section": "Core CRM",
       "description": "Report Schedules",
       "owner": "CRM FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 25,
       "dependencies": ["PG-102"],
       "artifacts": [
@@ -4210,7 +4409,7 @@
       "section": "Settings",
       "description": "Settings Home",
       "owner": "Platform FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 25,
       "dependencies": ["IFC-076"],
       "artifacts": [
@@ -4227,7 +4426,7 @@
       "section": "Settings",
       "description": "Profile Settings",
       "owner": "Platform FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 25,
       "dependencies": ["PG-104"],
       "artifacts": [
@@ -4244,7 +4443,7 @@
       "section": "Settings",
       "description": "Account Settings",
       "owner": "Platform FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 26,
       "dependencies": ["PG-104"],
       "artifacts": [
@@ -4261,7 +4460,7 @@
       "section": "Settings",
       "description": "Organization Settings",
       "owner": "Platform FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 26,
       "dependencies": ["PG-104"],
       "artifacts": [
@@ -4278,7 +4477,7 @@
       "section": "Settings",
       "description": "Users",
       "owner": "Platform FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 26,
       "dependencies": ["IFC-098"],
       "artifacts": [
@@ -4295,7 +4494,7 @@
       "section": "Settings",
       "description": "Roles",
       "owner": "Platform FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 26,
       "dependencies": ["IFC-098"],
       "artifacts": [
@@ -4312,7 +4511,7 @@
       "section": "Settings",
       "description": "Permissions",
       "owner": "Platform FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 26,
       "dependencies": ["PG-109"],
       "artifacts": [
@@ -4329,7 +4528,7 @@
       "section": "Settings",
       "description": "Teams",
       "owner": "Platform FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 26,
       "dependencies": ["PG-108"],
       "artifacts": [
@@ -4346,7 +4545,7 @@
       "section": "Settings",
       "description": "Audit Log",
       "owner": "Platform FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 27,
       "dependencies": ["IFC-098"],
       "artifacts": [
@@ -4363,7 +4562,7 @@
       "section": "Settings",
       "description": "API Keys",
       "owner": "Platform FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 27,
       "dependencies": ["PG-104"],
       "artifacts": [
@@ -4380,7 +4579,7 @@
       "section": "Settings",
       "description": "Webhooks",
       "owner": "Platform FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 27,
       "dependencies": ["IFC-099"],
       "artifacts": [
@@ -4397,7 +4596,7 @@
       "section": "Settings",
       "description": "Integrations",
       "owner": "Platform FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 27,
       "dependencies": ["IFC-099"],
       "artifacts": [
@@ -4414,7 +4613,7 @@
       "section": "Settings",
       "description": "Notifications",
       "owner": "Platform FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 27,
       "dependencies": ["PG-104"],
       "artifacts": [
@@ -4431,7 +4630,7 @@
       "section": "Settings",
       "description": "Localization",
       "owner": "Platform FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 27,
       "dependencies": ["PG-104"],
       "artifacts": [
@@ -4448,7 +4647,7 @@
       "section": "Settings",
       "description": "Data Retention",
       "owner": "Platform FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 28,
       "dependencies": ["IFC-058"],
       "artifacts": [
@@ -4465,7 +4664,7 @@
       "section": "Settings",
       "description": "Compliance",
       "owner": "Platform FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 28,
       "dependencies": ["IFC-058"],
       "artifacts": [
@@ -4482,7 +4681,7 @@
       "section": "Settings",
       "description": "Security",
       "owner": "Platform FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 28,
       "dependencies": ["IFC-072"],
       "artifacts": [
@@ -4499,7 +4698,7 @@
       "section": "Settings",
       "description": "Import/Export",
       "owner": "Platform FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 28,
       "dependencies": ["IFC-070"],
       "artifacts": [
@@ -4516,7 +4715,7 @@
       "section": "Settings",
       "description": "Privacy Export",
       "owner": "Platform FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 28,
       "dependencies": ["IFC-058"],
       "artifacts": [
@@ -4533,7 +4732,7 @@
       "section": "Settings",
       "description": "Privacy Delete",
       "owner": "Platform FE+BE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 28,
       "dependencies": ["IFC-058"],
       "artifacts": [
@@ -4550,7 +4749,7 @@
       "section": "Validation",
       "description": "Lead Aggregate and Value Objects",
       "owner": "Backend Dev + Tech Lead",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 2,
       "dependencies": ["IFC-002"],
       "artifacts": [
@@ -4567,7 +4766,7 @@
       "section": "Validation",
       "description": "Contact Aggregate and Value Objects",
       "owner": "Backend Dev + Tech Lead",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 2,
       "dependencies": ["IFC-002"],
       "artifacts": [
@@ -4584,7 +4783,7 @@
       "section": "Validation",
       "description": "Account Aggregate and Value Objects",
       "owner": "Backend Dev + Tech Lead",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 2,
       "dependencies": ["IFC-002"],
       "artifacts": [
@@ -4601,7 +4800,7 @@
       "section": "Validation",
       "description": "Opportunity Aggregate and Value Objects",
       "owner": "Backend Dev + Tech Lead",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 3,
       "dependencies": ["IFC-002"],
       "artifacts": [
@@ -4618,7 +4817,7 @@
       "section": "Validation",
       "description": "Task Aggregate and Value Objects",
       "owner": "Backend Dev + Tech Lead",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 3,
       "dependencies": ["IFC-002"],
       "artifacts": [
@@ -4635,7 +4834,7 @@
       "section": "Architecture",
       "description": "Define Hexagonal module boundaries + create canonical packages/application + packages/adapters skeleton",
       "owner": "Tech Lead + Backend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 1,
       "dependencies": ["IFC-002", "IFC-131"],
       "artifacts": [
@@ -4655,7 +4854,7 @@
       "section": "Infrastructure",
       "description": "Implement Repositories and Factories",
       "owner": "Backend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 3,
       "dependencies": ["IFC-101", "IFC-102", "IFC-103", "IFC-104", "IFC-105"],
       "artifacts": [
@@ -4672,7 +4871,7 @@
       "section": "Validation",
       "description": "Implement Domain Services & Business Logic",
       "owner": "Backend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 4,
       "dependencies": ["IFC-107"],
       "artifacts": [
@@ -4688,7 +4887,7 @@
       "section": "Testing",
       "description": "Define TDD Process, Coverage & Review Checklist",
       "owner": "QA Lead + Tech Lead",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 2,
       "dependencies": ["IFC-002"],
       "artifacts": [
@@ -4705,7 +4904,7 @@
       "section": "Testing",
       "description": "Write Unit & Integration Tests for Domain Entities",
       "owner": "QA + Backend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 4,
       "dependencies": ["IFC-101", "IFC-102", "IFC-103", "IFC-104", "IFC-105"],
       "artifacts": ["tests/domain/*"],
@@ -4718,7 +4917,7 @@
       "section": "Quality",
       "description": "Set up SonarQube and integrate static analysis into CI/CD",
       "owner": "DevOps + QA Lead",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 5,
       "dependencies": ["ENV-005-AI"],
       "artifacts": [
@@ -4735,7 +4934,7 @@
       "section": "Infrastructure",
       "description": "Implement blue/green deployment and rollback strategy",
       "owner": "DevOps",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 6,
       "dependencies": ["ENV-005-AI"],
       "artifacts": [
@@ -4752,7 +4951,7 @@
       "section": "Security",
       "description": "Implement secrets management and encryption at rest and in transit",
       "owner": "Security Eng + DevOps",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 6,
       "dependencies": ["IFC-072", "IFC-098"],
       "artifacts": [
@@ -4769,7 +4968,7 @@
       "section": "Security",
       "description": "Implement API rate limiting and DDoS protection",
       "owner": "Backend Dev + DevOps",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 7,
       "dependencies": ["IFC-003", "IFC-072"],
       "artifacts": [
@@ -4786,7 +4985,7 @@
       "section": "Resilience",
       "description": "Setup backups and disaster recovery plan",
       "owner": "DevOps + DBA",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 8,
       "dependencies": ["IFC-071"],
       "artifacts": [
@@ -4803,7 +5002,7 @@
       "section": "Observability",
       "description": "Instrument application with OpenTelemetry, unify logs, metrics and traces",
       "owner": "DevOps + SRE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 9,
       "dependencies": ["IFC-074"],
       "artifacts": [
@@ -4821,7 +5020,7 @@
       "section": "AI Insights",
       "description": "Monitor AI models for drift, latency, hallucination and ROI",
       "owner": "AI Specialist + SRE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 10,
       "dependencies": ["IFC-005", "AUTOMATION-002"],
       "artifacts": [
@@ -4838,7 +5037,7 @@
       "section": "Risk Mgmt",
       "description": "Establish and maintain a risk register with mitigation actions",
       "owner": "PM + Tech Lead",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 2,
       "dependencies": ["IFC-010", "IFC-054"],
       "artifacts": [
@@ -4855,7 +5054,7 @@
       "section": "Planning",
       "description": "Define recurring backlog refinement, sprint planning, review and retrospective ceremonies",
       "owner": "Scrum Master + PM",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 1,
       "dependencies": ["IFC-118"],
       "artifacts": [
@@ -4872,7 +5071,7 @@
       "section": "Auth Pages",
       "description": "Implement password reset and email verification flows",
       "owner": "Frontend Dev + Backend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 14,
       "dependencies": ["PG-015", "PG-016"],
       "artifacts": [
@@ -4890,7 +5089,7 @@
       "section": "Auth Pages",
       "description": "Implement SSO (SAML/OAuth) and social login providers",
       "owner": "Frontend Dev + Backend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 15,
       "dependencies": ["PG-015", "PG-016"],
       "artifacts": [
@@ -4907,7 +5106,7 @@
       "section": "Auth Pages",
       "description": "Add MFA using TOTP or SMS and allow users to enable/disable from security settings",
       "owner": "Frontend Dev + Backend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 16,
       "dependencies": ["IFC-120"],
       "artifacts": [
@@ -4925,7 +5124,7 @@
       "section": "Security",
       "description": "Schedule periodic secret rotation and dependency vulnerability updates",
       "owner": "DevOps + Security",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 10,
       "dependencies": ["IFC-113"],
       "artifacts": [
@@ -4941,7 +5140,7 @@
       "section": "Resilience",
       "description": "Implement circuit breaker and retry policies for external service calls",
       "owner": "Backend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 7,
       "dependencies": ["IFC-106", "IFC-107"],
       "artifacts": [
@@ -4958,7 +5157,7 @@
       "section": "Performance",
       "description": "Design caching strategy (Redis/CDN) and tune Prisma queries",
       "owner": "Backend Dev + SRE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 8,
       "dependencies": ["IFC-007", "IFC-087"],
       "artifacts": [
@@ -4975,7 +5174,7 @@
       "section": "Compliance",
       "description": "Encrypt and aggregate audit logs; automate compliance reporting",
       "owner": "Security Eng + Compliance",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 9,
       "dependencies": ["IFC-098", "PG-112"],
       "artifacts": [
@@ -4992,7 +5191,7 @@
       "section": "Public Pages",
       "description": "Add in‑app onboarding, guided product tours and feedback collection",
       "owner": "UX Designer + Frontend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 17,
       "dependencies": ["PG-001", "PG-002"],
       "artifacts": [
@@ -5009,7 +5208,7 @@
       "section": "AI Foundation",
       "description": "Implement guardrails for prompt injection, data leakage, and monitor AI bias",
       "owner": "AI Specialist + Security",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 11,
       "dependencies": ["IFC-005", "IFC-008"],
       "artifacts": [
@@ -5026,9 +5225,9 @@
       "section": "Documentation",
       "description": "Continuously maintain ADR registry and developer guide updates",
       "owner": "Tech Writer + PM",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 3,
-      "dependencies": ["IFC-100"],
+      "dependencies": ["IFC-100", "GOV-001"],
       "artifacts": [
         "docs/adr/*.md",
         "docs/dev-guide.md",
@@ -5043,7 +5242,7 @@
       "section": "Security",
       "description": "Implement tenant isolation at database and application layers",
       "owner": "Backend Dev + DevOps",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 10,
       "dependencies": ["IFC-098", "IFC-072"],
       "artifacts": [
@@ -5060,7 +5259,7 @@
       "section": "AI Foundation",
       "description": "Establish AI output review and manual fallback processes",
       "owner": "QA Lead + Tech Lead",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 3,
       "dependencies": ["ENV-017-AI"],
       "artifacts": [
@@ -5077,7 +5276,7 @@
       "section": "Testing",
       "description": "Write UI and contract tests for core pages and tRPC endpoints",
       "owner": "QA + Frontend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 6,
       "dependencies": ["IFC-110"],
       "artifacts": [
@@ -5094,7 +5293,7 @@
       "section": "Validation",
       "description": "Release governance: staging auto-deploy, promotion policy, quality/security gates, rollback criteria",
       "owner": "DevOps Lead",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 5,
       "dependencies": ["ENV-005-AI", "IFC-111"],
       "artifacts": [
@@ -5111,7 +5310,7 @@
       "section": "Foundation Setup",
       "description": "Architecture boundary enforcement: domain/infrastructure dependency rules + architecture tests in CI",
       "owner": "Tech Lead",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 4,
       "dependencies": ["IFC-106"],
       "artifacts": [
@@ -5129,7 +5328,7 @@
       "section": "Security",
       "description": "Supply chain security: dependency pinning + SBOM generation in CI (npm/pnpm + container)",
       "owner": "Security Engineer + DevOps",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 6,
       "dependencies": ["ENV-005-AI"],
       "artifacts": [
@@ -5146,7 +5345,7 @@
       "section": "Security",
       "description": "Supply chain security: artifact signing + provenance for build outputs (images + releases)",
       "owner": "DevOps Engineer",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 6,
       "dependencies": ["IFC-132"],
       "artifacts": [
@@ -5163,7 +5362,7 @@
       "section": "Security",
       "description": "Container/image scanning in CI and registry with fail-on-critical policy",
       "owner": "Security Engineer",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 6,
       "dependencies": ["ENV-003-AI", "ENV-005-AI"],
       "artifacts": [
@@ -5179,9 +5378,9 @@
       "section": "Architecture",
       "description": "Create ADR pack for multi-tenancy; workflow engine choice; agent tool-calling; data classification & retention; audit logging",
       "owner": "Tech Lead + Architect",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 1,
-      "dependencies": ["IFC-002"],
+      "dependencies": ["IFC-002", "GOV-001"],
       "artifacts": [
         "docs/adr/adr-multi-tenancy.md",
         "docs/adr/adr-workflow-engine.md",
@@ -5199,7 +5398,7 @@
       "section": "Domain",
       "description": "Implement Case/Matter aggregate root with tasks; deadlines; parties; lawyer assignments",
       "owner": "Backend Dev + Domain Architect",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 3,
       "dependencies": ["IFC-002", "IFC-003"],
       "artifacts": [
@@ -5218,7 +5417,7 @@
       "section": "Scheduling",
       "description": "Develop Appointment aggregate with conflict detection; buffers; recurrence; linkage to cases and calendars",
       "owner": "Backend Dev + Calendar Specialist",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 4,
       "dependencies": ["IFC-136", "IFC-003"],
       "artifacts": [
@@ -5236,7 +5435,7 @@
       "section": "Integration",
       "description": "Integrate external calendar providers (Google/Microsoft) with bidirectional sync; webhook handling; idempotency; reconciliation",
       "owner": "Backend Dev + DevOps",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 5,
       "dependencies": ["IFC-137", "IFC-106"],
       "artifacts": [
@@ -5255,7 +5454,7 @@
       "section": "AI Assistant",
       "description": "Expose application services as agent tools and implement human approval flows with preview and rollback for high-risk actions",
       "owner": "AI Specialist + Backend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 6,
       "dependencies": ["IFC-136", "IFC-137", "IFC-003", "IFC-128"],
       "artifacts": [
@@ -5273,7 +5472,7 @@
       "section": "Compliance",
       "description": "Implement data governance workflows: DSAR requests; retention & legal hold policies; tenant-specific encryption key management; data residency compliance",
       "owner": "Legal Ops + Security Eng",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 7,
       "dependencies": ["IFC-098", "IFC-127"],
       "artifacts": [
@@ -5292,7 +5491,7 @@
       "section": "Workflow",
       "description": "Evaluate n8n; custom engine; and Temporal; document decision via ADR; build event-driven minimal rules engine and integrate selected workflow engine",
       "owner": "Tech Lead + DevOps + Product Manager",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 4,
       "dependencies": ["IFC-136", "IFC-137", "IFC-135", "IFC-150", "IFC-151"],
       "artifacts": [
@@ -5310,7 +5509,7 @@
       "section": "Operations",
       "description": "Define SLOs/SLIs and alerting; establish on-call and incident management process; conduct restore drills; create capacity and cost budgets for AI inference and search",
       "owner": "SRE Lead + DevOps + Finance",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 8,
       "dependencies": ["ENV-008-AI"],
       "artifacts": [
@@ -5330,7 +5529,7 @@
       "section": "Security",
       "description": "Perform threat modeling and abuse-case analysis for multi-tenancy and agent tool-calling; design mitigations; schedule penetration test; implement cookie consent mechanism",
       "owner": "Security Lead + AI Specialist",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 6,
       "dependencies": ["IFC-125", "IFC-136", "IFC-139"],
       "artifacts": [
@@ -5349,7 +5548,7 @@
       "section": "Integration",
       "description": "Design and implement inbound/outbound email flows: SPF/DKIM/DMARC; inbound parsing; attachments; implement general webhook handling with idempotency and retries; publish public API specification (OpenAPI) with versioning; baseline inbound email feature delivered",
       "owner": "Integration Lead + Backend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 7,
       "dependencies": ["IFC-137", "IFC-003", "IFC-150", "IFC-151", "IFC-106"],
       "artifacts": [
@@ -5368,7 +5567,7 @@
       "section": "Migration",
       "description": "Plan and execute legacy system migration: discover and map data; assess data quality; design migration scripts; run rehearsals and reconciliation reporting; finalize cutover with rollback plan",
       "owner": "Data Engineer + DBA + PM",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 9,
       "dependencies": ["IFC-002", "IFC-136"],
       "artifacts": [
@@ -5387,7 +5586,7 @@
       "section": "Planning",
       "description": "Define PRD and user journey templates; create Definition of Ready criteria; develop traceability matrix linking capabilities to domain services; APIs; UIs; and tests",
       "owner": "Product Manager + Tech Lead",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 2,
       "dependencies": ["IFC-000", "ENV-018-AI"],
       "artifacts": [
@@ -5406,7 +5605,7 @@
       "section": "UI/Domain",
       "description": "Develop Case timeline UI with deadline engine: display tasks; deadlines; events; implement deadline engine to compute legal deadlines and reminders; integrate with scheduling",
       "owner": "Frontend Dev + Backend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 5,
       "dependencies": ["IFC-136", "IFC-137"],
       "artifacts": [
@@ -5424,7 +5623,7 @@
       "section": "AI Assistant",
       "description": "Implement conversation record entity: store chat transcripts; tool calls; actions per case; enable search and retrieval; integrate audit logging and data retention policies",
       "owner": "Backend Dev + AI Specialist",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 6,
       "dependencies": ["IFC-139", "IFC-126"],
       "artifacts": [
@@ -5443,7 +5642,7 @@
       "section": "AI Assistant",
       "description": "Implement action preview and rollback UI for agent-initiated changes; integrated with approval flows",
       "owner": "Frontend Dev + AI Specialist",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 6,
       "dependencies": ["IFC-139", "IFC-147"],
       "artifacts": [
@@ -5477,7 +5676,7 @@
       "section": "Platform",
       "description": "Domain events infrastructure: event contracts + versioning + outbox pattern + idempotent publishing",
       "owner": "Backend Dev + Architect",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 3,
       "dependencies": ["IFC-002", "IFC-106", "IFC-098"],
       "artifacts": [
@@ -5496,7 +5695,7 @@
       "section": "Platform",
       "description": "Event consumers framework: retries + DLQ + backoff + observability; standard webhook/idempotency utilities",
       "owner": "Backend Dev + SRE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 4,
       "dependencies": ["IFC-150", "ENV-008-AI"],
       "artifacts": [
@@ -5515,7 +5714,7 @@
       "section": "Case Docs",
       "description": "Case document model: storage metadata, versioning, ACL mapping (tenant + case + role), and audit hooks",
       "owner": "Backend Dev + Domain Architect",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 6,
       "dependencies": ["IFC-136", "IFC-127", "IFC-094"],
       "artifacts": [
@@ -5533,7 +5732,7 @@
       "section": "Case Docs",
       "description": "Ingestion pipeline for case files: upload/email attachment intake, antivirus scan, metadata extraction, storage, and indexing triggers",
       "owner": "Backend Dev + Integration Eng",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 7,
       "dependencies": ["IFC-152", "IFC-144", "IFC-151", "IFC-106"],
       "artifacts": [
@@ -5552,7 +5751,7 @@
       "section": "Case Docs",
       "description": "OCR + text extraction worker for scanned PDFs/images; normalized text artifacts stored for search and RAG",
       "owner": "Backend Dev + AI Specialist",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 8,
       "dependencies": ["IFC-153"],
       "artifacts": [
@@ -5570,7 +5769,7 @@
       "section": "Search/AI",
       "description": "Permissioned indexing for case documents and notes: full-text + embeddings with tenant/case ACL filters",
       "owner": "Backend Dev + AI Specialist",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 8,
       "dependencies": ["IFC-154", "IFC-127", "ENV-004-AI"],
       "artifacts": [
@@ -5589,7 +5788,7 @@
       "section": "AI Assistant",
       "description": "Case RAG tool: agent retrieval tool constrained by tenant/case permissions; citations + source trace; prompt-injection hardening for retrieved content",
       "owner": "AI Specialist + Security",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 9,
       "dependencies": ["IFC-155", "IFC-139", "IFC-125"],
       "artifacts": [
@@ -5607,7 +5806,7 @@
       "section": "Notifications",
       "description": "Notification service MVP: unified delivery (in-app + email) with preference model (backend), templates, and audit logging",
       "owner": "Backend Dev + SRE",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 7,
       "dependencies": ["IFC-144", "IFC-098", "IFC-151"],
       "artifacts": [
@@ -5625,7 +5824,7 @@
       "section": "Scheduling",
       "description": "Scheduling communications: ICS invites, reschedule/cancel flows, reminders; integrated with notification service and calendar sync",
       "owner": "Backend Dev + Calendar Specialist",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 8,
       "dependencies": ["IFC-138", "IFC-157", "IFC-137"],
       "artifacts": [
@@ -5643,7 +5842,7 @@
       "section": "UI/Domain",
       "description": "Case timeline enrichment: include documents/versions, communications (email/WhatsApp), and agent actions/approvals as timeline events",
       "owner": "Frontend Dev + Backend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 9,
       "dependencies": ["IFC-147", "IFC-153", "IFC-144", "IFC-149", "IFC-148"],
       "artifacts": [
@@ -5680,7 +5879,7 @@
       "section": "Platform",
       "description": "Standardize worker runtime under apps/workers (events, ingestion, notifications) with shared job framework, metrics, and deployment packaging",
       "owner": "SRE Lead + Backend Dev",
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "sprint": 6,
       "dependencies": ["IFC-150", "IFC-151", "IFC-153", "IFC-157", "IFC-106"],
       "artifacts": [

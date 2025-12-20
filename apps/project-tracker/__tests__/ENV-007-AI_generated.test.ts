@@ -145,12 +145,12 @@ describe('ENV-007: Run Assistant Prompt & Execution', () => {
     });
 
     it('times out long-running commands when a timeout is provided', async () => {
-      const hangingRunner: MockExec = vi.fn(
+      const hangingRunner = vi.fn(
         () =>
           new Promise(() => {
             /* never resolve */
           })
-      );
+      ) as unknown as MockExec;
 
       const req: RunRequest = {
         kind: 'command',

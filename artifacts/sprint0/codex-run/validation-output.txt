@@ -1,5 +1,5 @@
 IntelliFlow CRM - Validation Output (sanitized)
-Generated: 2025-12-19T18:01:39.087Z
+Generated: 2025-12-19T21:04:38.908Z
 Repo: C:\taly\intelliFlow-CRM
 
 === pnpm run validate:sprint0 ===
@@ -13,7 +13,7 @@ Exit code: 0
 IntelliFlow CRM - Sprint 0 Validation
 ======================================================================
 
- Validating Monorepo Structure...
+Validating Monorepo Structure...
 [PASS] Root package.json: Root package.json exists
 [PASS] pnpm-workspace.yaml: pnpm workspace configuration exists
 [PASS] turbo.json: Turbo configuration exists
@@ -21,7 +21,7 @@ IntelliFlow CRM - Sprint 0 Validation
 [PASS] Packages directory: Packages directory exists
 [PASS] Tests directory: Tests directory exists
 
-  Validating Configuration Files...
+Validating Configuration Files...
 [PASS] tsconfig.json: tsconfig.json exists
 [PASS] vitest.config.ts: vitest.config.ts exists
 [PASS] playwright.config.ts: playwright.config.ts exists
@@ -30,7 +30,7 @@ IntelliFlow CRM - Sprint 0 Validation
 [PASS] .gitignore: .gitignore exists
 [PASS] .env.example: .env.example exists
 
- Validating Test Infrastructure...
+Validating Test Infrastructure...
 [PASS] Unit test setup: Unit test setup file exists
 [PASS] Integration test setup: Integration test setup file exists
 [PASS] Integration API tests: API integration tests exist
@@ -40,7 +40,7 @@ IntelliFlow CRM - Sprint 0 Validation
 [PASS] Vitest dependency: Vitest is installed
 [PASS] Playwright dependency: Playwright is installed
 
- Validating Artifact Directories...
+Validating Artifact Directories...
 [PASS] artifacts: artifacts directory exists
 [PASS] artifacts/benchmarks: artifacts/benchmarks directory exists
 [PASS] artifacts/coverage: artifacts/coverage directory exists
@@ -51,7 +51,7 @@ IntelliFlow CRM - Sprint 0 Validation
 [PASS] artifacts/reports: artifacts/reports directory exists
 [PASS] artifacts/test-results: artifacts/test-results directory exists
 
- Validating Package Structure...
+Validating Package Structure...
 [PASS] packages/domain: packages/domain exists
 [PASS] packages/domain/package.json: packages/domain/package.json exists
 [PASS] packages/validators: packages/validators exists
@@ -61,13 +61,13 @@ IntelliFlow CRM - Sprint 0 Validation
 [PASS] packages/observability: packages/observability exists
 [PASS] packages/observability/package.json: packages/observability/package.json exists
 
- Validating Documentation...
+Validating Documentation...
 [PASS] README.md: README.md exists
 [PASS] CLAUDE.md: CLAUDE.md exists
 [PASS] Sprint_plan.csv: Sprint_plan.csv exists in correct location
 [PASS] Docs directory: docs/ directory exists
 
- Validating Scripts...
+Validating Scripts...
 [PASS] Script: dev: dev script defined
 [PASS] Script: build: build script defined
 [PASS] Script: test: test script defined
@@ -77,15 +77,15 @@ IntelliFlow CRM - Sprint 0 Validation
 [PASS] Script: lint: lint script defined
 [PASS] Script: typecheck: typecheck script defined
 
- Validating Git Setup...
+Validating Git Setup...
 [PASS] .git directory: Git repository initialized
 [PASS] .gitignore: .gitignore exists
 
- Validating TypeScript Configuration...
+Validating TypeScript Configuration...
 [PASS] Root tsconfig.json: Root tsconfig.json exists
 [PASS] TypeScript dependency: TypeScript is installed
 
- Validating Task Metrics...
+Validating Task Metrics...
 [PASS] Project tracker app: Project tracker app exists
 [PASS] Sprint 0 metrics directory: Sprint 0 metrics directory exists
 [PASS] ENV-017-AI metrics: ENV-017-AI metrics file exists

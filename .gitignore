@@ -106,10 +106,42 @@ artifacts/logs/swarm/
 # Tooling scratch space
 .specify/
 artifacts/misc/.locks/
-apps/project-tracker/docs/artifacts/
 apps/tree_intelliflow.txt
+
+# Project tracker docs artifacts (runtime; keep folders, ignore contents)
+apps/project-tracker/docs/artifacts/**
+!apps/project-tracker/docs/artifacts/**/
+!apps/project-tracker/docs/artifacts/**/.gitkeep
 
 # Project tracker generated backups/artifacts
 apps/project-tracker/docs/metrics/backups/
 apps/project-tracker/docs/metrics/artifacts/
 apps/project-tracker/docs/metrics/_global/*.tmp
+
+# ============================================
+# Runtime Artifacts - Sprint 0 Remediation
+# ============================================
+
+# Legacy runtime locations (block new files - migration in progress)
+apps/project-tracker/docs/metrics/.locks/
+apps/project-tracker/docs/metrics/.status/
+apps/project-tracker/docs/metrics/logs/
+
+# Swarm runtime state files
+**/swarm-health.json
+**/*.lock
+**/*.heartbeat
+**/*.input
+
+# Canonical backup location (runtime, not source)
+artifacts/backups/**
+!artifacts/backups/**/
+!artifacts/backups/.gitkeep
+
+# Execution and validation logs
+**/execution-*.log
+**/validation-*.log
+
+# Temporary and backup files
+**/*.tmp
+**/*.bak

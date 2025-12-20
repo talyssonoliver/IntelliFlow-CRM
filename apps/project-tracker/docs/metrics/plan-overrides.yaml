@@ -25,8 +25,21 @@
 # =============================================================================
 
 schema_version: '1.0.0'
-last_updated: '2025-12-17'
+last_updated: '2025-12-20'
 maintainer: 'Tech Lead'
+
+# -----------------------------------------------------------------------------
+# LINTER CONFIGURATION
+# Configures plan-linter behavior and thresholds
+# -----------------------------------------------------------------------------
+linter_config:
+  # Threshold for HIGH_FANOUT warnings. Tasks with more dependents than this
+  # will trigger a warning. Set to 20 for Sprint 0 since foundation tasks
+  # legitimately have many dependents (e.g., BRAND-001 has 17, GTM-002 has 16).
+  fanout_threshold: 20
+
+  # Threshold for WAIVER_EXPIRING warnings (days before expiry)
+  waiver_warning_days: 30
 
 # -----------------------------------------------------------------------------
 # TIER A: Critical Unblockers and High Fan-Out Tasks
@@ -423,7 +436,7 @@ ENV-017-AI:
     - integration_test
   acceptance_owner: 'Tech Lead'
   debt_allowed: yes
-  waiver_expiry: '2026-01-15'
+  waiver_expiry: '2026-02-28' # Extended from 2026-01-15 to align with Sprint 1 IFC-001 timeline
   override_deps_remove:
     - IFC-001 # Remove cross-sprint dependency
   exception_policy: 'stub_contract'

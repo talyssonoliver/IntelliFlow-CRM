@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { BaseAgent, AgentTask, BaseAgentConfig } from './base.agent';
-import { StructuredOutputParser } from 'langchain/output_parsers';
+import { StructuredOutputParser } from '@langchain/core/output_parsers';
 import pino from 'pino';
 
 const logger = pino({

@@ -29,8 +29,6 @@ $excludeDirs = @(
     ".next",
     "pnpm-store",
     "coverage",
-    "packages",
-    ".github",
     ".idea",
     "dist",
     "build"
@@ -119,8 +117,7 @@ Write-Host "Árvore gerada no arquivo temporário: $tempFile"
 
 # Aplica a filtragem usando UTF8 para leitura e gravação
 Get-Content $tempFile -Encoding UTF8 | 
-    Select-String -NotMatch 'node_modules' | 
-    Select-String -NotMatch '.git' |
+    Select-String -NotMatch 'node_modules' |
     Select-String -NotMatch '.bin' |
     Select-String -NotMatch 'pnpm-store' | 
     Select-String -NotMatch '^\s*[^A-Za-z]:\\.*node_modules.*' | 
@@ -167,8 +164,7 @@ Get-Content $tempFile -Encoding UTF8 |
     Select-String -NotMatch '^\s*[^A-Za-z]:\\.*\.cache/yarn/berry.*' | 
     Select-String -NotMatch '^\s*[^A-Za-z]:\\.*\.npmrc.*' | 
     Select-String -NotMatch '^\s*[^A-Za-z]:\\.*\.nvmrc.*' | 
-    Select-String -NotMatch '^\s*[^A-Za-z]:\\.*\.editorconfig.*' | 
-    Select-String -NotMatch '^\s*[^A-Za-z]:\\.*\.gitignore.*' | 
+    Select-String -NotMatch '^\s*[^A-Za-z]:\\.*\.editorconfig.*' |
     Select-String -NotMatch '^\s*[a-zA-Z0-9._-]+@.*' | 
     Select-String -NotMatch '^\s*\(.*\)' | 
     Select-String -NotMatch '^\s*[a-f0-9]{32,}$' | 

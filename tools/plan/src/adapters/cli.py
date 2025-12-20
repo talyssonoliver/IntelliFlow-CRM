@@ -116,6 +116,11 @@ def lint(
     if validation:
         click.echo(f"Loaded validation rules from {validation_file.name}")
 
+    linter_config = yaml_loader.load_linter_config(overrides_file)
+    fanout_threshold = linter_config.get("fanout_threshold", 3)
+    if fanout_threshold != 3:
+        click.echo(f"Using fanout_threshold: {fanout_threshold}")
+
     # Filter to sprint scope
     sprint_scope = None if all_sprints else sprint
     if sprint_scope is not None:
@@ -130,6 +135,7 @@ def lint(
         validation_rules=validation,
         sprint_scope=sprint_scope,
         project_root=str(root),  # For artifact validation
+        fanout_threshold=fanout_threshold,
     )
     result = use_case.execute()
 

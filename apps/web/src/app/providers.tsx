@@ -18,7 +18,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         defaultOptions: {
           queries: {
             staleTime: 5 * 60 * 1000,
-            cacheTime: 10 * 60 * 1000, // React Query v4 uses cacheTime (v5 uses gcTime)
+            gcTime: 10 * 60 * 1000, // React Query v5 uses gcTime (v4 used cacheTime)
           },
         },
       })

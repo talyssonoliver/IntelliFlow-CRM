@@ -52,7 +52,9 @@
     "docs:api": "pnpm --filter api docs:generate",
     "tracker": "pnpm --filter @intelliflow/project-tracker dev",
     "validate:sprint0": "tsx tools/scripts/sprint0-validation.ts",
+    "validate:sprint": "tsx tools/scripts/sprint0-validation.ts",
     "validate:sprint0:report": "tsx tools/scripts/capture-validation-output.ts --output artifacts/sprint0/codex-run/validation-output.txt",
+    "validate:sprint:report": "tsx tools/scripts/capture-validation-output.ts",
     "validate:sprint-data": "tsx tools/scripts/validate-sprint-data.ts",
     "sync:metrics": "cd apps/project-tracker && npx tsx scripts/sync-metrics.ts",
     "quality:check": "pnpm run typecheck && pnpm run lint && pnpm test --run && pnpm run quality:deps && pnpm run quality:security && pnpm run quality:deadcode",
@@ -87,8 +89,9 @@
     "@types/papaparse": "^5.3.14",
     "@typescript-eslint/eslint-plugin": "^8.49.0",
     "@typescript-eslint/parser": "^8.49.0",
-    "@vitest/coverage-v8": "^1.2.0",
+    "@vitest/coverage-v8": "^4.0.16",
     "depcheck": "^1.4.7",
+    "dependency-cruiser": "^17.3.4",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.10.1",
@@ -103,7 +106,7 @@
     "tsx": "^4.7.0",
     "turbo": "^2.0.0",
     "typescript": "^5.3.3",
-    "vitest": "^1.2.0"
+    "vitest": "^4.0.16"
   },
   "packageManager": "pnpm@8.15.0",
   "engines": {

@@ -69,11 +69,13 @@ tools:
   # SonarQube: kept in Tier 1 but not required until CI secrets + server are configured.
   - id: sonarqube-scanner
     tier: 1
+    order: 10
     enabled: true
     required: false
     owner: 'DevOps Engineer'
     scope: 'workspace'
     command: 'node scripts/sonarqube-helper.js analyze'
+    timeout_seconds: 600
     thresholds:
       quality_gate: 'A'
       technical_debt_ratio_max: 3
@@ -82,11 +84,13 @@ tools:
 
   - id: sonarqube-quality-gate
     tier: 1
+    order: 20
     enabled: true
     required: false
     owner: 'DevOps Engineer'
     scope: 'workspace'
     command: 'node scripts/sonar-status.js'
+    timeout_seconds: 60
     thresholds: {}
     expected_outputs: ['log']
     requires_env: ['SONAR_TOKEN']
@@ -105,7 +109,7 @@ tools:
   # Security/scanning tools (defined, but disabled by default until standardized installs land).
   - id: gitleaks
     tier: 1
-    enabled: false
+    enabled: true
     required: true
     owner: 'Security'
     scope: 'repo'
@@ -116,7 +120,7 @@ tools:
 
   - id: pnpm-audit-high
     tier: 1
-    enabled: false
+    enabled: true
     required: true
     owner: 'Security'
     scope: 'workspace'
@@ -164,11 +168,11 @@ tools:
 
   - id: dependency-cruiser-validate
     tier: 1
-    enabled: false
+    enabled: true
     required: true
     owner: 'Architecture'
     scope: 'repo'
-    command: 'dependency-cruiser --validate'
+    command: 'pnpm exec depcruise --config .dependency-cruiser.cjs packages apps --output-type err'
     thresholds: {}
     expected_outputs: ['log']
 

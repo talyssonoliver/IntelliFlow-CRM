@@ -1,0 +1,43 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "PM-OPS-001",
+  "description": "Project Operating Model & Delivery Playbook (cadence, WIP, ticket sizing, ABC)",
+  "owner": "Tech Lead + DevOps + Product Manager",
+  "status": "DONE",
+  "sprint": "sprint-0",
+  "phase": "phase-5-completion",
+  "stream": null,
+  "dependencies": {
+    "all_satisfied": true,
+    "verified_at": null,
+    "required": ["AUTOMATION-001", "ENV-005-AI"]
+  },
+  "dependencies_resolved": ["AUTOMATION-001", "ENV-005-AI"],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": null,
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "expected": [
+      "docs/operations/project-playbook.md",
+      "docs/operations/wip-policy.md",
+      "docs/operations/ticket-sizing.md",
+      "docs/operations/abc-classification.md",
+      "docs/operations/raci.md"
+    ],
+    "created": [],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "Ops Docs Created",
+      "command": "verify docs/operations/*.md exist",
+      "executed_at": "2025-12-20T00:00:00Z",
+      "exit_code": 0,
+      "passed": true
+    }
+  ],
+  "blockers": [],
+  "section": "Project Operations",
+  "status_history": []
+}

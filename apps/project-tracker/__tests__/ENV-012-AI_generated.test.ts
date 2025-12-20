@@ -110,11 +110,11 @@ function createGenerateRunHelp(deps: Deps): GenerateRunHelp {
 describe('ENV-012: AI-generated run-help message', () => {
   const metricsCwd = '/mnt/c/taly/intelliFlow-CRM/apps/project-tracker/docs/metrics';
 
-  let getCwdMock: ReturnType<typeof vi.fn<[], string>>;
+  let getCwdMock: () => string;
   let generateRunHelp: GenerateRunHelp;
 
   beforeEach(() => {
-    getCwdMock = vi.fn<[], string>().mockReturnValue(metricsCwd);
+    getCwdMock = vi.fn(() => metricsCwd);
     generateRunHelp = createGenerateRunHelp({ getCwd: getCwdMock });
   });
 

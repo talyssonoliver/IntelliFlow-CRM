@@ -36,7 +36,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Validate Sprint Data Consistency
-        run: pnpm run validate:sprint-data
+        run: pnpm run validate:sprint-data -- --strict
 
       - name: Check if sync is needed
         if: failure()

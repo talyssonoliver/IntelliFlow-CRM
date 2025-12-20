@@ -3,3 +3,4 @@ artifacts/**
 .specify/**
 apps/project-tracker/docs/metrics/.locks/**
 apps/project-tracker/docs/metrics/backups/**
+pnpm-lock.yaml

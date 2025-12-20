@@ -50,6 +50,9 @@ const CONFIG = {
     'logs/**/*',
     'artifacts/logs/**/*',
     '**/*.log',
+    // Sprint plan backups contain task descriptions with words like "password" (not actual secrets)
+    'artifacts/backups/**/*.csv',
+    '**/sprint-plan-*.csv',
   ],
 };
 
@@ -87,6 +90,16 @@ const RULES = {
     'docs/**/*.coverage',
     '.github/**/*.log',
     'infra/**/*.log',
+    // Sprint 0 Remediation: Block runtime artifacts in docs/metrics
+    'apps/project-tracker/docs/metrics/.locks/**/*',
+    'apps/project-tracker/docs/metrics/.status/**/*',
+    'apps/project-tracker/docs/metrics/logs/**/*',
+    'apps/project-tracker/docs/metrics/backups/**/*',
+    'apps/project-tracker/docs/metrics/artifacts/**/*',
+    'apps/project-tracker/docs/metrics/**/*.lock',
+    'apps/project-tracker/docs/metrics/**/*.heartbeat',
+    'apps/project-tracker/docs/metrics/**/*.input',
+    'apps/project-tracker/docs/metrics/**/*.bak',
   ],
   secretPatterns: [
     /(?:api[_-]?key|apikey)[\s:=]+['"]?([a-z0-9]{32,})['"]?/gi,

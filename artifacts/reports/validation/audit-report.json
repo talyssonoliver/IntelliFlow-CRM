@@ -1,0 +1,274 @@
+{
+  "actions": [
+    {
+      "action": "review",
+      "module": "langchain",
+      "resolves": [
+        {
+          "id": 1100325,
+          "path": "apps__ai-worker>langchain",
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ]
+    },
+    {
+      "action": "review",
+      "module": "@langchain/community",
+      "resolves": [
+        {
+          "id": 1100326,
+          "path": "apps__ai-worker>@langchain/community",
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        },
+        {
+          "id": 1100326,
+          "path": "apps__ai-worker>langchain>@langchain/community",
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ]
+    },
+    {
+      "action": "review",
+      "module": "esbuild",
+      "resolves": [
+        {
+          "id": 1102341,
+          "path": ".>vitest>vite>esbuild",
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ]
+    },
+    {
+      "action": "review",
+      "module": "expr-eval",
+      "resolves": [
+        {
+          "id": 1109807,
+          "path": "apps__ai-worker>langchain>@langchain/community>expr-eval",
+          "dev": false,
+          "bundled": false,
+          "optional": false
+        },
+        {
+          "id": 1111287,
+          "path": "apps__ai-worker>langchain>@langchain/community>expr-eval",
+          "dev": false,
+          "bundled": false,
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "advisories": {
+    "1100325": {
+      "findings": [
+        {
+          "version": "0.1.37",
+          "paths": []
+        }
+      ],
+      "found_by": null,
+      "deleted": null,
+      "references": "- https://nvd.nist.gov/vuln/detail/CVE-2024-7774\n- https://github.com/langchain-ai/langchainjs/commit/a0fad77d6b569e5872bd4a9d33be0c0785e538a9\n- https://huntr.com/bounties/8fe40685-b714-4191-af7a-3de5e5628cee\n- https://github.com/pypa/advisory-database/tree/main/vulns/langchain/PYSEC-2024-111.yaml\n- https://github.com/advisories/GHSA-hc5w-c9f8-9cc4",
+      "created": "2024-10-29T15:32:05.000Z",
+      "id": 1100325,
+      "npm_advisory_id": null,
+      "overview": "A path traversal vulnerability exists in the `getFullPath` method of langchain-ai/langchainjs version 0.2.5. This vulnerability allows attackers to save files anywhere in the filesystem, overwrite existing text files, read `.txt` files, and delete files. The vulnerability is exploited through the `setFileContent`, `getParsedFile`, and `mdelete` methods, which do not properly sanitize user input.",
+      "reported_by": null,
+      "title": "Langchain Path Traversal vulnerability",
+      "metadata": null,
+      "cves": [
+        "CVE-2024-7774"
+      ],
+      "access": "public",
+      "severity": "moderate",
+      "module_name": "langchain",
+      "vulnerable_versions": "<0.2.19",
+      "github_advisory_id": "GHSA-hc5w-c9f8-9cc4",
+      "recommendation": "Upgrade to version 0.2.19 or later",
+      "patched_versions": ">=0.2.19",
+      "updated": "2024-11-01T15:24:38.000Z",
+      "cvss": {
+        "score": 6.5,
+        "vectorString": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"
+      },
+      "cwe": [
+        "CWE-22",
+        "CWE-29"
+      ],
+      "url": "https://github.com/advisories/GHSA-hc5w-c9f8-9cc4"
+    },
+    "1100326": {
+      "findings": [
+        {
+          "version": "0.0.25",
+          "paths": []
+        },
+        {
+          "version": "0.0.57",
+          "paths": []
+        }
+      ],
+      "found_by": null,
+      "deleted": null,
+      "references": "- https://nvd.nist.gov/vuln/detail/CVE-2024-7042\n- https://github.com/langchain-ai/langchainjs/commit/615b9d9ab30a2d23a2f95fb8d7acfdf4b41ad7a6\n- https://huntr.com/bounties/b612defb-1104-4fff-9fef-001ab07c7b2d\n- https://github.com/pypa/advisory-database/tree/main/vulns/langchain/PYSEC-2024-114.yaml\n- https://github.com/advisories/GHSA-6m59-8fmv-m5f9",
+      "created": "2024-10-29T15:32:05.000Z",
+      "id": 1100326,
+      "npm_advisory_id": null,
+      "overview": "A vulnerability in the GraphCypherQAChain class of langchain-ai/langchainjs versions 0.2.5 and all versions with this class allows for prompt injection, leading to SQL injection. This vulnerability permits unauthorized data manipulation, data exfiltration, denial of service (DoS) by deleting all data, breaches in multi-tenant security environments, and data integrity issues. Attackers can create, update, or delete nodes and relationships without proper authorization, extract sensitive data, disrupt services, access data across different tenants, and compromise the integrity of the database.",
+      "reported_by": null,
+      "title": "@langchain/community SQL Injection vulnerability",
+      "metadata": null,
+      "cves": [
+        "CVE-2024-7042"
+      ],
+      "access": "public",
+      "severity": "low",
+      "module_name": "@langchain/community",
+      "vulnerable_versions": "<0.3.3",
+      "github_advisory_id": "GHSA-6m59-8fmv-m5f9",
+      "recommendation": "Upgrade to version 0.3.3 or later",
+      "patched_versions": ">=0.3.3",
+      "updated": "2024-11-01T13:16:11.000Z",
+      "cvss": {
+        "score": 4.9,
+        "vectorString": "CVSS:3.0/AV:L/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:L"
+      },
+      "cwe": [
+        "CWE-89"
+      ],
+      "url": "https://github.com/advisories/GHSA-6m59-8fmv-m5f9"
+    },
+    "1102341": {
+      "findings": [
+        {
+          "version": "0.21.5",
+          "paths": []
+        }
+      ],
+      "found_by": null,
+      "deleted": null,
+      "references": "- https://github.com/evanw/esbuild/security/advisories/GHSA-67mh-4wv8-2f99\n- https://github.com/evanw/esbuild/commit/de85afd65edec9ebc44a11e245fd9e9a2e99760d\n- https://github.com/advisories/GHSA-67mh-4wv8-2f99",
+      "created": "2025-02-10T17:48:07.000Z",
+      "id": 1102341,
+      "npm_advisory_id": null,
+      "overview": "### Summary\n\nesbuild allows any websites to send any request to the development server and read the response due to default CORS settings.\n\n### Details\n\nesbuild sets `Access-Control-Allow-Origin: *` header to all requests, including the SSE connection, which allows any websites to send any request to the development server and read the response.\n\nhttps://github.com/evanw/esbuild/blob/df815ac27b84f8b34374c9182a93c94718f8a630/pkg/api/serve_other.go#L121\nhttps://github.com/evanw/esbuild/blob/df815ac27b84f8b34374c9182a93c94718f8a630/pkg/api/serve_other.go#L363\n\n**Attack scenario**:\n\n1. The attacker serves a malicious web page (`http://malicious.example.com`).\n1. The user accesses the malicious web page.\n1. The attacker sends a `fetch('http://127.0.0.1:8000/main.js')` request by JS in that malicious web page. This request is normally blocked by same-origin policy, but that's not the case for the reasons above.\n1. The attacker gets the content of `http://127.0.0.1:8000/main.js`.\n\nIn this scenario, I assumed that the attacker knows the URL of the bundle output file name. But the attacker can also get that information by\n\n- Fetching `/index.html`: normally you have a script tag here\n- Fetching `/assets`: it's common to have a `assets` directory when you have JS files and CSS files in a different directory and the directory listing feature tells the attacker the list of files\n- Connecting `/esbuild` SSE endpoint: the SSE endpoint sends the URL path of the changed files when the file is changed (`new EventSource('/esbuild').addEventListener('change', e => console.log(e.type, e.data))`)\n- Fetching URLs in the known file: once the attacker knows one file, the attacker can know the URLs imported from that file\n\nThe scenario above fetches the compiled content, but if the victim has the source map option enabled, the attacker can also get the non-compiled content by fetching the source map file.\n\n### PoC\n\n1. Download [reproduction.zip](https://github.com/user-attachments/files/18561484/reproduction.zip)\n2. Extract it and move to that directory\n1. Run `npm i`\n1. Run `npm run watch`\n1. Run `fetch('http://127.0.0.1:8000/app.js').then(r => r.text()).then(content => console.log(content))` in a different website's dev tools.\n\n![image](https://github.com/user-attachments/assets/08fc2e4d-e1ec-44ca-b0ea-78a73c3c40e9)\n\n### Impact\n\nUsers using the serve feature may get the source code stolen by malicious websites.",
+      "reported_by": null,
+      "title": "esbuild enables any website to send any requests to the development server and read the response",
+      "metadata": null,
+      "cves": [],
+      "access": "public",
+      "severity": "moderate",
+      "module_name": "esbuild",
+      "vulnerable_versions": "<=0.24.2",
+      "github_advisory_id": "GHSA-67mh-4wv8-2f99",
+      "recommendation": "Upgrade to version 0.25.0 or later",
+      "patched_versions": ">=0.25.0",
+      "updated": "2025-02-10T17:48:08.000Z",
+      "cvss": {
+        "score": 5.3,
+        "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:N/A:N"
+      },
+      "cwe": [
+        "CWE-346"
+      ],
+      "url": "https://github.com/advisories/GHSA-67mh-4wv8-2f99"
+    },
+    "1109807": {
+      "findings": [
+        {
+          "version": "2.0.2",
+          "paths": []
+        }
+      ],
+      "found_by": null,
+      "deleted": null,
+      "references": "- https://nvd.nist.gov/vuln/detail/CVE-2025-13204\n- https://github.com/jorenbroekema/expr-eval\n- https://github.com/silentmatt/expr-eval\n- https://www.npmjs.com/package/expr-eval-fork\n- https://github.com/silentmatt/expr-eval/pull/252/files\n- https://github.com/SECCON/SECCON2022_final_CTF/blob/main/jeopardy/web/babybox/solver/solver.py\n- https://github.com/vladko312/extras/blob/f549d505af300fd74a01b46fab2102990ff1c14d/expr-eval.py\n- https://www.huntr.dev/bounties/1-npm-expr-eval\n- https://github.com/jorenbroekema/expr-eval/commit/6c475a118643ae0efe012de283e932fb8b74324b\n- https://github.com/silentmatt/expr-eval/commit/6e889e0e75c50ac37d70c35388602025650e0c50\n- https://github.com/advisories/GHSA-8gw3-rxh4-v6jx",
+      "created": "2025-11-14T18:31:39.000Z",
+      "id": 1109807,
+      "npm_advisory_id": null,
+      "overview": "npm package `expr-eval` is vulnerable to Prototype Pollution. An attacker with access to express eval interface can use JavaScript prototype-based inheritance model to achieve arbitrary code execution. The npm expr-eval-fork package resolves this issue.",
+      "reported_by": null,
+      "title": "expr-eval vulnerable to Prototype Pollution",
+      "metadata": null,
+      "cves": [
+        "CVE-2025-13204"
+      ],
+      "access": "public",
+      "severity": "high",
+      "module_name": "expr-eval",
+      "vulnerable_versions": "<=2.0.2",
+      "github_advisory_id": "GHSA-8gw3-rxh4-v6jx",
+      "recommendation": "None",
+      "patched_versions": "<0.0.0",
+      "updated": "2025-11-17T18:39:20.000Z",
+      "cvss": {
+        "score": 7.3,
+        "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L"
+      },
+      "cwe": [
+        "CWE-1321"
+      ],
+      "url": "https://github.com/advisories/GHSA-8gw3-rxh4-v6jx"
+    },
+    "1111287": {
+      "findings": [
+        {
+          "version": "2.0.2",
+          "paths": []
+        }
+      ],
+      "found_by": null,
+      "deleted": null,
+      "references": "- https://nvd.nist.gov/vuln/detail/CVE-2025-12735\n- https://github.com/silentmatt/expr-eval/pull/288\n- https://github.com/jorenbroekema/expr-eval\n- https://github.com/silentmatt/expr-eval\n- https://www.npmjs.com/package/expr-eval\n- https://www.npmjs.com/package/expr-eval-fork\n- https://github.com/jorenbroekema/expr-eval/commit/1d71bb2ca8f98df8de00e9cc4de8fdd468a7ad43\n- https://github.com/jorenbroekema/expr-eval/blob/460b820ba01c5aca6c5d84a7d4f1fa5d1913c67b/test/security.js\n- https://www.kb.cert.org/vuls/id/263614\n- https://kb.cert.org/vuls/id/263614\n- https://github.com/silentmatt/expr-eval/pull/289\n- https://github.com/advisories/GHSA-jc85-fpwf-qm7x",
+      "created": "2025-11-05T03:30:23.000Z",
+      "id": 1111287,
+      "npm_advisory_id": null,
+      "overview": "The expr-eval library is a JavaScript expression parser and evaluator designed to safely evaluate mathematical expressions with user-defined variables. However, due to insufficient input validation, an attacker can pass a crafted variables object into the evaluate() function and trigger arbitrary code execution.",
+      "reported_by": null,
+      "title": "expr-eval does not restrict functions passed to the evaluate function",
+      "metadata": null,
+      "cves": [
+        "CVE-2025-12735"
+      ],
+      "access": "public",
+      "severity": "high",
+      "module_name": "expr-eval",
+      "vulnerable_versions": "<=2.0.2",
+      "github_advisory_id": "GHSA-jc85-fpwf-qm7x",
+      "recommendation": "None",
+      "patched_versions": "<0.0.0",
+      "updated": "2025-12-09T15:33:16.000Z",
+      "cvss": {
+        "score": 0,
+        "vectorString": null
+      },
+      "cwe": [
+        "CWE-94"
+      ],
+      "url": "https://github.com/advisories/GHSA-jc85-fpwf-qm7x"
+    }
+  },
+  "muted": [],
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 2,
+      "moderate": 2,
+      "high": 2,
+      "critical": 0
+    },
+    "dependencies": 1004,
+    "devDependencies": 0,
+    "optionalDependencies": 0,
+    "totalDependencies": 1004
+  }
+}

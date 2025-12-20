@@ -25,6 +25,74 @@ import tool_versions
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_MATRIX_PATH = REPO_ROOT / "audit-matrix.yml"
 DEFAULT_OUTPUT_ROOT = REPO_ROOT / "artifacts" / "reports" / "system-audit"
+DEFAULT_DOTENV_PATH = REPO_ROOT / ".env.local"
+SONAR_CONTAINER_NAME = "intelliflow-sonarqube"
+SONAR_TOOL_IDS = {"sonarqube-scanner", "sonarqube-quality-gate"}
+
+
+def _load_dotenv(path: Path, allowed_keys: set[str] | None = None) -> dict[str, Any]:
+    """
+    Best-effort dotenv loader for local CLI runs.
+
+    Note: `.env.local` is automatically loaded by Next.js, but not by plain
+    Python/Node executions. This loader does not override existing env vars and
+    never logs secret values.
+    """
+    if not path.exists():
+        return {"path": os.path.relpath(path, REPO_ROOT).replace("\\", "/"), "loaded": False, "keys_loaded": 0}
+
+    keys_loaded = 0
+    try:
+        content = path.read_text(encoding="utf-8", errors="ignore")
+    except Exception:
+        return {"path": os.path.relpath(path, REPO_ROOT).replace("\\", "/"), "loaded": False, "keys_loaded": 0}
+
+    for line in content.splitlines():
+        raw = line.strip()
+        if not raw or raw.startswith("#"):
+            continue
+        if raw.startswith("export "):
+            raw = raw[len("export ") :].strip()
+        if "=" not in raw:
+            continue
+        key, value = raw.split("=", 1)
+        key = key.strip()
+        if not key or " " in key:
+            continue
+        if allowed_keys is not None and key not in allowed_keys:
+            continue
+        if os.environ.get(key) is not None:
+            continue
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+            value = value[1:-1]
+        os.environ[key] = value
+        keys_loaded += 1
+
+    return {"path": os.path.relpath(path, REPO_ROOT).replace("\\", "/"), "loaded": True, "keys_loaded": keys_loaded}
+
+
+def _docker_container_running(container_name: str) -> bool:
+    try:
+        proc = subprocess.run(
+            ["docker", "ps", "--filter", f"name={container_name}", "--format", "{{.Names}}"],
+            capture_output=True,
+            text=True,
+        )
+    except Exception:
+        return False
+    if proc.returncode != 0:
+        return False
+    names = {line.strip() for line in (proc.stdout or "").splitlines() if line.strip()}
+    return container_name in names
+
+
+def _run_node_script(args: list[str]) -> int:
+    try:
+        proc = subprocess.run(["node", *args], cwd=str(REPO_ROOT), env=os.environ.copy())
+        return int(proc.returncode)
+    except Exception:
+        return 1
 
 
 def _configure_stdio() -> None:
@@ -427,6 +495,8 @@ def _run_tool(
     retries = int(tool.get("retries") or 0)
     backoff = tool.get("backoff_seconds") or [5, 15]
     backoff_seconds = [int(x) for x in backoff] if isinstance(backoff, list) else [5, 15]
+    timeout_seconds_raw = tool.get("timeout_seconds")
+    timeout_seconds = int(timeout_seconds_raw) if timeout_seconds_raw is not None else None
 
     attempt = 0
     exit_code: int | None = None
@@ -452,9 +522,25 @@ def _run_tool(
                 text=True,
                 env=os.environ.copy(),
             )
-            exit_code = proc.wait()
+            try:
+                exit_code = proc.wait(timeout=timeout_seconds)
+            except subprocess.TimeoutExpired:
+                log_file.write(f"[audit] timeout_seconds={timeout_seconds}\n")
+                log_file.flush()
+                try:
+                    if os.name == "nt" and proc.pid:
+                        subprocess.run(
+                            ["taskkill", "/F", "/T", "/PID", str(proc.pid)],
+                            capture_output=True,
+                            text=True,
+                        )
+                    else:
+                        proc.kill()
+                except Exception:
+                    pass
+                exit_code = 124
 
-            if exit_code == 0 or attempt > retries + 1:
+            if exit_code == 0 or attempt >= retries + 1:
                 break
 
             # Backoff before retry
@@ -579,6 +665,28 @@ def _render_summary_md(summary: dict[str, Any]) -> str:
     lines.append(f"- Finished: `{summary.get('finished_at')}`")
     lines.append(f"- Result: `{summary.get('result', {}).get('overall_status')}`")
     lines.append("")
+
+    dotenv_meta = summary.get("dotenv")
+    if isinstance(dotenv_meta, dict) and dotenv_meta.get("loaded"):
+        lines.append("## Environment")
+        lines.append("")
+        lines.append(
+            f"- Dotenv: `{dotenv_meta.get('path')}` (keys loaded: `{dotenv_meta.get('keys_loaded')}`)"
+        )
+        lines.append("")
+
+    services_meta = summary.get("services")
+    if isinstance(services_meta, dict) and services_meta:
+        lines.append("## Services")
+        lines.append("")
+        for name in sorted(services_meta.keys()):
+            meta = services_meta.get(name)
+            if not isinstance(meta, dict):
+                continue
+            lines.append(
+                f"- `{name}`: needed={meta.get('needed')} was_running={meta.get('was_running')} start_exit={meta.get('start_exit')} stop_exit={meta.get('stop_exit')}"
+            )
+        lines.append("")
 
     affected_meta = summary.get("affected")
     if isinstance(affected_meta, dict) and affected_meta.get("report_dir"):
@@ -721,7 +829,29 @@ def main(argv: list[str] | None = None) -> int:
     existing_tool_index = _existing_tool_index(existing_summary) if existing_ok else {}
 
     selected_tools = [t for t in tools if _tool_is_selected(t, tiers)]
-    selected_tools_sorted = sorted(selected_tools, key=lambda x: (int(x.get("tier")), str(x.get("id"))))
+    selected_tools_sorted = sorted(
+        selected_tools,
+        key=lambda x: (
+            int(x.get("tier")),
+            int(x.get("order") or 0),
+            str(x.get("id")),
+        ),
+    )
+
+    allowed_env_keys: set[str] = set()
+    for t in selected_tools_sorted:
+        for name in t.get("requires_env") or []:
+            allowed_env_keys.add(str(name))
+    dotenv_meta = _load_dotenv(DEFAULT_DOTENV_PATH, allowed_keys=allowed_env_keys or None)
+
+    services_meta: dict[str, Any] = {}
+    need_sonar = any(
+        str(t.get("id")) in SONAR_TOOL_IDS and bool(t.get("enabled", True)) and _tool_env_ok(t)[0]
+        for t in selected_tools_sorted
+    )
+    sonar_was_running = _docker_container_running(SONAR_CONTAINER_NAME)
+    sonar_start_exit: int | None = None
+    sonar_stop_exit: int | None = None
 
     results: list[ToolResult] = []
 
@@ -736,24 +866,57 @@ def main(argv: list[str] | None = None) -> int:
             resume=bool(existing_ok and args.resume),
         )
 
-    if args.concurrency <= 1:
-        for tool in selected_tools_sorted:
-            r = run_one(tool)
-            results.append(r)
-            print(f"[audit] {r.tool_id} tier={r.tier} status={r.status} source={r.result_source}")
-            if r.status in {"fail"}:
-                tail = _tail_file(run_dir / f"{r.tool_id}.log", 20)
-                if tail:
-                    print(f"[audit] tail({r.tool_id}.log):\n{tail}")
-    else:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=args.concurrency) as executor:
-            futures = [executor.submit(run_one, t) for t in selected_tools_sorted]
-            for fut in concurrent.futures.as_completed(futures):
-                results.append(fut.result())
+    if need_sonar and not sonar_was_running:
+        print("[audit] service=sonarqube action=start")
+        sonar_start_exit = _run_node_script(["scripts/sonarqube-helper.js", "start"])
 
-        results = sorted(results, key=lambda r: (r.tier, r.tool_id))
-        for r in results:
-            print(f"[audit] {r.tool_id} tier={r.tier} status={r.status} source={r.result_source}")
+    services_meta["sonarqube"] = {
+        "needed": need_sonar,
+        "was_running": sonar_was_running,
+        "start_exit": sonar_start_exit,
+        "stop_exit": None,
+    }
+
+    try:
+        if args.concurrency <= 1:
+            for tool in selected_tools_sorted:
+                r = run_one(tool)
+                results.append(r)
+                print(f"[audit] {r.tool_id} tier={r.tier} status={r.status} source={r.result_source}")
+                if r.status in {"fail"}:
+                    tail = _tail_file(run_dir / f"{r.tool_id}.log", 20)
+                    if tail:
+                        print(f"[audit] tail({r.tool_id}.log):\n{tail}")
+        else:
+            # Enforce ordering barriers by `(tier, order)` even when using concurrency.
+            groups: list[tuple[int, int, list[dict[str, Any]]]] = []
+            current_key: tuple[int, int] | None = None
+            for tool in selected_tools_sorted:
+                key = (int(tool.get("tier")), int(tool.get("order") or 0))
+                if current_key != key:
+                    groups.append((key[0], key[1], [tool]))
+                    current_key = key
+                else:
+                    groups[-1][2].append(tool)
+
+            for _, _, group_tools in groups:
+                with concurrent.futures.ThreadPoolExecutor(max_workers=args.concurrency) as executor:
+                    futures = [executor.submit(run_one, t) for t in group_tools]
+                    for fut in concurrent.futures.as_completed(futures):
+                        r = fut.result()
+                        results.append(r)
+                        print(f"[audit] {r.tool_id} tier={r.tier} status={r.status} source={r.result_source}")
+                        if r.status in {"fail"}:
+                            tail = _tail_file(run_dir / f"{r.tool_id}.log", 20)
+                            if tail:
+                                print(f"[audit] tail({r.tool_id}.log):\n{tail}")
+
+            results = sorted(results, key=lambda r: (r.tier, r.tool_id))
+    finally:
+        if need_sonar and not sonar_was_running:
+            print("[audit] service=sonarqube action=stop")
+            sonar_stop_exit = _run_node_script(["scripts/sonarqube-helper.js", "stop"])
+            services_meta["sonarqube"]["stop_exit"] = sonar_stop_exit
 
     finished_at = _utc_now()
 
@@ -793,6 +956,8 @@ def main(argv: list[str] | None = None) -> int:
         if tool_versions_path.exists()
         else None,
         "affected": affected_meta,
+        "dotenv": dotenv_meta,
+        "services": services_meta,
         "runner": {
             "platform": platform.platform(),
             "github_actions": bool(os.environ.get("GITHUB_ACTIONS")),

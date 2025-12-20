@@ -1,0 +1,303 @@
+﻿
+apps/
+|-- ai-worker/
+|   |-- src/
+|   |   |-- agents/
+|   |   |   |-- base.agent.ts
+|   |   |   |-- crew.ts
+|   |   |   +-- qualification.agent.ts
+|   |   |-- chains/
+|   |   |   |-- embedding.chain.test.ts
+|   |   |   |-- embedding.chain.ts
+|   |   |   |-- scoring.chain.test.ts
+|   |   |   +-- scoring.chain.ts
+|   |   |-- config/
+|   |   |   +-- ai.config.ts
+|   |   |-- examples/
+|   |   |   +-- usage.ts
+|   |   |-- scripts/
+|   |   |   +-- benchmark.ts
+|   |   |-- types/
+|   |   |   +-- index.ts
+|   |   |-- utils/
+|   |   |   |-- cost-tracker.ts
+|   |   |   |-- logger.ts
+|   |   |   +-- retry.ts
+|   |   +-- index.ts
+|   |-- .env.example
+|   |-- .eslintrc.js
+|   |-- .gitignore
+|   |-- package.json
+|   |-- QUICKSTART.md
+|   |-- README.md
+|   |-- STRUCTURE.txt
+|   |-- tsconfig.json
+|   +-- vitest.config.ts
+|-- api/
+|   |-- src/
+|   |   |-- middleware/
+|   |   |   |-- auth.ts
+|   |   |   |-- index.ts
+|   |   |   |-- logging.ts
+|   |   |   +-- rate-limit.ts
+|   |   |-- modules/
+|   |   |   |-- account/
+|   |   |   |   +-- account.router.ts
+|   |   |   |-- contact/
+|   |   |   |   +-- contact.router.ts
+|   |   |   |-- lead/
+|   |   |   |   +-- lead.router.ts
+|   |   |   |-- opportunity/
+|   |   |   |   +-- opportunity.router.ts
+|   |   |   +-- task/
+|   |   |       +-- task.router.ts
+|   |   |-- context.ts
+|   |   |-- index.ts
+|   |   |-- router.ts
+|   |   +-- server.ts
+|   |-- package.json
+|   |-- README.md
+|   +-- tsconfig.json
+|-- project-tracker/
+|   |-- __tests__/
+|   |   |-- ENV-007-AI_generated.test.ts
+|   |   |-- ENV-009-AI_generated.test.ts
+|   |   |-- ENV-012-AI_generated.test.ts
+|   |   +-- IFC-160_generated.test.ts
+|   |-- app/
+|   |   |-- api/
+|   |   |   |-- audit/
+|   |   |   |   |-- affected/
+|   |   |   |   |   +-- route.ts
+|   |   |   |   |-- bundles/
+|   |   |   |   |   |-- [runId]/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   +-- route.ts
+|   |   |   |   |-- matrix/
+|   |   |   |   |   +-- route.ts
+|   |   |   |   +-- stream/
+|   |   |   |       +-- route.ts
+|   |   |   |-- governance/
+|   |   |   |   |-- debt/
+|   |   |   |   |   +-- route.ts
+|   |   |   |   |-- digest/
+|   |   |   |   |   +-- route.ts
+|   |   |   |   |-- lint-report/
+|   |   |   |   |   +-- route.ts
+|   |   |   |   |-- migrate/
+|   |   |   |   |   +-- route.ts
+|   |   |   |   |-- phantom-audit/
+|   |   |   |   |   +-- route.ts
+|   |   |   |   |-- review-queue/
+|   |   |   |   |   +-- route.ts
+|   |   |   |   |-- run-lint/
+|   |   |   |   |   +-- route.ts
+|   |   |   |   |-- summary/
+|   |   |   |   |   +-- route.ts
+|   |   |   |   +-- task/
+|   |   |   |       +-- [taskId]/
+|   |   |   |           +-- route.ts
+|   |   |   |-- metrics/
+|   |   |   |   |-- phases/
+|   |   |   |   |   +-- route.ts
+|   |   |   |   |-- sprint/
+|   |   |   |   |   +-- route.ts
+|   |   |   |   |-- task/
+|   |   |   |   |   +-- [taskId]/
+|   |   |   |   |       +-- route.ts
+|   |   |   |   +-- watch/
+|   |   |   |       +-- route.ts
+|   |   |   |-- sprint-plan/
+|   |   |   |   +-- route.ts
+|   |   |   |-- swarm/
+|   |   |   |   |-- active-tasks/
+|   |   |   |   |   +-- route.ts
+|   |   |   |   |-- cli/
+|   |   |   |   |   +-- route.ts
+|   |   |   |   |-- explain/
+|   |   |   |   |   +-- [taskId]/
+|   |   |   |   |       +-- route.ts
+|   |   |   |   |-- health/
+|   |   |   |   |   +-- route.ts
+|   |   |   |   |-- kill-task/
+|   |   |   |   |   +-- [taskId]/
+|   |   |   |   |       +-- route.ts
+|   |   |   |   |-- questions/
+|   |   |   |   |   |-- [taskId]/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   +-- route.ts
+|   |   |   |   |-- restart-task/
+|   |   |   |   |   +-- [taskId]/
+|   |   |   |   |       +-- route.ts
+|   |   |   |   |-- start/
+|   |   |   |   |   +-- route.ts
+|   |   |   |   |-- stop/
+|   |   |   |   |   +-- route.ts
+|   |   |   |   |-- stream-log/
+|   |   |   |   |   +-- route.ts
+|   |   |   |   |-- terminal/
+|   |   |   |   |   +-- [taskId]/
+|   |   |   |   |       +-- route.ts
+|   |   |   |   +-- view-log/
+|   |   |   |       +-- [taskId]/
+|   |   |   |           +-- route.ts
+|   |   |   +-- sync-metrics/
+|   |   |       +-- route.ts
+|   |   |-- swarm/
+|   |   |   +-- page.tsx
+|   |   |-- terminal/
+|   |   |   +-- [taskId]/
+|   |   |       +-- page.tsx
+|   |   |-- globals.css
+|   |   |-- layout.tsx
+|   |   |-- page.tsx
+|   |   +-- providers.tsx
+|   |-- components/
+|   |   |-- AnalyticsView.tsx
+|   |   |-- AuditView.tsx
+|   |   |-- DashboardView.tsx
+|   |   |-- GovernanceView.tsx
+|   |   |-- KanbanView.tsx
+|   |   |-- MetricsView.tsx
+|   |   |-- SettingsView.tsx
+|   |   |-- SwarmMonitor.tsx
+|   |   +-- TaskModal.tsx
+|   |-- docs/
+|   |   |-- .specify/
+|   |   |   |-- memory/
+|   |   |   |   +-- constitution.md
+|   |   |   |-- planning/
+|   |   |   +-- specifications/
+|   |   |-- artifacts/
+|   |   |   |-- contexts/
+|   |   |   |-- qualitative-reviews/
+|   |   |   |-- reports/
+|   |   |   |-- status/
+|   |   |   |-- validation/
+|   |   |   |-- work/
+|   |   |   |-- blockers.json
+|   |   |   +-- human-intervention-required.json
+|   |   |-- docs/
+|   |   |   +-- references/
+|   |   |-- logs/
+|   |   |-- metrics/
+|   |   |   |-- _global/
+|   |   |   |   |-- audit_playbook.md
+|   |   |   |   |-- dependency-graph.json
+|   |   |   |   |-- intelliflow_audit_improvements_prompt.md
+|   |   |   |   |-- kpi-definitions.json
+|   |   |   |   |-- Sprint_plan.csv
+|   |   |   |   |-- Sprint_plan.json
+|   |   |   |   +-- task-registry.json
+|   |   |   |-- schemas/
+|   |   |   |   |-- dependency-graph.schema.json
+|   |   |   |   |-- kpi-definitions.schema.json
+|   |   |   |   |-- phase-summary.schema.json
+|   |   |   |   |-- sprint-summary.schema.json
+|   |   |   |   |-- task-registry.schema.json
+|   |   |   |   +-- task-status.schema.json
+|   |   |   |-- sprint-0/
+|   |   |   |   |-- phase-0-initialisation/
+|   |   |   |   |   |-- _phase-summary.json
+|   |   |   |   |   |-- EXC-INIT-001.json
+|   |   |   |   |   +-- IFC-000.json
+|   |   |   |   |-- phase-1-ai-foundation/
+|   |   |   |   |   |-- _phase-summary.json
+|   |   |   |   |   +-- AI-SETUP-001.json
+|   |   |   |   |-- phase-2-parallel/
+|   |   |   |   |   |-- parallel-a/
+|   |   |   |   |   |   |-- AI-SETUP-002.json
+|   |   |   |   |   |   +-- AI-SETUP-003.json
+|   |   |   |   |   |-- parallel-b/
+|   |   |   |   |   |   |-- ENV-001-AI.json
+|   |   |   |   |   |   |-- ENV-002-AI.json
+|   |   |   |   |   |   |-- ENV-003-AI.json
+|   |   |   |   |   |   |-- ENV-005-AI.json
+|   |   |   |   |   |   |-- ENV-009-AI.json
+|   |   |   |   |   |   |-- ENV-012-AI.json
+|   |   |   |   |   |   +-- ENV-014-AI.json
+|   |   |   |   |   |-- parallel-c/
+|   |   |   |   |   |   |-- EXC-SEC-001.json
+|   |   |   |   |   |   +-- IFC-160.json
+|   |   |   |   |   +-- _phase-summary.json
+|   |   |   |   |-- phase-3-dependencies/
+|   |   |   |   |   |-- _phase-summary.json
+|   |   |   |   |   |-- ENV-004-AI.json
+|   |   |   |   |   |-- ENV-006-AI.json
+|   |   |   |   |   |-- ENV-007-AI.json
+|   |   |   |   |   |-- ENV-008-AI.json
+|   |   |   |   |   |-- ENV-010-AI.json
+|   |   |   |   |   |-- ENV-011-AI.json
+|   |   |   |   |   |-- ENV-013-AI.json
+|   |   |   |   |   |-- ENV-015-AI.json
+|   |   |   |   |   |-- ENV-016-AI.json
+|   |   |   |   |   +-- EP-001-AI.json
+|   |   |   |   |-- phase-4-final-setup/
+|   |   |   |   |   +-- ENV-017-AI.json
+|   |   |   |   |-- phase-4-integration/
+|   |   |   |   |   +-- _phase-summary.json
+|   |   |   |   |-- phase-5-completion/
+|   |   |   |   |   |-- AUTOMATION-001.json
+|   |   |   |   |   |-- AUTOMATION-002.json
+|   |   |   |   |   +-- ENV-018-AI.json
+|   |   |   |   +-- _summary.json
+|   |   |   |-- plan-overrides.yaml
+|   |   |   |-- plan-remediation.csv
+|   |   |   |-- README.md
+|   |   |   |-- review-queue.json
+|   |   |   +-- validation.yaml
+|   |   +-- DATA_SYNC.md
+|   |-- lib/
+|   |   |-- api.ts
+|   |   |-- csv-parser.ts
+|   |   |-- data-sync.ts
+|   |   |-- data-validator.ts
+|   |   |-- governance.ts
+|   |   |-- paths.ts
+|   |   |-- run-assistant.ts
+|   |   |-- types.ts
+|   |   +-- utils.ts
+|   |-- scripts/
+|   |   |-- generate_tree.ps1
+|   |   +-- sync-metrics.ts
+|   |-- .browserslistrc
+|   |-- .gitignore
+|   |-- eslint.config.js
+|   |-- next.config.js
+|   |-- next-env.d.ts
+|   |-- package.json
+|   |-- postcss.config.js
+|   |-- tailwind.config.ts
+|   |-- tsconfig.json
+|   +-- tsconfig.tsbuildinfo
+|-- web/
+|   |-- src/
+|   |   |-- app/
+|   |   |   |-- analytics/
+|   |   |   |   +-- page.tsx
+|   |   |   |-- contacts/
+|   |   |   |   +-- page.tsx
+|   |   |   |-- dashboard/
+|   |   |   |   +-- page.tsx
+|   |   |   |-- leads/
+|   |   |   |   +-- page.tsx
+|   |   |   |-- globals.css
+|   |   |   |-- layout.tsx
+|   |   |   |-- page.tsx
+|   |   |   +-- providers.tsx
+|   |   |-- components/
+|   |   |   |-- navigation.tsx
+|   |   |   +-- theme-provider.tsx
+|   |   +-- lib/
+|   |       +-- trpc.ts
+|   |-- components.json
+|   |-- next.config.js
+|   |-- next-env.d.ts
+|   |-- package.json
+|   |-- postcss.config.js
+|   |-- tailwind.config.ts
+|   |-- tsconfig.json
+|   +-- tsconfig.tsbuildinfo
++-- tree_temp.txt
+
+

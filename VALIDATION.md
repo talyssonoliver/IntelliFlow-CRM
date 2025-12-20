@@ -1,17 +1,23 @@
-# Sprint 0 Validation Guide
+# Sprint Validation Guide
 
-This guide provides quick instructions for validating the Sprint 0 setup and
+This guide provides quick instructions for validating sprint readiness and
 running the test suites.
 
 ## Quick Start
 
-### Validate Sprint 0 Completion
+### Validate Sprint Completion
 
-Run the comprehensive validation script to ensure all Sprint 0 requirements are
-met:
+Run the governance sprint validation gates:
 
 ```bash
-pnpm run validate:sprint0
+# Sprint 0 (default)
+pnpm run validate:sprint
+
+# Sprint 1
+pnpm run validate:sprint -- --sprint 1
+
+# Strict mode (WARN => FAIL)
+pnpm run validate:sprint -- --strict --sprint 1
 ```
 
 ### Generate a Human-Readable Log File
@@ -21,10 +27,17 @@ the report script. It strips ANSI color codes and avoids encoding issues seen
 when piping output on Windows PowerShell:
 
 ```bash
-pnpm run validate:sprint0:report
+# Sprint 0 (default)
+pnpm run validate:sprint:report
+
+# Sprint 1
+pnpm run validate:sprint:report -- --sprint 1
 ```
 
-Writes to: `artifacts/sprint0/codex-run/validation-output.txt`
+Writes to:
+
+- Sprint 0: `artifacts/sprint0/codex-run/validation-output.txt`
+- Sprint N: `artifacts/reports/validation/sprint-N-validation-output.txt`
 
 This will check:
 
@@ -69,7 +82,7 @@ Sprint 0 Validation Summary
 Total: 57/57 validations passed (100.0%)
 ----------------------------------------------------------------------
 
-🎉 Sprint 0 is complete! All validations passed.
+[OK] Sprint 0 baseline validations passed (structure/config only).
 ```
 
 ## Running Tests

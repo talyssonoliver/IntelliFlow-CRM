@@ -48,16 +48,11 @@ export const PATHS = {
     playbooks: join(MONOREPO_ROOT, 'docs', 'ops', 'playbooks'),
   },
 
-  // Scripts - TEMPORARY: Current location before moving to /scripts/
-  // TODO: After moving scripts, update to: join(MONOREPO_ROOT, 'scripts', '...')
+  // Scripts - Canonical location in /scripts/swarm/
   scripts: {
-    root: join(process.cwd(), 'docs', 'metrics'),
-    orchestrator: join(process.cwd(), 'docs', 'metrics', 'orchestrator.sh'),
-    swarmManager: join(process.cwd(), 'docs', 'metrics', 'swarm-manager.sh'),
-    // Target locations (after move):
-    // root: join(MONOREPO_ROOT, 'scripts'),
-    // orchestrator: join(MONOREPO_ROOT, 'scripts', 'orchestrator.sh'),
-    // swarmManager: join(MONOREPO_ROOT, 'scripts', 'swarm-manager.sh'),
+    root: join(MONOREPO_ROOT, 'scripts', 'swarm'),
+    orchestrator: join(MONOREPO_ROOT, 'scripts', 'swarm', 'orchestrator.sh'),
+    swarmManager: join(MONOREPO_ROOT, 'scripts', 'swarm', 'swarm-manager.sh'),
   },
 } as const;
 

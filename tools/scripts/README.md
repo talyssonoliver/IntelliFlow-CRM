@@ -223,54 +223,52 @@ pnpm tsx tools/scripts/health-check.ts --timeout=10000
 
 ### sprint0-validation.ts
 
-Comprehensive validation script for Sprint 0 completion.
+Governance-grade sprint validation script (supports any sprint via `--sprint`).
 
 **Purpose:**
 
-- Verifies all Sprint 0 tasks are complete
-- Validates development environment setup
-- Checks monorepo structure and configuration
-- Ensures test infrastructure is in place
-- Validates artifact directories and documentation
-- Confirms all required dependencies are installed
+- Baseline structure readiness (files/dirs)
+- Sprint completion check (CSV status only)
+- Evidence integrity for DONE tasks (tracked task JSON semantics)
+- Docs hygiene (no runtime artifacts under docs)
+- Metrics tracked state (no untracked files under docs/metrics)
+- Canonical uniqueness (single tracked copy of key artifacts)
 
 **Usage:**
 
 ```bash
-# Run Sprint 0 validation
+# Sprint 0 (default)
 pnpm run validate:sprint0
 
+# Sprint 1
+pnpm run validate:sprint -- --sprint 1
+
+# Strict mode (WARN => FAIL)
+pnpm run validate:sprint -- --strict --sprint 1
+
 # Or directly with tsx
-npx tsx tools/scripts/sprint0-validation.ts
+npx tsx tools/scripts/sprint0-validation.ts --sprint 1
 ```
 
 **Output:**
 
-- Color-coded console output with pass/fail status
-- Detailed summary with pass rate by category
-- Exit code for CI integration (0 = success, 1 = failure)
+- Gate-by-gate PASS/WARN/FAIL output plus a final summary
+- Exit code for CI integration (`0` = success, `1` = failure; WARN fails in
+  strict mode)
 
-**Validation Categories:**
+**Gates:**
 
-1. **Monorepo** (5 checks): package.json, pnpm-workspace.yaml, turbo.json,
-   directories
-2. **Configuration** (7 checks): TypeScript, Vitest, Playwright, ESLint,
-   Prettier, Git
-3. **Testing** (8 checks): Unit, integration, and E2E test infrastructure
-4. **Artifacts** (9 checks): All required artifact directories
-5. **Packages** (8 checks): Domain, validators, db, observability packages
-6. **Documentation** (4 checks): README, CLAUDE.md, Sprint_plan.csv
-7. **Scripts** (8 checks): dev, build, test, lint, typecheck scripts
-8. **Git** (2 checks): Repository initialization and .gitignore
-9. **TypeScript** (2 checks): Configuration and dependencies
-10. **Metrics** (4 checks): Project tracker and task metrics files
-
-**Total Checks:** 57 validations across 10 categories
+1. Baseline Structure
+2. Sprint Completion (CSV status only)
+3. Evidence Integrity (DONE semantics)
+4. Docs Hygiene
+5. Metrics Tracked State
+6. Canonical Uniqueness
 
 **Exit Codes:**
 
-- `0`: All validations passed (Sprint 0 complete)
-- `1`: One or more validations failed
+- `0`: All gates passed (or only WARNs in default mode)
+- `1`: Any gate failed (or WARNs in strict mode)
 
 **Example Output:**
 
@@ -307,7 +305,7 @@ Sprint 0 Validation Summary
 Total: 57/57 validations passed (100.0%)
 ----------------------------------------------------------------------
 
-🎉 Sprint 0 is complete! All validations passed.
+[OK] Sprint 0 baseline validations passed (structure/config only).
 ```
 
 ### check-dependencies.ts

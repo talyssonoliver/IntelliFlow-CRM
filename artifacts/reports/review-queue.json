@@ -1,7 +1,9 @@
 {
-  "generated_at": "2025-12-18T23:53:03+00:00",
+  "generated_at": "2025-12-19T22:49:35+00:00",
   "items": [
     {
+      "attestation_errors": [],
+      "attestation_invalid": false,
       "attestation_missing": true,
       "audit_bundle_missing": false,
       "classification": "In Review",
@@ -22,6 +24,8 @@
       "tier1_pass": false
     },
     {
+      "attestation_errors": [],
+      "attestation_invalid": false,
       "attestation_missing": true,
       "audit_bundle_missing": false,
       "classification": "In Review",
@@ -42,6 +46,8 @@
       "tier1_pass": false
     },
     {
+      "attestation_errors": [],
+      "attestation_invalid": false,
       "attestation_missing": true,
       "audit_bundle_missing": false,
       "classification": "In Review",
@@ -62,6 +68,8 @@
       "tier1_pass": false
     },
     {
+      "attestation_errors": [],
+      "attestation_invalid": false,
       "attestation_missing": true,
       "audit_bundle_missing": false,
       "classification": "In Review",
@@ -82,6 +90,8 @@
       "tier1_pass": false
     },
     {
+      "attestation_errors": [],
+      "attestation_invalid": false,
       "attestation_missing": true,
       "audit_bundle_missing": false,
       "classification": "In Review",
@@ -102,6 +112,8 @@
       "tier1_pass": false
     },
     {
+      "attestation_errors": [],
+      "attestation_invalid": false,
       "attestation_missing": true,
       "audit_bundle_missing": false,
       "classification": "In Review",
@@ -122,6 +134,8 @@
       "tier1_pass": false
     },
     {
+      "attestation_errors": [],
+      "attestation_invalid": false,
       "attestation_missing": true,
       "audit_bundle_missing": false,
       "classification": "In Review",
@@ -142,6 +156,8 @@
       "tier1_pass": false
     },
     {
+      "attestation_errors": [],
+      "attestation_invalid": false,
       "attestation_missing": true,
       "audit_bundle_missing": false,
       "classification": "In Review",
@@ -162,6 +178,8 @@
       "tier1_pass": false
     },
     {
+      "attestation_errors": [],
+      "attestation_invalid": false,
       "attestation_missing": true,
       "audit_bundle_missing": false,
       "classification": "In Review",
@@ -182,6 +200,8 @@
       "tier1_pass": false
     },
     {
+      "attestation_errors": [],
+      "attestation_invalid": false,
       "attestation_missing": true,
       "audit_bundle_missing": false,
       "classification": "In Review",
@@ -202,6 +222,8 @@
       "tier1_pass": false
     },
     {
+      "attestation_errors": [],
+      "attestation_invalid": false,
       "attestation_missing": true,
       "audit_bundle_missing": false,
       "classification": "In Review",
@@ -222,6 +244,8 @@
       "tier1_pass": false
     },
     {
+      "attestation_errors": [],
+      "attestation_invalid": false,
       "attestation_missing": true,
       "audit_bundle_missing": false,
       "classification": "In Review",
@@ -242,6 +266,8 @@
       "tier1_pass": false
     },
     {
+      "attestation_errors": [],
+      "attestation_invalid": false,
       "attestation_missing": true,
       "audit_bundle_missing": false,
       "classification": "In Review",
@@ -262,6 +288,8 @@
       "tier1_pass": false
     },
     {
+      "attestation_errors": [],
+      "attestation_invalid": false,
       "attestation_missing": true,
       "audit_bundle_missing": false,
       "classification": "In Review",
@@ -282,6 +310,8 @@
       "tier1_pass": false
     },
     {
+      "attestation_errors": [],
+      "attestation_invalid": false,
       "attestation_missing": true,
       "audit_bundle_missing": false,
       "classification": "In Review",
@@ -302,6 +332,250 @@
       "tier1_pass": false
     },
     {
+      "attestation_errors": [],
+      "attestation_invalid": false,
+      "attestation_missing": true,
+      "audit_bundle_missing": false,
+      "classification": "In Review",
+      "debt_ids": [],
+      "inferred_commit_sha": null,
+      "missing_evidence": [
+        ".specify/planning/.md",
+        ".specify/specifications/.md"
+      ],
+      "post_cutover": null,
+      "reasons": [
+        "MISSING_EVIDENCE_PACK",
+        "TIER1_FAILED"
+      ],
+      "status": "Completed",
+      "task_id": "",
+      "tier": null,
+      "tier1_pass": false
+    },
+    {
+      "attestation_errors": [],
+      "attestation_invalid": false,
+      "attestation_missing": true,
+      "audit_bundle_missing": false,
+      "classification": "In Review",
+      "debt_ids": [],
+      "inferred_commit_sha": null,
+      "missing_evidence": [
+        ".specify/planning/.md",
+        ".specify/specifications/.md"
+      ],
+      "post_cutover": null,
+      "reasons": [
+        "MISSING_EVIDENCE_PACK",
+        "TIER1_FAILED"
+      ],
+      "status": "Completed",
+      "task_id": "",
+      "tier": null,
+      "tier1_pass": false
+    },
+    {
+      "attestation_errors": [],
+      "attestation_invalid": false,
+      "attestation_missing": true,
+      "audit_bundle_missing": false,
+      "classification": "In Review",
+      "debt_ids": [],
+      "inferred_commit_sha": null,
+      "missing_evidence": [
+        ".specify/planning/.md",
+        ".specify/specifications/.md"
+      ],
+      "post_cutover": null,
+      "reasons": [
+        "MISSING_EVIDENCE_PACK",
+        "TIER1_FAILED"
+      ],
+      "status": "Completed",
+      "task_id": "",
+      "tier": null,
+      "tier1_pass": false
+    },
+    {
+      "attestation_errors": [],
+      "attestation_invalid": false,
+      "attestation_missing": true,
+      "audit_bundle_missing": false,
+      "classification": "In Review",
+      "debt_ids": [],
+      "inferred_commit_sha": null,
+      "missing_evidence": [
+        ".specify/planning/.md",
+        ".specify/specifications/.md"
+      ],
+      "post_cutover": null,
+      "reasons": [
+        "MISSING_EVIDENCE_PACK",
+        "TIER1_FAILED"
+      ],
+      "status": "Completed",
+      "task_id": "",
+      "tier": null,
+      "tier1_pass": false
+    },
+    {
+      "attestation_errors": [],
+      "attestation_invalid": false,
+      "attestation_missing": true,
+      "audit_bundle_missing": false,
+      "classification": "In Review",
+      "debt_ids": [],
+      "inferred_commit_sha": null,
+      "missing_evidence": [
+        ".specify/planning/.md",
+        ".specify/specifications/.md"
+      ],
+      "post_cutover": null,
+      "reasons": [
+        "MISSING_EVIDENCE_PACK",
+        "TIER1_FAILED"
+      ],
+      "status": "Completed",
+      "task_id": "",
+      "tier": null,
+      "tier1_pass": false
+    },
+    {
+      "attestation_errors": [],
+      "attestation_invalid": false,
+      "attestation_missing": true,
+      "audit_bundle_missing": false,
+      "classification": "In Review",
+      "debt_ids": [],
+      "inferred_commit_sha": null,
+      "missing_evidence": [
+        ".specify/planning/.md",
+        ".specify/specifications/.md"
+      ],
+      "post_cutover": null,
+      "reasons": [
+        "MISSING_EVIDENCE_PACK",
+        "TIER1_FAILED"
+      ],
+      "status": "Completed",
+      "task_id": "",
+      "tier": null,
+      "tier1_pass": false
+    },
+    {
+      "attestation_errors": [],
+      "attestation_invalid": false,
+      "attestation_missing": true,
+      "audit_bundle_missing": false,
+      "classification": "In Review",
+      "debt_ids": [],
+      "inferred_commit_sha": null,
+      "missing_evidence": [
+        ".specify/planning/.md",
+        ".specify/specifications/.md"
+      ],
+      "post_cutover": null,
+      "reasons": [
+        "MISSING_EVIDENCE_PACK",
+        "TIER1_FAILED"
+      ],
+      "status": "Completed",
+      "task_id": "",
+      "tier": null,
+      "tier1_pass": false
+    },
+    {
+      "attestation_errors": [],
+      "attestation_invalid": false,
+      "attestation_missing": true,
+      "audit_bundle_missing": false,
+      "classification": "In Review",
+      "debt_ids": [],
+      "inferred_commit_sha": null,
+      "missing_evidence": [
+        ".specify/planning/.md",
+        ".specify/specifications/.md"
+      ],
+      "post_cutover": null,
+      "reasons": [
+        "MISSING_EVIDENCE_PACK",
+        "TIER1_FAILED"
+      ],
+      "status": "Completed",
+      "task_id": "",
+      "tier": null,
+      "tier1_pass": false
+    },
+    {
+      "attestation_errors": [],
+      "attestation_invalid": false,
+      "attestation_missing": true,
+      "audit_bundle_missing": false,
+      "classification": "In Review",
+      "debt_ids": [],
+      "inferred_commit_sha": null,
+      "missing_evidence": [
+        ".specify/planning/.md",
+        ".specify/specifications/.md"
+      ],
+      "post_cutover": null,
+      "reasons": [
+        "MISSING_EVIDENCE_PACK",
+        "TIER1_FAILED"
+      ],
+      "status": "Completed",
+      "task_id": "",
+      "tier": null,
+      "tier1_pass": false
+    },
+    {
+      "attestation_errors": [],
+      "attestation_invalid": false,
+      "attestation_missing": true,
+      "audit_bundle_missing": false,
+      "classification": "In Review",
+      "debt_ids": [],
+      "inferred_commit_sha": null,
+      "missing_evidence": [
+        ".specify/planning/.md",
+        ".specify/specifications/.md"
+      ],
+      "post_cutover": null,
+      "reasons": [
+        "MISSING_EVIDENCE_PACK",
+        "TIER1_FAILED"
+      ],
+      "status": "Completed",
+      "task_id": "",
+      "tier": null,
+      "tier1_pass": false
+    },
+    {
+      "attestation_errors": [],
+      "attestation_invalid": false,
+      "attestation_missing": true,
+      "audit_bundle_missing": false,
+      "classification": "In Review",
+      "debt_ids": [],
+      "inferred_commit_sha": null,
+      "missing_evidence": [
+        ".specify/planning/.md",
+        ".specify/specifications/.md"
+      ],
+      "post_cutover": null,
+      "reasons": [
+        "MISSING_EVIDENCE_PACK",
+        "TIER1_FAILED"
+      ],
+      "status": "Completed",
+      "task_id": "",
+      "tier": null,
+      "tier1_pass": false
+    },
+    {
+      "attestation_errors": [],
+      "attestation_invalid": false,
       "attestation_missing": true,
       "audit_bundle_missing": false,
       "classification": "In Review",
@@ -322,5 +596,5 @@
       "tier1_pass": false
     }
   ],
-  "run_id": "local-smoke"
+  "run_id": "ui-audit-20251219T215101.162Z-qnel6t"
 }

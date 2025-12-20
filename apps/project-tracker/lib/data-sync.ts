@@ -404,7 +404,7 @@ function updatePhaseSummaries(tasks: any[], metricsDir: string): void {
     'phase-1-ai-foundation',
     'phase-2-parallel',
     'phase-3-dependencies',
-    'phase-4-integration',
+    'phase-4-final-setup',
     'phase-5-completion',
   ];
 
@@ -678,6 +678,57 @@ function updateSprintSummary(tasks: any[], metricsDir: string): void {
     (a, b) => new Date(a.completed_at).getTime() - new Date(b.completed_at).getTime()
   );
   summary.completed_tasks = completedTasks;
+
+  // Update phases array from phase directories
+  const phaseIds = [
+    'phase-0-initialisation',
+    'phase-1-ai-foundation',
+    'phase-2-parallel',
+    'phase-3-dependencies',
+    'phase-4-final-setup',
+    'phase-5-completion',
+  ];
+
+  const updatedPhases: Array<{
+    id: string;
+    status: string;
+    started_at: string | null;
+    completed_at: string | null;
+  }> = [];
+
+  for (const phaseId of phaseIds) {
+    const phaseSummaryPath = join(sprint0Dir, phaseId, '_phase-summary.json');
+    if (existsSync(phaseSummaryPath)) {
+      try {
+        const phaseSummary = readJsonTolerant(phaseSummaryPath);
+        const metrics = phaseSummary.aggregated_metrics || {};
+        const totalTasks = metrics.total_tasks || 0;
+        const doneTasks = metrics.done || 0;
+        const inProgressTasks = metrics.in_progress || 0;
+
+        let status = 'NOT_STARTED';
+        if (doneTasks === totalTasks && totalTasks > 0) {
+          status = 'DONE';
+        } else if (inProgressTasks > 0 || doneTasks > 0) {
+          status = 'IN_PROGRESS';
+        }
+
+        updatedPhases.push({
+          id: phaseId,
+          status,
+          started_at: phaseSummary.started_at || null,
+          completed_at:
+            status === 'DONE' ? phaseSummary.completed_at || new Date().toISOString() : null,
+        });
+      } catch {
+        // Skip invalid phase summaries
+      }
+    }
+  }
+
+  if (updatedPhases.length > 0) {
+    summary.phases = updatedPhases;
+  }
 
   // Update notes
   const pct = tasks.length > 0 ? Math.round((done / tasks.length) * 100) : 0;

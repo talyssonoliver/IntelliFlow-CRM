@@ -1,0 +1,25 @@
+{
+  "color": {
+    "brand": {
+      "primary": { "value": "#2563EB" },
+      "secondary": { "value": "#0F172A" },
+      "accent": { "value": "#22C55E" }
+    },
+    "neutral": {
+      "0": { "value": "#FFFFFF" },
+      "50": { "value": "#F8FAFC" },
+      "100": { "value": "#F1F5F9" },
+      "200": { "value": "#E2E8F0" },
+      "300": { "value": "#CBD5E1" },
+      "600": { "value": "#475569" },
+      "800": { "value": "#1F2937" },
+      "900": { "value": "#0F172A" }
+    },
+    "status": {
+      "success": { "value": "#22C55E" },
+      "warning": { "value": "#F59E0B" },
+      "danger": { "value": "#EF4444" },
+      "info": { "value": "#2563EB" }
+    }
+  }
+}

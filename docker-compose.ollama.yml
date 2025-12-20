@@ -1,0 +1,34 @@
+# IntelliFlow CRM - Ollama Docker Compose Overlay
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.ollama.yml up -d
+#
+# Notes:
+# - Keeps model data persisted via a named volume.
+# - Intended to be used as an overlay to the base `docker-compose.yml`.
+
+version: '3.9'
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: intelliflow-ollama
+    ports:
+      - '11434:11434'
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:11434/api/version']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - intelliflow
+
+networks:
+  intelliflow:
+    driver: bridge
+
+volumes:
+  ollama_data:
+    driver: local

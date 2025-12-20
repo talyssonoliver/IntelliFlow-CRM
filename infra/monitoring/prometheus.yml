@@ -1,0 +1,102 @@
+# IntelliFlow CRM - Prometheus Configuration
+# Deployed on EasyPanel for internal monitoring
+#
+# Architecture: Push-based OTLP pipeline
+# - Railway/Vercel apps push OTLP to OTel Collector
+# - OTel Collector pushes metrics to Prometheus via remote write
+# - Prometheus scrapes internal services only
+#
+# IMPORTANT: Start Prometheus with --web.enable-remote-write-receiver
+#
+# Retention: 30 days (set via --storage.tsdb.retention.time=30d)
+# Config hash tracked in EP-001-AI.json for audit
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'intelliflow-monitoring'
+    env: 'internal'
+
+# Alertmanager configuration (optional - add when needed)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#           - alertmanager:9093
+
+# Rule files (optional - add when needed)
+# rule_files:
+#   - /etc/prometheus/rules/*.yml
+
+scrape_configs:
+  # Self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    metrics_path: /metrics
+    scheme: http
+
+  # OpenTelemetry Collector metrics
+  # Collector exposes its own telemetry on :8888
+  - job_name: 'otel-collector'
+    static_configs:
+      - targets: ['otel-collector:8888']
+    metrics_path: /metrics
+    scheme: http
+
+  # Grafana metrics
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+    metrics_path: /metrics
+    scheme: http
+
+  # Loki metrics
+  - job_name: 'loki'
+    static_configs:
+      - targets: ['loki:3100']
+    metrics_path: /metrics
+    scheme: http
+
+  # Tempo metrics
+  - job_name: 'tempo'
+    static_configs:
+      - targets: ['tempo:3200']
+    metrics_path: /metrics
+    scheme: http
+
+  # Node exporter for host metrics (optional - deploy if needed)
+  # - job_name: 'node'
+  #   static_configs:
+  #     - targets: ['node-exporter:9100']
+
+# =============================================================================
+# PUSH-BASED TELEMETRY ARCHITECTURE
+# =============================================================================
+#
+# Railway/Vercel apps CANNOT be scraped (dynamic IPs, serverless).
+# They push telemetry using this flow:
+#
+#   Railway App                 OTel Collector              Prometheus
+#   (OTEL SDK)  --OTLP-HTTP-->  (port 4318)   --remote--->  (port 9090)
+#                                              write
+#
+# App Configuration (Railway environment variables):
+#   OTEL_EXPORTER_OTLP_ENDPOINT=http://<tailscale-ip>:4318
+#   OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+#   OTEL_SERVICE_NAME=intelliflow-api
+#   OTEL_RESOURCE_ATTRIBUTES=service.namespace=intelliflow,deployment.environment=production
+#
+# Prometheus must be started with:
+#   --web.enable-remote-write-receiver
+#
+# This is configured in docker-compose.monitoring.yml command section.
+# =============================================================================
+
+# Storage configuration is set via command line:
+# --storage.tsdb.path=/prometheus
+# --storage.tsdb.retention.time=30d
+# --storage.tsdb.retention.size=10GB
+# --web.enable-remote-write-receiver  # REQUIRED for OTel Collector push
+# --web.enable-lifecycle              # Enables /-/reload endpoint
