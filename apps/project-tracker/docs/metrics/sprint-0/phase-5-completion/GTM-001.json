@@ -9,10 +9,14 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2025-12-21T17:57:49.467Z",
-    "required": ["DOC-001"]
+    "verified_at": "2025-12-21T21:20:40.025Z",
+    "required": [
+      "DOC-001"
+    ]
   },
-  "dependencies_resolved": ["DOC-001"],
+  "dependencies_resolved": [
+    "DOC-001"
+  ],
   "started_at": "2025-12-21T07:06:10.560Z",
   "completed_at": "2025-12-21T07:21:10.560Z",
   "target_duration_minutes": null,

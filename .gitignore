@@ -163,3 +163,44 @@ artifacts/reports/attestation/sprint-*T*.md
 # Sprint run timestamped outputs
 artifacts/reports/sprint-runs/*.json
 artifacts/reports/sprint-runs/*.md
+
+# ============================================
+# Scope Control - Added 2025-12-21
+# ============================================
+
+# Python bytecode (redundant but explicit)
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# Sprint patches (intermediate build artifacts)
+artifacts/sprint*/codex-run/patches/
+
+# Future sprint context files (generate only for current sprint)
+# Keep: IFC-001 through IFC-003, IFC-072 through IFC-077, IFC-106, IFC-119, IFC-135
+# Keep: GOV-001, BRAND-002, SALES-001, AI-SETUP-*, ENV-*, EXC-*, AUTOMATION-*, EP-*
+artifacts/contexts/IFC-0[0-4][0-9]-context.md
+artifacts/contexts/IFC-0[5-6][0-9]-context.md
+artifacts/contexts/IFC-07[0-1]-context.md
+artifacts/contexts/IFC-07[8-9]-context.md
+artifacts/contexts/IFC-0[8-9][0-9]-context.md
+artifacts/contexts/IFC-1[0-5][0-9]-context.md
+!artifacts/contexts/IFC-001-context.md
+!artifacts/contexts/IFC-002-context.md
+!artifacts/contexts/IFC-003-context.md
+!artifacts/contexts/IFC-072-context.md
+!artifacts/contexts/IFC-073-context.md
+!artifacts/contexts/IFC-074-context.md
+!artifacts/contexts/IFC-075-context.md
+!artifacts/contexts/IFC-076-context.md
+!artifacts/contexts/IFC-077-context.md
+!artifacts/contexts/IFC-106-context.md
+!artifacts/contexts/IFC-119-context.md
+!artifacts/contexts/IFC-135-context.md
+
+# All logs under artifacts
+artifacts/logs/**/*.log
+!artifacts/logs/.gitkeep
+
+# Supabase temp files
+supabase/.temp/

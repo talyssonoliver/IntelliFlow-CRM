@@ -48,6 +48,7 @@ const STOA_GATE_PROFILES: Record<StoaRole, string[]> = {
   Foundation: [
     'turbo-typecheck',
     'turbo-build',
+    'turbo-test-coverage', // TDD enforcement - all foundation code must be tested
     'eslint-max-warnings-0',
     'prettier-check',
     'commitlint',
@@ -56,11 +57,10 @@ const STOA_GATE_PROFILES: Record<StoaRole, string[]> = {
   Security: ['gitleaks', 'pnpm-audit-high', 'snyk', 'semgrep-security-audit', 'trivy-image'],
   Quality: ['turbo-test-coverage', 'stryker', 'lighthouse-ci', 'sonarqube-scanner'],
   Intelligence: [
-    // AI-specific gates (to be defined in audit-matrix.yml)
     'turbo-test-coverage', // AI worker tests included in coverage
   ],
   Domain: ['turbo-typecheck', 'turbo-test-coverage', 'dependency-cruiser-validate'],
-  Automation: ['turbo-typecheck', 'turbo-build', 'eslint-max-warnings-0'],
+  Automation: ['turbo-typecheck', 'turbo-build', 'turbo-test-coverage', 'eslint-max-warnings-0'],
 };
 
 /**

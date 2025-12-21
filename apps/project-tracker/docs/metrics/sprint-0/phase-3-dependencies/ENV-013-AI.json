@@ -9,12 +9,20 @@
   "phase": "phase-3-dependencies",
   "stream": null,
   "dependencies": {
-    "required": ["ENV-005-AI", "ENV-007-AI", "ENV-009-AI"],
-    "verified_at": "2025-12-21T17:57:49.245Z",
+    "required": [
+      "ENV-005-AI",
+      "ENV-007-AI",
+      "ENV-009-AI"
+    ],
+    "verified_at": "2025-12-21T21:20:39.958Z",
     "all_satisfied": true
   },
   "status_history": [],
-  "dependencies_resolved": ["ENV-005-AI", "ENV-007-AI", "ENV-009-AI"],
+  "dependencies_resolved": [
+    "ENV-005-AI",
+    "ENV-007-AI",
+    "ENV-009-AI"
+  ],
   "started_at": "2025-12-19T00:43:54.006Z",
   "completed_at": "2025-12-19T00:58:54.006Z",
   "target_duration_minutes": 90,

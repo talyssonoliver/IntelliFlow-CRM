@@ -9,8 +9,10 @@
   "phase": "phase-3-dependencies",
   "stream": null,
   "dependencies": {
-    "required": ["ENV-005-AI"],
-    "verified_at": "2025-12-21T17:57:49.126Z",
+    "required": [
+      "ENV-005-AI"
+    ],
+    "verified_at": "2025-12-21T21:20:39.923Z",
     "all_satisfied": true
   },
   "status_history": [
@@ -45,7 +47,9 @@
       "note": "Task execution started"
     }
   ],
-  "dependencies_resolved": ["ENV-005-AI"],
+  "dependencies_resolved": [
+    "ENV-005-AI"
+  ],
   "started_at": "2025-12-18T23:21:37+00:00",
   "completed_at": "2025-12-19T00:58:53.985Z",
   "target_duration_minutes": 60,

@@ -9,10 +9,14 @@
   "stream": "parallel-a",
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2025-12-21T17:57:49.024Z",
-    "required": ["AI-SETUP-001"]
+    "verified_at": "2025-12-21T21:20:39.840Z",
+    "required": [
+      "AI-SETUP-001"
+    ]
   },
-  "dependencies_resolved": ["AI-SETUP-001"],
+  "dependencies_resolved": [
+    "AI-SETUP-001"
+  ],
   "started_at": "2025-12-14T20:20:00Z",
   "completed_at": "2025-12-14T20:35:00Z",
   "target_duration_minutes": 45,

@@ -42,7 +42,13 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'json-summary', 'lcov', 'html'],
       reportsDirectory: path.join(packageRoot, 'artifacts', 'coverage'),
-      include: ['apps/**/*.{ts,tsx}', 'packages/**/*.{ts,tsx}'],
+      include: [
+        // Core product code only - excludes temporary tooling
+        'apps/api/**/*.{ts,tsx}',
+        'apps/ai-worker/**/*.{ts,tsx}',
+        'apps/web/**/*.{ts,tsx}',
+        'packages/**/*.{ts,tsx}',
+      ],
       exclude: [
         '**/node_modules/**',
         '**/.pnpm/**',
@@ -56,7 +62,18 @@ export default defineConfig({
         '**/*.config.*',
         '**/__tests__/**',
         '**/__mocks__/**',
+        // Temporary tooling - not part of product
+        'apps/project-tracker/**',
+        'tools/**',
       ],
+      // TDD Enforcement: Build FAILS if coverage below thresholds
+      // Per CLAUDE.md: Domain >95%, Application >90%, Overall >90%
+      thresholds: {
+        statements: 90,
+        branches: 80,
+        functions: 90,
+        lines: 90,
+      },
     },
   },
 });

@@ -9,10 +9,14 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2025-12-21T17:57:49.113Z",
-    "required": ["ENV-004-AI"]
+    "verified_at": "2025-12-21T21:20:39.910Z",
+    "required": [
+      "ENV-004-AI"
+    ]
   },
-  "dependencies_resolved": ["ENV-004-AI"],
+  "dependencies_resolved": [
+    "ENV-004-AI"
+  ],
   "started_at": "2025-12-14T23:40:00Z",
   "completed_at": "2025-12-14T23:50:00Z",
   "target_duration_minutes": 15,

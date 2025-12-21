@@ -70,6 +70,7 @@ const STOA_GATE_PROFILES: Record<StoaRole, string[]> = {
   Foundation: [
     'turbo-typecheck',
     'turbo-build',
+    'turbo-test-coverage', // TDD enforcement - all foundation code must be tested
     'eslint-max-warnings-0',
     'prettier-check',
     'commitlint',
@@ -81,7 +82,7 @@ const STOA_GATE_PROFILES: Record<StoaRole, string[]> = {
     'turbo-test-coverage', // AI tests included
   ],
   Domain: ['turbo-test-coverage', 'dependency-cruiser-validate'],
-  Automation: ['turbo-typecheck', 'eslint-max-warnings-0'],
+  Automation: ['turbo-typecheck', 'turbo-test-coverage', 'eslint-max-warnings-0'],
 };
 
 // ============================================================================

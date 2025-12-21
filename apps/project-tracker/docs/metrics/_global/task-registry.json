@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2025-12-21T17:57:48.935Z",
+  "last_updated": "2025-12-21T21:20:39.824Z",
   "total_tasks": 305,
   "sprints": {
     "sprint-0": {
@@ -374,8 +374,13 @@
       "EXC-SEC-001",
       "EXC-MONITOR-001"
     ],
-    "Automation": ["AUTOMATION-001", "AUTOMATION-002"],
-    "Architecture": ["IFC-160"]
+    "Automation": [
+      "AUTOMATION-001",
+      "AUTOMATION-002"
+    ],
+    "Architecture": [
+      "IFC-160"
+    ]
   },
   "task_details": {
     "EXC-INIT-001": {
@@ -401,7 +406,9 @@
       "owner": "AI Specialist",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["EXC-INIT-001"],
+      "dependencies": [
+        "EXC-INIT-001"
+      ],
       "artifacts": [
         ".claude/commands/*",
         "artifacts/misc/command-test-results.csv"
@@ -417,7 +424,9 @@
       "owner": "DevOps Engineer",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["AI-SETUP-001"],
+      "dependencies": [
+        "AI-SETUP-001"
+      ],
       "artifacts": [
         "docs/shared/copilot-instructions.md",
         ".github/copilot/*",
@@ -435,7 +444,9 @@
       "owner": "AI Specialist",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["AI-SETUP-001"],
+      "dependencies": [
+        "AI-SETUP-001"
+      ],
       "artifacts": [
         "tools/integrations/codex/*",
         "tools/integrations/jules/*",
@@ -453,7 +464,9 @@
       "owner": "Tech Lead + Claude Code",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["AI-SETUP-001"],
+      "dependencies": [
+        "AI-SETUP-001"
+      ],
       "artifacts": [
         "turbo.json",
         "pnpm-workspace.yaml",
@@ -471,7 +484,9 @@
       "owner": "DevOps + Copilot",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["ENV-001-AI"],
+      "dependencies": [
+        "ENV-001-AI"
+      ],
       "artifacts": [
         ".eslintrc.js",
         ".prettierrc",
@@ -490,7 +505,9 @@
       "owner": "DevOps + Claude Code",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["ENV-001-AI"],
+      "dependencies": [
+        "ENV-001-AI"
+      ],
       "artifacts": [
         "docker-compose.yml",
         "infra/docker/*",
@@ -510,7 +527,9 @@
       "completed_at": "2025-12-14T20:30:00Z",
       "duration_minutes": 5,
       "metrics_file": "../sprint-0/phase-3-dependencies/ENV-004-AI.json",
-      "dependencies": ["ENV-003-AI"],
+      "dependencies": [
+        "ENV-003-AI"
+      ],
       "artifacts": [
         "supabase/config.toml",
         "supabase/.gitignore",
@@ -527,8 +546,13 @@
       "owner": "DevOps + Claude Code",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["ENV-002-AI"],
-      "artifacts": [".github/workflows/ci.yml", ".github/workflows/cd.yml"],
+      "dependencies": [
+        "ENV-002-AI"
+      ],
+      "artifacts": [
+        ".github/workflows/ci.yml",
+        ".github/workflows/cd.yml"
+      ],
       "kpis": "Pipeline <5 minutes, 95% cache hit rate, AI-predicted optimization applied",
       "definition_of_done": "Pipeline AI-generated, predictive caching, self-optimizing workflows, security gates automated",
       "validation": "Pipeline executing, cache hits >95%, optimizations measured",
@@ -540,7 +564,9 @@
       "owner": "Backend Dev + Copilot",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["ENV-004-AI"],
+      "dependencies": [
+        "ENV-004-AI"
+      ],
       "artifacts": [
         "packages/db/prisma/schema.prisma",
         "packages/db/prisma/seed.ts"
@@ -556,7 +582,9 @@
       "owner": "Tech Lead + Claude Code",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["ENV-006-AI"],
+      "dependencies": [
+        "ENV-006-AI"
+      ],
       "artifacts": [
         "apps/api/src/modules/*",
         "apps/api/src/router.ts",
@@ -573,7 +601,9 @@
       "owner": "DevOps + AI Agents",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["ENV-005-AI"],
+      "dependencies": [
+        "ENV-005-AI"
+      ],
       "artifacts": [
         "artifacts/misc/otel-config.yaml",
         "infra/monitoring/alerts/*",
@@ -591,7 +621,9 @@
       "owner": "Frontend Dev + Claude Code",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["ENV-001-AI"],
+      "dependencies": [
+        "ENV-001-AI"
+      ],
       "artifacts": [
         "apps/web/*",
         "apps/web/src/components/*",
@@ -608,7 +640,10 @@
       "owner": "QA Lead + AI Testing Suite",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["ENV-007-AI", "ENV-009-AI"],
+      "dependencies": [
+        "ENV-007-AI",
+        "ENV-009-AI"
+      ],
       "artifacts": [
         "tests/*",
         "tests/e2e/*",
@@ -626,8 +661,12 @@
       "owner": "AI Specialist + Claude Code",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["ENV-007-AI"],
-      "artifacts": ["apps/ai-worker/src/chains/*"],
+      "dependencies": [
+        "ENV-007-AI"
+      ],
+      "artifacts": [
+        "apps/ai-worker/src/chains/*"
+      ],
       "kpis": "Workflow runtime P95 < 300ms per step (baseline); cost logging enabled; deterministic replays supported",
       "definition_of_done": "LangChain AI-configured, chains AI-optimized, rate limiting AI-managed, cost prediction active",
       "validation": "Chains executing, costs optimized, scaling working",
@@ -639,8 +678,13 @@
       "owner": "Tech Writer + AI Agents",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["ENV-001-AI"],
-      "artifacts": ["docs/*", "docs/docusaurus.config.js"],
+      "dependencies": [
+        "ENV-001-AI"
+      ],
+      "artifacts": [
+        "docs/*",
+        "docs/docusaurus.config.js"
+      ],
       "kpis": "Doc generation <30s, 100% coverage, AI readability score >90",
       "definition_of_done": "Docs AI-generated, LLM-optimized structure, auto-updating enabled, multi-language support",
       "validation": "Docs generated, coverage complete, readability high",
@@ -652,7 +696,11 @@
       "owner": "Security Eng + AI Security Tools",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["ENV-005-AI", "ENV-007-AI", "ENV-009-AI"],
+      "dependencies": [
+        "ENV-005-AI",
+        "ENV-007-AI",
+        "ENV-009-AI"
+      ],
       "artifacts": [
         "docs/security/*",
         "artifacts/misc/security-scan-results.json",
@@ -670,7 +718,9 @@
       "owner": "Performance Eng + AI Tools",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["ENV-009-AI"],
+      "dependencies": [
+        "ENV-009-AI"
+      ],
       "artifacts": [
         "artifacts/performance/*",
         "artifacts/misc/profiling-results.json",
@@ -688,7 +738,9 @@
       "owner": "Backend Dev + AI Agents",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["ENV-007-AI"],
+      "dependencies": [
+        "ENV-007-AI"
+      ],
       "artifacts": [
         "packages/platform/src/feature-flags/*",
         "artifacts/misc/rollout-config.json",
@@ -706,7 +758,10 @@
       "owner": "Frontend Dev + AI Analytics",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["ENV-009-AI", "ANALYTICS-001"],
+      "dependencies": [
+        "ENV-009-AI",
+        "ANALYTICS-001"
+      ],
       "artifacts": [
         "artifacts/misc/analytics/*",
         "artifacts/misc/privacy-config.json",
@@ -748,7 +803,9 @@
       "owner": "PM + AI Planning Tools",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["ENV-017-AI"],
+      "dependencies": [
+        "ENV-017-AI"
+      ],
       "artifacts": [
         "artifacts/misc/sprint-planning/*",
         "artifacts/misc/velocity-prediction.json",
@@ -766,7 +823,10 @@
       "owner": "DevOps + Claude Code",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["ENV-003-AI", "ENV-008-AI"],
+      "dependencies": [
+        "ENV-003-AI",
+        "ENV-008-AI"
+      ],
       "artifacts": [
         "infra/monitoring/otel-collector.yaml",
         "infra/monitoring/tempo-config.yml",
@@ -812,7 +872,9 @@
       "owner": "DevOps + AI Monitoring",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["AUTOMATION-001"],
+      "dependencies": [
+        "AUTOMATION-001"
+      ],
       "artifacts": [
         "artifacts/misc/ai-dashboard/*",
         "artifacts/misc/optimization-loop.yaml",
@@ -848,7 +910,9 @@
       "owner": "CTO + Tech Lead",
       "status": "DONE",
       "sprint": 1,
-      "dependencies": ["IFC-000"],
+      "dependencies": [
+        "IFC-000"
+      ],
       "artifacts": [
         "docs/planning/ADR-001-modern-stack.md",
         "artifacts/misc/architecture-spike/*",
@@ -866,7 +930,9 @@
       "owner": "Tech Lead + DA",
       "status": "DONE",
       "sprint": 1,
-      "dependencies": ["IFC-000"],
+      "dependencies": [
+        "IFC-000"
+      ],
       "artifacts": [
         "packages/db/prisma/schema.prisma",
         "packages/domain/src/*",
@@ -884,7 +950,9 @@
       "owner": "DevOps + Backend Dev",
       "status": "DONE",
       "sprint": 1,
-      "dependencies": ["IFC-002"],
+      "dependencies": [
+        "IFC-002"
+      ],
       "artifacts": [
         "apps/api/src/modules/misc/*",
         "apps/api/src/trpc.ts",
@@ -902,7 +970,9 @@
       "owner": "Frontend Dev + UX",
       "status": "BACKLOG",
       "sprint": 2,
-      "dependencies": ["IFC-003"],
+      "dependencies": [
+        "IFC-003"
+      ],
       "artifacts": [
         "apps/web/app/leads/*",
         "apps/web/components/lead-form.tsx",
@@ -920,7 +990,9 @@
       "owner": "AI Specialist + Backend Dev",
       "status": "BACKLOG",
       "sprint": 2,
-      "dependencies": ["IFC-004"],
+      "dependencies": [
+        "IFC-004"
+      ],
       "artifacts": [
         "apps/ai-worker/src/chains/scoring.chain.ts",
         "apps/ai-worker/src/prompts/*",
@@ -937,7 +1009,9 @@
       "owner": "Backend Dev + DevOps",
       "status": "BACKLOG",
       "sprint": 3,
-      "dependencies": ["IFC-003"],
+      "dependencies": [
+        "IFC-003"
+      ],
       "artifacts": [
         "apps/api/src/lib/supabase.ts",
         "infra/supabase/migrations/*",
@@ -955,7 +1029,10 @@
       "owner": "Performance Eng + DevOps",
       "status": "BACKLOG",
       "sprint": 3,
-      "dependencies": ["IFC-004", "IFC-005"],
+      "dependencies": [
+        "IFC-004",
+        "IFC-005"
+      ],
       "artifacts": [
         "artifacts/misc/k6/scripts/load-test.js",
         "artifacts/benchmarks/performance-report.html",
@@ -973,7 +1050,9 @@
       "owner": "Security Eng + CTO",
       "status": "BACKLOG",
       "sprint": 2,
-      "dependencies": ["IFC-001"],
+      "dependencies": [
+        "IFC-001"
+      ],
       "artifacts": [
         "artifacts/reports/security-assessment-report.pdf",
         "artifacts/reports/owasp-checklist.xlsx",
@@ -991,7 +1070,10 @@
       "owner": "PM + Tech Lead",
       "status": "BACKLOG",
       "sprint": 4,
-      "dependencies": ["IFC-001", "IFC-005"],
+      "dependencies": [
+        "IFC-001",
+        "IFC-005"
+      ],
       "artifacts": [
         "artifacts/reports/team-skills-matrix.xlsx",
         "docs/planning/training-plan.md",
@@ -1037,7 +1119,9 @@
       "owner": "DevOps + PM",
       "status": "BACKLOG",
       "sprint": 3,
-      "dependencies": ["IFC-000"],
+      "dependencies": [
+        "IFC-000"
+      ],
       "artifacts": [
         "artifacts/reports/supabase-usage-report.json",
         "artifacts/reports/cost-projection.xlsx",
@@ -1055,7 +1139,9 @@
       "owner": "DevOps + Tech Lead",
       "status": "BACKLOG",
       "sprint": 6,
-      "dependencies": ["IFC-010"],
+      "dependencies": [
+        "IFC-010"
+      ],
       "artifacts": [
         "artifacts/misc/turbo.json",
         ".github/workflows/ci.yml",
@@ -1073,7 +1159,9 @@
       "owner": "Backend Dev + Tech Lead",
       "status": "BACKLOG",
       "sprint": 7,
-      "dependencies": ["IFC-012"],
+      "dependencies": [
+        "IFC-012"
+      ],
       "artifacts": [
         "apps/api/src/modules/crm/leads.router.ts",
         "packages/api-client/*",
@@ -1090,7 +1178,9 @@
       "owner": "Frontend Dev + UX",
       "status": "BACKLOG",
       "sprint": 8,
-      "dependencies": ["IFC-013"],
+      "dependencies": [
+        "IFC-013"
+      ],
       "artifacts": [
         "apps/web/app/(dashboard)/*",
         "apps/web/components/ui/*",
@@ -1108,7 +1198,9 @@
       "owner": "Backend Dev + DevOps",
       "status": "BACKLOG",
       "sprint": 8,
-      "dependencies": ["IFC-013"],
+      "dependencies": [
+        "IFC-013"
+      ],
       "artifacts": [
         "apps/ai-worker/src/workers/*",
         "apps/api/src/queues/*",
@@ -1126,7 +1218,9 @@
       "owner": "Frontend Dev + Backend Dev",
       "status": "BACKLOG",
       "sprint": 9,
-      "dependencies": ["IFC-014"],
+      "dependencies": [
+        "IFC-014"
+      ],
       "artifacts": [
         "apps/api/src/subscriptions/*",
         "apps/web/hooks/use-subscription.ts",
@@ -1143,7 +1237,10 @@
       "owner": "Backend Dev + DA",
       "status": "BACKLOG",
       "sprint": 9,
-      "dependencies": ["IFC-012", "IFC-013"],
+      "dependencies": [
+        "IFC-012",
+        "IFC-013"
+      ],
       "artifacts": [
         "packages/db/prisma/migrations/*",
         "packages/db/src/client.ts",
@@ -1161,7 +1258,11 @@
       "owner": "QA + Whole Team",
       "status": "BACKLOG",
       "sprint": 11,
-      "dependencies": ["IFC-014", "IFC-015", "IFC-016"],
+      "dependencies": [
+        "IFC-014",
+        "IFC-015",
+        "IFC-016"
+      ],
       "artifacts": [
         "apps/api/src/shared/vitest.config.ts",
         "artifacts/misc/coverage/coverage-summary.json",
@@ -1179,7 +1280,9 @@
       "owner": "CFO + CEO",
       "status": "BACKLOG",
       "sprint": 11,
-      "dependencies": ["IFC-018"],
+      "dependencies": [
+        "IFC-018"
+      ],
       "artifacts": [
         "artifacts/misc/investment-gate-1-deck.pptx",
         "artifacts/metrics/week-1-metrics.xlsx",
@@ -1197,7 +1300,9 @@
       "owner": "AI Specialist + Data Scientist",
       "status": "BACKLOG",
       "sprint": 12,
-      "dependencies": ["IFC-019"],
+      "dependencies": [
+        "IFC-019"
+      ],
       "artifacts": [
         "apps/ai-worker/src/pipelines/*",
         "docs/ai-architecture.md",
@@ -1214,7 +1319,9 @@
       "owner": "Backend Dev + AI Specialist",
       "status": "BACKLOG",
       "sprint": 12,
-      "dependencies": ["IFC-020"],
+      "dependencies": [
+        "IFC-020"
+      ],
       "artifacts": [
         "apps/ai-worker/src/agents/*",
         "artifacts/misc/crew-config.yaml",
@@ -1232,7 +1339,9 @@
       "owner": "AI Specialist + Backend Dev",
       "status": "BACKLOG",
       "sprint": 13,
-      "dependencies": ["IFC-021"],
+      "dependencies": [
+        "IFC-021"
+      ],
       "artifacts": [
         "packages/validators/src/ai-outputs/*",
         "apps/api/src/shared/output-validation-test.ts",
@@ -1249,7 +1358,9 @@
       "owner": "Frontend Dev + UX",
       "status": "BACKLOG",
       "sprint": 13,
-      "dependencies": ["IFC-022"],
+      "dependencies": [
+        "IFC-022"
+      ],
       "artifacts": [
         "apps/web/components/ai-explainability/*",
         "artifacts/reports/user-test-results.pdf",
@@ -1266,7 +1377,9 @@
       "owner": "Full Stack Dev",
       "status": "BACKLOG",
       "sprint": 14,
-      "dependencies": ["IFC-023"],
+      "dependencies": [
+        "IFC-023"
+      ],
       "artifacts": [
         "apps/api/src/feedback/*",
         "apps/web/components/feedback/*",
@@ -1283,7 +1396,9 @@
       "owner": "Data Scientist + Backend Dev",
       "status": "BACKLOG",
       "sprint": 14,
-      "dependencies": ["IFC-022"],
+      "dependencies": [
+        "IFC-022"
+      ],
       "artifacts": [
         "packages/experiments/*",
         "artifacts/misc/ab-test-config.json",
@@ -1301,7 +1416,10 @@
       "owner": "QA + AI Specialist",
       "status": "BACKLOG",
       "sprint": 15,
-      "dependencies": ["IFC-022", "IFC-024"],
+      "dependencies": [
+        "IFC-022",
+        "IFC-024"
+      ],
       "artifacts": [
         "tests/e2e/tests/*",
         "artifacts/misc/playwright-report/index.html",
@@ -1319,7 +1437,9 @@
       "owner": "CFO + CEO",
       "status": "BACKLOG",
       "sprint": 15,
-      "dependencies": ["IFC-026"],
+      "dependencies": [
+        "IFC-026"
+      ],
       "artifacts": [
         "artifacts/reports/investment-gate-2-analysis.xlsx",
         "artifacts/reports/ai-roi-report.pdf",
@@ -1337,7 +1457,9 @@
       "owner": "Backend Dev + Architect",
       "status": "BACKLOG",
       "sprint": 16,
-      "dependencies": ["IFC-027"],
+      "dependencies": [
+        "IFC-027"
+      ],
       "artifacts": [
         "apps/api/src/workflows/*",
         "artifacts/misc/workflow-definitions/*",
@@ -1355,7 +1477,9 @@
       "owner": "Backend Dev + AI Specialist",
       "status": "BACKLOG",
       "sprint": 16,
-      "dependencies": ["IFC-028"],
+      "dependencies": [
+        "IFC-028"
+      ],
       "artifacts": [
         "apps/api/src/auto-response/*",
         "artifacts/misc/approval-workflow.bpmn",
@@ -1372,7 +1496,9 @@
       "owner": "Backend Dev + Sales Ops",
       "status": "BACKLOG",
       "sprint": 17,
-      "dependencies": ["IFC-029"],
+      "dependencies": [
+        "IFC-029"
+      ],
       "artifacts": [
         "apps/api/src/routing/*",
         "artifacts/misc/routing-rules-config.yaml",
@@ -1390,7 +1516,9 @@
       "owner": "Frontend Dev + UX",
       "status": "BACKLOG",
       "sprint": 17,
-      "dependencies": ["IFC-028"],
+      "dependencies": [
+        "IFC-028"
+      ],
       "artifacts": [
         "apps/web/components/workflow-builder/*",
         "artifacts/misc/workflow-templates/*",
@@ -1407,7 +1535,9 @@
       "owner": "DevOps + SRE",
       "status": "BACKLOG",
       "sprint": 18,
-      "dependencies": ["IFC-030"],
+      "dependencies": [
+        "IFC-030"
+      ],
       "artifacts": [
         "artifacts/misc/otel-collector-config.yaml",
         "artifacts/misc/grafana/dashboards/*",
@@ -1425,7 +1555,10 @@
       "owner": "Performance Eng + DevOps",
       "status": "BACKLOG",
       "sprint": 19,
-      "dependencies": ["IFC-030", "IFC-032"],
+      "dependencies": [
+        "IFC-030",
+        "IFC-032"
+      ],
       "artifacts": [
         "artifacts/misc/k6/scenarios/*",
         "artifacts/reports/load-test-report.html",
@@ -1443,7 +1576,9 @@
       "owner": "CFO + CEO",
       "status": "BACKLOG",
       "sprint": 19,
-      "dependencies": ["IFC-033"],
+      "dependencies": [
+        "IFC-033"
+      ],
       "artifacts": [
         "artifacts/reports/automation-roi-analysis.xlsx",
         "artifacts/reports/stability-report.pdf",
@@ -1461,7 +1596,9 @@
       "owner": "Integration Eng + PM",
       "status": "BACKLOG",
       "sprint": 20,
-      "dependencies": ["IFC-034"],
+      "dependencies": [
+        "IFC-034"
+      ],
       "artifacts": [
         "docs/shared/whatsapp-api-research.md",
         "docs/shared/integration-design.puml",
@@ -1479,7 +1616,10 @@
       "owner": "Backend Dev + Integration Eng",
       "status": "BACKLOG",
       "sprint": 21,
-      "dependencies": ["IFC-035", "IFC-106"],
+      "dependencies": [
+        "IFC-035",
+        "IFC-106"
+      ],
       "artifacts": [
         "packages/adapters/src/whatsapp/*",
         "artifacts/misc/webhook-test-results.json",
@@ -1496,7 +1636,10 @@
       "owner": "Data Analyst + UX",
       "status": "BACKLOG",
       "sprint": 21,
-      "dependencies": ["IFC-032", "ANALYTICS-001"],
+      "dependencies": [
+        "IFC-032",
+        "ANALYTICS-001"
+      ],
       "artifacts": [
         "artifacts/misc/figma-dashboard-designs.url",
         "artifacts/misc/kpi-definitions.yaml",
@@ -1514,7 +1657,10 @@
       "owner": "Frontend Dev + Data Eng",
       "status": "BACKLOG",
       "sprint": 22,
-      "dependencies": ["IFC-037", "ANALYTICS-001"],
+      "dependencies": [
+        "IFC-037",
+        "ANALYTICS-001"
+      ],
       "artifacts": [
         "apps/web/app/analytics/*",
         "packages/application/src/analytics/*",
@@ -1531,7 +1677,9 @@
       "owner": "AI Specialist + Full Team",
       "status": "BACKLOG",
       "sprint": 23,
-      "dependencies": ["IFC-025"],
+      "dependencies": [
+        "IFC-025"
+      ],
       "artifacts": [
         "apps/ai-worker/src/rag/*",
         "artifacts/misc/embeddings-quality-test.json",
@@ -1581,7 +1729,11 @@
       "owner": "Tech Writer + PM",
       "status": "BACKLOG",
       "sprint": -1,
-      "dependencies": ["IFC-018", "IFC-026", "IFC-033"],
+      "dependencies": [
+        "IFC-018",
+        "IFC-026",
+        "IFC-033"
+      ],
       "artifacts": [
         "docs/user-manual/*",
         "artifacts/misc/codesandbox-examples.json",
@@ -1598,7 +1750,9 @@
       "owner": "Backend Dev + Tech Writer",
       "status": "BACKLOG",
       "sprint": -1,
-      "dependencies": ["IFC-013"],
+      "dependencies": [
+        "IFC-013"
+      ],
       "artifacts": [
         "packages/sdk/README.md",
         "artifacts/misc/sdk-examples/*",
@@ -1658,7 +1812,9 @@
       "owner": "QA + Backend Dev",
       "status": "BACKLOG",
       "sprint": -1,
-      "dependencies": ["IFC-044"],
+      "dependencies": [
+        "IFC-044"
+      ],
       "artifacts": [
         "tests/integration/*",
         "artifacts/misc/msw-handlers/*",
@@ -1676,7 +1832,9 @@
       "owner": "Security Eng + QA",
       "status": "BACKLOG",
       "sprint": -1,
-      "dependencies": ["IFC-008"],
+      "dependencies": [
+        "IFC-008"
+      ],
       "artifacts": [
         ".github/workflows/security.yml",
         "artifacts/misc/zap-report.xml",
@@ -1694,7 +1852,9 @@
       "owner": "Performance Eng",
       "status": "BACKLOG",
       "sprint": -1,
-      "dependencies": ["IFC-007"],
+      "dependencies": [
+        "IFC-007"
+      ],
       "artifacts": [
         "artifacts/misc/k6/tests/*",
         ".lighthouserc.js",
@@ -1712,7 +1872,9 @@
       "owner": "PM + Sales Team",
       "status": "BACKLOG",
       "sprint": 25,
-      "dependencies": ["IFC-039"],
+      "dependencies": [
+        "IFC-039"
+      ],
       "artifacts": [
         "artifacts/reports/uat-test-scenarios.xlsx",
         "artifacts/misc/uat-results.csv",
@@ -1730,7 +1892,9 @@
       "owner": "CEO + Board",
       "status": "BACKLOG",
       "sprint": 26,
-      "dependencies": ["IFC-048"],
+      "dependencies": [
+        "IFC-048"
+      ],
       "artifacts": [
         "artifacts/misc/final-investment-review.pptx",
         "artifacts/reports/market-validation.pdf",
@@ -1748,7 +1912,9 @@
       "owner": "PM + Marketing",
       "status": "BACKLOG",
       "sprint": 26,
-      "dependencies": ["IFC-048"],
+      "dependencies": [
+        "IFC-048"
+      ],
       "artifacts": [
         "artifacts/misc/training-materials/*",
         "artifacts/misc/team-quiz-results.csv",
@@ -1766,7 +1932,9 @@
       "owner": "Sales + CEO",
       "status": "BACKLOG",
       "sprint": 27,
-      "dependencies": ["IFC-049"],
+      "dependencies": [
+        "IFC-049"
+      ],
       "artifacts": [
         "docs/shared/pilot-customer-criteria.md",
         "artifacts/misc/signed-ndas/*",
@@ -1784,7 +1952,10 @@
       "owner": "DevOps + Whole Team",
       "status": "BACKLOG",
       "sprint": 27,
-      "dependencies": ["IFC-040", "IFC-050"],
+      "dependencies": [
+        "IFC-040",
+        "IFC-050"
+      ],
       "artifacts": [
         "artifacts/misc/deployment-log.txt",
         "artifacts/misc/feature-flags-config.json",
@@ -1802,7 +1973,9 @@
       "owner": "Support Team + DevOps",
       "status": "BACKLOG",
       "sprint": -1,
-      "dependencies": ["IFC-052"],
+      "dependencies": [
+        "IFC-052"
+      ],
       "artifacts": [
         "artifacts/reports/hypercare-schedule.xlsx",
         "artifacts/logs/incident-log.csv",
@@ -1856,7 +2029,9 @@
       "owner": "HR + Tech Lead",
       "status": "BACKLOG",
       "sprint": -1,
-      "dependencies": ["IFC-009"],
+      "dependencies": [
+        "IFC-009"
+      ],
       "artifacts": [
         "artifacts/misc/learning-paths/*",
         "artifacts/misc/skill-assessment-results.csv",
@@ -1874,7 +2049,9 @@
       "owner": "PM + Tech Lead",
       "status": "BACKLOG",
       "sprint": -1,
-      "dependencies": ["IFC-011"],
+      "dependencies": [
+        "IFC-011"
+      ],
       "artifacts": [
         "docs/shared/vendor-abstraction-layers.md",
         "artifacts/misc/migration-test-plan.yaml",
@@ -1892,7 +2069,11 @@
       "owner": "DPO + Legal",
       "status": "BACKLOG",
       "sprint": 11,
-      "dependencies": ["IFC-017", "IFC-127", "IFC-008"],
+      "dependencies": [
+        "IFC-017",
+        "IFC-127",
+        "IFC-008"
+      ],
       "artifacts": [
         "artifacts/misc/rls-policies/*",
         "artifacts/misc/data-flow-diagrams/*",
@@ -1910,7 +2091,9 @@
       "owner": "External Auditor + CTO",
       "status": "BACKLOG",
       "sprint": 25,
-      "dependencies": ["IFC-040"],
+      "dependencies": [
+        "IFC-040"
+      ],
       "artifacts": [
         "artifacts/reports/iso42001-assessment.pdf",
         "docs/shared/ai-governance-framework.md",
@@ -1928,7 +2111,9 @@
       "owner": "CEO + All Leads",
       "status": "BACKLOG",
       "sprint": 33,
-      "dependencies": ["IFC-052"],
+      "dependencies": [
+        "IFC-052"
+      ],
       "artifacts": [
         "artifacts/metrics/success-metrics-dashboard.pdf",
         "artifacts/reports/roi-calculation.xlsx",
@@ -1946,7 +2131,9 @@
       "owner": "DA + DevOps",
       "status": "BACKLOG",
       "sprint": 18,
-      "dependencies": ["IFC-017"],
+      "dependencies": [
+        "IFC-017"
+      ],
       "artifacts": [
         "artifacts/misc/migration-scripts/*",
         "artifacts/reports/data-validation-report.csv",
@@ -1964,7 +2151,9 @@
       "owner": "DevOps + DBA",
       "status": "BACKLOG",
       "sprint": 24,
-      "dependencies": ["IFC-040"],
+      "dependencies": [
+        "IFC-040"
+      ],
       "artifacts": [
         "docs/shared/multi-region-architecture.puml",
         "artifacts/metrics/replication-lag-metrics.json",
@@ -1982,7 +2171,10 @@
       "owner": "Security Eng + CTO",
       "status": "DONE",
       "sprint": 1,
-      "dependencies": ["IFC-001", "IFC-008"],
+      "dependencies": [
+        "IFC-001",
+        "IFC-008"
+      ],
       "artifacts": [
         "docs/security/zero-trust-design.md",
         "artifacts/misc/rls-implementation/*",
@@ -2000,7 +2192,9 @@
       "owner": "DPO + Legal",
       "status": "DONE",
       "sprint": 1,
-      "dependencies": ["IFC-072"],
+      "dependencies": [
+        "IFC-072"
+      ],
       "artifacts": [
         "artifacts/reports/dpia-report.pdf",
         "artifacts/reports/risk-mitigation-controls.xlsx",
@@ -2018,7 +2212,9 @@
       "owner": "SRE Lead + DevOps",
       "status": "DONE",
       "sprint": 1,
-      "dependencies": ["IFC-003"],
+      "dependencies": [
+        "IFC-003"
+      ],
       "artifacts": [
         "artifacts/misc/otel-implementation/*",
         "artifacts/misc/sentry-project-config.json",
@@ -2036,7 +2232,9 @@
       "owner": "DevOps",
       "status": "DONE",
       "sprint": 1,
-      "dependencies": ["IFC-001"],
+      "dependencies": [
+        "IFC-001"
+      ],
       "artifacts": [
         "infra/terraform/*",
         "artifacts/misc/terraform.tfstate",
@@ -2054,7 +2252,10 @@
       "owner": "Frontend Dev + UX",
       "status": "BACKLOG",
       "sprint": 10,
-      "dependencies": ["IFC-014", "BRAND-002"],
+      "dependencies": [
+        "IFC-014",
+        "BRAND-002"
+      ],
       "artifacts": [
         "apps/web/components/ui/*",
         "artifacts/misc/storybook-static/*",
@@ -2072,7 +2273,9 @@
       "owner": "Backend Dev + Security Eng",
       "status": "DONE",
       "sprint": 1,
-      "dependencies": ["IFC-013"],
+      "dependencies": [
+        "IFC-013"
+      ],
       "artifacts": [
         "apps/api/src/middleware/rate-limit.ts",
         "artifacts/misc/rate-limit-config.yaml",
@@ -2090,7 +2293,9 @@
       "owner": "DevOps + Tech Lead",
       "status": "BACKLOG",
       "sprint": 18,
-      "dependencies": ["IFC-012"],
+      "dependencies": [
+        "IFC-012"
+      ],
       "artifacts": [
         "artifacts/misc/platform/golden-paths/*",
         "artifacts/misc/developer-portal-poc/*",
@@ -2108,7 +2313,9 @@
       "owner": "Tech Writer + DevOps",
       "status": "BACKLOG",
       "sprint": 2,
-      "dependencies": ["IFC-012"],
+      "dependencies": [
+        "IFC-012"
+      ],
       "artifacts": [
         "docs/docusaurus.config.js",
         "docs/sidebars.js",
@@ -2126,7 +2333,9 @@
       "owner": "Tech Writer + AI Specialist",
       "status": "BACKLOG",
       "sprint": 2,
-      "dependencies": ["IFC-079"],
+      "dependencies": [
+        "IFC-079"
+      ],
       "artifacts": [
         "docs/templates/*",
         "docs/glossary.md",
@@ -2144,7 +2353,9 @@
       "owner": "Backend Dev + Tech Writer",
       "status": "BACKLOG",
       "sprint": -1,
-      "dependencies": ["IFC-013"],
+      "dependencies": [
+        "IFC-013"
+      ],
       "artifacts": [
         "apps/api/openapi.json",
         "artifacts/misc/postman-collection.json",
@@ -2162,7 +2373,9 @@
       "owner": "Tech Lead + Team",
       "status": "BACKLOG",
       "sprint": 4,
-      "dependencies": ["IFC-080"],
+      "dependencies": [
+        "IFC-080"
+      ],
       "artifacts": [
         "docs/domain/*",
         "artifacts/misc/domain-model-diagrams/*",
@@ -2180,7 +2393,10 @@
       "owner": "AI Specialist + Tech Writer",
       "status": "BACKLOG",
       "sprint": 23,
-      "dependencies": ["IFC-039", "IFC-082"],
+      "dependencies": [
+        "IFC-039",
+        "IFC-082"
+      ],
       "artifacts": [
         "packages/ai/src/rag/docs/*",
         "artifacts/misc/rag-test-questions.json",
@@ -2198,7 +2414,10 @@
       "owner": "Tech Writer + Marketing",
       "status": "BACKLOG",
       "sprint": 25,
-      "dependencies": ["IFC-050", "SALES-002"],
+      "dependencies": [
+        "IFC-050",
+        "SALES-002"
+      ],
       "artifacts": [
         "artifacts/misc/video-scripts/*",
         "artifacts/misc/video-links.json",
@@ -2216,7 +2435,9 @@
       "owner": "AI Specialist + DevOps",
       "status": "BACKLOG",
       "sprint": 2,
-      "dependencies": ["IFC-005"],
+      "dependencies": [
+        "IFC-005"
+      ],
       "artifacts": [
         "artifacts/misc/ollama-setup.sh",
         "artifacts/misc/model-comparison.csv",
@@ -2234,7 +2455,9 @@
       "owner": "AI Specialist + Backend Dev",
       "status": "BACKLOG",
       "sprint": 14,
-      "dependencies": ["IFC-020"],
+      "dependencies": [
+        "IFC-020"
+      ],
       "artifacts": [
         "apps/ai-worker/src/versioning/*",
         "artifacts/misc/prompt-versions.json",
@@ -2252,7 +2475,9 @@
       "owner": "Frontend Dev + DevOps",
       "status": "BACKLOG",
       "sprint": 20,
-      "dependencies": ["IFC-014"],
+      "dependencies": [
+        "IFC-014"
+      ],
       "artifacts": [
         "apps/web/api/edge/*",
         "artifacts/benchmarks/edge-performance-map.json",
@@ -2270,7 +2495,9 @@
       "owner": "QA Lead + PM",
       "status": "BACKLOG",
       "sprint": -1,
-      "dependencies": ["IFC-044"],
+      "dependencies": [
+        "IFC-044"
+      ],
       "artifacts": [
         "artifacts/misc/sonarqube-project.properties",
         "artifacts/misc/quality-gate-config.json",
@@ -2288,7 +2515,10 @@
       "owner": "Frontend Dev + Backend Dev",
       "status": "BACKLOG",
       "sprint": 5,
-      "dependencies": ["IFC-002", "IFC-004"],
+      "dependencies": [
+        "IFC-002",
+        "IFC-004"
+      ],
       "artifacts": [
         "packages/domain/src/contacts/*",
         "apps/api/src/modules/crm/contacts.router.ts",
@@ -2305,7 +2535,9 @@
       "owner": "Frontend Dev + UX Designer",
       "status": "BACKLOG",
       "sprint": 6,
-      "dependencies": ["IFC-089"],
+      "dependencies": [
+        "IFC-089"
+      ],
       "artifacts": [
         "apps/web/app/contacts/[id]/*",
         "artifacts/misc/contact-360-components/*",
@@ -2322,7 +2554,10 @@
       "owner": "Frontend Dev + Backend Dev",
       "status": "BACKLOG",
       "sprint": 6,
-      "dependencies": ["IFC-002", "IFC-004"],
+      "dependencies": [
+        "IFC-002",
+        "IFC-004"
+      ],
       "artifacts": [
         "apps/web/components/deals-kanban/*",
         "apps/api/src/modules/crm/deals.router.ts",
@@ -2339,7 +2574,9 @@
       "owner": "Data Eng + Backend Dev",
       "status": "BACKLOG",
       "sprint": 7,
-      "dependencies": ["IFC-091"],
+      "dependencies": [
+        "IFC-091"
+      ],
       "artifacts": [
         "packages/application/src/analytics/forecasting/*",
         "apps/api/src/shared/forecast-algorithm-tests.ts",
@@ -2356,7 +2593,10 @@
       "owner": "Backend Dev + Frontend Dev",
       "status": "BACKLOG",
       "sprint": 7,
-      "dependencies": ["IFC-002", "IFC-004"],
+      "dependencies": [
+        "IFC-002",
+        "IFC-004"
+      ],
       "artifacts": [
         "packages/domain/src/tickets/*",
         "apps/web/components/ticket-sla/*",
@@ -2373,7 +2613,10 @@
       "owner": "Backend Dev + Integrations Eng",
       "status": "BACKLOG",
       "sprint": 8,
-      "dependencies": ["IFC-090", "IFC-106"],
+      "dependencies": [
+        "IFC-090",
+        "IFC-106"
+      ],
       "artifacts": [
         "packages/adapters/src/docusign/*",
         "apps/web/components/document-viewer/*",
@@ -2390,7 +2633,10 @@
       "owner": "AI Specialist + Backend Dev",
       "status": "BACKLOG",
       "sprint": 8,
-      "dependencies": ["IFC-005", "IFC-090"],
+      "dependencies": [
+        "IFC-005",
+        "IFC-090"
+      ],
       "artifacts": [
         "apps/ai-worker/src/models/churn/*",
         "apps/web/components/ai-insights/*",
@@ -2407,7 +2653,10 @@
       "owner": "Frontend Dev + Data Eng",
       "status": "BACKLOG",
       "sprint": 9,
-      "dependencies": ["IFC-091", "IFC-092"],
+      "dependencies": [
+        "IFC-091",
+        "IFC-092"
+      ],
       "artifacts": [
         "apps/web/components/report-builder/*",
         "apps/api/src/exports/*",
@@ -2424,7 +2673,9 @@
       "owner": "DevOps + SRE",
       "status": "BACKLOG",
       "sprint": 9,
-      "dependencies": ["IFC-007"],
+      "dependencies": [
+        "IFC-007"
+      ],
       "artifacts": [
         "infra/monitoring/*",
         "artifacts/misc/grafana/provisioning/*",
@@ -2442,7 +2693,9 @@
       "owner": "Security Eng + Backend Dev",
       "status": "BACKLOG",
       "sprint": 9,
-      "dependencies": ["IFC-008"],
+      "dependencies": [
+        "IFC-008"
+      ],
       "artifacts": [
         "apps/api/src/auth/rbac/*",
         "packages/db/prisma/schema-audit.prisma",
@@ -2459,7 +2712,10 @@
       "owner": "Integrations Eng + Backend Dev",
       "status": "BACKLOG",
       "sprint": 10,
-      "dependencies": ["IFC-006", "IFC-106"],
+      "dependencies": [
+        "IFC-006",
+        "IFC-106"
+      ],
       "artifacts": [
         "packages/adapters/src/*",
         "tests/integration/*",
@@ -2476,7 +2732,10 @@
       "owner": "PM + CTO",
       "status": "BACKLOG",
       "sprint": 10,
-      "dependencies": ["IFC-008", "GOV-001"],
+      "dependencies": [
+        "IFC-008",
+        "GOV-001"
+      ],
       "artifacts": [
         "docs/adr/*",
         "artifacts/misc/compliance/*",
@@ -2494,7 +2753,11 @@
       "owner": "Growth FE",
       "status": "BACKLOG",
       "sprint": 11,
-      "dependencies": ["IFC-076", "GTM-002", "BRAND-001"],
+      "dependencies": [
+        "IFC-076",
+        "GTM-002",
+        "BRAND-001"
+      ],
       "artifacts": [
         "apps/web/app/(public)/page.tsx",
         "apps/web/app/(public)/loading.tsx",
@@ -2512,7 +2775,11 @@
       "owner": "Growth FE",
       "status": "BACKLOG",
       "sprint": 11,
-      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
       "artifacts": [
         "apps/web/app/(public)/features/page.tsx",
         "artifacts/misc/features-content.json",
@@ -2529,7 +2796,11 @@
       "owner": "Growth FE",
       "status": "BACKLOG",
       "sprint": 11,
-      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
       "artifacts": [
         "apps/web/app/(public)/pricing/page.tsx",
         "apps/web/components/pricing/pricing-calculator.tsx",
@@ -2546,7 +2817,11 @@
       "owner": "Growth FE",
       "status": "BACKLOG",
       "sprint": 11,
-      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
       "artifacts": [
         "apps/web/app/(public)/about/page.tsx",
         "artifacts/misc/team-data.json",
@@ -2563,7 +2838,11 @@
       "owner": "Growth FE",
       "status": "BACKLOG",
       "sprint": 11,
-      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
       "artifacts": [
         "apps/web/app/(public)/contact/page.tsx",
         "apps/web/components/shared/contact-form.tsx",
@@ -2580,7 +2859,11 @@
       "owner": "Growth FE",
       "status": "BACKLOG",
       "sprint": 11,
-      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
       "artifacts": [
         "apps/web/app/(public)/partners/page.tsx",
         "artifacts/misc/partner-logos/*",
@@ -2597,7 +2880,11 @@
       "owner": "Growth FE",
       "status": "BACKLOG",
       "sprint": 11,
-      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
       "artifacts": [
         "apps/web/app/(public)/press/page.tsx",
         "artifacts/misc/press-releases/*",
@@ -2614,7 +2901,11 @@
       "owner": "Growth FE",
       "status": "BACKLOG",
       "sprint": 11,
-      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
       "artifacts": [
         "apps/web/app/(public)/security/page.tsx",
         "artifacts/misc/security-badges/*",
@@ -2631,7 +2922,11 @@
       "owner": "Growth FE",
       "status": "BACKLOG",
       "sprint": 12,
-      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
       "artifacts": [
         "apps/web/app/(public)/blog/page.tsx",
         "apps/web/components/blog/blog-pagination.tsx",
@@ -2648,7 +2943,11 @@
       "owner": "Growth FE",
       "status": "BACKLOG",
       "sprint": 12,
-      "dependencies": ["PG-009", "GTM-002", "BRAND-001"],
+      "dependencies": [
+        "PG-009",
+        "GTM-002",
+        "BRAND-001"
+      ],
       "artifacts": [
         "apps/web/app/(public)/blog/[slug]/page.tsx",
         "apps/web/components/blog/markdown-renderer.tsx",
@@ -2665,7 +2964,11 @@
       "owner": "Growth FE",
       "status": "BACKLOG",
       "sprint": 12,
-      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
       "artifacts": [
         "apps/web/app/(public)/careers/page.tsx",
         "artifacts/misc/job-listings.json",
@@ -2682,7 +2985,11 @@
       "owner": "Growth FE",
       "status": "BACKLOG",
       "sprint": 12,
-      "dependencies": ["PG-011", "GTM-002", "BRAND-001"],
+      "dependencies": [
+        "PG-011",
+        "GTM-002",
+        "BRAND-001"
+      ],
       "artifacts": [
         "apps/web/app/(public)/careers/[id]/page.tsx",
         "apps/web/components/shared/job-detail-template.tsx",
@@ -2699,7 +3006,11 @@
       "owner": "Growth FE",
       "status": "BACKLOG",
       "sprint": 12,
-      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
       "artifacts": [
         "apps/web/app/(public)/lp/[slug]/page.tsx",
         "apps/web/components/shared/landing-builder.tsx",
@@ -2716,7 +3027,11 @@
       "owner": "Growth FE",
       "status": "BACKLOG",
       "sprint": 12,
-      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
       "artifacts": [
         "apps/web/app/(public)/status/page.tsx",
         "apps/web/components/status/status-monitor.tsx",
@@ -2733,7 +3048,10 @@
       "owner": "Platform FE",
       "status": "BACKLOG",
       "sprint": 13,
-      "dependencies": ["IFC-076", "IFC-098"],
+      "dependencies": [
+        "IFC-076",
+        "IFC-098"
+      ],
       "artifacts": [
         "apps/web/app/(auth)/login/page.tsx",
         "apps/web/components/shared/auth-providers.tsx",
@@ -2750,7 +3068,9 @@
       "owner": "Platform FE",
       "status": "BACKLOG",
       "sprint": 13,
-      "dependencies": ["PG-015"],
+      "dependencies": [
+        "PG-015"
+      ],
       "artifacts": [
         "apps/web/app/(auth)/signup/page.tsx",
         "apps/web/components/shared/registration-form.tsx",
@@ -2767,7 +3087,9 @@
       "owner": "Platform FE",
       "status": "BACKLOG",
       "sprint": 13,
-      "dependencies": ["PG-016"],
+      "dependencies": [
+        "PG-016"
+      ],
       "artifacts": [
         "apps/web/app/(auth)/signup/success/page.tsx",
         "apps/web/components/shared/onboarding-flow.tsx",
@@ -2784,7 +3106,9 @@
       "owner": "Platform FE",
       "status": "BACKLOG",
       "sprint": 13,
-      "dependencies": ["PG-015"],
+      "dependencies": [
+        "PG-015"
+      ],
       "artifacts": [
         "apps/web/app/(auth)/logout/page.tsx",
         "apps/web/lib/shared/session-cleanup.ts",
@@ -2801,7 +3125,9 @@
       "owner": "Platform FE",
       "status": "BACKLOG",
       "sprint": 13,
-      "dependencies": ["PG-015"],
+      "dependencies": [
+        "PG-015"
+      ],
       "artifacts": [
         "apps/web/app/(auth)/forgot-password/page.tsx",
         "apps/web/components/shared/reset-email.tsx",
@@ -2818,7 +3144,9 @@
       "owner": "Platform FE",
       "status": "BACKLOG",
       "sprint": 13,
-      "dependencies": ["PG-019"],
+      "dependencies": [
+        "PG-019"
+      ],
       "artifacts": [
         "apps/web/app/(auth)/reset-password/[token]/page.tsx",
         "apps/web/components/shared/password-reset.tsx",
@@ -2835,7 +3163,9 @@
       "owner": "Platform FE",
       "status": "BACKLOG",
       "sprint": 13,
-      "dependencies": ["PG-015"],
+      "dependencies": [
+        "PG-015"
+      ],
       "artifacts": [
         "apps/web/app/(auth)/mfa/setup/page.tsx",
         "apps/web/components/shared/mfa-qr-generator.tsx",
@@ -2852,7 +3182,9 @@
       "owner": "Platform FE",
       "status": "BACKLOG",
       "sprint": 13,
-      "dependencies": ["PG-021"],
+      "dependencies": [
+        "PG-021"
+      ],
       "artifacts": [
         "apps/web/app/(auth)/mfa/verify/page.tsx",
         "apps/web/components/shared/mfa-verification.tsx",
@@ -2869,7 +3201,9 @@
       "owner": "Platform FE",
       "status": "BACKLOG",
       "sprint": 13,
-      "dependencies": ["PG-016"],
+      "dependencies": [
+        "PG-016"
+      ],
       "artifacts": [
         "apps/web/app/(auth)/verify-email/[token]/page.tsx",
         "apps/web/components/shared/email-verification.tsx",
@@ -2886,7 +3220,9 @@
       "owner": "Platform FE",
       "status": "BACKLOG",
       "sprint": 13,
-      "dependencies": ["PG-015"],
+      "dependencies": [
+        "PG-015"
+      ],
       "artifacts": [
         "apps/web/app/(auth)/auth/callback/page.tsx",
         "apps/web/components/shared/oauth-callback.tsx",
@@ -2903,7 +3239,9 @@
       "owner": "Platform BE",
       "status": "BACKLOG",
       "sprint": 14,
-      "dependencies": ["IFC-099"],
+      "dependencies": [
+        "IFC-099"
+      ],
       "artifacts": [
         "apps/web/app/(billing)/billing/page.tsx",
         "apps/web/components/billing/billing-portal.tsx",
@@ -2920,7 +3258,9 @@
       "owner": "Platform BE",
       "status": "BACKLOG",
       "sprint": 14,
-      "dependencies": ["PG-025"],
+      "dependencies": [
+        "PG-025"
+      ],
       "artifacts": [
         "apps/web/app/(billing)/billing/checkout/page.tsx",
         "apps/web/components/billing/checkout-form.tsx",
@@ -2937,7 +3277,9 @@
       "owner": "Platform BE",
       "status": "BACKLOG",
       "sprint": 14,
-      "dependencies": ["PG-025"],
+      "dependencies": [
+        "PG-025"
+      ],
       "artifacts": [
         "apps/web/app/(billing)/billing/invoices/page.tsx",
         "apps/web/components/billing/invoice-list.tsx",
@@ -2954,7 +3296,9 @@
       "owner": "Platform BE",
       "status": "BACKLOG",
       "sprint": 14,
-      "dependencies": ["PG-027"],
+      "dependencies": [
+        "PG-027"
+      ],
       "artifacts": [
         "apps/web/app/(billing)/billing/invoices/[id]/page.tsx",
         "apps/web/components/billing/invoice-detail.tsx",
@@ -2971,7 +3315,9 @@
       "owner": "Platform BE",
       "status": "BACKLOG",
       "sprint": 14,
-      "dependencies": ["PG-025"],
+      "dependencies": [
+        "PG-025"
+      ],
       "artifacts": [
         "apps/web/app/(billing)/billing/settings/page.tsx",
         "apps/web/components/billing/payment-methods.tsx",
@@ -2988,7 +3334,9 @@
       "owner": "Platform BE",
       "status": "BACKLOG",
       "sprint": 14,
-      "dependencies": ["PG-025"],
+      "dependencies": [
+        "PG-025"
+      ],
       "artifacts": [
         "apps/web/app/(billing)/billing/subscriptions/page.tsx",
         "apps/web/components/billing/subscription-manager.tsx",
@@ -3005,7 +3353,9 @@
       "owner": "Platform BE",
       "status": "BACKLOG",
       "sprint": 14,
-      "dependencies": ["PG-025"],
+      "dependencies": [
+        "PG-025"
+      ],
       "artifacts": [
         "apps/web/app/(billing)/billing/receipts/page.tsx",
         "apps/web/components/billing/receipt-list.tsx",
@@ -3022,7 +3372,9 @@
       "owner": "DevRel",
       "status": "BACKLOG",
       "sprint": 15,
-      "dependencies": ["IFC-079"],
+      "dependencies": [
+        "IFC-079"
+      ],
       "artifacts": [
         "apps/web/app/(developer)/docs/page.tsx",
         "apps/web/components/shared/docs-search.tsx",
@@ -3039,7 +3391,9 @@
       "owner": "DevRel",
       "status": "BACKLOG",
       "sprint": 15,
-      "dependencies": ["PG-032"],
+      "dependencies": [
+        "PG-032"
+      ],
       "artifacts": [
         "apps/web/app/(developer)/docs/api/page.tsx",
         "apps/web/components/shared/api-reference.tsx",
@@ -3056,7 +3410,9 @@
       "owner": "DevRel",
       "status": "BACKLOG",
       "sprint": 15,
-      "dependencies": ["PG-032"],
+      "dependencies": [
+        "PG-032"
+      ],
       "artifacts": [
         "apps/web/app/(developer)/docs/webhooks/page.tsx",
         "apps/web/components/shared/webhook-docs.tsx",
@@ -3073,7 +3429,9 @@
       "owner": "DevRel",
       "status": "BACKLOG",
       "sprint": 15,
-      "dependencies": ["PG-032"],
+      "dependencies": [
+        "PG-032"
+      ],
       "artifacts": [
         "apps/web/app/(developer)/docs/changelog/page.tsx",
         "apps/web/components/shared/changelog-display.tsx",
@@ -3090,7 +3448,9 @@
       "owner": "DevRel",
       "status": "BACKLOG",
       "sprint": 15,
-      "dependencies": ["PG-032"],
+      "dependencies": [
+        "PG-032"
+      ],
       "artifacts": [
         "apps/web/app/(developer)/docs/sdk/page.tsx",
         "apps/web/components/shared/sdk-guides.tsx",
@@ -3107,7 +3467,9 @@
       "owner": "DevRel",
       "status": "BACKLOG",
       "sprint": 15,
-      "dependencies": ["PG-032"],
+      "dependencies": [
+        "PG-032"
+      ],
       "artifacts": [
         "apps/web/app/(developer)/docs/cli/page.tsx",
         "apps/web/components/shared/cli-docs.tsx",
@@ -3124,7 +3486,9 @@
       "owner": "DevRel",
       "status": "BACKLOG",
       "sprint": 15,
-      "dependencies": ["PG-032"],
+      "dependencies": [
+        "PG-032"
+      ],
       "artifacts": [
         "apps/web/app/(developer)/docs/auth/page.tsx",
         "apps/web/components/shared/auth-guides.tsx",
@@ -3141,7 +3505,9 @@
       "owner": "DevRel",
       "status": "BACKLOG",
       "sprint": 15,
-      "dependencies": ["PG-032"],
+      "dependencies": [
+        "PG-032"
+      ],
       "artifacts": [
         "apps/web/app/(developer)/developers/apps/page.tsx",
         "apps/web/components/shared/app-list.tsx",
@@ -3158,7 +3524,9 @@
       "owner": "DevRel",
       "status": "BACKLOG",
       "sprint": 15,
-      "dependencies": ["PG-039"],
+      "dependencies": [
+        "PG-039"
+      ],
       "artifacts": [
         "apps/web/app/(developer)/developers/apps/new/page.tsx",
         "apps/web/components/shared/app-creator.tsx",
@@ -3175,7 +3543,9 @@
       "owner": "DevRel",
       "status": "BACKLOG",
       "sprint": 15,
-      "dependencies": ["PG-039"],
+      "dependencies": [
+        "PG-039"
+      ],
       "artifacts": [
         "apps/web/app/(developer)/developers/apps/[id]/page.tsx",
         "apps/web/components/shared/app-dashboard.tsx",
@@ -3192,7 +3562,9 @@
       "owner": "DevRel",
       "status": "BACKLOG",
       "sprint": 15,
-      "dependencies": ["PG-041"],
+      "dependencies": [
+        "PG-041"
+      ],
       "artifacts": [
         "apps/web/app/(developer)/developers/apps/[id]/edit/page.tsx",
         "apps/web/components/shared/app-editor.tsx",
@@ -3209,7 +3581,9 @@
       "owner": "Support Eng",
       "status": "BACKLOG",
       "sprint": 16,
-      "dependencies": ["IFC-076"],
+      "dependencies": [
+        "IFC-076"
+      ],
       "artifacts": [
         "apps/web/app/(support)/help-center/page.tsx",
         "apps/web/components/shared/help-categories.tsx",
@@ -3226,7 +3600,9 @@
       "owner": "Support Eng",
       "status": "BACKLOG",
       "sprint": 16,
-      "dependencies": ["PG-043"],
+      "dependencies": [
+        "PG-043"
+      ],
       "artifacts": [
         "apps/web/app/(support)/help-center/search/page.tsx",
         "apps/web/components/shared/search-algorithm.tsx",
@@ -3243,7 +3619,9 @@
       "owner": "Support Eng",
       "status": "BACKLOG",
       "sprint": 16,
-      "dependencies": ["PG-043"],
+      "dependencies": [
+        "PG-043"
+      ],
       "artifacts": [
         "apps/web/app/(support)/help-center/[article]/page.tsx",
         "apps/web/components/shared/article-renderer.tsx",
@@ -3260,7 +3638,9 @@
       "owner": "Support Eng",
       "status": "BACKLOG",
       "sprint": 16,
-      "dependencies": ["IFC-093"],
+      "dependencies": [
+        "IFC-093"
+      ],
       "artifacts": [
         "apps/web/app/(support)/support/tickets/page.tsx",
         "apps/web/components/tickets/ticket-list.tsx",
@@ -3277,7 +3657,9 @@
       "owner": "Support Eng",
       "status": "BACKLOG",
       "sprint": 16,
-      "dependencies": ["PG-046"],
+      "dependencies": [
+        "PG-046"
+      ],
       "artifacts": [
         "apps/web/app/(support)/support/tickets/new/page.tsx",
         "apps/web/components/shared/ticket-form.tsx",
@@ -3294,7 +3676,9 @@
       "owner": "Support Eng",
       "status": "BACKLOG",
       "sprint": 16,
-      "dependencies": ["PG-046"],
+      "dependencies": [
+        "PG-046"
+      ],
       "artifacts": [
         "apps/web/app/(support)/support/tickets/[id]/page.tsx",
         "apps/web/components/shared/ticket-thread.tsx",
@@ -3311,7 +3695,9 @@
       "owner": "Support Eng",
       "status": "BACKLOG",
       "sprint": 16,
-      "dependencies": ["IFC-036"],
+      "dependencies": [
+        "IFC-036"
+      ],
       "artifacts": [
         "apps/web/app/(support)/support/chat/page.tsx",
         "apps/web/components/shared/chat-widget.tsx",
@@ -3328,7 +3714,9 @@
       "owner": "Legal Counsel",
       "status": "BACKLOG",
       "sprint": 17,
-      "dependencies": ["IFC-058"],
+      "dependencies": [
+        "IFC-058"
+      ],
       "artifacts": [
         "apps/web/app/(legal)/privacy/page.tsx",
         "docs/shared/privacy-content.md",
@@ -3345,7 +3733,9 @@
       "owner": "Legal Counsel",
       "status": "BACKLOG",
       "sprint": 17,
-      "dependencies": ["PG-050"],
+      "dependencies": [
+        "PG-050"
+      ],
       "artifacts": [
         "apps/web/app/(legal)/terms/page.tsx",
         "docs/shared/terms-content.md",
@@ -3362,7 +3752,9 @@
       "owner": "Legal Counsel",
       "status": "BACKLOG",
       "sprint": 17,
-      "dependencies": ["PG-050"],
+      "dependencies": [
+        "PG-050"
+      ],
       "artifacts": [
         "apps/web/app/(legal)/cookie-policy/page.tsx",
         "docs/shared/cookie-content.md",
@@ -3379,7 +3771,9 @@
       "owner": "Legal Counsel",
       "status": "BACKLOG",
       "sprint": 17,
-      "dependencies": ["PG-050"],
+      "dependencies": [
+        "PG-050"
+      ],
       "artifacts": [
         "apps/web/app/(legal)/dpa/page.tsx",
         "artifacts/reports/dpa-template.pdf",
@@ -3396,7 +3790,9 @@
       "owner": "Legal Counsel",
       "status": "BACKLOG",
       "sprint": 17,
-      "dependencies": ["PG-050"],
+      "dependencies": [
+        "PG-050"
+      ],
       "artifacts": [
         "apps/web/app/(legal)/aup/page.tsx",
         "docs/shared/aup-content.md",
@@ -3413,7 +3809,9 @@
       "owner": "SRE",
       "status": "BACKLOG",
       "sprint": 17,
-      "dependencies": ["IFC-076"],
+      "dependencies": [
+        "IFC-076"
+      ],
       "artifacts": [
         "apps/web/app/(system)/404/page.tsx",
         "apps/web/components/shared/search-suggestions.tsx",
@@ -3430,7 +3828,9 @@
       "owner": "SRE",
       "status": "BACKLOG",
       "sprint": 17,
-      "dependencies": ["PG-055"],
+      "dependencies": [
+        "PG-055"
+      ],
       "artifacts": [
         "apps/web/app/(system)/500/page.tsx",
         "apps/web/lib/shared/incident-creator.ts",
@@ -3447,7 +3847,9 @@
       "owner": "SRE",
       "status": "BACKLOG",
       "sprint": 17,
-      "dependencies": ["PG-055"],
+      "dependencies": [
+        "PG-055"
+      ],
       "artifacts": [
         "apps/web/app/(system)/maintenance/page.tsx",
         "apps/web/lib/shared/maintenance-mode.ts",
@@ -3464,7 +3866,11 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 18,
-      "dependencies": ["IFC-089", "IFC-091", "IFC-095"],
+      "dependencies": [
+        "IFC-089",
+        "IFC-091",
+        "IFC-095"
+      ],
       "artifacts": [
         "apps/web/app/(dashboard)/dashboard/page.tsx",
         "artifacts/misc/dashboard-widgets/*",
@@ -3481,7 +3887,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 18,
-      "dependencies": ["IFC-089"],
+      "dependencies": [
+        "IFC-089"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/leads/page.tsx",
         "apps/web/components/leads/lead-list.tsx",
@@ -3498,7 +3906,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 18,
-      "dependencies": ["PG-059"],
+      "dependencies": [
+        "PG-059"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/leads/new/page.tsx",
         "apps/web/components/shared/lead-form.tsx",
@@ -3515,7 +3925,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 18,
-      "dependencies": ["PG-059"],
+      "dependencies": [
+        "PG-059"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/leads/[id]/page.tsx",
         "apps/web/components/shared/lead-detail.tsx",
@@ -3532,7 +3944,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 18,
-      "dependencies": ["PG-061"],
+      "dependencies": [
+        "PG-061"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/leads/[id]/edit/page.tsx",
         "apps/web/components/shared/lead-editor.tsx",
@@ -3549,7 +3963,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 18,
-      "dependencies": ["PG-059"],
+      "dependencies": [
+        "PG-059"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/leads/import/page.tsx",
         "apps/web/components/leads/csv-importer.tsx",
@@ -3566,7 +3982,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 19,
-      "dependencies": ["IFC-089"],
+      "dependencies": [
+        "IFC-089"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/contacts/page.tsx",
         "apps/web/components/contacts/contact-list.tsx",
@@ -3583,7 +4001,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 19,
-      "dependencies": ["IFC-090"],
+      "dependencies": [
+        "IFC-090"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/contacts/[id]/page.tsx",
         "apps/web/components/shared/contact-360.tsx",
@@ -3600,7 +4020,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 19,
-      "dependencies": ["PG-065"],
+      "dependencies": [
+        "PG-065"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/contacts/[id]/edit/page.tsx",
         "apps/web/components/shared/contact-editor.tsx",
@@ -3617,7 +4039,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 19,
-      "dependencies": ["PG-064"],
+      "dependencies": [
+        "PG-064"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/contacts/import/page.tsx",
         "apps/web/components/contacts/contact-importer.tsx",
@@ -3634,7 +4058,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 19,
-      "dependencies": ["PG-064"],
+      "dependencies": [
+        "PG-064"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/contacts/merge/page.tsx",
         "apps/web/components/contacts/merge-wizard.tsx",
@@ -3651,7 +4077,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 19,
-      "dependencies": ["IFC-089"],
+      "dependencies": [
+        "IFC-089"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/accounts/page.tsx",
         "apps/web/components/shared/account-list.tsx",
@@ -3668,7 +4096,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 20,
-      "dependencies": ["PG-069"],
+      "dependencies": [
+        "PG-069"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/accounts/[id]/page.tsx",
         "apps/web/components/shared/account-detail.tsx",
@@ -3685,7 +4115,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 20,
-      "dependencies": ["PG-070"],
+      "dependencies": [
+        "PG-070"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/accounts/[id]/edit/page.tsx",
         "apps/web/components/shared/account-editor.tsx",
@@ -3702,7 +4134,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 20,
-      "dependencies": ["PG-069"],
+      "dependencies": [
+        "PG-069"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/accounts/import/page.tsx",
         "apps/web/components/shared/account-importer.tsx",
@@ -3719,7 +4153,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 20,
-      "dependencies": ["IFC-091"],
+      "dependencies": [
+        "IFC-091"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/opportunities/page.tsx",
         "apps/web/components/shared/opportunity-list.tsx",
@@ -3736,7 +4172,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 20,
-      "dependencies": ["PG-073"],
+      "dependencies": [
+        "PG-073"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/opportunities/[id]/page.tsx",
         "apps/web/components/shared/opportunity-detail.tsx",
@@ -3753,7 +4191,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 20,
-      "dependencies": ["PG-074"],
+      "dependencies": [
+        "PG-074"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/opportunities/[id]/edit/page.tsx",
         "apps/web/components/shared/opportunity-editor.tsx",
@@ -3770,7 +4210,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 21,
-      "dependencies": ["IFC-091"],
+      "dependencies": [
+        "IFC-091"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/pipeline/page.tsx",
         "apps/web/components/pipeline/pipeline-board.tsx",
@@ -3787,7 +4229,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 21,
-      "dependencies": ["PG-076"],
+      "dependencies": [
+        "PG-076"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/pipeline/stages/page.tsx",
         "apps/web/components/pipeline/stage-config.tsx",
@@ -3804,7 +4248,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 21,
-      "dependencies": ["PG-077"],
+      "dependencies": [
+        "PG-077"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/pipeline/stages/[id]/page.tsx",
         "apps/web/components/shared/stage-analytics.tsx",
@@ -3821,7 +4267,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 21,
-      "dependencies": ["IFC-092"],
+      "dependencies": [
+        "IFC-092"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/forecasts/page.tsx",
         "apps/web/components/shared/forecast-display.tsx",
@@ -3838,7 +4286,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 21,
-      "dependencies": ["IFC-089"],
+      "dependencies": [
+        "IFC-089"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/activities/page.tsx",
         "apps/web/components/shared/activity-timeline.tsx",
@@ -3855,7 +4305,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 21,
-      "dependencies": ["PG-080"],
+      "dependencies": [
+        "PG-080"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/tasks/page.tsx",
         "apps/web/components/shared/task-manager.tsx",
@@ -3872,7 +4324,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 22,
-      "dependencies": ["PG-081"],
+      "dependencies": [
+        "PG-081"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/tasks/[id]/page.tsx",
         "apps/web/components/shared/task-detail.tsx",
@@ -3904,7 +4358,9 @@
       "owner": "UX Designer + Frontend Dev",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["DOC-001"],
+      "dependencies": [
+        "DOC-001"
+      ],
       "artifacts": [
         "docs/company/brand/visual-identity.md; docs/company/brand/palette.tokens.json; docs/company/brand/typography.tokens.json; docs/company/brand/spacing.tokens.json"
       ],
@@ -3919,7 +4375,10 @@
       "owner": "Frontend Dev + UX Designer",
       "status": "DONE",
       "sprint": 1,
-      "dependencies": ["BRAND-001", "ENV-002-AI"],
+      "dependencies": [
+        "BRAND-001",
+        "ENV-002-AI"
+      ],
       "artifacts": [
         "docs/design-system/token-mapping.md; docs/design-system/theme-reference-spec.md; docs/design-system/token-naming.md"
       ],
@@ -3934,7 +4393,9 @@
       "owner": "PM + Marketing",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["DOC-001"],
+      "dependencies": [
+        "DOC-001"
+      ],
       "artifacts": [
         "docs/company/go-to-market/icp.md; docs/company/go-to-market/personas.md; docs/company/go-to-market/objections.md"
       ],
@@ -3949,7 +4410,10 @@
       "owner": "PM + Marketing",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["GTM-001", "BRAND-001"],
+      "dependencies": [
+        "GTM-001",
+        "BRAND-001"
+      ],
       "artifacts": [
         "docs/company/messaging/positioning.md; docs/company/messaging/value-props.md; docs/company/messaging/copy-blocks.md; docs/company/messaging/cta-library.md"
       ],
@@ -3964,7 +4428,10 @@
       "owner": "PM + Sales Team",
       "status": "DONE",
       "sprint": 1,
-      "dependencies": ["GTM-002", "BRAND-001"],
+      "dependencies": [
+        "GTM-002",
+        "BRAND-001"
+      ],
       "artifacts": [
         "docs/sales/pitch-deck-outline.md; docs/sales/one-pager.md; artifacts/misc/sales/pitch-deck-source-link.txt"
       ],
@@ -3979,7 +4446,10 @@
       "owner": "Sales + CEO",
       "status": "BACKLOG",
       "sprint": 2,
-      "dependencies": ["SALES-001", "GTM-002"],
+      "dependencies": [
+        "SALES-001",
+        "GTM-002"
+      ],
       "artifacts": [
         "docs/sales/sales-motion-playbook.md; docs/sales/discovery-script.md; docs/sales/demo-script.md; docs/sales/outreach-sequences.md"
       ],
@@ -3994,7 +4464,10 @@
       "owner": "Tech Lead + DevOps + Product Manager",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["AUTOMATION-001", "ENV-005-AI"],
+      "dependencies": [
+        "AUTOMATION-001",
+        "ENV-005-AI"
+      ],
       "artifacts": [
         "docs/operations/project-playbook.md; docs/operations/wip-policy.md; docs/operations/ticket-sizing.md; docs/operations/abc-classification.md; docs/operations/raci.md"
       ],
@@ -4009,7 +4482,11 @@
       "owner": "Tech Lead + DevOps + QA Lead",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["ENV-002-AI", "ENV-005-AI", "ENV-010-AI"],
+      "dependencies": [
+        "ENV-002-AI",
+        "ENV-005-AI",
+        "ENV-010-AI"
+      ],
       "artifacts": [
         "docs/operations/engineering-playbook.md; docs/operations/quality-gates.md; docs/operations/pr-checklist.md; docs/operations/release-rollback.md"
       ],
@@ -4024,7 +4501,9 @@
       "owner": "Backend Dev + Architect",
       "status": "DONE",
       "sprint": 1,
-      "dependencies": ["ENG-OPS-001"],
+      "dependencies": [
+        "ENG-OPS-001"
+      ],
       "artifacts": [
         "docs/architecture/adr/000-template.md; docs/architecture/arp/000-template.md; docs/architecture/decision-workflow.md; docs/architecture/diagrams/README.md; docs/architecture/flowcharts/README.md"
       ],
@@ -4039,7 +4518,10 @@
       "owner": "PM + DA",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["DOC-001", "GTM-001"],
+      "dependencies": [
+        "DOC-001",
+        "GTM-001"
+      ],
       "artifacts": [
         "docs/analytics/rfm-abc-spec.md; docs/analytics/event-taxonomy.md; docs/analytics/dashboards-requirements.md"
       ],
@@ -4054,7 +4536,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 22,
-      "dependencies": ["PG-080"],
+      "dependencies": [
+        "PG-080"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/calendar/page.tsx",
         "apps/web/components/calendar/calendar-view.tsx",
@@ -4071,7 +4555,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 22,
-      "dependencies": ["IFC-099"],
+      "dependencies": [
+        "IFC-099"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/emails/page.tsx",
         "apps/web/components/shared/email-client.tsx",
@@ -4088,7 +4574,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 22,
-      "dependencies": ["PG-084"],
+      "dependencies": [
+        "PG-084"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/templates/email/page.tsx",
         "apps/web/components/templates/template-builder.tsx",
@@ -4105,7 +4593,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 22,
-      "dependencies": ["PG-085"],
+      "dependencies": [
+        "PG-085"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/templates/sms/page.tsx",
         "apps/web/components/templates/sms-builder.tsx",
@@ -4122,7 +4612,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 22,
-      "dependencies": ["IFC-099"],
+      "dependencies": [
+        "IFC-099"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/calls/page.tsx",
         "apps/web/components/shared/call-logger.tsx",
@@ -4139,7 +4631,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 23,
-      "dependencies": ["PG-080"],
+      "dependencies": [
+        "PG-080"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/notes/page.tsx",
         "apps/web/components/shared/note-editor.tsx",
@@ -4156,7 +4650,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 23,
-      "dependencies": ["IFC-094"],
+      "dependencies": [
+        "IFC-094"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/files/page.tsx",
         "apps/web/components/shared/file-manager.tsx",
@@ -4173,7 +4669,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 23,
-      "dependencies": ["PG-089"],
+      "dependencies": [
+        "PG-089"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/files/[id]/page.tsx",
         "apps/web/components/shared/file-preview.tsx",
@@ -4190,7 +4688,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 23,
-      "dependencies": ["IFC-089"],
+      "dependencies": [
+        "IFC-089"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/products/page.tsx",
         "apps/web/components/shared/product-catalog.tsx",
@@ -4207,7 +4707,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 23,
-      "dependencies": ["PG-091"],
+      "dependencies": [
+        "PG-091"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/products/[id]/page.tsx",
         "apps/web/components/shared/product-detail.tsx",
@@ -4224,7 +4726,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 23,
-      "dependencies": ["PG-091"],
+      "dependencies": [
+        "PG-091"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/price-books/page.tsx",
         "apps/web/components/shared/price-book-manager.tsx",
@@ -4241,7 +4745,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 24,
-      "dependencies": ["PG-093"],
+      "dependencies": [
+        "PG-093"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/price-books/[id]/page.tsx",
         "apps/web/components/shared/price-book-detail.tsx",
@@ -4258,7 +4764,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 24,
-      "dependencies": ["PG-093"],
+      "dependencies": [
+        "PG-093"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/quotes/page.tsx",
         "apps/web/components/shared/quote-list.tsx",
@@ -4275,7 +4783,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 24,
-      "dependencies": ["PG-095"],
+      "dependencies": [
+        "PG-095"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/quotes/new/page.tsx",
         "apps/web/components/shared/quote-builder.tsx",
@@ -4292,7 +4802,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 24,
-      "dependencies": ["PG-095"],
+      "dependencies": [
+        "PG-095"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/quotes/[id]/page.tsx",
         "apps/web/components/shared/quote-detail.tsx",
@@ -4309,7 +4821,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 24,
-      "dependencies": ["PG-097"],
+      "dependencies": [
+        "PG-097"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/quotes/[id]/edit/page.tsx",
         "apps/web/components/shared/quote-editor.tsx",
@@ -4326,7 +4840,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 24,
-      "dependencies": ["PG-095"],
+      "dependencies": [
+        "PG-095"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/orders/page.tsx",
         "apps/web/components/shared/order-list.tsx",
@@ -4343,7 +4859,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 25,
-      "dependencies": ["PG-099"],
+      "dependencies": [
+        "PG-099"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/orders/[id]/page.tsx",
         "apps/web/components/shared/order-detail.tsx",
@@ -4360,7 +4878,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 25,
-      "dependencies": ["IFC-096"],
+      "dependencies": [
+        "IFC-096"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/reports/page.tsx",
         "apps/web/components/reports/report-library.tsx",
@@ -4377,7 +4897,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 25,
-      "dependencies": ["IFC-096"],
+      "dependencies": [
+        "IFC-096"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/reports/custom/page.tsx",
         "apps/web/components/reports/report-builder.tsx",
@@ -4394,7 +4916,9 @@
       "owner": "CRM FE+BE",
       "status": "BACKLOG",
       "sprint": 25,
-      "dependencies": ["PG-102"],
+      "dependencies": [
+        "PG-102"
+      ],
       "artifacts": [
         "apps/web/app/(crm)/reports/schedules/page.tsx",
         "apps/web/components/shared/schedule-manager.tsx",
@@ -4411,7 +4935,9 @@
       "owner": "Platform FE+BE",
       "status": "BACKLOG",
       "sprint": 25,
-      "dependencies": ["IFC-076"],
+      "dependencies": [
+        "IFC-076"
+      ],
       "artifacts": [
         "apps/web/app/(settings)/settings/page.tsx",
         "apps/web/components/shared/settings-nav.tsx",
@@ -4428,7 +4954,9 @@
       "owner": "Platform FE+BE",
       "status": "BACKLOG",
       "sprint": 25,
-      "dependencies": ["PG-104"],
+      "dependencies": [
+        "PG-104"
+      ],
       "artifacts": [
         "apps/web/app/(settings)/settings/profile/page.tsx",
         "apps/web/components/shared/profile-editor.tsx",
@@ -4445,7 +4973,9 @@
       "owner": "Platform FE+BE",
       "status": "BACKLOG",
       "sprint": 26,
-      "dependencies": ["PG-104"],
+      "dependencies": [
+        "PG-104"
+      ],
       "artifacts": [
         "apps/web/app/(settings)/settings/account/page.tsx",
         "apps/web/components/shared/account-manager.tsx",
@@ -4462,7 +4992,9 @@
       "owner": "Platform FE+BE",
       "status": "BACKLOG",
       "sprint": 26,
-      "dependencies": ["PG-104"],
+      "dependencies": [
+        "PG-104"
+      ],
       "artifacts": [
         "apps/web/app/(settings)/settings/organization/page.tsx",
         "apps/web/components/shared/org-config.tsx",
@@ -4479,7 +5011,9 @@
       "owner": "Platform FE+BE",
       "status": "BACKLOG",
       "sprint": 26,
-      "dependencies": ["IFC-098"],
+      "dependencies": [
+        "IFC-098"
+      ],
       "artifacts": [
         "apps/web/app/(settings)/settings/users/page.tsx",
         "apps/web/components/shared/user-manager.tsx",
@@ -4496,7 +5030,9 @@
       "owner": "Platform FE+BE",
       "status": "BACKLOG",
       "sprint": 26,
-      "dependencies": ["IFC-098"],
+      "dependencies": [
+        "IFC-098"
+      ],
       "artifacts": [
         "apps/web/app/(settings)/settings/roles/page.tsx",
         "apps/web/components/shared/role-editor.tsx",
@@ -4513,7 +5049,9 @@
       "owner": "Platform FE+BE",
       "status": "BACKLOG",
       "sprint": 26,
-      "dependencies": ["PG-109"],
+      "dependencies": [
+        "PG-109"
+      ],
       "artifacts": [
         "apps/web/app/(settings)/settings/permissions/page.tsx",
         "apps/web/components/shared/permission-matrix.tsx",
@@ -4530,7 +5068,9 @@
       "owner": "Platform FE+BE",
       "status": "BACKLOG",
       "sprint": 26,
-      "dependencies": ["PG-108"],
+      "dependencies": [
+        "PG-108"
+      ],
       "artifacts": [
         "apps/web/app/(settings)/settings/teams/page.tsx",
         "apps/web/components/shared/team-manager.tsx",
@@ -4547,7 +5087,9 @@
       "owner": "Platform FE+BE",
       "status": "BACKLOG",
       "sprint": 27,
-      "dependencies": ["IFC-098"],
+      "dependencies": [
+        "IFC-098"
+      ],
       "artifacts": [
         "apps/web/app/(settings)/settings/audit-log/page.tsx",
         "apps/web/components/shared/audit-viewer.tsx",
@@ -4564,7 +5106,9 @@
       "owner": "Platform FE+BE",
       "status": "BACKLOG",
       "sprint": 27,
-      "dependencies": ["PG-104"],
+      "dependencies": [
+        "PG-104"
+      ],
       "artifacts": [
         "apps/web/app/(settings)/settings/api-keys/page.tsx",
         "apps/web/components/shared/key-generator.tsx",
@@ -4581,7 +5125,9 @@
       "owner": "Platform FE+BE",
       "status": "BACKLOG",
       "sprint": 27,
-      "dependencies": ["IFC-099"],
+      "dependencies": [
+        "IFC-099"
+      ],
       "artifacts": [
         "apps/web/app/(settings)/settings/webhooks/page.tsx",
         "apps/web/components/shared/webhook-config.tsx",
@@ -4598,7 +5144,9 @@
       "owner": "Platform FE+BE",
       "status": "BACKLOG",
       "sprint": 27,
-      "dependencies": ["IFC-099"],
+      "dependencies": [
+        "IFC-099"
+      ],
       "artifacts": [
         "apps/web/app/(settings)/settings/integrations/page.tsx",
         "apps/web/components/shared/integration-catalog.tsx",
@@ -4615,7 +5163,9 @@
       "owner": "Platform FE+BE",
       "status": "BACKLOG",
       "sprint": 27,
-      "dependencies": ["PG-104"],
+      "dependencies": [
+        "PG-104"
+      ],
       "artifacts": [
         "apps/web/app/(settings)/settings/notifications/page.tsx",
         "apps/web/components/notifications/notification-prefs.tsx",
@@ -4632,7 +5182,9 @@
       "owner": "Platform FE+BE",
       "status": "BACKLOG",
       "sprint": 27,
-      "dependencies": ["PG-104"],
+      "dependencies": [
+        "PG-104"
+      ],
       "artifacts": [
         "apps/web/app/(settings)/settings/localization/page.tsx",
         "apps/web/components/shared/language-selector.tsx",
@@ -4649,7 +5201,9 @@
       "owner": "Platform FE+BE",
       "status": "BACKLOG",
       "sprint": 28,
-      "dependencies": ["IFC-058"],
+      "dependencies": [
+        "IFC-058"
+      ],
       "artifacts": [
         "apps/web/app/(settings)/settings/data-retention/page.tsx",
         "apps/web/components/shared/retention-policy.tsx",
@@ -4666,7 +5220,9 @@
       "owner": "Platform FE+BE",
       "status": "BACKLOG",
       "sprint": 28,
-      "dependencies": ["IFC-058"],
+      "dependencies": [
+        "IFC-058"
+      ],
       "artifacts": [
         "apps/web/app/(settings)/settings/compliance/page.tsx",
         "apps/web/components/shared/compliance-dashboard.tsx",
@@ -4683,7 +5239,9 @@
       "owner": "Platform FE+BE",
       "status": "BACKLOG",
       "sprint": 28,
-      "dependencies": ["IFC-072"],
+      "dependencies": [
+        "IFC-072"
+      ],
       "artifacts": [
         "apps/web/app/(settings)/settings/security/page.tsx",
         "apps/web/components/security/security-config.tsx",
@@ -4700,7 +5258,9 @@
       "owner": "Platform FE+BE",
       "status": "BACKLOG",
       "sprint": 28,
-      "dependencies": ["IFC-070"],
+      "dependencies": [
+        "IFC-070"
+      ],
       "artifacts": [
         "apps/web/app/(settings)/settings/import-export/page.tsx",
         "apps/web/components/shared/data-importer.tsx",
@@ -4717,7 +5277,9 @@
       "owner": "Platform FE+BE",
       "status": "BACKLOG",
       "sprint": 28,
-      "dependencies": ["IFC-058"],
+      "dependencies": [
+        "IFC-058"
+      ],
       "artifacts": [
         "apps/web/app/(settings)/settings/privacy/export/page.tsx",
         "apps/web/components/shared/privacy-exporter.tsx",
@@ -4734,7 +5296,9 @@
       "owner": "Platform FE+BE",
       "status": "BACKLOG",
       "sprint": 28,
-      "dependencies": ["IFC-058"],
+      "dependencies": [
+        "IFC-058"
+      ],
       "artifacts": [
         "apps/web/app/(settings)/settings/privacy/delete/page.tsx",
         "apps/web/components/shared/data-eraser.tsx",
@@ -4751,7 +5315,9 @@
       "owner": "Backend Dev + Tech Lead",
       "status": "BACKLOG",
       "sprint": 2,
-      "dependencies": ["IFC-002"],
+      "dependencies": [
+        "IFC-002"
+      ],
       "artifacts": [
         "packages/domain/src/leads/*",
         "packages/db/leads-repository.ts",
@@ -4768,7 +5334,9 @@
       "owner": "Backend Dev + Tech Lead",
       "status": "BACKLOG",
       "sprint": 2,
-      "dependencies": ["IFC-002"],
+      "dependencies": [
+        "IFC-002"
+      ],
       "artifacts": [
         "packages/domain/src/contacts/*",
         "packages/db/contacts-repository.ts",
@@ -4785,7 +5353,9 @@
       "owner": "Backend Dev + Tech Lead",
       "status": "BACKLOG",
       "sprint": 2,
-      "dependencies": ["IFC-002"],
+      "dependencies": [
+        "IFC-002"
+      ],
       "artifacts": [
         "packages/domain/src/accounts/*",
         "packages/db/accounts-repository.ts",
@@ -4802,7 +5372,9 @@
       "owner": "Backend Dev + Tech Lead",
       "status": "BACKLOG",
       "sprint": 3,
-      "dependencies": ["IFC-002"],
+      "dependencies": [
+        "IFC-002"
+      ],
       "artifacts": [
         "packages/domain/src/opportunities/*",
         "packages/db/opportunities-repository.ts",
@@ -4819,7 +5391,9 @@
       "owner": "Backend Dev + Tech Lead",
       "status": "BACKLOG",
       "sprint": 3,
-      "dependencies": ["IFC-002"],
+      "dependencies": [
+        "IFC-002"
+      ],
       "artifacts": [
         "packages/domain/src/tasks/*",
         "packages/db/tasks-repository.ts",
@@ -4836,7 +5410,10 @@
       "owner": "Tech Lead + Backend Dev",
       "status": "DONE",
       "sprint": 1,
-      "dependencies": ["IFC-002", "IFC-131"],
+      "dependencies": [
+        "IFC-002",
+        "IFC-131"
+      ],
       "artifacts": [
         "packages/application/src/ports/*",
         "packages/application/src/usecases/*",
@@ -4856,7 +5433,13 @@
       "owner": "Backend Dev",
       "status": "BACKLOG",
       "sprint": 3,
-      "dependencies": ["IFC-101", "IFC-102", "IFC-103", "IFC-104", "IFC-105"],
+      "dependencies": [
+        "IFC-101",
+        "IFC-102",
+        "IFC-103",
+        "IFC-104",
+        "IFC-105"
+      ],
       "artifacts": [
         "packages/db/repositories/*",
         "packages/factories/*",
@@ -4873,7 +5456,9 @@
       "owner": "Backend Dev",
       "status": "BACKLOG",
       "sprint": 4,
-      "dependencies": ["IFC-107"],
+      "dependencies": [
+        "IFC-107"
+      ],
       "artifacts": [
         "packages/domain/src/services/*",
         "tests/services/*.test.ts"
@@ -4889,7 +5474,9 @@
       "owner": "QA Lead + Tech Lead",
       "status": "BACKLOG",
       "sprint": 2,
-      "dependencies": ["IFC-002"],
+      "dependencies": [
+        "IFC-002"
+      ],
       "artifacts": [
         "docs/tdd-guidelines.md",
         "artifacts/misc/ci-coverage-config.yml",
@@ -4906,8 +5493,16 @@
       "owner": "QA + Backend Dev",
       "status": "BACKLOG",
       "sprint": 4,
-      "dependencies": ["IFC-101", "IFC-102", "IFC-103", "IFC-104", "IFC-105"],
-      "artifacts": ["tests/domain/*"],
+      "dependencies": [
+        "IFC-101",
+        "IFC-102",
+        "IFC-103",
+        "IFC-104",
+        "IFC-105"
+      ],
+      "artifacts": [
+        "tests/domain/*"
+      ],
       "kpis": "Coverage ≥90%, tests passing in CI",
       "definition_of_done": "All domain entities have unit and integration tests covering business logic and repository operations",
       "validation": "Test reports, coverage metrics",
@@ -4919,7 +5514,9 @@
       "owner": "DevOps + QA Lead",
       "status": "BACKLOG",
       "sprint": 5,
-      "dependencies": ["ENV-005-AI"],
+      "dependencies": [
+        "ENV-005-AI"
+      ],
       "artifacts": [
         "artifacts/misc/sonar-project.properties",
         "artifacts/misc/ci-sonar.yml",
@@ -4936,7 +5533,9 @@
       "owner": "DevOps",
       "status": "BACKLOG",
       "sprint": 6,
-      "dependencies": ["ENV-005-AI"],
+      "dependencies": [
+        "ENV-005-AI"
+      ],
       "artifacts": [
         "artifacts/misc/deployment-configs/*.yaml",
         "artifacts/misc/rollback-scripts/*.sh",
@@ -4953,7 +5552,10 @@
       "owner": "Security Eng + DevOps",
       "status": "BACKLOG",
       "sprint": 6,
-      "dependencies": ["IFC-072", "IFC-098"],
+      "dependencies": [
+        "IFC-072",
+        "IFC-098"
+      ],
       "artifacts": [
         "artifacts/misc/vault-config.yml",
         "artifacts/misc/encryption-keys/*",
@@ -4970,7 +5572,10 @@
       "owner": "Backend Dev + DevOps",
       "status": "BACKLOG",
       "sprint": 7,
-      "dependencies": ["IFC-003", "IFC-072"],
+      "dependencies": [
+        "IFC-003",
+        "IFC-072"
+      ],
       "artifacts": [
         "artifacts/misc/api/rate-limit.ts",
         "artifacts/misc/waf-config.json",
@@ -4987,7 +5592,9 @@
       "owner": "DevOps + DBA",
       "status": "BACKLOG",
       "sprint": 8,
-      "dependencies": ["IFC-071"],
+      "dependencies": [
+        "IFC-071"
+      ],
       "artifacts": [
         "artifacts/misc/backup-scripts.sh",
         "docs/shared/dr-plan.md",
@@ -5004,7 +5611,9 @@
       "owner": "DevOps + SRE",
       "status": "BACKLOG",
       "sprint": 9,
-      "dependencies": ["IFC-074"],
+      "dependencies": [
+        "IFC-074"
+      ],
       "artifacts": [
         "artifacts/misc/otel-config.yaml",
         "docs/security/log-schema.md",
@@ -5022,7 +5631,10 @@
       "owner": "AI Specialist + SRE",
       "status": "BACKLOG",
       "sprint": 10,
-      "dependencies": ["IFC-005", "AUTOMATION-002"],
+      "dependencies": [
+        "IFC-005",
+        "AUTOMATION-002"
+      ],
       "artifacts": [
         "artifacts/metrics/ai-metrics.json",
         "artifacts/misc/drift-dashboard.png",
@@ -5039,7 +5651,10 @@
       "owner": "PM + Tech Lead",
       "status": "BACKLOG",
       "sprint": 2,
-      "dependencies": ["IFC-010", "IFC-054"],
+      "dependencies": [
+        "IFC-010",
+        "IFC-054"
+      ],
       "artifacts": [
         "artifacts/reports/risk-register.xlsx",
         "docs/shared/risk-mitigation-plan.md",
@@ -5056,7 +5671,9 @@
       "owner": "Scrum Master + PM",
       "status": "DONE",
       "sprint": 1,
-      "dependencies": ["IFC-118"],
+      "dependencies": [
+        "IFC-118"
+      ],
       "artifacts": [
         "artifacts/misc/ceremony-calendar.ics",
         "artifacts/misc/templates/*.md",
@@ -5073,7 +5690,10 @@
       "owner": "Frontend Dev + Backend Dev",
       "status": "BACKLOG",
       "sprint": 14,
-      "dependencies": ["PG-015", "PG-016"],
+      "dependencies": [
+        "PG-015",
+        "PG-016"
+      ],
       "artifacts": [
         "apps/web/app/(auth)/reset/page.tsx",
         "artifacts/misc/api/auth/reset.ts",
@@ -5091,7 +5711,10 @@
       "owner": "Frontend Dev + Backend Dev",
       "status": "BACKLOG",
       "sprint": 15,
-      "dependencies": ["PG-015", "PG-016"],
+      "dependencies": [
+        "PG-015",
+        "PG-016"
+      ],
       "artifacts": [
         "apps/web/app/(auth)/sso/page.tsx",
         "apps/web/lib/shared/sso-handler.ts",
@@ -5108,7 +5731,9 @@
       "owner": "Frontend Dev + Backend Dev",
       "status": "BACKLOG",
       "sprint": 16,
-      "dependencies": ["IFC-120"],
+      "dependencies": [
+        "IFC-120"
+      ],
       "artifacts": [
         "apps/web/app/(auth)/mfa/page.tsx",
         "apps/web/lib/security/mfa-service.ts",
@@ -5126,7 +5751,9 @@
       "owner": "DevOps + Security",
       "status": "BACKLOG",
       "sprint": 10,
-      "dependencies": ["IFC-113"],
+      "dependencies": [
+        "IFC-113"
+      ],
       "artifacts": [
         "artifacts/misc/rotation-schedule.yaml",
         "docs/security/dependency-scan-report.md"
@@ -5142,7 +5769,10 @@
       "owner": "Backend Dev",
       "status": "BACKLOG",
       "sprint": 7,
-      "dependencies": ["IFC-106", "IFC-107"],
+      "dependencies": [
+        "IFC-106",
+        "IFC-107"
+      ],
       "artifacts": [
         "packages/platform/src/resilience/circuit-breaker.ts",
         "apps/api/src/shared/retry-policy.ts",
@@ -5159,7 +5789,10 @@
       "owner": "Backend Dev + SRE",
       "status": "BACKLOG",
       "sprint": 8,
-      "dependencies": ["IFC-007", "IFC-087"],
+      "dependencies": [
+        "IFC-007",
+        "IFC-087"
+      ],
       "artifacts": [
         "apps/api/src/shared/cache-config.ts",
         "artifacts/benchmarks/performance-benchmarks.csv",
@@ -5176,7 +5809,10 @@
       "owner": "Security Eng + Compliance",
       "status": "BACKLOG",
       "sprint": 9,
-      "dependencies": ["IFC-098", "PG-112"],
+      "dependencies": [
+        "IFC-098",
+        "PG-112"
+      ],
       "artifacts": [
         "apps/api/src/shared/audit-encryption-module.ts",
         "artifacts/misc/compliance-report-scripts/*.ts",
@@ -5193,7 +5829,10 @@
       "owner": "UX Designer + Frontend Dev",
       "status": "BACKLOG",
       "sprint": 17,
-      "dependencies": ["PG-001", "PG-002"],
+      "dependencies": [
+        "PG-001",
+        "PG-002"
+      ],
       "artifacts": [
         "artifacts/misc/onboarding-config.json",
         "apps/web/components/shared/tour-components.tsx",
@@ -5210,7 +5849,10 @@
       "owner": "AI Specialist + Security",
       "status": "BACKLOG",
       "sprint": 11,
-      "dependencies": ["IFC-005", "IFC-008"],
+      "dependencies": [
+        "IFC-005",
+        "IFC-008"
+      ],
       "artifacts": [
         "apps/api/src/shared/prompt-sanitizer.ts",
         "artifacts/metrics/bias-metrics.csv",
@@ -5227,7 +5869,10 @@
       "owner": "Tech Writer + PM",
       "status": "BACKLOG",
       "sprint": 3,
-      "dependencies": ["IFC-100", "GOV-001"],
+      "dependencies": [
+        "IFC-100",
+        "GOV-001"
+      ],
       "artifacts": [
         "docs/adr/*.md",
         "docs/dev-guide.md",
@@ -5244,7 +5889,10 @@
       "owner": "Backend Dev + DevOps",
       "status": "BACKLOG",
       "sprint": 10,
-      "dependencies": ["IFC-098", "IFC-072"],
+      "dependencies": [
+        "IFC-098",
+        "IFC-072"
+      ],
       "artifacts": [
         "infra/supabase/rls-policies.sql",
         "apps/api/src/security/tenant-context.ts",
@@ -5261,7 +5909,9 @@
       "owner": "QA Lead + Tech Lead",
       "status": "BACKLOG",
       "sprint": 3,
-      "dependencies": ["ENV-017-AI"],
+      "dependencies": [
+        "ENV-017-AI"
+      ],
       "artifacts": [
         "docs/shared/ai-review-checklist.md",
         "docs/shared/fallback-procedure.md",
@@ -5278,7 +5928,9 @@
       "owner": "QA + Frontend Dev",
       "status": "BACKLOG",
       "sprint": 6,
-      "dependencies": ["IFC-110"],
+      "dependencies": [
+        "IFC-110"
+      ],
       "artifacts": [
         "tests/ui/*",
         "tests/contract/*",
@@ -5295,7 +5947,10 @@
       "owner": "DevOps Lead",
       "status": "BACKLOG",
       "sprint": 5,
-      "dependencies": ["ENV-005-AI", "IFC-111"],
+      "dependencies": [
+        "ENV-005-AI",
+        "IFC-111"
+      ],
       "artifacts": [
         "docs/release/promotion-policy.md",
         ".github/workflows/release.yml",
@@ -5312,7 +5967,9 @@
       "owner": "Tech Lead",
       "status": "BACKLOG",
       "sprint": 4,
-      "dependencies": ["IFC-106"],
+      "dependencies": [
+        "IFC-106"
+      ],
       "artifacts": [
         "tools/arch-rules/*",
         "tests/architecture/*",
@@ -5330,7 +5987,9 @@
       "owner": "Security Engineer + DevOps",
       "status": "BACKLOG",
       "sprint": 6,
-      "dependencies": ["ENV-005-AI"],
+      "dependencies": [
+        "ENV-005-AI"
+      ],
       "artifacts": [
         "artifacts/sbom/*.json",
         ".github/workflows/security-sbom.yml",
@@ -5347,7 +6006,9 @@
       "owner": "DevOps Engineer",
       "status": "BACKLOG",
       "sprint": 6,
-      "dependencies": ["IFC-132"],
+      "dependencies": [
+        "IFC-132"
+      ],
       "artifacts": [
         "docs/security/signing.md",
         ".github/workflows/signing.yml",
@@ -5364,7 +6025,10 @@
       "owner": "Security Engineer",
       "status": "BACKLOG",
       "sprint": 6,
-      "dependencies": ["ENV-003-AI", "ENV-005-AI"],
+      "dependencies": [
+        "ENV-003-AI",
+        "ENV-005-AI"
+      ],
       "artifacts": [
         "docs/security/image-scanning.md",
         ".github/workflows/image-scan.yml"
@@ -5380,7 +6044,10 @@
       "owner": "Tech Lead + Architect",
       "status": "DONE",
       "sprint": 1,
-      "dependencies": ["IFC-002", "GOV-001"],
+      "dependencies": [
+        "IFC-002",
+        "GOV-001"
+      ],
       "artifacts": [
         "docs/adr/adr-multi-tenancy.md",
         "docs/adr/adr-workflow-engine.md",
@@ -5400,7 +6067,10 @@
       "owner": "Backend Dev + Domain Architect",
       "status": "BACKLOG",
       "sprint": 3,
-      "dependencies": ["IFC-002", "IFC-003"],
+      "dependencies": [
+        "IFC-002",
+        "IFC-003"
+      ],
       "artifacts": [
         "packages/domain/src/legal/cases/case.ts",
         "packages/domain/src/legal/cases/task.ts",
@@ -5419,7 +6089,10 @@
       "owner": "Backend Dev + Calendar Specialist",
       "status": "BACKLOG",
       "sprint": 4,
-      "dependencies": ["IFC-136", "IFC-003"],
+      "dependencies": [
+        "IFC-136",
+        "IFC-003"
+      ],
       "artifacts": [
         "packages/domain/src/legal/appointments/appointment.ts",
         "packages/application/src/usecases/scheduling.ts",
@@ -5437,7 +6110,10 @@
       "owner": "Backend Dev + DevOps",
       "status": "BACKLOG",
       "sprint": 5,
-      "dependencies": ["IFC-137", "IFC-106"],
+      "dependencies": [
+        "IFC-137",
+        "IFC-106"
+      ],
       "artifacts": [
         "packages/adapters/src/calendar/google/client.ts",
         "packages/adapters/src/calendar/microsoft/client.ts",
@@ -5456,7 +6132,12 @@
       "owner": "AI Specialist + Backend Dev",
       "status": "BACKLOG",
       "sprint": 6,
-      "dependencies": ["IFC-136", "IFC-137", "IFC-003", "IFC-128"],
+      "dependencies": [
+        "IFC-136",
+        "IFC-137",
+        "IFC-003",
+        "IFC-128"
+      ],
       "artifacts": [
         "packages/ai/tools/*",
         "apps/web/app/agent-approvals/*",
@@ -5474,7 +6155,10 @@
       "owner": "Legal Ops + Security Eng",
       "status": "BACKLOG",
       "sprint": 7,
-      "dependencies": ["IFC-098", "IFC-127"],
+      "dependencies": [
+        "IFC-098",
+        "IFC-127"
+      ],
       "artifacts": [
         "docs/data-governance/dsar-process.md",
         "docs/data-governance/retention-policy.md",
@@ -5493,7 +6177,13 @@
       "owner": "Tech Lead + DevOps + Product Manager",
       "status": "BACKLOG",
       "sprint": 4,
-      "dependencies": ["IFC-136", "IFC-137", "IFC-135", "IFC-150", "IFC-151"],
+      "dependencies": [
+        "IFC-136",
+        "IFC-137",
+        "IFC-135",
+        "IFC-150",
+        "IFC-151"
+      ],
       "artifacts": [
         "docs/adr/adr-workflow-decision.md",
         "artifacts/misc/workflow-poc/*",
@@ -5511,7 +6201,9 @@
       "owner": "SRE Lead + DevOps + Finance",
       "status": "BACKLOG",
       "sprint": 8,
-      "dependencies": ["ENV-008-AI"],
+      "dependencies": [
+        "ENV-008-AI"
+      ],
       "artifacts": [
         "docs/operations/slo-definitions.md",
         "artifacts/misc/alerts-config.yaml",
@@ -5531,7 +6223,11 @@
       "owner": "Security Lead + AI Specialist",
       "status": "BACKLOG",
       "sprint": 6,
-      "dependencies": ["IFC-125", "IFC-136", "IFC-139"],
+      "dependencies": [
+        "IFC-125",
+        "IFC-136",
+        "IFC-139"
+      ],
       "artifacts": [
         "docs/security/threat-model.puml",
         "docs/security/abuse-cases.md",
@@ -5550,7 +6246,13 @@
       "owner": "Integration Lead + Backend Dev",
       "status": "BACKLOG",
       "sprint": 7,
-      "dependencies": ["IFC-137", "IFC-003", "IFC-150", "IFC-151", "IFC-106"],
+      "dependencies": [
+        "IFC-137",
+        "IFC-003",
+        "IFC-150",
+        "IFC-151",
+        "IFC-106"
+      ],
       "artifacts": [
         "packages/adapters/src/messaging/email/outbound.ts",
         "packages/adapters/src/messaging/email/inbound.ts",
@@ -5569,7 +6271,10 @@
       "owner": "Data Engineer + DBA + PM",
       "status": "BACKLOG",
       "sprint": 9,
-      "dependencies": ["IFC-002", "IFC-136"],
+      "dependencies": [
+        "IFC-002",
+        "IFC-136"
+      ],
       "artifacts": [
         "scripts/migration/mapping.xlsx",
         "scripts/migration/scripts/*",
@@ -5588,7 +6293,10 @@
       "owner": "Product Manager + Tech Lead",
       "status": "BACKLOG",
       "sprint": 2,
-      "dependencies": ["IFC-000", "ENV-018-AI"],
+      "dependencies": [
+        "IFC-000",
+        "ENV-018-AI"
+      ],
       "artifacts": [
         "docs/planning/prd-template.md",
         "docs/planning/user-journey-template.md",
@@ -5607,7 +6315,10 @@
       "owner": "Frontend Dev + Backend Dev",
       "status": "BACKLOG",
       "sprint": 5,
-      "dependencies": ["IFC-136", "IFC-137"],
+      "dependencies": [
+        "IFC-136",
+        "IFC-137"
+      ],
       "artifacts": [
         "apps/web/app/cases/timeline.tsx",
         "packages/domain/src/legal/deadlines/deadline-engine.ts",
@@ -5625,7 +6336,10 @@
       "owner": "Backend Dev + AI Specialist",
       "status": "BACKLOG",
       "sprint": 6,
-      "dependencies": ["IFC-139", "IFC-126"],
+      "dependencies": [
+        "IFC-139",
+        "IFC-126"
+      ],
       "artifacts": [
         "packages/db/prisma/conversation.sql",
         "apps/api/src/modules/conversation.ts",
@@ -5644,7 +6358,10 @@
       "owner": "Frontend Dev + AI Specialist",
       "status": "BACKLOG",
       "sprint": 6,
-      "dependencies": ["IFC-139", "IFC-147"],
+      "dependencies": [
+        "IFC-139",
+        "IFC-147"
+      ],
       "artifacts": [
         "apps/web/app/agent-approvals/preview.tsx",
         "apps/web/lib/agent/rollback-service.ts",
@@ -5665,8 +6382,13 @@
       "completed_at": "2025-12-14T20:40:51Z",
       "duration_minutes": 6,
       "metrics_file": "../sprint-0/phase-2-parallel/parallel-c/EXC-SEC-001.json",
-      "dependencies": ["ENV-013-AI"],
-      "artifacts": ["artifacts/misc/vault-config.yaml", "infra/security/*"],
+      "dependencies": [
+        "ENV-013-AI"
+      ],
+      "artifacts": [
+        "artifacts/misc/vault-config.yaml",
+        "infra/security/*"
+      ],
       "kpis": "Zero secrets in code/config files, 100% programmatic access, audit log active.",
       "definition_of_done": "All API keys are stored in a secure vault, access is restricted via IAM/RBAC, and agents retrieve secrets programmatically.",
       "validation": "Vault server running in dev mode, API accessible, root token generated",
@@ -5678,7 +6400,11 @@
       "owner": "Backend Dev + Architect",
       "status": "BACKLOG",
       "sprint": 3,
-      "dependencies": ["IFC-002", "IFC-106", "IFC-098"],
+      "dependencies": [
+        "IFC-002",
+        "IFC-106",
+        "IFC-098"
+      ],
       "artifacts": [
         "docs/events/contracts-v1.yaml",
         "packages/platform/outbox/*",
@@ -5697,7 +6423,10 @@
       "owner": "Backend Dev + SRE",
       "status": "BACKLOG",
       "sprint": 4,
-      "dependencies": ["IFC-150", "ENV-008-AI"],
+      "dependencies": [
+        "IFC-150",
+        "ENV-008-AI"
+      ],
       "artifacts": [
         "packages/platform/consumers/*",
         "packages/platform/dlq/*",
@@ -5716,7 +6445,11 @@
       "owner": "Backend Dev + Domain Architect",
       "status": "BACKLOG",
       "sprint": 6,
-      "dependencies": ["IFC-136", "IFC-127", "IFC-094"],
+      "dependencies": [
+        "IFC-136",
+        "IFC-127",
+        "IFC-094"
+      ],
       "artifacts": [
         "packages/domain/src/legal/cases/case-document.ts",
         "packages/db/prisma/case-document.sql",
@@ -5734,7 +6467,12 @@
       "owner": "Backend Dev + Integration Eng",
       "status": "BACKLOG",
       "sprint": 7,
-      "dependencies": ["IFC-152", "IFC-144", "IFC-151", "IFC-106"],
+      "dependencies": [
+        "IFC-152",
+        "IFC-144",
+        "IFC-151",
+        "IFC-106"
+      ],
       "artifacts": [
         "apps/api/src/ingestion/*",
         "packages/adapters/src/messaging/email/attachments/*",
@@ -5753,7 +6491,9 @@
       "owner": "Backend Dev + AI Specialist",
       "status": "BACKLOG",
       "sprint": 8,
-      "dependencies": ["IFC-153"],
+      "dependencies": [
+        "IFC-153"
+      ],
       "artifacts": [
         "apps/workers/ocr/*",
         "artifacts/benchmarks/ocr-quality-benchmarks.csv",
@@ -5771,7 +6511,11 @@
       "owner": "Backend Dev + AI Specialist",
       "status": "BACKLOG",
       "sprint": 8,
-      "dependencies": ["IFC-154", "IFC-127", "ENV-004-AI"],
+      "dependencies": [
+        "IFC-154",
+        "IFC-127",
+        "ENV-004-AI"
+      ],
       "artifacts": [
         "packages/search/case-index/*",
         "packages/search/retrieval.ts",
@@ -5790,7 +6534,11 @@
       "owner": "AI Specialist + Security",
       "status": "BACKLOG",
       "sprint": 9,
-      "dependencies": ["IFC-155", "IFC-139", "IFC-125"],
+      "dependencies": [
+        "IFC-155",
+        "IFC-139",
+        "IFC-125"
+      ],
       "artifacts": [
         "packages/ai/tools/retrieve-case-context.ts",
         "artifacts/misc/evals/case-rag/*",
@@ -5808,7 +6556,11 @@
       "owner": "Backend Dev + SRE",
       "status": "BACKLOG",
       "sprint": 7,
-      "dependencies": ["IFC-144", "IFC-098", "IFC-151"],
+      "dependencies": [
+        "IFC-144",
+        "IFC-098",
+        "IFC-151"
+      ],
       "artifacts": [
         "packages/notifications/*",
         "artifacts/misc/templates/*",
@@ -5826,7 +6578,11 @@
       "owner": "Backend Dev + Calendar Specialist",
       "status": "BACKLOG",
       "sprint": 8,
-      "dependencies": ["IFC-138", "IFC-157", "IFC-137"],
+      "dependencies": [
+        "IFC-138",
+        "IFC-157",
+        "IFC-137"
+      ],
       "artifacts": [
         "packages/scheduling/invites/*",
         "packages/scheduling/reminders/*",
@@ -5844,7 +6600,13 @@
       "owner": "Frontend Dev + Backend Dev",
       "status": "BACKLOG",
       "sprint": 9,
-      "dependencies": ["IFC-147", "IFC-153", "IFC-144", "IFC-149", "IFC-148"],
+      "dependencies": [
+        "IFC-147",
+        "IFC-153",
+        "IFC-144",
+        "IFC-149",
+        "IFC-148"
+      ],
       "artifacts": [
         "apps/web/app/cases/timeline/*",
         "apps/api/src/modules/misc/timeline.ts",
@@ -5862,7 +6624,10 @@
       "owner": "Tech Lead + DevOps",
       "status": "DONE",
       "sprint": 0,
-      "dependencies": ["ENV-001-AI", "ENV-002-AI"],
+      "dependencies": [
+        "ENV-001-AI",
+        "ENV-002-AI"
+      ],
       "artifacts": [
         "docs/architecture/repo-layout.md",
         "docs/architecture/artifact-conventions.md",
@@ -5881,7 +6646,13 @@
       "owner": "SRE Lead + Backend Dev",
       "status": "BACKLOG",
       "sprint": 6,
-      "dependencies": ["IFC-150", "IFC-151", "IFC-153", "IFC-157", "IFC-106"],
+      "dependencies": [
+        "IFC-150",
+        "IFC-151",
+        "IFC-153",
+        "IFC-157",
+        "IFC-106"
+      ],
       "artifacts": [
         "apps/workers/events-worker/src/main.ts",
         "apps/workers/events-worker/src/outbox/pollOutbox.ts",

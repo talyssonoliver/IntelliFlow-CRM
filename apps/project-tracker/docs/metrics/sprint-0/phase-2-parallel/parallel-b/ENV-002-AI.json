@@ -9,10 +9,14 @@
   "stream": "parallel-b",
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2025-12-21T17:57:49.039Z",
-    "required": ["ENV-001-AI"]
+    "verified_at": "2025-12-21T21:20:39.855Z",
+    "required": [
+      "ENV-001-AI"
+    ]
   },
-  "dependencies_resolved": ["ENV-001-AI"],
+  "dependencies_resolved": [
+    "ENV-001-AI"
+  ],
   "started_at": "2025-12-14T20:30:00Z",
   "completed_at": "2025-12-14T20:35:00Z",
   "target_duration_minutes": 5,
