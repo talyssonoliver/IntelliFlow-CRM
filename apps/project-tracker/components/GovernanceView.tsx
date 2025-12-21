@@ -608,7 +608,8 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                 ? 'All Sprints'
                 : selectedSprint === 'Continuous'
                   ? 'Continuous Tasks'
-                  : `Sprint ${selectedSprint}`} validation and compliance
+                  : `Sprint ${selectedSprint}`}{' '}
+              validation and compliance
             </p>
           </div>
         </div>

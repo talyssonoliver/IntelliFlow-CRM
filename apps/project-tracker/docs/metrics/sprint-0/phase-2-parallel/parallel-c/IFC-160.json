@@ -9,16 +9,10 @@
   "stream": "parallel-c",
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2025-12-21T12:38:57.433Z",
-    "required": [
-      "ENV-001-AI",
-      "ENV-002-AI"
-    ]
+    "verified_at": "2025-12-21T17:57:49.567Z",
+    "required": ["ENV-001-AI", "ENV-002-AI"]
   },
-  "dependencies_resolved": [
-    "ENV-001-AI",
-    "ENV-002-AI"
-  ],
+  "dependencies_resolved": ["ENV-001-AI", "ENV-002-AI"],
   "target_duration_minutes": 120,
   "kpis": {
     "linter_errors": {

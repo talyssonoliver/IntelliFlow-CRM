@@ -1,6 +1,7 @@
 # Automation STOA Sub-Agent
 
-Execute Automation STOA validation for orchestration, validation rules, and artifact contracts.
+Execute Automation STOA validation for orchestration, validation rules, and
+artifact contracts.
 
 ## Usage
 
@@ -11,11 +12,13 @@ Execute Automation STOA validation for orchestration, validation rules, and arti
 ## Arguments
 
 - `TASK_ID` (required): The task ID being validated
-- `RUN_ID` (optional): The run ID from MATOP orchestrator. If not provided, generates a new one.
+- `RUN_ID` (optional): The run ID from MATOP orchestrator. If not provided,
+  generates a new one.
 
 ## Responsibility
 
 The Automation STOA owns:
+
 - Factory mechanics (swarm, orchestrator)
 - Validation rules and scripts
 - Artifact placement contracts
@@ -76,15 +79,16 @@ pnpm run sync:metrics --check 2>&1 | tee "artifacts/reports/system-audit/$RUN_ID
 
 ### Canonical File Locations
 
-| File | Expected Location | Check |
-|------|-------------------|-------|
-| Sprint_plan.csv | `apps/project-tracker/docs/metrics/_global/` | Uniqueness |
-| task-registry.json | `apps/project-tracker/docs/metrics/_global/` | Derived from CSV |
-| Task JSON files | `apps/project-tracker/docs/metrics/sprint-0/phase-*/` | Schema valid |
+| File               | Expected Location                                     | Check            |
+| ------------------ | ----------------------------------------------------- | ---------------- |
+| Sprint_plan.csv    | `apps/project-tracker/docs/metrics/_global/`          | Uniqueness       |
+| task-registry.json | `apps/project-tracker/docs/metrics/_global/`          | Derived from CSV |
+| Task JSON files    | `apps/project-tracker/docs/metrics/sprint-0/phase-*/` | Schema valid     |
 
 ### Forbidden Locations
 
 Runtime artifacts MUST NOT exist in:
+
 - `apps/project-tracker/docs/metrics/.locks/**`
 - `apps/project-tracker/docs/metrics/logs/**`
 - `apps/project-tracker/docs/artifacts/**`
@@ -93,6 +97,7 @@ Runtime artifacts MUST NOT exist in:
 ### Evidence Bundle Requirements
 
 Every MATOP run MUST produce:
+
 - `summary.json` with resolved canonical paths
 - `evidence-hashes.txt` with SHA256 for all artifacts
 - `gate-selection.json` with execute/waiverRequired/skipped
@@ -100,18 +105,19 @@ Every MATOP run MUST produce:
 
 ## Verdict Logic
 
-| Condition | Verdict |
-|-----------|---------|
-| All validation scripts pass, artifacts in correct locations | PASS |
-| Minor sync warnings, validations pass | WARN |
-| Sprint validation fails | FAIL |
-| Artifact in forbidden location | FAIL |
-| Multiple Sprint_plan.csv copies | FAIL |
-| Registry inconsistent with CSV | FAIL |
+| Condition                                                   | Verdict |
+| ----------------------------------------------------------- | ------- |
+| All validation scripts pass, artifacts in correct locations | PASS    |
+| Minor sync warnings, validations pass                       | WARN    |
+| Sprint validation fails                                     | FAIL    |
+| Artifact in forbidden location                              | FAIL    |
+| Multiple Sprint_plan.csv copies                             | FAIL    |
+| Registry inconsistent with CSV                              | FAIL    |
 
 ## Verdict Output
 
-Produce verdict file at: `artifacts/reports/system-audit/$RUN_ID/stoa-verdicts/Automation.json`
+Produce verdict file at:
+`artifacts/reports/system-audit/$RUN_ID/stoa-verdicts/Automation.json`
 
 ```json
 {
@@ -119,8 +125,16 @@ Produce verdict file at: `artifacts/reports/system-audit/$RUN_ID/stoa-verdicts/A
   "taskId": "<TASK_ID>",
   "verdict": "PASS|WARN|FAIL|NEEDS_HUMAN",
   "rationale": "All validation scripts passed, artifacts correctly placed",
-  "toolIdsSelected": ["artifact-paths-lint", "sprint-validation", "sprint-data-validation"],
-  "toolIdsExecuted": ["artifact-paths-lint", "sprint-validation", "sprint-data-validation"],
+  "toolIdsSelected": [
+    "artifact-paths-lint",
+    "sprint-validation",
+    "sprint-data-validation"
+  ],
+  "toolIdsExecuted": [
+    "artifact-paths-lint",
+    "sprint-validation",
+    "sprint-data-validation"
+  ],
   "waiversProposed": [],
   "findings": [],
   "automationMetrics": {
@@ -138,14 +152,17 @@ Produce verdict file at: `artifacts/reports/system-audit/$RUN_ID/stoa-verdicts/A
 The Automation STOA is triggered when:
 
 ### By Task Prefix (Lead)
+
 - `AUTOMATION-*` tasks
 
 ### By Keywords (Supporting STOA)
+
 - `orchestrator`, `swarm`, `tracker`
 - `validation`, `artifact`, `audit`
 - `sprint`, `metrics`, `registry`
 
 ### By Path Impact
+
 - `tools/scripts/**`
 - `tools/lint/**`
 - `tools/audit/**`
@@ -172,7 +189,7 @@ for (const module of stoaModules) {
       severity: 'critical',
       source: 'stoa-framework-check',
       message: `Missing STOA module: ${module}`,
-      recommendation: 'Reinstall STOA framework'
+      recommendation: 'Reinstall STOA framework',
     });
   }
 }

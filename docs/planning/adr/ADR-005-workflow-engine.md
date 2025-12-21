@@ -10,7 +10,12 @@
 
 ## Context and Problem Statement
 
-IntelliFlow CRM requires workflow automation to handle business processes like lead nurturing, follow-up sequences, case management workflows, and AI agent orchestration. We need to choose a workflow engine that supports event-driven automation, AI agent coordination, human-in-the-loop approvals, and complex multi-step processes. Should we use a third-party workflow platform, build a custom engine, or use a specialized AI workflow framework?
+IntelliFlow CRM requires workflow automation to handle business processes like
+lead nurturing, follow-up sequences, case management workflows, and AI agent
+orchestration. We need to choose a workflow engine that supports event-driven
+automation, AI agent coordination, human-in-the-loop approvals, and complex
+multi-step processes. Should we use a third-party workflow platform, build a
+custom engine, or use a specialized AI workflow framework?
 
 ## Decision Drivers
 
@@ -34,7 +39,12 @@ IntelliFlow CRM requires workflow automation to handle business processes like l
 
 ## Decision Outcome
 
-Chosen option: **"LangGraph for AI workflows + BullMQ for background jobs"**, because this hybrid approach provides the best fit for our use cases. LangGraph is purpose-built for AI agent orchestration with state management, branching logic, and human-in-the-loop steps. BullMQ handles simpler background jobs like email sending, data sync, and scheduled tasks. This separation keeps AI workflows clean and leverages existing BullMQ infrastructure.
+Chosen option: **"LangGraph for AI workflows + BullMQ for background jobs"**,
+because this hybrid approach provides the best fit for our use cases. LangGraph
+is purpose-built for AI agent orchestration with state management, branching
+logic, and human-in-the-loop steps. BullMQ handles simpler background jobs like
+email sending, data sync, and scheduled tasks. This separation keeps AI
+workflows clean and leverages existing BullMQ infrastructure.
 
 ### Positive Consequences
 
@@ -206,7 +216,8 @@ workflow.addNode('score_lead', async (state) => {
 
 // Node: Check if human review needed
 workflow.addNode('check_threshold', async (state) => {
-  const human_review_required = state.score !== null && state.score >= 40 && state.score <= 60;
+  const human_review_required =
+    state.score !== null && state.score >= 40 && state.score <= 60;
 
   return {
     human_review_required,
@@ -234,7 +245,11 @@ workflow.addNode('auto_qualify', async (state) => {
 
   return {
     qualification_status: qualified ? 'qualified' : 'disqualified',
-    messages: [new AIMessage(`Auto-decision: ${qualified ? 'QUALIFIED' : 'DISQUALIFIED'}`)],
+    messages: [
+      new AIMessage(
+        `Auto-decision: ${qualified ? 'QUALIFIED' : 'DISQUALIFIED'}`
+      ),
+    ],
   };
 });
 
@@ -357,7 +372,8 @@ If LangGraph proves too complex:
 - [LangSmith](https://smith.langchain.com/)
 - [Bull Board](https://github.com/felixmosh/bull-board)
 - Related: [ADR-006 Agent Tool-Calling](./ADR-006-agent-tools.md)
-- Related: [IFC-141 Workflow Engine Evaluation](../../apps/project-tracker/docs/metrics/_global/Sprint_plan.csv)
+- Related:
+  [IFC-141 Workflow Engine Evaluation](../../apps/project-tracker/docs/metrics/_global/Sprint_plan.csv)
 
 ## References
 

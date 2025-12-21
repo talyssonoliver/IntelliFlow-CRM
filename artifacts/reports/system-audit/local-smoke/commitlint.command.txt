@@ -1,1 +1,0 @@
-python tools/audit/commit_msg_lint.py --count 20

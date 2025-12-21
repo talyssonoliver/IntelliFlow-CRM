@@ -61,9 +61,7 @@ export async function GET(request: Request) {
           results: content.results,
           duration: content.duration,
           passRate:
-            content.totalTasks > 0
-              ? ((content.results?.pass || 0) / content.totalTasks) * 100
-              : 0,
+            content.totalTasks > 0 ? ((content.results?.pass || 0) / content.totalTasks) * 100 : 0,
           mdPath: f.path.replace('.json', '.md'),
         };
       } catch {

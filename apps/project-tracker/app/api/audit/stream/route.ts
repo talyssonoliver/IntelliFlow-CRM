@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server';
 import { spawn, spawnSync } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import path from 'node:path';
+import { stripVTControlCharacters } from 'node:util';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -37,13 +39,8 @@ function getPythonCommand(): string {
 
 function generateRunId(prefix: string): string {
   const ts = new Date().toISOString().replaceAll(':', '').replaceAll('-', '').replace('.000Z', 'Z');
-  const rand = Math.random().toString(36).slice(2, 8);
+  const rand = randomUUID().replaceAll('-', '').slice(0, 8);
   return `${prefix}-${ts}-${rand}`;
-}
-
-function stripAnsi(input: string): string {
-  // eslint-disable-next-line no-control-regex
-  return input.replace(/\x1b\[[0-9;]*m/g, '');
 }
 
 function sendSse(
@@ -185,7 +182,7 @@ export async function GET(request: NextRequest) {
       };
 
       const sendLogLine = (streamName: 'stdout' | 'stderr', line: string) => {
-        const clean = stripAnsi(line.replace(/\r/g, ''));
+        const clean = stripVTControlCharacters(line.replace(/\r/g, ''));
         if (!clean.trim()) return;
         sendSse(controller, encoder, 'log', {
           stream: streamName,

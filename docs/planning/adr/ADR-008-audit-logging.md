@@ -10,7 +10,13 @@
 
 ## Context and Problem Statement
 
-IntelliFlow CRM handles sensitive legal data and must maintain comprehensive audit logs for compliance (GDPR, CCPA, SOC 2, ISO 42001), security investigations, debugging, and business analytics. We need to track all data access, modifications, deletions, user actions, AI agent operations, and system events with sufficient detail to reconstruct exactly what happened, when, why, and by whom. How should we implement audit logging to balance completeness, performance, cost, and queryability?
+IntelliFlow CRM handles sensitive legal data and must maintain comprehensive
+audit logs for compliance (GDPR, CCPA, SOC 2, ISO 42001), security
+investigations, debugging, and business analytics. We need to track all data
+access, modifications, deletions, user actions, AI agent operations, and system
+events with sufficient detail to reconstruct exactly what happened, when, why,
+and by whom. How should we implement audit logging to balance completeness,
+performance, cost, and queryability?
 
 ## Decision Drivers
 
@@ -30,11 +36,17 @@ IntelliFlow CRM handles sensitive legal data and must maintain comprehensive aud
 - **Option 2**: Database audit table (PostgreSQL)
 - **Option 3**: Dedicated audit log service (Supabase + TimescaleDB)
 - **Option 4**: Domain events + event sourcing
-- **Option 5**: Hybrid approach (Domain events → Audit table + OpenTelemetry traces)
+- **Option 5**: Hybrid approach (Domain events → Audit table + OpenTelemetry
+  traces)
 
 ## Decision Outcome
 
-Chosen option: **"Hybrid approach (Domain events → Audit table + OpenTelemetry traces)"**, because it provides the best balance of compliance, performance, and observability. We will use domain events as the source of truth for audit events, persist them to a dedicated `audit_log` table in PostgreSQL, and emit OpenTelemetry traces for distributed tracing. This approach ensures all business actions are auditable, while technical metrics flow to Prometheus/Grafana.
+Chosen option: **"Hybrid approach (Domain events → Audit table + OpenTelemetry
+traces)"**, because it provides the best balance of compliance, performance, and
+observability. We will use domain events as the source of truth for audit
+events, persist them to a dedicated `audit_log` table in PostgreSQL, and emit
+OpenTelemetry traces for distributed tracing. This approach ensures all business
+actions are auditable, while technical metrics flow to Prometheus/Grafana.
 
 ### Positive Consequences
 
@@ -230,7 +242,10 @@ export class AuditEventHandler implements DomainEventHandler {
     });
   }
 
-  private mapEventToAuditLog(event: DomainEvent, context: EventContext): AuditLogEntry {
+  private mapEventToAuditLog(
+    event: DomainEvent,
+    context: EventContext
+  ): AuditLogEntry {
     return {
       tenant_id: context.tenantId,
       event_type: event.constructor.name,
@@ -550,7 +565,8 @@ If the hybrid approach proves too complex:
 
 1. Simplify to database audit table only (remove OpenTelemetry correlation)
 2. Use application logs for non-compliance events
-3. Migrate to dedicated audit service (Supabase + TimescaleDB) if performance suffers
+3. Migrate to dedicated audit service (Supabase + TimescaleDB) if performance
+   suffers
 
 ## Links
 

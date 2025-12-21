@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
+import { stripVTControlCharacters } from 'node:util';
 import { PATHS } from '@/lib/paths';
 
 // Convert Windows path to Unix-style for Git Bash
@@ -72,11 +73,7 @@ export async function GET(request: Request, context: RouteContext) {
         resolved = true;
 
         // Clean up output
-        const cleanStdout = stdout
-          .trim()
-          .replace(/\r/g, '')
-          // eslint-disable-next-line no-control-regex
-          .replace(/\x1b\[[0-9;]*m/g, '');
+        const cleanStdout = stripVTControlCharacters(stdout.trim().replace(/\r/g, ''));
 
         resolve(
           NextResponse.json({

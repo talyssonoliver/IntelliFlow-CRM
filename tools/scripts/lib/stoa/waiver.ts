@@ -27,9 +27,10 @@ const WAIVER_FILE_NAME = 'waivers.json';
 /**
  * Determine the appropriate waiver reason based on tool state.
  */
-export function determineWaiverReason(
-  tool: AuditMatrixTool
-): { reason: WaiverReason; details: string } {
+export function determineWaiverReason(tool: AuditMatrixTool): {
+  reason: WaiverReason;
+  details: string;
+} {
   // Check for missing env vars first
   if (tool.requires_env && tool.requires_env.length > 0) {
     const missingEnv = tool.requires_env.filter((v) => !process.env[v]);
@@ -196,10 +197,7 @@ export function loadWaivers(evidenceDir: string): WaiverRecord[] {
 /**
  * Save waivers to a run's evidence bundle.
  */
-export async function saveWaivers(
-  evidenceDir: string,
-  waivers: WaiverRecord[]
-): Promise<void> {
+export async function saveWaivers(evidenceDir: string, waivers: WaiverRecord[]): Promise<void> {
   await mkdir(evidenceDir, { recursive: true });
 
   const waiverPath = join(evidenceDir, WAIVER_FILE_NAME);
@@ -210,10 +208,7 @@ export async function saveWaivers(
  * Merge new waivers with existing ones.
  * New waivers for the same tool replace old ones.
  */
-export function mergeWaivers(
-  existing: WaiverRecord[],
-  newWaivers: WaiverRecord[]
-): WaiverRecord[] {
+export function mergeWaivers(existing: WaiverRecord[], newWaivers: WaiverRecord[]): WaiverRecord[] {
   const byToolId = new Map<string, WaiverRecord>();
 
   // Add existing waivers
@@ -245,9 +240,7 @@ export function approveWaiver(
     ...waiver,
     approved: true,
     owner: approver,
-    expiresAt: newExpiry
-      ? newExpiry.toISOString()
-      : waiver.expiresAt,
+    expiresAt: newExpiry ? newExpiry.toISOString() : waiver.expiresAt,
     strictModeBehavior: 'WARN', // Approved waivers become WARN instead of FAIL
   };
 }
@@ -275,10 +268,7 @@ export function renewWaiver(
  * Make a waiver permanent (no expiry).
  * Requires explicit justification.
  */
-export function makeWaiverPermanent(
-  waiver: WaiverRecord,
-  justification: string
-): WaiverRecord {
+export function makeWaiverPermanent(waiver: WaiverRecord, justification: string): WaiverRecord {
   return {
     ...waiver,
     expiresAt: null,

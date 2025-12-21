@@ -164,9 +164,7 @@ export class Task extends AggregateRoot<TaskId> {
       updatedAt: now,
     });
 
-    task.addDomainEvent(
-      new TaskCreatedEvent(taskId, props.title, task.priority, props.ownerId)
-    );
+    task.addDomainEvent(new TaskCreatedEvent(taskId, props.title, task.priority, props.ownerId));
 
     return Result.ok(task);
   }
@@ -190,9 +188,7 @@ export class Task extends AggregateRoot<TaskId> {
     this.props.status = newStatus;
     this.props.updatedAt = new Date();
 
-    this.addDomainEvent(
-      new TaskStatusChangedEvent(this.id, previousStatus, newStatus, changedBy)
-    );
+    this.addDomainEvent(new TaskStatusChangedEvent(this.id, previousStatus, newStatus, changedBy));
 
     return Result.ok(undefined);
   }

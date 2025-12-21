@@ -12,13 +12,7 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { load } from 'js-yaml';
-import type {
-  AuditMatrix,
-  AuditMatrixTool,
-  GateSelectionResult,
-  StoaRole,
-  Task,
-} from './types.js';
+import type { AuditMatrix, AuditMatrixTool, GateSelectionResult, StoaRole, Task } from './types.js';
 
 // ============================================================================
 // STOA to Tool Owner Mapping
@@ -246,10 +240,7 @@ export function validateGateSelection(
 /**
  * Sort gates by their order field (if present) for execution.
  */
-export function orderGatesForExecution(
-  gateIds: string[],
-  matrix: AuditMatrix
-): string[] {
+export function orderGatesForExecution(gateIds: string[], matrix: AuditMatrix): string[] {
   return gateIds.slice().sort((a, b) => {
     const toolA = getToolById(matrix, a);
     const toolB = getToolById(matrix, b);

@@ -1,0 +1,108 @@
+{
+  "$schema": "../schemas/sprint-summary.schema.json",
+  "sprint": 1,
+  "name": "Sprint 1 - Validation & Architecture",
+  "target_date": "2025-12-21",
+  "started_at": "2025-12-21T10:00:00Z",
+  "completed_at": "2025-12-21T18:00:00Z",
+  "status": "DONE",
+  "task_summary": {
+    "total": 14,
+    "done": 14,
+    "in_progress": 0,
+    "blocked": 0,
+    "not_started": 0,
+    "failed": 0
+  },
+  "phases": [
+    {
+      "phase_id": "phase-1-validation",
+      "phase_name": "Validation & Architecture",
+      "status": "DONE",
+      "task_count": 14,
+      "completed_count": 14
+    }
+  ],
+  "kpi_summary": {
+    "automation_percentage": 100,
+    "manual_interventions": 0,
+    "blockers_raised": 0,
+    "blockers_resolved": 0,
+    "average_task_duration_minutes": 130,
+    "validation_pass_rate": 100
+  },
+  "completed_tasks": [
+    {
+      "task_id": "IFC-001",
+      "completed_at": "2025-12-21T14:00:00Z",
+      "duration_minutes": 240
+    },
+    {
+      "task_id": "IFC-002",
+      "completed_at": "2025-12-21T16:00:00Z",
+      "duration_minutes": 120
+    },
+    {
+      "task_id": "IFC-003",
+      "completed_at": "2025-12-21T16:30:00Z",
+      "duration_minutes": 120
+    },
+    {
+      "task_id": "IFC-072",
+      "completed_at": "2025-12-21T14:00:00Z",
+      "duration_minutes": 240
+    },
+    {
+      "task_id": "IFC-073",
+      "completed_at": "2025-12-21T16:00:00Z",
+      "duration_minutes": 120
+    },
+    {
+      "task_id": "IFC-074",
+      "completed_at": "2025-12-21T16:00:00Z",
+      "duration_minutes": 120
+    },
+    {
+      "task_id": "IFC-075",
+      "completed_at": "2025-12-21T14:00:00Z",
+      "duration_minutes": 120
+    },
+    {
+      "task_id": "IFC-106",
+      "completed_at": "2025-12-21T16:00:00Z",
+      "duration_minutes": 120
+    },
+    {
+      "task_id": "IFC-135",
+      "completed_at": "2025-12-21T14:00:00Z",
+      "duration_minutes": 120
+    },
+    {
+      "task_id": "GOV-001",
+      "completed_at": "2025-12-21T14:00:00Z",
+      "duration_minutes": 120
+    },
+    {
+      "task_id": "BRAND-002",
+      "completed_at": "2025-12-21T14:00:00Z",
+      "duration_minutes": 120
+    },
+    {
+      "task_id": "SALES-001",
+      "completed_at": "2025-12-21T14:00:00Z",
+      "duration_minutes": 120
+    },
+    {
+      "task_id": "IFC-077",
+      "completed_at": "2025-12-21T17:00:00Z",
+      "duration_minutes": 60
+    },
+    {
+      "task_id": "IFC-119",
+      "completed_at": "2025-12-21T17:30:00Z",
+      "duration_minutes": 60
+    }
+  ],
+  "blockers": [],
+  "notes": "Sprint 1 completed successfully with all validation and architecture tasks done. Zero blockers, 100% automation rate."
+}

@@ -18,7 +18,7 @@ export abstract class AggregateRoot<TId> extends Entity<TId> {
   }
 
   getDomainEvents(): ReadonlyArray<DomainEvent> {
-    return this.domainEvents;
+    return [...this._domainEvents];
   }
 
   get version(): number {

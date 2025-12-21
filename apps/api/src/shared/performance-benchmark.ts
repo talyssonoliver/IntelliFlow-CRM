@@ -283,7 +283,8 @@ async function runBenchmarks() {
 /**
  * Export for programmatic use
  */
-export { benchmark, runBenchmarks, BenchmarkResult };
+export { benchmark, runBenchmarks };
+export type { BenchmarkResult };
 
 /**
  * Run if executed directly

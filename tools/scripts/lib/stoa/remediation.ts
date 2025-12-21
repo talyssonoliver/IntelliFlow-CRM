@@ -130,16 +130,11 @@ export function createReviewQueueItem(
   };
 }
 
-export function appendToReviewQueue(
-  repoRoot: string,
-  item: ReviewQueueItem
-): void {
+export function appendToReviewQueue(repoRoot: string, item: ReviewQueueItem): void {
   const queue = loadReviewQueue(repoRoot);
 
   // Check for existing unresolved item for same task
-  const existing = queue.find(
-    (q) => q.taskId === item.taskId && q.resolvedAt === null
-  );
+  const existing = queue.find((q) => q.taskId === item.taskId && q.resolvedAt === null);
 
   if (existing) {
     // Append findings to existing item
@@ -165,7 +160,15 @@ export function loadBlockers(repoRoot: string): BlockerRecord[] {
     return [];
   }
   try {
-    return JSON.parse(readFileSync(blockersPath, 'utf-8'));
+    const data = JSON.parse(readFileSync(blockersPath, 'utf-8'));
+    // Handle both array format and { blockers: [] } format
+    if (Array.isArray(data)) {
+      return data;
+    }
+    if (data && Array.isArray(data.blockers)) {
+      return data.blockers;
+    }
+    return [];
   } catch {
     return [];
   }
@@ -208,11 +211,7 @@ export function addBlocker(repoRoot: string, blocker: BlockerRecord): void {
   saveBlockers(repoRoot, filtered);
 }
 
-export function resolveBlocker(
-  repoRoot: string,
-  taskId: string,
-  resolvedBy: string
-): boolean {
+export function resolveBlocker(repoRoot: string, taskId: string, resolvedBy: string): boolean {
   const blockers = loadBlockers(repoRoot);
   const blocker = blockers.find((b) => b.taskId === taskId && !b.resolvedAt);
 
@@ -253,18 +252,20 @@ export function generateHumanPacket(
     .map((f) => `1. Check ${f.source}: ${f.message}`);
 
   // Generate suspected root cause from findings
-  const suspectedRootCause = verdict.findings.length > 0
-    ? verdict.findings
-        .slice(0, 3)
-        .map((f) => `${f.source}: ${f.message}`)
-        .join('\n')
-    : 'Unable to determine root cause automatically';
+  const suspectedRootCause =
+    verdict.findings.length > 0
+      ? verdict.findings
+          .slice(0, 3)
+          .map((f) => `${f.source}: ${f.message}`)
+          .join('\n')
+      : 'Unable to determine root cause automatically';
 
   // Generate recommended next attempt
-  const recommendedNextAttempt = verdict.findings
-    .filter((f) => f.recommendation)
-    .map((f) => f.recommendation)
-    .join('\n') || 'Review gate logs and fix underlying issues';
+  const recommendedNextAttempt =
+    verdict.findings
+      .filter((f) => f.recommendation)
+      .map((f) => f.recommendation)
+      .join('\n') || 'Review gate logs and fix underlying issues';
 
   return {
     taskId: verdict.taskId,
@@ -312,17 +313,21 @@ ${packet.escalationReason}
 
 ## Failing Commands
 
-${packet.failingCommands.length > 0
-  ? packet.failingCommands
-      .map((c) => `- **${c.command}**: Exit code ${c.exitCode}\n  Log: \`${c.logPath}\``)
-      .join('\n')
-  : 'No command failures recorded'}
+${
+  packet.failingCommands.length > 0
+    ? packet.failingCommands
+        .map((c) => `- **${c.command}**: Exit code ${c.exitCode}\n  Log: \`${c.logPath}\``)
+        .join('\n')
+    : 'No command failures recorded'
+}
 
 ## Reproduction Steps
 
-${packet.reproductionSteps.length > 0
-  ? packet.reproductionSteps.map((s, i) => `${i + 1}. ${s}`).join('\n')
-  : '1. Re-run the MATOP validation for this task'}
+${
+  packet.reproductionSteps.length > 0
+    ? packet.reproductionSteps.map((s, i) => `${i + 1}. ${s}`).join('\n')
+    : '1. Re-run the MATOP validation for this task'
+}
 
 ## Suspected Root Cause
 
@@ -396,10 +401,7 @@ export function createDebtEntry(
   };
 }
 
-export function appendToDebtLedger(
-  repoRoot: string,
-  entry: DebtLedgerEntry
-): void {
+export function appendToDebtLedger(repoRoot: string, entry: DebtLedgerEntry): void {
   const ledger = loadDebtLedger(repoRoot);
   ledger.push(entry);
   saveDebtLedger(repoRoot, ledger);
@@ -479,9 +481,7 @@ export function processVerdictRemediation(
       result.actions.push(`Created blocking review queue item: ${result.reviewQueueItem.id}`);
 
       // Create blocker record
-      const failedGates = gateResults
-        .filter((g) => g.exitCode !== 0)
-        .map((g) => g.toolId);
+      const failedGates = gateResults.filter((g) => g.exitCode !== 0).map((g) => g.toolId);
 
       result.blocker = createBlockerRecord(
         verdict.taskId,
@@ -526,11 +526,7 @@ export function processVerdictRemediation(
 /**
  * Close resolved review queue items for a task.
  */
-function closeReviewQueueItems(
-  repoRoot: string,
-  taskId: string,
-  resolvedByRunId: string
-): void {
+function closeReviewQueueItems(repoRoot: string, taskId: string, resolvedByRunId: string): void {
   const queue = loadReviewQueue(repoRoot);
   let changed = false;
 
@@ -552,10 +548,7 @@ function closeReviewQueueItems(
 // Remediation Report Generation
 // ============================================================================
 
-export function generateRemediationReport(
-  result: RemediationResult,
-  verdict: StoaVerdict
-): string {
+export function generateRemediationReport(result: RemediationResult, verdict: StoaVerdict): string {
   let report = `## Remediation Actions for ${verdict.taskId}\n\n`;
   report += `**Verdict:** ${verdict.verdict}\n`;
   report += `**STOA:** ${verdict.stoa}\n\n`;

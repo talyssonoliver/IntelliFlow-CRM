@@ -1,6 +1,7 @@
 # Foundation STOA Sub-Agent
 
-Execute Foundation STOA validation for infrastructure, tooling, CI, and environment tasks.
+Execute Foundation STOA validation for infrastructure, tooling, CI, and
+environment tasks.
 
 ## Usage
 
@@ -11,11 +12,13 @@ Execute Foundation STOA validation for infrastructure, tooling, CI, and environm
 ## Arguments
 
 - `TASK_ID` (required): The task ID being validated
-- `RUN_ID` (optional): The run ID from MATOP orchestrator. If not provided, generates a new one.
+- `RUN_ID` (optional): The run ID from MATOP orchestrator. If not provided,
+  generates a new one.
 
 ## Responsibility
 
 The Foundation STOA owns:
+
 - Infrastructure and tooling setup
 - CI/CD pipeline configuration
 - Environment bootstrap and validation
@@ -64,17 +67,18 @@ pnpm exec depcruise --config .dependency-cruiser.cjs packages apps --output-type
 
 ## Verdict Logic
 
-| Condition | Verdict |
-|-----------|---------|
-| All gates exit 0 | PASS |
-| Non-critical warnings (formatting, minor lint) | WARN |
-| Build fails OR typecheck fails | FAIL |
-| Docker config invalid (for infra tasks) | FAIL |
-| Tool misconfiguration or ambiguous results | NEEDS_HUMAN |
+| Condition                                      | Verdict     |
+| ---------------------------------------------- | ----------- |
+| All gates exit 0                               | PASS        |
+| Non-critical warnings (formatting, minor lint) | WARN        |
+| Build fails OR typecheck fails                 | FAIL        |
+| Docker config invalid (for infra tasks)        | FAIL        |
+| Tool misconfiguration or ambiguous results     | NEEDS_HUMAN |
 
 ## Verdict Output
 
-Produce verdict file at: `artifacts/reports/system-audit/$RUN_ID/stoa-verdicts/Foundation.json`
+Produce verdict file at:
+`artifacts/reports/system-audit/$RUN_ID/stoa-verdicts/Foundation.json`
 
 ```json
 {
@@ -100,7 +104,7 @@ import {
   runGates,
   generateStoaVerdict,
   writeStoaVerdict,
-  getEvidenceDir
+  getEvidenceDir,
 } from './tools/scripts/lib/stoa/index.js';
 
 const matrix = loadAuditMatrix(repoRoot);
@@ -113,14 +117,14 @@ const foundationGates = [
   'eslint-max-warnings-0',
   'prettier-check',
   'commitlint',
-  'dependency-cruiser-validate'
+  'dependency-cruiser-validate',
 ];
 
 const results = await runGates(foundationGates, {
   repoRoot,
   evidenceDir,
   matrix,
-  dryRun: false
+  dryRun: false,
 });
 
 const verdict = generateStoaVerdict(

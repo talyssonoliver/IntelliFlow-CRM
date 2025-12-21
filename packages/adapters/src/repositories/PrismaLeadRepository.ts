@@ -1,11 +1,5 @@
 import { PrismaClient } from '@intelliflow/db';
-import {
-  Lead,
-  LeadId,
-  Email,
-  type LeadSource,
-  type LeadStatus,
-} from '@intelliflow/domain';
+import { Lead, LeadId, Email, type LeadSource, type LeadStatus } from '@intelliflow/domain';
 import { LeadRepository } from '@intelliflow/application';
 
 /**
@@ -60,26 +54,23 @@ export class PrismaLeadRepository implements LeadRepository {
 
     if (!record) return null;
 
-    return Lead.reconstitute(
-      createLeadId(record.id),
-      {
-        email: Email.create(record.email).value,
-        firstName: record.firstName ?? undefined,
-        lastName: record.lastName ?? undefined,
-        company: record.company ?? undefined,
-        title: record.title ?? undefined,
-        phone: record.phone ?? undefined,
-        source: record.source as LeadSource,
-        status: record.status as LeadStatus,
-        score: {
-          value: record.score,
-          confidence: 1.0, // Default confidence since Prisma only stores score value
-        },
-        ownerId: record.ownerId,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-      }
-    );
+    return Lead.reconstitute(createLeadId(record.id), {
+      email: Email.create(record.email).value,
+      firstName: record.firstName ?? undefined,
+      lastName: record.lastName ?? undefined,
+      company: record.company ?? undefined,
+      title: record.title ?? undefined,
+      phone: record.phone ?? undefined,
+      source: record.source as LeadSource,
+      status: record.status as LeadStatus,
+      score: {
+        value: record.score,
+        confidence: 1.0, // Default confidence since Prisma only stores score value
+      },
+      ownerId: record.ownerId,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+    });
   }
 
   async findByEmail(email: Email): Promise<Lead | null> {
@@ -90,9 +81,33 @@ export class PrismaLeadRepository implements LeadRepository {
 
     if (!record) return null;
 
-    return Lead.reconstitute(
-      createLeadId(record.id),
-      {
+    return Lead.reconstitute(createLeadId(record.id), {
+      email: Email.create(record.email).value,
+      firstName: record.firstName ?? undefined,
+      lastName: record.lastName ?? undefined,
+      company: record.company ?? undefined,
+      title: record.title ?? undefined,
+      phone: record.phone ?? undefined,
+      source: record.source as LeadSource,
+      status: record.status as LeadStatus,
+      score: {
+        value: record.score,
+        confidence: 1.0,
+      },
+      ownerId: record.ownerId,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+    });
+  }
+
+  async findByOwnerId(ownerId: string): Promise<Lead[]> {
+    const records = await this.prisma.lead.findMany({
+      where: { ownerId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return records.map((record) =>
+      Lead.reconstitute(createLeadId(record.id), {
         email: Email.create(record.email).value,
         firstName: record.firstName ?? undefined,
         lastName: record.lastName ?? undefined,
@@ -108,37 +123,7 @@ export class PrismaLeadRepository implements LeadRepository {
         ownerId: record.ownerId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
-      }
-    );
-  }
-
-  async findByOwnerId(ownerId: string): Promise<Lead[]> {
-    const records = await this.prisma.lead.findMany({
-      where: { ownerId },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    return records.map((record) =>
-      Lead.reconstitute(
-        createLeadId(record.id),
-        {
-          email: Email.create(record.email).value,
-          firstName: record.firstName ?? undefined,
-          lastName: record.lastName ?? undefined,
-          company: record.company ?? undefined,
-          title: record.title ?? undefined,
-          phone: record.phone ?? undefined,
-          source: record.source as LeadSource,
-          status: record.status as LeadStatus,
-          score: {
-            value: record.score,
-            confidence: 1.0,
-          },
-          ownerId: record.ownerId,
-          createdAt: record.createdAt,
-          updatedAt: record.updatedAt,
-        }
-      )
+      })
     );
   }
 
@@ -152,26 +137,23 @@ export class PrismaLeadRepository implements LeadRepository {
     });
 
     return records.map((record) =>
-      Lead.reconstitute(
-        createLeadId(record.id),
-        {
-          email: Email.create(record.email).value,
-          firstName: record.firstName ?? undefined,
-          lastName: record.lastName ?? undefined,
-          company: record.company ?? undefined,
-          title: record.title ?? undefined,
-          phone: record.phone ?? undefined,
-          source: record.source as LeadSource,
-          status: record.status as LeadStatus,
-          score: {
-            value: record.score,
-            confidence: 1.0,
-          },
-          ownerId: record.ownerId,
-          createdAt: record.createdAt,
-          updatedAt: record.updatedAt,
-        }
-      )
+      Lead.reconstitute(createLeadId(record.id), {
+        email: Email.create(record.email).value,
+        firstName: record.firstName ?? undefined,
+        lastName: record.lastName ?? undefined,
+        company: record.company ?? undefined,
+        title: record.title ?? undefined,
+        phone: record.phone ?? undefined,
+        source: record.source as LeadSource,
+        status: record.status as LeadStatus,
+        score: {
+          value: record.score,
+          confidence: 1.0,
+        },
+        ownerId: record.ownerId,
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt,
+      })
     );
   }
 
@@ -185,26 +167,23 @@ export class PrismaLeadRepository implements LeadRepository {
     });
 
     return records.map((record) =>
-      Lead.reconstitute(
-        createLeadId(record.id),
-        {
-          email: Email.create(record.email).value,
-          firstName: record.firstName ?? undefined,
-          lastName: record.lastName ?? undefined,
-          company: record.company ?? undefined,
-          title: record.title ?? undefined,
-          phone: record.phone ?? undefined,
-          source: record.source as LeadSource,
-          status: record.status as LeadStatus,
-          score: {
-            value: record.score,
-            confidence: 1.0,
-          },
-          ownerId: record.ownerId,
-          createdAt: record.createdAt,
-          updatedAt: record.updatedAt,
-        }
-      )
+      Lead.reconstitute(createLeadId(record.id), {
+        email: Email.create(record.email).value,
+        firstName: record.firstName ?? undefined,
+        lastName: record.lastName ?? undefined,
+        company: record.company ?? undefined,
+        title: record.title ?? undefined,
+        phone: record.phone ?? undefined,
+        source: record.source as LeadSource,
+        status: record.status as LeadStatus,
+        score: {
+          value: record.score,
+          confidence: 1.0,
+        },
+        ownerId: record.ownerId,
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt,
+      })
     );
   }
 
@@ -244,36 +223,30 @@ export class PrismaLeadRepository implements LeadRepository {
 
     const records = await this.prisma.lead.findMany({
       where: {
-        OR: [
-          { score: 0 },
-          { updatedAt: { lt: thirtyDaysAgo } },
-        ],
+        OR: [{ score: 0 }, { updatedAt: { lt: thirtyDaysAgo } }],
       },
       take: limit,
       orderBy: { createdAt: 'asc' },
     });
 
     return records.map((record) =>
-      Lead.reconstitute(
-        createLeadId(record.id),
-        {
-          email: Email.create(record.email).value,
-          firstName: record.firstName ?? undefined,
-          lastName: record.lastName ?? undefined,
-          company: record.company ?? undefined,
-          title: record.title ?? undefined,
-          phone: record.phone ?? undefined,
-          source: record.source as LeadSource,
-          status: record.status as LeadStatus,
-          score: {
-            value: record.score,
-            confidence: 1.0,
-          },
-          ownerId: record.ownerId,
-          createdAt: record.createdAt,
-          updatedAt: record.updatedAt,
-        }
-      )
+      Lead.reconstitute(createLeadId(record.id), {
+        email: Email.create(record.email).value,
+        firstName: record.firstName ?? undefined,
+        lastName: record.lastName ?? undefined,
+        company: record.company ?? undefined,
+        title: record.title ?? undefined,
+        phone: record.phone ?? undefined,
+        source: record.source as LeadSource,
+        status: record.status as LeadStatus,
+        score: {
+          value: record.score,
+          confidence: 1.0,
+        },
+        ownerId: record.ownerId,
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt,
+      })
     );
   }
 }

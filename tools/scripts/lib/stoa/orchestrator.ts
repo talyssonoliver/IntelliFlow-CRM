@@ -64,11 +64,7 @@ export async function runPreflightChecks(
   const csvPath = resolveSprintPlanPath(repoRoot);
   const pathResolution = {
     path: csvPath,
-    source: csvPath?.includes('_global')
-      ? 'canonical'
-      : csvPath
-        ? 'fallback'
-        : 'not_found',
+    source: csvPath?.includes('_global') ? 'canonical' : csvPath ? 'fallback' : 'not_found',
     severity: 'PASS' as const,
     message: '',
   };
@@ -132,7 +128,9 @@ export async function runPreflightChecks(
   const passed =
     pathResolution.severity !== 'FAIL' &&
     uniquenessChecks.every((c) => c.severity === 'PASS') &&
-    toolAvailability.filter((t) => gateSelection.execute.includes(t.toolId)).every((t) => t.available);
+    toolAvailability
+      .filter((t) => gateSelection.execute.includes(t.toolId))
+      .every((t) => t.available);
 
   return {
     passed,
@@ -172,7 +170,9 @@ export function loadTaskFromCsv(taskId: string, repoRoot: string): Task | null {
     description: csvTask.Description,
     status: csvTask.Status,
     targetSprint: csvTask['Target Sprint'],
-    dependencies: csvTask.Dependencies?.split(',').map((d) => d.trim()).filter(Boolean),
+    dependencies: csvTask.Dependencies?.split(',')
+      .map((d) => d.trim())
+      .filter(Boolean),
     definitionOfDone: csvTask['Definition of Done'],
   };
 }
@@ -247,7 +247,9 @@ export async function runStoaOrchestration(
 
   const preflight = await runPreflightChecks(config, gateSelection, matrix);
 
-  log(`Path Resolution: ${preflight.pathResolution.severity} - ${preflight.pathResolution.message}`);
+  log(
+    `Path Resolution: ${preflight.pathResolution.severity} - ${preflight.pathResolution.message}`
+  );
 
   for (const check of preflight.uniquenessChecks) {
     log(`Uniqueness (${check.artifact}): ${check.severity} - ${check.message}`);

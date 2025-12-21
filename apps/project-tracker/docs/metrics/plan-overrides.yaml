@@ -60,7 +60,7 @@ IFC-106:
   acceptance_owner: 'Tech Lead'
   debt_allowed: no
   override_deps_remove:
-    - IFC-131  # Break cycle: IFC-106 -> IFC-131 -> IFC-106
+    - IFC-131 # Break cycle: IFC-106 -> IFC-131 -> IFC-106
   exception_policy: 'stub_contract'
   evidence_required:
     - packages/application/src/ports/*
@@ -114,7 +114,7 @@ IFC-115:
   debt_allowed: yes
   waiver_expiry: '2026-03-31'
   override_deps_remove:
-    - IFC-071  # Break cycle: IFC-040 -> IFC-115 -> IFC-071 -> IFC-040
+    - IFC-071 # Break cycle: IFC-040 -> IFC-115 -> IFC-071 -> IFC-040
   exception_policy: 'stub_contract'
   evidence_required:
     - apps/ai-worker/src/workflows/*
@@ -151,7 +151,7 @@ IFC-072:
   acceptance_owner: 'Security Engineer'
   debt_allowed: no
   override_deps_remove:
-    - IFC-008  # Sprint 2 dependency removed from Sprint 1 task
+    - IFC-008 # Sprint 2 dependency removed from Sprint 1 task
   exception_policy: 'stub_contract'
   evidence_required:
     - docs/security/zero-trust.md
@@ -168,7 +168,7 @@ IFC-077:
   debt_allowed: yes
   waiver_expiry: '2026-03-31'
   override_deps_remove:
-    - IFC-013  # Sprint 7 dependency removed from Sprint 1 task
+    - IFC-013 # Sprint 7 dependency removed from Sprint 1 task
   evidence_required:
     - docs/planning/*
   notes: 'CROSS-SPRINT FIX: IFC-013 (Sprint 7) dependency deferred.'
@@ -184,7 +184,7 @@ IFC-079:
   debt_allowed: yes
   waiver_expiry: '2026-03-31'
   override_deps_remove:
-    - IFC-012  # Sprint 6 dependency removed from Sprint 2 task
+    - IFC-012 # Sprint 6 dependency removed from Sprint 2 task
   evidence_required:
     - packages/domain/src/*
   notes: 'CROSS-SPRINT FIX: IFC-012 (Sprint 6) dependency deferred.'
@@ -199,7 +199,7 @@ IFC-084:
   debt_allowed: yes
   waiver_expiry: '2026-06-30'
   override_deps_remove:
-    - IFC-050  # Sprint 26 dependency removed from Sprint 25 task
+    - IFC-050 # Sprint 26 dependency removed from Sprint 25 task
   evidence_required:
     - docs/planning/release-plan.md
   notes: 'CROSS-SPRINT FIX: IFC-050 (Sprint 26) dependency adjusted.'
@@ -215,7 +215,7 @@ PG-049:
   debt_allowed: yes
   waiver_expiry: '2026-06-30'
   override_deps_remove:
-    - IFC-036  # Sprint 21 dependency removed from Sprint 16 task
+    - IFC-036 # Sprint 21 dependency removed from Sprint 16 task
   evidence_required:
     - apps/web/src/pages/*
   notes: 'CROSS-SPRINT FIX: IFC-036 (Sprint 21) dependency deferred.'
@@ -231,7 +231,7 @@ IFC-113:
   acceptance_owner: 'AI Specialist'
   debt_allowed: no
   override_deps_remove:
-    - IFC-098  # Sprint 9 dependency removed from Sprint 6 task
+    - IFC-098 # Sprint 9 dependency removed from Sprint 6 task
   exception_policy: 'stub_contract'
   evidence_required:
     - apps/ai-worker/src/chains/*
@@ -248,7 +248,7 @@ IFC-118:
   debt_allowed: yes
   waiver_expiry: '2026-02-28'
   override_deps_remove:
-    - IFC-010  # Sprint 4 dependency removed from Sprint 2 task
+    - IFC-010 # Sprint 4 dependency removed from Sprint 2 task
   evidence_required:
     - docs/planning/*
   notes: 'CROSS-SPRINT FIX: IFC-010 (Sprint 4) gate dependency deferred.'
@@ -263,7 +263,7 @@ IFC-119:
   debt_allowed: yes
   waiver_expiry: '2026-02-28'
   override_deps_remove:
-    - IFC-118  # Sprint 2 dependency removed from Sprint 1 task
+    - IFC-118 # Sprint 2 dependency removed from Sprint 1 task
   evidence_required:
     - docs/planning/*
   notes: 'CROSS-SPRINT FIX: IFC-118 (Sprint 2) dependency deferred.'
@@ -279,7 +279,7 @@ IFC-123:
   debt_allowed: yes
   waiver_expiry: '2026-06-30'
   override_deps_remove:
-    - IFC-087  # Sprint 20 dependency removed from Sprint 8 task
+    - IFC-087 # Sprint 20 dependency removed from Sprint 8 task
   evidence_required:
     - apps/ai-worker/src/*
   notes: 'CROSS-SPRINT FIX: IFC-087 (Sprint 20) dependency deferred.'
@@ -294,7 +294,7 @@ IFC-124:
   debt_allowed: yes
   waiver_expiry: '2026-06-30'
   override_deps_remove:
-    - PG-112  # Sprint 27 dependency removed from Sprint 9 task
+    - PG-112 # Sprint 27 dependency removed from Sprint 9 task
   evidence_required:
     - apps/web/src/*
   notes: 'CROSS-SPRINT FIX: PG-112 (Sprint 27) dependency deferred.'
@@ -309,7 +309,7 @@ IFC-126:
   debt_allowed: yes
   waiver_expiry: '2026-03-31'
   override_deps_remove:
-    - IFC-100  # Sprint 10 dependency removed from Sprint 3 task
+    - IFC-100 # Sprint 10 dependency removed from Sprint 3 task
   evidence_required:
     - packages/domain/src/*
   notes: 'CROSS-SPRINT FIX: IFC-100 (Sprint 10) dependency deferred.'
@@ -325,8 +325,8 @@ IFC-140:
   debt_allowed: yes
   waiver_expiry: '2026-03-31'
   override_deps_remove:
-    - IFC-098  # Sprint 9 dependency removed from Sprint 7 task
-    - IFC-127  # Sprint 10 dependency removed from Sprint 7 task
+    - IFC-098 # Sprint 9 dependency removed from Sprint 7 task
+    - IFC-127 # Sprint 10 dependency removed from Sprint 7 task
   evidence_required:
     - apps/ai-worker/src/*
   notes: 'CROSS-SPRINT FIX: IFC-098 and IFC-127 dependencies deferred.'
@@ -341,7 +341,7 @@ IFC-143:
   debt_allowed: yes
   waiver_expiry: '2026-03-31'
   override_deps_remove:
-    - IFC-125  # Sprint 11 dependency removed from Sprint 6 task
+    - IFC-125 # Sprint 11 dependency removed from Sprint 6 task
   evidence_required:
     - packages/domain/src/*
   notes: 'CROSS-SPRINT FIX: IFC-125 (Sprint 11) dependency deferred.'
@@ -356,7 +356,7 @@ IFC-150:
   acceptance_owner: 'Tech Lead'
   debt_allowed: no
   override_deps_remove:
-    - IFC-098  # Sprint 9 dependency removed from Sprint 3 task
+    - IFC-098 # Sprint 9 dependency removed from Sprint 3 task
   exception_policy: 'stub_contract'
   evidence_required:
     - packages/application/src/*
@@ -372,8 +372,8 @@ IFC-152:
   debt_allowed: yes
   waiver_expiry: '2026-03-31'
   override_deps_remove:
-    - IFC-127  # Sprint 10 dependency removed from Sprint 6 task
-    - IFC-094  # Sprint 8 dependency removed from Sprint 6 task
+    - IFC-127 # Sprint 10 dependency removed from Sprint 6 task
+    - IFC-094 # Sprint 8 dependency removed from Sprint 6 task
   evidence_required:
     - packages/domain/src/*
   notes: 'CROSS-SPRINT FIX: IFC-127 and IFC-094 dependencies deferred.'
@@ -388,7 +388,7 @@ IFC-155:
   debt_allowed: yes
   waiver_expiry: '2026-03-31'
   override_deps_remove:
-    - IFC-127  # Sprint 10 dependency removed from Sprint 8 task
+    - IFC-127 # Sprint 10 dependency removed from Sprint 8 task
   evidence_required:
     - packages/domain/src/*
   notes: 'CROSS-SPRINT FIX: IFC-127 (Sprint 10) dependency deferred.'
@@ -403,7 +403,7 @@ IFC-156:
   debt_allowed: yes
   waiver_expiry: '2026-03-31'
   override_deps_remove:
-    - IFC-125  # Sprint 11 dependency removed from Sprint 9 task
+    - IFC-125 # Sprint 11 dependency removed from Sprint 9 task
   evidence_required:
     - packages/domain/src/*
   notes: 'CROSS-SPRINT FIX: IFC-125 (Sprint 11) dependency deferred.'
@@ -418,7 +418,7 @@ IFC-157:
   debt_allowed: yes
   waiver_expiry: '2026-03-31'
   override_deps_remove:
-    - IFC-098  # Sprint 9 dependency removed from Sprint 7 task
+    - IFC-098 # Sprint 9 dependency removed from Sprint 7 task
   evidence_required:
     - apps/ai-worker/src/*
   notes: 'CROSS-SPRINT FIX: IFC-098 (Sprint 9) dependency deferred.'
@@ -433,8 +433,8 @@ IFC-163:
   debt_allowed: yes
   waiver_expiry: '2026-03-31'
   override_deps_remove:
-    - IFC-153  # Sprint 7 dependency removed from Sprint 6 task
-    - IFC-157  # Sprint 7 dependency removed from Sprint 6 task
+    - IFC-153 # Sprint 7 dependency removed from Sprint 6 task
+    - IFC-157 # Sprint 7 dependency removed from Sprint 6 task
   evidence_required:
     - docs/architecture/*
   notes: 'CROSS-SPRINT FIX: IFC-153 and IFC-157 dependencies deferred.'

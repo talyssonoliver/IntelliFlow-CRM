@@ -63,10 +63,7 @@ export function sha256File(filePath: string): string {
 /**
  * Generate evidence hash for a file.
  */
-export function generateEvidenceHash(
-  filePath: string,
-  baseDir: string
-): EvidenceHash {
+export function generateEvidenceHash(filePath: string, baseDir: string): EvidenceHash {
   const stats = statSync(filePath);
 
   return {
@@ -79,10 +76,7 @@ export function generateEvidenceHash(
 /**
  * Generate evidence hashes for all files in a directory.
  */
-export function generateDirectoryHashes(
-  dirPath: string,
-  baseDir: string
-): EvidenceHash[] {
+export function generateDirectoryHashes(dirPath: string, baseDir: string): EvidenceHash[] {
   const hashes: EvidenceHash[] = [];
 
   if (!existsSync(dirPath)) {
@@ -154,10 +148,7 @@ export async function ensureEvidenceDirs(evidenceDir: string): Promise<void> {
 /**
  * Write gate selection result to file.
  */
-export function writeGateSelection(
-  evidenceDir: string,
-  selection: GateSelectionResult
-): string {
+export function writeGateSelection(evidenceDir: string, selection: GateSelectionResult): string {
   const filePath = join(evidenceDir, 'gate-selection.json');
   writeFileSync(filePath, JSON.stringify(selection, null, 2), 'utf-8');
   return filePath;
@@ -166,10 +157,7 @@ export function writeGateSelection(
 /**
  * Write evidence hashes to file.
  */
-export function writeEvidenceHashes(
-  evidenceDir: string,
-  hashes: EvidenceHash[]
-): string {
+export function writeEvidenceHashes(evidenceDir: string, hashes: EvidenceHash[]): string {
   const filePath = join(evidenceDir, 'evidence-hashes.txt');
 
   const lines = hashes.map((h) => `${h.sha256}  ${h.path}  (${h.size} bytes)`);
@@ -181,10 +169,7 @@ export function writeEvidenceHashes(
 /**
  * Write run summary (machine-readable JSON).
  */
-export function writeRunSummaryJson(
-  evidenceDir: string,
-  summary: RunSummary
-): string {
+export function writeRunSummaryJson(evidenceDir: string, summary: RunSummary): string {
   const filePath = join(evidenceDir, 'summary.json');
   writeFileSync(filePath, JSON.stringify(summary, null, 2), 'utf-8');
   return filePath;
@@ -193,10 +178,7 @@ export function writeRunSummaryJson(
 /**
  * Write run summary (human-readable Markdown).
  */
-export function writeRunSummaryMd(
-  evidenceDir: string,
-  summary: RunSummary
-): string {
+export function writeRunSummaryMd(evidenceDir: string, summary: RunSummary): string {
   const filePath = join(evidenceDir, 'summary.md');
 
   const md = `# Run Summary
@@ -254,10 +236,7 @@ ${summary.evidenceHashes.length} files hashed. See \`evidence-hashes.txt\` for d
 /**
  * Write CSV patch proposal to file.
  */
-export function writeCsvPatchProposal(
-  evidenceDir: string,
-  proposal: CsvPatchProposal
-): string {
+export function writeCsvPatchProposal(evidenceDir: string, proposal: CsvPatchProposal): string {
   const filePath = join(evidenceDir, 'csv-patch-proposal.json');
   writeFileSync(filePath, JSON.stringify(proposal, null, 2), 'utf-8');
   return filePath;

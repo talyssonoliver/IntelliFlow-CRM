@@ -1,8 +1,4 @@
-import {
-  Lead,
-  LeadId,
-  Email,
-} from '@intelliflow/domain';
+import { Lead, LeadId, Email } from '@intelliflow/domain';
 import { LeadRepository } from '@intelliflow/application';
 
 /**

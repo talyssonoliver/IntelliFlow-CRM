@@ -124,10 +124,7 @@ export function getPatchHistoryPath(repoRoot: string): string {
 /**
  * Append a patch proposal to the history.
  */
-export function appendToPatchHistory(
-  repoRoot: string,
-  entry: PatchHistoryEntry
-): void {
+export function appendToPatchHistory(repoRoot: string, entry: PatchHistoryEntry): void {
   const historyPath = getPatchHistoryPath(repoRoot);
   const line = JSON.stringify(entry) + '\n';
   appendFileSync(historyPath, line, 'utf-8');
@@ -146,13 +143,15 @@ export function loadPatchHistory(repoRoot: string): PatchHistoryEntry[] {
   const content = readFileSync(historyPath, 'utf-8');
   const lines = content.trim().split('\n').filter(Boolean);
 
-  return lines.map((line) => {
-    try {
-      return JSON.parse(line) as PatchHistoryEntry;
-    } catch {
-      return null;
-    }
-  }).filter((e): e is PatchHistoryEntry => e !== null);
+  return lines
+    .map((line) => {
+      try {
+        return JSON.parse(line) as PatchHistoryEntry;
+      } catch {
+        return null;
+      }
+    })
+    .filter((e): e is PatchHistoryEntry => e !== null);
 }
 
 /**
@@ -166,11 +165,7 @@ export function getPendingPatches(repoRoot: string): PatchHistoryEntry[] {
 /**
  * Mark a patch as applied.
  */
-export function markPatchApplied(
-  repoRoot: string,
-  runId: string,
-  appliedBy: string
-): void {
+export function markPatchApplied(repoRoot: string, runId: string, appliedBy: string): void {
   // Note: JSONL format doesn't allow in-place updates.
   // In production, this would use a proper database or structured file.
   // For now, we append an "applied" marker entry.
@@ -308,7 +303,5 @@ export const FORBIDDEN_CSV_OPERATIONS = [
  * Check if an operation is forbidden.
  */
 export function isForbiddenOperation(operation: string): boolean {
-  return FORBIDDEN_CSV_OPERATIONS.some((f) =>
-    operation.toLowerCase().includes(f.toLowerCase())
-  );
+  return FORBIDDEN_CSV_OPERATIONS.some((f) => operation.toLowerCase().includes(f.toLowerCase()));
 }

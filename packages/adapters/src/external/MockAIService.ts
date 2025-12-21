@@ -1,9 +1,5 @@
 import { Result, DomainError } from '@intelliflow/domain';
-import {
-  AIServicePort,
-  LeadScoringInput,
-  LeadScoringResult,
-} from '@intelliflow/application';
+import { AIServicePort, LeadScoringInput, LeadScoringResult } from '@intelliflow/application';
 
 /**
  * Mock AI Service
@@ -68,12 +64,7 @@ export class MockAIService implements AIServicePort {
     return Result.ok(isQualified);
   }
 
-  async generateEmail(
-    leadId: string,
-    template: string
-  ): Promise<Result<string, DomainError>> {
-    return Result.ok(
-      `Mock email generated for lead ${leadId} using template: ${template}`
-    );
+  async generateEmail(leadId: string, template: string): Promise<Result<string, DomainError>> {
+    return Result.ok(`Mock email generated for lead ${leadId} using template: ${template}`);
   }
 }

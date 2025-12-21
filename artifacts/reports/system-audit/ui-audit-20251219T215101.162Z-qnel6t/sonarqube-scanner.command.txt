@@ -1,1 +1,0 @@
-node scripts/sonarqube-helper.js analyze

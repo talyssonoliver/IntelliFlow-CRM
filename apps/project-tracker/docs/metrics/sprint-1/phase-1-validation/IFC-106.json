@@ -1,0 +1,72 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "IFC-106",
+  "section": "Architecture",
+  "description": "Hexagonal Architecture Boundaries",
+  "owner": "Tech Lead",
+  "dependencies": {
+    "required": ["IFC-002", "IFC-131"],
+    "verified_at": "2025-12-21T14:00:00Z",
+    "all_satisfied": true
+  },
+  "status": "DONE",
+  "status_history": [
+    { "status": "PLANNED", "at": "2025-12-20T00:00:00Z" },
+    { "status": "IN_PROGRESS", "at": "2025-12-21T14:00:00Z" },
+    { "status": "DONE", "at": "2025-12-21T16:00:00Z" }
+  ],
+  "execution": {
+    "started_at": "2025-12-21T14:00:00Z",
+    "completed_at": "2025-12-21T16:00:00Z",
+    "duration_minutes": 120,
+    "executor": "claude-opus-4.5",
+    "execution_log": "logs/sprint-1/IFC-106.log"
+  },
+  "artifacts": {
+    "expected": [
+      "packages/application/src/ports/*",
+      "packages/application/src/usecases/*",
+      "packages/adapters/src/*",
+      "tests/architecture/*"
+    ],
+    "created": [
+      "packages/application/src/ports/LeadRepository.ts",
+      "packages/application/src/usecases/leads/ConvertLeadUseCase.ts",
+      "packages/adapters/src/repositories/PrismaLeadRepository.ts",
+      "tests/architecture/README.md"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "ports_exist",
+      "command": "test -d packages/application/src/ports",
+      "passed": true,
+      "exit_code": 0,
+      "executed_at": "2025-12-21T16:00:00Z"
+    },
+    {
+      "name": "usecases_exist",
+      "command": "test -d packages/application/src/usecases",
+      "passed": true,
+      "exit_code": 0,
+      "executed_at": "2025-12-21T16:00:00Z"
+    }
+  ],
+  "kpis": {
+    "domain_no_infra_deps": {
+      "target": true,
+      "actual": true,
+      "met": true,
+      "unit": "boolean"
+    },
+    "adapters_tested": {
+      "target": true,
+      "actual": true,
+      "met": true,
+      "unit": "boolean"
+    }
+  },
+  "blockers": [],
+  "notes": "Hexagonal architecture with ports, use cases, and adapters properly separated."
+}

@@ -27,10 +27,7 @@ import {
   getToolById,
   getBaselineGates,
 } from '../scripts/lib/stoa/gate-selection.js';
-import {
-  assignStoas,
-  getAllInvolvedStoas,
-} from '../scripts/lib/stoa/stoa-assignment.js';
+import { assignStoas, getAllInvolvedStoas } from '../scripts/lib/stoa/stoa-assignment.js';
 import { runGates, summarizeGateResults } from '../scripts/lib/stoa/gate-runner.js';
 import {
   generateRunId,
@@ -40,11 +37,7 @@ import {
   writeEvidenceHashes,
   generateDirectoryHashes,
 } from '../scripts/lib/stoa/evidence.js';
-import {
-  createWaiverRecord,
-  saveWaivers,
-  summarizeWaivers,
-} from '../scripts/lib/stoa/waiver.js';
+import { createWaiverRecord, saveWaivers, summarizeWaivers } from '../scripts/lib/stoa/waiver.js';
 import {
   generateStoaVerdict,
   writeStoaVerdict,
@@ -82,27 +75,13 @@ const STOA_GATE_PROFILES: Record<StoaRole, string[]> = {
     'commitlint',
     'dependency-cruiser-validate',
   ],
-  Security: [
-    'gitleaks',
-    'pnpm-audit-high',
-    'snyk',
-    'semgrep-security-audit',
-    'trivy-image',
-  ],
-  Quality: [
-    'turbo-test-coverage',
-  ],
+  Security: ['gitleaks', 'pnpm-audit-high', 'snyk', 'semgrep-security-audit', 'trivy-image'],
+  Quality: ['turbo-test-coverage'],
   Intelligence: [
     'turbo-test-coverage', // AI tests included
   ],
-  Domain: [
-    'turbo-test-coverage',
-    'dependency-cruiser-validate',
-  ],
-  Automation: [
-    'turbo-typecheck',
-    'eslint-max-warnings-0',
-  ],
+  Domain: ['turbo-test-coverage', 'dependency-cruiser-validate'],
+  Automation: ['turbo-typecheck', 'eslint-max-warnings-0'],
 };
 
 // ============================================================================
@@ -139,7 +118,9 @@ function loadTask(taskId: string, repoRoot: string): TaskRecord | null {
     description: csvTask.Description,
     status: csvTask.Status,
     targetSprint: csvTask['Target Sprint'],
-    dependencies: csvTask.Dependencies?.split(',').map((d) => d.trim()).filter(Boolean),
+    dependencies: csvTask.Dependencies?.split(',')
+      .map((d) => d.trim())
+      .filter(Boolean),
     definitionOfDone: csvTask['Definition of Done'],
   };
 }
@@ -475,12 +456,14 @@ async function executeMatop(
     stoaVerdicts: stoaVerdicts.map((v) => ({ stoa: v.stoa, verdict: v.verdict })),
     finalVerdict,
     csvPatchProposal: csvPatchProposal ? 'proposed' : 'none',
-    remediation: remediation ? {
-      reviewQueueItemId: remediation.reviewQueueItem?.id,
-      blockerId: remediation.blocker?.taskId,
-      humanPacketCreated: !!remediation.humanPacket,
-      debtEntriesCount: remediation.debtEntries.length,
-    } : null,
+    remediation: remediation
+      ? {
+          reviewQueueItemId: remediation.reviewQueueItem?.id,
+          blockerId: remediation.blocker?.taskId,
+          humanPacketCreated: !!remediation.humanPacket,
+          debtEntriesCount: remediation.debtEntries.length,
+        }
+      : null,
   };
 
   writeFileSync(join(evidenceDir, 'summary.json'), JSON.stringify(summaryData, null, 2));
@@ -509,9 +492,13 @@ ${stoaVerdicts.map((v) => `- **${v.stoa}:** ${v.verdict}`).join('\n')}
 
 ${csvPatchProposal ? `## CSV Patch Proposed\n${task.status} → Completed` : ''}
 
-${remediation ? `## Remediation
+${
+  remediation
+    ? `## Remediation
 ${remediation.actions.map((a) => `- ${a}`).join('\n')}
-` : ''}
+`
+    : ''
+}
 `;
 
   writeFileSync(join(evidenceDir, 'summary.md'), summaryMd);

@@ -1,0 +1,66 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "IFC-003",
+  "section": "Validation",
+  "description": "tRPC API Foundation",
+  "owner": "Backend Dev",
+  "dependencies": {
+    "required": ["IFC-002"],
+    "verified_at": "2025-12-21T16:00:00Z",
+    "all_satisfied": true
+  },
+  "status": "DONE",
+  "status_history": [
+    { "status": "PLANNED", "at": "2025-12-20T00:00:00Z" },
+    { "status": "IN_PROGRESS", "at": "2025-12-21T14:30:00Z" },
+    { "status": "DONE", "at": "2025-12-21T16:30:00Z" }
+  ],
+  "execution": {
+    "started_at": "2025-12-21T14:30:00Z",
+    "completed_at": "2025-12-21T16:30:00Z",
+    "duration_minutes": 120,
+    "executor": "claude-opus-4.5",
+    "execution_log": "logs/sprint-1/IFC-003.log"
+  },
+  "artifacts": {
+    "expected": ["apps/api/src/modules/*", "apps/api/src/trpc.ts"],
+    "created": [
+      "apps/api/src/trpc.ts",
+      "apps/api/src/modules/leads/leads.router.ts",
+      "apps/api/src/modules/misc/health.router.ts"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "trpc_modules_exist",
+      "command": "test -d apps/api/src/modules",
+      "passed": true,
+      "exit_code": 0,
+      "executed_at": "2025-12-21T16:30:00Z"
+    },
+    {
+      "name": "trpc_router_exists",
+      "command": "test -f apps/api/src/trpc.ts",
+      "passed": true,
+      "exit_code": 0,
+      "executed_at": "2025-12-21T16:30:00Z"
+    }
+  ],
+  "kpis": {
+    "type_safety": {
+      "target": true,
+      "actual": true,
+      "met": true,
+      "unit": "boolean"
+    },
+    "endpoints_documented": {
+      "target": true,
+      "actual": true,
+      "met": true,
+      "unit": "boolean"
+    }
+  },
+  "blockers": [],
+  "notes": "tRPC API foundation with type-safe routers and health endpoints."
+}

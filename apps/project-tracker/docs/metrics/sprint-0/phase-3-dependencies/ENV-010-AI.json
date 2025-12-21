@@ -9,16 +9,10 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2025-12-21T12:38:56.432Z",
-    "required": [
-      "ENV-007-AI",
-      "ENV-009-AI"
-    ]
+    "verified_at": "2025-12-21T17:57:49.231Z",
+    "required": ["ENV-007-AI", "ENV-009-AI"]
   },
-  "dependencies_resolved": [
-    "ENV-007-AI",
-    "ENV-009-AI"
-  ],
+  "dependencies_resolved": ["ENV-007-AI", "ENV-009-AI"],
   "target_duration_minutes": 1,
   "kpis": {
     "coverage": {

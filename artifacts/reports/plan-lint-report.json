@@ -1,8 +1,8 @@
 {
   "meta": {
-    "generated_at": "2025-12-21T09:43:12.738864Z",
+    "generated_at": "2025-12-21T16:14:13.205Z",
     "schema_version": "1.0.0",
-    "sprint_scope": "all"
+    "sprint_scope": 0
   },
   "summary": {
     "total_tasks": 35,
@@ -12,256 +12,333 @@
       "C": 7
     },
     "error_count": 0,
-    "warning_count": 0,
+    "warning_count": 29,
     "review_queue_size": 30,
     "validation_coverage": {
       "tasks_with_validation": 35,
       "tasks_without_validation": 0,
       "coverage_percentage": 100
-    },
-    "dependency_stats": {
-      "total_dependencies": 50,
-      "tasks_with_dependencies": 32,
-      "tasks_with_dependents": 20,
-      "orphan_tasks": 1
     }
   },
   "errors": [],
-  "warnings": [],
+  "warnings": [
+    {
+      "rule": "AI_TASKS_MVP",
+      "severity": "warning",
+      "message": "AI/Predictive task ENV-005-AI should have MVP criteria defined",
+      "tasks": [
+        "ENV-005-AI"
+      ],
+      "priority": "medium"
+    },
+    {
+      "rule": "AI_TASKS_MVP",
+      "severity": "warning",
+      "message": "AI/Predictive task ENV-015-AI should have MVP criteria defined",
+      "tasks": [
+        "ENV-015-AI"
+      ],
+      "priority": "medium"
+    },
+    {
+      "rule": "HIGH_FANOUT",
+      "severity": "info",
+      "message": "Task AI-SETUP-001 has 4 direct dependents (high fan-out)",
+      "tasks": [
+        "AI-SETUP-001"
+      ],
+      "priority": "high",
+      "dependentCount": 4
+    },
+    {
+      "rule": "HIGH_FANOUT",
+      "severity": "info",
+      "message": "Task ENV-001-AI has 6 direct dependents (high fan-out)",
+      "tasks": [
+        "ENV-001-AI"
+      ],
+      "priority": "high",
+      "dependentCount": 6
+    },
+    {
+      "rule": "HIGH_FANOUT",
+      "severity": "info",
+      "message": "Task ENV-002-AI has 4 direct dependents (high fan-out)",
+      "tasks": [
+        "ENV-002-AI"
+      ],
+      "priority": "high",
+      "dependentCount": 4
+    },
+    {
+      "rule": "HIGH_FANOUT",
+      "severity": "info",
+      "message": "Task ENV-003-AI has 4 direct dependents (high fan-out)",
+      "tasks": [
+        "ENV-003-AI"
+      ],
+      "priority": "high",
+      "dependentCount": 4
+    },
+    {
+      "rule": "HIGH_FANOUT",
+      "severity": "info",
+      "message": "Task ENV-005-AI has 11 direct dependents (high fan-out)",
+      "tasks": [
+        "ENV-005-AI"
+      ],
+      "priority": "high",
+      "dependentCount": 11
+    },
+    {
+      "rule": "HIGH_FANOUT",
+      "severity": "info",
+      "message": "Task ENV-007-AI has 4 direct dependents (high fan-out)",
+      "tasks": [
+        "ENV-007-AI"
+      ],
+      "priority": "high",
+      "dependentCount": 4
+    },
+    {
+      "rule": "HIGH_FANOUT",
+      "severity": "info",
+      "message": "Task ENV-008-AI has 5 direct dependents (high fan-out)",
+      "tasks": [
+        "ENV-008-AI"
+      ],
+      "priority": "high",
+      "dependentCount": 5
+    },
+    {
+      "rule": "HIGH_FANOUT",
+      "severity": "info",
+      "message": "Task ENV-009-AI has 4 direct dependents (high fan-out)",
+      "tasks": [
+        "ENV-009-AI"
+      ],
+      "priority": "high",
+      "dependentCount": 4
+    },
+    {
+      "rule": "HIGH_FANOUT",
+      "severity": "info",
+      "message": "Task ENV-010-AI has 3 direct dependents (high fan-out)",
+      "tasks": [
+        "ENV-010-AI"
+      ],
+      "priority": "high",
+      "dependentCount": 3
+    },
+    {
+      "rule": "HIGH_FANOUT",
+      "severity": "info",
+      "message": "Task IFC-000 has 4 direct dependents (high fan-out)",
+      "tasks": [
+        "IFC-000"
+      ],
+      "priority": "high",
+      "dependentCount": 4
+    },
+    {
+      "rule": "HIGH_FANOUT",
+      "severity": "info",
+      "message": "Task DOC-001 has 3 direct dependents (high fan-out)",
+      "tasks": [
+        "DOC-001"
+      ],
+      "priority": "high",
+      "dependentCount": 3
+    },
+    {
+      "rule": "HIGH_FANOUT",
+      "severity": "info",
+      "message": "Task BRAND-001 has 17 direct dependents (high fan-out)",
+      "tasks": [
+        "BRAND-001"
+      ],
+      "priority": "high",
+      "dependentCount": 17
+    },
+    {
+      "rule": "HIGH_FANOUT",
+      "severity": "info",
+      "message": "Task GTM-002 has 16 direct dependents (high fan-out)",
+      "tasks": [
+        "GTM-002"
+      ],
+      "priority": "high",
+      "dependentCount": 16
+    },
+    {
+      "rule": "HIGH_FANOUT",
+      "severity": "info",
+      "message": "Task ANALYTICS-001 has 3 direct dependents (high fan-out)",
+      "tasks": [
+        "ANALYTICS-001"
+      ],
+      "priority": "high",
+      "dependentCount": 3
+    },
+    {
+      "rule": "WAIVER_USED",
+      "severity": "info",
+      "message": "Task AI-SETUP-003 has debt_allowed=true",
+      "tasks": [
+        "AI-SETUP-003"
+      ],
+      "priority": "low",
+      "waiver_expiry": "2026-01-31"
+    },
+    {
+      "rule": "WAIVER_USED",
+      "severity": "info",
+      "message": "Task ENV-008-AI has debt_allowed=true",
+      "tasks": [
+        "ENV-008-AI"
+      ],
+      "priority": "low",
+      "waiver_expiry": "2026-02-28"
+    },
+    {
+      "rule": "WAIVER_USED",
+      "severity": "info",
+      "message": "Task ENV-010-AI has debt_allowed=true",
+      "tasks": [
+        "ENV-010-AI"
+      ],
+      "priority": "low",
+      "waiver_expiry": "2026-01-31"
+    },
+    {
+      "rule": "WAIVER_USED",
+      "severity": "info",
+      "message": "Task ENV-011-AI has debt_allowed=true",
+      "tasks": [
+        "ENV-011-AI"
+      ],
+      "priority": "low",
+      "waiver_expiry": "2026-01-31"
+    },
+    {
+      "rule": "WAIVER_USED",
+      "severity": "info",
+      "message": "Task ENV-012-AI has debt_allowed=true",
+      "tasks": [
+        "ENV-012-AI"
+      ],
+      "priority": "low",
+      "waiver_expiry": "2026-02-28"
+    },
+    {
+      "rule": "WAIVER_USED",
+      "severity": "info",
+      "message": "Task ENV-014-AI has debt_allowed=true",
+      "tasks": [
+        "ENV-014-AI"
+      ],
+      "priority": "low",
+      "waiver_expiry": "2026-02-28"
+    },
+    {
+      "rule": "WAIVER_USED",
+      "severity": "info",
+      "message": "Task ENV-015-AI has debt_allowed=true",
+      "tasks": [
+        "ENV-015-AI"
+      ],
+      "priority": "low",
+      "waiver_expiry": "2026-02-28"
+    },
+    {
+      "rule": "WAIVER_USED",
+      "severity": "info",
+      "message": "Task ENV-016-AI has debt_allowed=true",
+      "tasks": [
+        "ENV-016-AI"
+      ],
+      "priority": "low",
+      "waiver_expiry": "2026-02-28"
+    },
+    {
+      "rule": "WAIVER_USED",
+      "severity": "info",
+      "message": "Task ENV-017-AI has debt_allowed=true",
+      "tasks": [
+        "ENV-017-AI"
+      ],
+      "priority": "low",
+      "waiver_expiry": "2026-02-28"
+    },
+    {
+      "rule": "EXCEPTION_POLICY",
+      "severity": "info",
+      "message": "Task ENV-017-AI uses exception_policy: stub_contract",
+      "tasks": [
+        "ENV-017-AI"
+      ],
+      "priority": "medium",
+      "policy": "stub_contract"
+    },
+    {
+      "rule": "WAIVER_USED",
+      "severity": "info",
+      "message": "Task ENV-018-AI has debt_allowed=true",
+      "tasks": [
+        "ENV-018-AI"
+      ],
+      "priority": "low",
+      "waiver_expiry": "2026-01-31"
+    },
+    {
+      "rule": "WAIVER_USED",
+      "severity": "info",
+      "message": "Task AUTOMATION-001 has debt_allowed=true",
+      "tasks": [
+        "AUTOMATION-001"
+      ],
+      "priority": "low",
+      "waiver_expiry": "2026-02-28"
+    },
+    {
+      "rule": "WAIVER_USED",
+      "severity": "info",
+      "message": "Task AUTOMATION-002 has debt_allowed=true",
+      "tasks": [
+        "AUTOMATION-002"
+      ],
+      "priority": "low",
+      "waiver_expiry": "2026-02-28"
+    }
+  ],
   "review_queue": [
     {
-      "task_id": "EXC-INIT-001",
-      "tier": "A",
-      "section": "AI Foundation",
-      "status": "Completed",
-      "owner": "Tech Lead",
-      "reasons": [
-        "Tier A task - requires explicit validation"
-      ],
-      "dependent_count": 1,
-      "waiver_expiry": null,
-      "priority": "critical"
-    },
-    {
-      "task_id": "AI-SETUP-001",
-      "tier": "A",
-      "section": "AI Foundation",
-      "status": "Completed",
-      "owner": "AI Specialist",
-      "reasons": [
-        "Tier A task - requires explicit validation"
-      ],
-      "dependent_count": 4,
-      "waiver_expiry": null,
-      "priority": "critical"
-    },
-    {
-      "task_id": "AI-SETUP-002",
-      "tier": "A",
-      "section": "AI Foundation",
-      "status": "Completed",
-      "owner": "DevOps Engineer",
-      "reasons": [
-        "Tier A task - requires explicit validation"
-      ],
-      "dependent_count": 1,
-      "waiver_expiry": null,
-      "priority": "critical"
-    },
-    {
-      "task_id": "ENV-001-AI",
-      "tier": "A",
-      "section": "Foundation Setup",
-      "status": "Completed",
-      "owner": "Tech Lead",
-      "reasons": [
-        "Tier A task - requires explicit validation"
-      ],
-      "dependent_count": 6,
-      "waiver_expiry": null,
-      "priority": "critical"
-    },
-    {
-      "task_id": "ENV-002-AI",
-      "tier": "A",
+      "task_id": "ENV-008-AI",
+      "tier": "B",
       "section": "Foundation Setup",
       "status": "Completed",
       "owner": "DevOps Engineer",
       "reasons": [
-        "Tier A task - requires explicit validation"
+        "High fan-out (5 dependents)",
+        "Has waiver or debt_allowed"
       ],
-      "dependent_count": 4,
-      "waiver_expiry": null,
-      "priority": "critical"
+      "dependent_count": 5,
+      "waiver_expiry": "2026-02-28",
+      "priority": "high"
     },
     {
-      "task_id": "ENV-003-AI",
-      "tier": "A",
+      "task_id": "ENV-010-AI",
+      "tier": "B",
       "section": "Foundation Setup",
       "status": "Completed",
-      "owner": "DevOps Engineer",
+      "owner": "QA Lead",
       "reasons": [
-        "Tier A task - requires explicit validation"
-      ],
-      "dependent_count": 4,
-      "waiver_expiry": null,
-      "priority": "critical"
-    },
-    {
-      "task_id": "ENV-004-AI",
-      "tier": "A",
-      "section": "Foundation Setup",
-      "status": "Completed",
-      "owner": "Backend Dev",
-      "reasons": [
-        "Tier A task - requires explicit validation"
-      ],
-      "dependent_count": 2,
-      "waiver_expiry": null,
-      "priority": "critical"
-    },
-    {
-      "task_id": "ENV-005-AI",
-      "tier": "A",
-      "section": "Foundation Setup",
-      "status": "Completed",
-      "owner": "DevOps Engineer",
-      "reasons": [
-        "Tier A task - requires explicit validation"
-      ],
-      "dependent_count": 11,
-      "waiver_expiry": null,
-      "priority": "critical"
-    },
-    {
-      "task_id": "ENV-006-AI",
-      "tier": "A",
-      "section": "Foundation Setup",
-      "status": "Completed",
-      "owner": "Backend Dev",
-      "reasons": [
-        "Tier A task - requires explicit validation"
-      ],
-      "dependent_count": 1,
-      "waiver_expiry": null,
-      "priority": "critical"
-    },
-    {
-      "task_id": "ENV-007-AI",
-      "tier": "A",
-      "section": "Foundation Setup",
-      "status": "Completed",
-      "owner": "Tech Lead",
-      "reasons": [
-        "Tier A task - requires explicit validation"
-      ],
-      "dependent_count": 4,
-      "waiver_expiry": null,
-      "priority": "critical"
-    },
-    {
-      "task_id": "ENV-009-AI",
-      "tier": "A",
-      "section": "Foundation Setup",
-      "status": "Completed",
-      "owner": "Frontend Dev",
-      "reasons": [
-        "Tier A task - requires explicit validation"
-      ],
-      "dependent_count": 4,
-      "waiver_expiry": null,
-      "priority": "critical"
-    },
-    {
-      "task_id": "ENV-013-AI",
-      "tier": "A",
-      "section": "Foundation Setup",
-      "status": "Completed",
-      "owner": "Security Engineer",
-      "reasons": [
-        "Tier A task - requires explicit validation"
-      ],
-      "dependent_count": 1,
-      "waiver_expiry": null,
-      "priority": "critical"
-    },
-    {
-      "task_id": "IFC-000",
-      "tier": "A",
-      "section": "Planning",
-      "status": "Completed",
-      "owner": "CEO + CTO + CFO",
-      "reasons": [
-        "Tier A task - requires explicit validation"
-      ],
-      "dependent_count": 4,
-      "waiver_expiry": null,
-      "priority": "critical"
-    },
-    {
-      "task_id": "DOC-001",
-      "tier": "A",
-      "section": "Strategy & Documentation",
-      "status": "Completed",
-      "owner": "CEO + All Leads",
-      "reasons": [
-        "Tier A task - requires explicit validation"
+        "High fan-out (3 dependents)",
+        "Has waiver or debt_allowed"
       ],
       "dependent_count": 3,
-      "waiver_expiry": null,
-      "priority": "critical"
-    },
-    {
-      "task_id": "BRAND-001",
-      "tier": "A",
-      "section": "Brand & Design",
-      "status": "Completed",
-      "owner": "UX Designer + Frontend Dev",
-      "reasons": [
-        "Tier A task - requires explicit validation"
-      ],
-      "dependent_count": 17,
-      "waiver_expiry": null,
-      "priority": "critical"
-    },
-    {
-      "task_id": "GTM-002",
-      "tier": "A",
-      "section": "Go-to-Market",
-      "status": "Completed",
-      "owner": "PM + Marketing",
-      "reasons": [
-        "Tier A task - requires explicit validation"
-      ],
-      "dependent_count": 16,
-      "waiver_expiry": null,
-      "priority": "critical"
-    },
-    {
-      "task_id": "ANALYTICS-001",
-      "tier": "A",
-      "section": "Analytics & Segmentation",
-      "status": "Completed",
-      "owner": "PM + DA",
-      "reasons": [
-        "Tier A task - requires explicit validation"
-      ],
-      "dependent_count": 3,
-      "waiver_expiry": null,
-      "priority": "critical"
-    },
-    {
-      "task_id": "EXC-SEC-001",
-      "tier": "A",
-      "section": "AI Foundation",
-      "status": "Completed",
-      "owner": "Security Engineer",
-      "reasons": [
-        "Tier A task - requires explicit validation"
-      ],
-      "dependent_count": 0,
-      "waiver_expiry": null,
-      "priority": "critical"
+      "waiver_expiry": "2026-01-31",
+      "priority": "high"
     },
     {
       "task_id": "AI-SETUP-003",
@@ -272,33 +349,6 @@
       "reasons": [
         "Has waiver or debt_allowed"
       ],
-      "dependent_count": 0,
-      "waiver_expiry": "2026-01-31",
-      "priority": "medium"
-    },
-    {
-      "task_id": "ENV-008-AI",
-      "tier": "B",
-      "section": "Foundation Setup",
-      "status": "Completed",
-      "owner": "DevOps Engineer",
-      "reasons": [
-        "Has waiver or debt_allowed"
-      ],
-      "dependent_count": 5,
-      "waiver_expiry": "2026-02-28",
-      "priority": "medium"
-    },
-    {
-      "task_id": "ENV-010-AI",
-      "tier": "B",
-      "section": "Foundation Setup",
-      "status": "Completed",
-      "owner": "QA Lead",
-      "reasons": [
-        "Has waiver or debt_allowed"
-      ],
-      "dependent_count": 3,
       "waiver_expiry": "2026-01-31",
       "priority": "medium"
     },
@@ -311,7 +361,6 @@
       "reasons": [
         "Has waiver or debt_allowed"
       ],
-      "dependent_count": 0,
       "waiver_expiry": "2026-01-31",
       "priority": "medium"
     },
@@ -324,7 +373,6 @@
       "reasons": [
         "Has waiver or debt_allowed"
       ],
-      "dependent_count": 0,
       "waiver_expiry": "2026-02-28",
       "priority": "medium"
     },
@@ -337,7 +385,6 @@
       "reasons": [
         "Has waiver or debt_allowed"
       ],
-      "dependent_count": 0,
       "waiver_expiry": "2026-02-28",
       "priority": "medium"
     },
@@ -350,7 +397,6 @@
       "reasons": [
         "Has waiver or debt_allowed"
       ],
-      "dependent_count": 0,
       "waiver_expiry": "2026-02-28",
       "priority": "medium"
     },
@@ -363,7 +409,6 @@
       "reasons": [
         "Has waiver or debt_allowed"
       ],
-      "dependent_count": 0,
       "waiver_expiry": "2026-02-28",
       "priority": "medium"
     },
@@ -418,6 +463,276 @@
       "dependent_count": 1,
       "waiver_expiry": "2026-02-28",
       "priority": "medium"
+    },
+    {
+      "task_id": "EXC-INIT-001",
+      "tier": "A",
+      "section": "AI Foundation",
+      "status": "Completed",
+      "owner": "Tech Lead",
+      "reasons": [
+        "Tier A task - requires explicit validation"
+      ],
+      "dependent_count": 1,
+      "priority": "critical"
+    },
+    {
+      "task_id": "AI-SETUP-001",
+      "tier": "A",
+      "section": "AI Foundation",
+      "status": "Completed",
+      "owner": "AI Specialist",
+      "reasons": [
+        "Tier A task - requires explicit validation",
+        "High fan-out (4 dependents)"
+      ],
+      "dependent_count": 4,
+      "priority": "critical"
+    },
+    {
+      "task_id": "AI-SETUP-002",
+      "tier": "A",
+      "section": "AI Foundation",
+      "status": "Completed",
+      "owner": "DevOps Engineer",
+      "reasons": [
+        "Tier A task - requires explicit validation"
+      ],
+      "dependent_count": 1,
+      "priority": "critical"
+    },
+    {
+      "task_id": "ENV-001-AI",
+      "tier": "A",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "owner": "Tech Lead",
+      "reasons": [
+        "Tier A task - requires explicit validation",
+        "High fan-out (6 dependents)"
+      ],
+      "dependent_count": 6,
+      "priority": "critical"
+    },
+    {
+      "task_id": "ENV-002-AI",
+      "tier": "A",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "owner": "DevOps Engineer",
+      "reasons": [
+        "Tier A task - requires explicit validation",
+        "High fan-out (4 dependents)"
+      ],
+      "dependent_count": 4,
+      "priority": "critical"
+    },
+    {
+      "task_id": "ENV-003-AI",
+      "tier": "A",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "owner": "DevOps Engineer",
+      "reasons": [
+        "Tier A task - requires explicit validation",
+        "High fan-out (4 dependents)"
+      ],
+      "dependent_count": 4,
+      "priority": "critical"
+    },
+    {
+      "task_id": "ENV-004-AI",
+      "tier": "A",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "owner": "Backend Dev",
+      "reasons": [
+        "Tier A task - requires explicit validation"
+      ],
+      "dependent_count": 2,
+      "priority": "critical"
+    },
+    {
+      "task_id": "ENV-005-AI",
+      "tier": "A",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "owner": "DevOps Engineer",
+      "reasons": [
+        "Tier A task - requires explicit validation",
+        "High fan-out (11 dependents)"
+      ],
+      "dependent_count": 11,
+      "priority": "critical"
+    },
+    {
+      "task_id": "ENV-006-AI",
+      "tier": "A",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "owner": "Backend Dev",
+      "reasons": [
+        "Tier A task - requires explicit validation"
+      ],
+      "dependent_count": 1,
+      "priority": "critical"
+    },
+    {
+      "task_id": "ENV-007-AI",
+      "tier": "A",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "owner": "Tech Lead",
+      "reasons": [
+        "Tier A task - requires explicit validation",
+        "High fan-out (4 dependents)"
+      ],
+      "dependent_count": 4,
+      "priority": "critical"
+    },
+    {
+      "task_id": "ENV-009-AI",
+      "tier": "A",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "owner": "Frontend Dev",
+      "reasons": [
+        "Tier A task - requires explicit validation",
+        "High fan-out (4 dependents)"
+      ],
+      "dependent_count": 4,
+      "priority": "critical"
+    },
+    {
+      "task_id": "ENV-013-AI",
+      "tier": "A",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "owner": "Security Engineer",
+      "reasons": [
+        "Tier A task - requires explicit validation"
+      ],
+      "dependent_count": 1,
+      "priority": "critical"
+    },
+    {
+      "task_id": "IFC-000",
+      "tier": "A",
+      "section": "Planning",
+      "status": "Completed",
+      "owner": "CEO + CTO + CFO",
+      "reasons": [
+        "Tier A task - requires explicit validation",
+        "High fan-out (4 dependents)"
+      ],
+      "dependent_count": 4,
+      "priority": "critical"
+    },
+    {
+      "task_id": "DOC-001",
+      "tier": "A",
+      "section": "Strategy & Documentation",
+      "status": "Completed",
+      "owner": "CEO + All Leads",
+      "reasons": [
+        "Tier A task - requires explicit validation",
+        "High fan-out (3 dependents)"
+      ],
+      "dependent_count": 3,
+      "priority": "critical"
+    },
+    {
+      "task_id": "BRAND-001",
+      "tier": "A",
+      "section": "Brand & Design",
+      "status": "Completed",
+      "owner": "UX Designer + Frontend Dev",
+      "reasons": [
+        "Tier A task - requires explicit validation",
+        "High fan-out (17 dependents)"
+      ],
+      "dependent_count": 17,
+      "priority": "critical"
+    },
+    {
+      "task_id": "GTM-002",
+      "tier": "A",
+      "section": "Go-to-Market",
+      "status": "Completed",
+      "owner": "PM + Marketing",
+      "reasons": [
+        "Tier A task - requires explicit validation",
+        "High fan-out (16 dependents)"
+      ],
+      "dependent_count": 16,
+      "priority": "critical"
+    },
+    {
+      "task_id": "ANALYTICS-001",
+      "tier": "A",
+      "section": "Analytics & Segmentation",
+      "status": "Completed",
+      "owner": "PM + DA",
+      "reasons": [
+        "Tier A task - requires explicit validation",
+        "High fan-out (3 dependents)"
+      ],
+      "dependent_count": 3,
+      "priority": "critical"
+    },
+    {
+      "task_id": "EXC-SEC-001",
+      "tier": "A",
+      "section": "AI Foundation",
+      "status": "Completed",
+      "owner": "Security Engineer",
+      "reasons": [
+        "Tier A task - requires explicit validation"
+      ],
+      "priority": "critical"
     }
-  ]
+  ],
+  "tasks_by_tier": {
+    "A": [
+      "EXC-INIT-001",
+      "AI-SETUP-001",
+      "AI-SETUP-002",
+      "ENV-001-AI",
+      "ENV-002-AI",
+      "ENV-003-AI",
+      "ENV-004-AI",
+      "ENV-005-AI",
+      "ENV-006-AI",
+      "ENV-007-AI",
+      "ENV-009-AI",
+      "ENV-013-AI",
+      "IFC-000",
+      "DOC-001",
+      "BRAND-001",
+      "GTM-002",
+      "ANALYTICS-001",
+      "EXC-SEC-001"
+    ],
+    "B": [
+      "AI-SETUP-003",
+      "ENV-008-AI",
+      "ENV-010-AI",
+      "ENV-011-AI",
+      "ENV-014-AI",
+      "ENV-017-AI",
+      "ENV-018-AI",
+      "AUTOMATION-001",
+      "AUTOMATION-002",
+      "IFC-160"
+    ],
+    "C": [
+      "ENV-012-AI",
+      "ENV-015-AI",
+      "ENV-016-AI",
+      "EP-001-AI",
+      "GTM-001",
+      "PM-OPS-001",
+      "ENG-OPS-001"
+    ]
+  }
 }

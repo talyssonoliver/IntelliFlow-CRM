@@ -49,11 +49,7 @@ export class ConvertLeadUseCase {
     }
 
     // 3. Execute domain logic
-    const convertResult = lead.convert(
-      input.contactId,
-      input.accountId,
-      input.convertedBy
-    );
+    const convertResult = lead.convert(input.contactId, input.accountId, input.convertedBy);
 
     if (convertResult.isFailure) {
       return Result.fail(convertResult.error);

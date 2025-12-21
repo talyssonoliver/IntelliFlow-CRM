@@ -10,13 +10,19 @@
 
 ## Context and Problem Statement
 
-IntelliFlow CRM uses AI agents (CrewAI) to automate tasks like lead qualification, email drafting, calendar scheduling, and case research. These agents need to call application services (tRPC endpoints) to read data, create records, update statuses, and interact with external systems. How should we expose application functionality to AI agents while ensuring security, observability, and human oversight for high-risk actions?
+IntelliFlow CRM uses AI agents (CrewAI) to automate tasks like lead
+qualification, email drafting, calendar scheduling, and case research. These
+agents need to call application services (tRPC endpoints) to read data, create
+records, update statuses, and interact with external systems. How should we
+expose application functionality to AI agents while ensuring security,
+observability, and human oversight for high-risk actions?
 
 ## Decision Drivers
 
 - **Security**: Prevent unauthorized actions by AI agents
 - **Type Safety**: Ensure agents call endpoints with correct parameters
-- **Human-in-the-Loop**: Require approval for high-risk actions (send email, update case)
+- **Human-in-the-Loop**: Require approval for high-risk actions (send email,
+  update case)
 - **Observability**: Audit all agent actions with full context
 - **Rollback**: Support undo/rollback for agent-initiated changes
 - **Authorization**: Respect user/tenant permissions
@@ -30,15 +36,22 @@ IntelliFlow CRM uses AI agents (CrewAI) to automate tasks like lead qualificatio
 - **Option 2**: OpenAPI-based tools with LangChain OpenAPI agent
 - **Option 3**: Custom tool registry with approval flow middleware
 - **Option 4**: Function-calling with LLM native tools (OpenAI functions)
-- **Option 5**: Hybrid approach (tRPC tools + approval middleware + LangChain integration)
+- **Option 5**: Hybrid approach (tRPC tools + approval middleware + LangChain
+  integration)
 
 ## Decision Outcome
 
-Chosen option: **"Hybrid approach (tRPC tools + approval middleware + LangChain integration)"**, because it combines the best of all approaches. We expose tRPC procedures as LangChain tools with full type safety, wrap high-risk tools in approval middleware that pauses execution for human review, and use LangChain's tool-calling primitives for agent orchestration. This provides security, observability, and developer experience.
+Chosen option: **"Hybrid approach (tRPC tools + approval middleware + LangChain
+integration)"**, because it combines the best of all approaches. We expose tRPC
+procedures as LangChain tools with full type safety, wrap high-risk tools in
+approval middleware that pauses execution for human review, and use LangChain's
+tool-calling primitives for agent orchestration. This provides security,
+observability, and developer experience.
 
 ### Positive Consequences
 
-- **Type Safety**: tRPC procedures have TypeScript types that generate tool schemas
+- **Type Safety**: tRPC procedures have TypeScript types that generate tool
+  schemas
 - **Security**: Approval middleware enforces human review for sensitive actions
 - **Reusability**: Same tRPC endpoints used by UI and agents
 - **Observability**: LangSmith traces all tool calls with context
@@ -306,7 +319,11 @@ export async function requestApproval(data: {
   };
 
   // Store in Redis with 24h TTL
-  await redis.setex(`approval:${approvalId}`, 86400, JSON.stringify(pendingApproval));
+  await redis.setex(
+    `approval:${approvalId}`,
+    86400,
+    JSON.stringify(pendingApproval)
+  );
 
   // Notify user via WebSocket
   await publishApprovalNotification(pendingApproval);
@@ -416,7 +433,11 @@ Use tools in CrewAI agents:
 ```typescript
 // apps/ai-worker/src/agents/lead-qualifier.agent.ts
 import { Agent } from 'crewai';
-import { searchLeadsTool, updateLeadStatusTool, sendEmailTool } from '@intelliflow/ai/tools';
+import {
+  searchLeadsTool,
+  updateLeadStatusTool,
+  sendEmailTool,
+} from '@intelliflow/ai/tools';
 
 export const leadQualifierAgent = new Agent({
   role: 'Lead Qualification Specialist',
@@ -458,7 +479,9 @@ Implement compensating actions:
 
 ```typescript
 // packages/ai/rollback/rollback-service.ts
-export async function rollbackToolExecution(executionId: string): Promise<void> {
+export async function rollbackToolExecution(
+  executionId: string
+): Promise<void> {
   const execution = await db.agentToolExecution.findUnique({
     where: { id: executionId },
   });
@@ -468,7 +491,10 @@ export async function rollbackToolExecution(executionId: string): Promise<void> 
   }
 
   // Define rollback actions per tool
-  const rollbackActions: Record<string, (input: any, output: any) => Promise<void>> = {
+  const rollbackActions: Record<
+    string,
+    (input: any, output: any) => Promise<void>
+  > = {
     update_lead_status: async (input, output) => {
       // Revert status change
       await trpc.leads.updateStatus.mutate({

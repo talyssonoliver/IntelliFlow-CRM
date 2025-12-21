@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
+import { stripVTControlCharacters } from 'node:util';
 import { PATHS } from '@/lib/paths';
 
 // Valid CLI commands from orchestrator.sh
@@ -120,11 +121,7 @@ export async function POST(request: Request) {
         resolved = true;
 
         // Clean up output - remove carriage returns and ANSI codes
-        const cleanStdout = stdout
-          .trim()
-          .replace(/\r/g, '')
-          // eslint-disable-next-line no-control-regex
-          .replace(/\x1b\[[0-9;]*m/g, '');
+        const cleanStdout = stripVTControlCharacters(stdout.trim().replace(/\r/g, ''));
         const cleanStderr = stderr.trim().replace(/\r/g, '');
 
         // For status commands, exit code 1 often means "tasks incomplete" not error
@@ -161,11 +158,7 @@ export async function POST(request: Request) {
         child.kill();
 
         // Return partial output if available
-        const cleanStdout = stdout
-          .trim()
-          .replace(/\r/g, '')
-          // eslint-disable-next-line no-control-regex
-          .replace(/\x1b\[[0-9;]*m/g, '');
+        const cleanStdout = stripVTControlCharacters(stdout.trim().replace(/\r/g, ''));
         if (cleanStdout.length > 0) {
           resolve(
             NextResponse.json({

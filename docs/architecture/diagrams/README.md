@@ -1,12 +1,14 @@
 # Architecture Diagram Conventions
 
-This guide defines standards and conventions for creating architecture diagrams in the IntelliFlow CRM project.
+This guide defines standards and conventions for creating architecture diagrams
+in the IntelliFlow CRM project.
 
 ---
 
 ## Overview
 
-Clear, consistent diagrams are essential for communicating architecture decisions. This document establishes:
+Clear, consistent diagrams are essential for communicating architecture
+decisions. This document establishes:
 
 - Which diagram types to use for different purposes
 - Naming and styling conventions
@@ -31,7 +33,8 @@ Clear, consistent diagrams are essential for communicating architecture decision
 
 ## C4 Model
 
-We use the **C4 model** (Context, Containers, Components, Code) as our primary framework for architecture diagrams.
+We use the **C4 model** (Context, Containers, Components, Code) as our primary
+framework for architecture diagrams.
 
 ### C4 Levels
 
@@ -59,12 +62,12 @@ graph TD
 
 ### When to Use Each Level
 
-| Level | Purpose | Audience | Update Frequency |
-|-------|---------|----------|------------------|
-| **L1: System Context** | Show how our system fits in the world | Executives, Product, All teams | Rarely (major features) |
-| **L2: Container** | Show high-level technical building blocks | Architects, Leads, DevOps | Occasionally (new services) |
-| **L3: Component** | Show internal structure of containers | Developers, Architects | Regularly (new modules) |
-| **L4: Code** | Show class/module relationships | Developers | Rarely (complex modules only) |
+| Level                  | Purpose                                   | Audience                       | Update Frequency              |
+| ---------------------- | ----------------------------------------- | ------------------------------ | ----------------------------- |
+| **L1: System Context** | Show how our system fits in the world     | Executives, Product, All teams | Rarely (major features)       |
+| **L2: Container**      | Show high-level technical building blocks | Architects, Leads, DevOps      | Occasionally (new services)   |
+| **L3: Component**      | Show internal structure of containers     | Developers, Architects         | Regularly (new modules)       |
+| **L4: Code**           | Show class/module relationships           | Developers                     | Rarely (complex modules only) |
 
 ---
 
@@ -75,6 +78,7 @@ graph TD
 **Purpose:** Show how IntelliFlow CRM fits in the broader ecosystem
 
 **Elements:**
+
 - IntelliFlow CRM system (the thing we're building)
 - Users and personas
 - External systems (Stripe, Sendgrid, OpenAI, etc.)
@@ -108,7 +112,8 @@ graph TB
     SYSTEM -->|Syncs events| CALENDAR
 ```
 
-**File naming:** `01-system-context.mmd` (Mermaid) or `01-system-context.puml` (PlantUML)
+**File naming:** `01-system-context.mmd` (Mermaid) or `01-system-context.puml`
+(PlantUML)
 
 ---
 
@@ -117,6 +122,7 @@ graph TB
 **Purpose:** Show high-level technical architecture and deployment units
 
 **Elements:**
+
 - Applications (Web, API, Worker)
 - Databases (Supabase, Redis)
 - Message queues
@@ -166,6 +172,7 @@ graph TB
 **Purpose:** Show internal structure of a specific container
 
 **Elements:**
+
 - Packages/modules
 - Layers (domain, application, adapters)
 - Dependencies between components
@@ -216,6 +223,7 @@ graph TB
 **Purpose:** Show how objects/services interact over time
 
 **Use for:**
+
 - API request flows
 - Authentication flows
 - Event-driven workflows
@@ -259,6 +267,7 @@ sequenceDiagram
 **Purpose:** Show entity lifecycle and state transitions
 
 **Use for:**
+
 - Lead status flow
 - Deal pipeline stages
 - Ticket lifecycle
@@ -299,6 +308,7 @@ stateDiagram-v2
 **Purpose:** Show infrastructure and deployment architecture
 
 **Use for:**
+
 - Production environment layout
 - Multi-region setup
 - Networking and security zones
@@ -363,12 +373,12 @@ graph TB
 
 ### Recommended Tools
 
-| Tool | Use Cases | Pros | Cons | Format |
-|------|-----------|------|------|--------|
-| **Mermaid** | Sequence, flowcharts, state, simple diagrams | Text-based, git-friendly, renders in GitHub/Docusaurus | Limited styling | `.mmd` |
-| **PlantUML** | Complex UML, domain models, detailed diagrams | Powerful, widely supported | Requires Java, harder syntax | `.puml` |
-| **Excalidraw** | Ad-hoc sketches, whiteboarding, brainstorming | Easy to use, beautiful output | Not text-based, harder to version | `.excalidraw` |
-| **draw.io** | Complex custom diagrams, network diagrams | Feature-rich, professional | Not text-based, large files | `.drawio` |
+| Tool           | Use Cases                                     | Pros                                                   | Cons                              | Format        |
+| -------------- | --------------------------------------------- | ------------------------------------------------------ | --------------------------------- | ------------- |
+| **Mermaid**    | Sequence, flowcharts, state, simple diagrams  | Text-based, git-friendly, renders in GitHub/Docusaurus | Limited styling                   | `.mmd`        |
+| **PlantUML**   | Complex UML, domain models, detailed diagrams | Powerful, widely supported                             | Requires Java, harder syntax      | `.puml`       |
+| **Excalidraw** | Ad-hoc sketches, whiteboarding, brainstorming | Easy to use, beautiful output                          | Not text-based, harder to version | `.excalidraw` |
+| **draw.io**    | Complex custom diagrams, network diagrams     | Feature-rich, professional                             | Not text-based, large files       | `.drawio`     |
 
 ### Decision Tree
 
@@ -395,24 +405,28 @@ flowchart TD
 ### General Guidelines
 
 **Use Mermaid when:**
+
 - Diagram needs to be versioned with code
 - Simple to moderate complexity
 - Rendering in GitHub/Docusaurus is important
 - Collaboration through text edits
 
 **Use PlantUML when:**
+
 - Complex domain models or UML
 - Need precise control over layout
 - Using C4-PlantUML extension
 - Generating from code
 
 **Use Excalidraw when:**
+
 - Brainstorming or sketching
 - Presenting to non-technical stakeholders
 - Need hand-drawn aesthetic
 - Quick mockups
 
 **Use draw.io when:**
+
 - Complex network diagrams
 - Need rich visual customization
 - Creating detailed infrastructure diagrams
@@ -439,15 +453,15 @@ deploy-production.mmd
 
 ### Naming Components
 
-| Level | Prefix | Example |
-|-------|--------|---------|
-| System Context (C4-L1) | `01-system-` | `01-system-context.mmd` |
-| Container (C4-L2) | `02-container-` | `02-container.mmd` |
-| Component (C4-L3) | `03-component-` | `03-component-api.mmd` |
-| Code (C4-L4) | `04-code-` | `04-code-lead-aggregate.puml` |
-| Sequence | `seq-` | `seq-authentication-flow.mmd` |
-| State | `state-` | `state-lead-lifecycle.mmd` |
-| Deployment | `deploy-` | `deploy-production.mmd` |
+| Level                  | Prefix          | Example                       |
+| ---------------------- | --------------- | ----------------------------- |
+| System Context (C4-L1) | `01-system-`    | `01-system-context.mmd`       |
+| Container (C4-L2)      | `02-container-` | `02-container.mmd`            |
+| Component (C4-L3)      | `03-component-` | `03-component-api.mmd`        |
+| Code (C4-L4)           | `04-code-`      | `04-code-lead-aggregate.puml` |
+| Sequence               | `seq-`          | `seq-authentication-flow.mmd` |
+| State                  | `state-`        | `state-lead-lifecycle.mmd`    |
+| Deployment             | `deploy-`       | `deploy-production.mmd`       |
 
 ---
 
@@ -457,14 +471,14 @@ deploy-production.mmd
 
 Use consistent colors to represent different types of elements:
 
-| Element Type | Mermaid Color | PlantUML Color | Hex |
-|--------------|---------------|----------------|-----|
-| **User/Actor** | `fill:#E8F5E9` | `#E8F5E9` | Green-50 |
-| **Frontend/UI** | `fill:#E3F2FD` | `#E3F2FD` | Blue-50 |
-| **API/Backend** | `fill:#FFF3E0` | `#FFF3E0` | Orange-50 |
-| **Database** | `fill:#F3E5F5` | `#F3E5F5` | Purple-50 |
-| **External System** | `fill:#ECEFF1` | `#ECEFF1` | Blue-Gray-50 |
-| **Worker/Queue** | `fill:#FFF9C4` | `#FFF9C4` | Yellow-50 |
+| Element Type        | Mermaid Color  | PlantUML Color | Hex          |
+| ------------------- | -------------- | -------------- | ------------ |
+| **User/Actor**      | `fill:#E8F5E9` | `#E8F5E9`      | Green-50     |
+| **Frontend/UI**     | `fill:#E3F2FD` | `#E3F2FD`      | Blue-50      |
+| **API/Backend**     | `fill:#FFF3E0` | `#FFF3E0`      | Orange-50    |
+| **Database**        | `fill:#F3E5F5` | `#F3E5F5`      | Purple-50    |
+| **External System** | `fill:#ECEFF1` | `#ECEFF1`      | Blue-Gray-50 |
+| **Worker/Queue**    | `fill:#FFF9C4` | `#FFF9C4`      | Yellow-50    |
 
 ### Mermaid Styling Example
 
@@ -527,6 +541,7 @@ docs/architecture/diagrams/
 Reference diagrams in ADRs and documentation:
 
 **Markdown:**
+
 ```markdown
 ## Architecture Overview
 
@@ -534,10 +549,12 @@ Reference diagrams in ADRs and documentation:
 ```
 
 **In ADRs:**
+
 ```markdown
 ## Proposed Architecture
 
-See [Container Diagram](../diagrams/02-container.mmd) for the high-level structure.
+See [Container Diagram](../diagrams/02-container.mmd) for the high-level
+structure.
 ```
 
 ---
@@ -566,24 +583,23 @@ See: [`state-lead-lifecycle.mmd`](./state-lead-lifecycle.mmd)
 
 ### DO
 
-✅ **Start with context** - Begin with L1 system context before diving deep
-✅ **Use consistent notation** - Stick to established symbols and colors
-✅ **Keep it simple** - Diagrams should clarify, not confuse
-✅ **Label everything** - All nodes and edges should have clear labels
-✅ **Version with code** - Store diagrams in git alongside code
-✅ **Update regularly** - Keep diagrams in sync with implementation
-✅ **Add legends** - Include a legend for complex diagrams
+✅ **Start with context** - Begin with L1 system context before diving deep ✅
+**Use consistent notation** - Stick to established symbols and colors ✅ **Keep
+it simple** - Diagrams should clarify, not confuse ✅ **Label everything** - All
+nodes and edges should have clear labels ✅ **Version with code** - Store
+diagrams in git alongside code ✅ **Update regularly** - Keep diagrams in sync
+with implementation ✅ **Add legends** - Include a legend for complex diagrams
 ✅ **Link diagrams** - Create navigation between abstraction levels
 
 ### DON'T
 
-❌ **Don't overcomplicate** - If diagram is hard to read, split it
-❌ **Don't use screenshots** - Use text-based formats for versionability
-❌ **Don't mix abstraction levels** - Keep L1, L2, L3, L4 separate
-❌ **Don't duplicate information** - One source of truth per concept
-❌ **Don't skip titles/legends** - Always include context
-❌ **Don't use obscure tools** - Stick to team-approved tools
-❌ **Don't create and forget** - Diagrams need maintenance
+❌ **Don't overcomplicate** - If diagram is hard to read, split it ❌ **Don't
+use screenshots** - Use text-based formats for versionability ❌ **Don't mix
+abstraction levels** - Keep L1, L2, L3, L4 separate ❌ **Don't duplicate
+information** - One source of truth per concept ❌ **Don't skip
+titles/legends** - Always include context ❌ **Don't use obscure tools** - Stick
+to team-approved tools ❌ **Don't create and forget** - Diagrams need
+maintenance
 
 ---
 
@@ -639,6 +655,5 @@ Before committing a diagram, verify:
 
 ---
 
-**Document Owner:** Architecture Team
-**Last Updated:** 2025-12-20
-**Next Review:** 2026-03-20
+**Document Owner:** Architecture Team **Last Updated:** 2025-12-20 **Next
+Review:** 2026-03-20

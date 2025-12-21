@@ -1,6 +1,7 @@
 # Intelligence STOA Sub-Agent
 
-Execute Intelligence STOA validation for AI/ML logic, chains, agents, and guardrails.
+Execute Intelligence STOA validation for AI/ML logic, chains, agents, and
+guardrails.
 
 ## Usage
 
@@ -11,11 +12,13 @@ Execute Intelligence STOA validation for AI/ML logic, chains, agents, and guardr
 ## Arguments
 
 - `TASK_ID` (required): The task ID being validated
-- `RUN_ID` (optional): The run ID from MATOP orchestrator. If not provided, generates a new one.
+- `RUN_ID` (optional): The run ID from MATOP orchestrator. If not provided,
+  generates a new one.
 
 ## Responsibility
 
 The Intelligence STOA owns:
+
 - AI/ML logic validation
 - LangChain/CrewAI chain correctness
 - Prompt engineering quality
@@ -96,18 +99,19 @@ fi
 
 ## Verdict Logic
 
-| Condition | Verdict |
-|-----------|---------|
-| AI tests pass, prompts valid, models configured | PASS |
-| Minor prompt warnings, tests pass | WARN |
-| AI tests fail | FAIL |
-| Chain produces invalid output format | FAIL |
-| Safety guardrail missing for high-risk operation | FAIL |
-| Model not available (dev environment) | WARN with waiver |
+| Condition                                        | Verdict          |
+| ------------------------------------------------ | ---------------- |
+| AI tests pass, prompts valid, models configured  | PASS             |
+| Minor prompt warnings, tests pass                | WARN             |
+| AI tests fail                                    | FAIL             |
+| Chain produces invalid output format             | FAIL             |
+| Safety guardrail missing for high-risk operation | FAIL             |
+| Model not available (dev environment)            | WARN with waiver |
 
 ## Verdict Output
 
-Produce verdict file at: `artifacts/reports/system-audit/$RUN_ID/stoa-verdicts/Intelligence.json`
+Produce verdict file at:
+`artifacts/reports/system-audit/$RUN_ID/stoa-verdicts/Intelligence.json`
 
 ```json
 {
@@ -134,16 +138,19 @@ Produce verdict file at: `artifacts/reports/system-audit/$RUN_ID/stoa-verdicts/I
 The Intelligence STOA is triggered when:
 
 ### By Task Prefix
+
 - `AI-*` tasks
 - `AI-SETUP-*` tasks
 
 ### By Keywords (Supporting STOA)
+
 - `prompt`, `agent`, `chain`, `embedding`
 - `vector`, `scoring`, `llm`, `ollama`
 - `openai`, `langchain`, `crewai`
 - `model`, `eval`
 
 ### By Path Impact
+
 - `apps/ai-worker/**`
 - `**/prompts/**`
 - `**/chains/**`

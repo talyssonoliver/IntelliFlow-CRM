@@ -47,7 +47,7 @@ export async function GET(request: Request) {
     const phases = entries
       .filter((entry) => entry.isDirectory() && entry.name.startsWith('phase-'))
       .map((entry) => entry.name)
-      .sort();
+      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
     const phaseData: PhaseMetrics[] = [];
 

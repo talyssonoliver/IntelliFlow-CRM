@@ -94,7 +94,9 @@ export function Navigation() {
 
       {/* Overlay for mobile */}
       {mobileOpen && (
-        <div
+        <button
+          type="button"
+          aria-label="Close navigation menu"
           className="fixed inset-0 bg-black/50 z-30 lg:hidden"
           onClick={() => setMobileOpen(false)}
         />

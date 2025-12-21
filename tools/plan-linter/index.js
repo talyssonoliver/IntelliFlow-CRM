@@ -105,13 +105,35 @@ function parseDependencies(depString) {
   return depString.split(',').map(d => d.trim()).filter(d => d);
 }
 
-function buildDependencyGraph(tasks) {
+function applyDependencyOverrides(taskId, deps, overrides) {
+  const override = overrides?.[taskId];
+  if (!override) return deps;
+
+  let updated = deps;
+
+  if (Array.isArray(override.override_deps_remove) && override.override_deps_remove.length > 0) {
+    updated = updated.filter(d => !override.override_deps_remove.includes(d));
+  }
+
+  if (Array.isArray(override.override_deps_add) && override.override_deps_add.length > 0) {
+    updated = [...updated, ...override.override_deps_add];
+  }
+
+  // Preserve order but remove duplicates
+  return [...new Set(updated)];
+}
+
+function buildDependencyGraph(tasks, overrides) {
   const graph = new Map();
   const taskIds = new Set(tasks.map(t => t['Task ID']));
 
   tasks.forEach(task => {
     const id = task['Task ID'];
-    const deps = parseDependencies(task['Dependencies'] || task['CleanDependencies']);
+    const deps = applyDependencyOverrides(
+      id,
+      parseDependencies(task['Dependencies'] || task['CleanDependencies']),
+      overrides
+    );
     graph.set(id, deps);
   });
 
@@ -310,7 +332,7 @@ function computeTiers(tasks, overrides, fanout, config) {
 
 function checkHardRules(tasks, overrides, validationRules, config) {
   const errors = [];
-  const { graph, taskIds } = buildDependencyGraph(tasks);
+  const { graph, taskIds } = buildDependencyGraph(tasks, overrides);
 
   // Check for cycles
   const cycles = detectCycles(graph);

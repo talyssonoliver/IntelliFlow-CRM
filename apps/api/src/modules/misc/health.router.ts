@@ -9,11 +9,18 @@
  * - Container orchestrators (liveness/readiness probes)
  *
  * KPI: Response time <50ms (per IFC-003)
+ *
+ * Enhanced for IFC-074: Full Stack Observability
+ * - Version and build information
+ * - Environment details
+ * - Dependency health checks
+ * - Correlation ID support
  */
 
 import { z } from 'zod';
 import { createTRPCRouter, publicProcedure } from '../../trpc';
 import { prisma } from '@intelliflow/db/client';
+import { getCorrelationId } from '../../tracing/correlation';
 
 export const healthRouter = createTRPCRouter({
   /**
@@ -22,12 +29,13 @@ export const healthRouter = createTRPCRouter({
    * Returns 200 OK if the API server is running.
    * This is the fastest health check - use for basic uptime monitoring.
    *
-   * @returns Simple status object
+   * @returns Simple status object with correlation ID
    */
   ping: publicProcedure.query(() => {
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),
+      correlationId: getCorrelationId(),
     };
   }),
 
@@ -77,6 +85,9 @@ export const healthRouter = createTRPCRouter({
       timestamp: new Date().toISOString(),
       latency: totalLatency,
       checks,
+      correlationId: getCorrelationId(),
+      version: process.env.npm_package_version ?? '0.1.0',
+      environment: process.env.NODE_ENV ?? 'development',
     };
   }),
 
@@ -124,6 +135,10 @@ export const healthRouter = createTRPCRouter({
       alive: true,
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
+      correlationId: getCorrelationId(),
+      pid: process.pid,
+      nodeVersion: process.version,
+      memoryUsage: process.memoryUsage(),
     };
   }),
 
@@ -135,7 +150,18 @@ export const healthRouter = createTRPCRouter({
    */
   dbStats: publicProcedure.query(async () => {
     try {
-      const metrics = await prisma.$metrics.json();
+      const metricsProvider = (prisma as unknown as { $metrics?: { json: () => Promise<unknown> } })
+        .$metrics;
+      if (!metricsProvider?.json) {
+        return {
+          status: 'unsupported',
+          timestamp: new Date().toISOString(),
+          error:
+            'Prisma metrics are not available in this Prisma client build. Enable Prisma metrics and regenerate.',
+        };
+      }
+
+      const metrics = await metricsProvider.json();
 
       return {
         status: 'ok',

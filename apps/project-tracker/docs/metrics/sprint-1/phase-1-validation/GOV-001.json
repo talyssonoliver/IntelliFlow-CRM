@@ -1,0 +1,64 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "GOV-001",
+  "section": "Governance",
+  "description": "Governance Pack Implementation",
+  "owner": "Tech Lead + PM",
+  "dependencies": {
+    "required": [],
+    "verified_at": "2025-12-21T12:00:00Z",
+    "all_satisfied": true
+  },
+  "status": "DONE",
+  "status_history": [
+    { "status": "PLANNED", "at": "2025-12-20T00:00:00Z" },
+    { "status": "IN_PROGRESS", "at": "2025-12-21T12:00:00Z" },
+    { "status": "DONE", "at": "2025-12-21T14:00:00Z" }
+  ],
+  "execution": {
+    "started_at": "2025-12-21T12:00:00Z",
+    "completed_at": "2025-12-21T14:00:00Z",
+    "duration_minutes": 120,
+    "executor": "claude-opus-4.5",
+    "execution_log": "logs/sprint-1/GOV-001.log"
+  },
+  "artifacts": {
+    "expected": [
+      "docs/architecture/adr/000-template.md",
+      "docs/architecture/decision-workflow.md"
+    ],
+    "created": [
+      "docs/architecture/adr/000-template.md",
+      "docs/architecture/adr/001-hexagonal-architecture.md",
+      "docs/architecture/decision-workflow.md",
+      "docs/architecture/arp/000-template.md",
+      "docs/architecture/diagrams/README.md"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "adr_template_exists",
+      "command": "test -f docs/architecture/adr/000-template.md",
+      "passed": true,
+      "exit_code": 0,
+      "executed_at": "2025-12-21T14:00:00Z"
+    }
+  ],
+  "kpis": {
+    "templates_created": {
+      "target": true,
+      "actual": true,
+      "met": true,
+      "unit": "boolean"
+    },
+    "workflow_documented": {
+      "target": true,
+      "actual": true,
+      "met": true,
+      "unit": "boolean"
+    }
+  },
+  "blockers": [],
+  "notes": "Governance pack with ADR templates, ARP templates, and decision workflows."
+}

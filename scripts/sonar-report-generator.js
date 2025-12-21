@@ -13,22 +13,58 @@ import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const REPO_ROOT = path.resolve(__dirname, '..');
 
 const SONARQUBE_URL = 'http://localhost:9000';
 const PROJECT_KEY = 'IntelliFlow';
 const REPORT_DIR = 'sonar-reports';
 
-// Load token from environment
+function loadDotenvLocal() {
+  const envPath = path.join(REPO_ROOT, '.env.local');
+  if (!fs.existsSync(envPath)) return;
+
+  try {
+    const content = fs.readFileSync(envPath, 'utf8');
+    for (const line of content.split(/\r?\n/)) {
+      const raw = line.trim();
+      if (!raw || raw.startsWith('#')) continue;
+      const normalized = raw.startsWith('export ') ? raw.slice('export '.length).trim() : raw;
+      const idx = normalized.indexOf('=');
+      if (idx <= 0) continue;
+      const key = normalized.slice(0, idx).trim();
+      let value = normalized.slice(idx + 1).trim();
+      if (!key || key.includes(' ')) continue;
+      if (
+        value.length >= 2 &&
+        ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'")))
+      ) {
+        value = value.slice(1, -1);
+      }
+      if (process.env[key] === undefined) process.env[key] = value;
+    }
+  } catch {
+    // ignore
+  }
+}
+
+loadDotenvLocal();
+
 const SONAR_TOKEN = process.env.SONAR_TOKEN;
-if (!SONAR_TOKEN) {
-  console.error('❌ SONAR_TOKEN not found');
+const SONARQUBE_ADMIN_USER = process.env.SONARQUBE_ADMIN_USER;
+const SONARQUBE_ADMIN_PASSWORD = process.env.SONARQUBE_ADMIN_PASSWORD;
+
+const authUser = SONARQUBE_ADMIN_USER || SONAR_TOKEN;
+const authPass = SONARQUBE_ADMIN_USER ? SONARQUBE_ADMIN_PASSWORD : '';
+
+if (!authUser) {
+  console.error('❌ No SonarQube credentials found (set SONAR_TOKEN, or SONARQUBE_ADMIN_USER + SONARQUBE_ADMIN_PASSWORD).');
   process.exit(1);
 }
 
 function makeRequest(endpoint) {
   return new Promise((resolve, reject) => {
     const url = `${SONARQUBE_URL}/api${endpoint}`;
-    const auth = Buffer.from(`${SONAR_TOKEN}:`).toString('base64');
+    const auth = Buffer.from(`${authUser}:${authPass ?? ''}`).toString('base64');
 
     const options = {
       headers: {
@@ -41,10 +77,15 @@ function makeRequest(endpoint) {
 
     client
       .get(url, options, res => {
+        const status = res.statusCode || 0;
         let data = '';
 
         res.on('data', chunk => (data += chunk));
         res.on('end', () => {
+          if (status >= 400) {
+            reject(new Error(`HTTP ${String(status)}: ${data.slice(0, 300)}`));
+            return;
+          }
           try {
             resolve(JSON.parse(data));
           } catch (e) {

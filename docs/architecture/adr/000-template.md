@@ -1,6 +1,7 @@
 # ADR-XXX: [Title of Decision]
 
-**Status:** [Proposed | Accepted | Rejected | Deprecated | Superseded by ADR-YYY]
+**Status:** [Proposed | Accepted | Rejected | Deprecated | Superseded by
+ADR-YYY]
 
 **Date:** YYYY-MM-DD
 
@@ -10,11 +11,13 @@
 
 ## Context and Problem Statement
 
-[Describe the architectural context and problem statement in 2-3 sentences. Articulate the problem as a question if possible.]
+[Describe the architectural context and problem statement in 2-3 sentences.
+Articulate the problem as a question if possible.]
 
 ## Decision Drivers
 
-- [driver 1, e.g., technical constraint, business requirement, quality attribute]
+- [driver 1, e.g., technical constraint, business requirement, quality
+  attribute]
 - [driver 2, e.g., compliance requirement, performance target]
 - [driver 3, e.g., team capability, timeline constraint]
 - ... <!-- numbers of drivers can vary -->
@@ -28,11 +31,13 @@
 
 ## Decision Outcome
 
-Chosen option: "[option 1]", because [justification - explain why this option best satisfies the decision drivers and resolves the problem].
+Chosen option: "[option 1]", because [justification - explain why this option
+best satisfies the decision drivers and resolves the problem].
 
 ### Positive Consequences
 
-- [e.g., improvement of quality attribute satisfaction, enabler for future capabilities]
+- [e.g., improvement of quality attribute satisfaction, enabler for future
+  capabilities]
 - [e.g., reduced complexity, better maintainability]
 - ...
 
@@ -81,7 +86,8 @@ Chosen option: "[option 1]", because [justification - explain why this option be
 
 ## Implementation Notes
 
-[Any specific notes about implementing this decision, such as migration steps, configuration changes, or code patterns to follow]
+[Any specific notes about implementing this decision, such as migration steps,
+configuration changes, or code patterns to follow]
 
 ### Validation Criteria
 
@@ -99,13 +105,17 @@ Chosen option: "[option 1]", because [justification - explain why this option be
 
 ## Guidelines for Using This Template
 
-1. **Numbering**: Use sequential numbering (001, 002, etc.) based on chronological order
-2. **Status**: Start as "Proposed", move to "Accepted" after review, or "Rejected" if declined
+1. **Numbering**: Use sequential numbering (001, 002, etc.) based on
+   chronological order
+2. **Status**: Start as "Proposed", move to "Accepted" after review, or
+   "Rejected" if declined
 3. **Keep it concise**: ADRs should be scannable - aim for 1-2 pages maximum
 4. **Focus on "why"**: Document the reasoning and context, not just the decision
-5. **Update status**: Mark as "Deprecated" or "Superseded" when replaced by newer decisions
+5. **Update status**: Mark as "Deprecated" or "Superseded" when replaced by
+   newer decisions
 6. **Link related ADRs**: Create a web of architectural knowledge
-7. **Include validation**: Define how to verify the decision was implemented correctly
+7. **Include validation**: Define how to verify the decision was implemented
+   correctly
 
 ## When to Create an ADR
 
@@ -137,5 +147,6 @@ Do NOT create ADRs for:
 ---
 
 **Related Templates:**
+
 - [ARP Template](../arp/000-template.md) - For proposing architectural changes
 - [Decision Workflow](../decision-workflow.md) - Process for making decisions

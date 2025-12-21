@@ -233,13 +233,21 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     this.props.updatedAt = new Date();
 
     this.addDomainEvent(
-      new OpportunityProbabilityUpdatedEvent(this.id, previousProbability, newProbability, updatedBy)
+      new OpportunityProbabilityUpdatedEvent(
+        this.id,
+        previousProbability,
+        newProbability,
+        updatedBy
+      )
     );
 
     return Result.ok(undefined);
   }
 
-  updateExpectedCloseDate(newDate: Date, changedBy: string): Result<void, OpportunityAlreadyClosedError> {
+  updateExpectedCloseDate(
+    newDate: Date,
+    changedBy: string
+  ): Result<void, OpportunityAlreadyClosedError> {
     if (this.isClosed) {
       return Result.fail(new OpportunityAlreadyClosedError());
     }

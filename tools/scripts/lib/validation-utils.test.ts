@@ -610,7 +610,7 @@ apps/project-tracker/docs/artifacts/.gitkeep`;
     const execSyncFn = vi.fn((command: string) => {
       if (command.startsWith('git ls-files -o -i --exclude-standard')) return ignoredOutput;
       if (command.startsWith('git ls-files -o --exclude-standard')) return untrackedOutput;
-      if (command.startsWith('git ls-files \"apps/project-tracker/docs\"')) return trackedOutput;
+      if (command.startsWith('git ls-files "apps/project-tracker/docs"')) return trackedOutput;
       return '';
     });
     const result = findIgnoredRuntimeArtifacts(

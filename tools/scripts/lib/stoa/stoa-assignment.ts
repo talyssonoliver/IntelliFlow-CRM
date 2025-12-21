@@ -143,22 +143,8 @@ const STOA_KEYWORD_TRIGGERS: Record<StoaRole, string[]> = {
  * Path patterns that trigger each STOA as supporting.
  */
 const STOA_PATH_TRIGGERS: Record<StoaRole, RegExp[]> = {
-  Security: [
-    /middleware\/auth/i,
-    /auth/i,
-    /security/i,
-    /\.env/i,
-    /vault/i,
-    /secrets/i,
-  ],
-  Intelligence: [
-    /apps\/ai-worker/i,
-    /prompts/i,
-    /chains/i,
-    /embeddings/i,
-    /scoring/i,
-    /agents/i,
-  ],
+  Security: [/middleware\/auth/i, /auth/i, /security/i, /\.env/i, /vault/i, /secrets/i],
+  Intelligence: [/apps\/ai-worker/i, /prompts/i, /chains/i, /embeddings/i, /scoring/i, /agents/i],
   Quality: [
     /tests\//i,
     /\.test\./i,
@@ -177,14 +163,7 @@ const STOA_PATH_TRIGGERS: Record<StoaRole, RegExp[]> = {
     /monitoring/i,
     /observability/i,
   ],
-  Domain: [
-    /apps\/api/i,
-    /packages\/domain/i,
-    /packages\/db/i,
-    /prisma/i,
-    /schema/i,
-    /migrations/i,
-  ],
+  Domain: [/apps\/api/i, /packages\/domain/i, /packages\/db/i, /prisma/i, /schema/i, /migrations/i],
   Automation: [
     /tools\/scripts/i,
     /tools\/lint/i,
@@ -241,11 +220,9 @@ export function deriveSupportingStoas(
   leadStoa: StoaRole
 ): { stoas: StoaRole[]; derivedFrom: StoaAssignment['derivedFrom'] } {
   const supportingStoas: StoaRole[] = [];
-  const allText = [
-    task.description || '',
-    task.definitionOfDone || '',
-    task.section || '',
-  ].join(' ');
+  const allText = [task.description || '', task.definitionOfDone || '', task.section || ''].join(
+    ' '
+  );
   const affectedPaths = task.affectedPaths || [];
   const dependencies = task.dependencies || [];
 

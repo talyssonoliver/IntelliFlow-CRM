@@ -1,6 +1,7 @@
 # Domain STOA Sub-Agent
 
-Execute Domain STOA validation for business logic, API contracts, and data model correctness.
+Execute Domain STOA validation for business logic, API contracts, and data model
+correctness.
 
 ## Usage
 
@@ -11,11 +12,13 @@ Execute Domain STOA validation for business logic, API contracts, and data model
 ## Arguments
 
 - `TASK_ID` (required): The task ID being validated
-- `RUN_ID` (optional): The run ID from MATOP orchestrator. If not provided, generates a new one.
+- `RUN_ID` (optional): The run ID from MATOP orchestrator. If not provided,
+  generates a new one.
 
 ## Responsibility
 
 The Domain STOA owns:
+
 - Business/domain logic correctness
 - API contract validation (tRPC)
 - Database schema and migrations
@@ -74,11 +77,11 @@ pnpm exec depcruise --config .dependency-cruiser.cjs packages/domain packages/ap
 
 ### Coverage Thresholds (Enforced)
 
-| Layer | Required Coverage |
-|-------|------------------|
-| Domain (`packages/domain/`) | >95% |
-| Application (`packages/application/`) | >90% |
-| API Routes | >85% |
+| Layer                                 | Required Coverage |
+| ------------------------------------- | ----------------- |
+| Domain (`packages/domain/`)           | >95%              |
+| Application (`packages/application/`) | >90%              |
+| API Routes                            | >85%              |
 
 ### Hexagonal Architecture Rules
 
@@ -99,18 +102,19 @@ Adapters CAN depend on:
 
 ## Verdict Logic
 
-| Condition | Verdict |
-|-----------|---------|
-| All domain tests pass, types valid, no boundary violations | PASS |
-| Minor type warnings, tests pass | WARN |
-| Domain tests fail | FAIL |
-| Architecture boundary violation | FAIL |
-| Pending migrations not applied | WARN |
-| Business rule violation detected | FAIL |
+| Condition                                                  | Verdict |
+| ---------------------------------------------------------- | ------- |
+| All domain tests pass, types valid, no boundary violations | PASS    |
+| Minor type warnings, tests pass                            | WARN    |
+| Domain tests fail                                          | FAIL    |
+| Architecture boundary violation                            | FAIL    |
+| Pending migrations not applied                             | WARN    |
+| Business rule violation detected                           | FAIL    |
 
 ## Verdict Output
 
-Produce verdict file at: `artifacts/reports/system-audit/$RUN_ID/stoa-verdicts/Domain.json`
+Produce verdict file at:
+`artifacts/reports/system-audit/$RUN_ID/stoa-verdicts/Domain.json`
 
 ```json
 {
@@ -137,15 +141,18 @@ Produce verdict file at: `artifacts/reports/system-audit/$RUN_ID/stoa-verdicts/D
 The Domain STOA is triggered when:
 
 ### By Task Prefix (Lead)
+
 - `IFC-*` tasks (default for product features)
 
 ### By Keywords (Supporting STOA)
+
 - `trpc`, `api`, `prisma`, `database`
 - `schema`, `entity`, `aggregate`
 - `domain`, `use case`, `repository`
 - `migration`
 
 ### By Path Impact
+
 - `apps/api/**`
 - `packages/domain/**`
 - `packages/application/**`

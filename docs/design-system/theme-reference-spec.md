@@ -1,12 +1,12 @@
 # Theme Reference Specification
 
-**Version:** 1.0.0
-**Last Updated:** 2025-12-20
-**Status:** Active
+**Version:** 1.0.0 **Last Updated:** 2025-12-20 **Status:** Active
 
 ## Overview
 
-This document provides a comprehensive reference for the IntelliFlow CRM theme system. It explains how to use design tokens in components, implement dark mode, and follow best practices for maintaining visual consistency.
+This document provides a comprehensive reference for the IntelliFlow CRM theme
+system. It explains how to use design tokens in components, implement dark mode,
+and follow best practices for maintaining visual consistency.
 
 ## Table of Contents
 
@@ -52,18 +52,21 @@ intelliFlow-CRM/
 ### Three-Tier Token System
 
 **Tier 1: Brand Tokens (Design)**
+
 - Format: HEX colors, pixel values
 - Location: `docs/company/brand/*.tokens.json`
 - Purpose: Design system source of truth
 - Example: `"color.brand.primary": "#2563EB"`
 
 **Tier 2: CSS Variables (Implementation)**
+
 - Format: HSL colors (without `hsl()` wrapper)
 - Location: `apps/web/src/app/globals.css`
 - Purpose: Runtime theme values with dark mode support
 - Example: `--primary: 221.2 83.2% 53.3%;`
 
 **Tier 3: Tailwind Utilities (Usage)**
+
 - Format: Semantic class names
 - Location: `apps/web/tailwind.config.ts` + components
 - Purpose: Developer-friendly classes for components
@@ -95,18 +98,18 @@ Use semantic color names that describe purpose, not appearance:
 
 #### Available Semantic Colors
 
-| Token | Light Mode | Dark Mode | Usage |
-|-------|------------|-----------|-------|
-| `background` | White | Dark slate | Page backgrounds |
-| `foreground` | Dark slate | Light gray | Primary text |
-| `primary` | Blue | Lighter blue | Primary actions, links |
-| `secondary` | Light gray | Dark gray | Secondary surfaces |
-| `muted` | Light gray | Dark gray | Muted backgrounds |
-| `accent` | Light gray | Dark gray | Subtle accents, hover states |
-| `destructive` | Red | Dark red | Destructive actions, errors |
-| `border` | Light gray | Dark gray | Borders, dividers |
-| `input` | Light gray | Dark gray | Input borders |
-| `ring` | Blue | Blue | Focus rings |
+| Token         | Light Mode | Dark Mode    | Usage                        |
+| ------------- | ---------- | ------------ | ---------------------------- |
+| `background`  | White      | Dark slate   | Page backgrounds             |
+| `foreground`  | Dark slate | Light gray   | Primary text                 |
+| `primary`     | Blue       | Lighter blue | Primary actions, links       |
+| `secondary`   | Light gray | Dark gray    | Secondary surfaces           |
+| `muted`       | Light gray | Dark gray    | Muted backgrounds            |
+| `accent`      | Light gray | Dark gray    | Subtle accents, hover states |
+| `destructive` | Red        | Dark red     | Destructive actions, errors  |
+| `border`      | Light gray | Dark gray    | Borders, dividers            |
+| `input`       | Light gray | Dark gray    | Input borders                |
+| `ring`        | Blue       | Blue         | Focus rings                  |
 
 #### Color with Foreground
 
@@ -186,6 +189,7 @@ Use the 4px-based spacing scale:
 ```
 
 **Common Spacing Values:**
+
 - `0` = 0px
 - `1` = 4px
 - `2` = 8px
@@ -211,11 +215,13 @@ Use the 4px-based spacing scale:
 
 ### Overview
 
-The theme system uses **class-based dark mode**. A `.dark` class on the root element switches all CSS variables to their dark mode values.
+The theme system uses **class-based dark mode**. A `.dark` class on the root
+element switches all CSS variables to their dark mode values.
 
 ### Enabling Dark Mode
 
 **Method 1: Manual Toggle**
+
 ```tsx
 'use client';
 
@@ -228,14 +234,13 @@ export function DarkModeToggle() {
   };
 
   return (
-    <button onClick={toggleDarkMode}>
-      {isDark ? '☀️ Light' : '🌙 Dark'}
-    </button>
+    <button onClick={toggleDarkMode}>{isDark ? '☀️ Light' : '🌙 Dark'}</button>
   );
 }
 ```
 
 **Method 2: System Preference (Recommended)**
+
 ```tsx
 'use client';
 
@@ -283,9 +288,9 @@ All color tokens have dark mode variants:
 
 /* Dark mode */
 .dark {
-  --background: 222.2 84% 4.9%;  /* Inverted */
-  --foreground: 210 40% 98%;     /* Inverted */
-  --primary: 217.2 91.2% 59.8%;  /* Adjusted for dark backgrounds */
+  --background: 222.2 84% 4.9%; /* Inverted */
+  --foreground: 210 40% 98%; /* Inverted */
+  --primary: 217.2 91.2% 59.8%; /* Adjusted for dark backgrounds */
   /* ... */
 }
 ```
@@ -303,6 +308,7 @@ All color tokens have dark mode variants:
    - Destructive colors are darker in dark mode to reduce harshness
 
 3. **Testing Dark Mode**
+
    ```bash
    # Add class to test
    document.documentElement.classList.add('dark')
@@ -382,14 +388,19 @@ import { Button } from '@/components/ui/button';
 ### Card Component
 
 ```tsx
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from '@/components/ui/card';
 
 <Card>
   <CardHeader>
     <CardTitle>Card Title</CardTitle>
-    <CardDescription>
-      Card description with muted text
-    </CardDescription>
+    <CardDescription>Card description with muted text</CardDescription>
   </CardHeader>
   <CardContent>
     <p>Card content area</p>
@@ -397,7 +408,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
   <CardFooter>
     <Button>Action</Button>
   </CardFooter>
-</Card>
+</Card>;
 ```
 
 ### Form Components
@@ -408,18 +419,21 @@ import { Label } from '@/components/ui/label';
 
 <div className="space-y-2">
   <Label htmlFor="email">Email</Label>
-  <Input
-    id="email"
-    type="email"
-    placeholder="you@example.com"
-  />
-</div>
+  <Input id="email" type="email" placeholder="you@example.com" />
+</div>;
 ```
 
 ### Table Component
 
 ```tsx
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table';
 
 <Table>
   <TableHeader>
@@ -434,7 +448,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
       <TableCell>Active</TableCell>
     </TableRow>
   </TableBody>
-</Table>
+</Table>;
 ```
 
 ## Best Practices
@@ -548,9 +562,7 @@ export default function Page() {
             <CardTitle>Section Title</CardTitle>
             <CardDescription>Section description</CardDescription>
           </CardHeader>
-          <CardContent>
-            {/* Content */}
-          </CardContent>
+          <CardContent>{/* Content */}</CardContent>
         </Card>
       </main>
     </div>
@@ -574,7 +586,9 @@ export default function Page() {
 
   <div className="flex gap-4">
     <Button type="submit">Submit</Button>
-    <Button type="button" variant="outline">Cancel</Button>
+    <Button type="button" variant="outline">
+      Cancel
+    </Button>
   </div>
 </form>
 ```
@@ -583,15 +597,22 @@ export default function Page() {
 
 ```tsx
 // Create a status badge component
-export function StatusBadge({ status }: { status: 'success' | 'error' | 'pending' }) {
+export function StatusBadge({
+  status,
+}: {
+  status: 'success' | 'error' | 'pending';
+}) {
   const variants = {
-    success: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100',
+    success:
+      'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100',
     error: 'bg-destructive/10 text-destructive',
     pending: 'bg-muted text-muted-foreground',
   };
 
   return (
-    <span className={`inline-flex px-2 py-1 text-xs rounded-md ${variants[status]}`}>
+    <span
+      className={`inline-flex px-2 py-1 text-xs rounded-md ${variants[status]}`}
+    >
       {status}
     </span>
   );
@@ -629,12 +650,14 @@ export function StatusBadge({ status }: { status: 'success' | 'error' | 'pending
 ### From Hardcoded Colors
 
 **Before:**
+
 ```tsx
 <div className="bg-white dark:bg-slate-900">
   <p className="text-gray-900 dark:text-gray-100">
 ```
 
 **After:**
+
 ```tsx
 <div className="bg-background">
   <p className="text-foreground">
@@ -643,6 +666,7 @@ export function StatusBadge({ status }: { status: 'success' | 'error' | 'pending
 ### From Color Names
 
 **Before:**
+
 ```tsx
 <Button className="bg-blue-600 hover:bg-blue-700 text-white">
 
@@ -650,6 +674,7 @@ export function StatusBadge({ status }: { status: 'success' | 'error' | 'pending
 ```
 
 **After:**
+
 ```tsx
 <Button variant="default">
 
@@ -659,11 +684,13 @@ export function StatusBadge({ status }: { status: 'success' | 'error' | 'pending
 ### From Arbitrary Values
 
 **Before:**
+
 ```tsx
 <div className="p-[23px] mb-[17px]">
 ```
 
 **After:**
+
 ```tsx
 <div className="p-6 mb-4">
 ```
@@ -673,6 +700,7 @@ export function StatusBadge({ status }: { status: 'success' | 'error' | 'pending
 ### Issue: Dark mode not working
 
 **Solution:**
+
 1. Ensure `.dark` class is on `<html>` or `<body>` element
 2. Check Tailwind config has `darkMode: 'class'`
 3. Verify CSS variables exist in both `:root` and `.dark` selectors
@@ -680,6 +708,7 @@ export function StatusBadge({ status }: { status: 'success' | 'error' | 'pending
 ### Issue: Colors look wrong in dark mode
 
 **Solution:**
+
 1. Use semantic tokens, not hardcoded colors
 2. Include foreground variants: `bg-primary text-primary-foreground`
 3. Check CSS variable values in `globals.css`
@@ -687,6 +716,7 @@ export function StatusBadge({ status }: { status: 'success' | 'error' | 'pending
 ### Issue: Custom color not working
 
 **Solution:**
+
 1. Add HEX value to brand tokens
 2. Convert to HSL and add to CSS variables
 3. Add to Tailwind config
@@ -695,6 +725,7 @@ export function StatusBadge({ status }: { status: 'success' | 'error' | 'pending
 ### Issue: Inconsistent spacing
 
 **Solution:**
+
 1. Use spacing scale tokens (0, 1, 2, 3, 4, 6, 8, 10, 12)
 2. Avoid arbitrary values like `p-[23px]`
 3. Use consistent patterns (e.g., card padding always `p-6`)
@@ -702,6 +733,7 @@ export function StatusBadge({ status }: { status: 'success' | 'error' | 'pending
 ### Issue: Poor contrast
 
 **Solution:**
+
 1. Always pair background with foreground: `bg-card text-card-foreground`
 2. Use muted variants for secondary text: `text-muted-foreground`
 3. Test with browser dev tools color contrast checker
@@ -711,6 +743,7 @@ export function StatusBadge({ status }: { status: 'success' | 'error' | 'pending
 ### CSS Variable Performance
 
 CSS variables are performant and have minimal overhead:
+
 - Calculated once per theme switch
 - No runtime JavaScript required
 - Efficient browser caching
@@ -735,6 +768,7 @@ CSS variables are performant and have minimal overhead:
 ### Color Contrast
 
 All semantic color pairs meet WCAG AA standards:
+
 - `background` + `foreground`: 15:1 (AAA)
 - `primary` + `primary-foreground`: 7:1 (AAA)
 - `secondary` + `secondary-foreground`: 4.5:1 (AA)
@@ -743,6 +777,7 @@ All semantic color pairs meet WCAG AA standards:
 ### Focus States
 
 All interactive elements have visible focus rings:
+
 ```tsx
 <Button className="focus-visible:ring-2 focus-visible:ring-ring">
 ```
@@ -750,6 +785,7 @@ All interactive elements have visible focus rings:
 ### Reduced Motion
 
 Respect user preferences:
+
 ```css
 @media (prefers-reduced-motion: reduce) {
   * {
@@ -762,17 +798,20 @@ Respect user preferences:
 ## Resources
 
 ### Internal Documentation
+
 - [Token Naming Conventions](./token-naming.md)
 - [Token Mapping](./token-mapping.md)
 - [Brand Tokens](../../company/brand/palette.tokens.json)
 
 ### External Resources
+
 - [Tailwind CSS Documentation](https://tailwindcss.com/docs)
 - [shadcn/ui Components](https://ui.shadcn.com)
 - [HSL Color Picker](https://hslpicker.com)
 - [WCAG Contrast Checker](https://webaim.org/resources/contrastchecker/)
 
 ### Tools
+
 - [Tailwind CSS IntelliSense](https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss)
 - [Browser DevTools](https://developer.chrome.com/docs/devtools/)
 - [React Developer Tools](https://react.dev/learn/react-developer-tools)
@@ -780,6 +819,7 @@ Respect user preferences:
 ## Version History
 
 ### v1.0.0 (2025-12-20)
+
 - Initial theme reference specification
 - Complete token mapping for Sprint 0/1 components
 - Dark mode implementation guide

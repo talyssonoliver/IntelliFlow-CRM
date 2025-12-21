@@ -16,7 +16,10 @@ export const revalidate = 0;
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const sprint = parseInt(searchParams.get('sprint') || '0', 10);
+    const sprintParam = searchParams.get('sprint') || '0';
+
+    // Handle 'all' as a special case, otherwise parse as integer
+    const sprint: number | 'all' = sprintParam === 'all' ? 'all' : parseInt(sprintParam, 10);
 
     // Check if governance files exist
     const filesExist = checkGovernanceFilesExist();
@@ -33,7 +36,7 @@ export async function GET(request: Request) {
     }
 
     const summary = getGovernanceSummary(sprint);
-    const tierTasks = getDetailedTasksByTier();
+    const tierTasks = getDetailedTasksByTier(sprint);
 
     return NextResponse.json(
       {

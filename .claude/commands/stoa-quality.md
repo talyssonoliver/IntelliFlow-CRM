@@ -1,6 +1,7 @@
 # Quality STOA Sub-Agent
 
-Execute Quality STOA validation for test coverage, quality gates, and CI enforcement.
+Execute Quality STOA validation for test coverage, quality gates, and CI
+enforcement.
 
 ## Usage
 
@@ -11,11 +12,13 @@ Execute Quality STOA validation for test coverage, quality gates, and CI enforce
 ## Arguments
 
 - `TASK_ID` (required): The task ID being validated
-- `RUN_ID` (optional): The run ID from MATOP orchestrator. If not provided, generates a new one.
+- `RUN_ID` (optional): The run ID from MATOP orchestrator. If not provided,
+  generates a new one.
 
 ## Responsibility
 
 The Quality STOA owns:
+
 - Test strategy and execution
 - Coverage enforcement (thresholds)
 - Regression prevention
@@ -76,12 +79,12 @@ fi
 
 From `vitest.config.ts` (enforced):
 
-| Metric | Threshold | Action if Below |
-|--------|-----------|-----------------|
-| Statements | 90% | FAIL |
-| Branches | 90% | FAIL |
-| Functions | 90% | FAIL |
-| Lines | 90% | FAIL |
+| Metric     | Threshold | Action if Below |
+| ---------- | --------- | --------------- |
+| Statements | 90%       | FAIL            |
+| Branches   | 90%       | FAIL            |
+| Functions  | 90%       | FAIL            |
+| Lines      | 90%       | FAIL            |
 
 **Critical Configuration Check:**
 
@@ -102,17 +105,18 @@ If `thresholdAutoUpdate: true`, the gate is ineffective - report as NEEDS_HUMAN.
 
 ## Verdict Logic
 
-| Condition | Verdict |
-|-----------|---------|
-| Coverage >= 90%, all tests pass, no lint errors | PASS |
-| Coverage between 85-90% | WARN |
-| Tests fail | FAIL |
-| Coverage below 85% | FAIL |
-| Coverage enforcement not configured | NEEDS_HUMAN |
+| Condition                                       | Verdict     |
+| ----------------------------------------------- | ----------- |
+| Coverage >= 90%, all tests pass, no lint errors | PASS        |
+| Coverage between 85-90%                         | WARN        |
+| Tests fail                                      | FAIL        |
+| Coverage below 85%                              | FAIL        |
+| Coverage enforcement not configured             | NEEDS_HUMAN |
 
 ## Verdict Output
 
-Produce verdict file at: `artifacts/reports/system-audit/$RUN_ID/stoa-verdicts/Quality.json`
+Produce verdict file at:
+`artifacts/reports/system-audit/$RUN_ID/stoa-verdicts/Quality.json`
 
 ```json
 {
@@ -150,22 +154,20 @@ import {
   runGates,
   generateStoaVerdict,
   writeStoaVerdict,
-  getEvidenceDir
+  getEvidenceDir,
 } from './tools/scripts/lib/stoa/index.js';
 
 const matrix = loadAuditMatrix(repoRoot);
 const evidenceDir = getEvidenceDir(repoRoot, runId);
 
 // Quality-specific gates
-const qualityGates = [
-  'turbo-test-coverage'
-];
+const qualityGates = ['turbo-test-coverage'];
 
 const results = await runGates(qualityGates, {
   repoRoot,
   evidenceDir,
   matrix,
-  dryRun: false
+  dryRun: false,
 });
 
 // Parse coverage from output
@@ -179,7 +181,7 @@ if (coverage < 90 && coverage >= 85) {
     severity: 'medium',
     source: 'turbo-test-coverage',
     message: `Coverage at ${coverage}% (threshold: 90%)`,
-    recommendation: 'Add tests to increase coverage above 90%'
+    recommendation: 'Add tests to increase coverage above 90%',
   });
 }
 

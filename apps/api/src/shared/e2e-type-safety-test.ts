@@ -185,22 +185,18 @@ function demonstrateErrorPrevention() {
   // const lead: Lead = { emai: 'test@example.com' };
   //                      ^^^^
   // Error: Object literal may only specify known properties
-
   // ❌ Wrong type for field - caught at compile time
   // const lead: Lead = { email: 123 };
   //                             ^^^
   // Error: Type 'number' is not assignable to type 'string'
-
   // ❌ Missing required field - caught at compile time
   // const lead: Lead = { email: 'test@example.com' };
   //                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
   // Error: Property 'id' is missing
-
   // ❌ Invalid enum value - caught at compile time
   // const lead: Lead = { status: 'INVALID_STATUS' };
   //                              ^^^^^^^^^^^^^^^^
   // Error: Type '"INVALID_STATUS"' is not assignable to type 'LeadStatus'
-
   // ✅ All of these errors are caught BEFORE runtime!
   // This prevents an entire class of bugs from reaching production.
 }

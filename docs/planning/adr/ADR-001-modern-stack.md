@@ -10,57 +10,94 @@
 
 ## Context and Problem Statement
 
-IntelliFlow CRM is being built as an AI-native CRM system that emphasizes automation, type safety, and developer productivity. We need to select a modern technology stack that enables rapid AI-assisted development while maintaining production-grade quality, performance, and maintainability. How should we architect our technology stack to maximize AI integration, type safety, and development velocity?
+IntelliFlow CRM is being built as an AI-native CRM system that emphasizes
+automation, type safety, and developer productivity. We need to select a modern
+technology stack that enables rapid AI-assisted development while maintaining
+production-grade quality, performance, and maintainability. How should we
+architect our technology stack to maximize AI integration, type safety, and
+development velocity?
 
 ## Decision Drivers
 
-- **End-to-end Type Safety**: Prevent runtime errors through compile-time validation across the entire stack (database → backend → frontend)
-- **AI-First Architecture**: Enable seamless integration with LLMs (OpenAI, Ollama), vector databases, and agent frameworks
-- **Developer Productivity**: Optimize for AI-assisted coding with tools like Claude Code and GitHub Copilot
-- **Monorepo Scalability**: Support multiple applications and shared packages with efficient build caching
-- **Performance Targets**: API response time p95 < 100ms, p99 < 200ms; Frontend FCP < 1s
-- **Modern Tooling**: Leverage cutting-edge tools that improve DX without sacrificing stability
+- **End-to-end Type Safety**: Prevent runtime errors through compile-time
+  validation across the entire stack (database → backend → frontend)
+- **AI-First Architecture**: Enable seamless integration with LLMs (OpenAI,
+  Ollama), vector databases, and agent frameworks
+- **Developer Productivity**: Optimize for AI-assisted coding with tools like
+  Claude Code and GitHub Copilot
+- **Monorepo Scalability**: Support multiple applications and shared packages
+  with efficient build caching
+- **Performance Targets**: API response time p95 < 100ms, p99 < 200ms; Frontend
+  FCP < 1s
+- **Modern Tooling**: Leverage cutting-edge tools that improve DX without
+  sacrificing stability
 - **Cost Optimization**: Minimize infrastructure costs while maintaining quality
-- **Production Readiness**: Battle-tested technologies with strong community support
+- **Production Readiness**: Battle-tested technologies with strong community
+  support
 
 ## Considered Options
 
-- **Option 1**: Modern TypeScript Stack (Turborepo, tRPC, Prisma, Next.js 16, Supabase, LangChain)
-- **Option 2**: Traditional Stack (Express.js, REST API, TypeORM, React SPA, MySQL, Custom AI)
-- **Option 3**: Enterprise Stack (NestJS, GraphQL, TypeORM, Angular, AWS RDS, AWS Lambda)
-- **Option 4**: Serverless-First (Vercel Functions, GraphQL, Prisma, Next.js, PlanetScale, OpenAI Functions)
+- **Option 1**: Modern TypeScript Stack (Turborepo, tRPC, Prisma, Next.js 16,
+  Supabase, LangChain)
+- **Option 2**: Traditional Stack (Express.js, REST API, TypeORM, React SPA,
+  MySQL, Custom AI)
+- **Option 3**: Enterprise Stack (NestJS, GraphQL, TypeORM, Angular, AWS RDS,
+  AWS Lambda)
+- **Option 4**: Serverless-First (Vercel Functions, GraphQL, Prisma, Next.js,
+  PlanetScale, OpenAI Functions)
 
 ## Decision Outcome
 
-Chosen option: **"Modern TypeScript Stack"** (Option 1), because it provides the best combination of type safety, AI integration, developer experience, and performance while maintaining production readiness. This stack enables end-to-end type safety without code generation, seamless AI/LLM integration, and optimal DX for AI-assisted development.
+Chosen option: **"Modern TypeScript Stack"** (Option 1), because it provides the
+best combination of type safety, AI integration, developer experience, and
+performance while maintaining production readiness. This stack enables
+end-to-end type safety without code generation, seamless AI/LLM integration, and
+optimal DX for AI-assisted development.
 
 ### Positive Consequences
 
-- **Complete Type Safety**: TypeScript types flow from database schema (Prisma) → API (tRPC) → frontend (Next.js) without manual synchronization
-- **Zero Code Generation**: tRPC provides type safety without build steps for API contracts (Prisma generates only database client)
-- **Exceptional DX**: Autocomplete, IntelliSense, and refactoring work perfectly across the entire stack
-- **AI Integration**: LangChain ecosystem provides rich tools for LLM chains, agents, and RAG; Supabase pgvector enables semantic search
-- **Fast Builds**: Turborepo caching reduces build times from minutes to seconds for incremental changes
-- **Modern Features**: Next.js 16 App Router, Server Components, and streaming; React 19 latest features
-- **Vector Search**: Native pgvector support in Supabase enables semantic search and embeddings without additional infrastructure
-- **Cost Effective**: Supabase free tier + Railway/Vercel provides generous limits; Ollama for local LLM development reduces API costs
-- **Proven at Scale**: All components are used in production by major companies (Vercel, Cal.com, Supabase, Anthropic)
-- **Future-Proof**: Active development, strong community, modern patterns (RSC, streaming, AI agents)
+- **Complete Type Safety**: TypeScript types flow from database schema (Prisma)
+  → API (tRPC) → frontend (Next.js) without manual synchronization
+- **Zero Code Generation**: tRPC provides type safety without build steps for
+  API contracts (Prisma generates only database client)
+- **Exceptional DX**: Autocomplete, IntelliSense, and refactoring work perfectly
+  across the entire stack
+- **AI Integration**: LangChain ecosystem provides rich tools for LLM chains,
+  agents, and RAG; Supabase pgvector enables semantic search
+- **Fast Builds**: Turborepo caching reduces build times from minutes to seconds
+  for incremental changes
+- **Modern Features**: Next.js 16 App Router, Server Components, and streaming;
+  React 19 latest features
+- **Vector Search**: Native pgvector support in Supabase enables semantic search
+  and embeddings without additional infrastructure
+- **Cost Effective**: Supabase free tier + Railway/Vercel provides generous
+  limits; Ollama for local LLM development reduces API costs
+- **Proven at Scale**: All components are used in production by major companies
+  (Vercel, Cal.com, Supabase, Anthropic)
+- **Future-Proof**: Active development, strong community, modern patterns (RSC,
+  streaming, AI agents)
 
 ### Negative Consequences
 
-- **TypeScript Only**: Stack is TypeScript-centric; not suitable for non-TS teams (acceptable for our use case)
-- **Smaller Ecosystems**: tRPC and LangChain have smaller ecosystems than REST/GraphQL and traditional ML frameworks
-- **Rapid Evolution**: Some components (Next.js App Router, LangChain) are evolving quickly, requiring occasional updates
-- **Learning Curve**: Team must learn modern patterns (hexagonal architecture, DDD, tRPC, Server Components)
-- **Vendor Dependencies**: Supabase (PostgreSQL), Vercel/Railway (hosting) create some lock-in (mitigated by using Prisma and standard PostgreSQL)
-- **AI Framework Maturity**: LangChain API changes frequently; requires version pinning and careful upgrades
+- **TypeScript Only**: Stack is TypeScript-centric; not suitable for non-TS
+  teams (acceptable for our use case)
+- **Smaller Ecosystems**: tRPC and LangChain have smaller ecosystems than
+  REST/GraphQL and traditional ML frameworks
+- **Rapid Evolution**: Some components (Next.js App Router, LangChain) are
+  evolving quickly, requiring occasional updates
+- **Learning Curve**: Team must learn modern patterns (hexagonal architecture,
+  DDD, tRPC, Server Components)
+- **Vendor Dependencies**: Supabase (PostgreSQL), Vercel/Railway (hosting)
+  create some lock-in (mitigated by using Prisma and standard PostgreSQL)
+- **AI Framework Maturity**: LangChain API changes frequently; requires version
+  pinning and careful upgrades
 
 ## Pros and Cons of the Options
 
 ### Option 1: Modern TypeScript Stack (CHOSEN)
 
 **Stack Components:**
+
 - **Monorepo**: Turborepo with pnpm workspaces
 - **Backend**: tRPC for type-safe APIs, Prisma ORM
 - **Frontend**: Next.js 16.0.10 (App Router), React 19, Tailwind CSS, shadcn/ui
@@ -70,7 +107,9 @@ Chosen option: **"Modern TypeScript Stack"** (Option 1), because it provides the
 - **Observability**: OpenTelemetry, Prometheus, Grafana
 
 **Pros:**
-- ✅ End-to-end type safety without code generation (TypeScript → Prisma → tRPC → React)
+
+- ✅ End-to-end type safety without code generation (TypeScript → Prisma → tRPC
+  → React)
 - ✅ Excellent DX with IntelliSense, autocomplete, and refactoring
 - ✅ Fast builds with Turborepo caching (3-5x faster than without caching)
 - ✅ Native vector search with pgvector (no separate vector DB needed)
@@ -78,10 +117,12 @@ Chosen option: **"Modern TypeScript Stack"** (Option 1), because it provides the
 - ✅ Modern React patterns (Server Components, streaming, suspense)
 - ✅ Built-in authentication and RLS with Supabase
 - ✅ Cost-effective for startups (generous free tiers)
-- ✅ Optimized for AI-assisted coding (Claude Code, Copilot work exceptionally well)
+- ✅ Optimized for AI-assisted coding (Claude Code, Copilot work exceptionally
+  well)
 - ✅ Strong community and active development
 
 **Cons:**
+
 - ❌ TypeScript-only (not suitable for polyglot teams)
 - ❌ LangChain API evolves rapidly (requires version management)
 - ❌ Smaller ecosystem than REST/GraphQL
@@ -91,15 +132,19 @@ Chosen option: **"Modern TypeScript Stack"** (Option 1), because it provides the
 ### Option 2: Traditional Stack (Express + REST + TypeORM)
 
 **Stack Components:**
-- Express.js, REST API with OpenAPI/Swagger, TypeORM, React SPA (Vite), MySQL, Custom AI integration
+
+- Express.js, REST API with OpenAPI/Swagger, TypeORM, React SPA (Vite), MySQL,
+  Custom AI integration
 
 **Pros:**
+
 - ✅ Well-established patterns, large ecosystem
 - ✅ Extensive documentation and tutorials
 - ✅ Easy to find developers familiar with stack
 - ✅ Language-agnostic API (REST supports any client)
 
 **Cons:**
+
 - ❌ No compile-time type safety across API boundary
 - ❌ Requires code generation for TypeScript types (OpenAPI codegen)
 - ❌ Manual synchronization of API contracts and types
@@ -112,9 +157,12 @@ Chosen option: **"Modern TypeScript Stack"** (Option 1), because it provides the
 ### Option 3: Enterprise Stack (NestJS + GraphQL + Angular)
 
 **Stack Components:**
-- NestJS, GraphQL with Apollo, TypeORM, Angular, AWS RDS (PostgreSQL), AWS Lambda for AI
+
+- NestJS, GraphQL with Apollo, TypeORM, Angular, AWS RDS (PostgreSQL), AWS
+  Lambda for AI
 
 **Pros:**
+
 - ✅ Enterprise-grade architecture with decorators and modules
 - ✅ GraphQL provides flexible querying
 - ✅ Strong typing with GraphQL Codegen
@@ -122,6 +170,7 @@ Chosen option: **"Modern TypeScript Stack"** (Option 1), because it provides the
 - ✅ Suitable for large teams with strict governance
 
 **Cons:**
+
 - ❌ Heavy framework overhead (NestJS adds complexity)
 - ❌ GraphQL requires code generation for full type safety
 - ❌ Angular has steeper learning curve than React
@@ -134,9 +183,12 @@ Chosen option: **"Modern TypeScript Stack"** (Option 1), because it provides the
 ### Option 4: Serverless-First (Vercel Functions + GraphQL)
 
 **Stack Components:**
-- Vercel Edge Functions, GraphQL with Pothos, Prisma, Next.js, PlanetScale (MySQL), OpenAI Functions
+
+- Vercel Edge Functions, GraphQL with Pothos, Prisma, Next.js, PlanetScale
+  (MySQL), OpenAI Functions
 
 **Pros:**
+
 - ✅ Zero infrastructure management
 - ✅ Automatic scaling
 - ✅ Global edge distribution
@@ -144,6 +196,7 @@ Chosen option: **"Modern TypeScript Stack"** (Option 1), because it provides the
 - ✅ Pay-per-use pricing (cost-effective at low scale)
 
 **Cons:**
+
 - ❌ Serverless cold starts (latency spikes)
 - ❌ PlanetScale pricing expensive at scale
 - ❌ No native vector search in MySQL (requires separate Pinecone/Weaviate)
@@ -157,18 +210,21 @@ Chosen option: **"Modern TypeScript Stack"** (Option 1), because it provides the
 ### Monorepo: Turborepo + pnpm
 
 **Why Turborepo?**
+
 - Remote caching reduces CI build times by 3-5x
 - Task parallelization and dependency management
 - Incremental builds (only rebuild what changed)
 - Excellent DX with `turbo run dev` for all apps
 
 **Why pnpm?**
+
 - Faster than npm/yarn (content-addressable store)
 - Disk space efficient (shared dependencies)
 - Strict dependency resolution (no phantom dependencies)
 - Native workspace support
 
 **Validation:**
+
 ```bash
 # Build time without cache: ~180s
 # Build time with cache: ~35s (5x improvement)
@@ -178,6 +234,7 @@ pnpm run build  # Builds all apps/packages with Turborepo
 ### API: tRPC 11.8.0
 
 **Why tRPC over REST/GraphQL?**
+
 - End-to-end type safety without code generation
 - Automatic client generation with perfect TypeScript types
 - Minimal runtime overhead (<5ms vs GraphQL)
@@ -185,6 +242,7 @@ pnpm run build  # Builds all apps/packages with Turborepo
 - Built-in subscriptions via WebSockets
 
 **Type Safety Validation:**
+
 ```typescript
 // Server defines router
 export const leadRouter = router({
@@ -196,11 +254,12 @@ export const leadRouter = router({
 });
 
 // Client gets automatic types
-const lead = await trpc.lead.getById.query({ id: "123" });
+const lead = await trpc.lead.getById.query({ id: '123' });
 // TypeScript knows exact shape of `lead` - no manual typing needed
 ```
 
 **Performance:**
+
 - Request parsing: <1ms (Zod validation)
 - Type overhead: 0ms (compile-time only)
 - Serialization: <2ms (JSON.stringify)
@@ -209,12 +268,14 @@ const lead = await trpc.lead.getById.query({ id: "123" });
 ### Database: Prisma 5.x + Supabase
 
 **Why Prisma?**
+
 - Type-safe database client generated from schema
 - Excellent migration workflow
 - Query optimization and relation loading
 - Introspection and Prisma Studio for debugging
 
 **Why Supabase over self-hosted PostgreSQL?**
+
 - PostgreSQL 15 + pgvector extension (semantic search)
 - Built-in authentication (JWT-based)
 - Row Level Security (RLS) for authorization
@@ -223,6 +284,7 @@ const lead = await trpc.lead.getById.query({ id: "123" });
 - Generous free tier (500MB DB, 50,000 auth users)
 
 **Type Safety Validation:**
+
 ```typescript
 // Prisma schema defines models
 model Lead {
@@ -241,6 +303,7 @@ const lead = await prisma.lead.findUnique({
 ```
 
 **Vector Search (pgvector):**
+
 ```sql
 -- Semantic search using embeddings
 SELECT id, email, 1 - (embedding <=> '[0.1, 0.2, ...]') AS similarity
@@ -250,6 +313,7 @@ LIMIT 10;
 ```
 
 **Performance:**
+
 - Simple queries: <10ms (indexed lookups)
 - Complex joins: <50ms (optimized with Prisma)
 - Vector similarity search: <100ms (with HNSW index)
@@ -257,6 +321,7 @@ LIMIT 10;
 ### Frontend: Next.js 16.0.10 + React 19
 
 **Why Next.js 16 App Router?**
+
 - Server Components reduce client bundle size by ~40%
 - Streaming and Suspense for progressive rendering
 - File-based routing with layouts and templates
@@ -264,17 +329,20 @@ LIMIT 10;
 - API routes for tRPC endpoints
 
 **Why React 19?**
+
 - Latest features (use, Server Actions, transitions)
 - Better Suspense and streaming support
 - Improved performance and smaller bundle size
 
 **Component Library: shadcn/ui + Tailwind CSS**
+
 - Accessible components (WCAG 2.1 AA)
 - Customizable with Tailwind (no runtime CSS-in-JS)
 - Copy-paste approach (no dependency bloat)
 - Excellent DX with VS Code Tailwind extension
 
 **Performance Targets:**
+
 - First Contentful Paint (FCP): <1s
 - Time to Interactive (TTI): <2s
 - Lighthouse Score: >90
@@ -283,6 +351,7 @@ LIMIT 10;
 ### AI/LLM: LangChain + CrewAI + OpenAI/Ollama
 
 **Why LangChain?**
+
 - Rich ecosystem for LLM chains and agents
 - Structured outputs with Zod schemas
 - Streaming support for real-time responses
@@ -290,19 +359,22 @@ LIMIT 10;
 - RAG (Retrieval-Augmented Generation) tools
 
 **Why CrewAI?**
+
 - Multi-agent collaboration (lead qualification, email generation)
 - Role-based agents with specific tools
 - Task delegation and orchestration
 
 **Why OpenAI + Ollama?**
+
 - **OpenAI (Production)**: GPT-4o for high-quality outputs, embeddings
 - **Ollama (Development)**: Local LLMs (Llama 3, Mistral) for cost-free testing
 
 **AI Integration Example:**
+
 ```typescript
 // LangChain chain with structured output
 const scoringChain = new LLMChain({
-  llm: new ChatOpenAI({ model: "gpt-4o" }),
+  llm: new ChatOpenAI({ model: 'gpt-4o' }),
   prompt: scoringPromptTemplate,
   outputParser: StructuredOutputParser.fromZodSchema(leadScoreSchema),
 });
@@ -313,6 +385,7 @@ const result = await scoringChain.call({ lead });
 ```
 
 **Performance:**
+
 - AI Scoring: <2s per lead (includes API latency)
 - Embedding Generation: <500ms per document
 - Multi-agent workflows: <5s for complex tasks
@@ -320,12 +393,14 @@ const result = await scoringChain.call({ lead });
 ### Infrastructure: Docker + Railway/Vercel
 
 **Local Development:**
+
 - Docker Compose for PostgreSQL, Redis, Ollama
 - Supabase CLI for local database with migrations
 - pnpm for package management
 - Turborepo for build orchestration
 
 **Production:**
+
 - **Frontend**: Vercel (Next.js optimized, edge functions, CDN)
 - **API**: Railway (containerized tRPC server, auto-scaling)
 - **Database**: Supabase (managed PostgreSQL with pgvector)
@@ -335,12 +410,14 @@ const result = await scoringChain.call({ lead });
 ### Observability: OpenTelemetry + Prometheus + Grafana
 
 **Why OpenTelemetry?**
+
 - Vendor-neutral instrumentation
 - Automatic tracing for HTTP, database, external APIs
 - Custom metrics and spans
 - Distributed tracing across services
 
 **Metrics Tracked:**
+
 - API response times (p50, p95, p99)
 - Database query performance
 - AI scoring latency and cost
@@ -351,16 +428,17 @@ const result = await scoringChain.call({ lead });
 
 ### Type Safety Validation
 
-**Test**: Verify end-to-end type safety by intentionally breaking types and confirming TypeScript errors.
+**Test**: Verify end-to-end type safety by intentionally breaking types and
+confirming TypeScript errors.
 
 ```typescript
 // ✅ VALID: Types flow correctly
-const lead = await prisma.lead.findUnique({ where: { id: "123" } });
+const lead = await prisma.lead.findUnique({ where: { id: '123' } });
 const score = await trpc.lead.score.mutate({ leadId: lead.id });
 // TypeScript knows: lead has id, email, score; score is number
 
 // ❌ INVALID: TypeScript catches error at compile time
-const score = await trpc.lead.score.mutate({ wrongField: "oops" });
+const score = await trpc.lead.score.mutate({ wrongField: 'oops' });
 // Error: Argument of type '{ wrongField: string }' is not assignable
 ```
 
@@ -370,16 +448,17 @@ const score = await trpc.lead.score.mutate({ wrongField: "oops" });
 
 **Benchmark Results** (see `artifacts/benchmarks/performance-benchmark.json`):
 
-| Operation | Target | Actual | Status |
-|-----------|--------|--------|--------|
-| Simple tRPC query (getById) | <50ms | 12ms | ✅ Pass |
-| Complex query (with relations) | <50ms | 28ms | ✅ Pass |
-| Database query (indexed) | <20ms | 8ms | ✅ Pass |
-| Prisma type generation | N/A | 0ms (compile-time) | ✅ Pass |
-| tRPC type overhead | <5ms | 0ms (compile-time) | ✅ Pass |
-| Full stack request (DB→API→Client) | <100ms | 45ms | ✅ Pass |
+| Operation                          | Target | Actual             | Status  |
+| ---------------------------------- | ------ | ------------------ | ------- |
+| Simple tRPC query (getById)        | <50ms  | 12ms               | ✅ Pass |
+| Complex query (with relations)     | <50ms  | 28ms               | ✅ Pass |
+| Database query (indexed)           | <20ms  | 8ms                | ✅ Pass |
+| Prisma type generation             | N/A    | 0ms (compile-time) | ✅ Pass |
+| tRPC type overhead                 | <5ms   | 0ms (compile-time) | ✅ Pass |
+| Full stack request (DB→API→Client) | <100ms | 45ms               | ✅ Pass |
 
 **Key Findings:**
+
 - All components connectable: ✅ Validated
 - Type safety: ✅ Validated (compile-time errors caught)
 - Latency: ✅ Validated (<50ms, well under target)
@@ -387,7 +466,9 @@ const score = await trpc.lead.score.mutate({ wrongField: "oops" });
 ### Connection Validation
 
 **Tested Integrations:**
-1. ✅ Prisma → PostgreSQL (Supabase): Migrations applied, schema introspection working
+
+1. ✅ Prisma → PostgreSQL (Supabase): Migrations applied, schema introspection
+   working
 2. ✅ tRPC → Prisma: Type-safe queries executing correctly
 3. ✅ Next.js → tRPC: Client hooks generating with perfect types
 4. ✅ Turborepo: Builds cached and parallelized correctly
@@ -398,11 +479,13 @@ const score = await trpc.lead.score.mutate({ wrongField: "oops" });
 ### Setup Requirements
 
 1. **Install dependencies:**
+
    ```bash
    pnpm install
    ```
 
 2. **Database setup:**
+
    ```bash
    # Initialize Supabase locally
    supabase init
@@ -414,6 +497,7 @@ const score = await trpc.lead.score.mutate({ wrongField: "oops" });
    ```
 
 3. **Development:**
+
    ```bash
    # Start all apps in parallel
    pnpm run dev
@@ -504,14 +588,22 @@ If the modern stack proves problematic during Sprint 1-4:
 
 ## References
 
-- Hexagonal Architecture: [Alistair Cockburn](https://alistair.cockburn.us/hexagonal-architecture/)
-- Domain-Driven Design: [Martin Fowler](https://martinfowler.com/tags/domain%20driven%20design.html)
+- Hexagonal Architecture:
+  [Alistair Cockburn](https://alistair.cockburn.us/hexagonal-architecture/)
+- Domain-Driven Design:
+  [Martin Fowler](https://martinfowler.com/tags/domain%20driven%20design.html)
 - Type-Safe APIs: [tRPC vs GraphQL vs REST](https://trpc.io/docs/concepts)
-- Modern React: [React Server Components](https://nextjs.org/docs/app/building-your-application/rendering/server-components)
+- Modern React:
+  [React Server Components](https://nextjs.org/docs/app/building-your-application/rendering/server-components)
 - AI Integration: [LangChain Concepts](https://js.langchain.com/docs/concepts)
 
 ---
 
-**Conclusion**: The modern TypeScript stack (Turborepo, tRPC, Prisma, Next.js 16, Supabase, LangChain) provides the optimal foundation for IntelliFlow CRM. It delivers on all key requirements: end-to-end type safety, AI-first architecture, exceptional DX, and performance targets. The stack is production-ready, cost-effective, and future-proof, with clear migration paths if needed.
+**Conclusion**: The modern TypeScript stack (Turborepo, tRPC, Prisma, Next.js
+16, Supabase, LangChain) provides the optimal foundation for IntelliFlow CRM. It
+delivers on all key requirements: end-to-end type safety, AI-first architecture,
+exceptional DX, and performance targets. The stack is production-ready,
+cost-effective, and future-proof, with clear migration paths if needed.
 
-**Status**: ✅ Architecture spike validated. Ready to proceed with Sprint 1 implementation.
+**Status**: ✅ Architecture spike validated. Ready to proceed with Sprint 1
+implementation.

@@ -221,10 +221,7 @@ export function generateStoaVerdict(
 /**
  * Write a STOA verdict to a file.
  */
-export function writeStoaVerdict(
-  evidenceDir: string,
-  verdict: StoaVerdict
-): string {
+export function writeStoaVerdict(evidenceDir: string, verdict: StoaVerdict): string {
   const verdictsDir = getStoaVerdictsDir(evidenceDir);
   const filePath = join(verdictsDir, `${verdict.stoa}.json`);
 
@@ -287,9 +284,7 @@ export function aggregateFindings(verdicts: StoaVerdict[]): Finding[] {
     info: 4,
   };
 
-  return allFindings.sort(
-    (a, b) => severityOrder[a.severity] - severityOrder[b.severity]
-  );
+  return allFindings.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
 }
 
 /**

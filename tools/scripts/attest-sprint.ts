@@ -45,7 +45,7 @@ interface CliOptions {
   taskId?: string;
   json: boolean;
   quiet: boolean;
-  context: boolean;  // Output task context for LLM consumption
+  context: boolean; // Output task context for LLM consumption
   help: boolean;
 }
 
@@ -218,12 +218,18 @@ function formatTaskContext(context: TaskContext): string {
 function printAttestationSummary(attestation: TaskAttestation): void {
   const icon = (status: string) => {
     switch (status) {
-      case 'pass': return '✅';
-      case 'warn': return '⚠️';
-      case 'fail': return '❌';
-      case 'skip': return '⏭️';
-      case 'pending': return '🕐';
-      default: return '❓';
+      case 'pass':
+        return '✅';
+      case 'warn':
+        return '⚠️';
+      case 'fail':
+        return '❌';
+      case 'skip':
+        return '⏭️';
+      case 'pending':
+        return '🕐';
+      default:
+        return '❓';
     }
   };
 
@@ -249,7 +255,9 @@ function printAttestationSummary(attestation: TaskAttestation): void {
 
   console.log('');
   console.log(`**Overall:** ${attestation.overallStatus.toUpperCase()}`);
-  console.log(`**Summary:** ${attestation.summary.passed} pass, ${attestation.summary.warned} warn, ${attestation.summary.failed} fail, ${attestation.summary.skipped} skip`);
+  console.log(
+    `**Summary:** ${attestation.summary.passed} pass, ${attestation.summary.warned} warn, ${attestation.summary.failed} fail, ${attestation.summary.skipped} skip`
+  );
 }
 
 function printReportSummary(report: SprintAttestationReport): void {
@@ -277,20 +285,28 @@ function printReportSummary(report: SprintAttestationReport): void {
 
   const icon = (status: string) => {
     switch (status) {
-      case 'pass': return '✅';
-      case 'warn': return '⚠️';
-      case 'fail': return '❌';
-      case 'skip': return '⏭️';
-      case 'pending': return '🕐';
-      default: return '❓';
+      case 'pass':
+        return '✅';
+      case 'warn':
+        return '⚠️';
+      case 'fail':
+        return '❌';
+      case 'skip':
+        return '⏭️';
+      case 'pending':
+        return '🕐';
+      default:
+        return '❓';
     }
   };
 
   for (const a of report.attestations) {
-    const overall = a.overallStatus === 'valid' ? '✅' :
-                    a.overallStatus === 'needs_review' ? '⚠️' : '❌';
+    const overall =
+      a.overallStatus === 'valid' ? '✅' : a.overallStatus === 'needs_review' ? '⚠️' : '❌';
 
-    console.log(`| ${a.taskId.padEnd(7)} | ${icon(a.criteria.ownerApproval.status)} | ${icon(a.criteria.dependenciesClean.status)} | ${icon(a.criteria.prerequisitesMet.status)} | ${icon(a.criteria.definitionOfDoneMet.status)} | ${icon(a.criteria.kpisPassing.status)} | ${icon(a.criteria.artifactsTracked.status)} | ${icon(a.criteria.validationPassing.status)} | ${overall} |`);
+    console.log(
+      `| ${a.taskId.padEnd(7)} | ${icon(a.criteria.ownerApproval.status)} | ${icon(a.criteria.dependenciesClean.status)} | ${icon(a.criteria.prerequisitesMet.status)} | ${icon(a.criteria.definitionOfDoneMet.status)} | ${icon(a.criteria.kpisPassing.status)} | ${icon(a.criteria.artifactsTracked.status)} | ${icon(a.criteria.validationPassing.status)} | ${overall} |`
+    );
   }
 }
 

@@ -61,7 +61,10 @@ interface SprintReport {
 // Task Loading
 // ============================================================================
 
-function loadSprintTasks(sprint: string, repoRoot: string): Array<{
+function loadSprintTasks(
+  sprint: string,
+  repoRoot: string
+): Array<{
   taskId: string;
   description: string;
   status: string;
@@ -76,9 +79,7 @@ function loadSprintTasks(sprint: string, repoRoot: string): Array<{
   const { tasks } = parseSprintCsv(content);
 
   // Filter by sprint
-  const filtered = sprint === 'all'
-    ? tasks
-    : tasks.filter((t) => t['Target Sprint'] === sprint);
+  const filtered = sprint === 'all' ? tasks : tasks.filter((t) => t['Target Sprint'] === sprint);
 
   return filtered.map((t) => ({
     taskId: t['Task ID'],
@@ -171,9 +172,7 @@ async function runSprint(
   log(`Found ${allTasks.length} tasks in Sprint ${sprint}`);
 
   // Filter if skipping completed
-  const tasks = options.skipCompleted
-    ? allTasks.filter((t) => t.status !== 'Completed')
-    : allTasks;
+  const tasks = options.skipCompleted ? allTasks.filter((t) => t.status !== 'Completed') : allTasks;
 
   if (options.skipCompleted && tasks.length < allTasks.length) {
     log(`Skipping ${allTasks.length - tasks.length} completed tasks`);
@@ -275,9 +274,8 @@ async function runSprint(
 }
 
 function generateMarkdownReport(report: SprintReport): string {
-  const passRate = report.totalTasks > 0
-    ? ((report.results.pass / report.totalTasks) * 100).toFixed(1)
-    : '0';
+  const passRate =
+    report.totalTasks > 0 ? ((report.results.pass / report.totalTasks) * 100).toFixed(1) : '0';
 
   let md = `# Sprint ${report.sprint} MATOP Report
 
@@ -303,12 +301,16 @@ function generateMarkdownReport(report: SprintReport): string {
 `;
 
   for (const task of report.tasks) {
-    const icon = task.verdict === 'PASS' ? '✅' :
-                 task.verdict === 'WARN' ? '⚠️' :
-                 task.verdict === 'FAIL' ? '❌' : '💥';
-    const desc = task.description.length > 50
-      ? task.description.slice(0, 47) + '...'
-      : task.description;
+    const icon =
+      task.verdict === 'PASS'
+        ? '✅'
+        : task.verdict === 'WARN'
+          ? '⚠️'
+          : task.verdict === 'FAIL'
+            ? '❌'
+            : '💥';
+    const desc =
+      task.description.length > 50 ? task.description.slice(0, 47) + '...' : task.description;
     md += `| ${task.taskId} | ${icon} ${task.verdict} | ${task.duration}ms | ${desc} |\n`;
   }
 

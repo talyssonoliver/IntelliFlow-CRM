@@ -16,19 +16,16 @@
 
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import type { StoaRole, GateExecutionResult, WaiverRecord, AuditMatrix } from '../scripts/lib/stoa/types.js';
-import {
-  loadAuditMatrix,
-  getToolById,
-  selectGates,
-} from '../scripts/lib/stoa/gate-selection.js';
+import type {
+  StoaRole,
+  GateExecutionResult,
+  WaiverRecord,
+  AuditMatrix,
+} from '../scripts/lib/stoa/types.js';
+import { loadAuditMatrix, getToolById, selectGates } from '../scripts/lib/stoa/gate-selection.js';
 import { loadTaskFromCsv, assignStoas } from '../scripts/lib/stoa/orchestrator.js';
 import { runGates, summarizeGateResults } from '../scripts/lib/stoa/gate-runner.js';
-import {
-  generateRunId,
-  getEvidenceDir,
-  ensureEvidenceDirs,
-} from '../scripts/lib/stoa/evidence.js';
+import { generateRunId, getEvidenceDir, ensureEvidenceDirs } from '../scripts/lib/stoa/evidence.js';
 import { createWaiverRecord, saveWaivers } from '../scripts/lib/stoa/waiver.js';
 import { generateStoaVerdict, writeStoaVerdict } from '../scripts/lib/stoa/verdict.js';
 import {
@@ -56,42 +53,21 @@ const STOA_GATE_PROFILES: Record<StoaRole, string[]> = {
     'commitlint',
     'dependency-cruiser-validate',
   ],
-  Security: [
-    'gitleaks',
-    'pnpm-audit-high',
-    'snyk',
-    'semgrep-security-audit',
-    'trivy-image',
-  ],
-  Quality: [
-    'turbo-test-coverage',
-    'stryker',
-    'lighthouse-ci',
-    'sonarqube-scanner',
-  ],
+  Security: ['gitleaks', 'pnpm-audit-high', 'snyk', 'semgrep-security-audit', 'trivy-image'],
+  Quality: ['turbo-test-coverage', 'stryker', 'lighthouse-ci', 'sonarqube-scanner'],
   Intelligence: [
     // AI-specific gates (to be defined in audit-matrix.yml)
     'turbo-test-coverage', // AI worker tests included in coverage
   ],
-  Domain: [
-    'turbo-typecheck',
-    'turbo-test-coverage',
-    'dependency-cruiser-validate',
-  ],
-  Automation: [
-    'turbo-typecheck',
-    'turbo-build',
-    'eslint-max-warnings-0',
-  ],
+  Domain: ['turbo-typecheck', 'turbo-test-coverage', 'dependency-cruiser-validate'],
+  Automation: ['turbo-typecheck', 'turbo-build', 'eslint-max-warnings-0'],
 };
 
 /**
  * Additional validation scripts per STOA (not in audit-matrix).
  */
 const STOA_VALIDATION_SCRIPTS: Record<StoaRole, Array<{ name: string; command: string }>> = {
-  Foundation: [
-    { name: 'artifact-paths-lint', command: 'tsx tools/lint/artifact-paths.ts' },
-  ],
+  Foundation: [{ name: 'artifact-paths-lint', command: 'tsx tools/lint/artifact-paths.ts' }],
   Security: [],
   Quality: [],
   Intelligence: [],

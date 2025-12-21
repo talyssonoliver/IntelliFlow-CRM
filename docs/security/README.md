@@ -25,3 +25,34 @@ later sprints.
 - Ensure secret scanning is enabled at the Git hosting layer (GitHub Advanced
   Security) and that team access is configured appropriately.
 - Replace placeholder artifacts with real scan outputs once CI is running.
+
+## Sprint 1: Zero Trust Design (IFC-072 - PARTIAL)
+
+**Status:** Design Complete - Implementation in Sprint 2-3
+
+### Documents Created
+
+1. **rls-design.md** - Row Level Security Design
+   - RLS policy patterns for all core tables
+   - Helper functions for JWT claim extraction
+   - Owner-based isolation with hierarchical access
+   - Performance considerations and testing strategy
+
+2. **multi-tenant-isolation.md** - Multi-Tenant Isolation Strategy
+   - Current: User-level tenancy (owner-based)
+   - Future: Organization-level tenancy
+   - Attack vector mitigations
+
+3. **ADR-009: Zero Trust Security** - Architecture Decision
+   - Decision to use RLS + application authorization
+   - Defense in depth approach (3 layers)
+
+### Migration Files Created
+
+Located in `infra/supabase/migrations/`:
+
+1. **20250122000000_enable_rls.sql** - Enable RLS
+2. **20250123000000_rls_helper_functions.sql** - Helper functions
+3. **20250124000000_rls_policies.sql** - Complete policies
+
+**RLS Coverage:** 100% of core tables ✓

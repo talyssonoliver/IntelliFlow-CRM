@@ -113,7 +113,7 @@ tools:
     required: true
     owner: 'Security'
     scope: 'repo'
-    command: 'gitleaks detect --source . --redact'
+    command: 'python tools/audit/gitleaks_scan.py'
     thresholds:
       findings_max: 0
     expected_outputs: ['log', 'json']

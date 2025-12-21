@@ -10,17 +10,26 @@
 
 ## Context and Problem Statement
 
-IntelliFlow CRM needs a sustainable architecture that supports rapid AI-assisted development, maintains high testability, and allows infrastructure changes without touching business logic. How should we structure our codebase to achieve clean separation of concerns while maintaining developer productivity?
+IntelliFlow CRM needs a sustainable architecture that supports rapid AI-assisted
+development, maintains high testability, and allows infrastructure changes
+without touching business logic. How should we structure our codebase to achieve
+clean separation of concerns while maintaining developer productivity?
 
 ## Decision Drivers
 
-- **Testability**: Domain logic must be testable in isolation without infrastructure dependencies
-- **AI-First Development**: Clear boundaries make it easier for AI assistants to modify code safely
-- **Technology Independence**: Business logic shouldn't depend on frameworks, databases, or external services
-- **Maintainability**: Clear separation reduces cognitive load and makes codebase easier to understand
-- **Flexibility**: Infrastructure changes (e.g., swapping databases) shouldn't require business logic changes
+- **Testability**: Domain logic must be testable in isolation without
+  infrastructure dependencies
+- **AI-First Development**: Clear boundaries make it easier for AI assistants to
+  modify code safely
+- **Technology Independence**: Business logic shouldn't depend on frameworks,
+  databases, or external services
+- **Maintainability**: Clear separation reduces cognitive load and makes
+  codebase easier to understand
+- **Flexibility**: Infrastructure changes (e.g., swapping databases) shouldn't
+  require business logic changes
 - **DDD Alignment**: Architecture must support Domain-Driven Design principles
-- **Monorepo Support**: Structure must work well with Turborepo workspace organization
+- **Monorepo Support**: Structure must work well with Turborepo workspace
+  organization
 
 ## Considered Options
 
@@ -31,11 +40,15 @@ IntelliFlow CRM needs a sustainable architecture that supports rapid AI-assisted
 
 ## Decision Outcome
 
-Chosen option: "Hexagonal Architecture (Ports and Adapters)", because it provides the clearest separation between domain logic and infrastructure, has explicit contracts through ports, and aligns perfectly with our DDD approach and monorepo structure.
+Chosen option: "Hexagonal Architecture (Ports and Adapters)", because it
+provides the clearest separation between domain logic and infrastructure, has
+explicit contracts through ports, and aligns perfectly with our DDD approach and
+monorepo structure.
 
 ### Positive Consequences
 
-- Domain layer has zero infrastructure dependencies (enforced by architecture tests)
+- Domain layer has zero infrastructure dependencies (enforced by architecture
+  tests)
 - Business logic can be tested with simple unit tests (no mocks needed)
 - Infrastructure can be swapped without touching domain code
 - Clear contracts through port interfaces make AI-generated code safer
@@ -82,7 +95,8 @@ Chosen option: "Hexagonal Architecture (Ports and Adapters)", because it provide
 - Good, because it's well-documented with many examples
 - Good, because it supports high testability
 - Bad, because it has more concentric layers than hexagonal
-- Bad, because the additional layers add complexity without clear benefit for our use case
+- Bad, because the additional layers add complexity without clear benefit for
+  our use case
 - Bad, because it's less intuitive than hexagonal's ports metaphor
 
 ### Feature-based Modules
@@ -232,9 +246,9 @@ export interface LeadRepository {
 // packages/application/src/usecases/ScoreLeadUseCase.ts
 export class ScoreLeadUseCase {
   constructor(
-    private leadRepository: LeadRepository,      // Output port
-    private aiScoringService: AIServicePort,     // Output port
-    private eventBus: EventBusPort               // Output port
+    private leadRepository: LeadRepository, // Output port
+    private aiScoringService: AIServicePort, // Output port
+    private eventBus: EventBusPort // Output port
   ) {}
 
   async execute(input: ScoreLeadInput): Promise<Result<LeadScore, Error>> {
@@ -326,9 +340,10 @@ If hexagonal architecture proves too complex:
 5. Remove architecture boundary tests
 6. Update documentation to reflect new structure
 
-However, we should give this pattern at least 2 sprints before considering rollback, as the benefits become clearer with scale.
+However, we should give this pattern at least 2 sprints before considering
+rollback, as the benefits become clearer with scale.
 
 ---
 
-**Last Updated:** 2025-12-20
-**Review Date:** After Sprint 4 (IFC-010 Phase 1 Go/No-Go decision)
+**Last Updated:** 2025-12-20 **Review Date:** After Sprint 4 (IFC-010 Phase 1
+Go/No-Go decision)

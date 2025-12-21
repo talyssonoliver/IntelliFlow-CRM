@@ -1,0 +1,2713 @@
+﻿
+intelliFlow-CRM/
+|-- .claude/
+|   |-- commands/
+|   |   |-- create-aggregate.md
+|   |   |-- create-component.md
+|   |   |-- create-migration.md
+|   |   |-- create-router.md
+|   |   |-- deploy.md
+|   |   |-- generate-schema.md
+|   |   |-- matop-execute.md
+|   |   |-- review-ai-output.md
+|   |   |-- run-tests.md
+|   |   |-- setup-monorepo.md
+|   |   |-- stoa-automation.md
+|   |   |-- stoa-domain.md
+|   |   |-- stoa-foundation.md
+|   |   |-- stoa-intelligence.md
+|   |   |-- stoa-quality.md
+|   |   +-- stoa-security.md
+|   |-- hooks/
+|   |   |-- post-push.md
+|   |   |-- pre-commit.md
+|   |   +-- pr-review.md
+|   +-- settings.local.json
+|-- .github/
+|   |-- copilot/
+|   |   |-- exclusions.yaml
+|   |   |-- suggestions.yaml
+|   |   +-- team-settings.json
+|   |-- workflows/
+|   |   |-- artifact-lint.yml
+|   |   |-- cd.yml
+|   |   |-- ci.yml
+|   |   |-- pr-checks.yml
+|   |   |-- release.yml
+|   |   |-- security.yml
+|   |   |-- system-audit.yml
+|   |   |-- system-audit-integrity.yml
+|   |   |-- system-audit-nightly.yml
+|   |   |-- terraform.yml
+|   |   |-- terraform-drift.yml
+|   |   |-- validate-sprint0.yml
+|   |   +-- validate-sprint-data.yml
+|   +-- CODEOWNERS
+|-- .pytest_cache/
+|   |-- v/
+|   |   |-- cache/
+|   |   |   |-- nodeids
+|   |   |   +-- stepwise
+|   |   +-- randomly_seed
+|   |-- .gitignore
+|   |-- CACHEDIR.TAG
+|   +-- README.md
+|-- 
+|-- .specify/
+|   |-- memory/
+|   |   +-- constitution.md
+|   |-- planning/
+|   |   +-- IFC-125.md.tmp
+|   +-- specifications/
+|       |-- IFC-115.md.tmp
+|       |-- IFC-117.md.tmp
+|       |-- IFC-124.md.tmp
+|       +-- IFC-127.md.tmp
+|-- apps/
+|   |-- ai-worker/
+|   |   |-- src/
+|   |   |   |-- agents/
+|   |   |   |   |-- base.agent.ts
+|   |   |   |   |-- crew.ts
+|   |   |   |   +-- qualification.agent.ts
+|   |   |   |-- chains/
+|   |   |   |   |-- embedding.chain.test.ts
+|   |   |   |   |-- embedding.chain.ts
+|   |   |   |   |-- scoring.chain.test.ts
+|   |   |   |   +-- scoring.chain.ts
+|   |   |   |-- config/
+|   |   |   |   +-- ai.config.ts
+|   |   |   |-- examples/
+|   |   |   |   +-- usage.ts
+|   |   |   |-- scripts/
+|   |   |   |   +-- benchmark.ts
+|   |   |   |-- types/
+|   |   |   |   +-- index.ts
+|   |   |   |-- utils/
+|   |   |   |   |-- cost-tracker.ts
+|   |   |   |   |-- logger.ts
+|   |   |   |   +-- retry.ts
+|   |   |   +-- index.ts
+|   |   |-- .env.example
+|   |   |-- .eslintrc.js
+|   |   |-- .gitignore
+|   |   |-- package.json
+|   |   |-- QUICKSTART.md
+|   |   |-- README.md
+|   |   |-- STRUCTURE.txt
+|   |   |-- tsconfig.json
+|   |   +-- vitest.config.ts
+|   |-- api/
+|   |   |-- src/
+|   |   |   |-- middleware/
+|   |   |   |   |-- auth.ts
+|   |   |   |   |-- index.ts
+|   |   |   |   |-- logging.ts
+|   |   |   |   +-- rate-limit.ts
+|   |   |   |-- modules/
+|   |   |   |   |-- account/
+|   |   |   |   |   +-- account.router.ts
+|   |   |   |   |-- contact/
+|   |   |   |   |   +-- contact.router.ts
+|   |   |   |   |-- lead/
+|   |   |   |   |   +-- lead.router.ts
+|   |   |   |   |-- misc/
+|   |   |   |   |   |-- health.router.ts
+|   |   |   |   |   +-- system.router.ts
+|   |   |   |   |-- opportunity/
+|   |   |   |   |   +-- opportunity.router.ts
+|   |   |   |   +-- task/
+|   |   |   |       +-- task.router.ts
+|   |   |   |-- shared/
+|   |   |   |   |-- e2e-type-safety-test.ts
+|   |   |   |   |-- performance-benchmark.ts
+|   |   |   |   +-- subscription-demo.ts
+|   |   |   |-- tracing/
+|   |   |   |   |-- correlation.ts
+|   |   |   |   |-- example.ts
+|   |   |   |   |-- index.ts
+|   |   |   |   |-- middleware.test.ts
+|   |   |   |   |-- middleware.ts
+|   |   |   |   |-- otel.test.ts
+|   |   |   |   |-- otel.ts
+|   |   |   |   |-- sentry.test.ts
+|   |   |   |   |-- sentry.ts
+|   |   |   |   +-- tracing.test.ts
+|   |   |   |-- context.ts
+|   |   |   |-- index.ts
+|   |   |   |-- router.ts
+|   |   |   |-- server.ts
+|   |   |   +-- trpc.ts
+|   |   |-- package.json
+|   |   |-- README.md
+|   |   +-- tsconfig.json
+|   |-- project-tracker/
+|   |   |-- __tests__/
+|   |   |   |-- ENV-007-AI_generated.test.ts
+|   |   |   |-- ENV-009-AI_generated.test.ts
+|   |   |   |-- ENV-012-AI_generated.test.ts
+|   |   |   +-- IFC-160_generated.test.ts
+|   |   |-- app/
+|   |   |   |-- api/
+|   |   |   |   |-- audit/
+|   |   |   |   |   |-- affected/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- bundles/
+|   |   |   |   |   |   |-- [runId]/
+|   |   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- matrix/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   +-- stream/
+|   |   |   |   |       +-- route.ts
+|   |   |   |   |-- governance/
+|   |   |   |   |   |-- debt/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- digest/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- lint-report/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- migrate/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- phantom-audit/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- review-queue/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- run-lint/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- summary/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   +-- task/
+|   |   |   |   |       +-- [taskId]/
+|   |   |   |   |           +-- route.ts
+|   |   |   |   |-- matop/
+|   |   |   |   |   +-- sprint-runs/
+|   |   |   |   |       +-- route.ts
+|   |   |   |   |-- metrics/
+|   |   |   |   |   |-- phases/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- sprint/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- task/
+|   |   |   |   |   |   +-- [taskId]/
+|   |   |   |   |   |       +-- route.ts
+|   |   |   |   |   +-- watch/
+|   |   |   |   |       +-- route.ts
+|   |   |   |   |-- sprint-plan/
+|   |   |   |   |   +-- route.ts
+|   |   |   |   |-- swarm/
+|   |   |   |   |   |-- active-tasks/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- cli/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- explain/
+|   |   |   |   |   |   +-- [taskId]/
+|   |   |   |   |   |       +-- route.ts
+|   |   |   |   |   |-- health/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- kill-task/
+|   |   |   |   |   |   +-- [taskId]/
+|   |   |   |   |   |       +-- route.ts
+|   |   |   |   |   |-- questions/
+|   |   |   |   |   |   |-- [taskId]/
+|   |   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- restart-task/
+|   |   |   |   |   |   +-- [taskId]/
+|   |   |   |   |   |       +-- route.ts
+|   |   |   |   |   |-- start/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- stop/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- stream-log/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- terminal/
+|   |   |   |   |   |   +-- [taskId]/
+|   |   |   |   |   |       +-- route.ts
+|   |   |   |   |   +-- view-log/
+|   |   |   |   |       +-- [taskId]/
+|   |   |   |   |           +-- route.ts
+|   |   |   |   +-- sync-metrics/
+|   |   |   |       +-- route.ts
+|   |   |   |-- swarm/
+|   |   |   |   +-- page.tsx
+|   |   |   |-- terminal/
+|   |   |   |   +-- [taskId]/
+|   |   |   |       +-- page.tsx
+|   |   |   |-- globals.css
+|   |   |   |-- layout.tsx
+|   |   |   |-- page.tsx
+|   |   |   +-- providers.tsx
+|   |   |-- components/
+|   |   |   |-- AnalyticsView.tsx
+|   |   |   |-- AuditView.tsx
+|   |   |   |-- DashboardView.tsx
+|   |   |   |-- GovernanceView.tsx
+|   |   |   |-- KanbanView.tsx
+|   |   |   |-- MetricsView.tsx
+|   |   |   |-- SettingsView.tsx
+|   |   |   |-- SwarmMonitor.tsx
+|   |   |   +-- TaskModal.tsx
+|   |   |-- docs/
+|   |   |   |-- .specify/
+|   |   |   |   |-- memory/
+|   |   |   |   |   +-- constitution.md
+|   |   |   |   |-- planning/
+|   |   |   |   +-- specifications/
+|   |   |   |-- artifacts/
+|   |   |   |   |-- contexts/
+|   |   |   |   |   +-- .gitkeep
+|   |   |   |   |-- qualitative-reviews/
+|   |   |   |   |   +-- .gitkeep
+|   |   |   |   |-- reports/
+|   |   |   |   |   +-- .gitkeep
+|   |   |   |   |-- status/
+|   |   |   |   |   +-- .gitkeep
+|   |   |   |   |-- validation/
+|   |   |   |   |   +-- .gitkeep
+|   |   |   |   |-- work/
+|   |   |   |   |   +-- .gitkeep
+|   |   |   |   +-- .gitkeep
+|   |   |   |-- docs/
+|   |   |   |   +-- references/
+|   |   |   |-- logs/
+|   |   |   |-- metrics/
+|   |   |   |   |-- _global/
+|   |   |   |   |   |-- audit_playbook.md
+|   |   |   |   |   |-- dependency-graph.json
+|   |   |   |   |   |-- kpi-definitions.json
+|   |   |   |   |   |-- Sprint_plan.csv
+|   |   |   |   |   |-- Sprint_plan.json
+|   |   |   |   |   +-- task-registry.json
+|   |   |   |   |-- schemas/
+|   |   |   |   |   |-- dependency-graph.schema.json
+|   |   |   |   |   |-- kpi-definitions.schema.json
+|   |   |   |   |   |-- phase-summary.schema.json
+|   |   |   |   |   |-- sprint-summary.schema.json
+|   |   |   |   |   |-- task-registry.schema.json
+|   |   |   |   |   +-- task-status.schema.json
+|   |   |   |   |-- sprint-0/
+|   |   |   |   |   |-- phase-0-initialisation/
+|   |   |   |   |   |   |-- _phase-summary.json
+|   |   |   |   |   |   |-- EXC-INIT-001.json
+|   |   |   |   |   |   +-- IFC-000.json
+|   |   |   |   |   |-- phase-1-ai-foundation/
+|   |   |   |   |   |   |-- _phase-summary.json
+|   |   |   |   |   |   +-- AI-SETUP-001.json
+|   |   |   |   |   |-- phase-2-parallel/
+|   |   |   |   |   |   |-- parallel-a/
+|   |   |   |   |   |   |   |-- AI-SETUP-002.json
+|   |   |   |   |   |   |   +-- AI-SETUP-003.json
+|   |   |   |   |   |   |-- parallel-b/
+|   |   |   |   |   |   |   |-- ENV-001-AI.json
+|   |   |   |   |   |   |   |-- ENV-002-AI.json
+|   |   |   |   |   |   |   |-- ENV-003-AI.json
+|   |   |   |   |   |   |   |-- ENV-005-AI.json
+|   |   |   |   |   |   |   |-- ENV-009-AI.json
+|   |   |   |   |   |   |   |-- ENV-012-AI.json
+|   |   |   |   |   |   |   +-- ENV-014-AI.json
+|   |   |   |   |   |   |-- parallel-c/
+|   |   |   |   |   |   |   |-- EXC-SEC-001.json
+|   |   |   |   |   |   |   +-- IFC-160.json
+|   |   |   |   |   |   +-- _phase-summary.json
+|   |   |   |   |   |-- phase-3-dependencies/
+|   |   |   |   |   |   |-- _phase-summary.json
+|   |   |   |   |   |   |-- ENV-004-AI.json
+|   |   |   |   |   |   |-- ENV-006-AI.json
+|   |   |   |   |   |   |-- ENV-007-AI.json
+|   |   |   |   |   |   |-- ENV-008-AI.json
+|   |   |   |   |   |   |-- ENV-010-AI.json
+|   |   |   |   |   |   |-- ENV-011-AI.json
+|   |   |   |   |   |   |-- ENV-013-AI.json
+|   |   |   |   |   |   |-- ENV-015-AI.json
+|   |   |   |   |   |   |-- ENV-016-AI.json
+|   |   |   |   |   |   +-- EP-001-AI.json
+|   |   |   |   |   |-- phase-4-final-setup/
+|   |   |   |   |   |   |-- _phase-summary.json
+|   |   |   |   |   |   +-- ENV-017-AI.json
+|   |   |   |   |   |-- phase-5-completion/
+|   |   |   |   |   |   |-- _phase-summary.json
+|   |   |   |   |   |   |-- ANALYTICS-001.json
+|   |   |   |   |   |   |-- AUTOMATION-001.json
+|   |   |   |   |   |   |-- AUTOMATION-002.json
+|   |   |   |   |   |   |-- BRAND-001.json
+|   |   |   |   |   |   |-- DOC-001.json
+|   |   |   |   |   |   |-- ENG-OPS-001.json
+|   |   |   |   |   |   |-- ENV-018-AI.json
+|   |   |   |   |   |   |-- GTM-001.json
+|   |   |   |   |   |   |-- GTM-002.json
+|   |   |   |   |   |   +-- PM-OPS-001.json
+|   |   |   |   |   +-- _summary.json
+|   |   |   |   |-- plan-overrides.yaml
+|   |   |   |   |-- plan-remediation.csv
+|   |   |   |   |-- README.md
+|   |   |   |   |-- review-queue.json
+|   |   |   |   +-- validation.yaml
+|   |   |   +-- DATA_SYNC.md
+|   |   |-- lib/
+|   |   |   |-- api.ts
+|   |   |   |-- csv-parser.ts
+|   |   |   |-- data-sync.ts
+|   |   |   |-- data-validator.ts
+|   |   |   |-- governance.ts
+|   |   |   |-- paths.ts
+|   |   |   |-- run-assistant.ts
+|   |   |   |-- types.ts
+|   |   |   +-- utils.ts
+|   |   |-- scripts/
+|   |   |   |-- generate_tree.ps1
+|   |   |   +-- sync-metrics.ts
+|   |   |-- .browserslistrc
+|   |   |-- .gitignore
+|   |   |-- eslint.config.js
+|   |   |-- next.config.js
+|   |   |-- next-env.d.ts
+|   |   |-- package.json
+|   |   |-- postcss.config.js
+|   |   |-- tailwind.config.ts
+|   |   |-- tsconfig.json
+|   |   +-- tsconfig.tsbuildinfo
+|   |-- web/
+|   |   |-- src/
+|   |   |   |-- app/
+|   |   |   |   |-- analytics/
+|   |   |   |   |   +-- page.tsx
+|   |   |   |   |-- contacts/
+|   |   |   |   |   +-- page.tsx
+|   |   |   |   |-- dashboard/
+|   |   |   |   |   +-- page.tsx
+|   |   |   |   |-- leads/
+|   |   |   |   |   +-- page.tsx
+|   |   |   |   |-- globals.css
+|   |   |   |   |-- layout.tsx
+|   |   |   |   |-- page.tsx
+|   |   |   |   +-- providers.tsx
+|   |   |   |-- components/
+|   |   |   |   |-- navigation.tsx
+|   |   |   |   +-- theme-provider.tsx
+|   |   |   +-- lib/
+|   |   |       +-- trpc.ts
+|   |   |-- components.json
+|   |   |-- eslint.config.mjs
+|   |   |-- next.config.js
+|   |   |-- next-env.d.ts
+|   |   |-- package.json
+|   |   |-- postcss.config.js
+|   |   |-- tailwind.config.ts
+|   |   |-- tsconfig.json
+|   |   +-- tsconfig.tsbuildinfo
+|   +-- tree_intelliflow_crm.txt
+|-- artifacts/
+|   |-- backups/
+|   |   |-- sprint-plan/
+|   |   +-- .gitkeep
+|   |-- benchmarks/
+|   |   |-- baseline.json
+|   |   +-- performance-benchmark.json
+|   |-- contexts/
+|   |   |-- ENV-004-AI-context.md
+|   |   |-- ENV-005-AI-context.md
+|   |   |-- ENV-007-AI-context.md
+|   |   |-- ENV-008-AI-context.md
+|   |   |-- ENV-009-AI-context.md
+|   |   |-- ENV-012-AI-context.md
+|   |   |-- ENV-014-AI-context.md
+|   |   |-- ENV-015-AI-context.md
+|   |   |-- ENV-016-AI-context.md
+|   |   |-- IFC-000-context.md
+|   |   |-- IFC-001-context.md
+|   |   |-- IFC-002-context.md
+|   |   |-- IFC-003-context.md
+|   |   |-- IFC-004-context.md
+|   |   |-- IFC-005-context.md
+|   |   |-- IFC-006-context.md
+|   |   |-- IFC-007-context.md
+|   |   |-- IFC-008-context.md
+|   |   |-- IFC-009-context.md
+|   |   |-- IFC-010-context.md
+|   |   |-- IFC-011-context.md
+|   |   |-- IFC-012-context.md
+|   |   |-- IFC-013-context.md
+|   |   |-- IFC-014-context.md
+|   |   |-- IFC-015-context.md
+|   |   |-- IFC-016-context.md
+|   |   |-- IFC-017-context.md
+|   |   |-- IFC-018-context.md
+|   |   |-- IFC-019-context.md
+|   |   |-- IFC-020-context.md
+|   |   |-- IFC-021-context.md
+|   |   |-- IFC-022-context.md
+|   |   |-- IFC-023-context.md
+|   |   |-- IFC-024-context.md
+|   |   |-- IFC-025-context.md
+|   |   |-- IFC-026-context.md
+|   |   |-- IFC-027-context.md
+|   |   |-- IFC-028-context.md
+|   |   |-- IFC-029-context.md
+|   |   |-- IFC-030-context.md
+|   |   |-- IFC-031-context.md
+|   |   |-- IFC-032-context.md
+|   |   |-- IFC-033-context.md
+|   |   |-- IFC-034-context.md
+|   |   |-- IFC-035-context.md
+|   |   |-- IFC-036-context.md
+|   |   |-- IFC-037-context.md
+|   |   |-- IFC-038-context.md
+|   |   |-- IFC-039-context.md
+|   |   |-- IFC-040-context.md
+|   |   |-- IFC-041-context.md
+|   |   |-- IFC-042-context.md
+|   |   |-- IFC-043-context.md
+|   |   |-- IFC-044-context.md
+|   |   |-- IFC-045-context.md
+|   |   |-- IFC-046-context.md
+|   |   |-- IFC-047-context.md
+|   |   |-- IFC-048-context.md
+|   |   |-- IFC-049-context.md
+|   |   |-- IFC-050-context.md
+|   |   |-- IFC-051-context.md
+|   |   |-- IFC-052-context.md
+|   |   |-- IFC-053-context.md
+|   |   |-- IFC-054-context.md
+|   |   |-- IFC-055-context.md
+|   |   |-- IFC-056-context.md
+|   |   |-- IFC-057-context.md
+|   |   |-- IFC-058-context.md
+|   |   |-- IFC-059-context.md
+|   |   |-- IFC-060-context.md
+|   |   |-- IFC-070-context.md
+|   |   |-- IFC-071-context.md
+|   |   |-- IFC-072-context.md
+|   |   |-- IFC-073-context.md
+|   |   |-- IFC-074-context.md
+|   |   |-- IFC-075-context.md
+|   |   |-- IFC-076-context.md
+|   |   |-- IFC-077-context.md
+|   |   |-- IFC-078-context.md
+|   |   |-- IFC-079-context.md
+|   |   |-- IFC-080-context.md
+|   |   |-- IFC-081-context.md
+|   |   |-- IFC-082-context.md
+|   |   |-- IFC-083-context.md
+|   |   |-- IFC-084-context.md
+|   |   |-- IFC-085-context.md
+|   |   |-- IFC-086-context.md
+|   |   |-- IFC-087-context.md
+|   |   |-- IFC-088-context.md
+|   |   |-- IFC-089-context.md
+|   |   |-- IFC-090-context.md
+|   |   |-- IFC-091-context.md
+|   |   |-- IFC-092-context.md
+|   |   |-- IFC-093-context.md
+|   |   |-- IFC-094-context.md
+|   |   |-- IFC-095-context.md
+|   |   |-- IFC-096-context.md
+|   |   |-- IFC-097-context.md
+|   |   |-- IFC-098-context.md
+|   |   |-- IFC-099-context.md
+|   |   |-- IFC-100-context.md
+|   |   |-- IFC-101-context.md
+|   |   |-- IFC-102-context.md
+|   |   |-- IFC-103-context.md
+|   |   |-- IFC-104-context.md
+|   |   |-- IFC-105-context.md
+|   |   |-- IFC-106-context.md
+|   |   |-- IFC-107-context.md
+|   |   |-- IFC-108-context.md
+|   |   |-- IFC-109-context.md
+|   |   |-- IFC-110-context.md
+|   |   |-- IFC-111-context.md
+|   |   |-- IFC-112-context.md
+|   |   |-- IFC-113-context.md
+|   |   |-- IFC-114-context.md
+|   |   |-- IFC-115-context.md
+|   |   |-- IFC-116-context.md
+|   |   |-- IFC-117-context.md
+|   |   |-- IFC-118-context.md
+|   |   |-- IFC-119-context.md
+|   |   |-- IFC-120-context.md
+|   |   |-- IFC-121-context.md
+|   |   |-- IFC-122-context.md
+|   |   |-- IFC-123-context.md
+|   |   |-- IFC-124-context.md
+|   |   |-- IFC-125-context.md
+|   |   |-- IFC-126-context.md
+|   |   |-- IFC-127-context.md
+|   |   |-- IFC-128-context.md
+|   |   +-- IFC-160-context.md
+|   |-- forensics/
+|   |-- lighthouse/
+|   |   +-- .gitkeep
+|   |-- logs/
+|   |   |-- swarm/
+|   |   |   |-- ENV-008-AI.log
+|   |   |   |-- ENV-014-AI.log
+|   |   |   |-- ENV-015-AI.log
+|   |   |   |-- ENV-016-AI.log
+|   |   |   |-- swarm.log
+|   |   |   +-- swarm-health.json
+|   |   |-- .gitkeep
+|   |   |-- bug-fixes.log
+|   |   |-- execution-20251219-001114.log
+|   |   |-- execution-20251219-001206.log
+|   |   |-- execution-20251219-001213.log
+|   |   |-- execution-20251219-001214.log
+|   |   |-- execution-20251219-001323.log
+|   |   |-- execution-20251219-001324.log
+|   |   |-- execution-20251219-071440.log
+|   |   |-- execution-20251219-072343.log
+|   |   |-- execution-20251219-180025.log
+|   |   |-- optimization-log.csv
+|   |   |-- patch-log.csv
+|   |   |-- prisma-validation-test.log
+|   |   |-- quality-gates.log
+|   |   |-- secret-retrieval-test.log
+|   |   |-- supabase-migration-test.log
+|   |   +-- test-generation-log.json
+|   |-- metrics/
+|   |   |-- automation-metrics.json
+|   |   |-- confidence-metrics.csv
+|   |   |-- container-metrics.json
+|   |   |-- handoff-metrics.json
+|   |   |-- insights-accuracy.csv
+|   |   |-- metrics-realtime.json
+|   |   |-- prediction-accuracy.json
+|   |   +-- response-metrics.csv
+|   |-- misc/
+|   |   |-- .locks/
+|   |   |   |-- ENV-008-AI.heartbeat
+|   |   |   |-- ENV-014-AI.heartbeat
+|   |   |   |-- ENV-015-AI.heartbeat
+|   |   |   |-- ENV-016-AI.heartbeat
+|   |   |   +-- IFC-000.heartbeat
+|   |   |-- .status/
+|   |   |-- agent-coordination/
+|   |   |   |-- README.md
+|   |   |   +-- routing-rules.json
+|   |   |-- ai-dashboard/
+|   |   |   |-- dashboard-spec.json
+|   |   |   +-- README.md
+|   |   |-- analytics/
+|   |   |   |-- event-schema.json
+|   |   |   +-- README.md
+|   |   |-- architecture-spike/
+|   |   |   |-- performance-test.ts
+|   |   |   |-- README.md
+|   |   |   +-- type-safety-validation.ts
+|   |   |-- otel-implementation/
+|   |   |   |-- correlation-patterns.md
+|   |   |   |-- implementation-guide.md
+|   |   |   +-- instrumentation-checklist.md
+|   |   |-- sales/
+|   |   |   +-- pitch-deck-source-link.txt
+|   |   |-- sprint-planning/
+|   |   |   +-- README.md
+|   |   |-- tasks/
+|   |   |-- templates/
+|   |   |   |-- backlog-refinement.md
+|   |   |   |-- daily-standup.md
+|   |   |   |-- sprint-planning.md
+|   |   |   |-- sprint-retrospective.md
+|   |   |   +-- sprint-review.md
+|   |   |-- ab-test-results.csv
+|   |   |-- access-policy.json
+|   |   |-- anomaly-detection.json
+|   |   |-- cache-config.yaml
+|   |   |-- capacity-model.csv
+|   |   |-- ceremony-calendar.ics
+|   |   |-- command-test-results.csv
+|   |   |-- commitlint.config.js
+|   |   |-- correlation-test.csv
+|   |   |-- docusaurus.config.js
+|   |   |-- drift-detection-config.yaml
+|   |   |-- env-validation-results.json
+|   |   |-- false-positive.csv
+|   |   |-- health-check.yaml
+|   |   |-- lint-results.json
+|   |   |-- load-test-with-limits.json
+|   |   |-- mttr-baseline.json
+|   |   |-- optimization-loop.yaml
+|   |   |-- orchestration-config.yaml
+|   |   |-- otel-config.yaml
+|   |   |-- pipeline-status.yaml
+|   |   |-- privacy-config.json
+|   |   |-- profiling-results.json
+|   |   |-- rate-limit-config.yaml
+|   |   |-- roi-tracking.csv
+|   |   |-- rollout-config.json
+|   |   |-- sandbox-security.json
+|   |   |-- security-baseline.json
+|   |   |-- security-scan-results.json
+|   |   |-- self-healing-rules.yaml
+|   |   |-- sentry-project-config.json
+|   |   |-- team-licenses.csv
+|   |   |-- test-orchestration.json
+|   |   |-- vault-config.yaml
+|   |   |-- velocity-prediction.json
+|   |   +-- workflow-automation.yaml
+|   |-- performance/
+|   |   +-- README.md
+|   |-- qualitative-reviews/
+|   |-- reports/
+|   |   |-- attestation/
+|   |   |   |-- sprint-0-2025-12-21T10-18-27.json
+|   |   |   |-- sprint-0-2025-12-21T10-18-27.md
+|   |   |   |-- sprint-0-2025-12-21T10-19-59.json
+|   |   |   |-- sprint-0-2025-12-21T10-19-59.md
+|   |   |   |-- sprint-0-2025-12-21T10-32-09.json
+|   |   |   |-- sprint-0-2025-12-21T10-32-09.md
+|   |   |   |-- sprint-0-2025-12-21T12-22-25.json
+|   |   |   |-- sprint-0-2025-12-21T12-22-25.md
+|   |   |   |-- sprint-0-2025-12-21T12-29-45.json
+|   |   |   |-- sprint-0-2025-12-21T12-29-45.md
+|   |   |   |-- sprint-0-2025-12-21T12-42-17.json
+|   |   |   |-- sprint-0-2025-12-21T12-42-17.md
+|   |   |   |-- sprint-0-2025-12-21T13-05-37.json
+|   |   |   |-- sprint-0-2025-12-21T13-05-37.md
+|   |   |   |-- sprint-0-2025-12-21T13-18-26.json
+|   |   |   |-- sprint-0-2025-12-21T13-18-26.md
+|   |   |   |-- sprint-0-2025-12-21T13-22-06.json
+|   |   |   |-- sprint-0-2025-12-21T13-22-06.md
+|   |   |   |-- sprint-0-2025-12-21T13-24-51.json
+|   |   |   |-- sprint-0-2025-12-21T13-24-51.md
+|   |   |   |-- sprint-0-latest.json
+|   |   |   +-- sprint-0-latest.md
+|   |   |-- sprint-runs/
+|   |   |   |-- sprint-0-20251221-090123-11aa5f0f.json
+|   |   |   |-- sprint-0-20251221-090123-11aa5f0f.md
+|   |   |   |-- sprint-0-20251221-093220-160c024a.json
+|   |   |   |-- sprint-0-20251221-093220-160c024a.md
+|   |   |   |-- sprint-0-20251221-095236-7ddb7b63.json
+|   |   |   |-- sprint-0-20251221-095236-7ddb7b63.md
+|   |   |   |-- sprint-0-20251221-095549-8072536c.json
+|   |   |   |-- sprint-0-20251221-095549-8072536c.md
+|   |   |   |-- sprint-0-20251221-140841-100a8a4c.json
+|   |   |   |-- sprint-0-20251221-140841-100a8a4c.md
+|   |   |   |-- sprint-0-20251221-145554-b562bf76.json
+|   |   |   +-- sprint-0-20251221-145554-b562bf76.md
+|   |   |-- system-audit/
+|   |   |   |-- 20251220-230639-f301d09a/
+|   |   |   |   |-- gates/
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Foundation.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- summary.json
+|   |   |   |   |-- summary.md
+|   |   |   |   +-- waivers.json
+|   |   |   |-- 20251220T204008Z-5e68443/
+|   |   |   |   |-- commitlint.command.txt
+|   |   |   |   |-- commitlint.exit
+|   |   |   |   |-- commitlint.log
+|   |   |   |   |-- dependency-cruiser-validate.command.txt
+|   |   |   |   |-- dependency-cruiser-validate.exit
+|   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |-- eslint-max-warnings-0.command.txt
+|   |   |   |   |-- eslint-max-warnings-0.exit
+|   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |-- gitleaks.command.txt
+|   |   |   |   |-- gitleaks.exit
+|   |   |   |   |-- gitleaks.log
+|   |   |   |   |-- pnpm-audit-high.command.txt
+|   |   |   |   |-- pnpm-audit-high.exit
+|   |   |   |   |-- pnpm-audit-high.log
+|   |   |   |   |-- prettier-check.command.txt
+|   |   |   |   |-- prettier-check.exit
+|   |   |   |   |-- prettier-check.log
+|   |   |   |   |-- semgrep-security-audit.command.txt
+|   |   |   |   |-- semgrep-security-audit.exit
+|   |   |   |   |-- semgrep-security-audit.log
+|   |   |   |   |-- snyk.command.txt
+|   |   |   |   |-- snyk.exit
+|   |   |   |   |-- snyk.log
+|   |   |   |   |-- sonarqube-quality-gate.command.txt
+|   |   |   |   |-- sonarqube-quality-gate.exit
+|   |   |   |   |-- sonarqube-quality-gate.log
+|   |   |   |   |-- sonarqube-scanner.command.txt
+|   |   |   |   |-- sonarqube-scanner.exit
+|   |   |   |   |-- sonarqube-scanner.log
+|   |   |   |   |-- summary.json
+|   |   |   |   |-- summary.md
+|   |   |   |   |-- trivy-image.command.txt
+|   |   |   |   |-- trivy-image.exit
+|   |   |   |   |-- trivy-image.log
+|   |   |   |   |-- turbo-build.command.txt
+|   |   |   |   |-- turbo-build.exit
+|   |   |   |   |-- turbo-build.log
+|   |   |   |   |-- turbo-test-coverage.command.txt
+|   |   |   |   |-- turbo-test-coverage.exit
+|   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |-- turbo-typecheck.command.txt
+|   |   |   |   |-- turbo-typecheck.exit
+|   |   |   |   +-- turbo-typecheck.log
+|   |   |   |-- 20251221-082855-07ed005e/
+|   |   |   |   |-- gates/
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Foundation.json
+|   |   |   |   +-- task-updates/
+|   |   |   |-- 20251221-082909-2485f491/
+|   |   |   |   |-- gates/
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Security.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   +-- waivers.json
+|   |   |   |-- 20251221-083833-32ae3413/
+|   |   |   |   |-- gates/
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Foundation.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251221-083850-faa9c0b5/
+|   |   |   |   |-- gates/
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Domain.json
+|   |   |   |   |   |-- Intelligence.json
+|   |   |   |   |   +-- Security.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- summary.json
+|   |   |   |   |-- summary.md
+|   |   |   |   +-- waivers.json
+|   |   |   |-- 20251221-090126-3f8318ae/
+|   |   |   |   |-- gates/
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Automation.json
+|   |   |   |   |   |-- Domain.json
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   +-- Intelligence.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251221-130759-a42fc209/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- pnpm-audit-high.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   |-- Intelligence.json
+|   |   |   |   |   +-- Security.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   +-- waivers.json
+|   |   |   |-- 20251221-131255-1959418e/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- pnpm-audit-high.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Domain.json
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   +-- Security.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- remediation.md
+|   |   |   |   |-- summary.json
+|   |   |   |   |-- summary.md
+|   |   |   |   +-- waivers.json
+|   |   |   |-- 20251221-131532-81467712/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- pnpm-audit-high.log
+|   |   |   |   |   +-- turbo-test-coverage.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Domain.json
+|   |   |   |   |   |-- Intelligence.json
+|   |   |   |   |   +-- Security.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- remediation.md
+|   |   |   |   |-- summary.json
+|   |   |   |   |-- summary.md
+|   |   |   |   +-- waivers.json
+|   |   |   |-- 20251221-131620-76f1bd74/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- pnpm-audit-high.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   |-- Intelligence.json
+|   |   |   |   |   +-- Security.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- remediation.md
+|   |   |   |   |-- summary.json
+|   |   |   |   |-- summary.md
+|   |   |   |   +-- waivers.json
+|   |   |   |-- 20251221-140847-97329ebc/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Automation.json
+|   |   |   |   |   |-- Domain.json
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   +-- Intelligence.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-141137-de3ddd05/
+|   |   |   |   |-- gates/
+|   |   |   |   |   +-- turbo-test-coverage.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Intelligence.json
+|   |   |   |   |   +-- Quality.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251221-141145-64dedad9/
+|   |   |   |   |-- gates/
+|   |   |   |   |   +-- turbo-test-coverage.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Intelligence.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251221-141155-bc3d6b56/
+|   |   |   |   |-- gates/
+|   |   |   |   |   +-- turbo-test-coverage.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Intelligence.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251221-141210-de0276fe/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Foundation.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-141453-8fd5fd76/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Automation.json
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   +-- Quality.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-141842-378f0d00/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Foundation.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-142319-98b3f00b/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Domain.json
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   +-- Intelligence.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-142710-d6089333/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Foundation.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-143113-4123ae09/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Domain.json
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   +-- Quality.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-143543-3e0986ff/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Domain.json
+|   |   |   |   |   +-- Foundation.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-143939-9f05b402/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Foundation.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-144146-55715034/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Foundation.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-144446-b85c155d/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Automation.json
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   +-- Quality.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-144719-d7b56a51/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- pnpm-audit-high.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   |-- Intelligence.json
+|   |   |   |   |   +-- Security.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   +-- waivers.json
+|   |   |   |-- 20251221-145034-73cf9e53/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   +-- Intelligence.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-145601-3e3c2dc0/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Automation.json
+|   |   |   |   |   |-- Domain.json
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   +-- Intelligence.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251221-150104-826c10a9/
+|   |   |   |   |-- gates/
+|   |   |   |   |   +-- turbo-test-coverage.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Intelligence.json
+|   |   |   |   |   +-- Quality.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251221-150134-b7e89895/
+|   |   |   |   |-- gates/
+|   |   |   |   |   +-- turbo-test-coverage.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Intelligence.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251221-150145-f6dab307/
+|   |   |   |   |-- gates/
+|   |   |   |   |   +-- turbo-test-coverage.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Intelligence.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251221-150153-78a0644d/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Foundation.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-150607-87f0bb93/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Automation.json
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   +-- Quality.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-151000-9354ba35/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Foundation.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-151405-748bed70/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Domain.json
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   +-- Intelligence.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-151625-7b2aa3b8/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Foundation.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-151843-813468ba/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Domain.json
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   +-- Quality.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-152041-5b419699/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Domain.json
+|   |   |   |   |   +-- Foundation.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-152309-362afeea/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Foundation.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-152512-25b205c1/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Foundation.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-152635-18f6ad53/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Automation.json
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   +-- Quality.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-152818-3bede0bd/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- pnpm-audit-high.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   |-- Intelligence.json
+|   |   |   |   |   +-- Security.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   +-- waivers.json
+|   |   |   |-- 20251221-153033-1275c226/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   +-- Intelligence.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-153205-616fdfcd/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Automation.json
+|   |   |   |   |   +-- Foundation.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-153347-f6635872/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Foundation.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-153519-99af054e/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   +-- Quality.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-153717-3f71b0bf/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Foundation.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-153835-dd2e5850/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Automation.json
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   +-- Quality.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-154032-381d9f66/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Automation.json
+|   |   |   |   |   +-- Foundation.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-154209-aa98455f/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   +-- Quality.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-154513-1468f95e/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Automation.json
+|   |   |   |   |   |-- Intelligence.json
+|   |   |   |   |   +-- Quality.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251221-154549-124b8370/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Automation.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251221-154607-43d46565/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Domain.json
+|   |   |   |   |   +-- Foundation.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-154747-2a6f8851/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Automation.json
+|   |   |   |   |   +-- Domain.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251221-154822-911b9e49/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- pnpm-audit-high.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Domain.json
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   +-- Security.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   +-- waivers.json
+|   |   |   |-- 20251221-155021-d53d4129/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   +-- turbo-test-coverage.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Domain.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251221-155051-db0b1cdd/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Domain.json
+|   |   |   |   |   +-- Foundation.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-155229-b2a8a6fa/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Automation.json
+|   |   |   |   |   |-- Domain.json
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   +-- Intelligence.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-155405-0f8b809d/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Automation.json
+|   |   |   |   |   |-- Domain.json
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   +-- Quality.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-155558-2b88e170/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Domain.json
+|   |   |   |   |   +-- Foundation.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-155728-cb9052d9/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- pnpm-audit-high.log
+|   |   |   |   |   +-- turbo-test-coverage.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Domain.json
+|   |   |   |   |   |-- Intelligence.json
+|   |   |   |   |   +-- Security.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- remediation.md
+|   |   |   |   |-- summary.json
+|   |   |   |   |-- summary.md
+|   |   |   |   +-- waivers.json
+|   |   |   |-- 20251221-155753-df5c2fc8/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Automation.json
+|   |   |   |   |   |-- Domain.json
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   +-- Quality.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   +-- gate-selection.json
+|   |   |   |-- 20251221-173744-fe56b574/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Automation.json
+|   |   |   |   |   |-- Domain.json
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   +-- Intelligence.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- remediation.md
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251221-173959-adac9a56/
+|   |   |   |   |-- gates/
+|   |   |   |   |   +-- turbo-test-coverage.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Intelligence.json
+|   |   |   |   |   +-- Quality.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251221-174006-406b5e3b/
+|   |   |   |   |-- gates/
+|   |   |   |   |   +-- turbo-test-coverage.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Intelligence.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251221-174019-e1ab2e9e/
+|   |   |   |   |-- gates/
+|   |   |   |   |   +-- turbo-test-coverage.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Intelligence.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251221-174027-c45bfc9b/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Foundation.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- remediation.md
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251221-174229-1d200599/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Automation.json
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   +-- Quality.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- remediation.md
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251221-174441-05ae6baf/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Foundation.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- remediation.md
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251221-174643-c031fb76/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Domain.json
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   +-- Intelligence.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- remediation.md
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251221-175037-0c8b9f1a/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   +-- Foundation.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- remediation.md
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251221-175335-651b7461/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- commitlint.log
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- prettier-check.log
+|   |   |   |   |   |-- turbo-build.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Domain.json
+|   |   |   |   |   |-- Foundation.json
+|   |   |   |   |   +-- Quality.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- remediation.md
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- ui-audit-20251221T110123.851Z-0yjet4/
+|   |   |   |   |-- bearer.command.txt
+|   |   |   |   |-- bearer.exit
+|   |   |   |   |-- bearer.log
+|   |   |   |   |-- clinic-js.command.txt
+|   |   |   |   |-- clinic-js.exit
+|   |   |   |   |-- clinic-js.log
+|   |   |   |   |-- codeql-analysis.command.txt
+|   |   |   |   |-- codeql-analysis.exit
+|   |   |   |   |-- codeql-analysis.log
+|   |   |   |   |-- commitlint.command.txt
+|   |   |   |   |-- commitlint.exit
+|   |   |   |   |-- commitlint.log
+|   |   |   |   |-- cosign.command.txt
+|   |   |   |   |-- cosign.exit
+|   |   |   |   |-- cosign.log
+|   |   |   |   |-- cspell.command.txt
+|   |   |   |   |-- cspell.exit
+|   |   |   |   |-- cspell.log
+|   |   |   |   |-- depcheck.command.txt
+|   |   |   |   |-- depcheck.exit
+|   |   |   |   |-- depcheck.log
+|   |   |   |   |-- dependency-cruiser-validate.command.txt
+|   |   |   |   |-- dependency-cruiser-validate.exit
+|   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |-- eslint-max-warnings-0.command.txt
+|   |   |   |   |-- eslint-max-warnings-0.exit
+|   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |-- garak.command.txt
+|   |   |   |   |-- garak.exit
+|   |   |   |   |-- garak.log
+|   |   |   |   |-- gitleaks.command.txt
+|   |   |   |   |-- gitleaks.exit
+|   |   |   |   |-- gitleaks.log
+|   |   |   |   |-- grype.command.txt
+|   |   |   |   |-- grype.exit
+|   |   |   |   |-- grype.log
+|   |   |   |   |-- k6.command.txt
+|   |   |   |   |-- k6.exit
+|   |   |   |   |-- k6.log
+|   |   |   |   |-- knip.command.txt
+|   |   |   |   |-- knip.exit
+|   |   |   |   |-- knip.log
+|   |   |   |   |-- langfuse-audit.command.txt
+|   |   |   |   |-- langfuse-audit.exit
+|   |   |   |   |-- langfuse-audit.log
+|   |   |   |   |-- license-checker.command.txt
+|   |   |   |   |-- license-checker.exit
+|   |   |   |   |-- license-checker.log
+|   |   |   |   |-- lighthouse-ci.command.txt
+|   |   |   |   |-- lighthouse-ci.exit
+|   |   |   |   |-- lighthouse-ci.log
+|   |   |   |   |-- madge-circular.command.txt
+|   |   |   |   |-- madge-circular.exit
+|   |   |   |   |-- madge-circular.log
+|   |   |   |   |-- markdownlint.command.txt
+|   |   |   |   |-- markdownlint.exit
+|   |   |   |   |-- markdownlint.log
+|   |   |   |   |-- osv-scanner.command.txt
+|   |   |   |   |-- osv-scanner.exit
+|   |   |   |   |-- osv-scanner.log
+|   |   |   |   |-- owasp-zap.command.txt
+|   |   |   |   |-- owasp-zap.exit
+|   |   |   |   |-- owasp-zap.log
+|   |   |   |   |-- pnpm-audit-high.command.txt
+|   |   |   |   |-- pnpm-audit-high.exit
+|   |   |   |   |-- pnpm-audit-high.log
+|   |   |   |   |-- pnpm-outdated.command.txt
+|   |   |   |   |-- pnpm-outdated.exit
+|   |   |   |   |-- pnpm-outdated.log
+|   |   |   |   |-- prettier-check.command.txt
+|   |   |   |   |-- prettier-check.exit
+|   |   |   |   |-- prettier-check.log
+|   |   |   |   |-- semgrep-security-audit.command.txt
+|   |   |   |   |-- semgrep-security-audit.exit
+|   |   |   |   |-- semgrep-security-audit.log
+|   |   |   |   |-- size-limit.command.txt
+|   |   |   |   |-- size-limit.exit
+|   |   |   |   |-- size-limit.log
+|   |   |   |   |-- snyk.command.txt
+|   |   |   |   |-- snyk.exit
+|   |   |   |   |-- snyk.log
+|   |   |   |   |-- sonarqube-quality-gate.command.txt
+|   |   |   |   |-- sonarqube-quality-gate.exit
+|   |   |   |   |-- sonarqube-quality-gate.log
+|   |   |   |   |-- sonarqube-scanner.command.txt
+|   |   |   |   |-- sonarqube-scanner.exit
+|   |   |   |   |-- sonarqube-scanner.log
+|   |   |   |   |-- stryker.command.txt
+|   |   |   |   |-- stryker.exit
+|   |   |   |   |-- stryker.log
+|   |   |   |   |-- summary.json
+|   |   |   |   |-- summary.md
+|   |   |   |   |-- syft.command.txt
+|   |   |   |   |-- syft.exit
+|   |   |   |   |-- syft.log
+|   |   |   |   |-- trivy-image.command.txt
+|   |   |   |   |-- trivy-image.exit
+|   |   |   |   |-- trivy-image.log
+|   |   |   |   |-- ts-prune.command.txt
+|   |   |   |   |-- ts-prune.exit
+|   |   |   |   |-- ts-prune.log
+|   |   |   |   |-- turbo-build.command.txt
+|   |   |   |   |-- turbo-build.exit
+|   |   |   |   |-- turbo-build.log
+|   |   |   |   |-- turbo-test-coverage.command.txt
+|   |   |   |   |-- turbo-test-coverage.exit
+|   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |-- turbo-typecheck.command.txt
+|   |   |   |   |-- turbo-typecheck.exit
+|   |   |   |   +-- turbo-typecheck.log
+|   |   |   +-- ui-audit-20251221T125028.870Z-8ejjmf/
+|   |   |       |-- bearer.command.txt
+|   |   |       |-- bearer.exit
+|   |   |       |-- bearer.log
+|   |   |       |-- clinic-js.command.txt
+|   |   |       |-- clinic-js.exit
+|   |   |       |-- clinic-js.log
+|   |   |       |-- codeql-analysis.command.txt
+|   |   |       |-- codeql-analysis.exit
+|   |   |       |-- codeql-analysis.log
+|   |   |       |-- commitlint.command.txt
+|   |   |       |-- commitlint.exit
+|   |   |       |-- commitlint.log
+|   |   |       |-- cosign.command.txt
+|   |   |       |-- cosign.exit
+|   |   |       |-- cosign.log
+|   |   |       |-- cspell.command.txt
+|   |   |       |-- cspell.exit
+|   |   |       |-- cspell.log
+|   |   |       |-- depcheck.command.txt
+|   |   |       |-- depcheck.exit
+|   |   |       |-- depcheck.log
+|   |   |       |-- dependency-cruiser-validate.command.txt
+|   |   |       |-- dependency-cruiser-validate.exit
+|   |   |       |-- dependency-cruiser-validate.log
+|   |   |       |-- eslint-max-warnings-0.command.txt
+|   |   |       |-- eslint-max-warnings-0.exit
+|   |   |       |-- eslint-max-warnings-0.log
+|   |   |       |-- garak.command.txt
+|   |   |       |-- garak.exit
+|   |   |       |-- garak.log
+|   |   |       |-- gitleaks.command.txt
+|   |   |       |-- gitleaks.exit
+|   |   |       |-- gitleaks.log
+|   |   |       |-- grype.command.txt
+|   |   |       |-- grype.exit
+|   |   |       |-- grype.log
+|   |   |       |-- k6.command.txt
+|   |   |       |-- k6.exit
+|   |   |       |-- k6.log
+|   |   |       |-- knip.command.txt
+|   |   |       |-- knip.exit
+|   |   |       |-- knip.log
+|   |   |       |-- langfuse-audit.command.txt
+|   |   |       |-- langfuse-audit.exit
+|   |   |       |-- langfuse-audit.log
+|   |   |       |-- license-checker.command.txt
+|   |   |       |-- license-checker.exit
+|   |   |       |-- license-checker.log
+|   |   |       |-- lighthouse-ci.command.txt
+|   |   |       |-- lighthouse-ci.exit
+|   |   |       |-- lighthouse-ci.log
+|   |   |       |-- madge-circular.command.txt
+|   |   |       |-- madge-circular.exit
+|   |   |       |-- madge-circular.log
+|   |   |       |-- markdownlint.command.txt
+|   |   |       |-- markdownlint.exit
+|   |   |       |-- markdownlint.log
+|   |   |       |-- osv-scanner.command.txt
+|   |   |       |-- osv-scanner.exit
+|   |   |       |-- osv-scanner.log
+|   |   |       |-- owasp-zap.command.txt
+|   |   |       |-- owasp-zap.exit
+|   |   |       |-- owasp-zap.log
+|   |   |       |-- pnpm-audit-high.command.txt
+|   |   |       |-- pnpm-audit-high.exit
+|   |   |       |-- pnpm-audit-high.log
+|   |   |       |-- pnpm-outdated.command.txt
+|   |   |       |-- pnpm-outdated.exit
+|   |   |       |-- pnpm-outdated.log
+|   |   |       |-- prettier-check.command.txt
+|   |   |       |-- prettier-check.exit
+|   |   |       |-- prettier-check.log
+|   |   |       |-- semgrep-security-audit.command.txt
+|   |   |       |-- semgrep-security-audit.exit
+|   |   |       |-- semgrep-security-audit.log
+|   |   |       |-- size-limit.command.txt
+|   |   |       |-- size-limit.exit
+|   |   |       |-- size-limit.log
+|   |   |       |-- snyk.command.txt
+|   |   |       |-- snyk.exit
+|   |   |       |-- snyk.log
+|   |   |       |-- sonarqube-quality-gate.command.txt
+|   |   |       |-- sonarqube-quality-gate.exit
+|   |   |       |-- sonarqube-quality-gate.log
+|   |   |       |-- sonarqube-scanner.command.txt
+|   |   |       |-- sonarqube-scanner.exit
+|   |   |       |-- sonarqube-scanner.log
+|   |   |       |-- stryker.command.txt
+|   |   |       |-- stryker.exit
+|   |   |       |-- stryker.log
+|   |   |       |-- summary.json
+|   |   |       |-- summary.md
+|   |   |       |-- syft.command.txt
+|   |   |       |-- syft.exit
+|   |   |       |-- syft.log
+|   |   |       |-- trivy-image.command.txt
+|   |   |       |-- trivy-image.exit
+|   |   |       |-- trivy-image.log
+|   |   |       |-- ts-prune.command.txt
+|   |   |       |-- ts-prune.exit
+|   |   |       |-- ts-prune.log
+|   |   |       |-- turbo-build.command.txt
+|   |   |       |-- turbo-build.exit
+|   |   |       |-- turbo-build.log
+|   |   |       |-- turbo-test-coverage.command.txt
+|   |   |       |-- turbo-test-coverage.exit
+|   |   |       |-- turbo-test-coverage.log
+|   |   |       |-- turbo-typecheck.command.txt
+|   |   |       |-- turbo-typecheck.exit
+|   |   |       +-- turbo-typecheck.log
+|   |   |-- validation/
+|   |   |   |-- audit-report.json
+|   |   |   |-- sprint-0-latest.json
+|   |   |   |-- sprint-0-latest.md
+|   |   |   |-- validation-ENV-007-AI.json
+|   |   |   |-- validation-ENV-012-AI.json
+|   |   |   +-- validation-IFC-160.json
+|   |   |-- audit-report.json
+|   |   |-- business-case.pdf
+|   |   |-- compliance-report.pdf
+|   |   |-- debt-ledger.json
+|   |   |-- financial-model.xlsx
+|   |   |-- gdpr-compliance.pdf
+|   |   |-- ifc-000-completion-manifest.json
+|   |   |-- IFC-075-implementation-summary.md
+|   |   |-- phantom-completion-audit.json
+|   |   |-- plan-lint-report.json
+|   |   |-- retro-action-items.md
+|   |   |-- review-queue.json
+|   |   |-- review-queue.md
+|   |   |-- risk-matrix.xlsx
+|   |   |-- SALES-001-quick-reference.md
+|   |   |-- SALES-001-validation-report.md
+|   |   |-- status-snapshot.json
+|   |   |-- stoa-review-queue.json
+|   |   |-- swot-analysis.xlsx
+|   |   +-- turbo-validation.json
+|   |-- sprint0/
+|   |   +-- codex-run/
+|   |       |-- manifests/
+|   |       |   |-- Impl-CoreScaffold.json
+|   |       |   |-- Impl-Remaining.json
+|   |       |   |-- Integrator.json
+|   |       |   |-- Planner.json
+|   |       |   |-- Reporter.json
+|   |       |   |-- TaskExtractor.json
+|   |       |   +-- Validator.json
+|   |       |-- patches/
+|   |       |   |-- AUTOMATION-001.patch
+|   |       |   |-- AUTOMATION-002.patch
+|   |       |   |-- ENV-008-AI.patch
+|   |       |   |-- ENV-010-AI.patch
+|   |       |   |-- ENV-013-AI.patch
+|   |       |   |-- ENV-014-AI.patch
+|   |       |   |-- ENV-015-AI.patch
+|   |       |   |-- ENV-016-AI.patch
+|   |       |   |-- ENV-017-AI.patch
+|   |       |   |-- ENV-018-AI.patch
+|   |       |   |-- IFC-000.patch
+|   |       |   |-- REPO-ignore-python-cache.patch
+|   |       |   |-- REPO-track-artifacts.patch
+|   |       |   |-- SPRINT0-core-scaffolding.patch
+|   |       |   |-- SPRINT0-metrics-sync.patch
+|   |       |   |-- SPRINT0-sprint-data-validation.patch
+|   |       |   |-- SPRINT0-validation-output-generator.patch
+|   |       |   +-- SPRINT0-validation-output-human-readable.patch
+|   |       |-- pr-drafts/
+|   |       |   |-- AI-SETUP-001.md
+|   |       |   |-- AI-SETUP-002.md
+|   |       |   |-- AI-SETUP-003.md
+|   |       |   |-- AUTOMATION-001.md
+|   |       |   |-- AUTOMATION-002.md
+|   |       |   |-- ENV-001-AI.md
+|   |       |   |-- ENV-002-AI.md
+|   |       |   |-- ENV-008-AI.md
+|   |       |   |-- ENV-010-AI.md
+|   |       |   |-- ENV-013-AI.md
+|   |       |   |-- ENV-014-AI.md
+|   |       |   |-- ENV-015-AI.md
+|   |       |   |-- ENV-016-AI.md
+|   |       |   |-- ENV-017-AI.md
+|   |       |   |-- ENV-018-AI.md
+|   |       |   |-- IFC-000.md
+|   |       |   |-- REPO-track-artifacts.md
+|   |       |   |-- SPRINT0-metrics-sync.md
+|   |       |   +-- SPRINT0-validation-output.md
+|   |       |-- check-MATOA.md
+|   |       |-- Framework.md
+|   |       |-- governance.md
+|   |       |-- plan.json
+|   |       |-- prompt.md
+|   |       |-- report.md
+|   |       |-- tasks.json
+|   |       +-- validation-output.txt
+|   |-- status/
+|   |-- test-results/
+|   |   +-- .gitkeep
+|   |-- validation/
+|   |-- blockers.json
+|   |-- debt-ledger.jsonl
+|   |-- debt-ledger.md
+|   |-- human-intervention-required.json
+|   |-- monitoring-config-hashes.txt
+|   |-- move-map.csv
+|   |-- Sprint0_prompt.md
+|   +-- Sprint1_prompt.md
+|-- docs/
+|   |-- agent/
+|   |   +-- setup-complete-checklist.md
+|   |-- analytics/
+|   |   |-- dashboards-requirements.md
+|   |   |-- event-taxonomy.md
+|   |   +-- rfm-abc-spec.md
+|   |-- api/
+|   |   |-- overview.md
+|   |   +-- trpc-routes.md
+|   |-- architecture/
+|   |   |-- adr/
+|   |   |   |-- 000-template.md
+|   |   |   +-- 001-hexagonal-architecture.md
+|   |   |-- arp/
+|   |   |   +-- 000-template.md
+|   |   |-- diagrams/
+|   |   |   +-- README.md
+|   |   |-- flowcharts/
+|   |   |   +-- README.md
+|   |   |-- artifact-conventions.md
+|   |   |-- decision-workflow.md
+|   |   |-- overview.md
+|   |   +-- repo-layout.md
+|   |-- company/
+|   |   |-- brand/
+|   |   |   |-- palette.tokens.json
+|   |   |   |-- spacing.tokens.json
+|   |   |   |-- typography.tokens.json
+|   |   |   +-- visual-identity.md
+|   |   |-- go-to-market/
+|   |   |   |-- icp.md
+|   |   |   |-- icp-personas.md
+|   |   |   |-- objections.md
+|   |   |   +-- personas.md
+|   |   |-- messaging/
+|   |   |   |-- copy-blocks.md
+|   |   |   |-- cta-library.md
+|   |   |   |-- positioning.md
+|   |   |   |-- tone-of-voice.md
+|   |   |   +-- value-props.md
+|   |   |-- product/
+|   |   |   +-- product-vision.md
+|   |   +-- master-brief.md
+|   |-- compliance/
+|   |   |-- gdpr-checklist.md
+|   |   +-- retention-policy.md
+|   |-- design-system/
+|   |   |-- theme-reference-spec.md
+|   |   |-- token-mapping.md
+|   |   |-- token-naming.md
+|   |   +-- VALIDATION.md
+|   |-- guides/
+|   |   |-- getting-started.md
+|   |   +-- sprint-data-consistency.md
+|   |-- implementation/
+|   |   +-- ENV-007-AI-tRPC-API-Setup.md
+|   |-- observability/
+|   |   +-- IFC-074-IMPLEMENTATION.md
+|   |-- operations/
+|   |   |-- abc-classification.md
+|   |   |-- easypanel-runbook.md
+|   |   |-- engineering-playbook.md
+|   |   |-- monitoring-runbook.md
+|   |   |-- pr-checklist.md
+|   |   |-- project-playbook.md
+|   |   |-- quality-gates.md
+|   |   |-- raci.md
+|   |   |-- release-rollback.md
+|   |   |-- ticket-sizing.md
+|   |   |-- validation-scripts.md
+|   |   +-- wip-policy.md
+|   |-- ops/
+|   |   |-- playbooks/
+|   |   |   |-- audit_playbook.md
+|   |   |   |-- operator_observability_playbook.md
+|   |   |   +-- sprint0_comprehensive_audit_playbook_v2.md
+|   |   |-- audit-performance-and-iteration.md
+|   |   |-- intelliflow_audit_improvements_prompt.md
+|   |   |-- intelliflow_deep_daily_ops_and_integrity.md
+|   |   +-- system-audit.md
+|   |-- planning/
+|   |   |-- adr/
+|   |   |   |-- ADR-001-modern-stack.md
+|   |   |   |-- ADR-002-csv-source-of-truth.md
+|   |   |   |-- ADR-002-domain-driven-design.md
+|   |   |   |-- ADR-003-sprint-scoped-validation.md
+|   |   |   |-- ADR-003-type-safe-api-design.md
+|   |   |   |-- ADR-004-multi-tenancy.md
+|   |   |   |-- ADR-005-workflow-engine.md
+|   |   |   |-- ADR-006-agent-tools.md
+|   |   |   |-- ADR-007-data-governance.md
+|   |   |   |-- ADR-008-audit-logging.md
+|   |   |   |-- ADR-009-zero-trust-security.md
+|   |   |   |-- README.md
+|   |   |   +-- template.md
+|   |   |-- ADR-000-feasibility.md
+|   |   +-- DDD-context-map.puml
+|   |-- references/
+|   |   +-- README.md
+|   |-- sales/
+|   |   |-- one-pager.md
+|   |   +-- pitch-deck-outline.md
+|   |-- security/
+|   |   |-- data-flows.md
+|   |   |-- dpia.md
+|   |   |-- multi-tenant-isolation.md
+|   |   |-- README.md
+|   |   +-- rls-design.md
+|   |-- setup/
+|   |   |-- docker-compose-overlays.md
+|   |   |-- sonarqube-setup.md
+|   |   +-- sonarqube-token-guide.md
+|   |-- shared/
+|   |   +-- copilot-instructions.md
+|   |-- src/
+|   |   +-- css/
+|   |       +-- custom.css
+|   |-- attestation-schema.yaml
+|   |-- debt-ledger.yaml
+|   |-- docusaurus.config.js
+|   |-- evidence-pack-schema.yaml
+|   |-- getting-started.md
+|   |-- index.md
+|   |-- intro.md
+|   |-- package.json
+|   |-- plan-change-log.md
+|   |-- plan-governance.md
+|   |-- quality-gates.md
+|   |-- sidebars.js
+|   +-- sprint-0-completion-summary.md
+|-- infra/
+|   |-- docker/
+|   |   |-- postgres/
+|   |   |   +-- init.sql
+|   |   |-- Dockerfile.ai-worker
+|   |   |-- Dockerfile.api
+|   |   +-- Dockerfile.web
+|   |-- easypanel/
+|   |   |-- backup.sh
+|   |   +-- README.md
+|   |-- monitoring/
+|   |   |-- alerts/
+|   |   |   +-- intelliflow-alerts.yaml
+|   |   |-- dashboards/
+|   |   |   +-- main.json
+|   |   |-- grafana/
+|   |   |   +-- provisioning/
+|   |   |       |-- dashboards/
+|   |   |       |   +-- dashboards.yml
+|   |   |       +-- datasources/
+|   |   |           +-- datasources.yml
+|   |   |-- docker-compose.monitoring.yml
+|   |   |-- health-checks.yaml
+|   |   |-- loki-config.yml
+|   |   |-- otel-collector.yaml
+|   |   |-- otel-config.yaml
+|   |   |-- performance-budgets.json
+|   |   |-- prometheus.yml
+|   |   |-- README.md
+|   |   +-- tempo-config.yml
+|   |-- security/
+|   |   |-- dependency-check.yaml
+|   |   +-- trivy.yaml
+|   |-- supabase/
+|   |   |-- functions/
+|   |   |   |-- hello/
+|   |   |   |   +-- index.ts
+|   |   |   |-- deno.json
+|   |   |   +-- README.md
+|   |   |-- migrations/
+|   |   |   |-- 20250101000000_initial_schema.sql
+|   |   |   |-- 20250122000000_enable_rls.sql
+|   |   |   |-- 20250123000000_rls_helper_functions.sql
+|   |   |   +-- 20250124000000_rls_policies.sql
+|   |   |-- .env.local.example
+|   |   |-- config.toml
+|   |   |-- IMPLEMENTATION-GUIDE.md
+|   |   |-- README.md
+|   |   |-- rls-policies.sql
+|   |   |-- setup-local.ps1
+|   |   |-- setup-local.sh
+|   |   |-- storage-config.json
+|   |   +-- storage-setup.sql
+|   +-- terraform/
+|       |-- environments/
+|       |   |-- dev/
+|       |   |-- production/
+|       |   +-- staging/
+|       |-- modules/
+|       |   |-- railway/
+|       |   |   |-- main.tf
+|       |   |   |-- outputs.tf
+|       |   |   |-- README.md
+|       |   |   +-- variables.tf
+|       |   |-- supabase/
+|       |   |   |-- main.tf
+|       |   |   |-- outputs.tf
+|       |   |   |-- README.md
+|       |   |   +-- variables.tf
+|       |   |-- vercel/
+|       |   |   |-- main.tf
+|       |   |   |-- outputs.tf
+|       |   |   |-- README.md
+|       |   |   +-- variables.tf
+|       |   +-- README.md
+|       |-- .gitignore
+|       |-- main.tf
+|       |-- outputs.tf
+|       |-- providers.tf
+|       |-- README.md
+|       |-- terraform.tfvars.example
+|       +-- variables.tf
+|-- logs/
+|-- packages/
+|   |-- adapters/
+|   |   |-- artifacts/
+|   |   |-- src/
+|   |   |   |-- external/
+|   |   |   |   |-- index.ts
+|   |   |   |   |-- InMemoryCache.ts
+|   |   |   |   |-- InMemoryEventBus.ts
+|   |   |   |   +-- MockAIService.ts
+|   |   |   |-- repositories/
+|   |   |   |   |-- index.ts
+|   |   |   |   |-- InMemoryLeadRepository.ts
+|   |   |   |   +-- PrismaLeadRepository.ts
+|   |   |   +-- index.ts
+|   |   |-- package.json
+|   |   +-- tsconfig.json
+|   |-- api-client/
+|   |   |-- src/
+|   |   |   |-- index.ts
+|   |   |   |-- react-client.tsx
+|   |   |   +-- vanilla-client.ts
+|   |   |-- package.json
+|   |   |-- README.md
+|   |   +-- tsconfig.json
+|   |-- application/
+|   |   |-- artifacts/
+|   |   |-- src/
+|   |   |   |-- errors/
+|   |   |   |   |-- ApplicationErrors.ts
+|   |   |   |   +-- index.ts
+|   |   |   |-- ports/
+|   |   |   |   |-- external/
+|   |   |   |   |   |-- AIServicePort.ts
+|   |   |   |   |   |-- AuthServicePort.ts
+|   |   |   |   |   |-- CachePort.ts
+|   |   |   |   |   |-- EventBusPort.ts
+|   |   |   |   |   +-- index.ts
+|   |   |   |   |-- repositories/
+|   |   |   |   |   |-- AccountRepositoryPort.ts
+|   |   |   |   |   |-- ContactRepositoryPort.ts
+|   |   |   |   |   |-- index.ts
+|   |   |   |   |   |-- LeadRepositoryPort.ts
+|   |   |   |   |   |-- OpportunityRepositoryPort.ts
+|   |   |   |   |   +-- TaskRepositoryPort.ts
+|   |   |   |   +-- index.ts
+|   |   |   |-- usecases/
+|   |   |   |   |-- leads/
+|   |   |   |   |   |-- ConvertLeadUseCase.ts
+|   |   |   |   |   |-- CreateLeadUseCase.ts
+|   |   |   |   |   |-- index.ts
+|   |   |   |   |   |-- QualifyLeadUseCase.ts
+|   |   |   |   |   +-- ScoreLeadUseCase.ts
+|   |   |   |   +-- index.ts
+|   |   |   +-- index.ts
+|   |   |-- package.json
+|   |   +-- tsconfig.json
+|   |-- db/
+|   |   |-- prisma/
+|   |   |   |-- schema.prisma
+|   |   |   +-- seed.ts
+|   |   |-- src/
+|   |   |   |-- client.ts
+|   |   |   +-- index.ts
+|   |   |-- .env.example
+|   |   |-- .gitignore
+|   |   |-- package.json
+|   |   +-- tsconfig.json
+|   |-- domain/
+|   |   |-- __tests__/
+|   |   |   +-- lead.test.ts
+|   |   |-- artifacts/
+|   |   |-- src/
+|   |   |   |-- crm/
+|   |   |   |   |-- account/
+|   |   |   |   |   |-- Account.ts
+|   |   |   |   |   |-- AccountEvents.ts
+|   |   |   |   |   |-- AccountId.ts
+|   |   |   |   |   +-- AccountRepository.ts
+|   |   |   |   |-- contact/
+|   |   |   |   |   |-- Contact.ts
+|   |   |   |   |   |-- ContactEvents.ts
+|   |   |   |   |   |-- ContactId.ts
+|   |   |   |   |   +-- ContactRepository.ts
+|   |   |   |   |-- lead/
+|   |   |   |   |   |-- __tests__/
+|   |   |   |   |   |   +-- Lead.test.ts
+|   |   |   |   |   |-- Email.ts
+|   |   |   |   |   |-- Lead.ts
+|   |   |   |   |   |-- LeadEvents.ts
+|   |   |   |   |   |-- LeadId.ts
+|   |   |   |   |   |-- LeadRepository.ts
+|   |   |   |   |   +-- LeadScore.ts
+|   |   |   |   |-- opportunity/
+|   |   |   |   |   |-- Opportunity.ts
+|   |   |   |   |   |-- OpportunityEvents.ts
+|   |   |   |   |   |-- OpportunityId.ts
+|   |   |   |   |   +-- OpportunityRepository.ts
+|   |   |   |   +-- task/
+|   |   |   |       |-- Task.ts
+|   |   |   |       |-- TaskEvents.ts
+|   |   |   |       |-- TaskId.ts
+|   |   |   |       +-- TaskRepository.ts
+|   |   |   |-- shared/
+|   |   |   |   |-- AggregateRoot.ts
+|   |   |   |   |-- DomainEvent.ts
+|   |   |   |   |-- Entity.ts
+|   |   |   |   |-- QueryTypes.ts
+|   |   |   |   |-- Result.ts
+|   |   |   |   +-- ValueObject.ts
+|   |   |   +-- index.ts
+|   |   |-- package.json
+|   |   +-- tsconfig.json
+|   |-- observability/
+|   |   |-- artifacts/
+|   |   |-- src/
+|   |   |   |-- index.ts
+|   |   |   |-- logging.ts
+|   |   |   |-- metrics.ts
+|   |   |   |-- tracer.ts
+|   |   |   +-- tracing.ts
+|   |   |-- package.json
+|   |   |-- README.md
+|   |   |-- tsconfig.json
+|   |   +-- vitest.config.ts
+|   |-- platform/
+|   |   |-- src/
+|   |   |   |-- feature-flags/
+|   |   |   |   |-- index.ts
+|   |   |   |   |-- in-memory-provider.ts
+|   |   |   |   |-- schema.ts
+|   |   |   |   +-- types.ts
+|   |   |   +-- index.ts
+|   |   |-- package.json
+|   |   |-- README.md
+|   |   +-- tsconfig.json
+|   |-- typescript-config/
+|   |   |-- base.json
+|   |   |-- nextjs.json
+|   |   |-- package.json
+|   |   |-- react.json
+|   |   +-- react-library.json
+|   |-- ui/
+|   |   |-- src/
+|   |   |   |-- components/
+|   |   |   |   |-- button.tsx
+|   |   |   |   |-- card.tsx
+|   |   |   |   |-- data-table.tsx
+|   |   |   |   |-- form.tsx
+|   |   |   |   |-- input.tsx
+|   |   |   |   |-- label.tsx
+|   |   |   |   +-- table.tsx
+|   |   |   |-- lib/
+|   |   |   |   +-- utils.ts
+|   |   |   +-- index.ts
+|   |   |-- package.json
+|   |   +-- tsconfig.json
+|   +-- validators/
+|       |-- __tests__/
+|       |   +-- lead.test.ts
+|       |-- src/
+|       |   |-- account.ts
+|       |   |-- common.ts
+|       |   |-- contact.ts
+|       |   |-- index.ts
+|       |   |-- lead.ts
+|       |   |-- opportunity.ts
+|       |   +-- task.ts
+|       |-- package.json
+|       +-- tsconfig.json
+|-- scripts/
+|   |-- migration/
+|   |   |-- artifact-move-map.csv
+|   |   +-- README.md
+|   |-- swarm/
+|   |   |-- orchestrator.sh
+|   |   +-- swarm-manager.sh
+|   |-- clean-fake-task-data.ps1
+|   |-- fix-task-json-schema.ps1
+|   |-- fix-uppercase-sha256.ps1
+|   |-- pnpm-audit-report.js
+|   |-- run-soft.js
+|   |-- setup-quality-tools.sh
+|   |-- sonar-iterative.js
+|   |-- sonar-new-issues.js
+|   |-- sonarqube-helper.js
+|   |-- sonar-report-generator.js
+|   |-- sonar-scan.js
+|   |-- sonar-set-new-code-baseline.js
+|   |-- sonar-status.js
+|   +-- sonar-tracker.js
+|-- sonar-reports/
+|   |-- .gitkeep
+|   |-- README.md
+|   |-- sonar-analysis-2025-12-21T13-32-39.json
+|   |-- sonar-analysis-2025-12-21T13-32-39.md
+|   |-- sonar-new-issues.json
+|   |-- sonar-new-issues-2025-12-21T13-35-06.json
+|   |-- sonar-new-issues-2025-12-21T13-35-35.json
+|   |-- sonar-new-issues-2025-12-21T13-37-01.json
+|   |-- sonar-new-issues-2025-12-21T13-53-01.json
+|   |-- sonar-new-issues-2025-12-21T14-00-19.json
+|   +-- sonar-new-issues-2025-12-21T14-07-42.json
+|-- supabase/
+|   |-- .temp/
+|   |   +-- cli-latest
+|   |-- .gitignore
+|   +-- config.toml
+|-- tests/
+|   |-- architecture/
+|   |   |-- boundary-tests.ts
+|   |   |-- dependency-rules.ts
+|   |   |-- package.json
+|   |   |-- README.md
+|   |   +-- tsconfig.json
+|   |-- e2e/
+|   |   |-- global-setup.ts
+|   |   |-- global-teardown.ts
+|   |   +-- smoke.spec.ts
+|   |-- integration/
+|   |   |-- api.test.ts
+|   |   |-- db.test.ts
+|   |   |-- README.md
+|   |   +-- setup.ts
+|   |-- mocks/
+|   |   +-- prisma.mock.ts
+|   |-- utils/
+|   |   |-- db.ts
+|   |   |-- fixtures.ts
+|   |   |-- mocks.ts
+|   |   +-- test-helpers.ts
+|   +-- setup.ts
+|-- tools/
+|   |-- audit/
+|   |   |-- __pycache__/
+|   |   |   |-- affected.cpython-312.pyc
+|   |   |   |-- attestation.cpython-312.pyc
+|   |   |   |-- run_audit.cpython-312.pyc
+|   |   |   |-- sprint0_audit.cpython-312.pyc
+|   |   |   |-- status_snapshot.cpython-312.pyc
+|   |   |   +-- tool_versions.cpython-312.pyc
+|   |   |-- tests/
+|   |   |   |-- __pycache__/
+|   |   |   |   |-- conftest.cpython-312-pytest-8.3.5.pyc
+|   |   |   |   |-- test_affected.cpython-312-pytest-8.3.5.pyc
+|   |   |   |   |-- test_attestation.cpython-312-pytest-8.3.5.pyc
+|   |   |   |   |-- test_run_audit_matrix.cpython-312-pytest-8.3.5.pyc
+|   |   |   |   |-- test_run_audit_merge.cpython-312-pytest-8.3.5.pyc
+|   |   |   |   |-- test_sprint0_audit_rules.cpython-312-pytest-8.3.5.pyc
+|   |   |   |   +-- test_status_snapshot.cpython-312-pytest-8.3.5.pyc
+|   |   |   |-- fixtures/
+|   |   |   |   +-- sample_plan.csv
+|   |   |   |-- conftest.py
+|   |   |   |-- test_affected.py
+|   |   |   |-- test_attestation.py
+|   |   |   |-- test_run_audit_matrix.py
+|   |   |   |-- test_run_audit_merge.py
+|   |   |   |-- test_sprint0_audit_rules.py
+|   |   |   +-- test_status_snapshot.py
+|   |   |-- affected.py
+|   |   |-- attestation.py
+|   |   |-- commit_msg_lint.py
+|   |   |-- gitleaks_scan.py
+|   |   |-- README.md
+|   |   |-- run_audit.py
+|   |   |-- sprint0_audit.py
+|   |   |-- status_snapshot.py
+|   |   +-- tool_versions.py
+|   |-- integrations/
+|   |   |-- codex/
+|   |   |   |-- prompts/
+|   |   |   |   |-- code-review.md
+|   |   |   |   +-- test-generation.md
+|   |   |   |-- cli-config.yaml
+|   |   |   +-- test-suite.ts
+|   |   +-- jules/
+|   |       |-- workflows/
+|   |       |   +-- code-analysis.yaml
+|   |       |-- connection.yaml
+|   |       +-- test-suite.ts
+|   |-- lint/
+|   |   +-- artifact-paths.ts
+|   |-- llm_prompts/
+|   |-- perf/
+|   |   |-- benchmark.ts
+|   |   +-- lighthouse.config.js
+|   |-- plan/
+|   |   |-- .pytest_cache/
+|   |   |   |-- v/
+|   |   |   |   |-- cache/
+|   |   |   |   |   |-- lastfailed
+|   |   |   |   |   |-- nodeids
+|   |   |   |   |   +-- stepwise
+|   |   |   |   +-- randomly_seed
+|   |   |   |-- .gitignore
+|   |   |   |-- CACHEDIR.TAG
+|   |   |   +-- README.md
+|   |   |-- src/
+|   |   |   |-- __pycache__/
+|   |   |   |   +-- __init__.cpython-312.pyc
+|   |   |   |-- adapters/
+|   |   |   |   |-- __pycache__/
+|   |   |   |   |   |-- __init__.cpython-312.pyc
+|   |   |   |   |   |-- cli.cpython-312.pyc
+|   |   |   |   |   |-- csv_repository.cpython-312.pyc
+|   |   |   |   |   |-- json_writer.cpython-312.pyc
+|   |   |   |   |   +-- yaml_loader.cpython-312.pyc
+|   |   |   |   |-- __init__.py
+|   |   |   |   |-- cli.py
+|   |   |   |   |-- csv_repository.py
+|   |   |   |   |-- json_writer.py
+|   |   |   |   +-- yaml_loader.py
+|   |   |   |-- application/
+|   |   |   |   |-- __pycache__/
+|   |   |   |   |   |-- __init__.cpython-312.pyc
+|   |   |   |   |   |-- lint_plan.cpython-312.pyc
+|   |   |   |   |   +-- migrate_schema.cpython-312.pyc
+|   |   |   |   |-- __init__.py
+|   |   |   |   |-- lint_plan.py
+|   |   |   |   +-- migrate_schema.py
+|   |   |   |-- domain/
+|   |   |   |   |-- __pycache__/
+|   |   |   |   |   |-- __init__.cpython-312.pyc
+|   |   |   |   |   |-- debt.cpython-312.pyc
+|   |   |   |   |   |-- dependency_graph.cpython-312.pyc
+|   |   |   |   |   |-- task.cpython-312.pyc
+|   |   |   |   |   +-- validation_rules.cpython-312.pyc
+|   |   |   |   |-- __init__.py
+|   |   |   |   |-- debt.py
+|   |   |   |   |-- dependency_graph.py
+|   |   |   |   |-- task.py
+|   |   |   |   +-- validation_rules.py
+|   |   |   +-- __init__.py
+|   |   |-- tests/
+|   |   |   |-- __pycache__/
+|   |   |   |   +-- __init__.cpython-312.pyc
+|   |   |   |-- fixtures/
+|   |   |   |   |-- plan_with_cross_sprint.csv
+|   |   |   |   |-- plan_with_cycle.csv
+|   |   |   |   +-- sample_plan.csv
+|   |   |   |-- integration/
+|   |   |   |   |-- __pycache__/
+|   |   |   |   |   |-- __init__.cpython-312.pyc
+|   |   |   |   |   +-- test_cli.cpython-312-pytest-8.3.5.pyc
+|   |   |   |   |-- __init__.py
+|   |   |   |   +-- test_cli.py
+|   |   |   |-- unit/
+|   |   |   |   |-- __pycache__/
+|   |   |   |   |   |-- __init__.cpython-312.pyc
+|   |   |   |   |   |-- test_dependency_graph.cpython-312-pytest-8.3.5.pyc
+|   |   |   |   |   +-- test_task.cpython-312-pytest-8.3.5.pyc
+|   |   |   |   |-- __init__.py
+|   |   |   |   |-- test_dependency_graph.py
+|   |   |   |   +-- test_task.py
+|   |   |   +-- __init__.py
+|   |   |-- pyproject.toml
+|   |   +-- README.md
+|   |-- plan-linter/
+|   |   |-- config.yaml
+|   |   |-- index.js
+|   |   |-- package.json
+|   |   +-- package-lock.json
+|   |-- scripts/
+|   |   |-- lib/
+|   |   |   |-- stoa/
+|   |   |   |   |-- attestation.ts
+|   |   |   |   |-- csv-governance.ts
+|   |   |   |   |-- evidence.ts
+|   |   |   |   |-- gate-runner.ts
+|   |   |   |   |-- gate-selection.ts
+|   |   |   |   |-- index.ts
+|   |   |   |   |-- orchestrator.ts
+|   |   |   |   |-- remediation.ts
+|   |   |   |   |-- stoa-assignment.ts
+|   |   |   |   |-- types.ts
+|   |   |   |   |-- verdict.ts
+|   |   |   |   +-- waiver.ts
+|   |   |   |-- validation-utils.test.ts
+|   |   |   +-- validation-utils.ts
+|   |   |-- attest-sprint.ts
+|   |   |-- capture-validation-output.ts
+|   |   |-- check-dependencies.ts
+|   |   |-- health-check.ts
+|   |   |-- migrate-runtime-artifacts.ps1
+|   |   |-- quality-report.ts
+|   |   |-- README.md
+|   |   |-- sprint0-validation.ts
+|   |   |-- validate-env.ts
+|   |   |-- validate-sprint-data.ts
+|   |   +-- validate-turbo.ts
+|   +-- stoa/
+|       |-- matop-execute.ts
+|       |-- matop-sprint.ts
+|       +-- run-stoa.ts
+|-- .browserslistrc
+|-- .depcheckrc
+|-- .dependency-cruiser.cjs
+|-- .env.development
+|-- .env.example
+|-- .env.local.example
+|-- .env.test
+|-- .eslintrc.js
+|-- .gitignore
+|-- .gitleaks.toml
+|-- .prettierignore
+|-- audit-cutover.yml
+|-- audit-matrix.yml
+|-- CLAUDE.md
+|-- docker-compose.ollama.yml
+|-- docker-compose.sonarqube.yml
+|-- docker-compose.yml
+|-- gitleaks-report.json
+|-- intelliflow-dynamic-crm.html
+|-- knip.json
+|-- lighthouserc.js
+|-- 
+|-- package.json
+|-- PLANNING_ANALYSIS.md
+|-- playwright.config.ts
+|-- QUICK-START.md
+|-- README.md
+|-- SECURITY.md
+|-- SETUP.md
+|-- sonar-project.properties
+|-- tree_temp.txt
+|-- TRPC_QUICKSTART.md
+|-- tsconfig.json
+|-- VALIDATION.md
++-- vitest.config.ts
+
+

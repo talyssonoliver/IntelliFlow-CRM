@@ -11,11 +11,13 @@ Execute Security STOA validation for security-sensitive tasks.
 ## Arguments
 
 - `TASK_ID` (required): The task ID being validated
-- `RUN_ID` (optional): The run ID from MATOP orchestrator. If not provided, generates a new one.
+- `RUN_ID` (optional): The run ID from MATOP orchestrator. If not provided,
+  generates a new one.
 
 ## Responsibility
 
 The Security STOA owns:
+
 - Secret scanning and leak prevention
 - Dependency vulnerability auditing
 - SAST (Static Application Security Testing)
@@ -68,27 +70,28 @@ fi
 
 ## Verdict Logic
 
-| Condition | Verdict |
-|-----------|---------|
-| All gates exit 0, no HIGH/CRITICAL findings | PASS |
-| Gates pass but MEDIUM findings exist | WARN |
-| Any gate exits non-zero | FAIL |
-| HIGH/CRITICAL findings detected | FAIL |
-| Secret leak detected | FAIL (immediate) |
-| Tool misconfiguration or ambiguous results | NEEDS_HUMAN |
+| Condition                                   | Verdict          |
+| ------------------------------------------- | ---------------- |
+| All gates exit 0, no HIGH/CRITICAL findings | PASS             |
+| Gates pass but MEDIUM findings exist        | WARN             |
+| Any gate exits non-zero                     | FAIL             |
+| HIGH/CRITICAL findings detected             | FAIL             |
+| Secret leak detected                        | FAIL (immediate) |
+| Tool misconfiguration or ambiguous results  | NEEDS_HUMAN      |
 
 ## Security Finding Severity
 
-| Severity | Action |
-|----------|--------|
-| CRITICAL | Immediate FAIL, block merge |
-| HIGH | FAIL, requires fix before completion |
-| MEDIUM | WARN, create review queue entry |
-| LOW | INFO, log and continue |
+| Severity | Action                               |
+| -------- | ------------------------------------ |
+| CRITICAL | Immediate FAIL, block merge          |
+| HIGH     | FAIL, requires fix before completion |
+| MEDIUM   | WARN, create review queue entry      |
+| LOW      | INFO, log and continue               |
 
 ## Verdict Output
 
-Produce verdict file at: `artifacts/reports/system-audit/$RUN_ID/stoa-verdicts/Security.json`
+Produce verdict file at:
+`artifacts/reports/system-audit/$RUN_ID/stoa-verdicts/Security.json`
 
 ```json
 {
@@ -96,7 +99,12 @@ Produce verdict file at: `artifacts/reports/system-audit/$RUN_ID/stoa-verdicts/S
   "taskId": "<TASK_ID>",
   "verdict": "PASS|WARN|FAIL|NEEDS_HUMAN",
   "rationale": "All security gates passed with no HIGH/CRITICAL findings",
-  "toolIdsSelected": ["gitleaks", "pnpm-audit-high", "snyk", "semgrep-security-audit"],
+  "toolIdsSelected": [
+    "gitleaks",
+    "pnpm-audit-high",
+    "snyk",
+    "semgrep-security-audit"
+  ],
   "toolIdsExecuted": ["gitleaks", "pnpm-audit-high"],
   "waiversProposed": ["snyk", "semgrep-security-audit"],
   "findings": [
@@ -113,15 +121,17 @@ Produce verdict file at: `artifacts/reports/system-audit/$RUN_ID/stoa-verdicts/S
 
 ## Waiver Handling for Disabled Tools
 
-Many security tools require external setup (tokens, installations). When required but unavailable:
+Many security tools require external setup (tokens, installations). When
+required but unavailable:
 
-| Tool | Typical Waiver Reason |
-|------|----------------------|
-| `snyk` | `env_var_missing` (SNYK_TOKEN) |
-| `semgrep-security-audit` | `infrastructure_not_ready` |
-| `trivy-image` | `infrastructure_not_ready` |
+| Tool                     | Typical Waiver Reason          |
+| ------------------------ | ------------------------------ |
+| `snyk`                   | `env_var_missing` (SNYK_TOKEN) |
+| `semgrep-security-audit` | `infrastructure_not_ready`     |
+| `trivy-image`            | `infrastructure_not_ready`     |
 
 Waivers must:
+
 1. Have explicit justification
 2. Have expiry date (max 30 days)
 3. Be approved by human before task completes
@@ -136,17 +146,14 @@ import {
   writeStoaVerdict,
   createWaiverRecord,
   saveWaivers,
-  getEvidenceDir
+  getEvidenceDir,
 } from './tools/scripts/lib/stoa/index.js';
 
 const matrix = loadAuditMatrix(repoRoot);
 const evidenceDir = getEvidenceDir(repoRoot, runId);
 
 // Security-specific gates
-const securityGates = [
-  'gitleaks',
-  'pnpm-audit-high'
-];
+const securityGates = ['gitleaks', 'pnpm-audit-high'];
 
 // Check for optional gates
 if (process.env.SNYK_TOKEN) {
@@ -157,13 +164,19 @@ const results = await runGates(securityGates, {
   repoRoot,
   evidenceDir,
   matrix,
-  dryRun: false
+  dryRun: false,
 });
 
 // Create waivers for required-but-unavailable tools
 const waivers = [];
 if (!process.env.SNYK_TOKEN) {
-  waivers.push(createWaiverRecord('snyk', matrix.tools.find(t => t.id === 'snyk'), runId));
+  waivers.push(
+    createWaiverRecord(
+      'snyk',
+      matrix.tools.find((t) => t.id === 'snyk'),
+      runId
+    )
+  );
 }
 
 if (waivers.length > 0) {
@@ -173,7 +186,11 @@ if (waivers.length > 0) {
 const verdict = generateStoaVerdict(
   'Security',
   taskId,
-  { execute: securityGates, waiverRequired: waivers.map(w => w.toolId), skipped: [] },
+  {
+    execute: securityGates,
+    waiverRequired: waivers.map((w) => w.toolId),
+    skipped: [],
+  },
   results,
   waivers,
   isStrictMode()

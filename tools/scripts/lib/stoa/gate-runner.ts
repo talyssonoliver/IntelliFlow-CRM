@@ -74,11 +74,14 @@ export async function runGate(
     });
 
     // Set timeout
-    const timeoutHandle = setTimeout(() => {
-      timedOut = true;
-      proc.kill('SIGTERM');
-      setTimeout(() => proc.kill('SIGKILL'), 5000);
-    }, Math.min(timeoutMs, MAX_TIMEOUT_MS));
+    const timeoutHandle = setTimeout(
+      () => {
+        timedOut = true;
+        proc.kill('SIGTERM');
+        setTimeout(() => proc.kill('SIGKILL'), 5000);
+      },
+      Math.min(timeoutMs, MAX_TIMEOUT_MS)
+    );
 
     proc.stdout?.on('data', (data: Buffer) => {
       const text = data.toString();
@@ -201,9 +204,7 @@ export async function runGates(
     }
 
     // Calculate timeout
-    const timeoutMs = tool.timeout_seconds
-      ? tool.timeout_seconds * 1000
-      : DEFAULT_TIMEOUT_MS;
+    const timeoutMs = tool.timeout_seconds ? tool.timeout_seconds * 1000 : DEFAULT_TIMEOUT_MS;
 
     console.log(`Running gate: ${toolId}...`);
     const result = await runGate(toolId, tool.command, logPath, repoRoot, timeoutMs);
@@ -211,9 +212,7 @@ export async function runGates(
 
     // Log result
     const status = result.passed ? '✓' : '✗';
-    console.log(
-      `  ${status} ${toolId}: ${result.passed ? 'PASS' : 'FAIL'} (${result.duration}ms)`
-    );
+    console.log(`  ${status} ${toolId}: ${result.passed ? 'PASS' : 'FAIL'} (${result.duration}ms)`);
   }
 
   return results;

@@ -1,11 +1,14 @@
 # IntelliFlow CRM - Infrastructure as Code
 
-This directory contains Terraform configurations for managing IntelliFlow CRM infrastructure across multiple environments and cloud providers.
+This directory contains Terraform configurations for managing IntelliFlow CRM
+infrastructure across multiple environments and cloud providers.
 
 ## Overview
 
 The Terraform configuration provisions and manages:
-- **Supabase**: PostgreSQL database with pgvector, authentication, and real-time subscriptions
+
+- **Supabase**: PostgreSQL database with pgvector, authentication, and real-time
+  subscriptions
 - **Vercel**: Frontend and API deployments with edge functions
 - **Railway**: Backend services and worker applications
 - **Environment Variables**: Centralized secrets management across all platforms
@@ -33,6 +36,7 @@ infra/terraform/
 ## Prerequisites
 
 1. **Install Terraform** (>= 1.6.0)
+
    ```bash
    # Windows (Chocolatey)
    choco install terraform
@@ -50,7 +54,8 @@ infra/terraform/
    - Railway CLI (optional)
 
 3. **API Tokens**
-   - Supabase: Personal Access Token from https://app.supabase.com/account/tokens
+   - Supabase: Personal Access Token from
+     https://app.supabase.com/account/tokens
    - Vercel: Token from https://vercel.com/account/tokens
    - Railway: Token from https://railway.app/account/tokens
 
@@ -96,6 +101,7 @@ export TF_VAR_db_password="super-secret-password"
 ```
 
 Load the variables:
+
 ```bash
 source .env
 ```
@@ -158,10 +164,12 @@ terraform apply -var-file="environments/dev/terraform.tfvars"
 ### Environment-Specific Variables
 
 Each environment directory contains:
+
 - `terraform.tfvars`: Variable values
 - `override.tf`: Environment-specific overrides (optional)
 
 Example `environments/dev/terraform.tfvars`:
+
 ```hcl
 environment = "dev"
 project_name = "intelliflow-crm-dev"
@@ -185,9 +193,12 @@ railway_environment = "dev"
 
 ### Supabase Module
 
-**Note**: Supabase does not have an official Terraform provider. This module uses the Supabase Management API through the `restapi` provider or documents manual import procedures.
+**Note**: Supabase does not have an official Terraform provider. This module
+uses the Supabase Management API through the `restapi` provider or documents
+manual import procedures.
 
 **Features**:
+
 - Project creation and configuration
 - Database setup with pgvector extension
 - Authentication configuration
@@ -195,6 +206,7 @@ railway_environment = "dev"
 - Edge function deployment
 
 **Limitations**:
+
 - Manual project creation may be required
 - Use `terraform import` for existing projects
 
@@ -230,6 +242,7 @@ module "supabase" {
 ### Vercel Module
 
 **Features**:
+
 - Project creation and configuration
 - Domain management
 - Environment variables
@@ -264,6 +277,7 @@ module "vercel" {
 ### Railway Module
 
 **Features**:
+
 - Project and service creation
 - Environment variables management
 - Service scaling configuration
@@ -303,9 +317,11 @@ module "railway" {
 
 ### Remote State
 
-Terraform state files contain sensitive information and should NEVER be committed to git.
+Terraform state files contain sensitive information and should NEVER be
+committed to git.
 
 **Options**:
+
 1. **Terraform Cloud** (Recommended)
 2. **AWS S3** + DynamoDB for locking
 3. **Azure Blob Storage**
@@ -329,21 +345,40 @@ terraform {
 
 ## Drift Detection
 
-Drift detection identifies configuration changes made outside of Terraform.
+Drift detection identifies configuration changes made outside of Terraform
+(manual changes in Supabase/Vercel/Railway consoles).
+
+**Why Drift Matters**:
+
+- Ensures infrastructure matches code definitions
+- Prevents configuration inconsistencies
+- Detects unauthorized changes
+- Maintains reproducibility (KPI: 100% reproducible structure)
 
 ### Manual Drift Detection
 
 ```bash
-# Check for drift
+# Check for drift across all resources
 terraform plan -detailed-exitcode
 
 # Exit codes:
-# 0 = No changes
-# 1 = Error
-# 2 = Changes detected (drift)
+# 0 = No drift detected (infrastructure matches state)
+# 1 = Error occurred (configuration or authentication issue)
+# 2 = Drift detected (manual changes found)
+
+# Check drift for specific module
+terraform plan -target=module.supabase -detailed-exitcode
+terraform plan -target=module.vercel -detailed-exitcode
+terraform plan -target=module.railway -detailed-exitcode
+
+# Generate drift report
+terraform plan -detailed-exitcode -out=drift-check.tfplan
+terraform show -json drift-check.tfplan > artifacts/reports/drift-report.json
 ```
 
 ### Automated Drift Detection
+
+**Recommended Schedule**: Daily drift checks to catch manual changes early
 
 Configure in CI/CD (see `.github/workflows/terraform-drift.yml`):
 
@@ -352,37 +387,291 @@ name: Terraform Drift Detection
 
 on:
   schedule:
-    - cron: '0 8 * * *'  # Daily at 8 AM UTC
+    # Run daily at 8 AM UTC
+    - cron: '0 8 * * *'
+  # Allow manual trigger
   workflow_dispatch:
 
 jobs:
   detect-drift:
     runs-on: ubuntu-latest
+    environment: production
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
 
-      - name: Terraform Plan
+      - name: Configure AWS Credentials (for state)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Terraform Init
         run: |
-          terraform init
-          terraform plan -detailed-exitcode
-        continue-on-error: true
-        id: plan
+          cd infra/terraform
+          terraform init -backend-config="key=crm/production/terraform.tfstate"
 
-      - name: Alert on Drift
+      - name: Terraform Plan (Drift Check)
+        id: plan
+        run: |
+          cd infra/terraform
+          terraform plan -detailed-exitcode -no-color -out=drift.tfplan
+        continue-on-error: true
+        env:
+          TF_VAR_supabase_access_token: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          TF_VAR_vercel_api_token: ${{ secrets.VERCEL_API_TOKEN }}
+          TF_VAR_railway_token: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Generate Drift Report
+        if: steps.plan.outputs.exitcode == '2'
+        run: |
+          cd infra/terraform
+          terraform show -json drift.tfplan > ../../artifacts/reports/drift-report.json
+          echo "# Terraform Drift Report" >> $GITHUB_STEP_SUMMARY
+          echo "Drift detected at $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          terraform show -no-color drift.tfplan | head -100 >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload Drift Report
+        if: steps.plan.outputs.exitcode == '2'
+        uses: actions/upload-artifact@v4
+        with:
+          name: drift-report
+          path: artifacts/reports/drift-report.json
+          retention-days: 90
+
+      - name: Alert on Drift (GitHub Issue)
         if: steps.plan.outputs.exitcode == '2'
         uses: actions/github-script@v7
         with:
           script: |
-            github.rest.issues.create({
+            const fs = require('fs');
+            const driftReport = fs.readFileSync('artifacts/reports/drift-report.json', 'utf8');
+            const parsedReport = JSON.parse(driftReport);
+
+            // Extract changed resources
+            const changes = parsedReport.resource_changes || [];
+            const changedResources = changes.map(c => `- ${c.address} (${c.change.actions.join(', ')})`).join('\n');
+
+            await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: '🚨 Terraform Drift Detected',
-              body: 'Infrastructure drift detected. Please review and reconcile.'
-            })
+              title: '🚨 Terraform Drift Detected - ' + new Date().toISOString().split('T')[0],
+              labels: ['infrastructure', 'drift-detection', 'needs-review'],
+              body: `## Infrastructure Drift Detected
+
+**Detected At**: ${new Date().toUTCString()}
+**Environment**: production
+**Workflow Run**: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}
+
+### Changed Resources
+
+${changedResources}
+
+### Action Required
+
+1. Review the drift report: [Download Artifact](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
+2. Determine if changes are authorized:
+   - If authorized: Update Terraform code to match
+   - If unauthorized: Apply Terraform to revert
+3. Document decision in this issue
+4. Close issue once resolved
+
+### Next Steps
+
+\`\`\`bash
+# Review drift locally
+cd infra/terraform
+terraform plan -detailed-exitcode
+
+# Option 1: Update code (if changes are authorized)
+# Edit .tf files to match actual state
+terraform plan  # Verify no drift
+git add . && git commit -m "fix: update terraform to match infrastructure"
+
+# Option 2: Revert changes (if changes are unauthorized)
+terraform apply -auto-approve  # Revert to Terraform state
+\`\`\`
+
+**Note**: Do not close this issue until drift is resolved.`
+            });
+
+      - name: Alert on Drift (Slack)
+        if: steps.plan.outputs.exitcode == '2'
+        uses: slackapi/slack-github-action@v1
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "🚨 Terraform Drift Detected",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "🚨 Infrastructure Drift Detected"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Environment:*\nProduction"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Detected:*\n<!date^${{ github.event.repository.updated_at }}^{date_short_pretty} at {time}|timestamp>"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Infrastructure has drifted from Terraform state. Review required."
+                  },
+                  "accessory": {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "View Workflow"
+                    },
+                    "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  }
+                }
+              ]
+            }
+
+      - name: Pass or Fail
+        if: steps.plan.outputs.exitcode == '2'
+        run: |
+          echo "::error::Drift detected - infrastructure does not match Terraform state"
+          exit 1
+```
+
+### Drift Detection Strategies
+
+**1. Prevention**:
+
+- Restrict console access (use Terraform for all changes)
+- Enable audit logging in Supabase/Vercel/Railway
+- Require pull requests for all infrastructure changes
+- Use policy-as-code (Sentinel, OPA) to enforce standards
+
+**2. Detection**:
+
+- **Daily scheduled checks** (catch drift within 24 hours)
+- **Pre-deployment checks** (verify no drift before applying changes)
+- **Manual spot checks** (before major releases)
+
+**3. Resolution**:
+
+- **Authorized drift**: Update Terraform code to match actual state
+- **Unauthorized drift**: Apply Terraform to revert changes
+- **Document decision**: Record why drift occurred and how resolved
+
+### Common Drift Scenarios
+
+**Scenario 1: Environment Variable Added in Console**
+
+```bash
+# Drift detected
+terraform plan
+# Output: ~ environment_variables = {
+#           + NEW_VAR = "value"
+#         }
+
+# Resolution: Add to Terraform
+# Edit infra/terraform/main.tf
+module "vercel" {
+  environment_variables = {
+    # ... existing vars
+    NEW_VAR = var.new_var  # Add new variable
+  }
+}
+
+# Verify and apply
+terraform plan  # Should show no changes
+terraform apply
+```
+
+**Scenario 2: Storage Bucket Deleted in Console**
+
+```bash
+# Drift detected
+terraform plan
+# Output: - storage_bucket.documents
+
+# Resolution: Recreate via Terraform
+terraform apply -auto-approve
+# Bucket will be recreated with original configuration
+```
+
+**Scenario 3: Database Extension Added Manually**
+
+```bash
+# Drift detected in Supabase
+# Manual SQL: CREATE EXTENSION pg_trgm;
+
+# Resolution: Update Terraform
+# Edit modules/supabase/main.tf
+resource "null_resource" "database_extensions" {
+  provisioner "local-exec" {
+    command = "echo 'CREATE EXTENSION IF NOT EXISTS pg_trgm;' | psql ${var.db_connection_string}"
+  }
+}
+
+terraform apply
+```
+
+### Drift Detection Reporting
+
+Generate comprehensive drift reports:
+
+```bash
+# Generate JSON report
+terraform plan -detailed-exitcode -out=drift.tfplan
+terraform show -json drift.tfplan > artifacts/reports/drift-report.json
+
+# Generate human-readable report
+terraform show -no-color drift.tfplan > artifacts/reports/drift-report.txt
+
+# Extract specific drift
+jq '.resource_changes[] | select(.change.actions != ["no-op"])' artifacts/reports/drift-report.json
+
+# Count drifted resources
+jq '[.resource_changes[] | select(.change.actions != ["no-op"])] | length' artifacts/reports/drift-report.json
+```
+
+### Metrics and Monitoring
+
+Track drift detection metrics:
+
+- **Drift frequency**: How often drift is detected
+- **Time to resolution**: Time from detection to fix
+- **Drift categories**: Which services drift most often
+- **Prevention effectiveness**: Reduction in drift over time
+
+```bash
+# Example: Track drift metrics
+{
+  "timestamp": "2025-12-21T12:00:00Z",
+  "environment": "production",
+  "drift_detected": true,
+  "drifted_resources": 3,
+  "services": ["vercel", "supabase"],
+  "resolution_time_minutes": 45,
+  "resolution_method": "update_terraform"
+}
 ```
 
 ## Security Best Practices
@@ -449,12 +738,14 @@ func TestInfrastructure(t *testing.T) {
 ### Common Issues
 
 1. **State Lock Error**
+
    ```bash
    # Force unlock (use with caution)
    terraform force-unlock <lock-id>
    ```
 
 2. **Provider Authentication**
+
    ```bash
    # Verify credentials
    vercel whoami
@@ -462,6 +753,7 @@ func TestInfrastructure(t *testing.T) {
    ```
 
 3. **Resource Already Exists**
+
    ```bash
    # Import existing resource
    terraform import module.supabase.supabase_project.main <project-id>
@@ -481,6 +773,7 @@ func TestInfrastructure(t *testing.T) {
 If you have existing Supabase/Vercel/Railway resources:
 
 1. **Identify Resources**
+
    ```bash
    # List Supabase projects
    supabase projects list
@@ -493,6 +786,7 @@ If you have existing Supabase/Vercel/Railway resources:
    ```
 
 2. **Generate Import Statements**
+
    ```bash
    # Example: Import Supabase project
    terraform import module.supabase.supabase_project.main <project-ref>
@@ -522,7 +816,8 @@ See `.github/workflows/terraform.yml` for implementation.
 
 ### Current Tier Usage
 
-- **Supabase**: Free tier (500MB database, 1GB storage, 50,000 monthly active users)
+- **Supabase**: Free tier (500MB database, 1GB storage, 50,000 monthly active
+  users)
 - **Vercel**: Hobby tier (100GB bandwidth/month)
 - **Railway**: Starter tier ($5/month per service)
 
@@ -552,6 +847,7 @@ resource "grafana_alert" "db_storage" {
 ## Support
 
 For infrastructure issues:
+
 1. Check this README
 2. Review Terraform plan output
 3. Check drift detection alerts

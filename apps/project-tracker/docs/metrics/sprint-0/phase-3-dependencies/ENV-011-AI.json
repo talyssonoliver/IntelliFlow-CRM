@@ -9,16 +9,12 @@
   "phase": "phase-3-dependencies",
   "stream": null,
   "dependencies": {
-    "required": [
-      "ENV-007-AI"
-    ],
-    "verified_at": "2025-12-21T12:38:56.511Z",
+    "required": ["ENV-007-AI"],
+    "verified_at": "2025-12-21T17:57:49.236Z",
     "all_satisfied": true
   },
   "status_history": [],
-  "dependencies_resolved": [
-    "ENV-007-AI"
-  ],
+  "dependencies_resolved": ["ENV-007-AI"],
   "started_at": "2025-12-17T20:23:07.638Z",
   "completed_at": "2025-12-17T20:38:07.638Z",
   "target_duration_minutes": 300,

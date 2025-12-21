@@ -98,7 +98,7 @@ export default function AuditView() {
 
   const sortedTools = useMemo(() => {
     const keys = Object.keys(toolStatuses);
-    keys.sort();
+    keys.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
     return keys.map((k) => ({ id: k, ...toolStatuses[k] }));
   }, [toolStatuses]);
 

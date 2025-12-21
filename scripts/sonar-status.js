@@ -9,7 +9,8 @@
  * Env:
  * - SONAR_HOST_URL (default: http://localhost:9000)
  * - SONAR_PROJECT_KEY (default: IntelliFlow)
- * - SONAR_TOKEN (required)
+ * - SONAR_TOKEN (optional if admin creds are set)
+ * - SONARQUBE_ADMIN_USER + SONARQUBE_ADMIN_PASSWORD (local-only; optional)
  */
 
 import fs from 'node:fs';
@@ -78,15 +79,22 @@ const projectKeyEnv = process.env.SONAR_PROJECT_KEY;
 const SONAR_HOST_URL = hostUrlEnv || hostUrlFallback;
 const SONAR_PROJECT_KEY = projectKeyEnv || projectKeyFallback;
 const SONAR_TOKEN = process.env.SONAR_TOKEN;
+const SONARQUBE_ADMIN_USER = process.env.SONARQUBE_ADMIN_USER;
+const SONARQUBE_ADMIN_PASSWORD = process.env.SONARQUBE_ADMIN_PASSWORD;
 
-if (!SONAR_TOKEN) {
-  console.error('SONAR_TOKEN not found (set it in .env.local or your shell env).');
+const authUser = SONARQUBE_ADMIN_USER || SONAR_TOKEN;
+const authPass = SONARQUBE_ADMIN_USER ? SONARQUBE_ADMIN_PASSWORD : '';
+
+if (!authUser) {
+  console.error(
+    'No SonarQube credentials found (set SONAR_TOKEN, or SONARQUBE_ADMIN_USER + SONARQUBE_ADMIN_PASSWORD).'
+  );
   process.exit(1);
 }
 
 async function fetchJson(endpointPath) {
   const url = `${SONAR_HOST_URL}/api${endpointPath}`;
-  const auth = Buffer.from(`${SONAR_TOKEN}:`).toString('base64');
+  const auth = Buffer.from(`${authUser}:${authPass ?? ''}`).toString('base64');
 
   const res = await fetch(url, {
     method: 'GET',

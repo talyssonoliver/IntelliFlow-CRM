@@ -17,7 +17,8 @@ pnpm matop <TASK_ID> --dry-run
 
 ## Arguments
 
-- `TASK_ID` (required): The task ID from Sprint_plan.csv (e.g., ENV-001-AI, IFC-001)
+- `TASK_ID` (required): The task ID from Sprint_plan.csv (e.g., ENV-001-AI,
+  IFC-001)
 
 ## What It Does (Automatically)
 
@@ -35,14 +36,14 @@ pnpm matop <TASK_ID> --dry-run
 
 ### Lead STOA (by Task ID Prefix)
 
-| Prefix | Lead STOA |
-|--------|-----------|
-| `ENV-*` | Foundation |
-| `EP-*` | Foundation |
-| `IFC-*` | Domain |
-| `EXC-SEC-*`, `SEC-*` | Security |
+| Prefix               | Lead STOA    |
+| -------------------- | ------------ |
+| `ENV-*`              | Foundation   |
+| `EP-*`               | Foundation   |
+| `IFC-*`              | Domain       |
+| `EXC-SEC-*`, `SEC-*` | Security     |
 | `AI-*`, `AI-SETUP-*` | Intelligence |
-| `AUTOMATION-*` | Automation |
+| `AUTOMATION-*`       | Automation   |
 
 ### Supporting STOA Triggers
 
@@ -58,16 +59,17 @@ For each required STOA, spawn a focused sub-agent using the Task tool:
 ```typescript
 // Example: Spawn Foundation STOA
 Task({
-  subagent_type: "general-purpose",
+  subagent_type: 'general-purpose',
   prompt: `Execute Foundation STOA validation for task ${taskId}.
            Run /stoa-foundation ${taskId} ${runId}`,
-  description: "Foundation STOA validation"
-})
+  description: 'Foundation STOA validation',
+});
 ```
 
 ## Evidence Output
 
 All evidence is written to:
+
 ```
 artifacts/reports/system-audit/<RUN_ID>/
 ├── gate-selection.json       # Gates selected for execution
@@ -102,7 +104,11 @@ mkdir -p "artifacts/reports/system-audit/$RUN_ID"/{gates,stoa-verdicts,task-upda
 
 ```typescript
 // Use the STOA library to assign STOAs
-import { loadTaskFromCsv, assignStoas, getAllInvolvedStoas } from './tools/scripts/lib/stoa/index.js';
+import {
+  loadTaskFromCsv,
+  assignStoas,
+  getAllInvolvedStoas,
+} from './tools/scripts/lib/stoa/index.js';
 
 const task = loadTaskFromCsv(taskId, repoRoot);
 const assignment = assignStoas(task);
@@ -135,12 +141,12 @@ After all sub-agents complete:
 
 ## Consensus Rules
 
-| Condition | Final Verdict |
-|-----------|---------------|
-| Any STOA returns FAIL | FAIL |
-| Any STOA returns NEEDS_HUMAN | NEEDS_HUMAN |
-| Any STOA returns WARN (no FAIL) | WARN |
-| All STOAs return PASS | PASS |
+| Condition                       | Final Verdict |
+| ------------------------------- | ------------- |
+| Any STOA returns FAIL           | FAIL          |
+| Any STOA returns NEEDS_HUMAN    | NEEDS_HUMAN   |
+| Any STOA returns WARN (no FAIL) | WARN          |
+| All STOAs return PASS           | PASS          |
 
 ## Example
 
@@ -185,5 +191,6 @@ Claude Code (MATOP Lead):
 The MATOP orchestrator uses:
 
 - `audit-matrix.yml` - Gate definitions and thresholds
-- `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv` - Task source of truth
+- `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv` - Task source of
+  truth
 - `tools/scripts/lib/stoa/` - STOA library implementation

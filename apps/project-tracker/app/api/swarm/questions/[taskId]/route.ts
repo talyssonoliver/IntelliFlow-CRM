@@ -21,21 +21,31 @@ interface Answer {
   answer: string;
 }
 
+const QUESTION_BLOCK_RE = /\[QUESTION\]([\s\S]*?)\[\/QUESTION\]/g;
+const QUESTION_TYPE_RE = /type:\s*(codebase|agent|human)/i;
+const QUESTION_PRIORITY_RE = /priority:\s*(blocking|important|nice-to-have)/i;
+const QUESTION_CONTEXT_RE = /context:\s*(.+)/i;
+const QUESTION_TEXT_RE = /question:\s*(.+)/i;
+const QUESTION_SOURCES_RE = /suggested_sources:\s*(.+)/i;
+
+const ANSWER_QUESTION_HEADER_RE = /^##\s+Question\s+(\d+)\b/i;
+const ANSWER_SECTION_SEPARATOR_RE = /^\s*---\s*$/;
+
 // Parse [QUESTION] blocks from file content
 function parseQuestions(content: string): Question[] {
   const questions: Question[] = [];
-  const questionRegex = /\[QUESTION\]([\s\S]*?)\[\/QUESTION\]/g;
+  QUESTION_BLOCK_RE.lastIndex = 0;
   let match;
   let id = 1;
 
-  while ((match = questionRegex.exec(content)) !== null) {
+  while ((match = QUESTION_BLOCK_RE.exec(content)) !== null) {
     const block = match[1];
 
-    const typeMatch = block.match(/type:\s*(codebase|agent|human)/i);
-    const priorityMatch = block.match(/priority:\s*(blocking|important|nice-to-have)/i);
-    const contextMatch = block.match(/context:\s*(.+)/i);
-    const questionMatch = block.match(/question:\s*(.+)/i);
-    const sourcesMatch = block.match(/suggested_sources:\s*(.+)/i);
+    const typeMatch = QUESTION_TYPE_RE.exec(block);
+    const priorityMatch = QUESTION_PRIORITY_RE.exec(block);
+    const contextMatch = QUESTION_CONTEXT_RE.exec(block);
+    const questionMatch = QUESTION_TEXT_RE.exec(block);
+    const sourcesMatch = QUESTION_SOURCES_RE.exec(block);
 
     questions.push({
       id: id++,
@@ -80,6 +90,81 @@ function findQuestionFile(
   return null;
 }
 
+function sanitizeAnswerText(answerText: string): string | null {
+  const answer = answerText.trim();
+  if (!answer) return null;
+  if (answer.includes('REQUIRES HUMAN INPUT')) return null;
+
+  const normalized = answer.replace(/\s+/g, ' ').trim().toLowerCase();
+  if (normalized === '(not provided)') return null;
+
+  return answer;
+}
+
+function parseAnswerInlineText(line: string): string | null {
+  const trimmed = line.trimStart();
+  if (!trimmed.toLowerCase().startsWith('**answer')) return null;
+
+  const boldCloseIndex = trimmed.indexOf('**', 2);
+  if (boldCloseIndex <= 2) return null;
+
+  let inline = trimmed.slice(boldCloseIndex + 2).trimStart();
+  if (inline.startsWith(':')) inline = inline.slice(1).trimStart();
+  return inline;
+}
+
+function parseExistingAnswers(answersContent: string): Record<number, string> {
+  const existingAnswers: Record<number, string> = {};
+  const lines = answersContent.split(/\r?\n/);
+
+  let currentQuestionId: number | null = null;
+  let collectingAnswer = false;
+  let answerLines: string[] = [];
+
+  const flush = () => {
+    if (currentQuestionId === null || !collectingAnswer) return;
+
+    const answer = sanitizeAnswerText(answerLines.join('\n'));
+    answerLines = [];
+    collectingAnswer = false;
+    if (answer) existingAnswers[currentQuestionId] = answer;
+  };
+
+  for (const line of lines) {
+    const questionMatch = ANSWER_QUESTION_HEADER_RE.exec(line);
+    if (questionMatch?.[1]) {
+      flush();
+      currentQuestionId = Number.parseInt(questionMatch[1], 10);
+      collectingAnswer = false;
+      answerLines = [];
+      continue;
+    }
+
+    if (currentQuestionId === null) continue;
+
+    if (ANSWER_SECTION_SEPARATOR_RE.test(line)) {
+      flush();
+      currentQuestionId = null;
+      continue;
+    }
+
+    const inlineAnswer = parseAnswerInlineText(line);
+    if (inlineAnswer !== null) {
+      collectingAnswer = true;
+      answerLines = [];
+      if (inlineAnswer) answerLines.push(inlineAnswer);
+      continue;
+    }
+
+    if (collectingAnswer) {
+      answerLines.push(line);
+    }
+  }
+
+  flush();
+  return existingAnswers;
+}
+
 // GET - Get questions for a specific task
 export async function GET(request: Request, context: RouteContext) {
   try {
@@ -111,17 +196,7 @@ export async function GET(request: Request, context: RouteContext) {
 
     if (existsSync(answersFile)) {
       const answersContent = readFileSync(answersFile, 'utf-8');
-      // Parse existing answers (simple format: ## Question N followed by answer)
-      const answerMatches = answersContent.matchAll(
-        /## Question (\d+)[\s\S]*?\*\*Answer.*?\*\*:?\s*([\s\S]*?)(?=## Question|\n---|$)/g
-      );
-      for (const match of answerMatches) {
-        const qId = parseInt(match[1], 10);
-        const answer = match[2].trim();
-        if (answer && !answer.includes('REQUIRES HUMAN INPUT')) {
-          existingAnswers[qId] = answer;
-        }
-      }
+      Object.assign(existingAnswers, parseExistingAnswers(answersContent));
     }
 
     // Merge existing answers with questions

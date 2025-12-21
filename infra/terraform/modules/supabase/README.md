@@ -50,6 +50,7 @@ module "supabase" {
 ## Required Setup
 
 1. Install Supabase CLI:
+
    ```bash
    npm install -g supabase
    ```

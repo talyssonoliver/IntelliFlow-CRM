@@ -1,1 +1,0 @@
-snyk test --severity-threshold=high

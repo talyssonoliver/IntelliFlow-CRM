@@ -806,3 +806,259 @@ ANALYTICS-001:
   manual_checks:
     - description: 'Verify PM + Marketing + DA sign-off on analytics spec'
       priority: high
+
+# -----------------------------------------------------------------------------
+# SPRINT 1: Validation & Architecture Tasks
+# -----------------------------------------------------------------------------
+
+IFC-001:
+  validation_commands:
+    - command: 'test -f docs/architecture/technical-spike.md || test -d docs/planning/adr'
+      description: 'Architecture spike documentation exists'
+      type: auto
+      required: true
+    - command: 'pnpm run typecheck'
+      description: 'TypeScript compilation passes'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify architecture decisions are documented in ADRs'
+      priority: high
+
+IFC-002:
+  validation_commands:
+    - command: 'test -d packages/domain/src'
+      description: 'Domain package exists'
+      type: auto
+      required: true
+    - command: 'test -f packages/domain/src/crm/lead/Lead.ts'
+      description: 'Lead aggregate exists'
+      type: auto
+      required: true
+    - command: 'test -f packages/db/prisma/schema.prisma'
+      description: 'Prisma schema exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify DDD bounded contexts are properly defined'
+      priority: critical
+
+IFC-003:
+  validation_commands:
+    - command: 'test -d apps/api/src/modules'
+      description: 'tRPC modules directory exists'
+      type: auto
+      required: true
+    - command: 'test -f apps/api/src/trpc.ts'
+      description: 'tRPC router exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify end-to-end type safety with tRPC'
+      priority: high
+
+IFC-072:
+  validation_commands:
+    - command: 'test -f docs/security/rls-design.md || test -f docs/security/zero-trust-design.md'
+      description: 'Zero trust/RLS design documentation exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify RLS policies are designed for all core tables'
+      priority: critical
+
+IFC-073:
+  validation_commands:
+    - command: 'test -f docs/security/dpia.md'
+      description: 'DPIA document exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/security/data-flows.md'
+      description: 'Data flows documentation exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/compliance/gdpr-checklist.md'
+      description: 'GDPR checklist exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify DPIA is reviewed by DPO'
+      priority: critical
+
+IFC-074:
+  validation_commands:
+    - command: 'test -d apps/api/src/tracing'
+      description: 'Tracing module exists'
+      type: auto
+      required: true
+    - command: 'test -f apps/api/src/tracing/otel.ts'
+      description: 'OpenTelemetry configuration exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify traces are being collected'
+      priority: high
+
+IFC-075:
+  validation_commands:
+    - command: 'test -d infra/terraform'
+      description: 'Terraform directory exists'
+      type: auto
+      required: true
+    - command: 'test -f infra/terraform/main.tf || test -f infra/terraform/README.md'
+      description: 'Terraform configuration exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify Terraform plans execute successfully'
+      priority: high
+
+IFC-106:
+  validation_commands:
+    - command: 'test -d packages/application/src/ports'
+      description: 'Ports directory exists'
+      type: auto
+      required: true
+    - command: 'test -d packages/application/src/usecases'
+      description: 'Use cases directory exists'
+      type: auto
+      required: true
+    - command: 'test -d packages/adapters/src'
+      description: 'Adapters package exists'
+      type: auto
+      required: true
+    - command: 'test -d tests/architecture'
+      description: 'Architecture tests exist'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify hexagonal architecture boundaries are enforced'
+      priority: critical
+
+IFC-135:
+  validation_commands:
+    - command: 'test -f docs/planning/adr/ADR-004-multi-tenancy.md'
+      description: 'Multi-tenancy ADR exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/planning/adr/ADR-005-workflow-engine.md'
+      description: 'Workflow engine ADR exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/planning/adr/ADR-006-agent-tools.md'
+      description: 'Agent tools ADR exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/planning/adr/ADR-007-data-governance.md'
+      description: 'Data governance ADR exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/planning/adr/ADR-008-audit-logging.md'
+      description: 'Audit logging ADR exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify all ADRs are reviewed and approved'
+      priority: high
+
+GOV-001:
+  validation_commands:
+    - command: 'test -f docs/architecture/adr/000-template.md'
+      description: 'ADR template exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/architecture/arp/000-template.md'
+      description: 'ARP template exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/architecture/decision-workflow.md'
+      description: 'Decision workflow exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify governance templates are adopted by team'
+      priority: high
+
+BRAND-002:
+  validation_commands:
+    - command: 'test -f docs/design-system/token-mapping.md'
+      description: 'Token mapping document exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/design-system/theme-reference-spec.md'
+      description: 'Theme reference spec exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/design-system/token-naming.md'
+      description: 'Token naming document exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify design tokens integrate with Tailwind/shadcn'
+      priority: high
+
+SALES-001:
+  validation_commands:
+    - command: 'test -f docs/sales/pitch-deck-outline.md'
+      description: 'Pitch deck outline exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/sales/one-pager.md'
+      description: 'One-pager document exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify sales assets are reviewed by PM + Sales'
+      priority: high
+
+IFC-077:
+  validation_commands:
+    - command: 'test -f apps/api/src/middleware/rate-limit.ts'
+      description: 'Rate limiting middleware implementation exists'
+      type: auto
+      required: true
+    - command: 'test -f artifacts/misc/rate-limit-config.yaml'
+      description: 'Rate limit configuration exists'
+      type: auto
+      required: true
+    - command: 'test -f artifacts/misc/load-test-with-limits.json'
+      description: 'Load test results exist'
+      type: auto
+      required: true
+    - command: 'test -f artifacts/misc/false-positive.csv'
+      description: 'False positive analysis exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify rate limiting protects against DDoS'
+      priority: high
+    - description: 'Verify false positive rate <0.1%'
+      priority: high
+
+IFC-119:
+  validation_commands:
+    - command: 'test -f artifacts/misc/ceremony-calendar.ics'
+      description: 'Ceremony calendar exists'
+      type: auto
+      required: true
+    - command: 'test -f artifacts/misc/templates/sprint-planning.md'
+      description: 'Sprint planning template exists'
+      type: auto
+      required: true
+    - command: 'test -f artifacts/misc/templates/sprint-retrospective.md'
+      description: 'Retrospective template exists'
+      type: auto
+      required: true
+    - command: 'test -f artifacts/misc/templates/backlog-refinement.md'
+      description: 'Backlog refinement template exists'
+      type: auto
+      required: true
+    - command: 'test -f artifacts/reports/retro-action-items.md'
+      description: 'Retro action items tracker exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify sprint ceremonies are scheduled'
+      priority: medium
+    - description: 'Verify all team members have calendar invites'
+      priority: medium

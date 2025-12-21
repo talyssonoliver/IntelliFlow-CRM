@@ -1,12 +1,12 @@
 # Design Token Naming Conventions
 
-**Version:** 1.0.0
-**Last Updated:** 2025-12-20
-**Status:** Active
+**Version:** 1.0.0 **Last Updated:** 2025-12-20 **Status:** Active
 
 ## Overview
 
-This document defines the naming conventions for design tokens across the IntelliFlow CRM design system. It ensures consistency between brand tokens, CSS variables, and Tailwind utilities.
+This document defines the naming conventions for design tokens across the
+IntelliFlow CRM design system. It ensures consistency between brand tokens, CSS
+variables, and Tailwind utilities.
 
 ## Naming Philosophy
 
@@ -19,9 +19,11 @@ Design tokens follow a **three-tier naming system**:
 ## Brand Token Naming
 
 ### Location
+
 - `docs/company/brand/*.tokens.json`
 
 ### Structure
+
 ```
 {category}.{subcategory}.{variant}
 ```
@@ -29,6 +31,7 @@ Design tokens follow a **three-tier naming system**:
 ### Categories
 
 #### Colors
+
 ```json
 {
   "color": {
@@ -53,12 +56,14 @@ Design tokens follow a **three-tier naming system**:
 ```
 
 **Rules:**
+
 - Use lowercase names
 - Use hyphens for multi-word tokens
 - Include semantic meaning (primary, secondary, accent)
 - Numeric scales for neutrals (0-900)
 
 #### Typography
+
 ```json
 {
   "typography": {
@@ -81,11 +86,13 @@ Design tokens follow a **three-tier naming system**:
 ```
 
 **Rules:**
+
 - Use t-shirt sizing (xs, sm, md, lg, xl, 2xl)
 - Use descriptive names for line-height (tight, normal, relaxed)
 - Font families use generic category names (sans, mono, serif)
 
 #### Spacing
+
 ```json
 {
   "spacing": {
@@ -98,6 +105,7 @@ Design tokens follow a **three-tier naming system**:
 ```
 
 **Rules:**
+
 - Use numeric scale (0, 1, 2, 3, 4, 5, 6, 8, 10, 12)
 - Base unit is 4px (1 = 4px, 2 = 8px, etc.)
 - 0 always equals 0px
@@ -105,9 +113,11 @@ Design tokens follow a **three-tier naming system**:
 ## CSS Variable Naming
 
 ### Location
+
 - `apps/web/src/app/globals.css`
 
 ### Structure
+
 ```
 --{semantic-name}
 ```
@@ -156,11 +166,14 @@ Design tokens follow a **three-tier naming system**:
 ```
 
 **Rules:**
+
 - Use kebab-case (lowercase with hyphens)
-- Always include foreground variant for colors (`--primary` and `--primary-foreground`)
+- Always include foreground variant for colors (`--primary` and
+  `--primary-foreground`)
 - Colors are stored as HSL values: `{hue} {saturation}% {lightness}%`
 - Non-color values include units (`0.5rem`, not `0.5`)
-- Semantic names describe purpose, not appearance (use `--destructive`, not `--red`)
+- Semantic names describe purpose, not appearance (use `--destructive`, not
+  `--red`)
 
 ### Dark Mode Variables
 
@@ -173,6 +186,7 @@ Design tokens follow a **three-tier naming system**:
 ```
 
 **Rules:**
+
 - Same variable names as light mode
 - Values are inverted (dark backgrounds, light foregrounds)
 - Applied via `.dark` class on root element
@@ -180,9 +194,11 @@ Design tokens follow a **three-tier naming system**:
 ## Tailwind Utility Naming
 
 ### Location
+
 - `apps/web/tailwind.config.ts`
 
 ### Structure
+
 ```
 {property}-{semantic-name}
 ```
@@ -249,6 +265,7 @@ colors: {
 ```
 
 **Rules:**
+
 - Use semantic names (never hardcoded colors like `bg-blue-500`)
 - Always wrap CSS variables with `hsl(var(...))`
 - Use nested objects for color variants (`.DEFAULT`, `.foreground`)
@@ -257,6 +274,7 @@ colors: {
 ## Naming Best Practices
 
 ### DO
+
 - Use semantic names that describe purpose
 - Keep names consistent across all three tiers
 - Use kebab-case for CSS variables
@@ -265,6 +283,7 @@ colors: {
 - Use descriptive suffixes (`-foreground`, `-background`)
 
 ### DON'T
+
 - Use color names in semantic tokens (avoid `--blue-500`)
 - Mix naming conventions (don't use `--primaryColor`)
 - Create orphaned tokens (always include foreground if you have background)
@@ -276,6 +295,7 @@ colors: {
 ### Adding a New Semantic Color
 
 **1. Brand Token** (if needed)
+
 ```json
 {
   "color": {
@@ -287,6 +307,7 @@ colors: {
 ```
 
 **2. CSS Variable**
+
 ```css
 :root {
   --warning: 38 92% 50%;
@@ -300,6 +321,7 @@ colors: {
 ```
 
 **3. Tailwind Config**
+
 ```typescript
 colors: {
   warning: {
@@ -310,10 +332,9 @@ colors: {
 ```
 
 **4. Usage in Component**
+
 ```tsx
-<div className="bg-warning text-warning-foreground">
-  Warning message
-</div>
+<div className="bg-warning text-warning-foreground">Warning message</div>
 ```
 
 ## Migration Guidelines
@@ -348,7 +369,8 @@ colors: {
 
 All token names must pass these checks:
 
-- **Brand tokens:** Valid JSON, follows `{category}.{subcategory}.{variant}` pattern
+- **Brand tokens:** Valid JSON, follows `{category}.{subcategory}.{variant}`
+  pattern
 - **CSS variables:** Starts with `--`, uses kebab-case, has valid HSL value
 - **Tailwind utilities:** Defined in config, references valid CSS variable
 - **No orphans:** Every color has a foreground variant

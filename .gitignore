@@ -147,3 +147,19 @@ artifacts/reports/sprint-runs/
 # Temporary and backup files
 **/*.tmp
 **/*.bak
+
+# ============================================
+# Drift Prevention - Added 2025-12-21
+# ============================================
+
+# Tree generation temp files
+tree_temp.txt
+**/tree_temp.txt
+
+# Attestation timestamped outputs (keep only -latest symlink)
+artifacts/reports/attestation/sprint-*T*.json
+artifacts/reports/attestation/sprint-*T*.md
+
+# Sprint run timestamped outputs
+artifacts/reports/sprint-runs/*.json
+artifacts/reports/sprint-runs/*.md

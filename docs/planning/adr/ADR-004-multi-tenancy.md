@@ -10,15 +10,21 @@
 
 ## Context and Problem Statement
 
-IntelliFlow CRM needs to support multiple law firms (tenants) on a shared infrastructure while ensuring complete data isolation, security, and per-tenant customization. How should we implement multi-tenancy to maximize security, minimize cost, and allow tenant-specific configurations while maintaining a single codebase?
+IntelliFlow CRM needs to support multiple law firms (tenants) on a shared
+infrastructure while ensuring complete data isolation, security, and per-tenant
+customization. How should we implement multi-tenancy to maximize security,
+minimize cost, and allow tenant-specific configurations while maintaining a
+single codebase?
 
 ## Decision Drivers
 
-- **Data Isolation**: Absolute guarantee that one tenant cannot access another's data
+- **Data Isolation**: Absolute guarantee that one tenant cannot access another's
+  data
 - **Security**: Compliance with legal industry standards (GDPR, data residency)
 - **Cost Efficiency**: Shared infrastructure to minimize per-tenant costs
 - **Performance**: Query performance must not degrade with tenant growth
-- **Customization**: Support tenant-specific workflows, branding, and configurations
+- **Customization**: Support tenant-specific workflows, branding, and
+  configurations
 - **Maintenance**: Single codebase deployment for all tenants
 - **Scalability**: Support 100+ tenants on shared infrastructure
 
@@ -26,30 +32,40 @@ IntelliFlow CRM needs to support multiple law firms (tenants) on a shared infras
 
 - **Option 1**: Database-per-tenant (separate PostgreSQL database per tenant)
 - **Option 2**: Schema-per-tenant (separate PostgreSQL schema per tenant)
-- **Option 3**: Row-level isolation with Supabase RLS (tenant_id column + Row Level Security)
+- **Option 3**: Row-level isolation with Supabase RLS (tenant_id column + Row
+  Level Security)
 - **Option 4**: Hybrid approach (shared tables + tenant-specific tables)
 
 ## Decision Outcome
 
-Chosen option: "Row-level isolation with Supabase RLS", because it provides the best balance of security, cost efficiency, and simplicity. Supabase's built-in Row Level Security (RLS) policies enforce data isolation at the database level, preventing tenant data leakage even if application code has bugs. This approach works seamlessly with Prisma and requires minimal infrastructure overhead.
+Chosen option: "Row-level isolation with Supabase RLS", because it provides the
+best balance of security, cost efficiency, and simplicity. Supabase's built-in
+Row Level Security (RLS) policies enforce data isolation at the database level,
+preventing tenant data leakage even if application code has bugs. This approach
+works seamlessly with Prisma and requires minimal infrastructure overhead.
 
 ### Positive Consequences
 
-- **Database-enforced isolation**: RLS policies prevent cross-tenant queries at the database level
+- **Database-enforced isolation**: RLS policies prevent cross-tenant queries at
+  the database level
 - **Cost efficient**: Single database instance for all tenants
 - **Simple deployment**: No complex tenant provisioning or routing logic
 - **Query performance**: PostgreSQL indexes work efficiently with tenant_id
 - **Audit trail**: All queries automatically scoped to tenant via RLS
 - **Prisma integration**: Middleware automatically injects tenant_id
 - **Horizontal scaling**: Can shard by tenant_id if needed in future
-- **Backup simplicity**: Single database to backup with per-tenant restore capability
+- **Backup simplicity**: Single database to backup with per-tenant restore
+  capability
 
 ### Negative Consequences
 
-- **Performance overhead**: Every query includes tenant_id filter (mitigated by indexes)
-- **Resource contention**: Large tenants can impact small tenants (mitigated by connection pooling)
+- **Performance overhead**: Every query includes tenant_id filter (mitigated by
+  indexes)
+- **Resource contention**: Large tenants can impact small tenants (mitigated by
+  connection pooling)
 - **Schema changes**: Must coordinate schema migrations across all tenants
-- **Noisy neighbor**: One tenant's heavy load affects others (monitoring required)
+- **Noisy neighbor**: One tenant's heavy load affects others (monitoring
+  required)
 - **Limited isolation**: All tenants share same database resources
 
 ## Pros and Cons of the Options
@@ -253,10 +269,13 @@ interface TenantSettings {
 
 Test cases to verify tenant isolation:
 
-1. **Direct Query Test**: Attempt to query data with wrong tenant_id (should return empty)
+1. **Direct Query Test**: Attempt to query data with wrong tenant_id (should
+   return empty)
 2. **SQL Injection Test**: Attempt to bypass RLS with malicious tenant_id
-3. **API Test**: Use authenticated session to access other tenant's data (should fail)
-4. **Middleware Bypass Test**: Raw Prisma query without middleware (should fail with RLS)
+3. **API Test**: Use authenticated session to access other tenant's data (should
+   fail)
+4. **Middleware Bypass Test**: Raw Prisma query without middleware (should fail
+   with RLS)
 
 ### Monitoring
 
@@ -293,7 +312,8 @@ ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
 
 If multi-tenancy causes issues:
 
-1. Disable RLS policies temporarily: `ALTER TABLE <table> DISABLE ROW LEVEL SECURITY;`
+1. Disable RLS policies temporarily:
+   `ALTER TABLE <table> DISABLE ROW LEVEL SECURITY;`
 2. Remove Prisma middleware injection
 3. Fall back to single-tenant mode with fixed tenant_id
 4. Plan migration to database-per-tenant if required

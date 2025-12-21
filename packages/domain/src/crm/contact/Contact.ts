@@ -164,7 +164,10 @@ export class Contact extends AggregateRoot<ContactId> {
   }
 
   // Reconstitute from persistence
-  static reconstitute(id: ContactId, props: Omit<ContactProps, 'email'> & { email: string }): Contact {
+  static reconstitute(
+    id: ContactId,
+    props: Omit<ContactProps, 'email'> & { email: string }
+  ): Contact {
     const emailResult = Email.create(props.email);
     return new Contact(id, {
       ...props,
@@ -174,7 +177,9 @@ export class Contact extends AggregateRoot<ContactId> {
 
   // Commands
   updateContactInfo(
-    updates: Partial<Pick<ContactProps, 'firstName' | 'lastName' | 'title' | 'phone' | 'department'>>,
+    updates: Partial<
+      Pick<ContactProps, 'firstName' | 'lastName' | 'title' | 'phone' | 'department'>
+    >,
     updatedBy: string
   ): void {
     const updatedFields: string[] = [];

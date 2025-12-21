@@ -10,13 +10,21 @@
 
 ## Context and Problem Statement
 
-IntelliFlow CRM handles sensitive legal data including client information, case details, attorney-client privileged communications, and personally identifiable information (PII). We need a comprehensive data governance framework that classifies data by sensitivity, implements appropriate retention policies, supports legal hold requirements, enables Data Subject Access Requests (DSAR), and ensures compliance with GDPR, CCPA, and legal industry regulations. How should we design and implement data governance to balance security, compliance, and operational efficiency?
+IntelliFlow CRM handles sensitive legal data including client information, case
+details, attorney-client privileged communications, and personally identifiable
+information (PII). We need a comprehensive data governance framework that
+classifies data by sensitivity, implements appropriate retention policies,
+supports legal hold requirements, enables Data Subject Access Requests (DSAR),
+and ensures compliance with GDPR, CCPA, and legal industry regulations. How
+should we design and implement data governance to balance security, compliance,
+and operational efficiency?
 
 ## Decision Drivers
 
 - **Compliance**: GDPR, CCPA, attorney-client privilege, ISO 42001
 - **Data Classification**: Automatic and manual classification by sensitivity
-- **Retention Policies**: Enforce retention schedules per data type and jurisdiction
+- **Retention Policies**: Enforce retention schedules per data type and
+  jurisdiction
 - **Legal Hold**: Support litigation hold overriding retention policies
 - **DSAR**: Respond to subject access requests within 30 days
 - **Data Residency**: Support EU/US/multi-region data storage requirements
@@ -34,7 +42,12 @@ IntelliFlow CRM handles sensitive legal data including client information, case 
 
 ## Decision Outcome
 
-Chosen option: **"Built-in governance with Prisma + Supabase RLS + metadata"**, because it provides the best integration with our existing stack while maintaining full control over data handling. We will use database-level metadata columns for classification, retention policies enforced via scheduled jobs, legal hold flags to prevent deletion, and automated DSAR workflows built on tRPC. Third-party DLP tools can be added later for enhanced scanning.
+Chosen option: **"Built-in governance with Prisma + Supabase RLS + metadata"**,
+because it provides the best integration with our existing stack while
+maintaining full control over data handling. We will use database-level metadata
+columns for classification, retention policies enforced via scheduled jobs,
+legal hold flags to prevent deletion, and automated DSAR workflows built on
+tRPC. Third-party DLP tools can be added later for enhanced scanning.
 
 ### Positive Consequences
 
@@ -112,12 +125,12 @@ Built-in core + external DLP tools.
 
 Four classification levels based on sensitivity:
 
-| Tier       | Description                                       | Examples                            | Retention | Encryption |
-| ---------- | ------------------------------------------------- | ----------------------------------- | --------- | ---------- |
-| **Public** | Non-sensitive data safe for public disclosure     | Marketing content, blog posts       | 7 years   | In transit |
-| **Internal** | Internal business data (not client-confidential) | Lead data, analytics, logs          | 3 years   | At rest + transit |
-| **Confidential** | Client data and business-sensitive information | Case details, invoices, contracts   | 10 years  | At rest + transit |
-| **Privileged** | Attorney-client privileged communications       | Legal advice, case strategy, emails | Permanent | At rest + transit + field-level |
+| Tier             | Description                                      | Examples                            | Retention | Encryption                      |
+| ---------------- | ------------------------------------------------ | ----------------------------------- | --------- | ------------------------------- |
+| **Public**       | Non-sensitive data safe for public disclosure    | Marketing content, blog posts       | 7 years   | In transit                      |
+| **Internal**     | Internal business data (not client-confidential) | Lead data, analytics, logs          | 3 years   | At rest + transit               |
+| **Confidential** | Client data and business-sensitive information   | Case details, invoices, contracts   | 10 years  | At rest + transit               |
+| **Privileged**   | Attorney-client privileged communications        | Legal advice, case strategy, emails | Permanent | At rest + transit + field-level |
 
 ### Database Schema
 
@@ -428,7 +441,11 @@ const ALGORITHM = 'aes-256-gcm';
 
 export function encryptField(plaintext: string): string {
   const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipheriv(ALGORITHM, Buffer.from(ENCRYPTION_KEY, 'hex'), iv);
+  const cipher = crypto.createCipheriv(
+    ALGORITHM,
+    Buffer.from(ENCRYPTION_KEY, 'hex'),
+    iv
+  );
 
   let encrypted = cipher.update(plaintext, 'utf8', 'hex');
   encrypted += cipher.final('hex');
