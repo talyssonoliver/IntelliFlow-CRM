@@ -1,0 +1,2852 @@
+{
+  "sprint": "0",
+  "generatedAt": "2025-12-21T10:18:27.106Z",
+  "totalTasks": 35,
+  "completedTasks": 35,
+  "attestations": [
+    {
+      "taskId": "EXC-INIT-001",
+      "attestedAt": "2025-12-21T10:18:25.040Z",
+      "overallStatus": "needs_review",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: Tech Lead",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "pass",
+          "evidence": [
+            "No dependencies"
+          ]
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: Budget approved",
+            "Prereq: AI tools access",
+            "Prereq: GitHub Enterprise"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095240-76c18197"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: Setup time <4 hours total, 80% tasks automated, zero manual configuration errors",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "pass",
+          "evidence": [
+            "Found: docs/agent/setup-complete-checklist.md (sha256: 453b882ca6df...)",
+            "Found: artifacts/metrics/automation-metrics.json (sha256: 1fe1ecc0656a...)",
+            "Found: artifacts/misc/pipeline-status.yaml (sha256: ff79883c50a8...)"
+          ]
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: All automation tests passing, metrics dashboard live, zero manual interventions",
+            "MATOP run: 20251221-095240-76c18197",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 6,
+        "warned": 1,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "AI-SETUP-001",
+      "attestedAt": "2025-12-21T10:18:25.090Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: AI Specialist",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: EXC-INIT-001"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: Claude Code access",
+            "Prereq: project repository created"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095924-79acaf78"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: 100% commands functional, hooks triggering <100ms",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Found: artifacts/misc/command-test-results.csv (sha256: 5c1a084dbc38...)",
+            "Missing: .claude/commands/*"
+          ],
+          "recommendation": "Create missing artifacts: .claude/commands/*"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: All commands executable, performance <100ms verified",
+            "MATOP run: 20251221-095924-79acaf78",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 4,
+        "warned": 1,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "AI-SETUP-002",
+      "attestedAt": "2025-12-21T10:18:25.142Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: DevOps Engineer",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: AI-SETUP-001"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: GitHub Enterprise",
+            "Prereq: Copilot licenses"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095930-abe95318"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: Copilot response <2s, 100% team access, automation workflows active",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Found: docs/shared/copilot-instructions.md (sha256: 893926f94d38...)",
+            "Found: artifacts/misc/team-licenses.csv (sha256: 7f7086b29c8a...)",
+            "Found: artifacts/misc/workflow-automation.yaml (sha256: ee3d232a319b...)",
+            "Missing: .github/copilot/*"
+          ],
+          "recommendation": "Create missing artifacts: .github/copilot/*"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: Response time benchmarked, all team members verified, workflows triggered",
+            "MATOP run: 20251221-095930-abe95318",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 4,
+        "warned": 1,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "AI-SETUP-003",
+      "attestedAt": "2025-12-21T10:18:25.182Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: AI Specialist",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: AI-SETUP-001"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: API keys configured",
+            "Prereq: sandbox environments"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095940-79c35fc4"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: External tools integrated, sandboxing validated, <5s response time",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Found: artifacts/misc/sandbox-security.json (sha256: ea99de7b0d1b...)",
+            "Found: artifacts/metrics/response-metrics.csv (sha256: 5a5c709c2cc9...)",
+            "Missing: tools/integrations/codex/*",
+            "Missing: tools/integrations/jules/*"
+          ],
+          "recommendation": "Create missing artifacts: tools/integrations/codex/*, tools/integrations/jules/*"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: All integrations tested, security scan passed, performance measured",
+            "MATOP run: 20251221-095940-79c35fc4",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 4,
+        "warned": 1,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "ENV-001-AI",
+      "attestedAt": "2025-12-21T10:18:25.238Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: Tech Lead + Claude Code",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: AI-SETUP-001"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: Claude Code ready",
+            "Prereq: automation commands configured"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095311-99f2ef1d"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: Setup <10 minutes, zero manual steps, 100% best practices applied",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Found: turbo.json (sha256: 47f7cce88f72...)",
+            "Found: pnpm-workspace.yaml (sha256: 39f4b553d3f0...)",
+            "Missing: packages/*",
+            "Missing: apps/*"
+          ],
+          "recommendation": "Create missing artifacts: packages/*, apps/*"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: Structure validated, builds passing, all workspaces linked",
+            "MATOP run: 20251221-095311-99f2ef1d",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 4,
+        "warned": 1,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "ENV-002-AI",
+      "attestedAt": "2025-12-21T10:18:25.306Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: DevOps + Copilot",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: ENV-001-AI"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: Monorepo ready",
+            "Prereq: Copilot automation active"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095322-950f4b46"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: Configuration time <5 minutes, AI-suggested rules applied, zero conflicts",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Found: .eslintrc.js (sha256: 1c9d13551e89...)",
+            "Found: .prettierrc (sha256: 2d50e10ea5c2...)",
+            "Found: artifacts/misc/commitlint.config.js (sha256: e3d8554ece21...)",
+            "Found: artifacts/misc/lint-results.json (sha256: 217da10b2a0c...)",
+            "Missing: .husky/*"
+          ],
+          "recommendation": "Create missing artifacts: .husky/*"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: Linting passing, hooks executing, commits validated",
+            "MATOP run: 20251221-095322-950f4b46",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 4,
+        "warned": 1,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "ENV-003-AI",
+      "attestedAt": "2025-12-21T10:18:25.398Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: DevOps + Claude Code",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: ENV-001-AI"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq (needs verification): Docker Desktop",
+            "Prereq: Claude Code hooks active"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095338-3a7942a7"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: Environment up <2 minutes, AI-optimized resource usage, self-healing enabled",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Found: docker-compose.yml (sha256: b148dc01f387...)",
+            "Found: artifacts/misc/health-check.yaml (sha256: d5d19d4c7d9b...)",
+            "Missing: infra/docker/*"
+          ],
+          "recommendation": "Create missing artifacts: infra/docker/*"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: All containers running, resources optimized, health checks passing",
+            "MATOP run: 20251221-095338-3a7942a7",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 4,
+        "warned": 1,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "ENV-004-AI",
+      "attestedAt": "2025-12-21T10:18:25.483Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: Backend Dev + AI Agents",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: ENV-003-AI"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: Supabase account",
+            "Prereq: AI schema generation ready"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095345-12d8b7bd"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: Connection <30ms, AI-optimized indexes, 100% type safety verified",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Found: supabase/config.toml (sha256: be4b1d70dd0d...)",
+            "Found: supabase/.gitignore (sha256: 507699eb9114...)",
+            "Missing: apps/project-tracker/docs/metrics/*"
+          ],
+          "recommendation": "Create missing artifacts: apps/project-tracker/docs/metrics/*"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: Supabase initialized successfully, config.toml created, directory structure verified",
+            "MATOP run: 20251221-095345-12d8b7bd",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 4,
+        "warned": 1,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "ENV-005-AI",
+      "attestedAt": "2025-12-21T10:18:25.563Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: DevOps + Claude Code",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: ENV-002-AI"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: GitHub Actions",
+            "Prereq: AI automation hooks"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095353-e500b4cd"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: Pipeline <5 minutes, 95% cache hit rate, AI-predicted optimization applied",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "pass",
+          "evidence": [
+            "Found: .github/workflows/ci.yml (sha256: 693a84618da1...)",
+            "Found: .github/workflows/cd.yml (sha256: abbbdb51a3d2...)"
+          ]
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: Pipeline executing, cache hits >95%, optimizations measured",
+            "MATOP run: 20251221-095353-e500b4cd",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 5,
+        "warned": 1,
+        "failed": 1,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "ENV-006-AI",
+      "attestedAt": "2025-12-21T10:18:25.612Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: Backend Dev + Copilot",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: ENV-004-AI"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: Database ready",
+            "Prereq: AI schema analysis complete"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095402-26630b90"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: Migration time <15s, AI-verified indexes, 100% query optimization",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "pass",
+          "evidence": [
+            "Found: packages/db/prisma/schema.prisma (sha256: 2622efbb0ac9...)",
+            "Found: packages/db/prisma/seed.ts (sha256: ed9ce7a1489d...)"
+          ]
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: Migrations running, queries optimized, seed data loaded",
+            "MATOP run: 20251221-095402-26630b90",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 5,
+        "warned": 1,
+        "failed": 1,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "ENV-007-AI",
+      "attestedAt": "2025-12-21T10:18:25.662Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: Tech Lead + Claude Code",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: ENV-006-AI"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: Prisma ready",
+            "Prereq: AI type generation active"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095416-20e3ee6d"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: Type generation <30s, zero type errors, AI-validated contracts",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Found: apps/api/src/router.ts (sha256: 12f07615cfeb...)",
+            "Found: apps/web/src/lib/trpc.ts (sha256: 3ccae252f529...)",
+            "Missing: apps/api/src/modules/*"
+          ],
+          "recommendation": "Create missing artifacts: apps/api/src/modules/*"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: Types generated, no errors, contracts validated",
+            "MATOP run: 20251221-095416-20e3ee6d",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 4,
+        "warned": 1,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "ENV-008-AI",
+      "attestedAt": "2025-12-21T10:18:25.698Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: DevOps + AI Agents",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: ENV-005-AI"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: Monitoring tools selected",
+            "Prereq: AI analysis ready"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095425-e19431df"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: 100% services emit traces/metrics/logs",
+            "KPI: alerting configured",
+            "KPI: SLOs defined",
+            "KPI: dashboards live",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Found: artifacts/misc/otel-config.yaml (sha256: 75f9230654f5...)",
+            "Found: artifacts/misc/anomaly-detection.json (sha256: c447e7985dea...)",
+            "Found: artifacts/misc/self-healing-rules.yaml (sha256: 0d1a0b9880d2...)",
+            "Missing: infra/monitoring/alerts/*"
+          ],
+          "recommendation": "Create missing artifacts: infra/monitoring/alerts/*"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: Monitoring active, predictions accurate, healing working",
+            "MATOP run: 20251221-095425-e19431df",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 4,
+        "warned": 1,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "ENV-009-AI",
+      "attestedAt": "2025-12-21T10:18:25.762Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: Frontend Dev + Claude Code",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: ENV-001-AI"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: Design system",
+            "Prereq: AI component generation"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095437-6870e81e"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: Lighthouse >95, AI-generated components, load time <1s",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Missing: apps/web/*",
+            "Missing: apps/web/src/components/*",
+            "Missing: packages/ui/src/components/*"
+          ],
+          "recommendation": "Create missing artifacts: apps/web/*, apps/web/src/components/*, packages/ui/src/components/*"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: Lighthouse passing, components rendering, load time verified",
+            "MATOP run: 20251221-095437-6870e81e",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 4,
+        "warned": 1,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "ENV-010-AI",
+      "attestedAt": "2025-12-21T10:18:25.844Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: QA Lead + AI Testing Suite",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: ENV-007-AI,ENV-009-AI"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: AI test generation tools",
+            "Prereq: coverage targets"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095449-599d02cd"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: Coverage >95%, test generation <1 minute, AI-verified scenarios",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Found: artifacts/coverage/coverage-report.html (sha256: 8c3a1ecbb92b...)",
+            "Found: artifacts/logs/test-generation-log.json (sha256: 358191f8debd...)",
+            "Missing: tests/*",
+            "Missing: tests/e2e/*"
+          ],
+          "recommendation": "Create missing artifacts: tests/*, tests/e2e/*"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: Coverage >95%, tests passing, scenarios validated",
+            "MATOP run: 20251221-095449-599d02cd",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 4,
+        "warned": 1,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "ENV-011-AI",
+      "attestedAt": "2025-12-21T10:18:25.921Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "warn",
+          "evidence": [
+            "Owner: AI Specialist + Claude Code"
+          ],
+          "recommendation": "Run MATOP validation to confirm automated approval"
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: ENV-007-AI"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: OpenAI access",
+            "Prereq: AI chain optimization"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "warn",
+          "evidence": [
+            "DoD: LangChain AI-configured, chains AI-optimized, rate limiting AI-managed, cost prediction active"
+          ],
+          "recommendation": "Run MATOP validation to verify DoD criteria"
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "warn",
+          "evidence": [
+            "KPI: Workflow runtime P95 < 300ms per step (baseline)",
+            "KPI: cost logging enabled",
+            "KPI: deterministic replays supported"
+          ],
+          "recommendation": "Run validation to verify KPIs are still passing"
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Missing: apps/ai-worker/src/chains/*"
+          ],
+          "recommendation": "Create missing artifacts: apps/ai-worker/src/chains/*"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "warn",
+          "evidence": [
+            "Method: Chains executing, costs optimized, scaling working",
+            "MATOP run: 20251221-095510-85cebca6",
+            "Verdict: WARN"
+          ],
+          "recommendation": "Review MATOP warnings and resolve if needed"
+        }
+      },
+      "summary": {
+        "passed": 0,
+        "warned": 5,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "ENV-012-AI",
+      "attestedAt": "2025-12-21T10:18:25.985Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: Tech Writer + AI Agents",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: ENV-001-AI"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: Docusaurus setup",
+            "Prereq: AI content generation"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095522-75e1b659"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: Doc generation <30s, 100% coverage, AI readability score >90",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Found: docs/docusaurus.config.js (sha256: f310444fe9d1...)",
+            "Missing: docs/*"
+          ],
+          "recommendation": "Create missing artifacts: docs/*"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: Docs generated, coverage complete, readability high",
+            "MATOP run: 20251221-095522-75e1b659",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 4,
+        "warned": 1,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "ENV-013-AI",
+      "attestedAt": "2025-12-21T10:18:26.083Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: Security Eng + AI Security Tools",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: ENV-005-AI,ENV-007-AI,ENV-009-AI"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: Security AI tools",
+            "Prereq: threat models"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095531-b642866b"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: Zero high vulnerabilities, AI security score A+, compliance 100%",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Found: artifacts/misc/security-scan-results.json (sha256: 75fc040e376a...)",
+            "Found: artifacts/reports/compliance-report.pdf (sha256: a35414598dc4...)",
+            "Found: artifacts/logs/patch-log.csv (sha256: 709f99e30f44...)",
+            "Missing: docs/security/*"
+          ],
+          "recommendation": "Create missing artifacts: docs/security/*"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: Scan clean, score A+, compliance verified",
+            "MATOP run: 20251221-095531-b642866b",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 4,
+        "warned": 1,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "ENV-014-AI",
+      "attestedAt": "2025-12-21T10:18:26.166Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: Performance Eng + AI Tools",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: ENV-009-AI"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: Performance AI tools",
+            "Prereq: metrics defined"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095537-13457ddf"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: Performance gain >40%, AI-optimized bundles, predictive caching active",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Found: artifacts/misc/profiling-results.json (sha256: e0881b9877b9...)",
+            "Found: artifacts/logs/optimization-log.csv (sha256: c2c3a7fd6a2c...)",
+            "Found: artifacts/misc/cache-config.yaml (sha256: d218c6bf0a47...)",
+            "Missing: artifacts/performance/*"
+          ],
+          "recommendation": "Create missing artifacts: artifacts/performance/*"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: Performance improved, bundles optimized, caching active",
+            "MATOP run: 20251221-095537-13457ddf",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 4,
+        "warned": 1,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "ENV-015-AI",
+      "attestedAt": "2025-12-21T10:18:26.218Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: Backend Dev + AI Agents",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: ENV-007-AI"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: Feature flag system",
+            "Prereq: AI rollout engine"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095544-aa6643a3"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: Flag deployment <30s, AI-optimized rollout, prediction accuracy >90%",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Found: artifacts/misc/rollout-config.json (sha256: b944e610c5cc...)",
+            "Found: artifacts/misc/ab-test-results.csv (sha256: f8fed9411a5f...)",
+            "Found: artifacts/metrics/prediction-accuracy.json (sha256: 24f2456f8214...)",
+            "Missing: packages/platform/src/feature-flags/*"
+          ],
+          "recommendation": "Create missing artifacts: packages/platform/src/feature-flags/*"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: Flags deploying, rollouts optimized, predictions accurate",
+            "MATOP run: 20251221-095544-aa6643a3",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 4,
+        "warned": 1,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "ENV-016-AI",
+      "attestedAt": "2025-12-21T10:18:26.318Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: Frontend Dev + AI Analytics",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: ENV-009-AI,ANALYTICS-001"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: Analytics strategy",
+            "Prereq: AI insight engine"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095550-cff7725c"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: Feature flag framework live",
+            "KPI: audit log events captured",
+            "KPI: privacy baseline reviewed (DPIA draft)",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Found: artifacts/misc/privacy-config.json (sha256: 91c9fa819f74...)",
+            "Found: artifacts/metrics/insights-accuracy.csv (sha256: c26375337adc...)",
+            "Found: artifacts/reports/gdpr-compliance.pdf (sha256: 912d41b31bff...)",
+            "Missing: artifacts/misc/analytics/*"
+          ],
+          "recommendation": "Create missing artifacts: artifacts/misc/analytics/*"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: Analytics working, insights accurate, privacy compliant",
+            "MATOP run: 20251221-095550-cff7725c",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 4,
+        "warned": 1,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "ENV-017-AI",
+      "attestedAt": "2025-12-21T10:18:26.418Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: All Teams + AI Orchestrator",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: ENV-001-AI,ENV-003-AI,ENV-005-AI,ENV-010-AI,IFC-001"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: All components ready",
+            "Prereq: AI orchestration active"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095557-0d488159"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: Smoke + integration suite green",
+            "KPI: zero P0/P1 defects",
+            "KPI: test execution time <= 15 min in CI",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Found: artifacts/misc/test-orchestration.json (sha256: 36a5709f677c...)",
+            "Found: artifacts/logs/bug-fixes.log (sha256: 2fd2db9c481c...)",
+            "Found: artifacts/metrics/confidence-metrics.csv (sha256: 6423587d17e2...)",
+            "Missing: tests/integration/*"
+          ],
+          "recommendation": "Create missing artifacts: tests/integration/*"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: Tests passing, bugs fixed, confidence high",
+            "MATOP run: 20251221-095557-0d488159",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 4,
+        "warned": 1,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "ENV-018-AI",
+      "attestedAt": "2025-12-21T10:18:26.525Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: PM + AI Planning Tools",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: ENV-017-AI"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: Sprint 0 complete",
+            "Prereq: AI analytics ready"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095606-90dce0ab"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: Delivery metrics dashboard live (lead time, deploy frequency, change failure rate, MTTR)",
+            "KPI: forecast error <= +/-20%",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Found: artifacts/misc/velocity-prediction.json (sha256: 74e6da839f63...)",
+            "Found: artifacts/misc/capacity-model.csv (sha256: 5d2fd46e40a4...)",
+            "Found: artifacts/reports/risk-matrix.xlsx (sha256: 387abe43b43e...)",
+            "Missing: artifacts/misc/sprint-planning/*"
+          ],
+          "recommendation": "Create missing artifacts: artifacts/misc/sprint-planning/*"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: Planning optimized, velocity predicted, risks identified",
+            "MATOP run: 20251221-095606-90dce0ab",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 4,
+        "warned": 1,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "EP-001-AI",
+      "attestedAt": "2025-12-21T10:18:26.579Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: DevOps + Claude Code",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: ENV-003-AI,ENV-008-AI"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: Server provisioned",
+            "Prereq: Tailscale or Cloudflare Access configured",
+            "Prereq: EasyPanel installed"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095616-292f1741"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: Setup <30 min, zero manual SSL config, 100% services behind access control, 30-day metrics/logs retention, 7-day traces retention, OTLP push working from Railway",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Found: infra/monitoring/otel-collector.yaml (sha256: 309e3869a15e...)",
+            "Found: infra/monitoring/tempo-config.yml (sha256: 48a5698c3da8...)",
+            "Found: infra/monitoring/docker-compose.monitoring.yml (sha256: bd2a363efa90...)",
+            "Found: infra/monitoring/prometheus.yml (sha256: 138a1fd3d085...)",
+            "Found: infra/monitoring/loki-config.yml (sha256: e4f4e1732ed9...)",
+            "Found: artifacts/monitoring-config-hashes.txt (sha256: 39ae268dfb85...)",
+            "Found: docs/operations/monitoring-runbook.md (sha256: 8615349777c6...)",
+            "Missing: infra/monitoring/grafana/provisioning/*"
+          ],
+          "recommendation": "Create missing artifacts: infra/monitoring/grafana/provisioning/*"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: Health endpoints return 200, services not publicly accessible (403 or timeout), configs SHA256 hashed, audit evidence collected",
+            "MATOP run: 20251221-095616-292f1741",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 4,
+        "warned": 1,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "AUTOMATION-001",
+      "attestedAt": "2025-12-21T10:18:26.674Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: AI Specialist",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: AI-SETUP-001,AI-SETUP-002,ENV-005-AI,ENV-008-AI,ENV-010-AI"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: All AI tools integrated"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095626-8f39af0e"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: Automated task routing/notifications in place",
+            "KPI: PR/CI status surfaced",
+            "KPI: incident alerts to on-call channel",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Found: artifacts/misc/orchestration-config.yaml (sha256: c541dac92854...)",
+            "Found: artifacts/metrics/handoff-metrics.json (sha256: 0a47a4a5c5fa...)",
+            "Found: artifacts/logs/quality-gates.log (sha256: 61858858b3b9...)",
+            "Missing: artifacts/misc/agent-coordination/*"
+          ],
+          "recommendation": "Create missing artifacts: artifacts/misc/agent-coordination/*"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: Coordination working, coverage complete, handoffs smooth",
+            "MATOP run: 20251221-095626-8f39af0e",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 4,
+        "warned": 1,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "AUTOMATION-002",
+      "attestedAt": "2025-12-21T10:18:26.715Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: DevOps + AI Monitoring",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: AUTOMATION-001"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: Metrics collection active",
+            "Prereq: AI analysis ready"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095634-92d2c34e"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: DORA + quality metrics dashboard live",
+            "KPI: weekly review cadence established",
+            "KPI: action items tracked to closure",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Found: artifacts/misc/optimization-loop.yaml (sha256: 25b393b10c65...)",
+            "Found: artifacts/misc/roi-tracking.csv (sha256: e3d731a27bb2...)",
+            "Found: artifacts/metrics/metrics-realtime.json (sha256: 8f80003f6491...)",
+            "Missing: artifacts/misc/ai-dashboard/*"
+          ],
+          "recommendation": "Create missing artifacts: artifacts/misc/ai-dashboard/*"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: Dashboard live, ROI tracked, optimizations active",
+            "MATOP run: 20251221-095634-92d2c34e",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 4,
+        "warned": 1,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "IFC-000",
+      "attestedAt": "2025-12-21T10:18:26.758Z",
+      "overallStatus": "needs_review",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: CEO + CTO + CFO",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "pass",
+          "evidence": [
+            "No dependencies"
+          ]
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: Leadership alignment complete",
+            "Prereq: vision approved"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095641-d457a6ea"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: Decision confidence >80%, risks documented",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "pass",
+          "evidence": [
+            "Found: artifacts/reports/business-case.pdf (sha256: a4610cb9dc2d...)",
+            "Found: artifacts/reports/swot-analysis.xlsx (sha256: 85f6f15f963c...)",
+            "Found: artifacts/reports/financial-model.xlsx (sha256: 75eb2b22158b...)",
+            "Found: docs/planning/ADR-000-feasibility.md (sha256: b8917f55f19f...)"
+          ]
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: Leadership review complete, decision signed, risks documented",
+            "MATOP run: 20251221-095641-d457a6ea",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 6,
+        "warned": 1,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "DOC-001",
+      "attestedAt": "2025-12-21T10:18:26.800Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: CEO + All Leads",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "pass",
+          "evidence": [
+            "No dependencies"
+          ]
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: Stakeholder workshop (CEO/PM/Tech Lead)",
+            "Prereq: access to existing notes",
+            "Prereq: competitive context",
+            "Prereq: and current product scope"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095649-e5b4c9ff"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: 100% required sections filled",
+            "KPI: ≤5 open questions",
+            "KPI: referenced by agents/CI docs checks",
+            "KPI: updated_at + owner present",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Missing: docs/company/master-brief.md; docs/company/product/product-vision.md; docs/company/go-to-market/icp-personas.md; docs/company/messaging/tone-of-voice.md; docs/company/brand/visual-identity.md"
+          ],
+          "recommendation": "Create missing artifacts: docs/company/master-brief.md; docs/company/product/product-vision.md; docs/company/go-to-market/icp-personas.md; docs/company/messaging/tone-of-voice.md; docs/company/brand/visual-identity.md"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: Manual sign-off by CEO + leads; markdownlint + cspell pass on created docs; links present in CLAUDE.md/README",
+            "MATOP run: 20251221-095649-e5b4c9ff",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 5,
+        "warned": 1,
+        "failed": 1,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "BRAND-001",
+      "attestedAt": "2025-12-21T10:18:26.841Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "warn",
+          "evidence": [
+            "Owner: UX Designer + Frontend Dev"
+          ],
+          "recommendation": "Run MATOP validation to confirm automated approval"
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: DOC-001"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: Access to any existing brand assets",
+            "Prereq: decision-maker availability for final selection"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "warn",
+          "evidence": [
+            "DoD: Defined palette (primary/secondary/neutral), typography scale, spacing system, iconography guidance, and basic component styling principles",
+            "DoD: includes do/don’t examples",
+            "DoD: exported as machine-readable tokens (JSON) and documented usage guidance"
+          ],
+          "recommendation": "Run MATOP validation to verify DoD criteria"
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "warn",
+          "evidence": [
+            "KPI: Palette + type scale defined",
+            "KPI: tokens generated",
+            "KPI: 1 review iteration max",
+            "KPI: consistency checklist created"
+          ],
+          "recommendation": "Run validation to verify KPIs are still passing"
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Missing: docs/company/brand/visual-identity.md; docs/company/brand/palette.tokens.json; docs/company/brand/typography.tokens.json; docs/company/brand/spacing.tokens.json"
+          ],
+          "recommendation": "Create missing artifacts: docs/company/brand/visual-identity.md; docs/company/brand/palette.tokens.json; docs/company/brand/typography.tokens.json; docs/company/brand/spacing.tokens.json"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "warn",
+          "evidence": [
+            "Method: Design review sign-off; markdownlint/cspell pass; token files valid JSON",
+            "MATOP run: 20251221-095654-7d3775bf",
+            "Verdict: WARN"
+          ],
+          "recommendation": "Review MATOP warnings and resolve if needed"
+        }
+      },
+      "summary": {
+        "passed": 0,
+        "warned": 5,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "GTM-001",
+      "attestedAt": "2025-12-21T10:18:26.887Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: PM + Marketing",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: DOC-001"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: Access to intended market assumptions",
+            "Prereq: any existing customer discovery notes"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095658-1639b08e"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: ICP + ≥2 personas complete",
+            "KPI: ≥10 objections/answers",
+            "KPI: clear “not ICP” list",
+            "KPI: referenced by Sales assets",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Missing: docs/company/go-to-market/icp.md; docs/company/go-to-market/personas.md; docs/company/go-to-market/objections.md"
+          ],
+          "recommendation": "Create missing artifacts: docs/company/go-to-market/icp.md; docs/company/go-to-market/personas.md; docs/company/go-to-market/objections.md"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: PM + Marketing sign-off; markdownlint/cspell pass; cross-linking to master brief",
+            "MATOP run: 20251221-095658-1639b08e",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 4,
+        "warned": 1,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "GTM-002",
+      "attestedAt": "2025-12-21T10:18:26.938Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: PM + Marketing",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: GTM-001,BRAND-001"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: Approval of ICP/personas",
+            "Prereq: preliminary visual identity direction"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095703-ffcbf92a"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: Copy blocks cover all PG pages",
+            "KPI: tone guide ≤2 pages and actionable",
+            "KPI: ≤1 unresolved positioning decision",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Missing: docs/company/messaging/positioning.md; docs/company/messaging/value-props.md; docs/company/messaging/copy-blocks.md; docs/company/messaging/cta-library.md"
+          ],
+          "recommendation": "Create missing artifacts: docs/company/messaging/positioning.md; docs/company/messaging/value-props.md; docs/company/messaging/copy-blocks.md; docs/company/messaging/cta-library.md"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: PM + Marketing + CEO spot-check; markdownlint/cspell pass; links to personas",
+            "MATOP run: 20251221-095703-ffcbf92a",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 4,
+        "warned": 1,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "PM-OPS-001",
+      "attestedAt": "2025-12-21T10:18:26.968Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: Tech Lead + DevOps + Product Manager",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: AUTOMATION-001,ENV-005-AI"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: Agreement on repo workflow and tracker usage",
+            "Prereq: availability of team roles and responsibilities"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095709-03369cd6"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: WIP policy defined",
+            "KPI: ticket sizing heuristic defined",
+            "KPI: ABC coverage 100% of task types",
+            "KPI: RACI approved",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Missing: docs/operations/project-playbook.md; docs/operations/wip-policy.md; docs/operations/ticket-sizing.md; docs/operations/abc-classification.md; docs/operations/raci.md"
+          ],
+          "recommendation": "Create missing artifacts: docs/operations/project-playbook.md; docs/operations/wip-policy.md; docs/operations/ticket-sizing.md; docs/operations/abc-classification.md; docs/operations/raci.md"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: Leadership sign-off; markdownlint/cspell pass; referenced from tracker/README",
+            "MATOP run: 20251221-095709-03369cd6",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 4,
+        "warned": 1,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "ENG-OPS-001",
+      "attestedAt": "2025-12-21T10:18:27.008Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: Tech Lead + DevOps + QA Lead",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: ENV-002-AI,ENV-005-AI,ENV-010-AI"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: CI pipeline baseline",
+            "Prereq: lint/typecheck/test scripts present"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095713-131c592f"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: PR checklist adopted",
+            "KPI: gate mapping complete",
+            "KPI: rollback procedure documented",
+            "KPI: ≤1 page “fast path” summary included",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Missing: docs/operations/engineering-playbook.md; docs/operations/quality-gates.md; docs/operations/pr-checklist.md; docs/operations/release-rollback.md"
+          ],
+          "recommendation": "Create missing artifacts: docs/operations/engineering-playbook.md; docs/operations/quality-gates.md; docs/operations/pr-checklist.md; docs/operations/release-rollback.md"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: Team sign-off; markdownlint/cspell pass; PR template updated (if applicable)",
+            "MATOP run: 20251221-095713-131c592f",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 4,
+        "warned": 1,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "ANALYTICS-001",
+      "attestedAt": "2025-12-21T10:18:27.034Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: PM + DA",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: DOC-001,GTM-001"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: Access to ICP/personas",
+            "Prereq: agreement on CRM prioritization goals",
+            "Prereq: any existing analytics assumptions"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095718-5a9475ff"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: RFM/ABC spec complete",
+            "KPI: event taxonomy covers core flows",
+            "KPI: requirements mapped to ENV-016-AI + IFC-037/038",
+            "KPI: ≤5 open questions",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Missing: docs/analytics/rfm-abc-spec.md; docs/analytics/event-taxonomy.md; docs/analytics/dashboards-requirements.md"
+          ],
+          "recommendation": "Create missing artifacts: docs/analytics/rfm-abc-spec.md; docs/analytics/event-taxonomy.md; docs/analytics/dashboards-requirements.md"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: PM + Marketing + DA sign-off; markdownlint/cspell pass; traceability links to ENV-016-AI/IFC-037/038",
+            "MATOP run: 20251221-095718-5a9475ff",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 4,
+        "warned": 1,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "EXC-SEC-001",
+      "attestedAt": "2025-12-21T10:18:27.061Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "warn",
+          "evidence": [
+            "Owner: Security Eng + DevOps"
+          ],
+          "recommendation": "Run MATOP validation to confirm automated approval"
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: ENV-013-AI"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: Secrets Management tool selected",
+            "Prereq: AI access credentials secured"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "warn",
+          "evidence": [
+            "DoD: All API keys are stored in a secure vault, access is restricted via IAM/RBAC, and agents retrieve secrets programmatically."
+          ],
+          "recommendation": "Run MATOP validation to verify DoD criteria"
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "warn",
+          "evidence": [
+            "KPI: Zero secrets in code/config files, 100% programmatic access, audit log active."
+          ],
+          "recommendation": "Run validation to verify KPIs are still passing"
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "fail",
+          "evidence": [
+            "Found: artifacts/misc/vault-config.yaml (sha256: 9a0db680f464...)",
+            "Missing: infra/security/*"
+          ],
+          "recommendation": "Create missing artifacts: infra/security/*"
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "warn",
+          "evidence": [
+            "Method: Vault server running in dev mode, API accessible, root token generated",
+            "MATOP run: 20251221-095722-a7c103f9",
+            "Verdict: WARN"
+          ],
+          "recommendation": "Review MATOP warnings and resolve if needed"
+        }
+      },
+      "summary": {
+        "passed": 0,
+        "warned": 5,
+        "failed": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "taskId": "IFC-160",
+      "attestedAt": "2025-12-21T10:18:27.106Z",
+      "overallStatus": "invalid",
+      "criteria": {
+        "ownerApproval": {
+          "name": "Owner Approval",
+          "description": "Task has an assigned owner who approved completion",
+          "status": "pass",
+          "evidence": [
+            "Owner: Tech Lead + DevOps",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "dependenciesClean": {
+          "name": "Dependencies Clean",
+          "description": "All dependencies are completed and not blocking",
+          "status": "fail",
+          "evidence": [
+            "CleanDependencies: ENV-001-AI,ENV-002-AI"
+          ],
+          "recommendation": "Resolve blocking dependencies before marking complete"
+        },
+        "prerequisitesMet": {
+          "name": "Prerequisites Met",
+          "description": "All pre-requisites are satisfied",
+          "status": "warn",
+          "evidence": [
+            "Prereq: Canonical repo layout agreed",
+            "Prereq: planning templates in place"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
+        },
+        "definitionOfDoneMet": {
+          "name": "Definition of Done Met",
+          "description": "All DoD criteria are satisfied",
+          "status": "pass",
+          "evidence": [
+            "MATOP verdict: PASS",
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095729-9eba282c"
+          ]
+        },
+        "kpisPassing": {
+          "name": "KPIs Passing",
+          "description": "All KPI targets are met",
+          "status": "pass",
+          "evidence": [
+            "KPI: 0 artifact path violations on main",
+            "KPI: lint runtime <60s",
+            "KPI: 100% new PRs checked",
+            "MATOP verdict: PASS"
+          ]
+        },
+        "artifactsTracked": {
+          "name": "Artifacts Tracked",
+          "description": "All specified artifacts exist and are valid",
+          "status": "pass",
+          "evidence": [
+            "Found: docs/architecture/repo-layout.md (sha256: b545a44cba9a...)",
+            "Found: docs/architecture/artifact-conventions.md (sha256: f8dc54e4610d...)",
+            "Found: tools/lint/artifact-paths.ts (sha256: 759ec20d80dc...)",
+            "Found: .github/workflows/artifact-lint.yml (sha256: 1b2db0aa55ab...)",
+            "Found: scripts/migration/artifact-move-map.csv (sha256: 042e925d44b4...)"
+          ]
+        },
+        "validationPassing": {
+          "name": "Validation Passing",
+          "description": "Validation method executed and passing",
+          "status": "pass",
+          "evidence": [
+            "Method: Run artifact-lint in CI; introduce an invalid artifact path and confirm CI fails; review migration map completeness",
+            "MATOP run: 20251221-095729-9eba282c",
+            "Verdict: PASS"
+          ]
+        }
+      },
+      "summary": {
+        "passed": 5,
+        "warned": 1,
+        "failed": 1,
+        "skipped": 0
+      }
+    }
+  ],
+  "summary": {
+    "fullyValid": 0,
+    "needsReview": 2,
+    "invalid": 33
+  }
+}

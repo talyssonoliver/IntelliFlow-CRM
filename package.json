@@ -81,7 +81,11 @@
     "plan-lint": "cd tools/plan-linter && npm install --silent && node index.js",
     "plan-lint:verbose": "cd tools/plan-linter && npm install --silent && node index.js --verbose",
     "plan-lint:all": "cd tools/plan-linter && npm install --silent && node index.js --sprint=all",
-    "postinstall": "pnpm run db:generate"
+    "postinstall": "pnpm run db:generate",
+    "matop": "tsx tools/stoa/matop-execute.ts",
+    "matop:sprint": "tsx tools/stoa/matop-sprint.ts",
+    "attest:sprint": "tsx tools/scripts/attest-sprint.ts",
+    "attest:task": "tsx tools/scripts/attest-sprint.ts --task"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.0",
