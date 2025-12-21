@@ -1,6 +1,6 @@
 # Determina dinamicamente a raiz do repositório (2 níveis acima deste script)
 # Permite passar um caminho alternativo como primeiro argumento ao chamar o script
-$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$scriptDir = Resolve-Path -Path (Join-Path $MyInvocation.MyCommand.Path '..\..') | Select-Object -ExpandProperty Path
 $repoRoot = Resolve-Path -Path (Join-Path $scriptDir '..\..') | Select-Object -ExpandProperty Path
 $rootPath = $repoRoot
 if ($args.Count -gt 0 -and (Test-Path $args[0])) { $rootPath = (Resolve-Path $args[0]).Path }

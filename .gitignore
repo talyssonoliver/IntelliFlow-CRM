@@ -96,10 +96,8 @@ tmp/
 logs/
 *.log
 
-# Keep Sprint artifact logs under artifacts/
+# Keep artifacts/logs/ directory (but do not commit *.log files)
 !artifacts/logs/
-!artifacts/logs/**
-!artifacts/logs/**/*.log
 artifacts/logs/execution-*.log
 artifacts/logs/swarm/
 
@@ -141,6 +139,10 @@ artifacts/backups/**
 # Execution and validation logs
 **/execution-*.log
 **/validation-*.log
+
+# Generated run outputs (do not commit)
+artifacts/reports/system-audit/*/
+artifacts/reports/sprint-runs/
 
 # Temporary and backup files
 **/*.tmp

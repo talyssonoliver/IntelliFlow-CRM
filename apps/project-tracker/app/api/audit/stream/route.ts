@@ -42,6 +42,7 @@ function generateRunId(prefix: string): string {
 }
 
 function stripAnsi(input: string): string {
+  // eslint-disable-next-line no-control-regex
   return input.replace(/\x1b\[[0-9;]*m/g, '');
 }
 
@@ -78,7 +79,6 @@ function buildCommand(
   cmd: AuditStreamCommand,
   searchParams: URLSearchParams
 ): { displayName: string; runId?: string; argv: string[] } {
-  const repoRoot = getRepoRootDir();
   const python = getPythonCommand();
 
   if (cmd === 'run-audit') {

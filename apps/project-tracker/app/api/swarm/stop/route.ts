@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { spawn } from 'node:child_process';
 import { stat } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { PATHS } from '@/lib/paths';
 
 // Convert Windows path to Unix-style for Git Bash
@@ -13,7 +14,6 @@ function toUnixPath(windowsPath: string): string {
 // Get bash executable path (works on Windows and Unix)
 function getBashPath(): string {
   if (process.platform === 'win32') {
-    const { existsSync } = require('fs');
     const gitBashPaths = [
       'C:\\Program Files\\Git\\bin\\bash.exe',
       'C:\\Program Files\\Git\\usr\\bin\\bash.exe',
@@ -50,7 +50,6 @@ export async function POST() {
     }
 
     // Convert paths for Git Bash on Windows
-    const unixMetricsDir = toUnixPath(metricsDir);
     const unixSwarmManagerPath = toUnixPath(swarmManagerPath);
 
     // Run the stop command
@@ -61,14 +60,13 @@ export async function POST() {
     });
 
     let stdout = '';
-    let stderr = '';
 
     child.stdout?.on('data', (data) => {
       stdout += data.toString();
     });
 
-    child.stderr?.on('data', (data) => {
-      stderr += data.toString();
+    child.stderr?.on('data', () => {
+      // Capture stderr to prevent buffer overflow, but we don't need to use it
     });
 
     await new Promise<void>((resolve, reject) => {

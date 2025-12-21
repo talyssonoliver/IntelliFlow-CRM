@@ -1,14 +1,8 @@
-# AI performance dashboard (Sprint 0)
+# AI Performance Dashboard
 
-This directory contains baseline artifacts for **AUTOMATION-002**.
+Created: 2025-12-21T08:36:22.737Z
 
-## Sprint 0 scope
-
-- Define the dashboard spec and the optimization loop contract.
-- Track ROI and DORA/quality metrics placeholders.
-
-## Deferred scope
-
-The actual dashboard UI (Grafana/Datadog/etc) and automated optimization
-recommendations are post-Sprint 0.
-
+## Features
+- DORA metrics tracking
+- AI cost monitoring
+- Optimization recommendations

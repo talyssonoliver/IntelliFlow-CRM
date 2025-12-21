@@ -107,13 +107,13 @@ export async function GET(request: Request, context: RouteContext) {
 
     // Check if answers already exist
     const answersFile = getTaskAnswersPath(taskId);
-    let existingAnswers: Record<number, string> = {};
+    const existingAnswers: Record<number, string> = {};
 
     if (existsSync(answersFile)) {
       const answersContent = readFileSync(answersFile, 'utf-8');
       // Parse existing answers (simple format: ## Question N followed by answer)
       const answerMatches = answersContent.matchAll(
-        /## Question (\d+)[\s\S]*?\*\*Answer.*?\*\*:?\s*([\s\S]*?)(?=## Question|\n---|\Z)/g
+        /## Question (\d+)[\s\S]*?\*\*Answer.*?\*\*:?\s*([\s\S]*?)(?=## Question|\n---|$)/g
       );
       for (const match of answerMatches) {
         const qId = parseInt(match[1], 10);

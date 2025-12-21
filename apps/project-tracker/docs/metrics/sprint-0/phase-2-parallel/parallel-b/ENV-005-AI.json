@@ -8,11 +8,15 @@
   "phase": "phase-2-parallel",
   "stream": "parallel-b",
   "dependencies": {
-    "all_satisfied": false,
-    "verified_at": "2025-12-16T00:41:56Z",
-    "required": ["ENV-001-AI"]
+    "all_satisfied": true,
+    "verified_at": "2025-12-21T12:38:56.015Z",
+    "required": [
+      "ENV-002-AI"
+    ]
   },
-  "dependencies_resolved": ["ENV-001-AI"],
+  "dependencies_resolved": [
+    "ENV-002-AI"
+  ],
   "started_at": "2025-12-15T00:00:00Z",
   "completed_at": "2025-12-15T00:30:00Z",
   "target_duration_minutes": 30,
@@ -46,31 +50,11 @@
       ".github/workflows/artifact-lint.yml"
     ],
     "created": [
-      {
-        "created_at": "2025-12-16T00:41:56Z",
-        "path": ".github/workflows/ci.yml",
-        "sha256": "2e745cdb51c976641ac8462159d6c5fe238222f06552ad4eca75217735b914d6"
-      },
-      {
-        "created_at": "2025-12-16T00:41:56Z",
-        "path": ".github/workflows/pr-checks.yml",
-        "sha256": "44c07984b62764d3ef8d657af4b522e3d99b9c991f9c3086a4f62a4767472301"
-      },
-      {
-        "created_at": "2025-12-16T00:41:56Z",
-        "path": ".github/workflows/release.yml",
-        "sha256": "996a73357518ca7ebddba29db6a625b1ef844c062a497e50bb67e7c577b315d8"
-      },
-      {
-        "created_at": "2025-12-16T00:41:56Z",
-        "path": ".github/workflows/cd.yml",
-        "sha256": "abbbdb51a3d2fe9a46647daef556b61872e0b7ba2ad1b9cabe650f61362e1f98"
-      },
-      {
-        "created_at": "2025-12-16T00:41:56Z",
-        "path": ".github/workflows/artifact-lint.yml",
-        "sha256": "1b2db0aa55ab960de09a33c6a6e4fb40258d7c32852d36c382c973e3c885faab"
-      }
+      ".github/workflows/ci.yml",
+      ".github/workflows/pr-checks.yml",
+      ".github/workflows/release.yml",
+      ".github/workflows/cd.yml",
+      ".github/workflows/artifact-lint.yml"
     ],
     "missing": []
   },

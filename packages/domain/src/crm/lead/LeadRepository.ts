@@ -1,6 +1,7 @@
 import { Lead } from './Lead';
 import { LeadId } from './LeadId';
 import { Email } from './Email';
+import { DateRange } from '../../shared/QueryTypes';
 
 /**
  * Lead Repository Interface
@@ -108,11 +109,6 @@ export interface LeadStatistics {
   bySource: Record<string, number>;
   averageScore: number;
   conversionRate: number;
-}
-
-export interface DateRange {
-  start: Date;
-  end: Date;
 }
 
 export interface FunnelMetrics {

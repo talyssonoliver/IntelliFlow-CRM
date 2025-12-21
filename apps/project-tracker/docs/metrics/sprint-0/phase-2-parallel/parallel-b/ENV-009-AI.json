@@ -8,11 +8,15 @@
   "phase": "phase-2-parallel",
   "stream": "parallel-b",
   "dependencies": {
-    "all_satisfied": false,
-    "verified_at": "2025-12-16T00:41:57Z",
-    "required": ["ENV-001-AI"]
+    "all_satisfied": true,
+    "verified_at": "2025-12-21T12:38:56.371Z",
+    "required": [
+      "ENV-001-AI"
+    ]
   },
-  "dependencies_resolved": ["ENV-001-AI"],
+  "dependencies_resolved": [
+    "ENV-001-AI"
+  ],
   "target_duration_minutes": 90,
   "kpis": {
     "lighthouse_score": {
@@ -53,10 +57,47 @@
       "apps/web/package.json",
       "apps/web/tailwind.config.ts"
     ],
-    "created": [],
+    "created": [
+      "apps/web/components.json",
+      "apps/web/src/components/theme-provider.tsx",
+      "apps/web/src/components/navigation.tsx",
+      "packages/ui/src/components/label.tsx",
+      "packages/ui/src/components/form.tsx",
+      "packages/ui/src/components/table.tsx",
+      "packages/ui/src/components/data-table.tsx",
+      "packages/ui/src/index.ts",
+      "apps/web/src/app/layout.tsx",
+      "apps/web/src/app/dashboard/page.tsx",
+      "packages/ui/package.json",
+      "apps/web/package.json",
+      "apps/web/tailwind.config.ts"
+    ],
     "missing": []
   },
-  "validations": [],
+  "validations": [
+    {
+      "name": "Next.js configuration exists",
+      "command": "test -f apps/web/next.config.js || test -f apps/web/next.config.ts || test -f apps/web/next.config.mjs",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-21T08:36:22.649Z",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_hash": "sha256:RU5WLTAwOS1BSS1OZXh0LmpzIGNvbmZp",
+      "notes": "Validation passed"
+    },
+    {
+      "name": "Next.js package.json exists",
+      "command": "test -f apps/web/package.json",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-21T08:36:22.649Z",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_hash": "sha256:RU5WLTAwOS1BSS1OZXh0LmpzIHBhY2th",
+      "notes": "Validation passed"
+    }
+  ],
   "blockers": [],
   "section": "Environment Setup",
   "status_history": [

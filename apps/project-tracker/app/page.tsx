@@ -337,8 +337,8 @@ export default function Home() {
             {currentPage === 'analytics' && (
               <AnalyticsView tasks={filteredTasks} sections={sections} />
             )}
-            {currentPage === 'metrics' && <MetricsView />}
-            {currentPage === 'governance' && <GovernanceView />}
+            {currentPage === 'metrics' && <MetricsView selectedSprint={currentSprint} />}
+            {currentPage === 'governance' && <GovernanceView selectedSprint={currentSprint} />}
             {currentPage === 'audit' && <AuditView />}
             {currentPage === 'settings' && <SettingsView />}
           </>

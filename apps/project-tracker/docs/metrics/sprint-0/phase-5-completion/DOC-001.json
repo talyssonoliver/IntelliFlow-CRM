@@ -9,14 +9,14 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": null,
+    "verified_at": "2025-12-21T12:38:57.079Z",
     "required": []
   },
   "dependencies_resolved": [],
-  "started_at": null,
-  "completed_at": null,
+  "started_at": "2025-12-21T07:06:10.526Z",
+  "completed_at": "2025-12-21T07:21:10.526Z",
   "target_duration_minutes": null,
-  "actual_duration_minutes": null,
+  "actual_duration_minutes": 15,
   "artifacts": {
     "expected": [
       "docs/company/master-brief.md",
@@ -25,7 +25,13 @@
       "docs/company/messaging/tone-of-voice.md",
       "docs/company/brand/visual-identity.md"
     ],
-    "created": [],
+    "created": [
+      "docs/company/master-brief.md",
+      "docs/company/product/product-vision.md",
+      "docs/company/go-to-market/icp-personas.md",
+      "docs/company/messaging/tone-of-voice.md",
+      "docs/company/brand/visual-identity.md"
+    ],
     "missing": []
   },
   "validations": [

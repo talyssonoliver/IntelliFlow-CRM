@@ -1,0 +1,163 @@
+# IntelliFlow CRM - Pitch Deck Design Source
+
+## Current Status
+
+**Status**: Placeholder - Design source TBD
+**Last Updated**: 2025-12-20
+**Owner**: PM + Sales Team + Design Team
+
+---
+
+## Design Source Link
+
+**Platform**: TBD (Figma or Canva recommended)
+**URL**: [To be added by design team]
+
+**Options**:
+1. **Figma** (recommended for design teams)
+   - Full design system integration
+   - Component library with brand tokens
+   - Collaboration and version control
+   - Export to PDF/PowerPoint
+
+2. **Canva** (recommended for quick iteration)
+   - Template-based approach
+   - Easy for non-designers to edit
+   - Quick export options
+   - Good for persona-specific variants
+
+---
+
+## Deliverables Required
+
+### Primary Deck
+- **Format**: 12-slide master deck
+- **Outputs**: PDF + editable source (Figma/Canva)
+- **Content**: Follow outline in `docs/sales/pitch-deck-outline.md`
+- **Design**: Follow guidelines in `docs/company/brand/visual-identity.md`
+
+### Persona Variants
+Create 4 customized versions targeting:
+1. **Founder/GM**: Emphasize business impact, ROI, predictable execution
+2. **Sales Lead**: Focus on features, UX, time savings
+3. **RevOps/Ops**: Deep dive on governance, validation, data quality
+4. **Engineering Lead**: Technical stack, architecture, observability
+
+### Supporting Materials
+- Speaker notes for each slide
+- Demo flow recommendations
+- Objection handling guide
+- Appendix slides (optional)
+
+---
+
+## Design Requirements
+
+### Visual Style
+- **Brand Attributes**: Modern, reliable, technical but approachable
+- **Color Palette**: Use semantic tokens from `docs/company/brand/palette.tokens.json`
+- **Typography**: Use tokens from `docs/company/brand/typography.tokens.json`
+- **Spacing**: Use tokens from `docs/company/brand/spacing.tokens.json`
+
+### Layout Guidelines
+- Generous white space
+- Left-align text for readability
+- Maximum 3-4 bullet points per slide
+- Visual hierarchy: headline → subheadline → body → CTA
+- Slide template with consistent header/footer
+- Logo placement (top left or bottom right)
+- Slide numbers for navigation
+
+### Content Guidelines
+- Follow slide-by-slide outline in `pitch-deck-outline.md`
+- Include persona-specific talking points
+- Reference objection handling from `docs/company/go-to-market/objections.md`
+- Use copy blocks from `docs/company/messaging/copy-blocks.md`
+- CTAs from `docs/company/messaging/cta-library.md`
+
+---
+
+## Timeline
+
+**Total**: ~2 weeks to final deck
+
+1. **Design Draft**: 1 week
+   - Create master deck following outline
+   - Apply brand guidelines
+   - Add visual elements and diagrams
+
+2. **Internal Review**: 3-5 days
+   - PM + Sales Team review
+   - Gather feedback
+   - Test with sample personas
+
+3. **Revisions**: 2-3 days
+   - Incorporate feedback
+   - Refine visuals and messaging
+   - Create persona variants
+
+4. **Final Approval**: 1 day
+   - Final sign-off
+   - Export all formats
+   - Distribute to sales team
+
+---
+
+## References
+
+### Content Sources
+- Pitch Deck Outline: `docs/sales/pitch-deck-outline.md`
+- One-Pager: `docs/sales/one-pager.md`
+- Positioning: `docs/company/messaging/positioning.md`
+- Value Props: `docs/company/messaging/value-props.md`
+- Copy Blocks: `docs/company/messaging/copy-blocks.md`
+- Personas: `docs/company/go-to-market/personas.md`
+- Objections: `docs/company/go-to-market/objections.md`
+
+### Design Sources
+- Visual Identity: `docs/company/brand/visual-identity.md`
+- Color Palette: `docs/company/brand/palette.tokens.json`
+- Typography: `docs/company/brand/typography.tokens.json`
+- Spacing: `docs/company/brand/spacing.tokens.json`
+
+### Project Context
+- Sprint Plan: `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`
+- ICP Definition: `docs/company/go-to-market/icp.md`
+- Technical Stack: `CLAUDE.md` (Architecture Principles section)
+
+---
+
+## Next Actions
+
+**For Design Team**:
+1. Choose design platform (Figma vs. Canva)
+2. Create account/workspace if needed
+3. Import brand tokens and create design system
+4. Begin master deck design following outline
+5. Share link in this file once created
+
+**For PM + Sales Team**:
+1. Review pitch deck outline for accuracy
+2. Identify any missing content or slides
+3. Prepare demo environment for screenshots
+4. Schedule internal review meeting
+5. Brief design team on priorities and timeline
+
+---
+
+## Contact
+
+**Questions or feedback**:
+- PM: [Contact info TBD]
+- Sales Lead: [Contact info TBD]
+- Design Team: [Contact info TBD]
+
+---
+
+**Update this file** with the actual design source URL once created.
+
+**Format**: Replace "[To be added by design team]" above with:
+- Platform: Figma/Canva
+- URL: [Direct link to editable source]
+- Access: Instructions for team members to access/edit
+- Version: Track major revisions

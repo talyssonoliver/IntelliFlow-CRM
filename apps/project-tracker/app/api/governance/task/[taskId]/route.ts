@@ -27,7 +27,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ task
     // Find debt items related to this task
     const debtItems = debtLedger?.items
       ? Object.entries(debtLedger.items)
-          .filter(([_, item]) => item.origin_task === taskId)
+          .filter(([, item]) => item.origin_task === taskId)
           .map(([key, item]) => ({ ...item, id: key }))
       : [];
 

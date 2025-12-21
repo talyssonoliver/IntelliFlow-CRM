@@ -9,7 +9,7 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { router, protectedProcedure } from '../../server';
+import { createTRPCRouter, protectedProcedure } from '../../trpc';
 import {
   createAccountSchema,
   updateAccountSchema,
@@ -17,7 +17,7 @@ import {
   idSchema,
 } from '@intelliflow/validators/account';
 
-export const accountRouter = router({
+export const accountRouter = createTRPCRouter({
   /**
    * Create a new account
    */

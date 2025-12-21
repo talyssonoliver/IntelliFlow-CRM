@@ -9,7 +9,7 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { router, protectedProcedure } from '../../server';
+import { createTRPCRouter, protectedProcedure } from '../../trpc';
 import {
   createContactSchema,
   updateContactSchema,
@@ -17,7 +17,7 @@ import {
   idSchema,
 } from '@intelliflow/validators/contact';
 
-export const contactRouter = router({
+export const contactRouter = createTRPCRouter({
   /**
    * Create a new contact
    */

@@ -47,14 +47,22 @@ apps/
 |   |   |   |   +-- contact.router.ts
 |   |   |   |-- lead/
 |   |   |   |   +-- lead.router.ts
+|   |   |   |-- misc/
+|   |   |   |   |-- health.router.ts
+|   |   |   |   +-- system.router.ts
 |   |   |   |-- opportunity/
 |   |   |   |   +-- opportunity.router.ts
 |   |   |   +-- task/
 |   |   |       +-- task.router.ts
+|   |   |-- shared/
+|   |   |   |-- e2e-type-safety-test.ts
+|   |   |   |-- performance-benchmark.ts
+|   |   |   +-- subscription-demo.ts
 |   |   |-- context.ts
 |   |   |-- index.ts
 |   |   |-- router.ts
-|   |   +-- server.ts
+|   |   |-- server.ts
+|   |   +-- trpc.ts
 |   |-- package.json
 |   |-- README.md
 |   +-- tsconfig.json
@@ -170,13 +178,18 @@ apps/
 |   |   |   +-- specifications/
 |   |   |-- artifacts/
 |   |   |   |-- contexts/
+|   |   |   |   +-- .gitkeep
 |   |   |   |-- qualitative-reviews/
+|   |   |   |   +-- .gitkeep
 |   |   |   |-- reports/
+|   |   |   |   +-- .gitkeep
 |   |   |   |-- status/
+|   |   |   |   +-- .gitkeep
 |   |   |   |-- validation/
+|   |   |   |   +-- .gitkeep
 |   |   |   |-- work/
-|   |   |   |-- blockers.json
-|   |   |   +-- human-intervention-required.json
+|   |   |   |   +-- .gitkeep
+|   |   |   +-- .gitkeep
 |   |   |-- docs/
 |   |   |   +-- references/
 |   |   |-- logs/
@@ -233,13 +246,20 @@ apps/
 |   |   |   |   |   |-- ENV-016-AI.json
 |   |   |   |   |   +-- EP-001-AI.json
 |   |   |   |   |-- phase-4-final-setup/
+|   |   |   |   |   |-- _phase-summary.json
 |   |   |   |   |   +-- ENV-017-AI.json
-|   |   |   |   |-- phase-4-integration/
-|   |   |   |   |   +-- _phase-summary.json
 |   |   |   |   |-- phase-5-completion/
+|   |   |   |   |   |-- _phase-summary.json
+|   |   |   |   |   |-- ANALYTICS-001.json
 |   |   |   |   |   |-- AUTOMATION-001.json
 |   |   |   |   |   |-- AUTOMATION-002.json
-|   |   |   |   |   +-- ENV-018-AI.json
+|   |   |   |   |   |-- BRAND-001.json
+|   |   |   |   |   |-- DOC-001.json
+|   |   |   |   |   |-- ENG-OPS-001.json
+|   |   |   |   |   |-- ENV-018-AI.json
+|   |   |   |   |   |-- GTM-001.json
+|   |   |   |   |   |-- GTM-002.json
+|   |   |   |   |   +-- PM-OPS-001.json
 |   |   |   |   +-- _summary.json
 |   |   |   |-- plan-overrides.yaml
 |   |   |   |-- plan-remediation.csv

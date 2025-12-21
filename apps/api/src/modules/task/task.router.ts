@@ -9,7 +9,7 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { router, protectedProcedure } from '../../server';
+import { createTRPCRouter, protectedProcedure } from '../../trpc';
 import {
   createTaskSchema,
   updateTaskSchema,
@@ -18,7 +18,7 @@ import {
   idSchema,
 } from '@intelliflow/validators/task';
 
-export const taskRouter = router({
+export const taskRouter = createTRPCRouter({
   /**
    * Create a new task
    */

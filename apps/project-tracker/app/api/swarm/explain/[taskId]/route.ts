@@ -58,14 +58,13 @@ export async function GET(request: Request, context: RouteContext) {
       });
 
       let stdout = '';
-      let stderr = '';
 
       child.stdout?.on('data', (data) => {
         stdout += data.toString();
       });
 
-      child.stderr?.on('data', (data) => {
-        stderr += data.toString();
+      child.stderr?.on('data', () => {
+        // Capture stderr but don't use it - just prevent buffer overflow
       });
 
       child.on('close', (code) => {
@@ -76,6 +75,7 @@ export async function GET(request: Request, context: RouteContext) {
         const cleanStdout = stdout
           .trim()
           .replace(/\r/g, '')
+          // eslint-disable-next-line no-control-regex
           .replace(/\x1b\[[0-9;]*m/g, '');
 
         resolve(

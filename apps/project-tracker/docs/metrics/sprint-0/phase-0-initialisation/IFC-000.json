@@ -6,7 +6,7 @@
   "owner": "CEO + CTO + CFO",
   "dependencies": {
     "required": [],
-    "verified_at": "2025-12-14T10:00:00Z",
+    "verified_at": "2025-12-21T12:38:57.020Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -39,15 +39,38 @@
       "artifacts/reports/financial-model.xlsx",
       "docs/planning/ADR-000-feasibility.md"
     ],
-    "created": [],
-    "missing": [
+    "created": [
       "artifacts/reports/business-case.pdf",
       "artifacts/reports/swot-analysis.xlsx",
       "artifacts/reports/financial-model.xlsx",
       "docs/planning/ADR-000-feasibility.md"
-    ]
+    ],
+    "missing": []
   },
-  "validations": [],
+  "validations": [
+    {
+      "name": "Business case or feasibility study documented",
+      "command": "test -f docs/planning/business-case.md || test -f docs/planning/feasibility-study.md",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-21T08:36:22.637Z",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_hash": "sha256:SUZDLTAwMC1CdXNpbmVzcyBjYXNlIG9y",
+      "notes": "Validation passed"
+    },
+    {
+      "name": "Planning analysis exists",
+      "command": "test -f PLANNING_ANALYSIS.md",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-21T08:36:22.637Z",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_hash": "sha256:SUZDLTAwMC1QbGFubmluZyBhbmFseXNp",
+      "notes": "Validation passed"
+    }
+  ],
   "kpis": {
     "decision_confidence": {
       "target": 80,

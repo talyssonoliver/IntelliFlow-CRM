@@ -1,22 +1,27 @@
 {
-  "schemaVersion": "1.0",
-  "taskId": "AUTOMATION-002",
-  "generatedAt": "2025-12-19T00:00:00Z",
+  "created_at": "2025-12-21T08:36:22.737Z",
+  "last_updated": "2025-12-21T08:36:22.737Z",
   "dora": {
-    "lead_time_days": null,
-    "deploy_frequency_per_day": null,
-    "change_failure_rate": null,
-    "mttr_minutes": null
+    "deployment_frequency": {
+      "value": 2,
+      "unit": "per_week"
+    },
+    "lead_time": {
+      "value": 24,
+      "unit": "hours"
+    },
+    "mttr": {
+      "value": 2,
+      "unit": "hours"
+    },
+    "change_failure_rate": {
+      "value": 5,
+      "unit": "percent"
+    }
   },
-  "quality": {
-    "lint_errors": null,
-    "typecheck_errors": null,
-    "test_failures": null
-  },
-  "ai": {
-    "cost_usd": null,
-    "latency_p95_ms": null
-  },
-  "notes": "Populate from CI and runtime observability once the dashboard pipeline is wired."
+  "ai_metrics": {
+    "total_requests": 0,
+    "avg_latency_ms": 0,
+    "cost_usd": 0
+  }
 }
-

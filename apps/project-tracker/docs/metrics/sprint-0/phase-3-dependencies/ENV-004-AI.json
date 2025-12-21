@@ -5,8 +5,10 @@
   "description": "Supabase Integration with Automated Schema Design",
   "owner": "Backend Dev + AI Agents",
   "dependencies": {
-    "required": ["ENV-003-AI"],
-    "verified_at": "2025-12-14T23:35:00Z",
+    "required": [
+      "ENV-003-AI"
+    ],
+    "verified_at": "2025-12-21T12:38:55.951Z",
     "all_satisfied": true,
     "notes": "ENV-003-AI completed - Docker containers healthy, proceeding with schema setup"
   },
@@ -40,26 +42,9 @@
       "infra/supabase/config.toml"
     ],
     "created": [
-      {
-        "path": "infra/supabase/config.toml",
-        "sha256": "32adbbe238c8335338722e42580efe81d1d04ee34833da9742b44734a280a8ff",
-        "created_at": "2025-12-14T23:11:00Z"
-      },
-      {
-        "path": "infra/supabase/migrations/20250101000000_initial_schema.sql",
-        "sha256": "627c18708e5a1c5d222edc61d31782b9830463fa6ef924dc1b4c6dd4d066076e",
-        "created_at": "2025-12-14T23:11:00Z"
-      },
-      {
-        "path": "infra/supabase/rls-policies.sql",
-        "sha256": "2f737be743ce17e48ee9edb2fefdf99570b2e11c6f9da53e8d42a36a4a97e8a8",
-        "created_at": "2025-12-14T23:11:00Z"
-      },
-      {
-        "path": "artifacts/logs/supabase-migration-test.log",
-        "sha256": "647bd0b8d27bce2a390ff7d2f372ca1dae2448b99c5c66bb2389e3601744e8d3",
-        "created_at": "2025-12-14T23:40:00Z"
-      }
+      "supabase/config.toml",
+      "supabase/.gitignore",
+      "infra/supabase/config.toml"
     ],
     "missing": []
   },
@@ -164,5 +149,8 @@
   "notes": "Full schema deployed to both dev (port 5432) and test (port 5433) databases. pgvector v0.6.0+ working with 1536-dimension embeddings. 9 CRM tables with AI scoring support. Vector similarity search functions operational. All foreign keys, indexes, and triggers in place.",
   "completed_at": "2025-12-16T04:28:03.319Z",
   "started_at": "2025-12-16T04:13:03.320Z",
-  "actual_duration_minutes": 15
+  "actual_duration_minutes": 15,
+  "dependencies_resolved": [
+    "ENV-003-AI"
+  ]
 }

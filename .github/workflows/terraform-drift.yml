@@ -1,0 +1,241 @@
+name: Terraform Drift Detection
+
+on:
+  schedule:
+    # Run daily at 8 AM UTC
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to check for drift'
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - production
+          - all
+
+env:
+  TF_VERSION: '1.6.0'
+  TF_WORKING_DIR: 'infra/terraform'
+
+jobs:
+  detect-drift:
+    name: Detect Drift - ${{ matrix.environment }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: ${{ github.event.inputs.environment == 'all' && fromJSON('["dev", "staging", "production"]') || fromJSON(format('["{0}"]', github.event.inputs.environment || 'dev')) }}
+      fail-fast: false
+    environment: ${{ matrix.environment }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          terraform init \
+            -backend-config="key=crm/${{ matrix.environment }}/terraform.tfstate"
+
+      - name: Terraform Refresh
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        env:
+          TF_VAR_supabase_access_token: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          TF_VAR_vercel_api_token: ${{ secrets.VERCEL_API_TOKEN }}
+          TF_VAR_railway_token: ${{ secrets.RAILWAY_TOKEN }}
+          TF_VAR_supabase_db_password: ${{ secrets.DB_PASSWORD }}
+          TF_VAR_environment: ${{ matrix.environment }}
+        run: terraform refresh -var-file="environments/${{ matrix.environment }}/terraform.tfvars"
+
+      - name: Terraform Plan (Drift Check)
+        id: drift_check
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        env:
+          TF_VAR_supabase_access_token: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          TF_VAR_vercel_api_token: ${{ secrets.VERCEL_API_TOKEN }}
+          TF_VAR_railway_token: ${{ secrets.RAILWAY_TOKEN }}
+          TF_VAR_supabase_db_password: ${{ secrets.DB_PASSWORD }}
+          TF_VAR_environment: ${{ matrix.environment }}
+        continue-on-error: true
+        run: |
+          terraform plan \
+            -var-file="environments/${{ matrix.environment }}/terraform.tfvars" \
+            -detailed-exitcode \
+            -no-color | tee drift-check.txt
+
+          # Capture exit code
+          echo "exitcode=$?" >> $GITHUB_OUTPUT
+
+      - name: Parse Drift Results
+        id: parse_drift
+        if: always()
+        run: |
+          EXIT_CODE=${{ steps.drift_check.outputs.exitcode }}
+
+          if [ "$EXIT_CODE" -eq "0" ]; then
+            echo "status=no-drift" >> $GITHUB_OUTPUT
+            echo "message=No drift detected" >> $GITHUB_OUTPUT
+          elif [ "$EXIT_CODE" -eq "1" ]; then
+            echo "status=error" >> $GITHUB_OUTPUT
+            echo "message=Error occurred during drift detection" >> $GITHUB_OUTPUT
+          elif [ "$EXIT_CODE" -eq "2" ]; then
+            echo "status=drift-detected" >> $GITHUB_OUTPUT
+            echo "message=Drift detected" >> $GITHUB_OUTPUT
+
+            # Count affected resources
+            RESOURCE_COUNT=$(grep -c "# " ${{ env.TF_WORKING_DIR }}/drift-check.txt || echo "0")
+            echo "resource_count=$RESOURCE_COUNT" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload Drift Report
+        if: steps.parse_drift.outputs.status == 'drift-detected'
+        uses: actions/upload-artifact@v4
+        with:
+          name: drift-report-${{ matrix.environment }}-${{ github.run_number }}
+          path: ${{ env.TF_WORKING_DIR }}/drift-check.txt
+
+      - name: Create Issue on Drift
+        if: steps.parse_drift.outputs.status == 'drift-detected'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const driftReport = fs.readFileSync('${{ env.TF_WORKING_DIR }}/drift-check.txt', 'utf8');
+            const truncatedReport = driftReport.length > 60000 ? driftReport.substring(0, 60000) + '\n\n... (truncated)' : driftReport;
+
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚨 Terraform Drift Detected - ${{ matrix.environment }}`,
+              labels: ['infrastructure', 'drift-detected', 'needs-review'],
+              body: `## Infrastructure Drift Detected
+
+            **Environment:** ${{ matrix.environment }}
+            **Detection Time:** ${new Date().toISOString()}
+            **Affected Resources:** ${{ steps.parse_drift.outputs.resource_count }}
+            **Workflow Run:** [#${context.runNumber}](${context.payload.repository.html_url}/actions/runs/${context.runId})
+
+            ### Drift Summary
+
+            \`\`\`terraform
+            ${truncatedReport}
+            \`\`\`
+
+            ### Recommended Actions
+
+            1. Review the drift details in the [workflow run](${context.payload.repository.html_url}/actions/runs/${context.runId})
+            2. Download the full drift report from the artifacts
+            3. Determine if changes were:
+               - **Intentional**: Update Terraform configuration to match
+               - **Unauthorized**: Apply Terraform to restore desired state
+               - **Expected**: Add to drift detection ignore list
+
+            ### Next Steps
+
+            - [ ] Review drift report
+            - [ ] Identify root cause
+            - [ ] Update Terraform config OR apply to restore state
+            - [ ] Update drift detection filters if needed
+            - [ ] Close this issue when resolved
+
+            ### Auto-Remediation
+
+            **Status:** Disabled (manual review required)
+            **Action:** None taken - awaiting human review
+
+            ---
+            *This issue was automatically created by the Terraform Drift Detection workflow.*
+            `
+            });
+
+            console.log(`Created issue #${issue.data.number}`);
+
+      - name: Notify Slack on Drift
+        if: steps.parse_drift.outputs.status == 'drift-detected' && secrets.SLACK_WEBHOOK_URL != ''
+        run: |
+          curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} \
+            -H 'Content-Type: application/json' \
+            -d '{
+              "text": "🚨 Terraform Drift Detected",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "🚨 Infrastructure Drift Detected"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {"type": "mrkdwn", "text": "*Environment:*\n${{ matrix.environment }}"},
+                    {"type": "mrkdwn", "text": "*Resources Affected:*\n${{ steps.parse_drift.outputs.resource_count }}"},
+                    {"type": "mrkdwn", "text": "*Detection Time:*\n'$(date -u +"%Y-%m-%d %H:%M UTC")'"},
+                    {"type": "mrkdwn", "text": "*Workflow:*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"}
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Infrastructure drift has been detected. Review the workflow run for details and take appropriate action."
+                  }
+                }
+              ]
+            }'
+
+      - name: Save Drift Metrics
+        if: always()
+        run: |
+          mkdir -p artifacts/metrics/drift-detection
+
+          cat > artifacts/metrics/drift-detection/${{ matrix.environment }}-$(date +%Y%m%d-%H%M%S).json <<EOF
+          {
+            "environment": "${{ matrix.environment }}",
+            "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+            "workflow_run_id": "${{ github.run_id }}",
+            "workflow_run_number": "${{ github.run_number }}",
+            "status": "${{ steps.parse_drift.outputs.status }}",
+            "exit_code": "${{ steps.drift_check.outputs.exitcode }}",
+            "resource_count": "${{ steps.parse_drift.outputs.resource_count }}",
+            "message": "${{ steps.parse_drift.outputs.message }}"
+          }
+          EOF
+
+      - name: Commit Metrics
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add artifacts/metrics/drift-detection/*.json
+          git commit -m "chore: add drift detection metrics for ${{ matrix.environment }}" || echo "No changes to commit"
+          git push || echo "Nothing to push"
+
+  summary:
+    name: Drift Detection Summary
+    runs-on: ubuntu-latest
+    needs: detect-drift
+    if: always()
+    steps:
+      - name: Summary
+        run: |
+          echo "## Drift Detection Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Workflow Run:** #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check individual job results for drift status per environment." >> $GITHUB_STEP_SUMMARY

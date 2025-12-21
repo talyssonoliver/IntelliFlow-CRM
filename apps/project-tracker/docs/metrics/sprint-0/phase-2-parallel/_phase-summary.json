@@ -5,7 +5,10 @@
   "streams": [
     {
       "name": "parallel-a",
-      "tasks": ["AI-SETUP-002", "AI-SETUP-003"],
+      "tasks": [
+        "AI-SETUP-002",
+        "AI-SETUP-003"
+      ],
       "status": "DONE"
     },
     {
@@ -21,7 +24,10 @@
     },
     {
       "name": "parallel-c",
-      "tasks": ["EXC-SEC-001", "IFC-160"],
+      "tasks": [
+        "EXC-SEC-001",
+        "IFC-160"
+      ],
       "status": "IN_PROGRESS"
     }
   ],
@@ -33,7 +39,7 @@
     "not_started": 0
   },
   "started_at": "2025-12-14T20:35:00Z",
-  "completed_at": "2025-12-20T21:36:46.654Z",
+  "completed_at": "2025-12-21T12:38:57.557Z",
   "target_duration_minutes": 60,
   "actual_duration_minutes": null
 }

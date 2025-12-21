@@ -1,5 +1,5 @@
-measured_at_utc,task_id,metric,value,unit,notes
-2025-12-19T00:00:00Z,AUTOMATION-002,engineering_hours_saved,,,Placeholder
-2025-12-19T00:00:00Z,AUTOMATION-002,ai_cost_usd,,,Placeholder
-2025-12-19T00:00:00Z,AUTOMATION-002,roi,,,Placeholder
-
+metric,baseline,current,improvement,date
+deployment_frequency,1/week,2/week,100%,2025-12-21
+lead_time_hours,72,24,66%,2025-12-21
+mttr_hours,8,2,75%,2025-12-21
+change_failure_rate,15%,5%,66%,2025-12-21

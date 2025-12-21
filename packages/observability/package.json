@@ -38,7 +38,7 @@
     "dev": "tsup src/index.ts src/tracer.ts src/tracing.ts src/metrics.ts src/logging.ts --format cjs,esm --dts --watch",
     "clean": "rm -rf dist .turbo",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src/",
+    "lint": "eslint \"src/**/*.ts\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"

@@ -9,14 +9,22 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": null,
-    "required": ["ENV-002-AI", "ENV-005-AI", "ENV-010-AI"]
+    "verified_at": "2025-12-21T12:38:57.303Z",
+    "required": [
+      "ENV-002-AI",
+      "ENV-005-AI",
+      "ENV-010-AI"
+    ]
   },
-  "dependencies_resolved": ["ENV-002-AI", "ENV-005-AI", "ENV-010-AI"],
-  "started_at": null,
-  "completed_at": null,
+  "dependencies_resolved": [
+    "ENV-002-AI",
+    "ENV-005-AI",
+    "ENV-010-AI"
+  ],
+  "started_at": "2025-12-21T07:06:10.607Z",
+  "completed_at": "2025-12-21T07:21:10.607Z",
   "target_duration_minutes": null,
-  "actual_duration_minutes": null,
+  "actual_duration_minutes": 15,
   "artifacts": {
     "expected": [
       "docs/operations/engineering-playbook.md",
@@ -24,7 +32,12 @@
       "docs/operations/pr-checklist.md",
       "docs/operations/release-rollback.md"
     ],
-    "created": [],
+    "created": [
+      "docs/operations/engineering-playbook.md",
+      "docs/operations/quality-gates.md",
+      "docs/operations/pr-checklist.md",
+      "docs/operations/release-rollback.md"
+    ],
     "missing": []
   },
   "validations": [

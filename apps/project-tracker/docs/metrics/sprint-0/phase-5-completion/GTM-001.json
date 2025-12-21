@@ -9,21 +9,29 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": null,
-    "required": ["DOC-001"]
+    "verified_at": "2025-12-21T12:38:57.178Z",
+    "required": [
+      "DOC-001"
+    ]
   },
-  "dependencies_resolved": ["DOC-001"],
-  "started_at": null,
-  "completed_at": null,
+  "dependencies_resolved": [
+    "DOC-001"
+  ],
+  "started_at": "2025-12-21T07:06:10.560Z",
+  "completed_at": "2025-12-21T07:21:10.560Z",
   "target_duration_minutes": null,
-  "actual_duration_minutes": null,
+  "actual_duration_minutes": 15,
   "artifacts": {
     "expected": [
       "docs/company/go-to-market/icp.md",
       "docs/company/go-to-market/personas.md",
       "docs/company/go-to-market/objections.md"
     ],
-    "created": [],
+    "created": [
+      "docs/company/go-to-market/icp.md",
+      "docs/company/go-to-market/personas.md",
+      "docs/company/go-to-market/objections.md"
+    ],
     "missing": []
   },
   "validations": [

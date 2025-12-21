@@ -8,11 +8,15 @@
   "phase": "phase-1-ai-foundation",
   "stream": null,
   "dependencies": {
-    "all_satisfied": false,
-    "verified_at": "2025-12-16T00:41:56Z",
-    "required": ["EXC-INIT-001"]
+    "all_satisfied": true,
+    "verified_at": "2025-12-21T12:38:55.636Z",
+    "required": [
+      "EXC-INIT-001"
+    ]
   },
-  "dependencies_resolved": ["EXC-INIT-001"],
+  "dependencies_resolved": [
+    "EXC-INIT-001"
+  ],
   "started_at": "2025-12-14T20:05:00Z",
   "completed_at": "2025-12-14T20:20:00Z",
   "target_duration_minutes": 60,
@@ -42,7 +46,30 @@
     "created": [],
     "missing": []
   },
-  "validations": [],
+  "validations": [
+    {
+      "name": "Count Claude commands (>0)",
+      "command": "ls -la .claude/commands/*.sh | wc -l | grep -v '^0$'",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-21T08:36:22.638Z",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_hash": "sha256:QUktU0VUVVAtMDAxLUNvdW50IENsYXVk",
+      "notes": "Validation passed"
+    },
+    {
+      "name": "Command test results",
+      "command": "test -f artifacts/misc/command-test-results.csv",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-21T08:36:22.638Z",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_hash": "sha256:QUktU0VUVVAtMDAxLUNvbW1hbmQgdGVz",
+      "notes": "Validation passed"
+    }
+  ],
   "blockers": [],
   "section": "AI Integration",
   "status_history": [

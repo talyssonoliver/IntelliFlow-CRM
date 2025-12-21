@@ -1,19 +1,19 @@
 {
   "meta": {
-    "generated_at": "2025-12-20T20:55:37.878450Z",
+    "generated_at": "2025-12-21T09:43:12.738864Z",
     "schema_version": "1.0.0",
     "sprint_scope": "all"
   },
   "summary": {
     "total_tasks": 35,
     "tier_breakdown": {
-      "A": 14,
+      "A": 18,
       "B": 10,
-      "C": 11
+      "C": 7
     },
     "error_count": 0,
     "warning_count": 0,
-    "review_queue_size": 26,
+    "review_queue_size": 30,
     "validation_coverage": {
       "tasks_with_validation": 35,
       "tasks_without_validation": 0,
@@ -195,6 +195,58 @@
         "Tier A task - requires explicit validation"
       ],
       "dependent_count": 4,
+      "waiver_expiry": null,
+      "priority": "critical"
+    },
+    {
+      "task_id": "DOC-001",
+      "tier": "A",
+      "section": "Strategy & Documentation",
+      "status": "Completed",
+      "owner": "CEO + All Leads",
+      "reasons": [
+        "Tier A task - requires explicit validation"
+      ],
+      "dependent_count": 3,
+      "waiver_expiry": null,
+      "priority": "critical"
+    },
+    {
+      "task_id": "BRAND-001",
+      "tier": "A",
+      "section": "Brand & Design",
+      "status": "Completed",
+      "owner": "UX Designer + Frontend Dev",
+      "reasons": [
+        "Tier A task - requires explicit validation"
+      ],
+      "dependent_count": 17,
+      "waiver_expiry": null,
+      "priority": "critical"
+    },
+    {
+      "task_id": "GTM-002",
+      "tier": "A",
+      "section": "Go-to-Market",
+      "status": "Completed",
+      "owner": "PM + Marketing",
+      "reasons": [
+        "Tier A task - requires explicit validation"
+      ],
+      "dependent_count": 16,
+      "waiver_expiry": null,
+      "priority": "critical"
+    },
+    {
+      "task_id": "ANALYTICS-001",
+      "tier": "A",
+      "section": "Analytics & Segmentation",
+      "status": "Completed",
+      "owner": "PM + DA",
+      "reasons": [
+        "Tier A task - requires explicit validation"
+      ],
+      "dependent_count": 3,
       "waiver_expiry": null,
       "priority": "critical"
     },

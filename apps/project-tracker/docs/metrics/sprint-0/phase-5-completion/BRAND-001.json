@@ -9,14 +9,18 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": null,
-    "required": ["DOC-001"]
+    "verified_at": "2025-12-21T12:38:57.127Z",
+    "required": [
+      "DOC-001"
+    ]
   },
-  "dependencies_resolved": ["DOC-001"],
-  "started_at": null,
-  "completed_at": null,
+  "dependencies_resolved": [
+    "DOC-001"
+  ],
+  "started_at": "2025-12-21T07:06:10.544Z",
+  "completed_at": "2025-12-21T07:21:10.544Z",
   "target_duration_minutes": null,
-  "actual_duration_minutes": null,
+  "actual_duration_minutes": 15,
   "artifacts": {
     "expected": [
       "docs/company/brand/visual-identity.md",
@@ -24,7 +28,12 @@
       "docs/company/brand/typography.tokens.json",
       "docs/company/brand/spacing.tokens.json"
     ],
-    "created": [],
+    "created": [
+      "docs/company/brand/visual-identity.md",
+      "docs/company/brand/palette.tokens.json",
+      "docs/company/brand/typography.tokens.json",
+      "docs/company/brand/spacing.tokens.json"
+    ],
     "missing": []
   },
   "validations": [

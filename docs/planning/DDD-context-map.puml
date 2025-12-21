@@ -1,0 +1,166 @@
+@startuml IntelliFlow-CRM-Context-Map
+
+!define RECTANGLE class
+
+title IntelliFlow CRM - DDD Context Map
+
+' Define Bounded Contexts
+package "CRM Context" as CRM {
+  rectangle "Lead Management" as LeadBC {
+    [Lead Aggregate]
+    [Email VO]
+    [LeadScore VO]
+  }
+
+  rectangle "Contact Management" as ContactBC {
+    [Contact Aggregate]
+  }
+
+  rectangle "Account Management" as AccountBC {
+    [Account Aggregate]
+  }
+
+  rectangle "Opportunity Management" as OpportunityBC {
+    [Opportunity Aggregate]
+  }
+
+  rectangle "Task Management" as TaskBC {
+    [Task Aggregate]
+  }
+}
+
+package "Intelligence Context" as Intelligence {
+  rectangle "AI Scoring" as ScoringBC {
+    [ScoringService]
+    [ScoreModel]
+  }
+
+  rectangle "Predictions" as PredictionBC {
+    [PredictionEngine]
+    [ConversionPredictor]
+  }
+
+  rectangle "Recommendations" as RecommendationBC {
+    [RecommendationEngine]
+    [NextBestAction]
+  }
+}
+
+package "Platform Context" as Platform {
+  rectangle "Authentication" as AuthBC {
+    [User Aggregate]
+    [Session]
+    [Permissions]
+  }
+
+  rectangle "Notifications" as NotificationBC {
+    [Notification Aggregate]
+    [EmailService]
+    [SMSService]
+  }
+
+  rectangle "Audit" as AuditBC {
+    [AuditLog]
+    [EventStore]
+  }
+}
+
+package "Integration Context" as Integration {
+  rectangle "External APIs" as ExternalBC {
+    [EmailProvider]
+    [CalendarSync]
+    [DataEnrichment]
+  }
+}
+
+' Define relationships between contexts
+
+' CRM Internal Relationships
+LeadBC --> ContactBC : "Converts to" \n(Conformist)
+ContactBC --> AccountBC : "Belongs to" \n(Customer-Supplier)
+OpportunityBC --> AccountBC : "Belongs to" \n(Customer-Supplier)
+OpportunityBC --> ContactBC : "Associated with" \n(Customer-Supplier)
+TaskBC --> LeadBC : "Relates to" \n(Shared Kernel)
+TaskBC --> ContactBC : "Relates to" \n(Shared Kernel)
+TaskBC --> OpportunityBC : "Relates to" \n(Shared Kernel)
+
+' Intelligence to CRM (Upstream-Downstream)
+ScoringBC --> LeadBC : "Scores" \n(Customer-Supplier)
+PredictionBC --> OpportunityBC : "Predicts" \n(Customer-Supplier)
+RecommendationBC --> TaskBC : "Suggests" \n(Customer-Supplier)
+
+' Platform to CRM (Shared Kernel for Auth, Published Language for others)
+AuthBC --> LeadBC : "Owns" \n(Shared Kernel)
+AuthBC --> ContactBC : "Owns" \n(Shared Kernel)
+AuthBC --> AccountBC : "Owns" \n(Shared Kernel)
+AuthBC --> OpportunityBC : "Owns" \n(Shared Kernel)
+AuthBC --> TaskBC : "Owns" \n(Shared Kernel)
+
+NotificationBC ..> LeadBC : "Notifies about" \n(Published Language)
+NotificationBC ..> OpportunityBC : "Notifies about" \n(Published Language)
+NotificationBC ..> TaskBC : "Notifies about" \n(Published Language)
+
+AuditBC ..> LeadBC : "Audits" \n(Published Language)
+AuditBC ..> ContactBC : "Audits" \n(Published Language)
+AuditBC ..> AccountBC : "Audits" \n(Published Language)
+AuditBC ..> OpportunityBC : "Audits" \n(Published Language)
+
+' Integration Context
+ExternalBC --> ContactBC : "Enriches" \n(Anti-Corruption Layer)
+ExternalBC --> AccountBC : "Enriches" \n(Anti-Corruption Layer)
+
+note right of CRM
+  **CRM Context** (Core Domain)
+  - Lead Management: Lead capture, scoring, qualification
+  - Contact Management: Individual contacts from leads
+  - Account Management: Organizations/companies
+  - Opportunity Management: Sales pipeline
+  - Task Management: Activities and to-dos
+
+  All aggregates follow DDD patterns:
+  - Strong consistency boundaries
+  - Domain events for communication
+  - Repository pattern for persistence
+end note
+
+note right of Intelligence
+  **Intelligence Context** (Core Domain)
+  - AI Scoring: ML-based lead scoring
+  - Predictions: Opportunity win probability
+  - Recommendations: Next best actions
+
+  Consumes CRM data, publishes insights
+  via domain events
+end note
+
+note right of Platform
+  **Platform Context** (Supporting Subdomain)
+  - Authentication: User management, RBAC
+  - Notifications: Multi-channel notifications
+  - Audit: Event sourcing, compliance
+
+  Provides foundational services to
+  all bounded contexts
+end note
+
+note right of Integration
+  **Integration Context** (Generic Subdomain)
+  - External APIs: Third-party integrations
+  - Data enrichment: Company/contact data
+  - Calendar sync: Meeting management
+
+  Uses Anti-Corruption Layer to protect
+  domain from external changes
+end note
+
+legend right
+  **Context Relationship Patterns:**
+  |= Pattern |= Description |
+  | Shared Kernel | Shared domain concepts (e.g., User, ownerId) |
+  | Customer-Supplier | Downstream depends on upstream APIs |
+  | Conformist | Downstream conforms to upstream model |
+  | Published Language | Event-based integration via domain events |
+  | Anti-Corruption Layer | Protects domain from external systems |
+endlegend
+
+@enduml

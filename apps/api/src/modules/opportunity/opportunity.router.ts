@@ -9,7 +9,7 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { router, protectedProcedure } from '../../server';
+import { createTRPCRouter, protectedProcedure } from '../../trpc';
 import {
   createOpportunitySchema,
   updateOpportunitySchema,
@@ -17,7 +17,7 @@ import {
   idSchema,
 } from '@intelliflow/validators/opportunity';
 
-export const opportunityRouter = router({
+export const opportunityRouter = createTRPCRouter({
   /**
    * Create a new opportunity
    */

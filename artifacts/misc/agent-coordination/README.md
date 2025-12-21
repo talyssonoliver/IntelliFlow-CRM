@@ -1,18 +1,11 @@
-# AI agent coordination (Sprint 0)
+# Agent Coordination System
 
-This directory contains baseline coordination artifacts for **AUTOMATION-001**.
+Created: 2025-12-21T08:36:22.737Z
 
-## Sprint 0 scope
+## Overview
+Multi-agent coordination system for IntelliFlow CRM.
 
-- Define handoff metadata structures for automation.
-- Record quality gate signals for review (no auto-remediation).
-- Provide placeholders for chat/notification routing.
-
-## Operator notes
-
-Wire these concepts into your preferred automation platform:
-
-- GitHub Actions + issue/PR automation
-- ChatOps (Slack/Teams)
-- Incident tooling (PagerDuty, Opsgenie)
-
+## Components
+- Task routing
+- Agent handoff
+- Quality gates

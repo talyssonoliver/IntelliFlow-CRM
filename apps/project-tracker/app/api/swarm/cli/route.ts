@@ -123,6 +123,7 @@ export async function POST(request: Request) {
         const cleanStdout = stdout
           .trim()
           .replace(/\r/g, '')
+          // eslint-disable-next-line no-control-regex
           .replace(/\x1b\[[0-9;]*m/g, '');
         const cleanStderr = stderr.trim().replace(/\r/g, '');
 
@@ -163,6 +164,7 @@ export async function POST(request: Request) {
         const cleanStdout = stdout
           .trim()
           .replace(/\r/g, '')
+          // eslint-disable-next-line no-control-regex
           .replace(/\x1b\[[0-9;]*m/g, '');
         if (cleanStdout.length > 0) {
           resolve(

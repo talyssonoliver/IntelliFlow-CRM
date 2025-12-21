@@ -9,12 +9,20 @@
   "phase": "phase-3-dependencies",
   "stream": null,
   "dependencies": {
-    "required": ["ENV-005-AI", "ENV-007-AI", "ENV-009-AI"],
-    "verified_at": "2025-12-16T00:00:00Z",
-    "all_satisfied": false
+    "required": [
+      "ENV-005-AI",
+      "ENV-007-AI",
+      "ENV-009-AI"
+    ],
+    "verified_at": "2025-12-21T12:38:56.594Z",
+    "all_satisfied": true
   },
   "status_history": [],
-  "dependencies_resolved": [],
+  "dependencies_resolved": [
+    "ENV-005-AI",
+    "ENV-007-AI",
+    "ENV-009-AI"
+  ],
   "started_at": "2025-12-19T00:43:54.006Z",
   "completed_at": "2025-12-19T00:58:54.006Z",
   "target_duration_minutes": 90,
@@ -44,6 +52,29 @@
     "created": [],
     "missing": []
   },
-  "validations": [],
+  "validations": [
+    {
+      "name": "Security policy documented",
+      "command": "test -f docs/security/security-policy.md || test -f SECURITY.md",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-21T08:36:22.725Z",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_hash": "sha256:RU5WLTAxMy1BSS1TZWN1cml0eSBwb2xp",
+      "notes": "Validation passed"
+    },
+    {
+      "name": "Security incident response documented",
+      "command": "test -f .github/SECURITY.md || test -f docs/security/incident-response.md",
+      "type": "auto",
+      "required": false,
+      "executed_at": "2025-12-21T08:36:22.725Z",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_hash": "sha256:RU5WLTAxMy1BSS1TZWN1cml0eSBpbmNp",
+      "notes": "Validation passed"
+    }
+  ],
   "blockers": []
 }

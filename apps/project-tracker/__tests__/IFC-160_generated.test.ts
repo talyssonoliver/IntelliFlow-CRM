@@ -62,7 +62,6 @@ const REQUIRED_SNIPPETS = {
 async function loadGenerateRunHelp(): Promise<GenerateRunHelp | null> {
   if (!implementationPath) return null;
   // Dynamic import to let Vitest transform TS if present
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const mod: any = await import(implementationPath);
   const fn: unknown = mod.generateRunHelp ?? mod.default;
   if (typeof fn !== 'function') return null;

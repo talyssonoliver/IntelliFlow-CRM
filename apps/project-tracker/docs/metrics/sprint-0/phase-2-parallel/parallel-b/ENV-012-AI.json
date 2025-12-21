@@ -9,12 +9,16 @@
   "phase": "phase-2-parallel",
   "stream": "parallel-b",
   "dependencies": {
-    "required": ["ENV-001-AI"],
-    "verified_at": "2025-12-16T00:00:00Z",
-    "all_satisfied": false
+    "required": [
+      "ENV-001-AI"
+    ],
+    "verified_at": "2025-12-21T12:38:56.552Z",
+    "all_satisfied": true
   },
   "status_history": [],
-  "dependencies_resolved": {},
+  "dependencies_resolved": [
+    "ENV-001-AI"
+  ],
   "started_at": "2025-12-16T21:34:01.167Z",
   "completed_at": "2025-12-16T21:49:01.167Z",
   "target_duration_minutes": 30,
@@ -44,6 +48,29 @@
     "created": [],
     "missing": []
   },
-  "validations": [],
+  "validations": [
+    {
+      "name": "Documentation exists",
+      "command": "test -d docs || test -f README.md",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-21T08:36:22.651Z",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_hash": "sha256:RU5WLTAxMi1BSS1Eb2N1bWVudGF0aW9u",
+      "notes": "Validation passed"
+    },
+    {
+      "name": "LLM-friendly CLAUDE.md exists",
+      "command": "test -f CLAUDE.md",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-21T08:36:22.651Z",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_hash": "sha256:RU5WLTAxMi1BSS1MTE0tZnJpZW5kbHkg",
+      "notes": "Validation passed"
+    }
+  ],
   "blockers": []
 }

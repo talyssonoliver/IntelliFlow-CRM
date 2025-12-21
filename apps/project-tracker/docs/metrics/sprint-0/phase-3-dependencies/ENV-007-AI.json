@@ -8,11 +8,15 @@
   "phase": "phase-3-dependencies",
   "stream": null,
   "dependencies": {
-    "all_satisfied": false,
-    "verified_at": "2025-12-16T00:41:57Z",
-    "required": ["ENV-006-AI"]
+    "all_satisfied": true,
+    "verified_at": "2025-12-21T12:38:56.199Z",
+    "required": [
+      "ENV-006-AI"
+    ]
   },
-  "dependencies_resolved": ["ENV-006-AI"],
+  "dependencies_resolved": [
+    "ENV-006-AI"
+  ],
   "target_duration_minutes": 30,
   "kpis": {
     "type_generation_time": {
@@ -50,10 +54,47 @@
       "apps/api/src/middleware/index.ts",
       "packages/api-client/src/index.ts"
     ],
-    "created": [],
+    "created": [
+      "packages/validators/src/account.ts",
+      "packages/validators/src/opportunity.ts",
+      "packages/validators/src/task.ts",
+      "packages/validators/src/index.ts",
+      "apps/api/src/modules/account/account.router.ts",
+      "apps/api/src/modules/opportunity/opportunity.router.ts",
+      "apps/api/src/modules/task/task.router.ts",
+      "apps/api/src/router.ts",
+      "apps/api/src/middleware/auth.ts",
+      "apps/api/src/middleware/logging.ts",
+      "apps/api/src/middleware/rate-limit.ts",
+      "apps/api/src/middleware/index.ts",
+      "packages/api-client/src/index.ts"
+    ],
     "missing": []
   },
-  "validations": [],
+  "validations": [
+    {
+      "name": "tRPC API source directory exists",
+      "command": "test -d apps/api/src",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-21T08:36:22.656Z",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_hash": "sha256:RU5WLTAwNy1BSS10UlBDIEFQSSBzb3Vy",
+      "notes": "Validation passed"
+    },
+    {
+      "name": "tRPC API entry point exists",
+      "command": "test -f apps/api/src/index.ts || test -f apps/api/src/server.ts",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-21T08:36:22.656Z",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_hash": "sha256:RU5WLTAwNy1BSS10UlBDIEFQSSBlbnRy",
+      "notes": "Validation passed"
+    }
+  ],
   "blockers": [],
   "section": "Environment Setup",
   "status_history": [

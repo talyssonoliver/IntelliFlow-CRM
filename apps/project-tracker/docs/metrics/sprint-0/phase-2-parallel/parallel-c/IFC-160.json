@@ -8,11 +8,17 @@
   "phase": "phase-2-parallel",
   "stream": "parallel-c",
   "dependencies": {
-    "all_satisfied": false,
-    "verified_at": "2025-12-16T00:41:57Z",
-    "required": []
+    "all_satisfied": true,
+    "verified_at": "2025-12-21T12:38:57.433Z",
+    "required": [
+      "ENV-001-AI",
+      "ENV-002-AI"
+    ]
   },
-  "dependencies_resolved": [],
+  "dependencies_resolved": [
+    "ENV-001-AI",
+    "ENV-002-AI"
+  ],
   "target_duration_minutes": 120,
   "kpis": {
     "linter_errors": {
@@ -37,10 +43,26 @@
       ".github/workflows/artifact-lint.yml",
       "docs/architecture/artifact-conventions.md"
     ],
-    "created": [],
+    "created": [
+      "tools/lint/artifact-paths.ts",
+      ".github/workflows/artifact-lint.yml",
+      "docs/architecture/artifact-conventions.md"
+    ],
     "missing": []
   },
-  "validations": [],
+  "validations": [
+    {
+      "name": "Repo layout doc exists",
+      "command": "test -f docs/architecture/repo-layout.md",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-21T08:36:22.654Z",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_hash": "sha256:SUZDLTE2MC1SZXBvIGxheW91dCBkb2Mg",
+      "notes": "Validation passed"
+    }
+  ],
   "blockers": [],
   "notes": "Artifact path linter fully functional. Added exclusions for documentation files that discuss security concepts. Fixed Windows path normalization. CI workflow configured for PR checks.",
   "section": "Infrastructure & Configuration",

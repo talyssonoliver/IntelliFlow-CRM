@@ -98,7 +98,7 @@ export function withContext(context: LoggerContext) {
 /**
  * Log levels for different scenarios
  */
-export const LogLevel = {
+export const LOG_LEVELS = {
   TRACE: 'trace',
   DEBUG: 'debug',
   INFO: 'info',
@@ -107,4 +107,4 @@ export const LogLevel = {
   FATAL: 'fatal',
 } as const;
 
-export type LogLevel = (typeof LogLevel)[keyof typeof LogLevel];
+export type LogLevel = (typeof LOG_LEVELS)[keyof typeof LOG_LEVELS];

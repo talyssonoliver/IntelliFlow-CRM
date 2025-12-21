@@ -9,9 +9,11 @@
   "phase": "phase-3-dependencies",
   "stream": null,
   "dependencies": {
-    "required": ["ENV-005-AI"],
-    "verified_at": "2025-12-16T00:00:00Z",
-    "all_satisfied": false
+    "required": [
+      "ENV-005-AI"
+    ],
+    "verified_at": "2025-12-21T12:38:56.311Z",
+    "all_satisfied": true
   },
   "status_history": [
     {
@@ -45,7 +47,9 @@
       "note": "Task execution started"
     }
   ],
-  "dependencies_resolved": [],
+  "dependencies_resolved": [
+    "ENV-005-AI"
+  ],
   "started_at": "2025-12-18T23:21:37+00:00",
   "completed_at": "2025-12-19T00:58:53.985Z",
   "target_duration_minutes": 60,
@@ -75,7 +79,30 @@
     "created": [],
     "missing": []
   },
-  "validations": [],
+  "validations": [
+    {
+      "name": "OpenTelemetry Collector config exists",
+      "command": "test -f infra/monitoring/otel-collector.yaml",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-21T08:36:22.685Z",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_hash": "sha256:RU5WLTAwOC1BSS1PcGVuVGVsZW1ldHJ5",
+      "notes": "Validation passed"
+    },
+    {
+      "name": "Observability infrastructure exists",
+      "command": "test -f packages/observability/package.json || test -d infra/monitoring",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-21T08:36:22.685Z",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_hash": "sha256:RU5WLTAwOC1BSS1PYnNlcnZhYmlsaXR5",
+      "notes": "Validation passed"
+    }
+  ],
   "blockers": [],
   "current_phase": "ARCHITECT_SPEC",
   "updated_at": "2025-12-19T00:12:26+00:00",

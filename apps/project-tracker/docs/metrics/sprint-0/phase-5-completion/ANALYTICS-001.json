@@ -9,21 +9,31 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": null,
-    "required": ["DOC-001", "GTM-001"]
+    "verified_at": "2025-12-21T12:38:57.344Z",
+    "required": [
+      "DOC-001",
+      "GTM-001"
+    ]
   },
-  "dependencies_resolved": ["DOC-001", "GTM-001"],
-  "started_at": null,
-  "completed_at": null,
+  "dependencies_resolved": [
+    "DOC-001",
+    "GTM-001"
+  ],
+  "started_at": "2025-12-21T07:06:10.623Z",
+  "completed_at": "2025-12-21T07:21:10.623Z",
   "target_duration_minutes": null,
-  "actual_duration_minutes": null,
+  "actual_duration_minutes": 15,
   "artifacts": {
     "expected": [
       "docs/analytics/rfm-abc-spec.md",
       "docs/analytics/event-taxonomy.md",
       "docs/analytics/dashboards-requirements.md"
     ],
-    "created": [],
+    "created": [
+      "docs/analytics/rfm-abc-spec.md",
+      "docs/analytics/event-taxonomy.md",
+      "docs/analytics/dashboards-requirements.md"
+    ],
     "missing": []
   },
   "validations": [

@@ -1,10 +1,17 @@
 /**
  * Governance utilities for reading plan-overrides, review-queue, and debt-ledger
+ *
+ * ARCHITECTURE:
+ * - Sprint_plan.csv is the SOURCE OF TRUTH for all tasks
+ * - plan-overrides.yaml contains ONLY explicit overrides for specific tasks
+ * - Default tiers are computed based on task properties (section, dependencies, etc.)
+ * - Overrides from YAML are applied on top of defaults
  */
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as yaml from 'js-yaml';
+import Papa from 'papaparse';
 import type {
   TaskOverride,
   ReviewQueue,
@@ -18,12 +25,210 @@ import type {
 import { PATHS } from './paths';
 
 // File paths using centralized path configuration
+const SPRINT_PLAN_CSV_PATH = path.join(PATHS.sprintTracking.global, 'Sprint_plan.csv');
 const PLAN_OVERRIDES_PATH = path.join(PATHS.sprintTracking.root, 'plan-overrides.yaml');
 const REVIEW_QUEUE_PATH = path.join(PATHS.sprintTracking.root, 'review-queue.json');
 const LINT_REPORT_PATH = path.join(PATHS.artifacts.reports, 'plan-lint-report.json');
 const PHANTOM_AUDIT_PATH = path.join(PATHS.artifacts.reports, 'phantom-completion-audit.json');
 const DEBT_LEDGER_PATH = path.join(PATHS.docs.root, 'debt-ledger.yaml');
 const SPRINT_SUMMARY_PATH = path.join(PATHS.sprintTracking.sprint0, '_summary.json');
+
+/**
+ * CSV Task structure from Sprint_plan.csv
+ */
+interface CSVTask {
+  taskId: string;
+  section: string;
+  description: string;
+  owner: string;
+  dependencies: string[];
+  status: string;
+  sprint: number | 'Continuous';
+  artifacts: string[];
+}
+
+/**
+ * Combined task with governance data
+ */
+interface GovernanceTask {
+  taskId: string;
+  section: string;
+  description: string;
+  owner: string;
+  dependencies: string[];
+  status: string;
+  sprint: number | 'Continuous';
+  tier: TaskTier;
+  gateProfile: string[];
+  acceptanceOwner?: string;
+  debtAllowed: boolean;
+  waiverExpiry?: string;
+  evidenceRequired: string[];
+  isOverridden: boolean;
+}
+
+// Cache for CSV tasks to avoid re-parsing
+let cachedCSVTasks: CSVTask[] | null = null;
+let cachedCSVTimestamp: number = 0;
+
+/**
+ * Load all tasks from Sprint_plan.csv (source of truth)
+ */
+export function loadCSVTasks(): CSVTask[] {
+  try {
+    if (!fs.existsSync(SPRINT_PLAN_CSV_PATH)) {
+      console.warn('Sprint_plan.csv not found at:', SPRINT_PLAN_CSV_PATH);
+      return [];
+    }
+
+    const stats = fs.statSync(SPRINT_PLAN_CSV_PATH);
+    if (cachedCSVTasks && stats.mtimeMs === cachedCSVTimestamp) {
+      return cachedCSVTasks;
+    }
+
+    const content = fs.readFileSync(SPRINT_PLAN_CSV_PATH, 'utf8');
+    const results = Papa.parse(content, {
+      header: true,
+      skipEmptyLines: true,
+    });
+
+    const tasks: CSVTask[] = (results.data as any[])
+      .map((row) => {
+        const sprintValue = row['Target Sprint'] || '0';
+        let sprint: number | 'Continuous' = 0;
+        if (sprintValue.toLowerCase() === 'continuous') {
+          sprint = 'Continuous';
+        } else {
+          const num = parseInt(sprintValue, 10);
+          sprint = isNaN(num) ? 0 : num;
+        }
+
+        const depsStr = row['CleanDependencies'] || row['Dependencies'] || '';
+        const dependencies = depsStr
+          .split(',')
+          .map((d: string) => d.trim())
+          .filter(Boolean);
+
+        const artifactsStr = row['Artifacts To Track'] || '';
+        const artifacts = artifactsStr.includes(';')
+          ? artifactsStr
+              .split(';')
+              .map((a: string) => a.trim())
+              .filter(Boolean)
+          : artifactsStr
+              .split(',')
+              .map((a: string) => a.trim())
+              .filter(Boolean);
+
+        return {
+          taskId: row['Task ID'] || '',
+          section: row['Section'] || '',
+          description: row['Description'] || '',
+          owner: row['Owner'] || '',
+          dependencies,
+          status: row['Status'] || 'Planned',
+          sprint,
+          artifacts,
+        };
+      })
+      .filter((t) => t.taskId);
+
+    cachedCSVTasks = tasks;
+    cachedCSVTimestamp = stats.mtimeMs;
+
+    return tasks;
+  } catch (error) {
+    console.error('Error loading Sprint_plan.csv:', error);
+    return [];
+  }
+}
+
+/**
+ * Compute default tier based on task properties
+ */
+export function computeDefaultTier(task: CSVTask, allTasks: CSVTask[]): TaskTier {
+  const { taskId, section } = task;
+
+  const dependentCount = allTasks.filter((t) => t.dependencies.includes(taskId)).length;
+
+  // TIER A: Critical tasks
+  if (taskId.includes('SEC') || section.toLowerCase().includes('security')) {
+    return 'A';
+  }
+  if (taskId.startsWith('IFC-0') && parseInt(taskId.replace('IFC-', '')) <= 10) {
+    return 'A';
+  }
+  if (dependentCount >= 5) {
+    return 'A';
+  }
+  if (taskId.startsWith('EXC-')) {
+    return 'A';
+  }
+  if (
+    section.toLowerCase().includes('planning') ||
+    section.toLowerCase().includes('strategy') ||
+    taskId.startsWith('DOC-001') ||
+    taskId.startsWith('BRAND-001') ||
+    taskId.startsWith('GTM-')
+  ) {
+    return 'A';
+  }
+  if (taskId.startsWith('ANALYTICS-001')) {
+    return 'A';
+  }
+
+  // TIER B: Important tasks
+  if (taskId.startsWith('ENV-') || taskId.startsWith('AI-SETUP-')) {
+    return 'B';
+  }
+  if (taskId.startsWith('AUTOMATION-')) {
+    return 'B';
+  }
+  if (dependentCount >= 2) {
+    return 'B';
+  }
+  if (taskId.startsWith('ENG-OPS-') || taskId.startsWith('PM-OPS-')) {
+    return 'B';
+  }
+
+  // TIER C: Standard tasks (default)
+  return 'C';
+}
+
+/**
+ * Get all tasks with governance data applied
+ */
+export function getAllTasksWithGovernance(sprintFilter?: number | 'all'): GovernanceTask[] {
+  const csvTasks = loadCSVTasks();
+  const overrides = loadPlanOverrides();
+
+  let filteredTasks = csvTasks;
+  if (sprintFilter !== undefined && sprintFilter !== 'all') {
+    filteredTasks = csvTasks.filter((t) => t.sprint === sprintFilter);
+  }
+
+  return filteredTasks.map((task) => {
+    const override = overrides[task.taskId];
+    const defaultTier = computeDefaultTier(task, csvTasks);
+
+    return {
+      taskId: task.taskId,
+      section: task.section,
+      description: task.description,
+      owner: task.owner,
+      dependencies: task.dependencies,
+      status: task.status,
+      sprint: task.sprint,
+      tier: override?.tier || defaultTier,
+      gateProfile: override?.gateProfile || [],
+      acceptanceOwner: override?.acceptanceOwner,
+      debtAllowed: override?.debtAllowed || false,
+      waiverExpiry: override?.waiverExpiry,
+      evidenceRequired: override?.evidenceRequired || [],
+      isOverridden: !!override,
+    };
+  });
+}
 
 // Interface for sprint summary task data
 interface SprintTaskSummary {
@@ -60,11 +265,9 @@ export function loadPlanOverrides(): Record<string, TaskOverride> {
     const content = fs.readFileSync(PLAN_OVERRIDES_PATH, 'utf8');
     const data = yaml.load(content) as Record<string, any>;
 
-    // Convert YAML structure to TaskOverride objects
     const overrides: Record<string, TaskOverride> = {};
 
     for (const [taskId, override] of Object.entries(data)) {
-      // Skip metadata fields
       if (
         taskId.startsWith('_') ||
         taskId === 'schema_version' ||
@@ -270,21 +473,20 @@ export function loadDebtLedger(): DebtLedger | null {
 
 /**
  * Get governance summary for a sprint
+ * Now reads from CSV (source of truth) and applies overrides
  */
-export function getGovernanceSummary(sprint: number = 0): GovernanceSummary {
+export function getGovernanceSummary(sprint: number | 'all' = 0): GovernanceSummary {
+  const allTasksWithGov = getAllTasksWithGovernance(sprint === 'all' ? 'all' : sprint);
   const overrides = loadPlanOverrides();
   const reviewQueue = loadReviewQueue();
   const lintReport = loadLintReport();
   const debtLedger = loadDebtLedger();
-  const sprintSummary = loadSprintSummary();
 
-  // Count tiers
   const tierBreakdown = { A: 0, B: 0, C: 0 };
-  for (const override of Object.values(overrides)) {
-    tierBreakdown[override.tier]++;
+  for (const task of allTasksWithGov) {
+    tierBreakdown[task.tier]++;
   }
 
-  // Count expiring waivers (within 30 days)
   const now = new Date();
   const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
   let expiringWaivers = 0;
@@ -298,36 +500,52 @@ export function getGovernanceSummary(sprint: number = 0): GovernanceSummary {
     }
   }
 
-  // Get completed task IDs for tier completion breakdown
-  const completedTaskIds = new Set(sprintSummary?.completed_tasks?.map((t) => t.task_id) || []);
-
-  // Calculate completion per tier
   const tierCompletion = {
     A: { done: 0, total: 0 },
     B: { done: 0, total: 0 },
     C: { done: 0, total: 0 },
   };
-  for (const [taskId, override] of Object.entries(overrides)) {
-    tierCompletion[override.tier].total++;
-    if (completedTaskIds.has(taskId)) {
-      tierCompletion[override.tier].done++;
+
+  const taskSummary = {
+    total: allTasksWithGov.length,
+    done: 0,
+    in_progress: 0,
+    blocked: 0,
+    not_started: 0,
+    failed: 0,
+  };
+
+  for (const task of allTasksWithGov) {
+    tierCompletion[task.tier].total++;
+
+    const status = task.status.toLowerCase();
+    if (status === 'completed' || status === 'done') {
+      tierCompletion[task.tier].done++;
+      taskSummary.done++;
+    } else if (status === 'in progress' || status === 'in_progress') {
+      taskSummary.in_progress++;
+    } else if (status === 'blocked') {
+      taskSummary.blocked++;
+    } else if (status === 'failed') {
+      taskSummary.failed++;
+    } else {
+      taskSummary.not_started++;
     }
   }
 
+  let filteredReviewQueue = reviewQueue?.items || [];
+  if (sprint !== 'all' && typeof sprint === 'number') {
+    const sprintTaskIds = new Set(allTasksWithGov.map((t) => t.taskId));
+    filteredReviewQueue = filteredReviewQueue.filter((item) => sprintTaskIds.has(item.task_id));
+  }
+
   return {
-    sprint,
+    sprint: typeof sprint === 'number' ? sprint : 0,
     tierBreakdown,
     tierCompletion,
-    taskSummary: sprintSummary?.task_summary || {
-      total: 0,
-      done: 0,
-      in_progress: 0,
-      blocked: 0,
-      not_started: 0,
-      failed: 0,
-    },
+    taskSummary,
     validationCoverage: lintReport?.summary.validation_coverage.coverage_percentage || 0,
-    reviewQueueSize: reviewQueue?.items.length || 0,
+    reviewQueueSize: filteredReviewQueue.length,
     errorCount: lintReport?.summary.error_count || 0,
     warningCount: lintReport?.summary.warning_count || 0,
     debtItems: debtLedger?.summary.total_items || 0,
@@ -355,13 +573,10 @@ export function enhanceTaskWithGovernance(task: Task): TaskWithGovernance {
     return task as TaskWithGovernance;
   }
 
-  // Check if task is in review queue
   const reviewItem = reviewQueue?.items.find((item) => item.task_id === task.id);
 
-  // Check evidence status (simplified - just check if files exist)
   const evidenceStatus: Record<string, boolean> = {};
   for (const evidence of override.evidenceRequired) {
-    // For now, mark as pending - actual file checking would need fs access
     evidenceStatus[evidence] = false;
   }
 
@@ -370,7 +585,7 @@ export function enhanceTaskWithGovernance(task: Task): TaskWithGovernance {
     governance: {
       tier: override.tier,
       gateProfile: override.gateProfile,
-      gateStatus: {}, // Would need actual gate execution results
+      gateStatus: {},
       acceptanceOwner: override.acceptanceOwner,
       evidenceRequired: override.evidenceRequired,
       evidenceStatus,
@@ -411,7 +626,6 @@ export interface TierTaskDetail {
   debtAllowed: boolean;
 }
 
-// Helper to build lint errors map (extracted to reduce cognitive complexity)
 function buildTaskLintErrorsMap(lintReport: LintReport | null): Record<string, string[]> {
   const taskLintErrors: Record<string, string[]> = {};
   if (!lintReport?.errors) return taskLintErrors;
@@ -429,33 +643,27 @@ function buildTaskLintErrorsMap(lintReport: LintReport | null): Record<string, s
   return taskLintErrors;
 }
 
-// Helper to compare tier tasks for sorting
 function compareTierTasks(a: TierTaskDetail, b: TierTaskDetail): number {
-  // Pending before done
   if (a.status !== b.status) {
     return a.status === 'pending' ? -1 : 1;
   }
-  // If both pending, errors first
   if (a.status === 'pending' && a.hasLintErrors !== b.hasLintErrors) {
     return a.hasLintErrors ? -1 : 1;
   }
-  // Alphabetical by taskId
   return a.taskId.localeCompare(b.taskId);
 }
 
 /**
  * Get detailed tasks grouped by tier with status and lint info
+ * Now reads from CSV (source of truth) and applies overrides
  */
-export function getDetailedTasksByTier(): {
+export function getDetailedTasksByTier(sprintFilter?: number | 'all'): {
   A: TierTaskDetail[];
   B: TierTaskDetail[];
   C: TierTaskDetail[];
 } {
-  const overrides = loadPlanOverrides();
-  const sprintSummary = loadSprintSummary();
+  const allTasksWithGov = getAllTasksWithGovernance(sprintFilter);
   const lintReport = loadLintReport();
-
-  const completedTaskIds = new Set(sprintSummary?.completed_tasks?.map((t) => t.task_id) || []);
   const taskLintErrors = buildTaskLintErrorsMap(lintReport);
 
   const result: { A: TierTaskDetail[]; B: TierTaskDetail[]; C: TierTaskDetail[] } = {
@@ -464,26 +672,27 @@ export function getDetailedTasksByTier(): {
     C: [],
   };
 
-  for (const [taskId, override] of Object.entries(overrides)) {
-    const isDone = completedTaskIds.has(taskId);
-    const lintErrors = taskLintErrors[taskId] || [];
+  for (const task of allTasksWithGov) {
+    const status = task.status.toLowerCase();
+    const isDone = status === 'completed' || status === 'done';
+    const isBlocked = status === 'blocked';
+    const lintErrors = taskLintErrors[task.taskId] || [];
 
     const detail: TierTaskDetail = {
-      taskId,
-      status: isDone ? 'done' : 'pending',
-      acceptanceOwner: override.acceptanceOwner,
+      taskId: task.taskId,
+      status: isDone ? 'done' : isBlocked ? 'blocked' : 'pending',
+      acceptanceOwner: task.acceptanceOwner,
       hasLintErrors: lintErrors.length > 0,
       lintErrorTypes: lintErrors,
-      evidenceRequired: override.evidenceRequired,
-      gateProfile: override.gateProfile,
-      waiverExpiry: override.waiverExpiry,
-      debtAllowed: override.debtAllowed,
+      evidenceRequired: task.evidenceRequired,
+      gateProfile: task.gateProfile,
+      waiverExpiry: task.waiverExpiry,
+      debtAllowed: task.debtAllowed,
     };
 
-    result[override.tier].push(detail);
+    result[task.tier].push(detail);
   }
 
-  // Sort each tier: pending first (with errors at top), then done
   for (const tier of ['A', 'B', 'C'] as const) {
     result[tier].sort(compareTierTasks);
   }

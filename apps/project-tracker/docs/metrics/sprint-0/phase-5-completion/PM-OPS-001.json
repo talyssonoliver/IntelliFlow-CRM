@@ -9,14 +9,20 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": null,
-    "required": ["AUTOMATION-001", "ENV-005-AI"]
+    "verified_at": "2025-12-21T12:38:57.262Z",
+    "required": [
+      "AUTOMATION-001",
+      "ENV-005-AI"
+    ]
   },
-  "dependencies_resolved": ["AUTOMATION-001", "ENV-005-AI"],
-  "started_at": null,
-  "completed_at": null,
+  "dependencies_resolved": [
+    "AUTOMATION-001",
+    "ENV-005-AI"
+  ],
+  "started_at": "2025-12-21T07:06:10.592Z",
+  "completed_at": "2025-12-21T07:21:10.592Z",
   "target_duration_minutes": null,
-  "actual_duration_minutes": null,
+  "actual_duration_minutes": 15,
   "artifacts": {
     "expected": [
       "docs/operations/project-playbook.md",
@@ -25,7 +31,13 @@
       "docs/operations/abc-classification.md",
       "docs/operations/raci.md"
     ],
-    "created": [],
+    "created": [
+      "docs/operations/project-playbook.md",
+      "docs/operations/wip-policy.md",
+      "docs/operations/ticket-sizing.md",
+      "docs/operations/abc-classification.md",
+      "docs/operations/raci.md"
+    ],
     "missing": []
   },
   "validations": [

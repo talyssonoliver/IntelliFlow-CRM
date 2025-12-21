@@ -9,12 +9,16 @@
   "phase": "phase-3-dependencies",
   "stream": null,
   "dependencies": {
-    "required": ["ENV-007-AI"],
-    "verified_at": "2025-12-16T00:00:00Z",
-    "all_satisfied": false
+    "required": [
+      "ENV-007-AI"
+    ],
+    "verified_at": "2025-12-21T12:38:56.511Z",
+    "all_satisfied": true
   },
   "status_history": [],
-  "dependencies_resolved": [],
+  "dependencies_resolved": [
+    "ENV-007-AI"
+  ],
   "started_at": "2025-12-17T20:23:07.638Z",
   "completed_at": "2025-12-17T20:38:07.638Z",
   "target_duration_minutes": 300,
@@ -44,6 +48,29 @@
     "created": [],
     "missing": []
   },
-  "validations": [],
+  "validations": [
+    {
+      "name": "IDE configuration exists",
+      "command": "test -f .vscode/settings.json || test -f .idea/workspace.xml",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-21T08:36:22.724Z",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_hash": "sha256:RU5WLTAxMS1BSS1JREUgY29uZmlndXJh",
+      "notes": "Validation passed"
+    },
+    {
+      "name": "Dev environment configuration exists",
+      "command": "test -f .devcontainer/devcontainer.json || test -f docker-compose.yml",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-21T08:36:22.724Z",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_hash": "sha256:RU5WLTAxMS1BSS1EZXYgZW52aXJvbm1l",
+      "notes": "Validation passed"
+    }
+  ],
   "blockers": []
 }

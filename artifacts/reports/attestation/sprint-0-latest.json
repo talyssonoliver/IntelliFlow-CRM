@@ -1,13 +1,13 @@
 {
   "sprint": "0",
-  "generatedAt": "2025-12-21T12:29:45.426Z",
+  "generatedAt": "2025-12-21T10:32:09.601Z",
   "totalTasks": 35,
   "completedTasks": 35,
   "attestations": [
     {
       "taskId": "EXC-INIT-001",
-      "attestedAt": "2025-12-21T12:29:44.545Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:08.446Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -29,13 +29,13 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: Budget approved",
             "Prereq: AI tools access",
-            "Prereq: GitHub Enterprise",
-            "Verified by MATOP run: 20251221-095240-76c18197"
-          ]
+            "Prereq: GitHub Enterprise"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -77,16 +77,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "AI-SETUP-001",
-      "attestedAt": "2025-12-21T12:29:44.568Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:08.475Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -108,12 +108,12 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: Claude Code access",
-            "Prereq: project repository created",
-            "Verified by MATOP run: 20251221-095924-79acaf78"
-          ]
+            "Prereq: project repository created"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -154,16 +154,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "AI-SETUP-002",
-      "attestedAt": "2025-12-21T12:29:44.589Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:08.504Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -185,12 +185,12 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: GitHub Enterprise",
-            "Prereq: Copilot licenses",
-            "Verified by MATOP run: 20251221-095930-abe95318"
-          ]
+            "Prereq: Copilot licenses"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -233,16 +233,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "AI-SETUP-003",
-      "attestedAt": "2025-12-21T12:29:44.609Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:08.536Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -264,12 +264,12 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: API keys configured",
-            "Prereq: sandbox environments",
-            "Verified by MATOP run: 20251221-095940-79c35fc4"
-          ]
+            "Prereq: sandbox environments"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -312,16 +312,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "ENV-001-AI",
-      "attestedAt": "2025-12-21T12:29:44.635Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:08.571Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -343,12 +343,12 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: Claude Code ready",
-            "Prereq: automation commands configured",
-            "Verified by MATOP run: 20251221-095311-99f2ef1d"
-          ]
+            "Prereq: automation commands configured"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -391,16 +391,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "ENV-002-AI",
-      "attestedAt": "2025-12-21T12:29:44.663Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:08.611Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -422,12 +422,12 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: Monorepo ready",
-            "Prereq: Copilot automation active",
-            "Verified by MATOP run: 20251221-095322-950f4b46"
-          ]
+            "Prereq: Copilot automation active"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -471,16 +471,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "ENV-003-AI",
-      "attestedAt": "2025-12-21T12:29:44.693Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:08.647Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -502,12 +502,12 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
-            "Prereq: Docker Desktop",
-            "Prereq: Claude Code hooks active",
-            "Verified by MATOP run: 20251221-095338-3a7942a7"
-          ]
+            "Prereq (needs verification): Docker Desktop",
+            "Prereq: Claude Code hooks active"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -549,16 +549,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "ENV-004-AI",
-      "attestedAt": "2025-12-21T12:29:44.726Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:08.687Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -580,12 +580,12 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: Supabase account",
-            "Prereq: AI schema generation ready",
-            "Verified by MATOP run: 20251221-095345-12d8b7bd"
-          ]
+            "Prereq: AI schema generation ready"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -627,16 +627,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "ENV-005-AI",
-      "attestedAt": "2025-12-21T12:29:44.755Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:08.716Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -658,12 +658,12 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: GitHub Actions",
-            "Prereq: AI automation hooks",
-            "Verified by MATOP run: 20251221-095353-e500b4cd"
-          ]
+            "Prereq: AI automation hooks"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -704,16 +704,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "ENV-006-AI",
-      "attestedAt": "2025-12-21T12:29:44.779Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:08.753Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -735,12 +735,12 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: Database ready",
-            "Prereq: AI schema analysis complete",
-            "Verified by MATOP run: 20251221-095402-26630b90"
-          ]
+            "Prereq: AI schema analysis complete"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -781,16 +781,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "ENV-007-AI",
-      "attestedAt": "2025-12-21T12:29:44.810Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:08.799Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -812,12 +812,12 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: Prisma ready",
-            "Prereq: AI type generation active",
-            "Verified by MATOP run: 20251221-095416-20e3ee6d"
-          ]
+            "Prereq: AI type generation active"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -842,8 +842,8 @@
           "description": "All specified artifacts exist and are valid",
           "status": "pass",
           "evidence": [
-            "Found: apps/api/src/modules/* (5 files in apps/api/src/modules)",
-            "Found: apps/api/src/router.ts (sha256: 296ca9fa2d0e...)",
+            "Found: apps/api/src/modules/* (6 files in apps/api/src/modules)",
+            "Found: apps/api/src/router.ts (sha256: 12f07615cfeb...)",
             "Found: apps/web/src/lib/trpc.ts (sha256: 3ccae252f529...)"
           ]
         },
@@ -859,16 +859,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "ENV-008-AI",
-      "attestedAt": "2025-12-21T12:29:44.837Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:08.842Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -890,12 +890,12 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: Monitoring tools selected",
-            "Prereq: AI analysis ready",
-            "Verified by MATOP run: 20251221-095425-e19431df"
-          ]
+            "Prereq: AI analysis ready"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -941,16 +941,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "ENV-009-AI",
-      "attestedAt": "2025-12-21T12:29:44.864Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:08.874Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -972,12 +972,12 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: Design system",
-            "Prereq: AI component generation",
-            "Verified by MATOP run: 20251221-095437-6870e81e"
-          ]
+            "Prereq: AI component generation"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -1002,7 +1002,7 @@
           "description": "All specified artifacts exist and are valid",
           "status": "pass",
           "evidence": [
-            "Found: apps/web/* (12 files in apps/web)",
+            "Found: apps/web/* (13 files in apps/web)",
             "Found: apps/web/src/components/* (2 files in apps/web/src/components)",
             "Found: packages/ui/src/components/* (7 files in packages/ui/src/components)"
           ]
@@ -1019,16 +1019,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "ENV-010-AI",
-      "attestedAt": "2025-12-21T12:29:44.892Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:08.906Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -1051,12 +1051,12 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: AI test generation tools",
-            "Prereq: coverage targets",
-            "Verified by MATOP run: 20251221-095449-599d02cd"
-          ]
+            "Prereq: coverage targets"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -1099,15 +1099,15 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "ENV-011-AI",
-      "attestedAt": "2025-12-21T12:29:44.926Z",
+      "attestedAt": "2025-12-21T10:32:08.935Z",
       "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
@@ -1133,10 +1133,9 @@
           "status": "warn",
           "evidence": [
             "Prereq: OpenAI access",
-            "Prereq: AI chain optimization",
-            "MATOP verdict was WARN - review prerequisites"
+            "Prereq: AI chain optimization"
           ],
-          "recommendation": "Check MATOP evidence for prerequisite issues"
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -1187,8 +1186,8 @@
     },
     {
       "taskId": "ENV-012-AI",
-      "attestedAt": "2025-12-21T12:29:44.959Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:08.965Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -1210,12 +1209,12 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: Docusaurus setup",
-            "Prereq: AI content generation",
-            "Verified by MATOP run: 20251221-095522-75e1b659"
-          ]
+            "Prereq: AI content generation"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -1240,7 +1239,7 @@
           "description": "All specified artifacts exist and are valid",
           "status": "pass",
           "evidence": [
-            "Found: docs/* (28 files in docs)",
+            "Found: docs/* (30 files in docs)",
             "Found: docs/docusaurus.config.js (sha256: f310444fe9d1...)"
           ]
         },
@@ -1256,16 +1255,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "ENV-013-AI",
-      "attestedAt": "2025-12-21T12:29:44.988Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:08.990Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -1289,12 +1288,12 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: Security AI tools",
-            "Prereq: threat models",
-            "Verified by MATOP run: 20251221-095531-b642866b"
-          ]
+            "Prereq: threat models"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -1337,16 +1336,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "ENV-014-AI",
-      "attestedAt": "2025-12-21T12:29:45.013Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:09.015Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -1368,12 +1367,12 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: Performance AI tools",
-            "Prereq: metrics defined",
-            "Verified by MATOP run: 20251221-095537-13457ddf"
-          ]
+            "Prereq: metrics defined"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -1416,16 +1415,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "ENV-015-AI",
-      "attestedAt": "2025-12-21T12:29:45.049Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:09.042Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -1447,12 +1446,12 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: Feature flag system",
-            "Prereq: AI rollout engine",
-            "Verified by MATOP run: 20251221-095544-aa6643a3"
-          ]
+            "Prereq: AI rollout engine"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -1495,16 +1494,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "ENV-016-AI",
-      "attestedAt": "2025-12-21T12:29:45.072Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:09.076Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -1527,12 +1526,12 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: Analytics strategy",
-            "Prereq: AI insight engine",
-            "Verified by MATOP run: 20251221-095550-cff7725c"
-          ]
+            "Prereq: AI insight engine"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -1577,16 +1576,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "ENV-017-AI",
-      "attestedAt": "2025-12-21T12:29:45.096Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:09.102Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -1605,18 +1604,19 @@
             "ENV-001-AI: Completed",
             "ENV-003-AI: Completed",
             "ENV-005-AI: Completed",
-            "ENV-010-AI: Completed"
+            "ENV-010-AI: Completed",
+            "IFC-001: Completed"
           ]
         },
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: All components ready",
-            "Prereq: AI orchestration active",
-            "Verified by MATOP run: 20251221-095557-0d488159"
-          ]
+            "Prereq: AI orchestration active"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -1661,16 +1661,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "ENV-018-AI",
-      "attestedAt": "2025-12-21T12:29:45.121Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:09.131Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -1692,12 +1692,12 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: Sprint 0 complete",
-            "Prereq: AI analytics ready",
-            "Verified by MATOP run: 20251221-095606-90dce0ab"
-          ]
+            "Prereq: AI analytics ready"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -1741,16 +1741,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "EP-001-AI",
-      "attestedAt": "2025-12-21T12:29:45.148Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:09.162Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -1773,13 +1773,13 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: Server provisioned",
             "Prereq: Tailscale or Cloudflare Access configured",
-            "Prereq: EasyPanel installed",
-            "Verified by MATOP run: 20251221-095616-292f1741"
-          ]
+            "Prereq: EasyPanel installed"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -1826,16 +1826,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "AUTOMATION-001",
-      "attestedAt": "2025-12-21T12:29:45.170Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:09.193Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -1861,11 +1861,11 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
-            "Prereq: All AI tools integrated",
-            "Verified by MATOP run: 20251221-095626-8f39af0e"
-          ]
+            "Prereq: All AI tools integrated"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -1893,9 +1893,9 @@
           "status": "pass",
           "evidence": [
             "Found: artifacts/misc/agent-coordination/* (2 files in artifacts/misc/agent-coordination)",
-            "Found: artifacts/misc/orchestration-config.yaml (sha256: 7c064e0b0a15...)",
-            "Found: artifacts/metrics/handoff-metrics.json (sha256: 82a6ebc84b2f...)",
-            "Found: artifacts/logs/quality-gates.log (sha256: 128b69cc346f...)"
+            "Found: artifacts/misc/orchestration-config.yaml (sha256: c541dac92854...)",
+            "Found: artifacts/metrics/handoff-metrics.json (sha256: 0a47a4a5c5fa...)",
+            "Found: artifacts/logs/quality-gates.log (sha256: 61858858b3b9...)"
           ]
         },
         "validationPassing": {
@@ -1910,16 +1910,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "AUTOMATION-002",
-      "attestedAt": "2025-12-21T12:29:45.194Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:09.228Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -1941,12 +1941,12 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: Metrics collection active",
-            "Prereq: AI analysis ready",
-            "Verified by MATOP run: 20251221-095634-92d2c34e"
-          ]
+            "Prereq: AI analysis ready"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -1974,9 +1974,9 @@
           "status": "pass",
           "evidence": [
             "Found: artifacts/misc/ai-dashboard/* (2 files in artifacts/misc/ai-dashboard)",
-            "Found: artifacts/misc/optimization-loop.yaml (sha256: f078abff582d...)",
-            "Found: artifacts/misc/roi-tracking.csv (sha256: 5c6b38061d5e...)",
-            "Found: artifacts/metrics/metrics-realtime.json (sha256: d355c6558dd0...)"
+            "Found: artifacts/misc/optimization-loop.yaml (sha256: 25b393b10c65...)",
+            "Found: artifacts/misc/roi-tracking.csv (sha256: e3d731a27bb2...)",
+            "Found: artifacts/metrics/metrics-realtime.json (sha256: 8f80003f6491...)"
           ]
         },
         "validationPassing": {
@@ -1991,16 +1991,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "IFC-000",
-      "attestedAt": "2025-12-21T12:29:45.214Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:09.260Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -2022,12 +2022,12 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: Leadership alignment complete",
-            "Prereq: vision approved",
-            "Verified by MATOP run: 20251221-095641-d457a6ea"
-          ]
+            "Prereq: vision approved"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -2070,16 +2070,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "DOC-001",
-      "attestedAt": "2025-12-21T12:29:45.236Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:09.304Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -2101,14 +2101,14 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: Stakeholder workshop (CEO/PM/Tech Lead)",
             "Prereq: access to existing notes",
             "Prereq: competitive context",
-            "Prereq: and current product scope",
-            "Verified by MATOP run: 20251221-095649-e5b4c9ff"
-          ]
+            "Prereq: and current product scope"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -2155,15 +2155,15 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "BRAND-001",
-      "attestedAt": "2025-12-21T12:29:45.258Z",
+      "attestedAt": "2025-12-21T10:32:09.334Z",
       "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
@@ -2189,10 +2189,9 @@
           "status": "warn",
           "evidence": [
             "Prereq: Access to any existing brand assets",
-            "Prereq: decision-maker availability for final selection",
-            "MATOP verdict was WARN - review prerequisites"
+            "Prereq: decision-maker availability for final selection"
           ],
-          "recommendation": "Check MATOP evidence for prerequisite issues"
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -2249,8 +2248,8 @@
     },
     {
       "taskId": "GTM-001",
-      "attestedAt": "2025-12-21T12:29:45.276Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:09.360Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -2272,12 +2271,12 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: Access to intended market assumptions",
-            "Prereq: any existing customer discovery notes",
-            "Verified by MATOP run: 20251221-103902-7ade9749"
-          ]
+            "Prereq: any existing customer discovery notes"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -2285,7 +2284,7 @@
           "status": "pass",
           "evidence": [
             "MATOP verdict: PASS",
-            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-103902-7ade9749"
+            "Evidence: C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-095658-1639b08e"
           ]
         },
         "kpisPassing": {
@@ -2316,22 +2315,22 @@
           "status": "pass",
           "evidence": [
             "Method: PM + Marketing sign-off; markdownlint/cspell pass; cross-linking to master brief",
-            "MATOP run: 20251221-103902-7ade9749",
+            "MATOP run: 20251221-095658-1639b08e",
             "Verdict: PASS"
           ]
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "GTM-002",
-      "attestedAt": "2025-12-21T12:29:45.301Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:09.399Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -2354,12 +2353,12 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: Approval of ICP/personas",
-            "Prereq: preliminary visual identity direction",
-            "Verified by MATOP run: 20251221-095703-ffcbf92a"
-          ]
+            "Prereq: preliminary visual identity direction"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -2404,16 +2403,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "PM-OPS-001",
-      "attestedAt": "2025-12-21T12:29:45.330Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:09.460Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -2436,12 +2435,12 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: Agreement on repo workflow and tracker usage",
-            "Prereq: availability of team roles and responsibilities",
-            "Verified by MATOP run: 20251221-095709-03369cd6"
-          ]
+            "Prereq: availability of team roles and responsibilities"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -2488,16 +2487,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "ENG-OPS-001",
-      "attestedAt": "2025-12-21T12:29:45.352Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:09.505Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -2521,12 +2520,12 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: CI pipeline baseline",
-            "Prereq: lint/typecheck/test scripts present",
-            "Verified by MATOP run: 20251221-095713-131c592f"
-          ]
+            "Prereq: lint/typecheck/test scripts present"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -2572,16 +2571,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "ANALYTICS-001",
-      "attestedAt": "2025-12-21T12:29:45.375Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:09.541Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -2604,13 +2603,13 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: Access to ICP/personas",
             "Prereq: agreement on CRM prioritization goals",
-            "Prereq: any existing analytics assumptions",
-            "Verified by MATOP run: 20251221-095718-5a9475ff"
-          ]
+            "Prereq: any existing analytics assumptions"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -2655,15 +2654,15 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     },
     {
       "taskId": "EXC-SEC-001",
-      "attestedAt": "2025-12-21T12:29:45.400Z",
+      "attestedAt": "2025-12-21T10:32:09.570Z",
       "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
@@ -2689,10 +2688,9 @@
           "status": "warn",
           "evidence": [
             "Prereq: Secrets Management tool selected",
-            "Prereq: AI access credentials secured",
-            "MATOP verdict was WARN - review prerequisites"
+            "Prereq: AI access credentials secured"
           ],
-          "recommendation": "Check MATOP evidence for prerequisite issues"
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -2742,8 +2740,8 @@
     },
     {
       "taskId": "IFC-160",
-      "attestedAt": "2025-12-21T12:29:45.426Z",
-      "overallStatus": "valid",
+      "attestedAt": "2025-12-21T10:32:09.600Z",
+      "overallStatus": "needs_review",
       "criteria": {
         "ownerApproval": {
           "name": "Owner Approval",
@@ -2766,12 +2764,12 @@
         "prerequisitesMet": {
           "name": "Prerequisites Met",
           "description": "All pre-requisites are satisfied",
-          "status": "pass",
+          "status": "warn",
           "evidence": [
             "Prereq: Canonical repo layout agreed",
-            "Prereq: planning templates in place",
-            "Verified by MATOP run: 20251221-095729-9eba282c"
-          ]
+            "Prereq: planning templates in place"
+          ],
+          "recommendation": "Manually verify prerequisites are still valid"
         },
         "definitionOfDoneMet": {
           "name": "Definition of Done Met",
@@ -2800,7 +2798,7 @@
           "evidence": [
             "Found: docs/architecture/repo-layout.md (sha256: b545a44cba9a...)",
             "Found: docs/architecture/artifact-conventions.md (sha256: f8dc54e4610d...)",
-            "Found: tools/lint/artifact-paths.ts (sha256: 0d5eb6492413...)",
+            "Found: tools/lint/artifact-paths.ts (sha256: 759ec20d80dc...)",
             "Found: .github/workflows/artifact-lint.yml (sha256: 1b2db0aa55ab...)",
             "Found: scripts/migration/artifact-move-map.csv (sha256: 042e925d44b4...)"
           ]
@@ -2817,16 +2815,16 @@
         }
       },
       "summary": {
-        "passed": 7,
-        "warned": 0,
+        "passed": 6,
+        "warned": 1,
         "failed": 0,
         "skipped": 0
       }
     }
   ],
   "summary": {
-    "fullyValid": 32,
-    "needsReview": 3,
+    "fullyValid": 0,
+    "needsReview": 35,
     "invalid": 0
   }
 }

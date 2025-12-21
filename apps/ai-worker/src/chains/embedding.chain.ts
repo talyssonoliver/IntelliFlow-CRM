@@ -352,7 +352,7 @@ export class EmbeddingChain {
    */
   parseFromPgvector(pgvectorString: string): number[] {
     // Remove brackets and split by comma
-    const cleaned = pgvectorString.replace(/[\[\]]/g, '');
+    const cleaned = pgvectorString.replace(/[[\]]/g, '');
     return cleaned.split(',').map((val) => parseFloat(val.trim()));
   }
 }

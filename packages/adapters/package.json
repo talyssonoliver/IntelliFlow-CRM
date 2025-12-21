@@ -1,0 +1,49 @@
+{
+  "name": "@intelliflow/adapters",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Infrastructure adapters for IntelliFlow CRM - Repository implementations and external services",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./repositories/*": {
+      "types": "./dist/repositories/*.d.ts",
+      "import": "./dist/repositories/*.mjs",
+      "require": "./dist/repositories/*.js"
+    },
+    "./external/*": {
+      "types": "./dist/external/*.d.ts",
+      "import": "./dist/external/*.mjs",
+      "require": "./dist/external/*.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "clean": "rm -rf dist .turbo",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint \"src/**/*.ts\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@intelliflow/domain": "workspace:*",
+    "@intelliflow/application": "workspace:*",
+    "@intelliflow/db": "workspace:*"
+  },
+  "devDependencies": {
+    "@intelliflow/typescript-config": "workspace:*",
+    "@types/node": "^20.11.0",
+    "@vitest/coverage-v8": "^4.0.16",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^4.0.16"
+  }
+}

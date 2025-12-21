@@ -10,7 +10,7 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { router, protectedProcedure } from '../../server';
+import { createTRPCRouter, protectedProcedure } from '../../trpc';
 import {
   createLeadSchema,
   updateLeadSchema,
@@ -21,7 +21,7 @@ import {
 } from '@intelliflow/validators/lead';
 import { LeadStatus } from '@intelliflow/db';
 
-export const leadRouter = router({
+export const leadRouter = createTRPCRouter({
   /**
    * Create a new lead
    */

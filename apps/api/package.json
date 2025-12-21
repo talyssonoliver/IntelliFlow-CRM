@@ -12,7 +12,7 @@
     "start": "node dist/index.js",
     "clean": "rm -rf dist .turbo",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src/",
+    "lint": "eslint \"src/**/*.ts\"",
     "test": "vitest run",
     "test:watch": "vitest"
   },

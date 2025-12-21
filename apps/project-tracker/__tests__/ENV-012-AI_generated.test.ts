@@ -69,7 +69,7 @@ function createGenerateRunHelp(deps: Deps): GenerateRunHelp {
     let cwd: string;
     try {
       cwd = (options?.cwd ?? deps.getCwd()).trim();
-    } catch (err) {
+    } catch {
       throw new Error('Failed to resolve current directory');
     }
 

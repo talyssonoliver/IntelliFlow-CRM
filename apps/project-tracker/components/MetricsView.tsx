@@ -54,7 +54,11 @@ interface PhaseMetrics {
   completed_at: string | null;
 }
 
-export default function MetricsView() {
+interface MetricsViewProps {
+  selectedSprint: number | 'all' | 'Continuous';
+}
+
+export default function MetricsView({ selectedSprint }: MetricsViewProps) {
   const [sprintSummary, setSprintSummary] = useState<SprintSummary | null>(null);
   const [phases, setPhases] = useState<PhaseMetrics[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -84,14 +88,22 @@ export default function MetricsView() {
     }
   };
 
+  // Convert selectedSprint to query parameter
+  const getSprintParam = () => {
+    if (selectedSprint === 'all') return 'all';
+    if (selectedSprint === 'Continuous') return 'continuous';
+    return String(selectedSprint);
+  };
+
   const loadMetrics = async () => {
     setIsLoading(true);
+    const sprintParam = getSprintParam();
     try {
       const timestamp = Date.now();
 
       const [sprintRes, phasesRes] = await Promise.all([
-        fetch(`/api/metrics/sprint?t=${timestamp}`, { cache: 'no-store' }),
-        fetch(`/api/metrics/phases?t=${timestamp}`, { cache: 'no-store' }),
+        fetch(`/api/metrics/sprint?sprint=${sprintParam}&t=${timestamp}`, { cache: 'no-store' }),
+        fetch(`/api/metrics/phases?sprint=${sprintParam}&t=${timestamp}`, { cache: 'no-store' }),
       ]);
 
       if (sprintRes.ok) {
@@ -131,7 +143,7 @@ export default function MetricsView() {
     return () => {
       eventSource.close();
     };
-  }, []);
+  }, [selectedSprint]);
 
   const getStatusColor = (status: string) => {
     switch (status) {

@@ -46,12 +46,13 @@ intelliFlow-CRM/
 
 ## Sprint 0 Status
 
-**Completion**: 100% (27/27 tasks)
+**Completion**: 100% (35/35 tasks)
 
-- Completed: 27
+- Completed: 35
 - In Progress: 0
 - Planned: 0
 - Backlog: 0
+- Blocked: 0
 
 See `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv` for details.
 

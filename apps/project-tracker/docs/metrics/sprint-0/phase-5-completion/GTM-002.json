@@ -9,14 +9,20 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": null,
-    "required": ["GTM-001", "BRAND-001"]
+    "verified_at": "2025-12-21T12:38:57.217Z",
+    "required": [
+      "GTM-001",
+      "BRAND-001"
+    ]
   },
-  "dependencies_resolved": ["GTM-001", "BRAND-001"],
-  "started_at": null,
-  "completed_at": null,
+  "dependencies_resolved": [
+    "GTM-001",
+    "BRAND-001"
+  ],
+  "started_at": "2025-12-21T07:06:10.575Z",
+  "completed_at": "2025-12-21T07:21:10.575Z",
   "target_duration_minutes": null,
-  "actual_duration_minutes": null,
+  "actual_duration_minutes": 15,
   "artifacts": {
     "expected": [
       "docs/company/messaging/positioning.md",
@@ -24,7 +30,12 @@
       "docs/company/messaging/copy-blocks.md",
       "docs/company/messaging/cta-library.md"
     ],
-    "created": [],
+    "created": [
+      "docs/company/messaging/positioning.md",
+      "docs/company/messaging/value-props.md",
+      "docs/company/messaging/copy-blocks.md",
+      "docs/company/messaging/cta-library.md"
+    ],
     "missing": []
   },
   "validations": [

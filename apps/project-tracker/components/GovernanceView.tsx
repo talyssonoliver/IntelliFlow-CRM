@@ -321,7 +321,11 @@ function TierCard({
   );
 }
 
-export default function GovernanceView() {
+interface GovernanceViewProps {
+  selectedSprint: number | 'all' | 'Continuous';
+}
+
+export default function GovernanceView({ selectedSprint }: GovernanceViewProps) {
   const [summary, setSummary] = useState<GovernanceSummary | null>(null);
   const [reviewQueue, setReviewQueue] = useState<ReviewQueueItem[]>([]);
   const [debtItems, setDebtItems] = useState<DebtItem[]>([]);
@@ -353,15 +357,23 @@ export default function GovernanceView() {
     return res.ok ? res.json() : null;
   };
 
+  // Convert selectedSprint to query parameter
+  const getSprintParam = () => {
+    if (selectedSprint === 'all') return 'all';
+    if (selectedSprint === 'Continuous') return 'continuous';
+    return String(selectedSprint);
+  };
+
   const loadGovernanceData = async () => {
     setIsLoading(true);
+    const sprintParam = getSprintParam();
     try {
       const [summaryData, queueData, debtData, lintData, phantomData] = await Promise.all([
-        fetchJson('/api/governance/summary'),
-        fetchJson('/api/governance/review-queue'),
-        fetchJson('/api/governance/debt'),
-        fetchJson('/api/governance/lint-report'),
-        fetchJson('/api/governance/phantom-audit'),
+        fetchJson(`/api/governance/summary?sprint=${sprintParam}`),
+        fetchJson(`/api/governance/review-queue?sprint=${sprintParam}`),
+        fetchJson(`/api/governance/debt?sprint=${sprintParam}`),
+        fetchJson(`/api/governance/lint-report?sprint=${sprintParam}`),
+        fetchJson(`/api/governance/phantom-audit?sprint=${sprintParam}`),
       ]);
 
       if (summaryData) {
@@ -386,8 +398,9 @@ export default function GovernanceView() {
   const runPlanLint = async () => {
     setIsRunningLint(true);
     setLintOutput('Running Python plan-linter...\n');
+    const sprintParam = getSprintParam();
     try {
-      const response = await fetch('/api/governance/run-lint?sprint=0&verbose=true', {
+      const response = await fetch(`/api/governance/run-lint?sprint=${sprintParam}&verbose=true`, {
         method: 'POST',
         cache: 'no-store',
       });
@@ -415,7 +428,7 @@ export default function GovernanceView() {
 
   useEffect(() => {
     loadGovernanceData();
-  }, []);
+  }, [selectedSprint]);
 
   const toggleExpand = (id: string) => {
     const newExpanded = new Set(expandedItems);
@@ -590,7 +603,13 @@ export default function GovernanceView() {
           <Shield className="w-8 h-8 text-blue-600" />
           <div>
             <h1 className="text-2xl font-bold">Plan Governance</h1>
-            <p className="text-gray-600">Sprint {summary?.sprint || 0} validation and compliance</p>
+            <p className="text-gray-600">
+              {selectedSprint === 'all'
+                ? 'All Sprints'
+                : selectedSprint === 'Continuous'
+                  ? 'Continuous Tasks'
+                  : `Sprint ${selectedSprint}`} validation and compliance
+            </p>
           </div>
         </div>
         <div className="flex gap-2">

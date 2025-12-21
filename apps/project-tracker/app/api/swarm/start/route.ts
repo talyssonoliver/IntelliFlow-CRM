@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { spawn } from 'node:child_process';
 import { stat } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { PATHS, ensureArtifactDirs } from '@/lib/paths';
 
 // Convert Windows path to Unix-style for Git Bash
@@ -13,7 +14,6 @@ function toUnixPath(windowsPath: string): string {
 // Get bash executable path (works on Windows and Unix)
 function getBashPath(): string {
   if (process.platform === 'win32') {
-    const { existsSync } = require('fs');
     const gitBashPaths = [
       'C:\\Program Files\\Git\\bin\\bash.exe',
       'C:\\Program Files\\Git\\usr\\bin\\bash.exe',
@@ -57,7 +57,6 @@ export async function POST(request: Request) {
     }
 
     // Convert paths for Git Bash on Windows
-    const unixMetricsDir = toUnixPath(metricsDir);
     const unixSwarmManagerPath = toUnixPath(swarmManagerPath);
 
     // Spawn the swarm manager process

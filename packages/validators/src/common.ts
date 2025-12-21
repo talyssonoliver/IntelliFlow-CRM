@@ -1,16 +1,23 @@
 import { z } from 'zod';
 
 // Common ID schemas
-export const idSchema = z.string().cuid();
+// Use UUID as the standard ID format (database-compatible)
+export const idSchema = z.string().uuid();
 
-export const uuidSchema = z.string().uuid();
+// Keep cuid for legacy compatibility if needed
+export const cuidSchema = z.string().cuid();
+
+// Alias for clarity
+export const uuidSchema = idSchema;
 
 // Common string schemas
 export const emailSchema = z.string().email('Invalid email address').toLowerCase().trim();
 
+// Phone schema - accepts E.164 format or common formats with dashes/spaces
 export const phoneSchema = z
   .string()
-  .regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number format')
+  .regex(/^\+?[1-9][\d\s\-()]{1,18}$/, 'Invalid phone number format')
+  .transform((val) => val.replace(/[\s\-()]/g, '')) // Normalize to digits only
   .optional();
 
 export const urlSchema = z.string().url('Invalid URL').optional();

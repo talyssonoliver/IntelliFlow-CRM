@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir, access } from 'node:fs/promises';
 import { join } from 'node:path';
 
 export const dynamic = 'force-dynamic';
@@ -17,16 +17,37 @@ interface PhaseMetrics {
   };
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const sprintPath = join(process.cwd(), 'docs', 'metrics', 'sprint-0');
-    const phases = [
-      'phase-0-initialisation',
-      'phase-1-ai-foundation',
-      'phase-2-parallel',
-      'phase-3-dependencies',
-      'phase-4-integration',
-    ];
+    const { searchParams } = new URL(request.url);
+    const sprintParam = searchParams.get('sprint') || '0';
+
+    // Handle 'all' and 'continuous' - default to sprint 0 for now
+    const sprintNumber = sprintParam === 'all' || sprintParam === 'continuous' ? '0' : sprintParam;
+    const sprintFolder = `sprint-${sprintNumber}`;
+
+    const sprintPath = join(process.cwd(), 'docs', 'metrics', sprintFolder);
+
+    // Check if sprint folder exists
+    try {
+      await access(sprintPath);
+    } catch {
+      // Sprint folder doesn't exist, return empty array
+      return NextResponse.json([], {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+          Pragma: 'no-cache',
+          Expires: '0',
+        },
+      });
+    }
+
+    // Dynamically find phase folders
+    const entries = await readdir(sprintPath, { withFileTypes: true });
+    const phases = entries
+      .filter((entry) => entry.isDirectory() && entry.name.startsWith('phase-'))
+      .map((entry) => entry.name)
+      .sort();
 
     const phaseData: PhaseMetrics[] = [];
 
