@@ -14,10 +14,20 @@ playwright-report/
 
 # Keep Sprint artifact outputs under artifacts/
 !artifacts/coverage/
-!artifacts/coverage/**
 !artifacts/test-results/
 !artifacts/test-results/**
 artifacts/coverage/.tmp/
+
+# Coverage: keep only data files, ignore generated HTML reports
+artifacts/coverage/**/*.html
+artifacts/coverage/**/*.css
+artifacts/coverage/**/*.js
+artifacts/coverage/**/*.png
+artifacts/coverage/**/
+!artifacts/coverage/
+!artifacts/coverage/*.json
+!artifacts/coverage/*.info
+!artifacts/coverage/lcov-report/
 
 # next.js
 /.next/

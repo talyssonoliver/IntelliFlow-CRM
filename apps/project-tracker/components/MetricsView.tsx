@@ -294,22 +294,23 @@ export default function MetricsView({ selectedSprint }: MetricsViewProps) {
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold mb-4">Phase Progress</h2>
         <div className="space-y-4">
-          {phases.map((phase) => {
+          {phases.map((phase, index) => {
             const status = getPhaseStatus(phase);
+            const metrics = phase.aggregated_metrics ?? { total_tasks: 0, done: 0, in_progress: 0, blocked: 0, not_started: 0 };
             const phaseProgress =
-              phase.aggregated_metrics.total_tasks > 0
-                ? (phase.aggregated_metrics.done / phase.aggregated_metrics.total_tasks) * 100
+              metrics.total_tasks > 0
+                ? (metrics.done / metrics.total_tasks) * 100
                 : 0;
 
             return (
-              <div key={phase.phase} className="border rounded-lg p-4">
+              <div key={phase.phase ?? `phase-${index}`} className="border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
                     <div className={`w-3 h-3 rounded-full ${getPhaseStatusColor(status)}`} />
                     <h3 className="font-semibold">{phase.phase}</h3>
                   </div>
                   <span className="text-sm text-gray-600">
-                    {phase.aggregated_metrics.done} / {phase.aggregated_metrics.total_tasks}
+                    {metrics.done} / {metrics.total_tasks}
                   </span>
                 </div>
                 <p className="text-sm text-gray-600 mb-3">{phase.description}</p>
@@ -343,7 +344,7 @@ export default function MetricsView({ selectedSprint }: MetricsViewProps) {
                 {typeof kpi.target === 'number' ? kpi.target.toFixed(1) : (kpi.target ?? 'N/A')}{' '}
                 {kpi.unit}
               </p>
-              <p className="text-xs font-semibold mt-1">{kpi.status.replaceAll('_', ' ')}</p>
+              <p className="text-xs font-semibold mt-1">{(kpi.status || 'unknown').replaceAll('_', ' ')}</p>
             </div>
           ))}
         </div>

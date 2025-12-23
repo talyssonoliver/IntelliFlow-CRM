@@ -325,16 +325,26 @@ export function createRunSummary(
     }
   }
 
+  const completedAt = new Date().toISOString();
+
   return {
+    run_id: bundle.runId,
     runId: bundle.runId,
     taskId: bundle.taskId,
+    started_at: startedAt,
+    finished_at: completedAt,
     startedAt,
-    completedAt: new Date().toISOString(),
+    completedAt,
+    mode: 'matop',
+    scope: `MATOP Validation - ${bundle.taskId}`,
     resolvedCsvPath,
     strictMode,
     stoaAssignment,
     gateSelection: bundle.gateSelection,
     finalVerdict,
+    result: {
+      overall_status: finalVerdict,
+    },
     evidenceHashes: bundle.hashes,
     waiverCount: bundle.waivers.length,
     findingsCount,

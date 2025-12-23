@@ -9,7 +9,7 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2025-12-21T21:20:39.910Z",
+    "verified_at": "2025-12-22T07:23:15.908Z",
     "required": [
       "ENV-004-AI"
     ]
@@ -63,10 +63,11 @@
     "created": [
       "packages/db/prisma/schema.prisma",
       "packages/db/dist/index.js",
-      "packages/db/dist/client.js",
-      "artifacts/logs/prisma-validation-test.log"
+      "packages/db/dist/client.js"
     ],
-    "missing": []
+    "missing": [
+      "artifacts/logs/prisma-validation-test.log"
+    ]
   },
   "validations": [
     {

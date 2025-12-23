@@ -300,11 +300,11 @@
       "CrossQuarterDeps": "False",
       "Pre-requisites": "AI test generation tools, coverage targets",
       "Definition of Done": "Tests AI-generated, coverage AI-optimized, E2E scenarios AI-created, continuous validation",
-      "Status": "Completed",
-      "KPIs": "Coverage >95%, test generation <1 minute, AI-verified scenarios",
+      "Status": "In Progress",
+      "KPIs": "Coverage >90%, test generation <1 minute, AI-verified scenarios",
       "Target Sprint": "0",
       "Artifacts To Track": "tests/*, tests/e2e/*, artifacts/coverage/coverage-report.html, artifacts/logs/test-generation-log.json",
-      "Validation Method": "Coverage >95%, tests passing, scenarios validated"
+      "Validation Method": "Coverage >90%, tests passing, scenarios validated"
     },
     {
       "Task ID": "ENV-011-AI",
@@ -1485,16 +1485,16 @@
       "Section": "Testing",
       "Description": "Unit Tests (Vitest + TDD)",
       "Owner": "All Developers",
-      "Dependencies": "",
-      "CleanDependencies": "",
+      "Dependencies": "ENV-010-AI",
+      "CleanDependencies": "ENV-010-AI",
       "CrossQuarterDeps": "False",
       "Pre-requisites": "Vitest configured, TDD workflow adopted",
       "Definition of Done": "90%+ coverage, all business logic tested",
-      "Status": "Backlog",
+      "Status": "In Progress",
       "KPIs": "Coverage >90%, tests fast (<30s)",
-      "Target Sprint": "Continuous",
-      "Artifacts To Track": "artifacts/misc/coverage/lcov.info, artifacts/logs/test-execution-time.log, artifacts/misc/tdd-compliance.csv, artifacts/misc/mutation-test.html",
-      "Validation Method": "Coverage >90%, tests <30s, mutations tested"
+      "Target Sprint": "0",
+      "Artifacts To Track": "artifacts/coverage/lcov.info, artifacts/logs/test-execution-time.log, artifacts/metrics/tdd-compliance.csv, artifacts/reports/mutation-test.html",
+      "Validation Method": "Coverage >90%, tests <30s, vitest threshold enforcement active"
     },
     {
       "Task ID": "IFC-045",

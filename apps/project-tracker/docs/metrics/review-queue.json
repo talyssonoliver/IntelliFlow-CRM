@@ -1,8 +1,8 @@
 {
   "meta": {
-    "generated_at": "2025-12-21T16:14:13.209Z",
+    "generated_at": "2025-12-21T22:11:35.323Z",
     "sprint_scope": 0,
-    "total_items": 30
+    "total_items": 31
   },
   "items": [
     {
@@ -11,7 +11,10 @@
       "section": "Foundation Setup",
       "status": "Completed",
       "owner": "DevOps Engineer",
-      "reasons": ["High fan-out (5 dependents)", "Has waiver or debt_allowed"],
+      "reasons": [
+        "High fan-out (5 dependents)",
+        "Has waiver or debt_allowed"
+      ],
       "dependent_count": 5,
       "waiver_expiry": "2026-02-28",
       "priority": "high"
@@ -20,10 +23,13 @@
       "task_id": "ENV-010-AI",
       "tier": "B",
       "section": "Foundation Setup",
-      "status": "Completed",
+      "status": "In Progress",
       "owner": "QA Lead",
-      "reasons": ["High fan-out (3 dependents)", "Has waiver or debt_allowed"],
-      "dependent_count": 3,
+      "reasons": [
+        "High fan-out (4 dependents)",
+        "Has waiver or debt_allowed"
+      ],
+      "dependent_count": 4,
       "waiver_expiry": "2026-01-31",
       "priority": "high"
     },
@@ -33,7 +39,9 @@
       "section": "AI Foundation",
       "status": "Completed",
       "owner": "AI Specialist",
-      "reasons": ["Has waiver or debt_allowed"],
+      "reasons": [
+        "Has waiver or debt_allowed"
+      ],
       "waiver_expiry": "2026-01-31",
       "priority": "medium"
     },
@@ -43,7 +51,9 @@
       "section": "Foundation Setup",
       "status": "Completed",
       "owner": "AI Specialist",
-      "reasons": ["Has waiver or debt_allowed"],
+      "reasons": [
+        "Has waiver or debt_allowed"
+      ],
       "waiver_expiry": "2026-01-31",
       "priority": "medium"
     },
@@ -53,7 +63,9 @@
       "section": "Foundation Setup",
       "status": "Completed",
       "owner": "Tech Writer",
-      "reasons": ["Has waiver or debt_allowed"],
+      "reasons": [
+        "Has waiver or debt_allowed"
+      ],
       "waiver_expiry": "2026-02-28",
       "priority": "medium"
     },
@@ -63,7 +75,9 @@
       "section": "Foundation Setup",
       "status": "Completed",
       "owner": "Performance Engineer",
-      "reasons": ["Has waiver or debt_allowed"],
+      "reasons": [
+        "Has waiver or debt_allowed"
+      ],
       "waiver_expiry": "2026-02-28",
       "priority": "medium"
     },
@@ -73,7 +87,9 @@
       "section": "Foundation Setup",
       "status": "Completed",
       "owner": "Backend Dev",
-      "reasons": ["Has waiver or debt_allowed"],
+      "reasons": [
+        "Has waiver or debt_allowed"
+      ],
       "waiver_expiry": "2026-02-28",
       "priority": "medium"
     },
@@ -83,7 +99,9 @@
       "section": "Foundation Setup",
       "status": "Completed",
       "owner": "Frontend Dev",
-      "reasons": ["Has waiver or debt_allowed"],
+      "reasons": [
+        "Has waiver or debt_allowed"
+      ],
       "waiver_expiry": "2026-02-28",
       "priority": "medium"
     },
@@ -93,7 +111,9 @@
       "section": "Foundation Setup",
       "status": "Completed",
       "owner": "Tech Lead",
-      "reasons": ["Has waiver or debt_allowed"],
+      "reasons": [
+        "Has waiver or debt_allowed"
+      ],
       "dependent_count": 2,
       "waiver_expiry": "2026-02-28",
       "priority": "medium"
@@ -104,7 +124,9 @@
       "section": "Foundation Setup",
       "status": "Completed",
       "owner": "PM",
-      "reasons": ["Has waiver or debt_allowed"],
+      "reasons": [
+        "Has waiver or debt_allowed"
+      ],
       "dependent_count": 1,
       "waiver_expiry": "2026-01-31",
       "priority": "medium"
@@ -115,7 +137,9 @@
       "section": "AI Foundation",
       "status": "Completed",
       "owner": "AI Specialist",
-      "reasons": ["Has waiver or debt_allowed"],
+      "reasons": [
+        "Has waiver or debt_allowed"
+      ],
       "dependent_count": 2,
       "waiver_expiry": "2026-02-28",
       "priority": "medium"
@@ -126,7 +150,9 @@
       "section": "AI Foundation",
       "status": "Completed",
       "owner": "DevOps Engineer",
-      "reasons": ["Has waiver or debt_allowed"],
+      "reasons": [
+        "Has waiver or debt_allowed"
+      ],
       "dependent_count": 1,
       "waiver_expiry": "2026-02-28",
       "priority": "medium"
@@ -137,7 +163,9 @@
       "section": "AI Foundation",
       "status": "Completed",
       "owner": "Tech Lead",
-      "reasons": ["Tier A task - requires explicit validation"],
+      "reasons": [
+        "Tier A task - requires explicit validation"
+      ],
       "dependent_count": 1,
       "priority": "critical"
     },
@@ -160,7 +188,9 @@
       "section": "AI Foundation",
       "status": "Completed",
       "owner": "DevOps Engineer",
-      "reasons": ["Tier A task - requires explicit validation"],
+      "reasons": [
+        "Tier A task - requires explicit validation"
+      ],
       "dependent_count": 1,
       "priority": "critical"
     },
@@ -209,7 +239,9 @@
       "section": "Foundation Setup",
       "status": "Completed",
       "owner": "Backend Dev",
-      "reasons": ["Tier A task - requires explicit validation"],
+      "reasons": [
+        "Tier A task - requires explicit validation"
+      ],
       "dependent_count": 2,
       "priority": "critical"
     },
@@ -232,7 +264,9 @@
       "section": "Foundation Setup",
       "status": "Completed",
       "owner": "Backend Dev",
-      "reasons": ["Tier A task - requires explicit validation"],
+      "reasons": [
+        "Tier A task - requires explicit validation"
+      ],
       "dependent_count": 1,
       "priority": "critical"
     },
@@ -268,7 +302,9 @@
       "section": "Foundation Setup",
       "status": "Completed",
       "owner": "Security Engineer",
-      "reasons": ["Tier A task - requires explicit validation"],
+      "reasons": [
+        "Tier A task - requires explicit validation"
+      ],
       "dependent_count": 1,
       "priority": "critical"
     },
@@ -283,6 +319,19 @@
         "High fan-out (4 dependents)"
       ],
       "dependent_count": 4,
+      "priority": "critical"
+    },
+    {
+      "task_id": "IFC-044",
+      "tier": "A",
+      "section": "Testing",
+      "status": "In Progress",
+      "owner": "Backend Dev",
+      "reasons": [
+        "Tier A task - requires explicit validation",
+        "Missing validation.yaml entry"
+      ],
+      "dependent_count": 2,
       "priority": "critical"
     },
     {
@@ -343,7 +392,9 @@
       "section": "AI Foundation",
       "status": "Completed",
       "owner": "Security Engineer",
-      "reasons": ["Tier A task - requires explicit validation"],
+      "reasons": [
+        "Tier A task - requires explicit validation"
+      ],
       "priority": "critical"
     }
   ]

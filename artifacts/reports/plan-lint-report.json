@@ -1,27 +1,37 @@
 {
   "meta": {
-    "generated_at": "2025-12-21T16:14:13.205Z",
+    "generated_at": "2025-12-21T22:11:35.318Z",
     "schema_version": "1.0.0",
     "sprint_scope": 0
   },
   "summary": {
-    "total_tasks": 35,
+    "total_tasks": 36,
     "tier_breakdown": {
-      "A": 18,
+      "A": 19,
       "B": 10,
       "C": 7
     },
     "error_count": 0,
-    "warning_count": 29,
-    "review_queue_size": 30,
+    "warning_count": 30,
+    "review_queue_size": 31,
     "validation_coverage": {
       "tasks_with_validation": 35,
-      "tasks_without_validation": 0,
-      "coverage_percentage": 100
+      "tasks_without_validation": 1,
+      "coverage_percentage": 97
     }
   },
   "errors": [],
   "warnings": [
+    {
+      "rule": "MISSING_VALIDATION",
+      "severity": "warning",
+      "message": "Task IFC-044 has no validation commands in validation.yaml",
+      "tasks": [
+        "IFC-044"
+      ],
+      "priority": "high",
+      "section": "Testing"
+    },
     {
       "rule": "AI_TASKS_MVP",
       "severity": "warning",
@@ -123,12 +133,12 @@
     {
       "rule": "HIGH_FANOUT",
       "severity": "info",
-      "message": "Task ENV-010-AI has 3 direct dependents (high fan-out)",
+      "message": "Task ENV-010-AI has 4 direct dependents (high fan-out)",
       "tasks": [
         "ENV-010-AI"
       ],
       "priority": "high",
-      "dependentCount": 3
+      "dependentCount": 4
     },
     {
       "rule": "HIGH_FANOUT",
@@ -330,13 +340,13 @@
       "task_id": "ENV-010-AI",
       "tier": "B",
       "section": "Foundation Setup",
-      "status": "Completed",
+      "status": "In Progress",
       "owner": "QA Lead",
       "reasons": [
-        "High fan-out (3 dependents)",
+        "High fan-out (4 dependents)",
         "Has waiver or debt_allowed"
       ],
-      "dependent_count": 3,
+      "dependent_count": 4,
       "waiver_expiry": "2026-01-31",
       "priority": "high"
     },
@@ -629,6 +639,19 @@
       "priority": "critical"
     },
     {
+      "task_id": "IFC-044",
+      "tier": "A",
+      "section": "Testing",
+      "status": "In Progress",
+      "owner": "Backend Dev",
+      "reasons": [
+        "Tier A task - requires explicit validation",
+        "Missing validation.yaml entry"
+      ],
+      "dependent_count": 2,
+      "priority": "critical"
+    },
+    {
       "task_id": "DOC-001",
       "tier": "A",
       "section": "Strategy & Documentation",
@@ -707,6 +730,7 @@
       "ENV-009-AI",
       "ENV-013-AI",
       "IFC-000",
+      "IFC-044",
       "DOC-001",
       "BRAND-001",
       "GTM-002",

@@ -201,15 +201,25 @@ export interface EvidenceBundle {
 }
 
 export interface RunSummary {
+  run_id: string;
   runId: string;
   taskId: string;
+  started_at: string;
+  finished_at: string;
   startedAt: string;
   completedAt: string;
+  mode: string;
+  scope: string;
   resolvedCsvPath: string;
   strictMode: boolean;
   stoaAssignment: StoaAssignment;
   gateSelection: GateSelectionResult;
+  /** @deprecated Use result.overall_status instead */
   finalVerdict: VerdictType;
+  /** UI-compatible result object */
+  result: {
+    overall_status: VerdictType;
+  };
   evidenceHashes: EvidenceHash[];
   waiverCount: number;
   findingsCount: {

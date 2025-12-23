@@ -8,8 +8,8 @@
   "phase": "phase-4-final-setup",
   "stream": null,
   "dependencies": {
-    "all_satisfied": true,
-    "verified_at": "2025-12-21T21:20:39.982Z",
+    "all_satisfied": false,
+    "verified_at": "2025-12-22T07:23:15.964Z",
     "required": [
       "ENV-001-AI",
       "ENV-003-AI",

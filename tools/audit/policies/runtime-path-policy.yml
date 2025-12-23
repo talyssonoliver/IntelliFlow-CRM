@@ -1,0 +1,424 @@
+# =============================================================================
+# Runtime Artifact Path Policy v1.0
+# =============================================================================
+# This policy defines forbidden runtime paths, canonical file locations,
+# and enforcement rules to prevent artifact hygiene regressions.
+#
+# Used by: tools/audit/runtime-path-linter.ts
+# Enforced by: .github/workflows/runtime-path-lint.yml
+# =============================================================================
+
+schema_version: '1.0.0'
+last_updated: '2025-12-21'
+maintainer: 'Tech Lead'
+
+# -----------------------------------------------------------------------------
+# CANONICAL FILES - Must have exactly ONE copy in repository
+# -----------------------------------------------------------------------------
+# These files are the single source of truth and MUST NOT be duplicated
+canonical:
+  # Sprint planning files
+  - path: 'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv'
+    description: 'Single source of truth for all sprint tasks'
+    referenced_by:
+      - 'apps/project-tracker/app/api/sprint-plan/route.ts'
+      - 'tools/plan-linter/index.js'
+      - 'tools/scripts/lib/stoa/csv-governance.ts'
+
+  - path: 'apps/project-tracker/docs/metrics/_global/Sprint_plan.json'
+    description: 'Auto-generated structured sprint plan (synced from CSV)'
+    generated_by: 'apps/project-tracker/lib/data-sync.ts'
+
+  - path: 'apps/project-tracker/docs/metrics/_global/task-registry.json'
+    description: 'Central task registry with status tracking'
+    generated_by: 'apps/project-tracker/lib/data-sync.ts'
+
+  - path: 'apps/project-tracker/docs/metrics/_global/dependency-graph.json'
+    description: 'Task dependency graph for visualization'
+    generated_by: 'apps/project-tracker/lib/data-sync.ts'
+
+# -----------------------------------------------------------------------------
+# FORBIDDEN PATHS - Runtime artifacts that should NEVER exist
+# -----------------------------------------------------------------------------
+# Files matching these patterns MUST be in .gitignore and not tracked
+forbidden:
+  # Root-level artifacts (except allowed)
+  - pattern: '/*.json'
+    exceptions:
+      - 'package.json'
+      - 'tsconfig.json'
+      - 'turbo.json'
+      - 'vitest.config.json'
+    severity: 'error'
+    message: 'Root-level JSON files are forbidden. Move to artifacts/ or appropriate directory.'
+    fix: 'Move to artifacts/misc/ or delete if runtime-generated'
+
+  - pattern: '/*.log'
+    exceptions: []
+    severity: 'error'
+    message: 'Root-level log files are forbidden'
+    fix: 'Move to artifacts/logs/ or add to .gitignore'
+
+  - pattern: '/*.csv'
+    exceptions: []
+    severity: 'error'
+    message: 'Root-level CSV files are forbidden'
+    fix: 'Move to artifacts/metrics/ or appropriate directory'
+
+  # Runtime artifacts in docs/
+  - pattern: 'apps/project-tracker/docs/metrics/.locks/**/*'
+    exceptions: []
+    severity: 'error'
+    message: 'Lock files must not be in docs/metrics (runtime-only)'
+    fix: 'Delete - these are runtime artifacts that should be in artifacts/'
+
+  - pattern: 'apps/project-tracker/docs/metrics/.status/**/*'
+    exceptions: []
+    severity: 'error'
+    message: 'Status files must not be in docs/metrics (runtime-only)'
+    fix: 'Delete - these are runtime artifacts that should be in artifacts/'
+
+  - pattern: 'apps/project-tracker/docs/metrics/logs/**/*'
+    exceptions: []
+    severity: 'error'
+    message: 'Log files must not be in docs/metrics'
+    fix: 'Move to artifacts/logs/ or delete'
+
+  - pattern: 'apps/project-tracker/docs/metrics/backups/**/*'
+    exceptions: []
+    severity: 'error'
+    message: 'Backup files must not be in docs/metrics'
+    fix: 'Move to artifacts/backups/ or delete'
+
+  - pattern: 'apps/project-tracker/docs/metrics/artifacts/**/*'
+    exceptions: []
+    severity: 'error'
+    message: 'Runtime artifacts nested in docs/metrics are forbidden'
+    fix: 'Move to artifacts/ directory at repository root'
+
+  - pattern: 'apps/project-tracker/docs/metrics/**/*.lock'
+    exceptions: []
+    severity: 'error'
+    message: 'Lock files in docs/metrics are forbidden'
+    fix: 'Delete - runtime-only files should not be tracked'
+
+  - pattern: 'apps/project-tracker/docs/metrics/**/*.heartbeat'
+    exceptions: []
+    severity: 'error'
+    message: 'Heartbeat files in docs/metrics are forbidden'
+    fix: 'Delete - runtime-only coordination files'
+
+  - pattern: 'apps/project-tracker/docs/metrics/**/*.input'
+    exceptions: []
+    severity: 'error'
+    message: 'Input files in docs/metrics are forbidden'
+    fix: 'Delete - runtime-only coordination files'
+
+  - pattern: 'apps/project-tracker/docs/metrics/**/*.bak'
+    exceptions: []
+    severity: 'error'
+    message: 'Backup files in docs/metrics are forbidden'
+    fix: 'Delete or move to artifacts/backups/'
+
+  # Prohibited locations for artifacts
+  - pattern: 'src/**/*.log'
+    exceptions: []
+    severity: 'error'
+    message: 'Log files in src/ directories are forbidden'
+    fix: 'Move to artifacts/logs/'
+
+  - pattern: 'packages/*/src/**/*.log'
+    exceptions: []
+    severity: 'error'
+    message: 'Log files in package source directories are forbidden'
+    fix: 'Move to artifacts/logs/'
+
+  - pattern: 'apps/*/src/**/*.log'
+    exceptions: []
+    severity: 'error'
+    message: 'Log files in app source directories are forbidden'
+    fix: 'Move to artifacts/logs/'
+
+  - pattern: 'docs/**/*.log'
+    exceptions: []
+    severity: 'error'
+    message: 'Log files in docs/ are forbidden'
+    fix: 'Move to artifacts/logs/'
+
+  - pattern: '.github/**/*.log'
+    exceptions: []
+    severity: 'error'
+    message: 'Log files in .github/ are forbidden'
+    fix: 'Move to artifacts/logs/'
+
+# -----------------------------------------------------------------------------
+# POLICY PENDING - Transitional enforcement (WARN in local, FAIL in CI)
+# -----------------------------------------------------------------------------
+# These paths are being migrated. Local mode shows warnings, CI/strict fails
+policy_pending:
+  - pattern: 'apps/project-tracker/docs/artifacts/**/*'
+    deadline: '2025-01-15'
+    severity_local: 'warning'
+    severity_ci: 'error'
+    reason: 'Migration from docs/artifacts to artifacts/ in progress'
+    migration_target: 'artifacts/'
+    tracking_issue: 'https://github.com/example/repo/issues/123'
+    responsible: 'DevOps Engineer'
+    message: 'Runtime artifacts in docs/ are deprecated - migrate to artifacts/'
+    fix: 'Run migration script: pnpm tsx tools/audit/migrate-artifacts.ts'
+
+  - pattern: 'artifacts/reports/system-audit/local-*/**/*'
+    deadline: '2025-01-31'
+    severity_local: 'info'
+    severity_ci: 'warning'
+    reason: 'Local audit runs should be in .gitignore, not committed'
+    migration_target: '.gitignore'
+    responsible: 'Tech Lead'
+    message: 'Local audit artifacts should not be committed'
+    fix: 'Add to .gitignore: artifacts/reports/system-audit/local-*'
+
+  - pattern: 'artifacts/reports/completed-task-ids.txt'
+    deadline: '2025-01-20'
+    severity_local: 'warning'
+    severity_ci: 'error'
+    reason: 'Replaced by task-registry.json - legacy file pending deletion'
+    migration_target: 'DELETE'
+    responsible: 'Project Manager'
+    message: 'Legacy file - task tracking moved to task-registry.json'
+    fix: 'Delete file - data migrated to task-registry.json'
+
+# -----------------------------------------------------------------------------
+# ALLOWED PATTERNS - Explicitly permitted locations
+# -----------------------------------------------------------------------------
+allowed:
+  # Canonical data files
+  - pattern: 'apps/project-tracker/docs/metrics/_global/**/*'
+    description: 'Canonical sprint plan and global metrics files'
+
+  - pattern: 'apps/project-tracker/docs/metrics/schemas/**/*'
+    description: 'JSON schemas for validation'
+
+  - pattern: 'apps/project-tracker/docs/metrics/sprint-*/**/*.json'
+    description: 'Sprint-specific task and phase metrics'
+    exclude_patterns:
+      - '**/*.lock'
+      - '**/*.bak'
+      - '**/*.tmp'
+
+  - pattern: 'apps/project-tracker/docs/metrics/*.yaml'
+    description: 'Plan governance and validation configuration'
+
+  # Standard artifact categories
+  - pattern: 'artifacts/logs/**/*'
+    description: 'Application and build logs'
+
+  - pattern: 'artifacts/reports/**/*'
+    description: 'Generated reports (coverage, benchmarks, audits)'
+
+  - pattern: 'artifacts/metrics/**/*'
+    description: 'Runtime metrics and KPI tracking'
+
+  - pattern: 'artifacts/misc/**/*'
+    description: 'Miscellaneous artifacts (configs, test data)'
+
+  - pattern: 'artifacts/attestations/**/*'
+    description: 'Task completion attestations'
+
+  - pattern: 'artifacts/coverage/**/*'
+    description: 'Test coverage reports'
+
+  - pattern: 'artifacts/benchmarks/**/*'
+    description: 'Performance benchmark results'
+
+  # Build outputs (should be in .gitignore)
+  - pattern: 'dist/**/*'
+    gitignore_required: true
+
+  - pattern: '.next/**/*'
+    gitignore_required: true
+
+  - pattern: '.turbo/**/*'
+    gitignore_required: true
+
+  - pattern: 'node_modules/.cache/**/*'
+    gitignore_required: true
+
+# -----------------------------------------------------------------------------
+# DUPLICATE DETECTION - Files that MUST be unique
+# -----------------------------------------------------------------------------
+duplicate_rules:
+  # Sprint plan files
+  - filename: 'Sprint_plan.csv'
+    max_copies: 1
+    canonical_path: 'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv'
+    severity: 'error'
+    message: 'Multiple Sprint_plan.csv files detected - must have exactly one canonical copy'
+
+  - filename: 'Sprint_plan.json'
+    max_copies: 1
+    canonical_path: 'apps/project-tracker/docs/metrics/_global/Sprint_plan.json'
+    severity: 'error'
+    message: 'Multiple Sprint_plan.json files detected - must have exactly one canonical copy'
+
+  - filename: 'task-registry.json'
+    max_copies: 1
+    canonical_path: 'apps/project-tracker/docs/metrics/_global/task-registry.json'
+    severity: 'error'
+    message: 'Multiple task-registry.json files detected - must have exactly one canonical copy'
+
+  - filename: 'dependency-graph.json'
+    max_copies: 1
+    canonical_path: 'apps/project-tracker/docs/metrics/_global/dependency-graph.json'
+    severity: 'error'
+    message: 'Multiple dependency-graph.json files detected - must have exactly one canonical copy'
+
+# -----------------------------------------------------------------------------
+# STRICT MODE - Enhanced enforcement rules
+# -----------------------------------------------------------------------------
+strict_mode:
+  # Conditions that trigger strict mode
+  enabled_by:
+    - 'CI'  # GitHub Actions
+    - 'STRICT_VALIDATION'  # Environment variable
+    - 'PRE_COMMIT_HOOK'  # Git hook
+
+  # In strict mode, policy_pending violations become errors
+  policy_pending_as_failure: true
+
+  # In strict mode, warnings count towards exit code
+  warnings_as_failure: false
+
+  # Maximum allowed warnings before failure
+  max_warnings: 10
+
+  # Require all canonical files to exist
+  require_canonical_files: true
+
+  # Fail if any duplicates detected
+  fail_on_duplicates: true
+
+  # Scan ignored files for drift detection
+  scan_gitignore: true
+
+  # Maximum age for policy_pending items
+  max_policy_pending_age_days: 90
+
+# -----------------------------------------------------------------------------
+# ENFORCEMENT RULES
+# -----------------------------------------------------------------------------
+enforcement:
+  # Detection methods
+  detection:
+    # Scan tracked files
+    git_tracked: true
+
+    # Scan ignored files (drift detection)
+    git_ignored: true
+    command: 'git ls-files -o -i --exclude-standard'
+
+    # Scan untracked files
+    git_untracked: true
+    command: 'git ls-files -o --exclude-standard'
+
+  # Exit codes
+  exit_codes:
+    success: 0
+    forbidden_violation: 1
+    duplicate_violation: 1
+    canonical_missing: 2
+    policy_pending_expired: 3
+    policy_pending_strict: 1
+    parse_error: 4
+
+  # Output formats
+  output:
+    console: true
+    json_report: 'artifacts/reports/runtime-path-lint-report.json'
+    markdown_summary: 'artifacts/reports/runtime-path-lint-summary.md'
+
+  # Integration
+  integrations:
+    github_actions:
+      enabled: true
+      workflow: '.github/workflows/runtime-path-lint.yml'
+      pr_comment: true
+      status_check: true
+
+    pre_commit:
+      enabled: true
+      hook: '.husky/pre-commit'
+      skip_env: 'SKIP_RUNTIME_PATH_LINT'
+
+# -----------------------------------------------------------------------------
+# REMEDIATION - Automated fixes
+# -----------------------------------------------------------------------------
+remediation:
+  # Auto-fix capability
+  autofix_enabled: true
+
+  # Dry-run mode (show fixes without applying)
+  dry_run_default: true
+
+  # Fix strategies
+  strategies:
+    # Move forbidden files to correct location
+    move_to_artifacts:
+      enabled: true
+      target_mapping:
+        '*.log': 'artifacts/logs/migration/'
+        '*.html': 'artifacts/reports/migration/'
+        '*.json': 'artifacts/metrics/migration/'
+        '*.csv': 'artifacts/metrics/migration/'
+        '*': 'artifacts/misc/migration/'
+
+    # Delete runtime artifacts
+    delete_runtime_artifacts:
+      enabled: false  # Requires explicit confirmation
+      patterns:
+        - '**/*.lock'
+        - '**/*.heartbeat'
+        - '**/*.input'
+        - '**/*.tmp'
+
+    # Update .gitignore
+    update_gitignore:
+      enabled: true
+      add_patterns:
+        - 'artifacts/reports/system-audit/local-*'
+        - 'apps/project-tracker/docs/metrics/.locks'
+        - 'apps/project-tracker/docs/metrics/.status'
+        - '**/*.heartbeat'
+        - '**/*.input'
+
+# -----------------------------------------------------------------------------
+# REPORTING
+# -----------------------------------------------------------------------------
+reporting:
+  # Verbosity levels
+  verbosity:
+    quiet: 0    # Errors only
+    normal: 1   # Errors + warnings
+    verbose: 2  # Errors + warnings + info
+    debug: 3    # All messages + stack traces
+
+  # Grouping
+  group_by:
+    - 'severity'
+    - 'pattern'
+    - 'directory'
+
+  # Statistics
+  include_stats: true
+  stats:
+    - 'total_files_scanned'
+    - 'forbidden_violations'
+    - 'duplicate_violations'
+    - 'policy_pending_items'
+    - 'canonical_files_status'
+    - 'ignored_files_scanned'
+
+  # Diff reporting (show only changed files in PR)
+  pr_mode:
+    enabled: true
+    only_changed_files: true
+    git_diff_base: 'origin/main'

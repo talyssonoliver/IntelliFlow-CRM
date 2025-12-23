@@ -181,7 +181,7 @@ tools:
   # ---------------------------------------------------------------------------
   - id: knip
     tier: 2
-    enabled: false
+    enabled: true
     required: false
     owner: 'Tech Lead'
     scope: 'workspace'
@@ -201,7 +201,7 @@ tools:
 
   - id: depcheck
     tier: 2
-    enabled: false
+    enabled: true
     required: false
     owner: 'Tech Lead'
     scope: 'workspace'
@@ -211,7 +211,7 @@ tools:
 
   - id: cspell
     tier: 2
-    enabled: false
+    enabled: true
     required: false
     owner: 'Tech Writer'
     scope: 'repo'
@@ -221,7 +221,7 @@ tools:
 
   - id: markdownlint
     tier: 2
-    enabled: false
+    enabled: true
     required: false
     owner: 'Tech Writer'
     scope: 'repo'
@@ -273,7 +273,7 @@ tools:
 
   - id: madge-circular
     tier: 2
-    enabled: false
+    enabled: true
     required: false
     owner: 'Architecture'
     scope: 'repo'
@@ -307,7 +307,7 @@ tools:
 
   - id: pnpm-outdated
     tier: 3
-    enabled: false
+    enabled: true
     required: false
     owner: 'Tech Lead'
     scope: 'workspace'
@@ -317,7 +317,7 @@ tools:
 
   - id: license-checker
     tier: 3
-    enabled: false
+    enabled: true
     required: false
     owner: 'Tech Lead'
     scope: 'workspace'

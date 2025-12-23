@@ -593,6 +593,87 @@ describe('Negative Tests: Hygiene Gate', () => {
 });
 
 // ============================================================================
+// Truthful Messaging Tests
+// ============================================================================
+
+describe('Truthful Messaging: WARN != PASS semantics', () => {
+  const originalArgv = process.argv;
+  const originalEnv = process.env.VALIDATION_STRICT;
+
+  afterEach(() => {
+    process.argv = originalArgv;
+    if (originalEnv === undefined) {
+      delete process.env.VALIDATION_STRICT;
+    } else {
+      process.env.VALIDATION_STRICT = originalEnv;
+    }
+  });
+
+  it('summary with warnings should indicate INCOMPLETE status, not PASS', () => {
+    process.argv = ['node', 'script.ts'];
+    delete process.env.VALIDATION_STRICT;
+
+    const gates: GateResult[] = [
+      { name: 'Test 1', severity: 'PASS', message: 'OK' },
+      { name: 'Test 2', severity: 'WARN', message: 'Some issues' },
+    ];
+
+    const summary = createSummary(gates);
+
+    // In default mode, warnings should still be counted as warnings
+    expect(summary.warnCount).toBe(1);
+    expect(summary.passCount).toBe(1);
+    expect(summary.failCount).toBe(0);
+
+    // Exit code is 0, but warnCount > 0 indicates INCOMPLETE
+    expect(getExitCode(summary)).toBe(0);
+
+    // Key insight: calling code should interpret warnCount > 0 as INCOMPLETE
+    const isComplete = summary.warnCount === 0 && summary.failCount === 0 && summary.passCount > 0;
+    expect(isComplete).toBe(false);
+  });
+
+  it('summary with only PASS results should indicate COMPLETE status', () => {
+    process.argv = ['node', 'script.ts'];
+    delete process.env.VALIDATION_STRICT;
+
+    const gates: GateResult[] = [
+      { name: 'Test 1', severity: 'PASS', message: 'OK' },
+      { name: 'Test 2', severity: 'PASS', message: 'Also OK' },
+    ];
+
+    const summary = createSummary(gates);
+
+    expect(summary.warnCount).toBe(0);
+    expect(summary.passCount).toBe(2);
+    expect(summary.failCount).toBe(0);
+
+    // Only truly complete when all pass and no warnings
+    const isComplete = summary.warnCount === 0 && summary.failCount === 0 && summary.passCount > 0;
+    expect(isComplete).toBe(true);
+  });
+
+  it('summary with FAIL results should indicate BLOCKED status', () => {
+    process.argv = ['node', 'script.ts'];
+    delete process.env.VALIDATION_STRICT;
+
+    const gates: GateResult[] = [
+      { name: 'Test 1', severity: 'PASS', message: 'OK' },
+      { name: 'Test 2', severity: 'FAIL', message: 'Critical error' },
+    ];
+
+    const summary = createSummary(gates);
+
+    expect(summary.failCount).toBe(1);
+    expect(getExitCode(summary)).toBe(1);
+
+    // FAIL means BLOCKED
+    const isBlocked = summary.failCount > 0;
+    expect(isBlocked).toBe(true);
+  });
+});
+
+// ============================================================================
 // Integration-style Test with Mocked git ls-files
 // ============================================================================
 

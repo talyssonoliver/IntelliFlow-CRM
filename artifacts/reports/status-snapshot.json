@@ -1,13 +1,13 @@
 {
   "counts": {
     "by_status": {
-      "Backlog": 10,
-      "Completed": 16,
-      "Planned": 278
+      "Backlog": 266,
+      "Completed": 48,
+      "In Progress": 2
     },
-    "total": 304
+    "total": 316
   },
-  "generated_at": "2025-12-18T21:08:56+00:00",
+  "generated_at": "2025-12-21T22:14:08+00:00",
   "source": {
     "path": "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv",
     "type": "csv"
@@ -128,7 +128,7 @@
       "description": "Automated Observability with Predictive Monitoring",
       "owner": "DevOps + AI Agents",
       "section": "Foundation Setup",
-      "status": "Backlog",
+      "status": "Completed",
       "target_sprint": "0",
       "task_id": "",
       "validation_method": "Monitoring active, predictions accurate, healing working"
@@ -148,10 +148,10 @@
       "description": "Automated Test Generation and Automation",
       "owner": "QA Lead + AI Testing Suite",
       "section": "Foundation Setup",
-      "status": "Backlog",
+      "status": "In Progress",
       "target_sprint": "0",
       "task_id": "",
-      "validation_method": "Coverage >95%, tests passing, scenarios validated"
+      "validation_method": "Coverage >90%, tests passing, scenarios validated"
     },
     {
       "artifacts_to_track": "apps/ai-worker/src/chains/*",
@@ -178,7 +178,7 @@
       "description": "Automated Security Implementation",
       "owner": "Security Eng + AI Security Tools",
       "section": "Foundation Setup",
-      "status": "Backlog",
+      "status": "Completed",
       "target_sprint": "0",
       "task_id": "",
       "validation_method": "Scan clean, score A+, compliance verified"
@@ -188,7 +188,7 @@
       "description": "Performance Optimization with AI Profiling",
       "owner": "Performance Eng + AI Tools",
       "section": "Foundation Setup",
-      "status": "Backlog",
+      "status": "Completed",
       "target_sprint": "0",
       "task_id": "",
       "validation_method": "Performance improved, bundles optimized, caching active"
@@ -198,7 +198,7 @@
       "description": "AI-Managed Feature Flags with Predictive Rollout",
       "owner": "Backend Dev + AI Agents",
       "section": "Foundation Setup",
-      "status": "Backlog",
+      "status": "Completed",
       "target_sprint": "0",
       "task_id": "",
       "validation_method": "Flags deploying, rollouts optimized, predictions accurate"
@@ -208,7 +208,7 @@
       "description": "Privacy-First Analytics with AI Insights",
       "owner": "Frontend Dev + AI Analytics",
       "section": "Foundation Setup",
-      "status": "Backlog",
+      "status": "Completed",
       "target_sprint": "0",
       "task_id": "",
       "validation_method": "Analytics working, insights accurate, privacy compliant"
@@ -218,7 +218,7 @@
       "description": "Automated Integration Testing",
       "owner": "All Teams + AI Orchestrator",
       "section": "Foundation Setup",
-      "status": "Backlog",
+      "status": "Completed",
       "target_sprint": "0",
       "task_id": "",
       "validation_method": "Tests passing, bugs fixed, confidence high"
@@ -228,17 +228,27 @@
       "description": "Sprint Planning and Velocity Prediction",
       "owner": "PM + AI Planning Tools",
       "section": "Foundation Setup",
-      "status": "Backlog",
+      "status": "Completed",
       "target_sprint": "0",
       "task_id": "",
       "validation_method": "Planning optimized, velocity predicted, risks identified"
+    },
+    {
+      "artifacts_to_track": "infra/monitoring/otel-collector.yaml, infra/monitoring/tempo-config.yml, infra/monitoring/docker-compose.monitoring.yml, infra/monitoring/prometheus.yml, infra/monitoring/loki-config.yml, infra/monitoring/grafana/provisioning/*, artifacts/monitoring-config-hashes.txt, docs/operations/monitoring-runbook.md",
+      "description": "EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline)",
+      "owner": "DevOps + Claude Code",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Health endpoints return 200, services not publicly accessible (403 or timeout), configs SHA256 hashed, audit evidence collected"
     },
     {
       "artifacts_to_track": "artifacts/misc/agent-coordination/*, artifacts/misc/orchestration-config.yaml, artifacts/metrics/handoff-metrics.json, artifacts/logs/quality-gates.log",
       "description": "Continuous AI Agent Coordination System",
       "owner": "AI Specialist",
       "section": "AI Foundation",
-      "status": "Backlog",
+      "status": "Completed",
       "target_sprint": "0",
       "task_id": "",
       "validation_method": "Coordination working, coverage complete, handoffs smooth"
@@ -248,7 +258,7 @@
       "description": "AI Performance Dashboard and Optimization Loop",
       "owner": "DevOps + AI Monitoring",
       "section": "AI Foundation",
-      "status": "Backlog",
+      "status": "Completed",
       "target_sprint": "0",
       "task_id": "",
       "validation_method": "Dashboard live, ROI tracked, optimizations active"
@@ -258,7 +268,7 @@
       "description": "IntelliFlow CRM Feasibility Assessment",
       "owner": "CEO + CTO + CFO",
       "section": "Planning",
-      "status": "Planned",
+      "status": "Completed",
       "target_sprint": "0",
       "task_id": "",
       "validation_method": "Leadership review complete, decision signed, risks documented"
@@ -268,7 +278,7 @@
       "description": "Technical Architecture Spike - Modern Stack",
       "owner": "CTO + Tech Lead",
       "section": "Validation",
-      "status": "Planned",
+      "status": "Completed",
       "target_sprint": "1",
       "task_id": "",
       "validation_method": "POC working, performance verified, architecture approved"
@@ -278,7 +288,7 @@
       "description": "Domain Model Design (DDD)",
       "owner": "Tech Lead + DA",
       "section": "Validation",
-      "status": "Planned",
+      "status": "Completed",
       "target_sprint": "1",
       "task_id": "",
       "validation_method": "Schema validated, types checked, domain model complete"
@@ -288,7 +298,7 @@
       "description": "tRPC API Foundation",
       "owner": "DevOps + Backend Dev",
       "section": "Validation",
-      "status": "Planned",
+      "status": "Completed",
       "target_sprint": "1",
       "task_id": "",
       "validation_method": "tRPC working, types safe, subscriptions active"
@@ -298,7 +308,7 @@
       "description": "Next.js 16.0.10 Lead Capture UI",
       "owner": "Frontend Dev + UX",
       "section": "Validation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "2",
       "task_id": "",
       "validation_method": "Lighthouse passing, form working, mobile tested"
@@ -308,7 +318,7 @@
       "description": "LangChain AI Scoring Prototype",
       "owner": "AI Specialist + Backend Dev",
       "section": "Validation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "2",
       "task_id": "",
       "validation_method": "AI scoring working, output validated, performance measured"
@@ -318,7 +328,7 @@
       "description": "Supabase Integration Test",
       "owner": "Backend Dev + DevOps",
       "section": "Validation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "3",
       "task_id": "",
       "validation_method": "Auth tested, real-time working, vectors enabled"
@@ -328,7 +338,7 @@
       "description": "Performance Benchmarks - Modern Stack",
       "owner": "Performance Eng + DevOps",
       "section": "Validation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "3",
       "task_id": "",
       "validation_method": "Load tests passing, p99 measured, baselines set"
@@ -338,7 +348,7 @@
       "description": "Security Assessment - OWASP + ISO 42001 Prep",
       "owner": "Security Eng + CTO",
       "section": "Validation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "2",
       "task_id": "",
       "validation_method": "Security scan clean, compliance mapped, roadmap created"
@@ -348,7 +358,7 @@
       "description": "Team Capability Assessment - Modern Stack",
       "owner": "PM + Tech Lead",
       "section": "Validation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "4",
       "task_id": "",
       "validation_method": "Skills assessed, training planned, confidence measured"
@@ -358,7 +368,7 @@
       "description": "Phase 1 Go/No-Go Decision",
       "owner": "CEO + Leadership",
       "section": "Decision Gate",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "4",
       "task_id": "",
       "validation_method": "Decision documented, budget approved, risks accepted"
@@ -368,7 +378,7 @@
       "description": "Supabase Free Tier Optimization",
       "owner": "DevOps + PM",
       "section": "Parallel Track",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "3",
       "task_id": "",
       "validation_method": "Usage optimized, costs projected, triggers defined"
@@ -378,7 +388,7 @@
       "description": "Turborepo Monorepo Setup",
       "owner": "DevOps + Tech Lead",
       "section": "MVP Week 1",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "6",
       "task_id": "",
       "validation_method": "Builds cached, time <3min, workspaces linked"
@@ -388,7 +398,7 @@
       "description": "tRPC Router Implementation",
       "owner": "Backend Dev + Tech Lead",
       "section": "MVP Week 1",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "7",
       "task_id": "",
       "validation_method": "Types covered, response fast, client working"
@@ -398,7 +408,7 @@
       "description": "Next.js 16.0.10 App Router UI",
       "owner": "Frontend Dev + UX",
       "section": "MVP Week 1",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "8",
       "task_id": "",
       "validation_method": "Vitals green, a11y passed, UI responsive"
@@ -408,7 +418,7 @@
       "description": "BullMQ Job Queue Setup",
       "owner": "Backend Dev + DevOps",
       "section": "MVP Week 1",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "8",
       "task_id": "",
       "validation_method": "Queue working, retries tested, dashboard live"
@@ -418,7 +428,7 @@
       "description": "Real-time Subscriptions",
       "owner": "Frontend Dev + Backend Dev",
       "section": "MVP Week 1",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "9",
       "task_id": "",
       "validation_method": "WebSockets working, latency low, reconnection tested"
@@ -428,7 +438,7 @@
       "description": "Prisma + Supabase Data Layer",
       "owner": "Backend Dev + DA",
       "section": "MVP Week 1",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "9",
       "task_id": "",
       "validation_method": "Migrations applied, queries fast, vectors working"
@@ -438,7 +448,7 @@
       "description": "Vitest Testing Suite",
       "owner": "QA + Whole Team",
       "section": "MVP Week 1",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "11",
       "task_id": "",
       "validation_method": "Tests passing, coverage >80%, CI integrated"
@@ -448,7 +458,7 @@
       "description": "Gate 1 Review - \u00a3500 Investment",
       "owner": "CFO + CEO",
       "section": "Investment Gate",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "11",
       "task_id": "",
       "validation_method": "ROI validated, budget approved, continue decision"
@@ -458,7 +468,7 @@
       "description": "LangChain Pipeline Design",
       "owner": "AI Specialist + Data Scientist",
       "section": "Intelligence",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "12",
       "task_id": "",
       "validation_method": "Pipeline designed, architecture documented, extensible"
@@ -468,7 +478,7 @@
       "description": "CrewAI Agent Framework",
       "owner": "Backend Dev + AI Specialist",
       "section": "Intelligence",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "12",
       "task_id": "",
       "validation_method": "Agents working, tasks orchestrated, cooperation tested"
@@ -478,7 +488,7 @@
       "description": "Structured AI Output Implementation",
       "owner": "AI Specialist + Backend Dev",
       "section": "Intelligence",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "13",
       "task_id": "",
       "validation_method": "Outputs structured, validation working, confidence calibrated"
@@ -488,7 +498,7 @@
       "description": "AI Explainability UI",
       "owner": "Frontend Dev + UX",
       "section": "Intelligence",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "13",
       "task_id": "",
       "validation_method": "Explanations clear, trust high, UI intuitive"
@@ -498,7 +508,7 @@
       "description": "Human-in-the-Loop Feedback",
       "owner": "Full Stack Dev",
       "section": "Intelligence",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "14",
       "task_id": "",
       "validation_method": "Feedback captured, model improving, loop closed"
@@ -508,7 +518,7 @@
       "description": "A/B Testing Framework",
       "owner": "Data Scientist + Backend Dev",
       "section": "Intelligence",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "14",
       "task_id": "",
       "validation_method": "Experiments running, statistics valid, dashboard live"
@@ -518,7 +528,7 @@
       "description": "Playwright E2E Testing",
       "owner": "QA + AI Specialist",
       "section": "Intelligence",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "15",
       "task_id": "",
       "validation_method": "E2E passing, visuals matched, videos recorded"
@@ -528,7 +538,7 @@
       "description": "Gate 2 Review - \u00a32000 Investment",
       "owner": "CFO + CEO",
       "section": "Investment Gate",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "15",
       "task_id": "",
       "validation_method": "AI value proven, ROI positive, expansion approved"
@@ -538,7 +548,7 @@
       "description": "Workflow Engine with LangGraph",
       "owner": "Backend Dev + Architect",
       "section": "Automation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "16",
       "task_id": "",
       "validation_method": "Workflows working, state persisted, UI functional"
@@ -548,7 +558,7 @@
       "description": "Auto-Response with Approval Gate",
       "owner": "Backend Dev + AI Specialist",
       "section": "Automation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "16",
       "task_id": "",
       "validation_method": "Responses generating, approvals tracked, quality measured"
@@ -558,7 +568,7 @@
       "description": "Smart Lead Routing",
       "owner": "Backend Dev + Sales Ops",
       "section": "Automation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "17",
       "task_id": "",
       "validation_method": "Routing optimal, load balanced, SLA met"
@@ -568,7 +578,7 @@
       "description": "Workflow Builder UI (React Flow)",
       "owner": "Frontend Dev + UX",
       "section": "Automation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "17",
       "task_id": "",
       "validation_method": "Builder intuitive, templates working, users successful"
@@ -578,7 +588,7 @@
       "description": "OpenTelemetry Monitoring",
       "owner": "DevOps + SRE",
       "section": "Automation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "18",
       "task_id": "",
       "validation_method": "Traces flowing, dashboards created, alerts firing"
@@ -588,7 +598,7 @@
       "description": "Load Testing with k6",
       "owner": "Performance Eng + DevOps",
       "section": "Automation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "19",
       "task_id": "",
       "validation_method": "Load handled, bottlenecks found, optimizations identified"
@@ -598,7 +608,7 @@
       "description": "Gate 3 Review - \u00a33000 Investment",
       "owner": "CFO + CEO",
       "section": "Investment Gate",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "19",
       "task_id": "",
       "validation_method": "ROI calculated, stability proven, scale approved"
@@ -608,7 +618,7 @@
       "description": "WhatsApp Business API Research",
       "owner": "Integration Eng + PM",
       "section": "Enhancement",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "20",
       "task_id": "",
       "validation_method": "Feasibility confirmed, costs analyzed, approach validated"
@@ -618,7 +628,7 @@
       "description": "WhatsApp + tRPC Integration",
       "owner": "Backend Dev + Integration Eng",
       "section": "Enhancement",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "21",
       "task_id": "",
       "validation_method": "Messages flowing, latency <1s, reliability tested"
@@ -628,7 +638,7 @@
       "description": "Analytics Dashboard Design",
       "owner": "Data Analyst + UX",
       "section": "Enhancement",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "21",
       "task_id": "",
       "validation_method": "Designs approved, KPIs defined, tokens exported"
@@ -638,7 +648,7 @@
       "description": "Analytics Implementation",
       "owner": "Frontend Dev + Data Eng",
       "section": "Enhancement",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "22",
       "task_id": "",
       "validation_method": "Dashboard working, updates real-time, insights clear"
@@ -648,7 +658,7 @@
       "description": "Advanced AI Features (RAG)",
       "owner": "AI Specialist + Full Team",
       "section": "Enhancement",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "23",
       "task_id": "",
       "validation_method": "RAG working, sentiment accurate, NBA relevant"
@@ -658,7 +668,7 @@
       "description": "Production Hardening",
       "owner": "DevOps + Security",
       "section": "Enhancement",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "24",
       "task_id": "",
       "validation_method": "Production ready, security certified, monitoring active"
@@ -668,7 +678,7 @@
       "description": "User Manual with Interactive Examples",
       "owner": "Tech Writer + PM",
       "section": "Documentation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "Continuous",
       "task_id": "",
       "validation_method": "Manual complete, examples working, coverage 100%"
@@ -678,7 +688,7 @@
       "description": "tRPC API Client SDK Docs",
       "owner": "Backend Dev + Tech Writer",
       "section": "Documentation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "Continuous",
       "task_id": "",
       "validation_method": "SDK published, examples running, autocomplete working"
@@ -688,27 +698,27 @@
       "description": "Operational runbooks (deploy, rollback, incident response, backup/restore, access requests)",
       "owner": "DevOps + Tech Lead",
       "section": "Documentation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "20",
       "task_id": "",
       "validation_method": "Runbooks tested, MTTR <30min, procedures clear"
     },
     {
-      "artifacts_to_track": "artifacts/misc/coverage/lcov.info, artifacts/logs/test-execution-time.log, artifacts/misc/tdd-compliance.csv, artifacts/misc/mutation-test.html",
+      "artifacts_to_track": "artifacts/coverage/lcov.info, artifacts/logs/test-execution-time.log, artifacts/metrics/tdd-compliance.csv, artifacts/reports/mutation-test.html",
       "description": "Unit Tests (Vitest + TDD)",
       "owner": "All Developers",
       "section": "Testing",
-      "status": "Planned",
-      "target_sprint": "Continuous",
+      "status": "In Progress",
+      "target_sprint": "0",
       "task_id": "",
-      "validation_method": "Coverage >90%, tests <30s, mutations tested"
+      "validation_method": "Coverage >90%, tests <30s, vitest threshold enforcement active"
     },
     {
       "artifacts_to_track": "tests/integration/*, artifacts/misc/msw-handlers/*, artifacts/misc/test-data-factories/*, artifacts/coverage/integration-coverage.json",
       "description": "Integration Tests (Vitest + MSW)",
       "owner": "QA + Backend Dev",
       "section": "Testing",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "Continuous",
       "task_id": "",
       "validation_method": "APIs mocked, factories working, tests reliable"
@@ -718,7 +728,7 @@
       "description": "Security Tests (OWASP ZAP + Snyk)",
       "owner": "Security Eng + QA",
       "section": "Testing",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "Continuous",
       "task_id": "",
       "validation_method": "Scans clean, CI working, baseline set"
@@ -728,7 +738,7 @@
       "description": "Performance Tests (k6 + Lighthouse)",
       "owner": "Performance Eng",
       "section": "Testing",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "Continuous",
       "task_id": "",
       "validation_method": "p99 maintained, vitals green, alerts configured"
@@ -738,7 +748,7 @@
       "description": "User Acceptance Testing",
       "owner": "PM + Sales Team",
       "section": "Testing",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "25",
       "task_id": "",
       "validation_method": "UAT passed, satisfaction >90%, feedback addressed"
@@ -748,7 +758,7 @@
       "description": "Gate 4 Review - \u00a35000 Investment",
       "owner": "CEO + Board",
       "section": "Investment Gate",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "26",
       "task_id": "",
       "validation_method": "Strategy approved, market validated, investment authorized"
@@ -758,7 +768,7 @@
       "description": "Internal Launch Preparation",
       "owner": "PM + Marketing",
       "section": "Launch",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "26",
       "task_id": "",
       "validation_method": "Team trained, docs complete, launch ready"
@@ -768,7 +778,7 @@
       "description": "Pilot Customer Selection",
       "owner": "Sales + CEO",
       "section": "Launch",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "27",
       "task_id": "",
       "validation_method": "Pilots selected, NDAs signed, expectations set"
@@ -778,7 +788,7 @@
       "description": "Production Deployment",
       "owner": "DevOps + Whole Team",
       "section": "Launch",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "27",
       "task_id": "",
       "validation_method": "Deployed successfully, monitoring active, rollback tested"
@@ -788,7 +798,7 @@
       "description": "Hypercare Period",
       "owner": "Support Team + DevOps",
       "section": "Launch",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "Continuous",
       "task_id": "",
       "validation_method": "Support active, response <15min, uptime >99%"
@@ -798,7 +808,7 @@
       "description": "Technical Complexity Monitoring",
       "owner": "CTO + Tech Lead",
       "section": "Risk Mgmt",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "Continuous",
       "task_id": "",
       "validation_method": "Debt <10%, complexity managed, velocity stable"
@@ -808,7 +818,7 @@
       "description": "Budget Tracking with FinOps",
       "owner": "CFO + PM",
       "section": "Risk Mgmt",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "Continuous",
       "task_id": "",
       "validation_method": "Costs tracked, alerts configured, variance <10%"
@@ -818,7 +828,7 @@
       "description": "Team Upskilling Program",
       "owner": "HR + Tech Lead",
       "section": "Risk Mgmt",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "Continuous",
       "task_id": "",
       "validation_method": "Skills improving, training completed, confidence >4/5"
@@ -828,7 +838,7 @@
       "description": "Vendor Lock-in Mitigation",
       "owner": "PM + Tech Lead",
       "section": "Risk Mgmt",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "Continuous",
       "task_id": "",
       "validation_method": "Abstractions documented, migration <1 week, alternatives ready"
@@ -838,7 +848,7 @@
       "description": "GDPR baseline controls: Supabase RLS policies, data minimisation, retention hooks",
       "owner": "DPO + Legal",
       "section": "Compliance",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "11",
       "task_id": "",
       "validation_method": "RLS working, GDPR compliant, audit complete"
@@ -848,7 +858,7 @@
       "description": "ISO 42001 Readiness Assessment",
       "owner": "External Auditor + CTO",
       "section": "Compliance",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "25",
       "task_id": "",
       "validation_method": "Assessment complete, framework ready, roadmap approved"
@@ -858,7 +868,7 @@
       "description": "Success Metrics Review",
       "owner": "CEO + All Leads",
       "section": "Success",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "33",
       "task_id": "",
       "validation_method": "Metrics met, ROI validated, Phase 2 planned"
@@ -868,7 +878,7 @@
       "description": "Data Migration from Legacy",
       "owner": "DA + DevOps",
       "section": "Migration",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "18",
       "task_id": "",
       "validation_method": "Data migrated, validation passed, rollback ready"
@@ -878,7 +888,7 @@
       "description": "Multi-Region Setup",
       "owner": "DevOps + DBA",
       "section": "Resilience",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "24",
       "task_id": "",
       "validation_method": "Replication working, RPO/RTO met, tests passed"
@@ -888,7 +898,7 @@
       "description": "Zero Trust Security Model",
       "owner": "Security Eng + CTO",
       "section": "Security",
-      "status": "Planned",
+      "status": "Completed",
       "target_sprint": "1",
       "task_id": "",
       "validation_method": "Zero trust implemented, pentest passed, endpoints secured"
@@ -898,7 +908,7 @@
       "description": "Privacy Impact Assessment",
       "owner": "DPO + Legal",
       "section": "Compliance",
-      "status": "Planned",
+      "status": "Completed",
       "target_sprint": "1",
       "task_id": "",
       "validation_method": "DPIA complete, risks mitigated, controls documented"
@@ -908,7 +918,7 @@
       "description": "Full Stack Observability",
       "owner": "SRE Lead + DevOps",
       "section": "Observability",
-      "status": "Planned",
+      "status": "Completed",
       "target_sprint": "1",
       "task_id": "",
       "validation_method": "Traces correlating, MTTD <2min, root cause found"
@@ -918,7 +928,7 @@
       "description": "IaC with Terraform",
       "owner": "DevOps",
       "section": "Infrastructure",
-      "status": "Planned",
+      "status": "Completed",
       "target_sprint": "1",
       "task_id": "",
       "validation_method": "IaC working, drift detected, reproducible"
@@ -928,7 +938,7 @@
       "description": "Component Library (shadcn/ui)",
       "owner": "Frontend Dev + UX",
       "section": "Quality",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "10",
       "task_id": "",
       "validation_method": "Components built, Storybook deployed, a11y passed"
@@ -938,7 +948,7 @@
       "description": "API Rate Limiting (tRPC + Upstash)",
       "owner": "Backend Dev + Security Eng",
       "section": "Security",
-      "status": "Planned",
+      "status": "Completed",
       "target_sprint": "1",
       "task_id": "",
       "validation_method": "Rate limits working, DDoS protected, false positives <0.1%"
@@ -948,7 +958,7 @@
       "description": "Platform Engineering Foundation",
       "owner": "DevOps + Tech Lead",
       "section": "Platform",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "18",
       "task_id": "",
       "validation_method": "Golden paths defined, portal working, satisfaction >4/5"
@@ -958,7 +968,7 @@
       "description": "Docusaurus Setup",
       "owner": "Tech Writer + DevOps",
       "section": "Documentation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "2",
       "task_id": "",
       "validation_method": "Docs deployed, search working, LLM optimized"
@@ -968,7 +978,7 @@
       "description": "LLM-Friendly Documentation Templates",
       "owner": "Tech Writer + AI Specialist",
       "section": "Documentation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "2",
       "task_id": "",
       "validation_method": "Templates created, glossary complete, chunks optimized"
@@ -978,7 +988,7 @@
       "description": "API Documentation (tRPC + OpenAPI)",
       "owner": "Backend Dev + Tech Writer",
       "section": "Documentation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "Continuous",
       "task_id": "",
       "validation_method": "API documented, Postman working, examples tested"
@@ -988,7 +998,7 @@
       "description": "Domain Knowledge Base",
       "owner": "Tech Lead + Team",
       "section": "Documentation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "4",
       "task_id": "",
       "validation_method": "Domain documented, graph searchable, contexts mapped"
@@ -998,7 +1008,7 @@
       "description": "RAG Integration for Docs",
       "owner": "AI Specialist + Tech Writer",
       "section": "Documentation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "23",
       "task_id": "",
       "validation_method": "RAG working, accuracy >90%, response <2s"
@@ -1008,7 +1018,7 @@
       "description": "Video Tutorials & Demos",
       "owner": "Tech Writer + Marketing",
       "section": "Documentation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "25",
       "task_id": "",
       "validation_method": "Videos created, satisfaction >80%, embedded in docs"
@@ -1018,7 +1028,7 @@
       "description": "Ollama Local Development",
       "owner": "AI Specialist + DevOps",
       "section": "AI/ML",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "2",
       "task_id": "",
       "validation_method": "Ollama running, costs reduced 90%, accuracy maintained"
@@ -1028,7 +1038,7 @@
       "description": "Model Versioning with Zep",
       "owner": "AI Specialist + Backend Dev",
       "section": "AI/ML",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "14",
       "task_id": "",
       "validation_method": "Versioning working, rollback tested, A/B configured"
@@ -1038,7 +1048,7 @@
       "description": "Edge Functions Optimization",
       "owner": "Frontend Dev + DevOps",
       "section": "Performance",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "20",
       "task_id": "",
       "validation_method": "Edge deployed, TTFB <50ms, costs optimized"
@@ -1048,7 +1058,7 @@
       "description": "Continuous Quality Metrics",
       "owner": "QA Lead + PM",
       "section": "Quality",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "Continuous",
       "task_id": "",
       "validation_method": "Quality A rating, debt <3%, trends improving"
@@ -1058,7 +1068,7 @@
       "description": "Contacts Module - Create/Edit/Search",
       "owner": "Frontend Dev + Backend Dev",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "5",
       "task_id": "",
       "validation_method": "CRUD working, search <200ms, UI responsive"
@@ -1068,7 +1078,7 @@
       "description": "Contact 360 Page - Full Detail View",
       "owner": "Frontend Dev + UX Designer",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "6",
       "task_id": "",
       "validation_method": "360 view working, Lighthouse >90, tabs functional"
@@ -1078,7 +1088,7 @@
       "description": "Deals Pipeline - Kanban Board",
       "owner": "Frontend Dev + Backend Dev",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "6",
       "task_id": "",
       "validation_method": "Kanban working, drag-drop smooth, persistence <300ms"
@@ -1088,7 +1098,7 @@
       "description": "Deal Forecasting & Reporting",
       "owner": "Data Eng + Backend Dev",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "7",
       "task_id": "",
       "validation_method": "Forecast accurate \u226585%, KPIs calculated, reports generated"
@@ -1098,7 +1108,7 @@
       "description": "Tickets Module - SLA Tracking",
       "owner": "Backend Dev + Frontend Dev",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "7",
       "task_id": "",
       "validation_method": "Tickets working, SLA alerts <1m, badges correct"
@@ -1108,7 +1118,7 @@
       "description": "Documents Management - Upload & Sign",
       "owner": "Backend Dev + Integrations Eng",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "8",
       "task_id": "",
       "validation_method": "DocuSign integrated, preview working, versions tracked"
@@ -1118,7 +1128,7 @@
       "description": "Churn Risk & Next Best Action",
       "owner": "AI Specialist + Backend Dev",
       "section": "AI Insights",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "8",
       "task_id": "",
       "validation_method": "Model accurate >80%, predictions <2s, UI integrated"
@@ -1128,7 +1138,7 @@
       "description": "Custom Reports & Dashboards",
       "owner": "Frontend Dev + Data Eng",
       "section": "Reports",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "9",
       "task_id": "",
       "validation_method": "Builder working, widgets ready, exports functional"
@@ -1138,7 +1148,7 @@
       "description": "Distributed Tracing & Logging",
       "owner": "DevOps + SRE",
       "section": "Ops & Observability",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "9",
       "task_id": "",
       "validation_method": "Traces flowing, coverage >99%, dashboards created"
@@ -1148,7 +1158,7 @@
       "description": "RBAC/ABAC & Audit Trail",
       "owner": "Security Eng + Backend Dev",
       "section": "Security",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "9",
       "task_id": "",
       "validation_method": "RBAC working, audit 100%, permissions tested"
@@ -1158,7 +1168,7 @@
       "description": "ERP/Payment/Email Connectors",
       "owner": "Integrations Eng + Backend Dev",
       "section": "Integrations",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "10",
       "task_id": "",
       "validation_method": "Connectors tested, payments working, emails sent"
@@ -1168,7 +1178,7 @@
       "description": "ADR Registry & Compliance Reporting",
       "owner": "PM + CTO",
       "section": "Governance",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "10",
       "task_id": "",
       "validation_method": "ADRs documented, compliance tracked, templates ready"
@@ -1178,7 +1188,7 @@
       "description": "Home Page",
       "owner": "Growth FE",
       "section": "Public Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "11",
       "task_id": "",
       "validation_method": "Page rendering, Lighthouse >90, SEO verified"
@@ -1188,7 +1198,7 @@
       "description": "Features Page",
       "owner": "Growth FE",
       "section": "Public Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "11",
       "task_id": "",
       "validation_method": "Features displayed, CTAs tracked, performance met"
@@ -1198,7 +1208,7 @@
       "description": "Pricing Page",
       "owner": "Growth FE",
       "section": "Public Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "11",
       "task_id": "",
       "validation_method": "Pricing displayed, calculator working, Stripe connected"
@@ -1208,7 +1218,7 @@
       "description": "About Page",
       "owner": "Growth FE",
       "section": "Public Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "11",
       "task_id": "",
       "validation_method": "About content live, team displayed, culture shown"
@@ -1218,7 +1228,7 @@
       "description": "Contact Page",
       "owner": "Growth FE",
       "section": "Public Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "11",
       "task_id": "",
       "validation_method": "Form working, validation active, emails sending"
@@ -1228,7 +1238,7 @@
       "description": "Partners Page",
       "owner": "Growth FE",
       "section": "Public Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "11",
       "task_id": "",
       "validation_method": "Partners displayed, benefits clear, CTAs active"
@@ -1238,7 +1248,7 @@
       "description": "Press Page",
       "owner": "Growth FE",
       "section": "Public Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "11",
       "task_id": "",
       "validation_method": "Press content live, downloads working, kit available"
@@ -1248,7 +1258,7 @@
       "description": "Security Page",
       "owner": "Growth FE",
       "section": "Public Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "11",
       "task_id": "",
       "validation_method": "Security detailed, badges shown, trust established"
@@ -1258,7 +1268,7 @@
       "description": "Blog Index",
       "owner": "Growth FE",
       "section": "Public Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "12",
       "task_id": "",
       "validation_method": "Blog indexed, pagination working, categories filterable"
@@ -1268,7 +1278,7 @@
       "description": "Blog Post",
       "owner": "Growth FE",
       "section": "Public Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "12",
       "task_id": "",
       "validation_method": "Posts rendering, markdown parsed, comments working"
@@ -1278,7 +1288,7 @@
       "description": "Careers Page",
       "owner": "Growth FE",
       "section": "Public Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "12",
       "task_id": "",
       "validation_method": "Jobs displayed, applications working, ATS connected"
@@ -1288,7 +1298,7 @@
       "description": "Career Detail",
       "owner": "Growth FE",
       "section": "Public Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "12",
       "task_id": "",
       "validation_method": "Details rendering, requirements shown, apply functional"
@@ -1298,7 +1308,7 @@
       "description": "Landing Page Template",
       "owner": "Growth FE",
       "section": "Marketing Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "12",
       "task_id": "",
       "validation_method": "Landing pages live, A/B testing, conversions tracked"
@@ -1308,7 +1318,7 @@
       "description": "Status Page",
       "owner": "Growth FE",
       "section": "Public Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "12",
       "task_id": "",
       "validation_method": "Status showing, incidents tracked, updates live"
@@ -1318,7 +1328,7 @@
       "description": "Sign In",
       "owner": "Platform FE",
       "section": "Auth Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "13",
       "task_id": "",
       "validation_method": "Login working, SSO functional, security tested"
@@ -1328,7 +1338,7 @@
       "description": "Sign Up",
       "owner": "Platform FE",
       "section": "Auth Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "13",
       "task_id": "",
       "validation_method": "Signup functional, validation working, emails sending"
@@ -1338,7 +1348,7 @@
       "description": "Sign Up Success",
       "owner": "Platform FE",
       "section": "Auth Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "13",
       "task_id": "",
       "validation_method": "Success displayed, onboarding started, tracking working"
@@ -1348,7 +1358,7 @@
       "description": "Logout",
       "owner": "Platform FE",
       "section": "Auth Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "13",
       "task_id": "",
       "validation_method": "Logout functional, session cleared, redirect working"
@@ -1358,7 +1368,7 @@
       "description": "Forgot Password",
       "owner": "Platform FE",
       "section": "Auth Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "13",
       "task_id": "",
       "validation_method": "Reset working, emails sending, tokens valid"
@@ -1368,7 +1378,7 @@
       "description": "Reset Password",
       "owner": "Platform FE",
       "section": "Auth Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "13",
       "task_id": "",
       "validation_method": "Reset functional, validation working, password updated"
@@ -1378,7 +1388,7 @@
       "description": "MFA Setup",
       "owner": "Platform FE",
       "section": "Auth Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "13",
       "task_id": "",
       "validation_method": "MFA setup working, QR generated, codes created"
@@ -1388,7 +1398,7 @@
       "description": "MFA Verify",
       "owner": "Platform FE",
       "section": "Auth Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "13",
       "task_id": "",
       "validation_method": "Verification working, codes validated, access granted"
@@ -1398,7 +1408,7 @@
       "description": "Email Verification",
       "owner": "Platform FE",
       "section": "Auth Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "13",
       "task_id": "",
       "validation_method": "Verification working, account activated, email confirmed"
@@ -1408,7 +1418,7 @@
       "description": "SSO Callback",
       "owner": "Platform FE",
       "section": "Auth Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "13",
       "task_id": "",
       "validation_method": "Callback working, tokens exchanged, login complete"
@@ -1418,7 +1428,7 @@
       "description": "Billing Portal",
       "owner": "Platform BE",
       "section": "Billing Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "14",
       "task_id": "",
       "validation_method": "Portal functional, subscriptions shown, Stripe connected"
@@ -1428,7 +1438,7 @@
       "description": "Checkout",
       "owner": "Platform BE",
       "section": "Billing Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "14",
       "task_id": "",
       "validation_method": "Checkout functional, payments processing, receipts generated"
@@ -1438,7 +1448,7 @@
       "description": "Invoices",
       "owner": "Platform BE",
       "section": "Billing Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "14",
       "task_id": "",
       "validation_method": "Invoices listed, PDFs generated, downloads working"
@@ -1448,7 +1458,7 @@
       "description": "Invoice Detail",
       "owner": "Platform BE",
       "section": "Billing Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "14",
       "task_id": "",
       "validation_method": "Details shown, line items displayed, actions working"
@@ -1458,7 +1468,7 @@
       "description": "Payment Methods",
       "owner": "Platform BE",
       "section": "Billing Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "14",
       "task_id": "",
       "validation_method": "Cards managed, defaults working, updates processed"
@@ -1468,7 +1478,7 @@
       "description": "Subscriptions",
       "owner": "Platform BE",
       "section": "Billing Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "14",
       "task_id": "",
       "validation_method": "Subscriptions managed, changes working, prorations correct"
@@ -1478,7 +1488,7 @@
       "description": "Receipts",
       "owner": "Platform BE",
       "section": "Billing Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "14",
       "task_id": "",
       "validation_method": "Receipts listed, emails sent, downloads working"
@@ -1488,7 +1498,7 @@
       "description": "Docs Index",
       "owner": "DevRel",
       "section": "Developer Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "15",
       "task_id": "",
       "validation_method": "Docs indexed, search functional, navigation working"
@@ -1498,7 +1508,7 @@
       "description": "API Docs",
       "owner": "DevRel",
       "section": "Developer Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "15",
       "task_id": "",
       "validation_method": "API documented, examples running, playground working"
@@ -1508,7 +1518,7 @@
       "description": "Webhooks Docs",
       "owner": "DevRel",
       "section": "Developer Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "15",
       "task_id": "",
       "validation_method": "Webhooks documented, examples shown, tester working"
@@ -1518,7 +1528,7 @@
       "description": "Changelog",
       "owner": "DevRel",
       "section": "Developer Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "15",
       "task_id": "",
       "validation_method": "Changelog displayed, versions tracked, RSS working"
@@ -1528,7 +1538,7 @@
       "description": "SDK Guides",
       "owner": "DevRel",
       "section": "Developer Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "15",
       "task_id": "",
       "validation_method": "SDKs documented, guides clear, downloads working"
@@ -1538,7 +1548,7 @@
       "description": "CLI Docs",
       "owner": "DevRel",
       "section": "Developer Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "15",
       "task_id": "",
       "validation_method": "CLI documented, commands listed, examples working"
@@ -1548,7 +1558,7 @@
       "description": "Auth Guides",
       "owner": "DevRel",
       "section": "Developer Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "15",
       "task_id": "",
       "validation_method": "Auth documented, flows explained, examples shown"
@@ -1558,7 +1568,7 @@
       "description": "Dev Apps",
       "owner": "DevRel",
       "section": "Developer Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "15",
       "task_id": "",
       "validation_method": "Apps listed, keys generated, settings working"
@@ -1568,7 +1578,7 @@
       "description": "New Dev App",
       "owner": "DevRel",
       "section": "Developer Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "15",
       "task_id": "",
       "validation_method": "Apps created, OAuth working, webhooks configured"
@@ -1578,7 +1588,7 @@
       "description": "Dev App Detail",
       "owner": "DevRel",
       "section": "Developer Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "15",
       "task_id": "",
       "validation_method": "Details shown, metrics displayed, logs accessible"
@@ -1588,7 +1598,7 @@
       "description": "Dev App Edit",
       "owner": "DevRel",
       "section": "Developer Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "15",
       "task_id": "",
       "validation_method": "Settings editable, webhooks working, changes saved"
@@ -1598,7 +1608,7 @@
       "description": "Help Center Index",
       "owner": "Support Eng",
       "section": "Support Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "16",
       "task_id": "",
       "validation_method": "Help center live, categories shown, search working"
@@ -1608,7 +1618,7 @@
       "description": "Help Search",
       "owner": "Support Eng",
       "section": "Support Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "16",
       "task_id": "",
       "validation_method": "Search functional, results relevant, filters working"
@@ -1618,7 +1628,7 @@
       "description": "Help Article",
       "owner": "Support Eng",
       "section": "Support Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "16",
       "task_id": "",
       "validation_method": "Articles rendered, feedback working, related shown"
@@ -1628,7 +1638,7 @@
       "description": "Support Tickets",
       "owner": "Support Eng",
       "section": "Support Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "16",
       "task_id": "",
       "validation_method": "Tickets listed, filters functional, SLA displayed"
@@ -1638,7 +1648,7 @@
       "description": "New Ticket",
       "owner": "Support Eng",
       "section": "Support Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "16",
       "task_id": "",
       "validation_method": "Tickets created, categories selected, files uploaded"
@@ -1648,7 +1658,7 @@
       "description": "Ticket Detail",
       "owner": "Support Eng",
       "section": "Support Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "16",
       "task_id": "",
       "validation_method": "Details shown, thread working, updates real-time"
@@ -1658,7 +1668,7 @@
       "description": "Support Chat",
       "owner": "Support Eng",
       "section": "Support Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "16",
       "task_id": "",
       "validation_method": "Chat functional, agents connected, messages sent"
@@ -1668,7 +1678,7 @@
       "description": "Privacy Policy",
       "owner": "Legal Counsel",
       "section": "Legal Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "17",
       "task_id": "",
       "validation_method": "Policy displayed, versions tracked, consent logged"
@@ -1678,7 +1688,7 @@
       "description": "Terms of Service",
       "owner": "Legal Counsel",
       "section": "Legal Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "17",
       "task_id": "",
       "validation_method": "Terms displayed, acceptance tracked, updates sent"
@@ -1688,7 +1698,7 @@
       "description": "Cookie Policy",
       "owner": "Legal Counsel",
       "section": "Legal Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "17",
       "task_id": "",
       "validation_method": "Policy shown, banner working, preferences saved"
@@ -1698,7 +1708,7 @@
       "description": "Data Processing Addendum",
       "owner": "Legal Counsel",
       "section": "Legal Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "17",
       "task_id": "",
       "validation_method": "DPA available, signatures working, records maintained"
@@ -1708,7 +1718,7 @@
       "description": "Acceptable Use Policy",
       "owner": "Legal Counsel",
       "section": "Legal Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "17",
       "task_id": "",
       "validation_method": "AUP displayed, violations tracked, enforcement ready"
@@ -1718,7 +1728,7 @@
       "description": "404 Not Found",
       "owner": "SRE",
       "section": "System Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "17",
       "task_id": "",
       "validation_method": "404 working, suggestions shown, analytics tracked"
@@ -1728,7 +1738,7 @@
       "description": "500 Error",
       "owner": "SRE",
       "section": "System Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "17",
       "task_id": "",
       "validation_method": "Error shown, incidents created, notifications sent"
@@ -1738,7 +1748,7 @@
       "description": "Maintenance",
       "owner": "SRE",
       "section": "System Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "17",
       "task_id": "",
       "validation_method": "Maintenance shown, updates displayed, ETA visible"
@@ -1748,7 +1758,7 @@
       "description": "Dashboard",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "18",
       "task_id": "",
       "validation_method": "Dashboard live, KPIs shown, updates real-time"
@@ -1758,7 +1768,7 @@
       "description": "Leads List",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "18",
       "task_id": "",
       "validation_method": "Leads listed, filters working, bulk actions functional"
@@ -1768,7 +1778,7 @@
       "description": "New Lead",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "18",
       "task_id": "",
       "validation_method": "Leads created, enriched, assigned automatically"
@@ -1778,7 +1788,7 @@
       "description": "Lead Detail",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "18",
       "task_id": "",
       "validation_method": "Details shown, timeline working, actions functional"
@@ -1788,7 +1798,7 @@
       "description": "Edit Lead",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "18",
       "task_id": "",
       "validation_method": "Edits saving, changes tracked, history recorded"
@@ -1798,7 +1808,7 @@
       "description": "Import Leads",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "18",
       "task_id": "",
       "validation_method": "Imports working, mapping functional, validation active"
@@ -1808,7 +1818,7 @@
       "description": "Contacts List",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "19",
       "task_id": "",
       "validation_method": "Contacts listed, search fast, segments working"
@@ -1818,7 +1828,7 @@
       "description": "Contact 360",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "19",
       "task_id": "",
       "validation_method": "360 view complete, data shown, insights displayed"
@@ -1828,7 +1838,7 @@
       "description": "Edit Contact",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "19",
       "task_id": "",
       "validation_method": "Edits saving, duplicates detected, merge working"
@@ -1838,7 +1848,7 @@
       "description": "Import Contacts",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "19",
       "task_id": "",
       "validation_method": "Imports working, deduplication active, data clean"
@@ -1848,7 +1858,7 @@
       "description": "Merge Contacts",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "19",
       "task_id": "",
       "validation_method": "Merges working, conflicts resolved, history kept"
@@ -1858,7 +1868,7 @@
       "description": "Accounts List",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "19",
       "task_id": "",
       "validation_method": "Accounts listed, hierarchy shown, relationships linked"
@@ -1868,7 +1878,7 @@
       "description": "Account Detail",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "20",
       "task_id": "",
       "validation_method": "Details shown, subsidiaries listed, contacts linked"
@@ -1878,7 +1888,7 @@
       "description": "Edit Account",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "20",
       "task_id": "",
       "validation_method": "Edits saving, hierarchy updated, changes tracked"
@@ -1888,7 +1898,7 @@
       "description": "Import Accounts",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "20",
       "task_id": "",
       "validation_method": "Imports working, hierarchy preserved, relationships set"
@@ -1898,7 +1908,7 @@
       "description": "Opportunities List",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "20",
       "task_id": "",
       "validation_method": "Opportunities listed, pipeline visible, stages shown"
@@ -1908,7 +1918,7 @@
       "description": "Opportunity Detail",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "20",
       "task_id": "",
       "validation_method": "Details shown, products listed, timeline visible"
@@ -1918,7 +1928,7 @@
       "description": "Edit Opportunity",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "20",
       "task_id": "",
       "validation_method": "Edits saving, probability calculated, forecast updated"
@@ -1928,7 +1938,7 @@
       "description": "Pipeline Board",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "21",
       "task_id": "",
       "validation_method": "Board working, drag-drop smooth, filters active"
@@ -1938,7 +1948,7 @@
       "description": "Pipeline Stages",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "21",
       "task_id": "",
       "validation_method": "Stages configured, rates calculated, insights displayed"
@@ -1948,7 +1958,7 @@
       "description": "Stage Detail",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "21",
       "task_id": "",
       "validation_method": "Analytics shown, bottlenecks found, actions suggested"
@@ -1958,7 +1968,7 @@
       "description": "Forecasts",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "21",
       "task_id": "",
       "validation_method": "Forecasts shown, accuracy tracked, adjustments working"
@@ -1968,7 +1978,7 @@
       "description": "Activities",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "21",
       "task_id": "",
       "validation_method": "Activities shown, timeline smooth, filters functional"
@@ -1978,7 +1988,7 @@
       "description": "Tasks",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "21",
       "task_id": "",
       "validation_method": "Tasks managed, assignments working, reminders active"
@@ -1988,17 +1998,127 @@
       "description": "Task Detail",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "22",
       "task_id": "",
       "validation_method": "Details shown, subtasks working, comments active"
+    },
+    {
+      "artifacts_to_track": "docs/company/master-brief.md; docs/company/product/product-vision.md; docs/company/go-to-market/icp-personas.md; docs/company/messaging/tone-of-voice.md; docs/company/brand/visual-identity.md",
+      "description": "Company & Product Master Brief (single source of truth)",
+      "owner": "CEO + All Leads",
+      "section": "Strategy & Documentation",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Manual sign-off by CEO + leads; markdownlint + cspell pass on created docs; links present in CLAUDE.md/README"
+    },
+    {
+      "artifacts_to_track": "docs/company/brand/visual-identity.md; docs/company/brand/palette.tokens.json; docs/company/brand/typography.tokens.json; docs/company/brand/spacing.tokens.json",
+      "description": "Visual Identity System (palette, typography, spacing, logo usage)",
+      "owner": "UX Designer + Frontend Dev",
+      "section": "Brand & Design",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Design review sign-off; markdownlint/cspell pass; token files valid JSON"
+    },
+    {
+      "artifacts_to_track": "docs/design-system/token-mapping.md; docs/design-system/theme-reference-spec.md; docs/design-system/token-naming.md",
+      "description": "Design Tokens Integration Plan (Tailwind/shadcn theme mapping)",
+      "owner": "Frontend Dev + UX Designer",
+      "section": "Design System",
+      "status": "Completed",
+      "target_sprint": "1",
+      "task_id": "",
+      "validation_method": "Frontend + UX sign-off; markdownlint/cspell pass; linted JSON snippets if included"
+    },
+    {
+      "artifacts_to_track": "docs/company/go-to-market/icp.md; docs/company/go-to-market/personas.md; docs/company/go-to-market/objections.md",
+      "description": "ICP & Personas Pack (target customers, job stories, objections)",
+      "owner": "PM + Marketing",
+      "section": "Go-to-Market",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "PM + Marketing sign-off; markdownlint/cspell pass; cross-linking to master brief"
+    },
+    {
+      "artifacts_to_track": "docs/company/messaging/positioning.md; docs/company/messaging/value-props.md; docs/company/messaging/copy-blocks.md; docs/company/messaging/cta-library.md",
+      "description": "Messaging Framework (positioning, value props, copy blocks)",
+      "owner": "PM + Marketing",
+      "section": "Go-to-Market",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "PM + Marketing + CEO spot-check; markdownlint/cspell pass; links to personas"
+    },
+    {
+      "artifacts_to_track": "docs/sales/pitch-deck-outline.md; docs/sales/one-pager.md; artifacts/misc/sales/pitch-deck-source-link.txt",
+      "description": "Commercial Narrative + Pitch Deck Outline + One-Pager",
+      "owner": "PM + Sales Team",
+      "section": "Commercial Assets",
+      "status": "Completed",
+      "target_sprint": "1",
+      "task_id": "",
+      "validation_method": "Sales + PM sign-off; markdownlint/cspell pass; link accessible"
+    },
+    {
+      "artifacts_to_track": "docs/sales/sales-motion-playbook.md; docs/sales/discovery-script.md; docs/sales/demo-script.md; docs/sales/outreach-sequences.md",
+      "description": "Sales Motion Playbook (outreach sequences, discovery + demo scripts)",
+      "owner": "Sales + CEO",
+      "section": "Commercial Assets",
+      "status": "Backlog",
+      "target_sprint": "2",
+      "task_id": "",
+      "validation_method": "Sales leadership sign-off; markdownlint/cspell pass; pilot review notes captured"
+    },
+    {
+      "artifacts_to_track": "docs/operations/project-playbook.md; docs/operations/wip-policy.md; docs/operations/ticket-sizing.md; docs/operations/abc-classification.md; docs/operations/raci.md",
+      "description": "Project Operating Model & Delivery Playbook (cadence, WIP, ticket sizing, ABC)",
+      "owner": "Tech Lead + DevOps + Product Manager",
+      "section": "Project Operations",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Leadership sign-off; markdownlint/cspell pass; referenced from tracker/README"
+    },
+    {
+      "artifacts_to_track": "docs/operations/engineering-playbook.md; docs/operations/quality-gates.md; docs/operations/pr-checklist.md; docs/operations/release-rollback.md",
+      "description": "Engineering Playbook (SDLC, PR rules, quality gates, release/rollback)",
+      "owner": "Tech Lead + DevOps + QA Lead",
+      "section": "Engineering Operations",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "Team sign-off; markdownlint/cspell pass; PR template updated (if applicable)"
+    },
+    {
+      "artifacts_to_track": "docs/architecture/adr/000-template.md; docs/architecture/arp/000-template.md; docs/architecture/decision-workflow.md; docs/architecture/diagrams/README.md; docs/architecture/flowcharts/README.md",
+      "description": "Architecture Governance Pack (ADR + ARP templates, decision workflow, flowcharts)",
+      "owner": "Backend Dev + Architect",
+      "section": "Architecture Governance",
+      "status": "Completed",
+      "target_sprint": "1",
+      "task_id": "",
+      "validation_method": "Architect sign-off; markdownlint/cspell pass; links referenced from engineering playbook"
+    },
+    {
+      "artifacts_to_track": "docs/analytics/rfm-abc-spec.md; docs/analytics/event-taxonomy.md; docs/analytics/dashboards-requirements.md",
+      "description": "Customer Segmentation Spec (RFM + ABC) + Event Taxonomy",
+      "owner": "PM + DA",
+      "section": "Analytics & Segmentation",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "",
+      "validation_method": "PM + Marketing + DA sign-off; markdownlint/cspell pass; traceability links to ENV-016-AI/IFC-037/038"
     },
     {
       "artifacts_to_track": "apps/web/app/(crm)/calendar/page.tsx, apps/web/components/calendar/calendar-view.tsx, apps/web/lib/calendar/event-scheduler.ts",
       "description": "Calendar",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "22",
       "task_id": "",
       "validation_method": "Calendar displayed, events synced, scheduling working"
@@ -2008,7 +2128,7 @@
       "description": "Emails",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "22",
       "task_id": "",
       "validation_method": "Emails shown, threads organized, tracking working"
@@ -2018,7 +2138,7 @@
       "description": "Email Templates",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "22",
       "task_id": "",
       "validation_method": "Templates created, personalization working, sending active"
@@ -2028,7 +2148,7 @@
       "description": "SMS Templates",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "22",
       "task_id": "",
       "validation_method": "SMS created, compliance checked, sending working"
@@ -2038,7 +2158,7 @@
       "description": "Calls",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "22",
       "task_id": "",
       "validation_method": "Calls logged, recordings linked, analytics displayed"
@@ -2048,7 +2168,7 @@
       "description": "Notes",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "23",
       "task_id": "",
       "validation_method": "Notes saved, mentions working, sharing active"
@@ -2058,7 +2178,7 @@
       "description": "Files",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "23",
       "task_id": "",
       "validation_method": "Files uploaded, versions tracked, sharing enabled"
@@ -2068,7 +2188,7 @@
       "description": "File Detail",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "23",
       "task_id": "",
       "validation_method": "Previews working, metadata shown, sharing active"
@@ -2078,7 +2198,7 @@
       "description": "Products",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "23",
       "task_id": "",
       "validation_method": "Products listed, categories organized, search working"
@@ -2088,7 +2208,7 @@
       "description": "Product Detail",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "23",
       "task_id": "",
       "validation_method": "Details shown, pricing displayed, availability tracked"
@@ -2098,7 +2218,7 @@
       "description": "Price Books",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "23",
       "task_id": "",
       "validation_method": "Price books created, discounts working, rules applied"
@@ -2108,7 +2228,7 @@
       "description": "Price Book Detail",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "24",
       "task_id": "",
       "validation_method": "Prices displayed, dates effective, history maintained"
@@ -2118,7 +2238,7 @@
       "description": "Quotes",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "24",
       "task_id": "",
       "validation_method": "Quotes listed, generation working, PDFs created"
@@ -2128,7 +2248,7 @@
       "description": "New Quote",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "24",
       "task_id": "",
       "validation_method": "Quotes built, products added, calculations correct"
@@ -2138,7 +2258,7 @@
       "description": "Quote Detail",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "24",
       "task_id": "",
       "validation_method": "Details shown, versions tracked, actions enabled"
@@ -2148,7 +2268,7 @@
       "description": "Edit Quote",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "24",
       "task_id": "",
       "validation_method": "Edits saving, recalculation working, history kept"
@@ -2158,7 +2278,7 @@
       "description": "Orders",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "24",
       "task_id": "",
       "validation_method": "Orders listed, fulfillment tracked, status current"
@@ -2168,7 +2288,7 @@
       "description": "Order Detail",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "25",
       "task_id": "",
       "validation_method": "Details shown, shipments tracked, updates live"
@@ -2178,7 +2298,7 @@
       "description": "Reports",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "25",
       "task_id": "",
       "validation_method": "Reports listed, favorites working, generation fast"
@@ -2188,7 +2308,7 @@
       "description": "Custom Reports",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "25",
       "task_id": "",
       "validation_method": "Builder functional, visualizations working, exports enabled"
@@ -2198,7 +2318,7 @@
       "description": "Report Schedules",
       "owner": "CRM FE+BE",
       "section": "Core CRM",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "25",
       "task_id": "",
       "validation_method": "Schedules created, distribution working, history kept"
@@ -2208,7 +2328,7 @@
       "description": "Settings Home",
       "owner": "Platform FE+BE",
       "section": "Settings",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "25",
       "task_id": "",
       "validation_method": "Settings organized, search working, changes tracked"
@@ -2218,7 +2338,7 @@
       "description": "Profile Settings",
       "owner": "Platform FE+BE",
       "section": "Settings",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "25",
       "task_id": "",
       "validation_method": "Profile editable, avatar working, preferences saved"
@@ -2228,7 +2348,7 @@
       "description": "Account Settings",
       "owner": "Platform FE+BE",
       "section": "Settings",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "26",
       "task_id": "",
       "validation_method": "Account managed, deletion working, export enabled"
@@ -2238,7 +2358,7 @@
       "description": "Organization Settings",
       "owner": "Platform FE+BE",
       "section": "Settings",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "26",
       "task_id": "",
       "validation_method": "Org configured, branding applied, settings saved"
@@ -2248,7 +2368,7 @@
       "description": "Users",
       "owner": "Platform FE+BE",
       "section": "Settings",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "26",
       "task_id": "",
       "validation_method": "Users managed, invites sent, roles assigned"
@@ -2258,7 +2378,7 @@
       "description": "Roles",
       "owner": "Platform FE+BE",
       "section": "Settings",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "26",
       "task_id": "",
       "validation_method": "Roles created, permissions set, inheritance working"
@@ -2268,7 +2388,7 @@
       "description": "Permissions",
       "owner": "Platform FE+BE",
       "section": "Settings",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "26",
       "task_id": "",
       "validation_method": "Permissions set, testing working, enforcement active"
@@ -2278,7 +2398,7 @@
       "description": "Teams",
       "owner": "Platform FE+BE",
       "section": "Settings",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "26",
       "task_id": "",
       "validation_method": "Teams created, hierarchy set, members assigned"
@@ -2288,7 +2408,7 @@
       "description": "Audit Log",
       "owner": "Platform FE+BE",
       "section": "Settings",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "27",
       "task_id": "",
       "validation_method": "Logs captured, filtering working, export enabled"
@@ -2298,7 +2418,7 @@
       "description": "API Keys",
       "owner": "Platform FE+BE",
       "section": "Settings",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "27",
       "task_id": "",
       "validation_method": "Keys generated, scopes enforced, rotation working"
@@ -2308,7 +2428,7 @@
       "description": "Webhooks",
       "owner": "Platform FE+BE",
       "section": "Settings",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "27",
       "task_id": "",
       "validation_method": "Webhooks configured, testing working, logs available"
@@ -2318,7 +2438,7 @@
       "description": "Integrations",
       "owner": "Platform FE+BE",
       "section": "Settings",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "27",
       "task_id": "",
       "validation_method": "Integrations listed, OAuth working, sync active"
@@ -2328,7 +2448,7 @@
       "description": "Notifications",
       "owner": "Platform FE+BE",
       "section": "Settings",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "27",
       "task_id": "",
       "validation_method": "Preferences set, channels configured, delivery working"
@@ -2338,7 +2458,7 @@
       "description": "Localization",
       "owner": "Platform FE+BE",
       "section": "Settings",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "27",
       "task_id": "",
       "validation_method": "Languages set, translations loaded, switching smooth"
@@ -2348,7 +2468,7 @@
       "description": "Data Retention",
       "owner": "Platform FE+BE",
       "section": "Settings",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "28",
       "task_id": "",
       "validation_method": "Policies set, automation working, compliance met"
@@ -2358,7 +2478,7 @@
       "description": "Compliance",
       "owner": "Platform FE+BE",
       "section": "Settings",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "28",
       "task_id": "",
       "validation_method": "Dashboard live, reports generated, audits passed"
@@ -2368,7 +2488,7 @@
       "description": "Security",
       "owner": "Platform FE+BE",
       "section": "Settings",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "28",
       "task_id": "",
       "validation_method": "Settings configured, 2FA working, policies enforced"
@@ -2378,7 +2498,7 @@
       "description": "Import/Export",
       "owner": "Platform FE+BE",
       "section": "Settings",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "28",
       "task_id": "",
       "validation_method": "Imports working, exports generated, mappings saved"
@@ -2388,7 +2508,7 @@
       "description": "Privacy Export",
       "owner": "Platform FE+BE",
       "section": "Settings",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "28",
       "task_id": "",
       "validation_method": "Exports generated, packages complete, GDPR met"
@@ -2398,7 +2518,7 @@
       "description": "Privacy Delete",
       "owner": "Platform FE+BE",
       "section": "Settings",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "28",
       "task_id": "",
       "validation_method": "Deletion working, confirmation required, audit logged"
@@ -2408,7 +2528,7 @@
       "description": "Lead Aggregate and Value Objects",
       "owner": "Backend Dev + Tech Lead",
       "section": "Validation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "2",
       "task_id": "",
       "validation_method": "Tests passing, design reviewed, integration with tRPC works"
@@ -2418,7 +2538,7 @@
       "description": "Contact Aggregate and Value Objects",
       "owner": "Backend Dev + Tech Lead",
       "section": "Validation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "2",
       "task_id": "",
       "validation_method": "Tests pass, design reviewed"
@@ -2428,7 +2548,7 @@
       "description": "Account Aggregate and Value Objects",
       "owner": "Backend Dev + Tech Lead",
       "section": "Validation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "2",
       "task_id": "",
       "validation_method": "Tests pass, design reviewed"
@@ -2438,7 +2558,7 @@
       "description": "Opportunity Aggregate and Value Objects",
       "owner": "Backend Dev + Tech Lead",
       "section": "Validation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "3",
       "task_id": "",
       "validation_method": "Tests pass, design reviewed"
@@ -2448,7 +2568,7 @@
       "description": "Task Aggregate and Value Objects",
       "owner": "Backend Dev + Tech Lead",
       "section": "Validation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "3",
       "task_id": "",
       "validation_method": "Tests pass, design reviewed"
@@ -2458,7 +2578,7 @@
       "description": "Define Hexagonal module boundaries + create canonical packages/application + packages/adapters skeleton",
       "owner": "Tech Lead + Backend Dev",
       "section": "Architecture",
-      "status": "Planned",
+      "status": "Completed",
       "target_sprint": "1",
       "task_id": "",
       "validation_method": "Tests pass, architecture review"
@@ -2468,7 +2588,7 @@
       "description": "Implement Repositories and Factories",
       "owner": "Backend Dev",
       "section": "Infrastructure",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "3",
       "task_id": "",
       "validation_method": "Unit tests pass, queries optimized"
@@ -2478,7 +2598,7 @@
       "description": "Implement Domain Services & Business Logic",
       "owner": "Backend Dev",
       "section": "Validation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "4",
       "task_id": "",
       "validation_method": "Integration tests pass"
@@ -2488,7 +2608,7 @@
       "description": "Define TDD Process, Coverage & Review Checklist",
       "owner": "QA Lead + Tech Lead",
       "section": "Testing",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "2",
       "task_id": "",
       "validation_method": "CI fails when coverage <90%, guidelines published"
@@ -2498,7 +2618,7 @@
       "description": "Write Unit & Integration Tests for Domain Entities",
       "owner": "QA + Backend Dev",
       "section": "Testing",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "4",
       "task_id": "",
       "validation_method": "Test reports, coverage metrics"
@@ -2508,7 +2628,7 @@
       "description": "Set up SonarQube and integrate static analysis into CI/CD",
       "owner": "DevOps + QA Lead",
       "section": "Quality",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "5",
       "task_id": "",
       "validation_method": "Sonar reports show A rating, pipeline passes when quality gate satisfied"
@@ -2518,7 +2638,7 @@
       "description": "Implement blue/green deployment and rollback strategy",
       "owner": "DevOps",
       "section": "Infrastructure",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "6",
       "task_id": "",
       "validation_method": "Canary tested, rollback verified"
@@ -2528,7 +2648,7 @@
       "description": "Implement secrets management and encryption at rest and in transit",
       "owner": "Security Eng + DevOps",
       "section": "Security",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "6",
       "task_id": "",
       "validation_method": "Secrets scan passes, encryption verified"
@@ -2538,7 +2658,7 @@
       "description": "Implement API rate limiting and DDoS protection",
       "owner": "Backend Dev + DevOps",
       "section": "Security",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "7",
       "task_id": "",
       "validation_method": "Load tests show throttling, WAF blocks malicious traffic"
@@ -2548,7 +2668,7 @@
       "description": "Setup backups and disaster recovery plan",
       "owner": "DevOps + DBA",
       "section": "Resilience",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "8",
       "task_id": "",
       "validation_method": "Simulated recovery successful"
@@ -2558,7 +2678,7 @@
       "description": "Instrument application with OpenTelemetry, unify logs, metrics and traces",
       "owner": "DevOps + SRE",
       "section": "Observability",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "9",
       "task_id": "",
       "validation_method": "Observability shows complete traces, alerts triggered on anomalies"
@@ -2568,7 +2688,7 @@
       "description": "Monitor AI models for drift, latency, hallucination and ROI",
       "owner": "AI Specialist + SRE",
       "section": "AI Insights",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "10",
       "task_id": "",
       "validation_method": "Drift simulation triggers alert; dashboard displays metrics"
@@ -2578,17 +2698,17 @@
       "description": "Establish and maintain a risk register with mitigation actions",
       "owner": "PM + Tech Lead",
       "section": "Risk Mgmt",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "2",
       "task_id": "",
       "validation_method": "Risk review sessions held; register updated; no untracked risks"
     },
     {
-      "artifacts_to_track": "artifacts/misc/ceremony-calendar.ics, artifacts/misc/templates/*.md, artifacts/reports/retro-action-items.xlsx",
+      "artifacts_to_track": "artifacts/misc/ceremony-calendar.ics, artifacts/misc/templates/*.md, artifacts/reports/retro-action-items.md",
       "description": "Define recurring backlog refinement, sprint planning, review and retrospective ceremonies",
       "owner": "Scrum Master + PM",
       "section": "Planning",
-      "status": "Planned",
+      "status": "Completed",
       "target_sprint": "1",
       "task_id": "",
       "validation_method": "Meetings occur on schedule; backlog ready; actions tracked"
@@ -2598,7 +2718,7 @@
       "description": "Implement password reset and email verification flows",
       "owner": "Frontend Dev + Backend Dev",
       "section": "Auth Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "14",
       "task_id": "",
       "validation_method": "E2E tests pass, tokens expire, emails delivered"
@@ -2608,7 +2728,7 @@
       "description": "Implement SSO (SAML/OAuth) and social login providers",
       "owner": "Frontend Dev + Backend Dev",
       "section": "Auth Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "15",
       "task_id": "",
       "validation_method": "E2E tests pass; identity tokens validated; scopes correct"
@@ -2618,7 +2738,7 @@
       "description": "Add MFA using TOTP or SMS and allow users to enable/disable from security settings",
       "owner": "Frontend Dev + Backend Dev",
       "section": "Auth Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "16",
       "task_id": "",
       "validation_method": "E2E tests simulate MFA flows; backup codes regenerate; bypass blocked"
@@ -2628,7 +2748,7 @@
       "description": "Schedule periodic secret rotation and dependency vulnerability updates",
       "owner": "DevOps + Security",
       "section": "Security",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "10",
       "task_id": "",
       "validation_method": "Rotation logs verified; dependency updates merge automatically; no stale secrets"
@@ -2638,7 +2758,7 @@
       "description": "Implement circuit breaker and retry policies for external service calls",
       "owner": "Backend Dev",
       "section": "Resilience",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "7",
       "task_id": "",
       "validation_method": "Chaos tests show successful failover; metrics confirm improvements"
@@ -2648,7 +2768,7 @@
       "description": "Design caching strategy (Redis/CDN) and tune Prisma queries",
       "owner": "Backend Dev + SRE",
       "section": "Performance",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "8",
       "task_id": "",
       "validation_method": "Benchmarks confirm improvements; no stale data"
@@ -2658,7 +2778,7 @@
       "description": "Encrypt and aggregate audit logs; automate compliance reporting",
       "owner": "Security Eng + Compliance",
       "section": "Compliance",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "9",
       "task_id": "",
       "validation_method": "Compliance auditor verifies reports; logs decryptable by authorized roles only"
@@ -2668,7 +2788,7 @@
       "description": "Add in\u2011app onboarding, guided product tours and feedback collection",
       "owner": "UX Designer + Frontend Dev",
       "section": "Public Pages",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "17",
       "task_id": "",
       "validation_method": "User testing shows clarity; analytics confirm completion rate"
@@ -2678,7 +2798,7 @@
       "description": "Implement guardrails for prompt injection, data leakage, and monitor AI bias",
       "owner": "AI Specialist + Security",
       "section": "AI Foundation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "11",
       "task_id": "",
       "validation_method": "Security tests simulate injections; bias tests executed; logs verified"
@@ -2688,7 +2808,7 @@
       "description": "Continuously maintain ADR registry and developer guide updates",
       "owner": "Tech Writer + PM",
       "section": "Documentation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "3",
       "task_id": "",
       "validation_method": "ADR reviews complete; doc site updated"
@@ -2698,7 +2818,7 @@
       "description": "Implement tenant isolation at database and application layers",
       "owner": "Backend Dev + DevOps",
       "section": "Security",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "10",
       "task_id": "",
       "validation_method": "Penetration tests confirm isolation"
@@ -2708,7 +2828,7 @@
       "description": "Establish AI output review and manual fallback processes",
       "owner": "QA Lead + Tech Lead",
       "section": "AI Foundation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "3",
       "task_id": "",
       "validation_method": "Review logs show compliance; fallback used when necessary"
@@ -2718,7 +2838,7 @@
       "description": "Write UI and contract tests for core pages and tRPC endpoints",
       "owner": "QA + Frontend Dev",
       "section": "Testing",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "6",
       "task_id": "",
       "validation_method": "Test suites pass; coverage reports meet thresholds"
@@ -2728,7 +2848,7 @@
       "description": "Release governance: staging auto-deploy, promotion policy, quality/security gates, rollback criteria",
       "owner": "DevOps Lead",
       "section": "Validation",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "5",
       "task_id": "",
       "validation_method": "Dry-run release executed to staging; simulated rollback executed; checklist reviewed"
@@ -2738,7 +2858,7 @@
       "description": "Architecture boundary enforcement: domain/infrastructure dependency rules + architecture tests in CI",
       "owner": "Tech Lead",
       "section": "Foundation Setup",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "4",
       "task_id": "",
       "validation_method": "Introduce intentional violation and confirm CI fails; review with architecture checklist"
@@ -2748,7 +2868,7 @@
       "description": "Supply chain security: dependency pinning + SBOM generation in CI (npm/pnpm + container)",
       "owner": "Security Engineer + DevOps",
       "section": "Security",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "6",
       "task_id": "",
       "validation_method": "CI run produces SBOM; verify SBOM content and retention; review policy"
@@ -2758,7 +2878,7 @@
       "description": "Supply chain security: artifact signing + provenance for build outputs (images + releases)",
       "owner": "DevOps Engineer",
       "section": "Security",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "6",
       "task_id": "",
       "validation_method": "Signed artifact verified in CI and deployment; tamper test fails as expected"
@@ -2768,7 +2888,7 @@
       "description": "Container/image scanning in CI and registry with fail-on-critical policy",
       "owner": "Security Engineer",
       "section": "Security",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "6",
       "task_id": "",
       "validation_method": "CI blocks image with known critical vuln; report archived"
@@ -2778,7 +2898,7 @@
       "description": "Create ADR pack for multi-tenancy; workflow engine choice; agent tool-calling; data classification & retention; audit logging",
       "owner": "Tech Lead + Architect",
       "section": "Architecture",
-      "status": "Planned",
+      "status": "Completed",
       "target_sprint": "1",
       "task_id": "",
       "validation_method": "ADR review meeting minutes; stakeholder approval recorded"
@@ -2788,7 +2908,7 @@
       "description": "Implement Case/Matter aggregate root with tasks; deadlines; parties; lawyer assignments",
       "owner": "Backend Dev + Domain Architect",
       "section": "Domain",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "3",
       "task_id": "",
       "validation_method": "Integration tests passing; manual QA of CRUD flows; review by domain architect"
@@ -2798,7 +2918,7 @@
       "description": "Develop Appointment aggregate with conflict detection; buffers; recurrence; linkage to cases and calendars",
       "owner": "Backend Dev + Calendar Specialist",
       "section": "Scheduling",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "4",
       "task_id": "",
       "validation_method": "Conflict scenarios tested; load tests confirm latency; manual booking flows validated"
@@ -2808,7 +2928,7 @@
       "description": "Integrate external calendar providers (Google/Microsoft) with bidirectional sync; webhook handling; idempotency; reconciliation",
       "owner": "Backend Dev + DevOps",
       "section": "Integration",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "5",
       "task_id": "",
       "validation_method": "Simulated event sync and conflict resolution; reliability metrics monitored"
@@ -2818,7 +2938,7 @@
       "description": "Expose application services as agent tools and implement human approval flows with preview and rollback for high-risk actions",
       "owner": "AI Specialist + Backend Dev",
       "section": "AI Assistant",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "6",
       "task_id": "",
       "validation_method": "End-to-end tests simulate agent actions; manual review; audit logs inspected"
@@ -2828,7 +2948,7 @@
       "description": "Implement data governance workflows: DSAR requests; retention & legal hold policies; tenant-specific encryption key management; data residency compliance",
       "owner": "Legal Ops + Security Eng",
       "section": "Compliance",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "7",
       "task_id": "",
       "validation_method": "Mock DSAR processed; retention jobs run; encryption keys rotated; compliance audit passes"
@@ -2838,7 +2958,7 @@
       "description": "Evaluate n8n; custom engine; and Temporal; document decision via ADR; build event-driven minimal rules engine and integrate selected workflow engine",
       "owner": "Tech Lead + DevOps + Product Manager",
       "section": "Workflow",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "4",
       "task_id": "",
       "validation_method": "ADR reviewed; POC results documented; event-driven flow tested"
@@ -2848,7 +2968,7 @@
       "description": "Define SLOs/SLIs and alerting; establish on-call and incident management process; conduct restore drills; create capacity and cost budgets for AI inference and search",
       "owner": "SRE Lead + DevOps + Finance",
       "section": "Operations",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "8",
       "task_id": "",
       "validation_method": "Drills executed; metrics dashboards confirm SLOs; budgets reviewed; incident simulation completed"
@@ -2858,7 +2978,7 @@
       "description": "Perform threat modeling and abuse-case analysis for multi-tenancy and agent tool-calling; design mitigations; schedule penetration test; implement cookie consent mechanism",
       "owner": "Security Lead + AI Specialist",
       "section": "Security",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "6",
       "task_id": "",
       "validation_method": "Threat model reviewed; pen test results validated; cookie banner tested across browsers; compliance attestation"
@@ -2868,7 +2988,7 @@
       "description": "Design and implement inbound/outbound email flows: SPF/DKIM/DMARC; inbound parsing; attachments; implement general webhook handling with idempotency and retries; publish public API specification (OpenAPI) with versioning; baseline inbound email feature delivered",
       "owner": "Integration Lead + Backend Dev",
       "section": "Integration",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "7",
       "task_id": "",
       "validation_method": "Emails delivered and parsed; DMARC reports show pass; webhook tests simulate duplicates; API spec validated by tools"
@@ -2878,7 +2998,7 @@
       "description": "Plan and execute legacy system migration: discover and map data; assess data quality; design migration scripts; run rehearsals and reconciliation reporting; finalize cutover with rollback plan",
       "owner": "Data Engineer + DBA + PM",
       "section": "Migration",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "9",
       "task_id": "",
       "validation_method": "Rehearsal results reviewed; final migration verified by stakeholders; rollback procedure tested"
@@ -2888,7 +3008,7 @@
       "description": "Define PRD and user journey templates; create Definition of Ready criteria; develop traceability matrix linking capabilities to domain services; APIs; UIs; and tests",
       "owner": "Product Manager + Tech Lead",
       "section": "Planning",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "2",
       "task_id": "",
       "validation_method": "Sample stories reviewed; DoR used; traceability matrix cross-checked; training session feedback"
@@ -2898,7 +3018,7 @@
       "description": "Develop Case timeline UI with deadline engine: display tasks; deadlines; events; implement deadline engine to compute legal deadlines and reminders; integrate with scheduling",
       "owner": "Frontend Dev + Backend Dev",
       "section": "UI/Domain",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "5",
       "task_id": "",
       "validation_method": "User testing; functional tests; performance analysis; legal accuracy review"
@@ -2908,7 +3028,7 @@
       "description": "Implement conversation record entity: store chat transcripts; tool calls; actions per case; enable search and retrieval; integrate audit logging and data retention policies",
       "owner": "Backend Dev + AI Specialist",
       "section": "AI Assistant",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "6",
       "task_id": "",
       "validation_method": "Unit and integration tests; manual search; DSAR deletion tested; audit logs verified"
@@ -2918,7 +3038,7 @@
       "description": "Implement action preview and rollback UI for agent-initiated changes; integrated with approval flows",
       "owner": "Frontend Dev + AI Specialist",
       "section": "AI Assistant",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "6",
       "task_id": "",
       "validation_method": "Manual testing of diff preview; rollback tested; analytics dashboards review"
@@ -2938,7 +3058,7 @@
       "description": "Domain events infrastructure: event contracts + versioning + outbox pattern + idempotent publishing",
       "owner": "Backend Dev + Architect",
       "section": "Platform",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "3",
       "task_id": "",
       "validation_method": "Integration tests validate outbox consistency; duplicate publish prevented; dashboards show event flow"
@@ -2948,7 +3068,7 @@
       "description": "Event consumers framework: retries + DLQ + backoff + observability; standard webhook/idempotency utilities",
       "owner": "Backend Dev + SRE",
       "section": "Platform",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "4",
       "task_id": "",
       "validation_method": "Chaos tests inject failures; DLQ receives poison messages; alerts fire; handlers remain idempotent"
@@ -2958,7 +3078,7 @@
       "description": "Case document model: storage metadata, versioning, ACL mapping (tenant + case + role), and audit hooks",
       "owner": "Backend Dev + Domain Architect",
       "section": "Case Docs",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "6",
       "task_id": "",
       "validation_method": "Isolation tests prove tenant/case scoping; audit entries present for all actions; API contract tests pass"
@@ -2968,7 +3088,7 @@
       "description": "Ingestion pipeline for case files: upload/email attachment intake, antivirus scan, metadata extraction, storage, and indexing triggers",
       "owner": "Backend Dev + Integration Eng",
       "section": "Case Docs",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "7",
       "task_id": "",
       "validation_method": "E2E ingest from UI + inbound email; malicious sample blocked; retries succeed; ingestion metrics visible"
@@ -2978,7 +3098,7 @@
       "description": "OCR + text extraction worker for scanned PDFs/images; normalized text artifacts stored for search and RAG",
       "owner": "Backend Dev + AI Specialist",
       "section": "Case Docs",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "8",
       "task_id": "",
       "validation_method": "Benchmark run against sample corpus; extraction stored and searchable; retries verified"
@@ -2988,7 +3108,7 @@
       "description": "Permissioned indexing for case documents and notes: full-text + embeddings with tenant/case ACL filters",
       "owner": "Backend Dev + AI Specialist",
       "section": "Search/AI",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "8",
       "task_id": "",
       "validation_method": "Automated tests prove ACL enforcement; relevance suite runs in CI; load test meets latency"
@@ -2998,7 +3118,7 @@
       "description": "Case RAG tool: agent retrieval tool constrained by tenant/case permissions; citations + source trace; prompt-injection hardening for retrieved content",
       "owner": "AI Specialist + Security",
       "section": "AI Assistant",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "9",
       "task_id": "",
       "validation_method": "Red-team prompts blocked; eval suite passes; tool logs show tenant/case scoping"
@@ -3008,7 +3128,7 @@
       "description": "Notification service MVP: unified delivery (in-app + email) with preference model (backend), templates, and audit logging",
       "owner": "Backend Dev + SRE",
       "section": "Notifications",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "7",
       "task_id": "",
       "validation_method": "Send test notifications; simulate provider failure; retries succeed; audit logs validated"
@@ -3018,7 +3138,7 @@
       "description": "Scheduling communications: ICS invites, reschedule/cancel flows, reminders; integrated with notification service and calendar sync",
       "owner": "Backend Dev + Calendar Specialist",
       "section": "Scheduling",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "8",
       "task_id": "",
       "validation_method": "E2E booking sends invite; reschedule updates; cancel notifies; retry does not duplicate"
@@ -3028,7 +3148,7 @@
       "description": "Case timeline enrichment: include documents/versions, communications (email/WhatsApp), and agent actions/approvals as timeline events",
       "owner": "Frontend Dev + Backend Dev",
       "section": "UI/Domain",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "9",
       "task_id": "",
       "validation_method": "User testing validates readability; E2E tests cover permissions; performance checks pass"
@@ -3048,7 +3168,7 @@
       "description": "Standardize worker runtime under apps/workers (events, ingestion, notifications) with shared job framework, metrics, and deployment packaging",
       "owner": "SRE Lead + Backend Dev",
       "section": "Platform",
-      "status": "Planned",
+      "status": "Backlog",
       "target_sprint": "6",
       "task_id": "",
       "validation_method": "Run workers locally via docker-compose; simulate outbox publish and ingestion triggers; verify dashboards populate; chaos test restart and confirm idempotent resume"

@@ -8,8 +8,8 @@
   "phase": "phase-5-completion",
   "stream": null,
   "dependencies": {
-    "all_satisfied": true,
-    "verified_at": "2025-12-21T21:20:40.003Z",
+    "all_satisfied": false,
+    "verified_at": "2025-12-22T07:23:15.984Z",
     "required": [
       "AI-SETUP-001",
       "AI-SETUP-002",
@@ -52,10 +52,11 @@
     ],
     "created": [
       "artifacts/misc/orchestration-config.yaml",
-      "artifacts/metrics/handoff-metrics.json",
-      "artifacts/logs/quality-gates.log"
+      "artifacts/metrics/handoff-metrics.json"
     ],
-    "missing": []
+    "missing": [
+      "artifacts/logs/quality-gates.log"
+    ]
   },
   "validations": [
     {

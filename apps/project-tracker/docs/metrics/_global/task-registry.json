@@ -1,13 +1,13 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2025-12-21T21:20:39.824Z",
+  "last_updated": "2025-12-22T07:23:15.855Z",
   "total_tasks": 305,
   "sprints": {
     "sprint-0": {
-      "total_tasks": 35,
-      "completed": 35,
-      "in_progress": 0,
+      "total_tasks": 36,
+      "completed": 34,
+      "in_progress": 2,
       "validating": 0,
       "blocked": 0,
       "planned": 0,
@@ -32,7 +32,6 @@
       "ENV-007-AI",
       "ENV-008-AI",
       "ENV-009-AI",
-      "ENV-010-AI",
       "ENV-011-AI",
       "ENV-012-AI",
       "ENV-013-AI",
@@ -69,7 +68,10 @@
       "EXC-SEC-001",
       "IFC-160"
     ],
-    "IN_PROGRESS": [],
+    "IN_PROGRESS": [
+      "ENV-010-AI",
+      "IFC-044"
+    ],
     "VALIDATING": [],
     "BLOCKED": [],
     "PLANNED": [],
@@ -114,7 +116,6 @@
       "IFC-041",
       "IFC-042",
       "IFC-043",
-      "IFC-044",
       "IFC-045",
       "IFC-046",
       "IFC-047",
@@ -638,7 +639,7 @@
       "section": "Foundation Setup",
       "description": "Automated Test Generation and Automation",
       "owner": "QA Lead + AI Testing Suite",
-      "status": "DONE",
+      "status": "IN_PROGRESS",
       "sprint": 0,
       "dependencies": [
         "ENV-007-AI",
@@ -650,9 +651,9 @@
         "artifacts/coverage/coverage-report.html",
         "artifacts/logs/test-generation-log.json"
       ],
-      "kpis": "Coverage >95%, test generation <1 minute, AI-verified scenarios",
+      "kpis": "Coverage >90%, test generation <1 minute, AI-verified scenarios",
       "definition_of_done": "Tests AI-generated, coverage AI-optimized, E2E scenarios AI-created, continuous validation",
-      "validation": "Coverage >95%, tests passing, scenarios validated",
+      "validation": "Coverage >90%, tests passing, scenarios validated",
       "prerequisites": "AI test generation tools, coverage targets"
     },
     "ENV-011-AI": {
@@ -1792,18 +1793,20 @@
       "section": "Testing",
       "description": "Unit Tests (Vitest + TDD)",
       "owner": "All Developers",
-      "status": "BACKLOG",
-      "sprint": -1,
-      "dependencies": [],
+      "status": "IN_PROGRESS",
+      "sprint": 0,
+      "dependencies": [
+        "ENV-010-AI"
+      ],
       "artifacts": [
-        "artifacts/misc/coverage/lcov.info",
+        "artifacts/coverage/lcov.info",
         "artifacts/logs/test-execution-time.log",
-        "artifacts/misc/tdd-compliance.csv",
-        "artifacts/misc/mutation-test.html"
+        "artifacts/metrics/tdd-compliance.csv",
+        "artifacts/reports/mutation-test.html"
       ],
       "kpis": "Coverage >90%, tests fast (<30s)",
       "definition_of_done": "90%+ coverage, all business logic tested",
-      "validation": "Coverage >90%, tests <30s, mutations tested",
+      "validation": "Coverage >90%, tests <30s, vitest threshold enforcement active",
       "prerequisites": "Vitest configured, TDD workflow adopted"
     },
     "IFC-045": {
