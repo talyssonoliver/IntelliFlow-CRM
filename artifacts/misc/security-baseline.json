@@ -407,9 +407,9 @@
     }
   },
   "contactInformation": {
-    "securityTeam": "security@intelliflow-crm.com",
-    "incidentResponse": "incidents@intelliflow-crm.com",
-    "bugBounty": "bugbounty@intelliflow-crm.com",
+    "securityTeam": "security-team@example.com",
+    "incidentResponse": "incidents@example.com",
+    "bugBounty": "bugbounty@example.com",
     "disclosurePolicy": "https://intelliflow-crm.com/security/disclosure"
   },
   "reviewSchedule": {

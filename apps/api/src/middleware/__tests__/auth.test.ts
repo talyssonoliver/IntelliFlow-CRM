@@ -28,6 +28,8 @@ describe('AuthMiddleware', () => {
           role: 'USER',
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       };
 
       const result = await authMiddleware({
@@ -51,6 +53,8 @@ describe('AuthMiddleware', () => {
       const ctx: Context = {
         user: null,
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       };
 
       await expect(
@@ -80,6 +84,8 @@ describe('AuthMiddleware', () => {
       const ctx: Context = {
         user: undefined,
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       };
 
       await expect(
@@ -108,6 +114,8 @@ describe('AuthMiddleware', () => {
           role: 'ADMIN',
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       };
 
       await authMiddleware({ ctx, next: mockNext });
@@ -127,6 +135,8 @@ describe('AuthMiddleware', () => {
           role: 'USER',
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
         correlationId: 'corr-123',
       };
 
@@ -153,6 +163,8 @@ describe('AuthMiddleware', () => {
           role: 'ADMIN',
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       } as Context & { user: NonNullable<Context['user']> };
 
       const result = await adminMiddleware({
@@ -175,6 +187,8 @@ describe('AuthMiddleware', () => {
           role: 'USER',
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       } as Context & { user: NonNullable<Context['user']> };
 
       await expect(
@@ -208,6 +222,8 @@ describe('AuthMiddleware', () => {
           role: 'MANAGER',
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       } as Context & { user: NonNullable<Context['user']> };
 
       await expect(
@@ -241,6 +257,8 @@ describe('AuthMiddleware', () => {
           role: 'GUEST',
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       } as Context & { user: NonNullable<Context['user']> };
 
       await expect(
@@ -264,6 +282,8 @@ describe('AuthMiddleware', () => {
           role: 'USER',
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       } as Context & { user: NonNullable<Context['user']> };
 
       try {
@@ -288,6 +308,8 @@ describe('AuthMiddleware', () => {
           role: 'ADMIN',
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       } as Context & { user: NonNullable<Context['user']> };
 
       const result = await managerMiddleware({
@@ -310,6 +332,8 @@ describe('AuthMiddleware', () => {
           role: 'MANAGER',
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       } as Context & { user: NonNullable<Context['user']> };
 
       const result = await managerMiddleware({
@@ -332,6 +356,8 @@ describe('AuthMiddleware', () => {
           role: 'USER',
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       } as Context & { user: NonNullable<Context['user']> };
 
       await expect(
@@ -365,6 +391,8 @@ describe('AuthMiddleware', () => {
           role: 'GUEST',
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       } as Context & { user: NonNullable<Context['user']> };
 
       await expect(
@@ -388,6 +416,8 @@ describe('AuthMiddleware', () => {
           role: 'manager', // lowercase
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       } as Context & { user: NonNullable<Context['user']> };
 
       await expect(
@@ -520,6 +550,8 @@ describe('AuthMiddleware', () => {
               role: 'ADMIN',
             },
             prisma: {} as any,
+            req: undefined,
+            res: undefined,
           },
           next: async () => {
             adminNextCalled = true;
@@ -535,6 +567,8 @@ describe('AuthMiddleware', () => {
           role: 'ADMIN',
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       };
 
       const result = await authMiddleware({
@@ -558,6 +592,8 @@ describe('AuthMiddleware', () => {
       const ctx: Context = {
         user: null,
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       };
 
       await expect(
@@ -588,6 +624,8 @@ describe('AuthMiddleware', () => {
           role: 'USER',
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       };
 
       await expect(
@@ -616,6 +654,8 @@ describe('AuthMiddleware', () => {
           role: 'USER',
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       };
 
       const errorNext = vi.fn(async () => {
@@ -642,6 +682,8 @@ describe('AuthMiddleware', () => {
           role: 'USER',
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       };
 
       const errorNext = vi.fn(async () => {
@@ -679,6 +721,8 @@ describe('AuthMiddleware', () => {
           role: 'USER',
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       };
 
       const errorNext = vi.fn(() => {
@@ -711,6 +755,8 @@ describe('AuthMiddleware', () => {
           role: 'USER',
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
         customProp: 'custom-value',
       };
 
@@ -735,6 +781,8 @@ describe('AuthMiddleware', () => {
       const ctx: Context = {
         user: originalUser,
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       };
 
       await authMiddleware({ ctx, next: mockNext });

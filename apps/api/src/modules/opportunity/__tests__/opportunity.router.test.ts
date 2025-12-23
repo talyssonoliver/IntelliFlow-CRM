@@ -6,8 +6,9 @@ import { TEST_UUIDS } from '../../../test/setup';
  * - create, getById, list, update, delete, stats, forecast
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
+import { Prisma } from '@prisma/client';
 import { opportunityRouter } from '../opportunity.router';
 import { prismaMock, createTestContext, mockOpportunity, mockAccount, mockContact, mockUser, mockTask } from '../../../test/setup';
 
@@ -35,12 +36,13 @@ describe('Opportunity Router', () => {
       prismaMock.opportunity.create.mockResolvedValue({
         ...mockOpportunity,
         ...input,
+        value: new Prisma.Decimal(input.value),
       });
 
       const result = await caller.create(input);
 
       expect(result.name).toBe(input.name);
-      expect(result.value).toBe(input.value);
+      expect(Number(result.value)).toBe(input.value);
       expect(prismaMock.opportunity.create).toHaveBeenCalledWith({
         data: {
           ...input,
@@ -139,7 +141,7 @@ describe('Opportunity Router', () => {
         contact: mockContact,
       }));
 
-      prismaMock.opportunity.findMany.mockResolvedValue(opportunitiesWithRelations);
+      prismaMock.opportunity.findMany.mockResolvedValue(opportunitiesWithRelations as any);
       prismaMock.opportunity.count.mockResolvedValue(30);
 
       const result = await caller.list({ page: 1, limit: 20 });
@@ -215,10 +217,10 @@ describe('Opportunity Router', () => {
 
   describe('update', () => {
     it('should update opportunity with valid data', async () => {
-      prismaMock.opportunity.findUnique.mockResolvedValue(mockOpportunity);
+      prismaMock.opportunity.findUnique.mockResolvedValue(mockOpportunity as any);
 
       const updated = { ...mockOpportunity, stage: 'NEGOTIATION' as const, probability: 70 };
-      prismaMock.opportunity.update.mockResolvedValue(updated);
+      prismaMock.opportunity.update.mockResolvedValue(updated as any);
 
       const result = await caller.update({
         id: TEST_UUIDS.opportunity1,
@@ -282,17 +284,17 @@ describe('Opportunity Router', () => {
   describe('stats', () => {
     it('should return opportunity statistics', async () => {
       prismaMock.opportunity.count.mockResolvedValue(50);
-      prismaMock.opportunity.groupBy.mockResolvedValue([
-        { stage: 'PROPOSAL', _count: 15, _sum: { value: 500000 } },
-        { stage: 'NEGOTIATION', _count: 10, _sum: { value: 300000 } },
-        { stage: 'CLOSED_WON', _count: 20, _sum: { value: 1000000 } },
-      ] as any);
+      vi.mocked(prismaMock.opportunity.groupBy).mockResolvedValue([
+        { stage: 'PROPOSAL', _count: 15, _sum: { value: new Prisma.Decimal(500000) } },
+        { stage: 'NEGOTIATION', _count: 10, _sum: { value: new Prisma.Decimal(300000) } },
+        { stage: 'CLOSED_WON', _count: 20, _sum: { value: new Prisma.Decimal(1000000) } },
+      ] as unknown as Awaited<ReturnType<typeof prismaMock.opportunity.groupBy>>);
       prismaMock.opportunity.aggregate.mockResolvedValueOnce({
-        _sum: { value: 2000000 },
-      } as any);
+        _sum: { value: new Prisma.Decimal(2000000) },
+      } as Awaited<ReturnType<typeof prismaMock.opportunity.aggregate>>);
       prismaMock.opportunity.aggregate.mockResolvedValueOnce({
         _avg: { probability: 65.5 },
-      } as any);
+      } as Awaited<ReturnType<typeof prismaMock.opportunity.aggregate>>);
 
       const result = await caller.stats();
 
@@ -308,13 +310,13 @@ describe('Opportunity Router', () => {
 
     it('should handle zero statistics', async () => {
       prismaMock.opportunity.count.mockResolvedValue(0);
-      prismaMock.opportunity.groupBy.mockResolvedValue([]);
+      vi.mocked(prismaMock.opportunity.groupBy).mockResolvedValue([]);
       prismaMock.opportunity.aggregate.mockResolvedValueOnce({
         _sum: { value: null },
-      } as any);
+      } as Awaited<ReturnType<typeof prismaMock.opportunity.aggregate>>);
       prismaMock.opportunity.aggregate.mockResolvedValueOnce({
         _avg: { probability: null },
-      } as any);
+      } as Awaited<ReturnType<typeof prismaMock.opportunity.aggregate>>);
 
       const result = await caller.stats();
 
@@ -326,13 +328,14 @@ describe('Opportunity Router', () => {
 
   describe('forecast', () => {
     it('should calculate weighted pipeline value', async () => {
-      const opportunities = [
-        { value: 100000, probability: 80, stage: 'NEGOTIATION' },
-        { value: 50000, probability: 60, stage: 'PROPOSAL' },
-        { value: 200000, probability: 90, stage: 'NEGOTIATION' },
+      // Create forecast data with just the fields needed for calculation
+      const forecastData = [
+        { value: new Prisma.Decimal(100000), probability: 80, stage: 'NEGOTIATION' as const },
+        { value: new Prisma.Decimal(50000), probability: 60, stage: 'PROPOSAL' as const },
+        { value: new Prisma.Decimal(200000), probability: 90, stage: 'NEGOTIATION' as const },
       ];
 
-      prismaMock.opportunity.findMany.mockResolvedValue(opportunities as any);
+      prismaMock.opportunity.findMany.mockResolvedValue(forecastData as Awaited<ReturnType<typeof prismaMock.opportunity.findMany>>);
 
       const result = await caller.forecast();
 

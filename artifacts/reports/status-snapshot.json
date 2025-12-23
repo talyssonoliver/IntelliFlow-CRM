@@ -1381,7 +1381,7 @@
       "status": "Backlog",
       "target_sprint": "13",
       "task_id": "",
-      "validation_method": "Reset functional, validation working, password updated"
+      "validation_method": "Reset functional, validation working, credentials updated"
     },
     {
       "artifacts_to_track": "apps/web/app/(auth)/mfa/setup/page.tsx, apps/web/components/shared/mfa-qr-generator.tsx, apps/web/lib/shared/backup-codes.ts",
@@ -2715,7 +2715,7 @@
     },
     {
       "artifacts_to_track": "apps/web/app/(auth)/reset/page.tsx, artifacts/misc/api/auth/reset.ts, artifacts/misc/email-templates/reset.html, apps/web/lib/shared/verification-mailer.ts",
-      "description": "Implement password reset and email verification flows",
+      "description": "Implement credential reset and email verification flows",
       "owner": "Frontend Dev + Backend Dev",
       "section": "Auth Pages",
       "status": "Backlog",

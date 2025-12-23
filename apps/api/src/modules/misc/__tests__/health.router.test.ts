@@ -68,10 +68,10 @@ describe('Health Router', () => {
     });
 
     it('should measure database latency', async () => {
-      prismaMock.$queryRaw.mockImplementation(async () => {
+      vi.mocked(prismaMock.$queryRaw).mockImplementation((async () => {
         await new Promise(resolve => setTimeout(resolve, 10));
         return [{ '?column?': 1 }];
-      });
+      }) as unknown as typeof prismaMock.$queryRaw);
 
       const result = await caller.check();
 
@@ -81,10 +81,10 @@ describe('Health Router', () => {
     it('should warn if database latency is high', async () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-      prismaMock.$queryRaw.mockImplementation(async () => {
+      vi.mocked(prismaMock.$queryRaw).mockImplementation((async () => {
         await new Promise(resolve => setTimeout(resolve, 25));
         return [{ '?column?': 1 }];
-      });
+      }) as unknown as typeof prismaMock.$queryRaw);
 
       await caller.check();
 
@@ -154,7 +154,18 @@ describe('Health Router', () => {
 
   describe('dbStats', () => {
     it('should return unsupported if metrics not available', async () => {
-      const result = await caller.dbStats();
+      // Mock prisma without $metrics support
+      const mockPrismaWithoutMetrics = {
+        ...prismaMock,
+        $metrics: undefined,
+      } as any;
+
+      const callerWithoutMetrics = healthRouter.createCaller({
+        ...createPublicContext(),
+        prisma: mockPrismaWithoutMetrics,
+      });
+
+      const result = await callerWithoutMetrics.dbStats();
 
       expect(result.status).toBe('unsupported');
       expect(result.timestamp).toBeDefined();

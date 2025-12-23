@@ -115,7 +115,7 @@ Usage Example:
   import { leadScoringChain } from '@intelliflow/ai-worker';
   
   const result = await leadScoringChain.scoreLead({
-    email: 'john@acme.com',
+    email: 'lead@example.com',
     company: 'Acme Corp',
     title: 'VP Sales',
     source: 'WEBSITE'

@@ -66,31 +66,31 @@
         "severity": "high",
         "source": "commitlint",
         "message": "Gate 'commitlint' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-102144-06259bff/gates/commitlint.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-102144-06259bff/gates/commitlint.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "eslint-max-warnings-0",
         "message": "Gate 'eslint-max-warnings-0' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-102144-06259bff/gates/eslint-max-warnings-0.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-102144-06259bff/gates/eslint-max-warnings-0.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-102144-06259bff/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-102144-06259bff/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-102144-06259bff/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-102144-06259bff/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-build",
         "message": "Gate 'turbo-build' failed with exit code -1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-130759-a42fc209/gates/turbo-build.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-130759-a42fc209/gates/turbo-build.log and fix the underlying issue"
       },
       {
         "severity": "medium",
@@ -120,13 +120,13 @@
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-144719-d7b56a51/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-144719-d7b56a51/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-152818-3bede0bd/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-152818-3bede0bd/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "medium",
@@ -201,7 +201,7 @@
         "severity": "high",
         "source": "gitleaks",
         "message": "Gate 'gitleaks' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103740-03a2fdad/gates/gitleaks.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103740-03a2fdad/gates/gitleaks.log and fix the underlying issue"
       },
       {
         "severity": "medium",
@@ -273,7 +273,7 @@
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-154822-911b9e49/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-154822-911b9e49/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "medium",
@@ -429,61 +429,61 @@
         "severity": "high",
         "source": "commitlint",
         "message": "Gate 'commitlint' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-095555-edf0cc22/gates/commitlint.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-095555-edf0cc22/gates/commitlint.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "eslint-max-warnings-0",
         "message": "Gate 'eslint-max-warnings-0' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-095555-edf0cc22/gates/eslint-max-warnings-0.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-095555-edf0cc22/gates/eslint-max-warnings-0.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-095555-edf0cc22/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-095555-edf0cc22/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-095555-edf0cc22/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-095555-edf0cc22/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-140847-97329ebc/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-140847-97329ebc/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-173744-fe56b574/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-173744-fe56b574/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-173744-fe56b574/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-173744-fe56b574/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-173744-fe56b574/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-173744-fe56b574/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-180417-1a0e2880/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-180417-1a0e2880/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-build",
         "message": "Gate 'turbo-build' failed with exit code -1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-180417-1a0e2880/gates/turbo-build.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-180417-1a0e2880/gates/turbo-build.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T09:59:22.382Z",
@@ -504,61 +504,61 @@
         "severity": "high",
         "source": "commitlint",
         "message": "Gate 'commitlint' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-095947-8e181456/gates/commitlint.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-095947-8e181456/gates/commitlint.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "eslint-max-warnings-0",
         "message": "Gate 'eslint-max-warnings-0' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-095947-8e181456/gates/eslint-max-warnings-0.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-095947-8e181456/gates/eslint-max-warnings-0.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-095947-8e181456/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-095947-8e181456/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-build",
         "message": "Gate 'turbo-build' failed with exit code -1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-095947-8e181456/gates/turbo-build.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-095947-8e181456/gates/turbo-build.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-095947-8e181456/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-095947-8e181456/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-141210-de0276fe/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-141210-de0276fe/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-150153-78a0644d/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-150153-78a0644d/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-174027-c45bfc9b/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-174027-c45bfc9b/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-174027-c45bfc9b/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-174027-c45bfc9b/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-181126-8130081f/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-181126-8130081f/gates/prettier-check.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T10:03:48.056Z",
@@ -579,61 +579,61 @@
         "severity": "high",
         "source": "commitlint",
         "message": "Gate 'commitlint' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-100421-4a1ff9bc/gates/commitlint.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-100421-4a1ff9bc/gates/commitlint.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "eslint-max-warnings-0",
         "message": "Gate 'eslint-max-warnings-0' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-100421-4a1ff9bc/gates/eslint-max-warnings-0.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-100421-4a1ff9bc/gates/eslint-max-warnings-0.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-100421-4a1ff9bc/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-100421-4a1ff9bc/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-100421-4a1ff9bc/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-100421-4a1ff9bc/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-141453-8fd5fd76/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-141453-8fd5fd76/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-150607-87f0bb93/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-150607-87f0bb93/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-174229-1d200599/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-174229-1d200599/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-174229-1d200599/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-174229-1d200599/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-174229-1d200599/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-174229-1d200599/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-181333-5ca97e22/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-181333-5ca97e22/gates/prettier-check.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T10:06:32.317Z",
@@ -654,61 +654,61 @@
         "severity": "high",
         "source": "commitlint",
         "message": "Gate 'commitlint' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-100634-d898bf7f/gates/commitlint.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-100634-d898bf7f/gates/commitlint.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "eslint-max-warnings-0",
         "message": "Gate 'eslint-max-warnings-0' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-100634-d898bf7f/gates/eslint-max-warnings-0.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-100634-d898bf7f/gates/eslint-max-warnings-0.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-100634-d898bf7f/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-100634-d898bf7f/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-100634-d898bf7f/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-100634-d898bf7f/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-141842-378f0d00/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-141842-378f0d00/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-build",
         "message": "Gate 'turbo-build' failed with exit code -1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-141842-378f0d00/gates/turbo-build.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-141842-378f0d00/gates/turbo-build.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-141842-378f0d00/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-141842-378f0d00/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-151000-9354ba35/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-151000-9354ba35/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-174441-05ae6baf/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-174441-05ae6baf/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-174441-05ae6baf/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-174441-05ae6baf/gates/turbo-typecheck.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T10:08:19.607Z",
@@ -729,49 +729,49 @@
         "severity": "high",
         "source": "commitlint",
         "message": "Gate 'commitlint' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-100821-95e5cec2/gates/commitlint.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-100821-95e5cec2/gates/commitlint.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "eslint-max-warnings-0",
         "message": "Gate 'eslint-max-warnings-0' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-100821-95e5cec2/gates/eslint-max-warnings-0.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-100821-95e5cec2/gates/eslint-max-warnings-0.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-100821-95e5cec2/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-100821-95e5cec2/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-100821-95e5cec2/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-100821-95e5cec2/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-142319-98b3f00b/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-142319-98b3f00b/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-142319-98b3f00b/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-142319-98b3f00b/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-151405-748bed70/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-151405-748bed70/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-174643-c031fb76/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-174643-c031fb76/gates/prettier-check.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T10:09:59.927Z",
@@ -792,79 +792,79 @@
         "severity": "high",
         "source": "commitlint",
         "message": "Gate 'commitlint' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-101002-bd57a39f/gates/commitlint.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-101002-bd57a39f/gates/commitlint.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "eslint-max-warnings-0",
         "message": "Gate 'eslint-max-warnings-0' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-101002-bd57a39f/gates/eslint-max-warnings-0.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-101002-bd57a39f/gates/eslint-max-warnings-0.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-101002-bd57a39f/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-101002-bd57a39f/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-101002-bd57a39f/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-101002-bd57a39f/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-142710-d6089333/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-142710-d6089333/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-build",
         "message": "Gate 'turbo-build' failed with exit code -1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-142710-d6089333/gates/turbo-build.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-142710-d6089333/gates/turbo-build.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-142710-d6089333/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-142710-d6089333/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "dependency-cruiser-validate",
         "message": "Gate 'dependency-cruiser-validate' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-151625-7b2aa3b8/gates/dependency-cruiser-validate.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-151625-7b2aa3b8/gates/dependency-cruiser-validate.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-151625-7b2aa3b8/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-151625-7b2aa3b8/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-build",
         "message": "Gate 'turbo-build' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-151625-7b2aa3b8/gates/turbo-build.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-151625-7b2aa3b8/gates/turbo-build.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-175037-0c8b9f1a/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-175037-0c8b9f1a/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-build",
         "message": "Gate 'turbo-build' failed with exit code 3221225794",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-181903-ace24f3e/gates/turbo-build.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-181903-ace24f3e/gates/turbo-build.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 3221225794",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-181903-ace24f3e/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-181903-ace24f3e/gates/turbo-typecheck.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T10:11:59.840Z",
@@ -885,85 +885,85 @@
         "severity": "high",
         "source": "commitlint",
         "message": "Gate 'commitlint' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-101204-ca4b391b/gates/commitlint.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-101204-ca4b391b/gates/commitlint.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "eslint-max-warnings-0",
         "message": "Gate 'eslint-max-warnings-0' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-101204-ca4b391b/gates/eslint-max-warnings-0.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-101204-ca4b391b/gates/eslint-max-warnings-0.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-101204-ca4b391b/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-101204-ca4b391b/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-101204-ca4b391b/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-101204-ca4b391b/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-143113-4123ae09/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-143113-4123ae09/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-build",
         "message": "Gate 'turbo-build' failed with exit code -1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-143113-4123ae09/gates/turbo-build.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-143113-4123ae09/gates/turbo-build.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-143113-4123ae09/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-143113-4123ae09/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-151843-813468ba/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-151843-813468ba/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-build",
         "message": "Gate 'turbo-build' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-151843-813468ba/gates/turbo-build.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-151843-813468ba/gates/turbo-build.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-175335-651b7461/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-175335-651b7461/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-build",
         "message": "Gate 'turbo-build' failed with exit code 3221225794",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-175335-651b7461/gates/turbo-build.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-175335-651b7461/gates/turbo-build.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 3221225794",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-175335-651b7461/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-175335-651b7461/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-test-coverage",
         "message": "Gate 'turbo-test-coverage' failed with exit code 3221225794",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-175335-651b7461/gates/turbo-test-coverage.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-175335-651b7461/gates/turbo-test-coverage.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-test-coverage",
         "message": "Gate 'turbo-test-coverage' failed with exit code 3221225794",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-175335-651b7461/gates/turbo-test-coverage.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-175335-651b7461/gates/turbo-test-coverage.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T10:13:56.849Z",
@@ -984,43 +984,43 @@
         "severity": "high",
         "source": "commitlint",
         "message": "Gate 'commitlint' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-101359-1bb937ae/gates/commitlint.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-101359-1bb937ae/gates/commitlint.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "eslint-max-warnings-0",
         "message": "Gate 'eslint-max-warnings-0' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-101359-1bb937ae/gates/eslint-max-warnings-0.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-101359-1bb937ae/gates/eslint-max-warnings-0.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-101359-1bb937ae/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-101359-1bb937ae/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-101359-1bb937ae/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-101359-1bb937ae/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-143543-3e0986ff/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-143543-3e0986ff/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-build",
         "message": "Gate 'turbo-build' failed with exit code -1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-143543-3e0986ff/gates/turbo-build.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-143543-3e0986ff/gates/turbo-build.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-152041-5b419699/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-152041-5b419699/gates/prettier-check.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T10:15:45.612Z",
@@ -1041,37 +1041,37 @@
         "severity": "high",
         "source": "commitlint",
         "message": "Gate 'commitlint' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-101547-761fa1f9/gates/commitlint.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-101547-761fa1f9/gates/commitlint.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "eslint-max-warnings-0",
         "message": "Gate 'eslint-max-warnings-0' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-101547-761fa1f9/gates/eslint-max-warnings-0.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-101547-761fa1f9/gates/eslint-max-warnings-0.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-101547-761fa1f9/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-101547-761fa1f9/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-101547-761fa1f9/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-101547-761fa1f9/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-143939-9f05b402/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-143939-9f05b402/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-152309-362afeea/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-152309-362afeea/gates/prettier-check.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T10:17:55.838Z",
@@ -1092,37 +1092,37 @@
         "severity": "high",
         "source": "commitlint",
         "message": "Gate 'commitlint' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-101759-4b73d524/gates/commitlint.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-101759-4b73d524/gates/commitlint.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "eslint-max-warnings-0",
         "message": "Gate 'eslint-max-warnings-0' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-101759-4b73d524/gates/eslint-max-warnings-0.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-101759-4b73d524/gates/eslint-max-warnings-0.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-101759-4b73d524/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-101759-4b73d524/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-101759-4b73d524/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-101759-4b73d524/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-144146-55715034/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-144146-55715034/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-152512-25b205c1/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-152512-25b205c1/gates/prettier-check.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T10:19:49.071Z",
@@ -1143,37 +1143,37 @@
         "severity": "high",
         "source": "commitlint",
         "message": "Gate 'commitlint' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-101951-101e6395/gates/commitlint.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-101951-101e6395/gates/commitlint.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "eslint-max-warnings-0",
         "message": "Gate 'eslint-max-warnings-0' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-101951-101e6395/gates/eslint-max-warnings-0.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-101951-101e6395/gates/eslint-max-warnings-0.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-101951-101e6395/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-101951-101e6395/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-101951-101e6395/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-101951-101e6395/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-144446-b85c155d/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-144446-b85c155d/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-152635-18f6ad53/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-152635-18f6ad53/gates/prettier-check.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T10:21:42.796Z",
@@ -1194,49 +1194,49 @@
         "severity": "high",
         "source": "commitlint",
         "message": "Gate 'commitlint' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-102327-05bf9853/gates/commitlint.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-102327-05bf9853/gates/commitlint.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "eslint-max-warnings-0",
         "message": "Gate 'eslint-max-warnings-0' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-102327-05bf9853/gates/eslint-max-warnings-0.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-102327-05bf9853/gates/eslint-max-warnings-0.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-102327-05bf9853/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-102327-05bf9853/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-102327-05bf9853/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-102327-05bf9853/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-145034-73cf9e53/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-145034-73cf9e53/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-build",
         "message": "Gate 'turbo-build' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-145034-73cf9e53/gates/turbo-build.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-145034-73cf9e53/gates/turbo-build.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 3221225794",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-145034-73cf9e53/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-145034-73cf9e53/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-153033-1275c226/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-153033-1275c226/gates/prettier-check.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T10:24:56.682Z",
@@ -1257,31 +1257,31 @@
         "severity": "high",
         "source": "commitlint",
         "message": "Gate 'commitlint' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-102458-83fbe243/gates/commitlint.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-102458-83fbe243/gates/commitlint.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "eslint-max-warnings-0",
         "message": "Gate 'eslint-max-warnings-0' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-102458-83fbe243/gates/eslint-max-warnings-0.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-102458-83fbe243/gates/eslint-max-warnings-0.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-102458-83fbe243/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-102458-83fbe243/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-102458-83fbe243/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-102458-83fbe243/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-153205-616fdfcd/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-153205-616fdfcd/gates/prettier-check.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T10:26:20.362Z",
@@ -1302,31 +1302,31 @@
         "severity": "high",
         "source": "commitlint",
         "message": "Gate 'commitlint' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-102622-e3a208c8/gates/commitlint.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-102622-e3a208c8/gates/commitlint.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "eslint-max-warnings-0",
         "message": "Gate 'eslint-max-warnings-0' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-102622-e3a208c8/gates/eslint-max-warnings-0.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-102622-e3a208c8/gates/eslint-max-warnings-0.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-102622-e3a208c8/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-102622-e3a208c8/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-102622-e3a208c8/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-102622-e3a208c8/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-153347-f6635872/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-153347-f6635872/gates/prettier-check.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T10:27:52.641Z",
@@ -1347,31 +1347,31 @@
         "severity": "high",
         "source": "commitlint",
         "message": "Gate 'commitlint' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-102756-d0bc6b7d/gates/commitlint.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-102756-d0bc6b7d/gates/commitlint.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "eslint-max-warnings-0",
         "message": "Gate 'eslint-max-warnings-0' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-102756-d0bc6b7d/gates/eslint-max-warnings-0.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-102756-d0bc6b7d/gates/eslint-max-warnings-0.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-102756-d0bc6b7d/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-102756-d0bc6b7d/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-102756-d0bc6b7d/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-102756-d0bc6b7d/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-153519-99af054e/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-153519-99af054e/gates/prettier-check.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T10:29:26.558Z",
@@ -1392,31 +1392,31 @@
         "severity": "high",
         "source": "commitlint",
         "message": "Gate 'commitlint' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-102928-7142c7fc/gates/commitlint.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-102928-7142c7fc/gates/commitlint.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "eslint-max-warnings-0",
         "message": "Gate 'eslint-max-warnings-0' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-102928-7142c7fc/gates/eslint-max-warnings-0.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-102928-7142c7fc/gates/eslint-max-warnings-0.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-102928-7142c7fc/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-102928-7142c7fc/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-102928-7142c7fc/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-102928-7142c7fc/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-153717-3f71b0bf/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-153717-3f71b0bf/gates/prettier-check.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T10:30:42.243Z",
@@ -1437,31 +1437,31 @@
         "severity": "high",
         "source": "commitlint",
         "message": "Gate 'commitlint' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103044-f1e165c7/gates/commitlint.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103044-f1e165c7/gates/commitlint.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "eslint-max-warnings-0",
         "message": "Gate 'eslint-max-warnings-0' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103044-f1e165c7/gates/eslint-max-warnings-0.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103044-f1e165c7/gates/eslint-max-warnings-0.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103044-f1e165c7/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103044-f1e165c7/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103044-f1e165c7/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103044-f1e165c7/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-153835-dd2e5850/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-153835-dd2e5850/gates/prettier-check.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T10:32:24.286Z",
@@ -1482,31 +1482,31 @@
         "severity": "high",
         "source": "commitlint",
         "message": "Gate 'commitlint' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103227-01df31d8/gates/commitlint.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103227-01df31d8/gates/commitlint.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "eslint-max-warnings-0",
         "message": "Gate 'eslint-max-warnings-0' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103227-01df31d8/gates/eslint-max-warnings-0.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103227-01df31d8/gates/eslint-max-warnings-0.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103227-01df31d8/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103227-01df31d8/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103227-01df31d8/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103227-01df31d8/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-154032-381d9f66/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-154032-381d9f66/gates/prettier-check.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T10:33:53.016Z",
@@ -1527,31 +1527,31 @@
         "severity": "high",
         "source": "commitlint",
         "message": "Gate 'commitlint' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103355-57fec4fc/gates/commitlint.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103355-57fec4fc/gates/commitlint.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "eslint-max-warnings-0",
         "message": "Gate 'eslint-max-warnings-0' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103355-57fec4fc/gates/eslint-max-warnings-0.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103355-57fec4fc/gates/eslint-max-warnings-0.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103355-57fec4fc/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103355-57fec4fc/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103355-57fec4fc/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103355-57fec4fc/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-154209-aa98455f/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-154209-aa98455f/gates/prettier-check.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T10:35:09.319Z",
@@ -1572,13 +1572,13 @@
         "severity": "high",
         "source": "eslint-max-warnings-0",
         "message": "Gate 'eslint-max-warnings-0' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103511-1fc22068/gates/eslint-max-warnings-0.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103511-1fc22068/gates/eslint-max-warnings-0.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103511-1fc22068/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103511-1fc22068/gates/turbo-typecheck.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T10:35:27.774Z",
@@ -1599,13 +1599,13 @@
         "severity": "high",
         "source": "eslint-max-warnings-0",
         "message": "Gate 'eslint-max-warnings-0' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103529-9467e8e8/gates/eslint-max-warnings-0.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103529-9467e8e8/gates/eslint-max-warnings-0.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103529-9467e8e8/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103529-9467e8e8/gates/turbo-typecheck.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T10:35:40.931Z",
@@ -1626,31 +1626,31 @@
         "severity": "high",
         "source": "commitlint",
         "message": "Gate 'commitlint' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103542-1e87604f/gates/commitlint.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103542-1e87604f/gates/commitlint.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "eslint-max-warnings-0",
         "message": "Gate 'eslint-max-warnings-0' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103542-1e87604f/gates/eslint-max-warnings-0.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103542-1e87604f/gates/eslint-max-warnings-0.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103542-1e87604f/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103542-1e87604f/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103542-1e87604f/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103542-1e87604f/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-154607-43d46565/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-154607-43d46565/gates/prettier-check.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T10:37:03.213Z",
@@ -1671,13 +1671,13 @@
         "severity": "high",
         "source": "eslint-max-warnings-0",
         "message": "Gate 'eslint-max-warnings-0' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103705-b1e2049c/gates/eslint-max-warnings-0.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103705-b1e2049c/gates/eslint-max-warnings-0.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103705-b1e2049c/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103705-b1e2049c/gates/turbo-typecheck.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T10:37:38.399Z",
@@ -1698,31 +1698,31 @@
         "severity": "high",
         "source": "commitlint",
         "message": "Gate 'commitlint' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103916-e428bd1e/gates/commitlint.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103916-e428bd1e/gates/commitlint.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "eslint-max-warnings-0",
         "message": "Gate 'eslint-max-warnings-0' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103916-e428bd1e/gates/eslint-max-warnings-0.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103916-e428bd1e/gates/eslint-max-warnings-0.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103916-e428bd1e/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103916-e428bd1e/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-103916-e428bd1e/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-103916-e428bd1e/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-155051-db0b1cdd/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-155051-db0b1cdd/gates/prettier-check.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T10:40:24.956Z",
@@ -1743,31 +1743,31 @@
         "severity": "high",
         "source": "commitlint",
         "message": "Gate 'commitlint' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-104026-32e5b970/gates/commitlint.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-104026-32e5b970/gates/commitlint.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "eslint-max-warnings-0",
         "message": "Gate 'eslint-max-warnings-0' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-104026-32e5b970/gates/eslint-max-warnings-0.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-104026-32e5b970/gates/eslint-max-warnings-0.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-104026-32e5b970/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-104026-32e5b970/gates/prettier-check.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "turbo-typecheck",
         "message": "Gate 'turbo-typecheck' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-104026-32e5b970/gates/turbo-typecheck.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-104026-32e5b970/gates/turbo-typecheck.log and fix the underlying issue"
       },
       {
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-155229-b2a8a6fa/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-155229-b2a8a6fa/gates/prettier-check.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T10:41:47.871Z",
@@ -1788,7 +1788,7 @@
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-155405-0f8b809d/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-155405-0f8b809d/gates/prettier-check.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T15:55:51.293Z",
@@ -1809,7 +1809,7 @@
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-155558-2b88e170/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-155558-2b88e170/gates/prettier-check.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T15:57:23.815Z",
@@ -1830,10 +1830,115 @@
         "severity": "high",
         "source": "prettier-check",
         "message": "Gate 'prettier-check' failed with exit code 1",
-        "recommendation": "Review gate log at C:/taly/intelliFlow-CRM/artifacts/reports/system-audit/20251221-155753-df5c2fc8/gates/prettier-check.log and fix the underlying issue"
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251221-155753-df5c2fc8/gates/prettier-check.log and fix the underlying issue"
       }
     ],
     "createdAt": "2025-12-21T16:00:25.594Z",
+    "resolvedAt": null,
+    "resolvedBy": null,
+    "resolution": null
+  },
+  {
+    "id": "RQ-1766438020979-piraja",
+    "taskId": "IFC-008",
+    "runId": "20251222-211124-d01dd204",
+    "verdict": "FAIL",
+    "stoa": "Automation",
+    "severity": "blocking",
+    "summary": "1 gate(s) failed: turbo-typecheck",
+    "findings": [
+      {
+        "severity": "high",
+        "source": "turbo-typecheck",
+        "message": "Gate 'turbo-typecheck' failed with exit code 1",
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251222-211124-d01dd204/gates/turbo-typecheck.log and fix the underlying issue"
+      }
+    ],
+    "createdAt": "2025-12-22T21:13:40.980Z",
+    "resolvedAt": null,
+    "resolvedBy": null,
+    "resolution": null
+  },
+  {
+    "id": "RQ-1766438201018-m63qpp",
+    "taskId": "IFC-101",
+    "runId": "20251222-211532-eca8cc2d",
+    "verdict": "FAIL",
+    "stoa": "Automation",
+    "severity": "blocking",
+    "summary": "1 gate(s) failed: turbo-typecheck",
+    "findings": [
+      {
+        "severity": "high",
+        "source": "turbo-typecheck",
+        "message": "Gate 'turbo-typecheck' failed with exit code 1",
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251222-211532-eca8cc2d/gates/turbo-typecheck.log and fix the underlying issue"
+      }
+    ],
+    "createdAt": "2025-12-22T21:16:41.018Z",
+    "resolvedAt": null,
+    "resolvedBy": null,
+    "resolution": null
+  },
+  {
+    "id": "RQ-1766438298827-fw6q8h",
+    "taskId": "IFC-102",
+    "runId": "20251222-211645-5159b335",
+    "verdict": "FAIL",
+    "stoa": "Automation",
+    "severity": "blocking",
+    "summary": "1 gate(s) failed: turbo-typecheck",
+    "findings": [
+      {
+        "severity": "high",
+        "source": "turbo-typecheck",
+        "message": "Gate 'turbo-typecheck' failed with exit code 1",
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251222-211645-5159b335/gates/turbo-typecheck.log and fix the underlying issue"
+      }
+    ],
+    "createdAt": "2025-12-22T21:18:18.827Z",
+    "resolvedAt": null,
+    "resolvedBy": null,
+    "resolution": null
+  },
+  {
+    "id": "RQ-1766438356030-jz1wao",
+    "taskId": "IFC-103",
+    "runId": "20251222-211828-1a7c95a2",
+    "verdict": "FAIL",
+    "stoa": "Automation",
+    "severity": "blocking",
+    "summary": "1 gate(s) failed: turbo-typecheck",
+    "findings": [
+      {
+        "severity": "high",
+        "source": "turbo-typecheck",
+        "message": "Gate 'turbo-typecheck' failed with exit code 1",
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251222-211828-1a7c95a2/gates/turbo-typecheck.log and fix the underlying issue"
+      }
+    ],
+    "createdAt": "2025-12-22T21:19:16.030Z",
+    "resolvedAt": null,
+    "resolvedBy": null,
+    "resolution": null
+  },
+  {
+    "id": "RQ-1766438406903-emnheu",
+    "taskId": "IFC-118",
+    "runId": "20251222-211918-6e7017cf",
+    "verdict": "FAIL",
+    "stoa": "Automation",
+    "severity": "blocking",
+    "summary": "1 gate(s) failed: turbo-typecheck",
+    "findings": [
+      {
+        "severity": "high",
+        "source": "turbo-typecheck",
+        "message": "Gate 'turbo-typecheck' failed with exit code 1",
+        "recommendation": "Review gate log at ./artifacts/reports/system-audit/20251222-211918-6e7017cf/gates/turbo-typecheck.log and fix the underlying issue"
+      }
+    ],
+    "createdAt": "2025-12-22T21:20:06.903Z",
     "resolvedAt": null,
     "resolvedBy": null,
     "resolution": null

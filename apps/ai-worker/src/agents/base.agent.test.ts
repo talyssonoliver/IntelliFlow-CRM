@@ -2,12 +2,19 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { BaseAgent, AgentTask, BaseAgentConfig, AgentResult } from './base.agent';
 import { z } from 'zod';
 
-// Mock the ChatOpenAI
-vi.mock('@langchain/openai', () => ({
-  ChatOpenAI: vi.fn().mockImplementation(() => ({
-    invoke: vi.fn().mockResolvedValue({ content: 'Mocked LLM response' }),
-  })),
-}));
+// Mock the ChatOpenAI with a proper class
+vi.mock('@langchain/openai', () => {
+  return {
+    ChatOpenAI: class MockChatOpenAI {
+      constructor(config: unknown) {
+        // Store config for potential inspection
+      }
+      async invoke(messages: unknown[]): Promise<{ content: string }> {
+        return { content: 'Mocked LLM response' };
+      }
+    },
+  };
+});
 
 // Mock the ai.config
 vi.mock('../config/ai.config', () => ({
@@ -26,10 +33,10 @@ vi.mock('../config/ai.config', () => ({
   },
 }));
 
-// Mock cost tracker
+// Mock cost tracker with proper function implementation
 vi.mock('../utils/cost-tracker', () => ({
   costTracker: {
-    recordUsage: vi.fn(),
+    recordUsage: function mockRecordUsage() {},
   },
 }));
 
@@ -105,15 +112,52 @@ describe('BaseAgent', () => {
       expect(stats.config.verbose).toBe(false);
     });
 
-    it('should throw error for Ollama provider', () => {
-      // Mock Ollama provider
+    it('should throw error for Ollama provider', async () => {
+      // Reset modules to apply new mock
+      vi.resetModules();
+
+      // Mock Ollama provider before importing the module
       vi.doMock('../config/ai.config', () => ({
         aiConfig: {
           provider: 'ollama',
+          openai: {
+            model: 'gpt-4-turbo-preview',
+            temperature: 0.7,
+            maxTokens: 2000,
+            timeout: 30000,
+            apiKey: 'test-api-key',
+          },
         },
       }));
 
-      expect(() => new TestAgent(config)).toThrow('Ollama support requires dynamic import');
+      // Dynamically import the module with the new mock
+      const { BaseAgent: BaseAgentWithOllama } = await import('./base.agent');
+
+      // Create a test class that extends the newly imported BaseAgent
+      class OllamaTestAgent extends BaseAgentWithOllama<{ message: string }, { response: string }> {
+        protected async executeTask(): Promise<{ response: string }> {
+          return { response: 'test' };
+        }
+      }
+
+      expect(() => new OllamaTestAgent(config)).toThrow('Ollama support requires dynamic import');
+
+      // Restore original mock
+      vi.doMock('../config/ai.config', () => ({
+        aiConfig: {
+          provider: 'openai',
+          openai: {
+            model: 'gpt-4-turbo-preview',
+            temperature: 0.7,
+            maxTokens: 2000,
+            timeout: 30000,
+            apiKey: 'test-api-key',
+          },
+          costTracking: {
+            enabled: true,
+          },
+        },
+      }));
     });
   });
 

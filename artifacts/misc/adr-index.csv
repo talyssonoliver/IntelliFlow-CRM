@@ -1,0 +1,10 @@
+adr_id,title,status,date,stakeholders,path
+ADR-001,Modern Stack Selection,Accepted,2025-12-20,CTO;Tech Lead,docs/planning/adr/ADR-001-modern-stack.md
+ADR-002,Domain-Driven Design,Accepted,2025-12-20,Tech Lead;DA,docs/planning/adr/ADR-002-domain-driven-design.md
+ADR-003,Type-Safe API Design,Accepted,2025-12-20,Backend Dev;Tech Lead,docs/planning/adr/ADR-003-type-safe-api-design.md
+ADR-004,Multi-Tenancy Strategy,Accepted,2025-12-21,Tech Lead;Architect,docs/planning/adr/ADR-004-multi-tenancy.md
+ADR-005,Workflow Engine Choice,Accepted,2025-12-21,AI Specialist;Tech Lead,docs/planning/adr/ADR-005-workflow-engine.md
+ADR-006,Agent Tool-Calling Model,Accepted,2025-12-21,AI Specialist;Backend Dev,docs/planning/adr/ADR-006-agent-tools.md
+ADR-007,Data Classification & Retention,Accepted,2025-12-21,Security Eng;Compliance,docs/planning/adr/ADR-007-data-governance.md
+ADR-008,Audit Logging Strategy,Accepted,2025-12-21,Backend Dev;Security Eng,docs/planning/adr/ADR-008-audit-logging.md
+ADR-009,Zero Trust Security Model,Accepted,2025-12-22,Security Eng;CTO,docs/planning/adr/ADR-009-zero-trust-security.md

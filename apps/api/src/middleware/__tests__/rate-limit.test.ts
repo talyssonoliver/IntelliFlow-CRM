@@ -7,6 +7,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
+import type { PrismaClient } from '@prisma/client';
 import type { Context } from '../../context';
 
 // Counter for unique user IDs to avoid state collision
@@ -29,7 +30,7 @@ describe('RateLimitMiddleware', () => {
 
   describe('createRateLimitMiddleware()', () => {
     it('should allow requests within limit', async () => {
-      const { createRateLimitMiddleware } = await import('../rate-limit');
+      const { createRateLimitMiddleware } = await import('../rate-limit.js');
       const rateLimitMiddleware = createRateLimitMiddleware(5, 60000); // 5 per minute
       const mockNext = vi.fn(async () => ({ success: true }));
 
@@ -39,7 +40,9 @@ describe('RateLimitMiddleware', () => {
           email: 'test@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       // Make 5 requests (within limit)
@@ -55,7 +58,7 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should block requests exceeding limit', async () => {
-      const { createRateLimitMiddleware } = await import('../rate-limit');
+      const { createRateLimitMiddleware } = await import('../rate-limit.js');
       const rateLimitMiddleware = createRateLimitMiddleware(3, 60000); // 3 per minute
       const mockNext = vi.fn(async () => ({ success: true }));
 
@@ -65,7 +68,9 @@ describe('RateLimitMiddleware', () => {
           email: 'test@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       // Make 3 successful requests
@@ -95,7 +100,7 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should reset limit after time window', async () => {
-      const { createRateLimitMiddleware } = await import('../rate-limit');
+      const { createRateLimitMiddleware } = await import('../rate-limit.js');
       const rateLimitMiddleware = createRateLimitMiddleware(2, 60000); // 2 per minute
       const mockNext = vi.fn(async () => ({ success: true }));
 
@@ -105,7 +110,9 @@ describe('RateLimitMiddleware', () => {
           email: 'test@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       // Make 2 requests (hit limit)
@@ -127,7 +134,7 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should track limits separately per user', async () => {
-      const { createRateLimitMiddleware } = await import('../rate-limit');
+      const { createRateLimitMiddleware } = await import('../rate-limit.js');
       const rateLimitMiddleware = createRateLimitMiddleware(2, 60000);
       const mockNext = vi.fn(async () => ({ success: true }));
 
@@ -137,7 +144,9 @@ describe('RateLimitMiddleware', () => {
           email: 'user1@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       const user2Ctx: Context = {
@@ -146,7 +155,9 @@ describe('RateLimitMiddleware', () => {
           email: 'user2@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       // User 1 makes 2 requests
@@ -166,13 +177,15 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should use "anonymous" key for unauthenticated users', async () => {
-      const { createRateLimitMiddleware } = await import('../rate-limit');
+      const { createRateLimitMiddleware } = await import('../rate-limit.js');
       const rateLimitMiddleware = createRateLimitMiddleware(2, 60000);
       const mockNext = vi.fn(async () => ({ success: true }));
 
       const ctx: Context = {
         user: null,
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       // Make 2 anonymous requests
@@ -188,18 +201,22 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should share limit across anonymous requests', async () => {
-      const { createRateLimitMiddleware } = await import('../rate-limit');
+      const { createRateLimitMiddleware } = await import('../rate-limit.js');
       const rateLimitMiddleware = createRateLimitMiddleware(3, 60000);
       const mockNext = vi.fn(async () => ({ success: true }));
 
       const ctx1: Context = {
         user: null,
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       const ctx2: Context = {
         user: undefined,
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       // Make requests from different anonymous contexts
@@ -216,7 +233,7 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should include retry-after in error message', async () => {
-      const { createRateLimitMiddleware } = await import('../rate-limit');
+      const { createRateLimitMiddleware } = await import('../rate-limit.js');
       const rateLimitMiddleware = createRateLimitMiddleware(1, 60000);
       const mockNext = vi.fn(async () => ({}));
 
@@ -226,7 +243,9 @@ describe('RateLimitMiddleware', () => {
           email: 'test@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       // First request succeeds
@@ -243,7 +262,7 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should use default limit of 100 per minute', async () => {
-      const { createRateLimitMiddleware } = await import('../rate-limit');
+      const { createRateLimitMiddleware } = await import('../rate-limit.js');
       const rateLimitMiddleware = createRateLimitMiddleware(); // Default params
       const mockNext = vi.fn(async () => ({}));
 
@@ -253,7 +272,9 @@ describe('RateLimitMiddleware', () => {
           email: 'test@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       // Should allow 100 requests
@@ -270,7 +291,7 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should handle custom window sizes', async () => {
-      const { createRateLimitMiddleware } = await import('../rate-limit');
+      const { createRateLimitMiddleware } = await import('../rate-limit.js');
       const rateLimitMiddleware = createRateLimitMiddleware(3, 30000); // 3 per 30 seconds
       const mockNext = vi.fn(async () => ({}));
 
@@ -280,7 +301,9 @@ describe('RateLimitMiddleware', () => {
           email: 'test@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       // Hit limit
@@ -302,7 +325,7 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should not reset counter before window expires', async () => {
-      const { createRateLimitMiddleware } = await import('../rate-limit');
+      const { createRateLimitMiddleware } = await import('../rate-limit.js');
       const rateLimitMiddleware = createRateLimitMiddleware(2, 60000);
       const mockNext = vi.fn(async () => ({}));
 
@@ -312,7 +335,9 @@ describe('RateLimitMiddleware', () => {
           email: 'test@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       // Make 2 requests
@@ -329,7 +354,7 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should propagate errors from next middleware', async () => {
-      const { createRateLimitMiddleware } = await import('../rate-limit');
+      const { createRateLimitMiddleware } = await import('../rate-limit.js');
       const rateLimitMiddleware = createRateLimitMiddleware(5, 60000);
       const mockNext = vi.fn(async () => {
         throw new Error('Database error');
@@ -341,7 +366,9 @@ describe('RateLimitMiddleware', () => {
           email: 'test@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       await expect(
@@ -350,7 +377,7 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should count failed requests against limit', async () => {
-      const { createRateLimitMiddleware } = await import('../rate-limit');
+      const { createRateLimitMiddleware } = await import('../rate-limit.js');
       const rateLimitMiddleware = createRateLimitMiddleware(3, 60000);
       let callCount = 0;
       const mockNext = vi.fn(async () => {
@@ -367,7 +394,9 @@ describe('RateLimitMiddleware', () => {
           email: 'test@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       // Request 1: success
@@ -388,7 +417,7 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should handle limit of 1 request', async () => {
-      const { createRateLimitMiddleware } = await import('../rate-limit');
+      const { createRateLimitMiddleware } = await import('../rate-limit.js');
       const rateLimitMiddleware = createRateLimitMiddleware(1, 60000);
       const mockNext = vi.fn(async () => ({}));
 
@@ -398,7 +427,9 @@ describe('RateLimitMiddleware', () => {
           email: 'test@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       // First request succeeds
@@ -413,7 +444,7 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should handle very large limits', async () => {
-      const { createRateLimitMiddleware } = await import('../rate-limit');
+      const { createRateLimitMiddleware } = await import('../rate-limit.js');
       const rateLimitMiddleware = createRateLimitMiddleware(10000, 60000);
       const mockNext = vi.fn(async () => ({}));
 
@@ -423,7 +454,9 @@ describe('RateLimitMiddleware', () => {
           email: 'test@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       // Should handle large number of requests
@@ -437,7 +470,7 @@ describe('RateLimitMiddleware', () => {
 
   describe('createStrictRateLimitMiddleware()', () => {
     it('should enforce 10 requests per minute limit', async () => {
-      const { createStrictRateLimitMiddleware } = await import('../rate-limit');
+      const { createStrictRateLimitMiddleware } = await import('../rate-limit.js');
       const strictMiddleware = createStrictRateLimitMiddleware();
       const mockNext = vi.fn(async () => ({ success: true }));
 
@@ -447,7 +480,9 @@ describe('RateLimitMiddleware', () => {
           email: 'test@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       // Make 10 requests (within limit)
@@ -471,7 +506,7 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should be suitable for sensitive endpoints', async () => {
-      const { createStrictRateLimitMiddleware } = await import('../rate-limit');
+      const { createStrictRateLimitMiddleware } = await import('../rate-limit.js');
       const strictMiddleware = createStrictRateLimitMiddleware();
       const mockNext = vi.fn(async () => ({ token: 'sensitive-data' }));
 
@@ -481,7 +516,9 @@ describe('RateLimitMiddleware', () => {
           email: 'attacker@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       // Attempt 11 rapid requests
@@ -496,7 +533,7 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should reset after 1 minute window', async () => {
-      const { createStrictRateLimitMiddleware } = await import('../rate-limit');
+      const { createStrictRateLimitMiddleware } = await import('../rate-limit.js');
       const strictMiddleware = createStrictRateLimitMiddleware();
       const mockNext = vi.fn(async () => ({}));
 
@@ -506,7 +543,9 @@ describe('RateLimitMiddleware', () => {
           email: 'test@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       // Hit limit
@@ -530,7 +569,7 @@ describe('RateLimitMiddleware', () => {
 
   describe('createLenientRateLimitMiddleware()', () => {
     it('should enforce 1000 requests per minute limit', async () => {
-      const { createLenientRateLimitMiddleware } = await import('../rate-limit');
+      const { createLenientRateLimitMiddleware } = await import('../rate-limit.js');
       const lenientMiddleware = createLenientRateLimitMiddleware();
       const mockNext = vi.fn(async () => ({ success: true }));
 
@@ -540,7 +579,9 @@ describe('RateLimitMiddleware', () => {
           email: 'test@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       // Make 1000 requests (within limit)
@@ -563,7 +604,7 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should be suitable for read-heavy operations', async () => {
-      const { createLenientRateLimitMiddleware } = await import('../rate-limit');
+      const { createLenientRateLimitMiddleware } = await import('../rate-limit.js');
       const lenientMiddleware = createLenientRateLimitMiddleware();
       const mockNext = vi.fn(async () => ({ data: 'public-data' }));
 
@@ -573,7 +614,9 @@ describe('RateLimitMiddleware', () => {
           email: 'test@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       // Should handle many reads
@@ -585,7 +628,7 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should reset after 1 minute window', async () => {
-      const { createLenientRateLimitMiddleware } = await import('../rate-limit');
+      const { createLenientRateLimitMiddleware } = await import('../rate-limit.js');
       const lenientMiddleware = createLenientRateLimitMiddleware();
       const mockNext = vi.fn(async () => ({}));
 
@@ -595,7 +638,9 @@ describe('RateLimitMiddleware', () => {
           email: 'test@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       // Hit limit
@@ -619,26 +664,26 @@ describe('RateLimitMiddleware', () => {
 
   describe('RedisRateLimiter', () => {
     it('should instantiate without error', async () => {
-      const { RedisRateLimiter } = await import('../rate-limit');
+      const { RedisRateLimiter } = await import('../rate-limit.js');
       expect(() => new RedisRateLimiter()).not.toThrow();
     });
 
     it('should have checkLimit method', async () => {
-      const { RedisRateLimiter } = await import('../rate-limit');
+      const { RedisRateLimiter } = await import('../rate-limit.js');
       const limiter = new RedisRateLimiter();
       expect(limiter.checkLimit).toBeDefined();
       expect(typeof limiter.checkLimit).toBe('function');
     });
 
     it('should return true for all requests (placeholder)', async () => {
-      const { RedisRateLimiter } = await import('../rate-limit');
+      const { RedisRateLimiter } = await import('../rate-limit.js');
       const limiter = new RedisRateLimiter();
       const result = await limiter.checkLimit('test-key', 10, 60000);
       expect(result).toBe(true);
     });
 
     it('should accept various key formats', async () => {
-      const { RedisRateLimiter } = await import('../rate-limit');
+      const { RedisRateLimiter } = await import('../rate-limit.js');
       const limiter = new RedisRateLimiter();
 
       const results = await Promise.all([
@@ -651,7 +696,7 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should handle different limit values', async () => {
-      const { RedisRateLimiter } = await import('../rate-limit');
+      const { RedisRateLimiter } = await import('../rate-limit.js');
       const limiter = new RedisRateLimiter();
 
       const results = await Promise.all([
@@ -664,7 +709,7 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should handle different window sizes', async () => {
-      const { RedisRateLimiter } = await import('../rate-limit');
+      const { RedisRateLimiter } = await import('../rate-limit.js');
       const limiter = new RedisRateLimiter();
 
       const results = await Promise.all([
@@ -679,7 +724,7 @@ describe('RateLimitMiddleware', () => {
 
   describe('Middleware Composition', () => {
     it('should compose rate limit with other middleware', async () => {
-      const { createRateLimitMiddleware } = await import('../rate-limit');
+      const { createRateLimitMiddleware } = await import('../rate-limit.js');
       const rateLimitMiddleware = createRateLimitMiddleware(2, 60000);
       const authMiddleware = vi.fn(async ({ next }: any) => next());
 
@@ -691,7 +736,9 @@ describe('RateLimitMiddleware', () => {
           email: 'test@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       // First request
@@ -734,7 +781,7 @@ describe('RateLimitMiddleware', () => {
 
     it('should allow different limits for different middleware', async () => {
       const { createStrictRateLimitMiddleware, createLenientRateLimitMiddleware } =
-        await import('../rate-limit');
+        await import('../rate-limit.js');
       const strictMiddleware = createStrictRateLimitMiddleware(); // 10/min
       const lenientMiddleware = createLenientRateLimitMiddleware(); // 1000/min
 
@@ -746,7 +793,9 @@ describe('RateLimitMiddleware', () => {
           email: 'test@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       // Hit strict limit (10 requests)
@@ -767,7 +816,9 @@ describe('RateLimitMiddleware', () => {
           email: 'other@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       const result = await lenientMiddleware({ ctx: otherUserCtx, next: mockNext });
@@ -777,7 +828,7 @@ describe('RateLimitMiddleware', () => {
 
   describe('Edge Cases', () => {
     it('should handle zero limit', async () => {
-      const { createRateLimitMiddleware } = await import('../rate-limit');
+      const { createRateLimitMiddleware } = await import('../rate-limit.js');
       const rateLimitMiddleware = createRateLimitMiddleware(0, 60000);
       const mockNext = vi.fn(async () => ({}));
 
@@ -787,7 +838,9 @@ describe('RateLimitMiddleware', () => {
           email: 'test@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       // With limit of 0, the first request sets count to 1, which exceeds 0
@@ -805,7 +858,7 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should handle very short time windows', async () => {
-      const { createRateLimitMiddleware } = await import('../rate-limit');
+      const { createRateLimitMiddleware } = await import('../rate-limit.js');
       const rateLimitMiddleware = createRateLimitMiddleware(2, 100); // 100ms window
       const mockNext = vi.fn(async () => ({}));
 
@@ -815,7 +868,9 @@ describe('RateLimitMiddleware', () => {
           email: 'test@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       // Make 2 requests
@@ -836,7 +891,7 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should handle concurrent requests correctly', async () => {
-      const { createRateLimitMiddleware } = await import('../rate-limit');
+      const { createRateLimitMiddleware } = await import('../rate-limit.js');
       const rateLimitMiddleware = createRateLimitMiddleware(5, 60000);
       const mockNext = vi.fn(async () => {
         // Use fake timers - no actual delay needed
@@ -849,7 +904,9 @@ describe('RateLimitMiddleware', () => {
           email: 'test@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       // Fire 6 requests concurrently
@@ -868,7 +925,7 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should handle empty userId gracefully', async () => {
-      const { createRateLimitMiddleware } = await import('../rate-limit');
+      const { createRateLimitMiddleware } = await import('../rate-limit.js');
       const rateLimitMiddleware = createRateLimitMiddleware(2, 60000);
       const mockNext = vi.fn(async () => ({}));
 
@@ -878,7 +935,9 @@ describe('RateLimitMiddleware', () => {
           email: 'test@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       // Should use empty string as key
@@ -893,7 +952,7 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should handle multiple time window expirations', async () => {
-      const { createRateLimitMiddleware } = await import('../rate-limit');
+      const { createRateLimitMiddleware } = await import('../rate-limit.js');
       const rateLimitMiddleware = createRateLimitMiddleware(2, 60000);
       const mockNext = vi.fn(async () => ({}));
 
@@ -903,7 +962,9 @@ describe('RateLimitMiddleware', () => {
           email: 'test@example.com',
           role: 'USER',
         },
-        prisma: {} as any,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
       };
 
       // First window

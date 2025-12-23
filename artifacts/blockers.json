@@ -95,5 +95,70 @@
     "createdAt": "2025-12-21T18:20:33.946Z",
     "resolvedAt": null,
     "resolvedBy": null
+  },
+  {
+    "taskId": "IFC-008",
+    "runId": "20251222-211124-d01dd204",
+    "type": "gate_failure",
+    "message": "1 gate(s) failed: turbo-typecheck",
+    "failedGates": [
+      "turbo-typecheck"
+    ],
+    "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251222-211124-d01dd204",
+    "createdAt": "2025-12-22T21:13:40.985Z",
+    "resolvedAt": null,
+    "resolvedBy": null
+  },
+  {
+    "taskId": "IFC-101",
+    "runId": "20251222-211532-eca8cc2d",
+    "type": "gate_failure",
+    "message": "1 gate(s) failed: turbo-typecheck",
+    "failedGates": [
+      "turbo-typecheck"
+    ],
+    "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251222-211532-eca8cc2d",
+    "createdAt": "2025-12-22T21:16:41.023Z",
+    "resolvedAt": null,
+    "resolvedBy": null
+  },
+  {
+    "taskId": "IFC-102",
+    "runId": "20251222-211645-5159b335",
+    "type": "gate_failure",
+    "message": "1 gate(s) failed: turbo-typecheck",
+    "failedGates": [
+      "turbo-typecheck"
+    ],
+    "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251222-211645-5159b335",
+    "createdAt": "2025-12-22T21:18:18.832Z",
+    "resolvedAt": null,
+    "resolvedBy": null
+  },
+  {
+    "taskId": "IFC-103",
+    "runId": "20251222-211828-1a7c95a2",
+    "type": "gate_failure",
+    "message": "1 gate(s) failed: turbo-typecheck",
+    "failedGates": [
+      "turbo-typecheck"
+    ],
+    "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251222-211828-1a7c95a2",
+    "createdAt": "2025-12-22T21:19:16.036Z",
+    "resolvedAt": null,
+    "resolvedBy": null
+  },
+  {
+    "taskId": "IFC-118",
+    "runId": "20251222-211918-6e7017cf",
+    "type": "gate_failure",
+    "message": "1 gate(s) failed: turbo-typecheck",
+    "failedGates": [
+      "turbo-typecheck"
+    ],
+    "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251222-211918-6e7017cf",
+    "createdAt": "2025-12-22T21:20:06.909Z",
+    "resolvedAt": null,
+    "resolvedBy": null
   }
 ]

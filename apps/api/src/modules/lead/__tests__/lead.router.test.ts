@@ -7,7 +7,7 @@ import { TEST_UUIDS } from '../../../test/setup';
  * - qualify, convert, scoreWithAI, stats
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { leadRouter } from '../lead.router';
 import { prismaMock, createTestContext, mockLead, mockUser, mockContact, mockAccount, mockTask, mockAIScore } from '../../../test/setup';
@@ -177,17 +177,17 @@ describe('Lead Router', () => {
     it('should update lead with valid data', async () => {
       prismaMock.lead.findUnique.mockResolvedValue(mockLead);
 
-      const updated = { ...mockLead, firstName: 'Updated', score: 85 };
+      const updated = { ...mockLead, firstName: 'Updated', status: 'CONTACTED' as const };
       prismaMock.lead.update.mockResolvedValue(updated);
 
       const result = await caller.update({
         id: TEST_UUIDS.lead1,
         firstName: 'Updated',
-        score: 85,
+        status: 'CONTACTED',
       });
 
       expect(result.firstName).toBe('Updated');
-      expect(result.score).toBe(85);
+      expect(result.status).toBe('CONTACTED');
     });
 
     it('should throw NOT_FOUND when updating non-existent lead', async () => {
@@ -373,14 +373,14 @@ describe('Lead Router', () => {
   describe('stats', () => {
     it('should return lead statistics', async () => {
       prismaMock.lead.count.mockResolvedValue(100);
-      prismaMock.lead.groupBy.mockResolvedValue([
+      vi.mocked(prismaMock.lead.groupBy).mockResolvedValue([
         { status: 'NEW', _count: 30 },
         { status: 'QUALIFIED', _count: 25 },
         { status: 'CONVERTED', _count: 20 },
-      ] as any);
+      ] as unknown as Awaited<ReturnType<typeof prismaMock.lead.groupBy>>);
       prismaMock.lead.aggregate.mockResolvedValue({
         _avg: { score: 72.5 },
-      } as any);
+      } as Awaited<ReturnType<typeof prismaMock.lead.aggregate>>);
 
       const result = await caller.stats();
 
@@ -395,10 +395,10 @@ describe('Lead Router', () => {
 
     it('should handle zero average score', async () => {
       prismaMock.lead.count.mockResolvedValue(0);
-      prismaMock.lead.groupBy.mockResolvedValue([]);
+      vi.mocked(prismaMock.lead.groupBy).mockResolvedValue([]);
       prismaMock.lead.aggregate.mockResolvedValue({
         _avg: { score: null },
-      } as any);
+      } as Awaited<ReturnType<typeof prismaMock.lead.aggregate>>);
 
       const result = await caller.stats();
 

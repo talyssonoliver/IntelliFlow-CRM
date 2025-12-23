@@ -78,8 +78,8 @@ notifications:
       enabled: false
       config:
         recipients:
-          - "devops@intelliflow.com"
-          - "security@intelliflow.com"
+          - "devops-team@example.com"
+          - "security-team@example.com"
         subject_template: "[ALERT] Terraform Drift - {{ .Environment }}"
 
 # Remediation Settings

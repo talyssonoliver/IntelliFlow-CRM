@@ -1,0 +1,137 @@
+{
+  "$schema": "../schemas/traceability.schema.json",
+  "title": "IntelliFlow CRM - Capability Traceability Matrix",
+  "description": "Links business capabilities to domain services, APIs, UIs, and tests",
+  "created_at": "2025-12-22T21:00:00Z",
+  "task_reference": "IFC-146",
+  "version": "1.0.0",
+  "capabilities": [
+    {
+      "capability_id": "CAP-001",
+      "name": "Lead Management",
+      "description": "Capture, score, qualify, and convert leads",
+      "domain_services": [
+        "packages/domain/src/crm/lead/Lead.ts",
+        "packages/application/src/usecases/leads/CreateLeadUseCase.ts",
+        "packages/application/src/usecases/leads/QualifyLeadUseCase.ts",
+        "packages/application/src/usecases/leads/ScoreLeadUseCase.ts",
+        "packages/application/src/usecases/leads/ConvertLeadUseCase.ts"
+      ],
+      "api_endpoints": [
+        "apps/api/src/modules/lead/lead.router.ts"
+      ],
+      "ui_components": [
+        "apps/web/src/components/lead-form.tsx",
+        "apps/web/src/app/leads/page.tsx"
+      ],
+      "tests": [
+        "packages/domain/src/crm/lead/__tests__/",
+        "apps/api/src/modules/lead/__tests__/lead.router.test.ts"
+      ],
+      "sprint_tasks": ["IFC-004", "IFC-005", "IFC-101"]
+    },
+    {
+      "capability_id": "CAP-002",
+      "name": "AI Lead Scoring",
+      "description": "Automated lead scoring using LLM with structured output",
+      "domain_services": [
+        "apps/ai-worker/src/chains/scoring.chain.ts",
+        "apps/ai-worker/src/prompts/index.ts"
+      ],
+      "api_endpoints": [
+        "apps/api/src/modules/lead/lead.router.ts (score mutation)"
+      ],
+      "ui_components": [
+        "apps/web/src/components/lead-score-badge.tsx"
+      ],
+      "tests": [
+        "apps/ai-worker/src/chains/scoring.chain.test.ts"
+      ],
+      "sprint_tasks": ["IFC-005", "IFC-085"]
+    },
+    {
+      "capability_id": "CAP-003",
+      "name": "Contact Management",
+      "description": "Create, update, and manage contacts linked to accounts",
+      "domain_services": [
+        "packages/domain/src/crm/contact/Contact.ts",
+        "packages/domain/src/crm/contact/ContactId.ts"
+      ],
+      "api_endpoints": [
+        "apps/api/src/modules/contact/contact.router.ts"
+      ],
+      "ui_components": [
+        "apps/web/src/app/contacts/page.tsx"
+      ],
+      "tests": [
+        "packages/domain/src/crm/contact/__tests__/",
+        "apps/api/src/modules/contact/__tests__/contact.router.test.ts"
+      ],
+      "sprint_tasks": ["IFC-102"]
+    },
+    {
+      "capability_id": "CAP-004",
+      "name": "Account Management",
+      "description": "Manage customer accounts and their relationships",
+      "domain_services": [
+        "packages/domain/src/crm/account/Account.ts",
+        "packages/domain/src/crm/account/AccountId.ts"
+      ],
+      "api_endpoints": [
+        "apps/api/src/modules/account/account.router.ts"
+      ],
+      "ui_components": [],
+      "tests": [
+        "packages/domain/src/crm/account/__tests__/",
+        "apps/api/src/modules/account/__tests__/account.router.test.ts"
+      ],
+      "sprint_tasks": ["IFC-103"]
+    },
+    {
+      "capability_id": "CAP-005",
+      "name": "Opportunity Management",
+      "description": "Track sales opportunities and pipeline stages",
+      "domain_services": [
+        "packages/domain/src/crm/opportunity/Opportunity.ts",
+        "packages/domain/src/crm/opportunity/OpportunityId.ts"
+      ],
+      "api_endpoints": [
+        "apps/api/src/modules/opportunity/opportunity.router.ts"
+      ],
+      "ui_components": [],
+      "tests": [
+        "packages/domain/src/crm/opportunity/__tests__/",
+        "apps/api/src/modules/opportunity/__tests__/opportunity.router.test.ts"
+      ],
+      "sprint_tasks": ["IFC-104"]
+    },
+    {
+      "capability_id": "CAP-006",
+      "name": "Task Management",
+      "description": "Create and manage tasks, reminders, and follow-ups",
+      "domain_services": [
+        "packages/domain/src/crm/task/Task.ts",
+        "packages/domain/src/crm/task/TaskId.ts"
+      ],
+      "api_endpoints": [
+        "apps/api/src/modules/task/task.router.ts"
+      ],
+      "ui_components": [],
+      "tests": [
+        "packages/domain/src/crm/task/__tests__/",
+        "apps/api/src/modules/task/__tests__/task.router.test.ts"
+      ],
+      "sprint_tasks": ["IFC-105"]
+    }
+  ],
+  "coverage_summary": {
+    "total_capabilities": 6,
+    "with_domain_services": 6,
+    "with_api_endpoints": 6,
+    "with_ui_components": 3,
+    "with_tests": 6,
+    "traceability_coverage_percentage": 90
+  },
+  "validated_by": "MATOP-orchestrator",
+  "validated_at": "2025-12-22T21:00:00Z"
+}

@@ -42,6 +42,8 @@ describe('LoggingMiddleware', () => {
           role: 'USER',
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       };
 
       await loggingMiddleware({
@@ -77,6 +79,8 @@ describe('LoggingMiddleware', () => {
           role: 'USER',
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       };
 
       await loggingMiddleware({
@@ -90,7 +94,7 @@ describe('LoggingMiddleware', () => {
 
       // Check response log
       const responseCalls = consoleLogSpy.mock.calls.filter(
-        (call) => call[0].type === 'response'
+        (call: [{ type: string }]) => call[0].type === 'response'
       );
       expect(responseCalls).toHaveLength(1);
       expect(responseCalls[0][0]).toMatchObject({
@@ -119,6 +123,8 @@ describe('LoggingMiddleware', () => {
           role: 'USER',
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       };
 
       await expect(
@@ -152,6 +158,8 @@ describe('LoggingMiddleware', () => {
       const ctx: Context = {
         user: null,
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       };
 
       await expect(
@@ -187,6 +195,8 @@ describe('LoggingMiddleware', () => {
           role: 'USER',
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       };
 
       await loggingMiddleware({
@@ -209,6 +219,8 @@ describe('LoggingMiddleware', () => {
       const ctx: Context = {
         user: null,
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       };
 
       await loggingMiddleware({
@@ -242,6 +254,8 @@ describe('LoggingMiddleware', () => {
           role: 'USER',
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
         customProp: 'custom-value',
       };
 
@@ -267,7 +281,7 @@ describe('LoggingMiddleware', () => {
         });
 
         await loggingMiddleware({
-          ctx: { user: null, prisma: {} as any },
+          ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
           path: 'test.route',
           type: 'query',
           next: mockNext,
@@ -287,14 +301,14 @@ describe('LoggingMiddleware', () => {
       });
 
       await loggingMiddleware({
-        ctx: { user: null, prisma: {} as any },
+        ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
         path: 'test.route',
         type: 'query',
         next: mockNext,
       });
 
       const responseLog = consoleLogSpy.mock.calls.find(
-        (call) => call[0].type === 'response'
+        (call: [{ type: string }]) => call[0].type === 'response'
       );
       expect(responseLog).toBeDefined();
       expect(responseLog![0].duration).toBeGreaterThanOrEqual(250);
@@ -308,7 +322,7 @@ describe('LoggingMiddleware', () => {
       });
 
       const promise = loggingMiddleware({
-        ctx: { user: null, prisma: {} as any },
+        ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
         path: 'test.route',
         type: 'query',
         next: mockNext,
@@ -334,6 +348,8 @@ describe('LoggingMiddleware', () => {
           role: 'USER',
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       };
 
       await performanceMiddleware({
@@ -370,6 +386,8 @@ describe('LoggingMiddleware', () => {
           role: 'USER',
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       };
 
       await performanceMiddleware({
@@ -390,7 +408,7 @@ describe('LoggingMiddleware', () => {
       });
 
       await performanceMiddleware({
-        ctx: { user: null, prisma: {} as any },
+        ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
         path: 'very.slow',
         type: 'query',
         next: mockNext,
@@ -412,7 +430,7 @@ describe('LoggingMiddleware', () => {
       });
 
       await performanceMiddleware({
-        ctx: { user: null, prisma: {} as any },
+        ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
         path: 'test.route',
         type: 'query',
         next: mockNext,
@@ -430,7 +448,7 @@ describe('LoggingMiddleware', () => {
       });
 
       await performanceMiddleware({
-        ctx: { user: null, prisma: {} as any },
+        ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
         path: 'test.route',
         type: 'query',
         next: mockNext,
@@ -445,7 +463,7 @@ describe('LoggingMiddleware', () => {
       const mockNext = vi.fn(async () => expectedResult);
 
       const result = await performanceMiddleware({
-        ctx: { user: null, prisma: {} as any },
+        ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
         path: 'test.route',
         type: 'query',
         next: mockNext,
@@ -463,7 +481,7 @@ describe('LoggingMiddleware', () => {
 
       await expect(
         performanceMiddleware({
-          ctx: { user: null, prisma: {} as any },
+          ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
           path: 'test.route',
           type: 'query',
           next: mockNext,
@@ -482,7 +500,7 @@ describe('LoggingMiddleware', () => {
       });
 
       await performanceMiddleware({
-        ctx: { user: null, prisma: {} as any },
+        ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
         path: 'public.slow',
         type: 'query',
         next: mockNext,
@@ -504,7 +522,7 @@ describe('LoggingMiddleware', () => {
       });
 
       await performanceMiddleware({
-        ctx: { user: null, prisma: {} as any },
+        ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
         path: 'test.route',
         type: 'query',
         next: mockNext,
@@ -533,6 +551,8 @@ describe('LoggingMiddleware', () => {
           role: 'USER',
         },
         prisma: {} as any,
+        req: undefined,
+        res: undefined,
       };
 
       await expect(
@@ -568,7 +588,7 @@ describe('LoggingMiddleware', () => {
 
       await expect(
         errorTrackingMiddleware({
-          ctx: { user: null, prisma: {} as any },
+          ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
           path: 'test.route',
           type: 'query',
           next: mockNext,
@@ -588,7 +608,7 @@ describe('LoggingMiddleware', () => {
       const mockNext = vi.fn(async () => expectedResult);
 
       const result = await errorTrackingMiddleware({
-        ctx: { user: null, prisma: {} as any },
+        ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
         path: 'test.route',
         type: 'query',
         next: mockNext,
@@ -606,7 +626,7 @@ describe('LoggingMiddleware', () => {
 
       await expect(
         errorTrackingMiddleware({
-          ctx: { user: null, prisma: {} as any },
+          ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
           path: 'public.health',
           type: 'query',
           next: mockNext,
@@ -629,7 +649,7 @@ describe('LoggingMiddleware', () => {
 
       await expect(
         errorTrackingMiddleware({
-          ctx: { user: null, prisma: {} as any },
+          ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
           path: 'test.route',
           type: 'query',
           next: mockNext,
@@ -657,7 +677,7 @@ describe('LoggingMiddleware', () => {
 
       await expect(
         errorTrackingMiddleware({
-          ctx: { user: null, prisma: {} as any },
+          ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
           path: 'test.route',
           type: 'query',
           next: mockNext,
@@ -682,7 +702,7 @@ describe('LoggingMiddleware', () => {
 
       await expect(
         errorTrackingMiddleware({
-          ctx: { user: null, prisma: {} as any },
+          ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
           path: 'test.route',
           type: 'query',
           next: mockNext,
@@ -704,7 +724,7 @@ describe('LoggingMiddleware', () => {
 
       await expect(
         errorTrackingMiddleware({
-          ctx: { user: null, prisma: {} as any },
+          ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
           path: 'test.route',
           type: 'query',
           next: mockNext,
@@ -726,12 +746,12 @@ describe('LoggingMiddleware', () => {
       });
 
       const result = await loggingMiddleware({
-        ctx: { user: null, prisma: {} as any },
+        ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
         path: 'test.route',
         type: 'query',
         next: async () =>
           performanceMiddleware({
-            ctx: { user: null, prisma: {} as any },
+            ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
             path: 'test.route',
             type: 'query',
             next: finalNext,
@@ -755,17 +775,17 @@ describe('LoggingMiddleware', () => {
 
       await expect(
         loggingMiddleware({
-          ctx: { user: null, prisma: {} as any },
+          ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
           path: 'test.route',
           type: 'query',
           next: async () =>
             performanceMiddleware({
-              ctx: { user: null, prisma: {} as any },
+              ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
               path: 'test.route',
               type: 'query',
               next: async () =>
                 errorTrackingMiddleware({
-                  ctx: { user: null, prisma: {} as any },
+                  ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
                   path: 'test.route',
                   type: 'query',
                   next: finalNext,
@@ -786,7 +806,7 @@ describe('LoggingMiddleware', () => {
       const mockNext = vi.fn(async () => ({}));
 
       await loggingMiddleware({
-        ctx: { user: null, prisma: {} as any },
+        ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
         path: longPath,
         type: 'query',
         next: mockNext,
@@ -807,7 +827,7 @@ describe('LoggingMiddleware', () => {
       });
 
       await performanceMiddleware({
-        ctx: { user: null, prisma: {} as any },
+        ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
         path: 'instant.operation',
         type: 'query',
         next: mockNext,
@@ -822,7 +842,7 @@ describe('LoggingMiddleware', () => {
       const mockNext = vi.fn(async () => ({}));
 
       await performanceMiddleware({
-        ctx: { user: null, prisma: {} as any },
+        ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
         path: 'test.route',
         type: 'query',
         next: mockNext,

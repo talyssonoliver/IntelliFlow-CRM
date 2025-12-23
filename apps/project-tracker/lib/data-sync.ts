@@ -41,16 +41,42 @@ function findRepoRoot(startDir: string): string | null {
   }
 }
 
-function resolvePrettierBin(): string | null {
-  const candidates = [
+function resolvePrettierBin(repoRoot: string): string | null {
+  // Try to find prettier in node_modules directly (avoids Turbopack virtual path issues)
+  // On Windows, prioritize the actual JS files over .bin scripts (which are bash scripts)
+  const isWindows = process.platform === 'win32';
+  const nodeModulesPaths = isWindows
+    ? [
+        join(repoRoot, 'node_modules', 'prettier', 'bin', 'prettier.cjs'),
+        join(repoRoot, 'node_modules', 'prettier', 'bin-prettier.cjs'),
+        join(repoRoot, 'node_modules', 'prettier', 'bin', 'prettier.js'),
+      ]
+    : [
+        join(repoRoot, 'node_modules', '.bin', 'prettier'),
+        join(repoRoot, 'node_modules', 'prettier', 'bin', 'prettier.cjs'),
+        join(repoRoot, 'node_modules', 'prettier', 'bin-prettier.cjs'),
+      ];
+
+  for (const candidate of nodeModulesPaths) {
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
+  // Fallback: try require.resolve (may fail in Turbopack)
+  const requireCandidates = [
     'prettier/bin/prettier.cjs',
     'prettier/bin-prettier.cjs',
     'prettier/bin/prettier.js',
   ];
 
-  for (const candidate of candidates) {
+  for (const candidate of requireCandidates) {
     try {
-      return nodeRequire.resolve(candidate);
+      const resolved = nodeRequire.resolve(candidate);
+      // Skip if it contains virtualized paths like [project]
+      if (!resolved.includes('[') && existsSync(resolved)) {
+        return resolved;
+      }
     } catch {
       // try next
     }
@@ -66,7 +92,7 @@ function tryFormatMetricsJson(metricsDir: string): void {
   const repoRoot = findRepoRoot(metricsDir) ?? process.cwd();
   const glob = `${metricsDir.replaceAll('\\', '/')}/**/*.json`;
 
-  const prettierBin = resolvePrettierBin();
+  const prettierBin = resolvePrettierBin(repoRoot);
   if (!prettierBin) {
     console.warn('[data-sync] Prettier not found; skipping JSON formatting');
     return;

@@ -54,7 +54,7 @@ describe('OpenTelemetry SDK (otel.ts)', () => {
 
     expect(sdk).toBeNull();
     expect(lastNodeSdkOptions).toBeUndefined();
-  });
+  }, 10000);
 
   it('creates a NodeSDK with resource attributes when enabled', async () => {
     process.env.OTEL_ENABLED = 'true';

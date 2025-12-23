@@ -19,7 +19,6 @@
 
 import { z } from 'zod';
 import { createTRPCRouter, publicProcedure } from '../../trpc';
-import { prisma } from '@intelliflow/db/client';
 import { getCorrelationId } from '../../tracing/correlation';
 
 export const healthRouter = createTRPCRouter({
@@ -50,14 +49,14 @@ export const healthRouter = createTRPCRouter({
    *
    * @returns Detailed health status with dependency checks
    */
-  check: publicProcedure.query(async () => {
+  check: publicProcedure.query(async ({ ctx }) => {
     const startTime = Date.now();
     const checks: Record<string, { status: 'ok' | 'error'; latency?: number; error?: string }> = {};
 
     // Database connectivity check
     try {
       const dbStart = Date.now();
-      await prisma.$queryRaw`SELECT 1`;
+      await ctx.prisma.$queryRaw`SELECT 1`;
       const dbLatency = Date.now() - dbStart;
 
       checks.database = {
@@ -99,10 +98,10 @@ export const healthRouter = createTRPCRouter({
    *
    * Returns HTTP 503 if not ready (handled by error middleware).
    */
-  ready: publicProcedure.query(async () => {
+  ready: publicProcedure.query(async ({ ctx }) => {
     try {
       // Check database connectivity
-      await prisma.$queryRaw`SELECT 1`;
+      await ctx.prisma.$queryRaw`SELECT 1`;
 
       // Future checks:
       // - Redis connection
@@ -148,9 +147,9 @@ export const healthRouter = createTRPCRouter({
    * Returns Prisma connection pool metrics for monitoring.
    * Useful for diagnosing connection leaks or pool exhaustion.
    */
-  dbStats: publicProcedure.query(async () => {
+  dbStats: publicProcedure.query(async ({ ctx }) => {
     try {
-      const metricsProvider = (prisma as unknown as { $metrics?: { json: () => Promise<unknown> } })
+      const metricsProvider = (ctx.prisma as unknown as { $metrics?: { json: () => Promise<unknown> } })
         .$metrics;
       if (!metricsProvider?.json) {
         return {

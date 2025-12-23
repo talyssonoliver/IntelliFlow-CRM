@@ -1,0 +1,15 @@
+timestamp,action,task_id,field,old_value,new_value,updated_by
+2025-12-21T08:00:00.000Z,create,IFC-001,status,,Backlog,system
+2025-12-21T08:30:00.000Z,update,IFC-001,status,Backlog,In Progress,claude-code
+2025-12-21T10:00:00.000Z,update,IFC-001,status,In Progress,Completed,claude-code
+2025-12-21T10:05:00.000Z,update,IFC-002,status,Backlog,In Progress,claude-code
+2025-12-21T12:00:00.000Z,update,IFC-002,status,In Progress,Completed,claude-code
+2025-12-21T12:10:00.000Z,update,ENV-001-AI,status,Backlog,In Progress,claude-code
+2025-12-21T14:00:00.000Z,update,ENV-001-AI,status,In Progress,Completed,claude-code
+2025-12-21T14:15:00.000Z,update,ENV-004-AI,status,Backlog,In Progress,claude-code
+2025-12-21T14:20:00.000Z,update,ENV-004-AI,status,In Progress,Completed,claude-code
+2025-12-21T15:00:00.000Z,update,EXC-SEC-001,status,Backlog,In Progress,claude-code
+2025-12-21T15:10:00.000Z,update,EXC-SEC-001,status,In Progress,Completed,claude-code
+2025-12-22T08:00:00.000Z,refinement,IFC-106,priority,Medium,High,scrum-master
+2025-12-22T08:30:00.000Z,update,IFC-106,status,Backlog,In Progress,claude-code
+2025-12-22T12:00:00.000Z,update,IFC-106,status,In Progress,Completed,claude-code

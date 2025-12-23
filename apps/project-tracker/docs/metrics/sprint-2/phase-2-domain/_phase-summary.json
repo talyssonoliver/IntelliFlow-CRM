@@ -1,0 +1,17 @@
+{
+  "phase": "phase-2-domain",
+  "sprint": "sprint-2",
+  "description": "Domain aggregates and core domain model implementation",
+  "streams": [],
+  "aggregated_metrics": {
+    "total_tasks": 5,
+    "done": 0,
+    "in_progress": 0,
+    "blocked": 0,
+    "not_started": 5
+  },
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 240,
+  "actual_duration_minutes": 0
+}

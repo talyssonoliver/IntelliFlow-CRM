@@ -1,0 +1,8 @@
+date,package,tests_written_first,tests_written_after,tdd_ratio,coverage_before,coverage_after,notes
+2025-12-20,packages/domain,15,2,88%,0%,85%,Initial domain model tests
+2025-12-21,packages/domain,8,1,89%,85%,92%,Value object tests added
+2025-12-21,packages/application,12,3,80%,0%,78%,Use case tests
+2025-12-22,packages/adapters,10,4,71%,0%,75%,Repository tests
+2025-12-22,apps/api,8,2,80%,0%,72%,Router tests
+2025-12-23,packages/domain,5,0,100%,92%,95%,Event tests
+2025-12-23,overall,58,12,83%,62%,70.9%,Sprint 0 summary

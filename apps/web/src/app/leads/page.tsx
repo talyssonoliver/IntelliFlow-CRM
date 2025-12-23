@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { LeadForm } from '@/components/lead-form';
 
 type LeadStatus = 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'UNQUALIFIED' | 'CONVERTED' | 'LOST';
 
@@ -41,6 +42,7 @@ const placeholderLeads: Lead[] = [
 
 export default function LeadsPage() {
   const [statusFilter, setStatusFilter] = useState<LeadStatus | 'ALL'>('ALL');
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const filteredLeads =
     statusFilter === 'ALL'
@@ -78,7 +80,10 @@ export default function LeadsPage() {
               Manage and score your sales leads with AI
             </p>
           </div>
-          <button className="px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 transition-opacity">
+          <button
+            onClick={() => setIsFormOpen(true)}
+            className="px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 transition-opacity"
+          >
             + New Lead
           </button>
         </div>
@@ -152,6 +157,16 @@ export default function LeadsPage() {
           </table>
         </div>
       </main>
+
+      {/* Lead Form Modal */}
+      <LeadForm
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        onSuccess={() => {
+          // TODO: Refresh leads list when API is connected
+          console.log('Lead created successfully');
+        }}
+      />
     </div>
   );
 }

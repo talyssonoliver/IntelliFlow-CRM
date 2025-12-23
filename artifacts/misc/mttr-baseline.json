@@ -110,7 +110,7 @@
     },
     "email": {
       "enabled": true,
-      "recipients": ["sre@intelliflow.dev"],
+      "recipients": ["sre-team@example.com"],
       "severity_filter": ["critical"],
       "expected_latency_seconds": 30
     },

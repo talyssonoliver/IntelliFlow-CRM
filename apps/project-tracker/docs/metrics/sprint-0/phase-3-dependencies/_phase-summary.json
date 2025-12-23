@@ -5,13 +5,13 @@
   "streams": [],
   "aggregated_metrics": {
     "total_tasks": 7,
-    "done": 6,
-    "in_progress": 1,
+    "done": 7,
+    "in_progress": 0,
     "blocked": 0,
     "not_started": 0
   },
   "started_at": "2025-12-14T20:20:00Z",
-  "completed_at": "2025-12-21T21:20:40.098Z",
+  "completed_at": "2025-12-23T22:38:34.630Z",
   "target_duration_minutes": 120,
   "actual_duration_minutes": null
 }

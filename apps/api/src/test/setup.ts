@@ -10,6 +10,7 @@
 
 import { beforeEach, vi } from 'vitest';
 import type { PrismaClient } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import type { DeepMockProxy } from 'vitest-mock-extended';
 import { mockDeep, mockReset } from 'vitest-mock-extended';
 import type { Context } from '../context';
@@ -144,7 +145,7 @@ export const mockAccount = {
   website: 'https://techcorp.example.com',
   industry: 'Technology',
   description: 'A leading tech company',
-  revenue: 1000000,
+  revenue: new Prisma.Decimal(1000000),
   employees: 50,
   ownerId: TEST_UUIDS.user1,
   createdAt: new Date('2024-01-01'),
@@ -154,10 +155,11 @@ export const mockAccount = {
 export const mockOpportunity = {
   id: TEST_UUIDS.opportunity1,
   name: 'Enterprise Deal',
-  value: 50000,
+  value: new Prisma.Decimal(50000),
   stage: 'PROPOSAL' as const,
   probability: 60,
   expectedCloseDate: new Date('2024-12-31'),
+  closedAt: null,
   description: 'Large enterprise opportunity',
   accountId: TEST_UUIDS.account1,
   contactId: TEST_UUIDS.contact1,

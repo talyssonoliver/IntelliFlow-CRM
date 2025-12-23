@@ -154,6 +154,9 @@ artifacts/backups/**
 artifacts/reports/system-audit/*/
 artifacts/reports/sprint-runs/
 
+# Security scan reports (contain git author emails)
+artifacts/reports/security/gitleaks-report.json
+
 # Temporary and backup files
 **/*.tmp
 **/*.bak

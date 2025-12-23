@@ -1,0 +1,164 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "SALES-002",
+  "section": "Commercial Assets",
+  "description": "Sales Motion Playbook (outreach sequences, discovery + demo scripts)",
+  "owner": "Sales + CEO",
+  "dependencies": {
+    "required": ["SALES-001", "GTM-002"],
+    "verified_at": "2025-12-22T21:05:00Z",
+    "all_satisfied": true,
+    "notes": "Commercial narrative established, qualification framework (BANT) documented"
+  },
+  "status": "DONE",
+  "status_history": [
+    {
+      "status": "PLANNED",
+      "at": "2025-12-14T00:00:00Z"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "at": "2025-12-22T21:05:00Z"
+    },
+    {
+      "status": "DONE",
+      "at": "2025-12-22T21:15:00Z"
+    }
+  ],
+  "execution": {
+    "started_at": "2025-12-22T21:05:00Z",
+    "completed_at": "2025-12-22T21:15:00Z",
+    "duration_minutes": 10,
+    "executor": "claude-opus-4.5-matop",
+    "execution_log": "artifacts/reports/system-audit/20251222-210500-sales002/gates/",
+    "run_id": "20251222-210500-sales002"
+  },
+  "artifacts": {
+    "expected": [
+      "docs/sales/sales-motion-playbook.md",
+      "docs/sales/discovery-script.md",
+      "docs/sales/demo-script.md",
+      "docs/sales/outreach-sequences.md"
+    ],
+    "created": [
+      {
+        "path": "docs/sales/sales-motion-playbook.md",
+        "sha256": "c23387b8f777edec759fe5e4c80227615369778132a687ec11fa30f7bd48c0a3"
+      },
+      {
+        "path": "docs/sales/discovery-script.md",
+        "sha256": "5d385bdf0c3d71ac19989bea7de2599dce35810585812306a597f44d2b362af5"
+      },
+      {
+        "path": "docs/sales/demo-script.md",
+        "sha256": "0c2027c2bddb29dfc153c680da315b7c4e4f494914f0e6b10ee342af523e0bc4"
+      },
+      {
+        "path": "docs/sales/outreach-sequences.md",
+        "sha256": "e9da801414366a1506904a692d0ca04d46df5d3a8fbc3b6788c826fe816f44be"
+      }
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "playbook_exists",
+      "command": "ls docs/sales/sales-motion-playbook.md",
+      "executed_at": "2025-12-22T21:10:00Z",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "playbook_has_qualification",
+      "command": "grep 'BANT' docs/sales/sales-motion-playbook.md",
+      "executed_at": "2025-12-22T21:10:00Z",
+      "exit_code": 0,
+      "passed": true,
+      "notes": "BANT qualification framework documented"
+    },
+    {
+      "name": "discovery_script_exists",
+      "command": "ls docs/sales/discovery-script.md",
+      "executed_at": "2025-12-22T21:10:00Z",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "demo_script_exists",
+      "command": "ls docs/sales/demo-script.md",
+      "executed_at": "2025-12-22T21:10:00Z",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "outreach_sequences_exist",
+      "command": "ls docs/sales/outreach-sequences.md",
+      "executed_at": "2025-12-22T21:10:00Z",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "email_sequence_defined",
+      "command": "grep 'Email Outreach' docs/sales/outreach-sequences.md",
+      "executed_at": "2025-12-22T21:10:00Z",
+      "exit_code": 0,
+      "passed": true,
+      "notes": "Email outreach sequence with 6 touches documented"
+    },
+    {
+      "name": "linkedin_sequence_defined",
+      "command": "grep 'LinkedIn Outreach' docs/sales/outreach-sequences.md",
+      "executed_at": "2025-12-22T21:10:00Z",
+      "exit_code": 0,
+      "passed": true,
+      "notes": "LinkedIn outreach sequence documented"
+    },
+    {
+      "name": "handoff_policy_defined",
+      "command": "grep 'Handoff Policy' docs/sales/outreach-sequences.md",
+      "executed_at": "2025-12-22T21:10:00Z",
+      "exit_code": 0,
+      "passed": true,
+      "notes": "Marketing-to-Sales and Sales-to-Implementation handoff documented"
+    }
+  ],
+  "kpis": {
+    "sequences_ready": {
+      "target": ">=2",
+      "actual": "3 (Email, LinkedIn, Fast Track)",
+      "met": true,
+      "unit": "count"
+    },
+    "discovery_script_complete": {
+      "target": true,
+      "actual": true,
+      "met": true,
+      "unit": "boolean"
+    },
+    "demo_script_complete": {
+      "target": true,
+      "actual": true,
+      "met": true,
+      "unit": "boolean"
+    },
+    "pilot_documented": {
+      "target": true,
+      "actual": true,
+      "met": true,
+      "unit": "boolean",
+      "notes": "Metrics and tracking section included"
+    }
+  },
+  "stoa_verdicts": {
+    "lead": "Domain",
+    "supporting": ["Quality"],
+    "domain_verdict": "PASS",
+    "quality_verdict": "PASS",
+    "consensus": "PASS"
+  },
+  "blockers": [],
+  "waivers": [],
+  "notes": "Complete sales motion playbook with BANT qualification framework. Three outreach sequences defined: Email (6-touch cold prospect), LinkedIn (warm prospect nurture), Demo Fast Track (inbound high-intent). Discovery and demo scripts provide end-to-end coverage. Handoff policies for Marketing-to-Sales and Sales-to-Implementation. Compliance notes for CAN-SPAM, GDPR, and platform limits included.",
+  "completed_at": "2025-12-22T21:15:00Z",
+  "started_at": "2025-12-22T21:05:00Z"
+}

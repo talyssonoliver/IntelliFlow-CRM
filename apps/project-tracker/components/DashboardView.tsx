@@ -5,6 +5,7 @@ import { countTasksByStatus, calculateCompletionRate } from '@/lib/csv-parser';
 import { groupBy } from '@/lib/utils';
 import React from 'react';
 import { Clock, CheckCircle2, PlayCircle } from 'lucide-react';
+import ExecutiveSummary from './ExecutiveSummary';
 import SwarmMonitor from './SwarmMonitor';
 
 interface DashboardViewProps {
@@ -84,6 +85,9 @@ export default function DashboardView({ tasks, sections, onTaskClick }: Dashboar
           />
         </div>
       </div>
+
+      {/* Executive Summary */}
+      <ExecutiveSummary />
 
       {/* Swarm Monitor */}
       <SwarmMonitor />

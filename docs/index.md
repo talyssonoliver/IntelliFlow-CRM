@@ -17,7 +17,7 @@ services.
 - **AI-Powered Lead Scoring**: Automatically score and qualify leads using
   LangChain and CrewAI agents
 - **Type-Safe API**: End-to-end type safety with tRPC from backend to frontend
-- **Modern Stack**: Built with Next.js 14, Prisma, PostgreSQL, and Supabase
+- **Modern Stack**: Built with Next.js 16.0.10, Prisma, PostgreSQL, and Supabase
 - **Vector Search**: pgvector integration for semantic search and embeddings
 - **Real-time Analytics**: Track lead engagement and conversion metrics
 - **Automated Workflows**: AI agents handle routine tasks and follow-ups
@@ -60,7 +60,7 @@ intelliFlow-CRM/
 
 ### Frontend
 
-- **Next.js 14** with App Router
+- **Next.js 16.0.10** with App Router
 - **shadcn/ui** components
 - **Tailwind CSS** for styling
 - **React Query** for data fetching

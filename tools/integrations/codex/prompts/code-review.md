@@ -10,7 +10,7 @@ project standards.
 IntelliFlow CRM is built with:
 
 - **Architecture**: Domain-Driven Design (DDD), Hexagonal Architecture
-- **Stack**: Next.js 14, tRPC, Prisma, PostgreSQL, LangChain
+- **Stack**: Next.js 16.0.10, tRPC, Prisma, PostgreSQL, LangChain
 - **Monorepo**: Turborepo with pnpm workspaces
 - **Type Safety**: End-to-end TypeScript strict mode with Zod validation
 - **Testing**: Vitest with 90%+ coverage requirement

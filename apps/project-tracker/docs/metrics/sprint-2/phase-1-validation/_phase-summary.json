@@ -1,0 +1,17 @@
+{
+  "phase": "phase-1-validation",
+  "sprint": "sprint-2",
+  "description": "Validation and foundation tasks for Sprint 2",
+  "streams": [],
+  "aggregated_metrics": {
+    "total_tasks": 4,
+    "done": 3,
+    "in_progress": 0,
+    "blocked": 0,
+    "not_started": 1
+  },
+  "started_at": "2025-12-22T20:00:00Z",
+  "completed_at": null,
+  "target_duration_minutes": 120,
+  "actual_duration_minutes": 90
+}

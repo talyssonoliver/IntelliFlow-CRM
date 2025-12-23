@@ -23,7 +23,7 @@
  *   pnpm run validate:sprint0                     # Back-compat alias (same behavior)
  *   VALIDATION_STRICT=1 pnpm run validate:sprint0      # Strict via env
  *
- * @module tools/scripts/sprint0-validation
+ * @module tools/scripts/sprint-validation
  */
 
 import fs from 'node:fs';

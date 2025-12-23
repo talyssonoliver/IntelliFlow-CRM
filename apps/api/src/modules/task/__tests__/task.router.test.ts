@@ -6,7 +6,7 @@ import { TEST_UUIDS } from '../../../test/setup';
  * - create, getById, list, update, delete, complete, stats
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { taskRouter } from '../task.router';
 import { prismaMock, createTestContext, mockTask, mockLead, mockContact, mockOpportunity, mockUser } from '../../../test/setup';
@@ -382,16 +382,16 @@ describe('Task Router', () => {
   describe('stats', () => {
     it('should return task statistics', async () => {
       prismaMock.task.count.mockResolvedValueOnce(100); // total
-      prismaMock.task.groupBy.mockResolvedValueOnce([
+      vi.mocked(prismaMock.task.groupBy).mockResolvedValueOnce([
         { status: 'PENDING', _count: 40 },
         { status: 'IN_PROGRESS', _count: 20 },
         { status: 'COMPLETED', _count: 30 },
-      ] as any);
-      prismaMock.task.groupBy.mockResolvedValueOnce([
+      ] as unknown as Awaited<ReturnType<typeof prismaMock.task.groupBy>>);
+      vi.mocked(prismaMock.task.groupBy).mockResolvedValueOnce([
         { priority: 'HIGH', _count: 25 },
         { priority: 'MEDIUM', _count: 50 },
         { priority: 'LOW', _count: 25 },
-      ] as any);
+      ] as unknown as Awaited<ReturnType<typeof prismaMock.task.groupBy>>);
       prismaMock.task.count.mockResolvedValueOnce(10); // overdue
       prismaMock.task.count.mockResolvedValueOnce(5); // dueToday
 
@@ -414,7 +414,7 @@ describe('Task Router', () => {
 
     it('should handle empty statistics', async () => {
       prismaMock.task.count.mockResolvedValue(0);
-      prismaMock.task.groupBy.mockResolvedValue([]);
+      vi.mocked(prismaMock.task.groupBy).mockResolvedValue([]);
 
       const result = await caller.stats();
 

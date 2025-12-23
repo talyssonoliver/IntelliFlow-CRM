@@ -42,7 +42,7 @@ export const createContext = async (opts?: { req?: Request; res?: Response }) =>
 
   return {
     prisma,
-    user: mockUser,
+    user: mockUser as UserSession | null | undefined,
     req: opts?.req,
     res: opts?.res,
   };

@@ -9,14 +9,10 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2025-12-22T07:23:15.955Z",
-    "required": [
-      "ENV-007-AI"
-    ]
+    "verified_at": "2025-12-23T22:38:34.212Z",
+    "required": ["ENV-007-AI"]
   },
-  "dependencies_resolved": [
-    "ENV-007-AI"
-  ],
+  "dependencies_resolved": ["ENV-007-AI"],
   "target_duration_minutes": 10,
   "kpis": {
     "lighthouse_config_created": {

@@ -6,7 +6,7 @@
   "owner": "CEO + CTO + CFO",
   "dependencies": {
     "required": [],
-    "verified_at": "2025-12-22T07:23:15.992Z",
+    "verified_at": "2025-12-23T22:38:34.257Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -40,12 +40,13 @@
       "docs/planning/ADR-000-feasibility.md"
     ],
     "created": [
-      "artifacts/reports/business-case.pdf",
       "artifacts/reports/swot-analysis.xlsx",
-      "artifacts/reports/financial-model.xlsx",
       "docs/planning/ADR-000-feasibility.md"
     ],
-    "missing": []
+    "missing": [
+      "artifacts/reports/business-case.pdf",
+      "artifacts/reports/financial-model.xlsx"
+    ]
   },
   "validations": [
     {

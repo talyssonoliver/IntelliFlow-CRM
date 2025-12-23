@@ -1,7 +1,31 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createLogger, logger, withTiming, withContext, LOG_LEVELS, LoggerContext } from './logger';
 
 describe('Logger', () => {
+  // Store original env vars
+  const originalLogLevel = process.env.LOG_LEVEL;
+  const originalNodeEnv = process.env.NODE_ENV;
+
+  // Ensure clean state before each test
+  beforeEach(() => {
+    // Set a known log level to prevent pino errors
+    process.env.LOG_LEVEL = 'info';
+  });
+
+  // Restore after all tests
+  afterEach(() => {
+    if (originalLogLevel === undefined) {
+      delete process.env.LOG_LEVEL;
+    } else {
+      process.env.LOG_LEVEL = originalLogLevel;
+    }
+    if (originalNodeEnv === undefined) {
+      delete process.env.NODE_ENV;
+    } else {
+      process.env.NODE_ENV = originalNodeEnv;
+    }
+  });
+
   describe('createLogger', () => {
     it('should create logger with name', () => {
       const testLogger = createLogger('test-logger');
@@ -36,8 +60,12 @@ describe('Logger', () => {
       const errorLogger = createLogger('error-logger');
       expect(errorLogger).toBeDefined();
 
-      // Restore
-      process.env.LOG_LEVEL = originalLogLevel;
+      // Properly restore
+      if (originalLogLevel === undefined) {
+        delete process.env.LOG_LEVEL;
+      } else {
+        process.env.LOG_LEVEL = originalLogLevel;
+      }
     });
 
     it('should default to info level', () => {
@@ -47,7 +75,12 @@ describe('Logger', () => {
       const defaultLogger = createLogger('default-logger');
       expect(defaultLogger).toBeDefined();
 
-      process.env.LOG_LEVEL = originalLogLevel;
+      // Properly restore
+      if (originalLogLevel === undefined) {
+        delete process.env.LOG_LEVEL;
+      } else {
+        process.env.LOG_LEVEL = originalLogLevel;
+      }
     });
   });
 
@@ -65,7 +98,7 @@ describe('Logger', () => {
 
   describe('withTiming', () => {
     it('should wrap async function with timing', async () => {
-      const mockFn = vi.fn().mockResolvedValue('success');
+      const mockFn = vi.fn(async (a: string, b: string) => 'success');
 
       // withTiming returns a wrapped function
       const result = await withTiming(mockFn, 'test-operation')('arg1', 'arg2');
@@ -86,7 +119,9 @@ describe('Logger', () => {
     });
 
     it('should handle errors and still measure time', async () => {
-      const errorFn = vi.fn().mockRejectedValue(new Error('Test error'));
+      const errorFn = vi.fn(async () => {
+        throw new Error('Test error');
+      });
 
       await expect(withTiming(errorFn, 'error-operation')()).rejects.toThrow('Test error');
       expect(errorFn).toHaveBeenCalled();
@@ -216,8 +251,17 @@ describe('Logger', () => {
       const prodLogger = createLogger('prod-logger');
       expect(prodLogger).toBeDefined();
 
-      process.env.NODE_ENV = originalEnv;
-      process.env.LOG_LEVEL = originalLogLevel;
+      // Properly restore env vars
+      if (originalEnv === undefined) {
+        delete process.env.NODE_ENV;
+      } else {
+        process.env.NODE_ENV = originalEnv;
+      }
+      if (originalLogLevel === undefined) {
+        delete process.env.LOG_LEVEL;
+      } else {
+        process.env.LOG_LEVEL = originalLogLevel;
+      }
     });
 
     it('should handle development environment', () => {
@@ -230,21 +274,34 @@ describe('Logger', () => {
       const devLogger = createLogger('dev-logger');
       expect(devLogger).toBeDefined();
 
-      process.env.NODE_ENV = originalEnv;
-      process.env.LOG_LEVEL = originalLogLevel;
+      // Properly restore env vars
+      if (originalEnv === undefined) {
+        delete process.env.NODE_ENV;
+      } else {
+        process.env.NODE_ENV = originalEnv;
+      }
+      if (originalLogLevel === undefined) {
+        delete process.env.LOG_LEVEL;
+      } else {
+        process.env.LOG_LEVEL = originalLogLevel;
+      }
     });
   });
 
   describe('error handling in withTiming', () => {
     it('should re-throw original error', async () => {
       const customError = new Error('Custom error message');
-      const errorFn = vi.fn().mockRejectedValue(customError);
+      const errorFn = vi.fn(async () => {
+        throw customError;
+      });
 
       await expect(withTiming(errorFn, 'error-test')()).rejects.toThrow('Custom error message');
     });
 
     it('should handle non-Error objects', async () => {
-      const errorFn = vi.fn().mockRejectedValue('String error');
+      const errorFn = vi.fn(async () => {
+        throw 'String error';
+      });
 
       await expect(withTiming(errorFn, 'string-error')()).rejects.toBe('String error');
     });

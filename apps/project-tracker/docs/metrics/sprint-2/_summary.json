@@ -1,0 +1,111 @@
+{
+  "sprint": "sprint-2",
+  "name": "Core Domain & Documentation",
+  "target_date": "2025-02-07",
+  "started_at": "2025-12-22T20:00:00Z",
+  "completed_at": null,
+  "phases": [
+    {
+      "id": "phase-1-validation",
+      "status": "IN_PROGRESS",
+      "started_at": "2025-12-22T20:00:00Z",
+      "completed_at": null
+    },
+    {
+      "id": "phase-2-domain",
+      "status": "NOT_STARTED",
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "id": "phase-3-documentation",
+      "status": "IN_PROGRESS",
+      "started_at": "2025-12-22T21:00:00Z",
+      "completed_at": null
+    }
+  ],
+  "task_summary": {
+    "total": 13,
+    "done": 8,
+    "in_progress": 0,
+    "blocked": 0,
+    "not_started": 5,
+    "failed": 0
+  },
+  "kpi_summary": {
+    "tasks_completed": {
+      "target": 13,
+      "actual": 8,
+      "status": "IN_PROGRESS",
+      "unit": "count"
+    },
+    "automation_percentage": {
+      "target": 80,
+      "actual": 61.5,
+      "status": "IN_PROGRESS",
+      "unit": "percent"
+    }
+  },
+  "blockers": [],
+  "completed_tasks": [
+    {
+      "task_id": "IFC-004",
+      "completed_at": "2025-12-22T20:30:00Z",
+      "duration_minutes": 10
+    },
+    {
+      "task_id": "IFC-005",
+      "completed_at": "2025-12-22T20:37:00Z",
+      "duration_minutes": 10
+    },
+    {
+      "task_id": "IFC-085",
+      "completed_at": "2025-12-22T20:42:00Z",
+      "duration_minutes": 10
+    },
+    {
+      "task_id": "IFC-109",
+      "completed_at": "2025-12-22T20:45:00Z",
+      "duration_minutes": 10
+    },
+    {
+      "task_id": "IFC-146",
+      "completed_at": "2025-12-22T20:49:00Z",
+      "duration_minutes": 10
+    },
+    {
+      "task_id": "SALES-002",
+      "completed_at": "2025-12-22T21:15:00Z",
+      "duration_minutes": 10
+    },
+    {
+      "task_id": "IFC-079",
+      "completed_at": "2025-12-22T21:20:00Z",
+      "duration_minutes": 67
+    },
+    {
+      "task_id": "IFC-080",
+      "completed_at": "2025-12-22T21:25:00Z",
+      "duration_minutes": 37
+    }
+  ],
+  "notes": "8/13 tasks DONE (61.5%). Last synced: 2025-12-22T21:30:00Z",
+  "section": "Core Domain & Documentation",
+  "dependencies": {
+    "all_satisfied": true,
+    "verified_at": "2025-12-22T20:00:00Z",
+    "required": []
+  },
+  "status_history": [
+    {
+      "status": "IN_PROGRESS",
+      "note": "Sprint 2 execution started",
+      "at": "2025-12-22T20:00:00Z"
+    }
+  ],
+  "artifacts": {
+    "expected": [],
+    "created": [],
+    "missing": []
+  }
+}

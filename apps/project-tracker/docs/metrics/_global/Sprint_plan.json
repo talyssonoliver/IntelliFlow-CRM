@@ -36,7 +36,7 @@
       "Task ID": "AI-SETUP-002",
       "Section": "AI Foundation",
       "Description": "GitHub Copilot Enterprise Automation Setup",
-      "Owner": "DevOps Engineer",
+      "Owner": "AI Specialist",
       "Dependencies": "AI-SETUP-001",
       "CleanDependencies": "AI-SETUP-001",
       "CrossQuarterDeps": "False",
@@ -84,7 +84,7 @@
       "Task ID": "AUTOMATION-002",
       "Section": "AI Foundation",
       "Description": "AI Performance Dashboard and Optimization Loop",
-      "Owner": "DevOps + AI Monitoring",
+      "Owner": "AI Specialist + Backend Dev",
       "Dependencies": "AUTOMATION-001",
       "CleanDependencies": "AUTOMATION-001",
       "CrossQuarterDeps": "False",
@@ -166,7 +166,7 @@
       "Task ID": "ENV-002-AI",
       "Section": "Foundation Setup",
       "Description": "Automated Development Tools Configuration",
-      "Owner": "DevOps + Copilot",
+      "Owner": "Backend Dev + AI Specialist",
       "Dependencies": "ENV-001-AI",
       "CleanDependencies": "ENV-001-AI",
       "CrossQuarterDeps": "False",
@@ -262,7 +262,7 @@
       "Task ID": "ENV-008-AI",
       "Section": "Foundation Setup",
       "Description": "Automated Observability with Predictive Monitoring",
-      "Owner": "DevOps + AI Agents",
+      "Owner": "Backend Dev + AI Specialist",
       "Dependencies": "ENV-005-AI",
       "CleanDependencies": "ENV-005-AI",
       "CrossQuarterDeps": "False",
@@ -283,7 +283,7 @@
       "CleanDependencies": "ENV-001-AI",
       "CrossQuarterDeps": "False",
       "Pre-requisites": "Design system, AI component generation",
-      "Definition of Done": "Next.js AI-optimized, shadcn components AI-selected, performance AI-tuned, accessibility verified",
+      "Definition of Done": "Next.js 16.0.10 App Router baseline, Turbopack FS caching enabled, Cache Components used where appropriate, proxy replaces middleware where required; shadcn components AI-selected, performance AI-tuned, accessibility verified",
       "Status": "Completed",
       "KPIs": "Lighthouse >95, AI-generated components, load time <1s",
       "Target Sprint": "0",
@@ -300,10 +300,10 @@
       "CrossQuarterDeps": "False",
       "Pre-requisites": "AI test generation tools, coverage targets",
       "Definition of Done": "Tests AI-generated, coverage AI-optimized, E2E scenarios AI-created, continuous validation",
-      "Status": "In Progress",
+      "Status": "Completed",
       "KPIs": "Coverage >90%, test generation <1 minute, AI-verified scenarios",
       "Target Sprint": "0",
-      "Artifacts To Track": "tests/*, tests/e2e/*, artifacts/coverage/coverage-report.html, artifacts/logs/test-generation-log.json",
+      "Artifacts To Track": "tests/*, tests/e2e/*, artifacts/coverage/index.html, artifacts/coverage/lcov-report/*",
       "Validation Method": "Coverage >90%, tests passing, scenarios validated"
     },
     {
@@ -351,7 +351,7 @@
       "Status": "Completed",
       "KPIs": "Zero high vulnerabilities, AI security score A+, compliance 100%",
       "Target Sprint": "0",
-      "Artifacts To Track": "docs/security/*, artifacts/misc/security-scan-results.json, artifacts/reports/compliance-report.pdf, artifacts/logs/patch-log.csv",
+      "Artifacts To Track": "docs/security/*, artifacts/misc/security-scan-results.json, artifacts/reports/compliance-report.md, artifacts/logs/patch-log.csv",
       "Validation Method": "Scan clean, score A+, compliance verified"
     },
     {
@@ -399,7 +399,7 @@
       "Status": "Completed",
       "KPIs": "Feature flag framework live; audit log events captured; privacy baseline reviewed (DPIA draft)",
       "Target Sprint": "0",
-      "Artifacts To Track": "artifacts/misc/analytics/*, artifacts/misc/privacy-config.json, artifacts/metrics/insights-accuracy.csv, artifacts/reports/gdpr-compliance.pdf",
+      "Artifacts To Track": "artifacts/misc/analytics/*, artifacts/misc/privacy-config.json, artifacts/metrics/insights-accuracy.csv, artifacts/reports/gdpr-compliance.md",
       "Validation Method": "Analytics working, insights accurate, privacy compliant"
     },
     {
@@ -414,7 +414,7 @@
       "Definition of Done": "System AI-tested, issues AI-detected and fixed, demo AI-prepared, metrics AI-verified",
       "Status": "Completed",
       "KPIs": "Smoke + integration suite green; zero P0/P1 defects; test execution time <= 15 min in CI",
-      "Target Sprint": "0",
+      "Target Sprint": "1",
       "Artifacts To Track": "tests/integration/*, artifacts/misc/test-orchestration.json, artifacts/logs/bug-fixes.log, artifacts/metrics/confidence-metrics.csv",
       "Validation Method": "Tests passing, bugs fixed, confidence high"
     },
@@ -430,7 +430,7 @@
       "Definition of Done": "Backlog AI-prioritized, velocity AI-predicted, capacity AI-optimized, risks AI-identified",
       "Status": "Completed",
       "KPIs": "Delivery metrics dashboard live (lead time, deploy frequency, change failure rate, MTTR); forecast error <= +/-20%",
-      "Target Sprint": "0",
+      "Target Sprint": "1",
       "Artifacts To Track": "artifacts/misc/sprint-planning/*, artifacts/misc/velocity-prediction.json, artifacts/misc/capacity-model.csv, artifacts/reports/risk-matrix.xlsx",
       "Validation Method": "Planning optimized, velocity predicted, risks identified"
     },
@@ -481,7 +481,7 @@
       "Status": "Completed",
       "KPIs": "Decision confidence >80%, risks documented",
       "Target Sprint": "0",
-      "Artifacts To Track": "artifacts/reports/business-case.pdf, artifacts/reports/swot-analysis.xlsx, artifacts/reports/financial-model.xlsx, docs/planning/ADR-000-feasibility.md",
+      "Artifacts To Track": "artifacts/reports/business-case.md, artifacts/reports/swot-analysis.xlsx, artifacts/reports/financial-model.md, docs/planning/ADR-000-feasibility.md",
       "Validation Method": "Leadership review complete, decision signed, risks documented"
     },
     {
@@ -489,8 +489,8 @@
       "Section": "Planning",
       "Description": "Define recurring backlog refinement, sprint planning, review and retrospective ceremonies",
       "Owner": "Scrum Master + PM",
-      "Dependencies": "IFC-118",
-      "CleanDependencies": "IFC-118",
+      "Dependencies": "",
+      "CleanDependencies": "",
       "CrossQuarterDeps": "False",
       "Pre-requisites": "Sprint cadence defined",
       "Definition of Done": "Ceremony schedule published; agendas and templates created; meeting outcomes documented",
@@ -510,7 +510,7 @@
       "CrossQuarterDeps": "False",
       "Pre-requisites": "Feasibility assessment; sprint planning AI predictions",
       "Definition of Done": "PRD templates available and used; user journey mapping methodology defined; DoR criteria documented and adopted; traceability matrix tool or document created and applied to backlog; backlog items updated",
-      "Status": "Backlog",
+      "Status": "Completed",
       "KPIs": "100% new stories include PRD and meet DoR; traceability coverage >=90%; backlog management efficiency improved",
       "Target Sprint": "2",
       "Artifacts To Track": "docs/planning/prd-template.md, docs/planning/user-journey-template.md, docs/planning/definition-of-ready.md, artifacts/reports/traceability-matrix.xlsx, artifacts/logs/backlog-updates-log.csv",
@@ -591,8 +591,8 @@
       "CleanDependencies": "IFC-003",
       "CrossQuarterDeps": "False",
       "Pre-requisites": "Next.js 16.0.10 setup, shadcn/ui configured",
-      "Definition of Done": "Lead form with tRPC integration, mobile responsive",
-      "Status": "Backlog",
+      "Definition of Done": "Lead form with tRPC integration, mobile responsive; Next.js 16.0.10 App Router uses Turbopack FS caching and Cache Components; proxy replaces middleware where required",
+      "Status": "Completed",
       "KPIs": "Lighthouse score >90, form submission <1s",
       "Target Sprint": "2",
       "Artifacts To Track": "apps/web/app/leads/*, apps/web/components/lead-form.tsx, artifacts/lighthouse/lighthouse-report.html, artifacts/misc/mobile-screenshots/*",
@@ -608,7 +608,7 @@
       "CrossQuarterDeps": "False",
       "Pre-requisites": "LangChain setup, OpenAI API key, Zod schemas",
       "Definition of Done": "AI scoring pipeline with structured output, confidence scores",
-      "Status": "Backlog",
+      "Status": "Completed",
       "KPIs": "Scoring <2s, structured output validated",
       "Target Sprint": "2",
       "Artifacts To Track": "apps/ai-worker/src/chains/scoring.chain.ts, apps/ai-worker/src/prompts/*, apps/api/src/shared/scoring-output-schema.zod.ts",
@@ -656,7 +656,7 @@
       "CrossQuarterDeps": "False",
       "Pre-requisites": "OWASP checklist, ISO 42001 requirements mapped",
       "Definition of Done": "Security review with AI governance considerations",
-      "Status": "Backlog",
+      "Status": "Completed",
       "KPIs": "0 critical vulnerabilities, AI compliance roadmap",
       "Target Sprint": "2",
       "Artifacts To Track": "artifacts/reports/security-assessment-report.pdf, artifacts/reports/owasp-checklist.xlsx, docs/planning/iso42001-gap-analysis.md, artifacts/reports/zap-scan-report.html",
@@ -665,7 +665,7 @@
     {
       "Task ID": "IFC-009",
       "Section": "Validation",
-      "Description": "Team Capability Assessment - Modern Stack",
+      "Description": "Team Capability Assessment - Modern Stack (Next.js 16.0.10 App Router, Turbopack FS caching, Cache Components, proxy replacing middleware)",
       "Owner": "PM + Tech Lead",
       "Dependencies": "IFC-001,IFC-005",
       "CleanDependencies": "IFC-001,IFC-005",
@@ -688,10 +688,10 @@
       "CrossQuarterDeps": "False",
       "Pre-requisites": "Bounded contexts defined, IFC-002 completed",
       "Definition of Done": "Lead aggregate, value objects, repository interfaces and domain services implemented",
-      "Status": "Backlog",
+      "Status": "Completed",
       "KPIs": "Design approved, unit tests ≥90% coverage, repository API stable",
       "Target Sprint": "2",
-      "Artifacts To Track": "packages/domain/src/leads/*, packages/db/leads-repository.ts, tests/domain/leads/*.test.ts",
+      "Artifacts To Track": "packages/domain/src/crm/lead/*, packages/adapters/src/repositories/PrismaLeadRepository.ts, packages/domain/src/crm/lead/__tests__/*.test.ts",
       "Validation Method": "Tests passing, design reviewed, integration with tRPC works"
     },
     {
@@ -704,10 +704,10 @@
       "CrossQuarterDeps": "False",
       "Pre-requisites": "Bounded contexts defined, IFC-002 completed",
       "Definition of Done": "Contact aggregate implemented with value objects, repository, domain services",
-      "Status": "Backlog",
+      "Status": "Completed",
       "KPIs": "Design approved, unit tests ≥90% coverage, repository API stable",
       "Target Sprint": "2",
-      "Artifacts To Track": "packages/domain/src/contacts/*, packages/db/contacts-repository.ts, tests/domain/contacts/*.test.ts",
+      "Artifacts To Track": "packages/domain/src/crm/contact/*, packages/adapters/src/repositories/PrismaContactRepository.ts, packages/domain/src/crm/contact/__tests__/*.test.ts",
       "Validation Method": "Tests pass, design reviewed"
     },
     {
@@ -720,10 +720,10 @@
       "CrossQuarterDeps": "False",
       "Pre-requisites": "Bounded contexts defined, IFC-002 completed",
       "Definition of Done": "Account aggregate implemented with value objects, repository, domain services",
-      "Status": "Backlog",
+      "Status": "Completed",
       "KPIs": "Design approved, unit tests ≥90% coverage, repository API stable",
       "Target Sprint": "2",
-      "Artifacts To Track": "packages/domain/src/accounts/*, packages/db/accounts-repository.ts, tests/domain/accounts/*.test.ts",
+      "Artifacts To Track": "packages/domain/src/crm/account/*, packages/adapters/src/repositories/PrismaAccountRepository.ts, packages/domain/src/crm/account/__tests__/*.test.ts",
       "Validation Method": "Tests pass, design reviewed"
     },
     {
@@ -736,10 +736,10 @@
       "CrossQuarterDeps": "False",
       "Pre-requisites": "Bounded contexts defined, IFC-002 completed",
       "Definition of Done": "Opportunity aggregate implemented with value objects, repository, domain services",
-      "Status": "Backlog",
+      "Status": "Completed",
       "KPIs": "Design approved, unit tests ≥90% coverage, repository API stable",
       "Target Sprint": "3",
-      "Artifacts To Track": "packages/domain/src/opportunities/*, packages/db/opportunities-repository.ts, tests/domain/opportunities/*.test.ts",
+      "Artifacts To Track": "packages/domain/src/crm/opportunity/*, packages/adapters/src/repositories/PrismaOpportunityRepository.ts, packages/domain/src/crm/opportunity/__tests__/*.test.ts",
       "Validation Method": "Tests pass, design reviewed"
     },
     {
@@ -752,10 +752,10 @@
       "CrossQuarterDeps": "False",
       "Pre-requisites": "Bounded contexts defined, IFC-002 completed",
       "Definition of Done": "Task aggregate implemented with value objects, repository, domain services",
-      "Status": "Backlog",
+      "Status": "Completed",
       "KPIs": "Design approved, unit tests ≥90% coverage, repository API stable",
       "Target Sprint": "3",
-      "Artifacts To Track": "packages/domain/src/tasks/*, packages/db/tasks-repository.ts, tests/domain/tasks/*.test.ts",
+      "Artifacts To Track": "packages/domain/src/crm/task/*, packages/adapters/src/repositories/PrismaTaskRepository.ts, packages/domain/src/crm/task/__tests__/*.test.ts",
       "Validation Method": "Tests pass, design reviewed"
     },
     {
@@ -797,14 +797,14 @@
       "Section": "Decision Gate",
       "Description": "Phase 1 Go/No-Go Decision",
       "Owner": "CEO + Leadership",
-      "Dependencies": "IFC-001,IFC-002,IFC-003,IFC-004,IFC-005,IFC-006,IFC-007,IFC-008,IFC-009",
-      "CleanDependencies": "IFC-001,IFC-002,IFC-003,IFC-004,IFC-005,IFC-006,IFC-007,IFC-008,IFC-009",
+      "Dependencies": "IFC-001,IFC-002,IFC-003,IFC-004,IFC-005,IFC-006,IFC-007,IFC-008,IFC-009,IFC-089,IFC-098,IFC-112",
+      "CleanDependencies": "IFC-001,IFC-002,IFC-003,IFC-004,IFC-005,IFC-006,IFC-007,IFC-008,IFC-009,IFC-089,IFC-098,IFC-112",
       "CrossQuarterDeps": "False",
       "Pre-requisites": "All validation tasks complete, risks assessed",
       "Definition of Done": "Decision made: proceed with modern stack or pivot",
       "Status": "Backlog",
       "KPIs": "Clear decision, modern stack validated",
-      "Target Sprint": "4",
+      "Target Sprint": "6",
       "Artifacts To Track": "artifacts/misc/decision-gate-1.pptx, artifacts/reports/risk-assessment.xlsx, artifacts/reports/go-decision-minutes.pdf, artifacts/reports/budget-approval.pdf",
       "Validation Method": "Decision documented, budget approved, risks accepted"
     }
@@ -832,7 +832,7 @@
       "Task ID": "IFC-012",
       "Section": "MVP Week 1",
       "Description": "Turborepo Monorepo Setup",
-      "Owner": "DevOps + Tech Lead",
+      "Owner": "Tech Lead + Backend Dev",
       "Dependencies": "IFC-010",
       "CleanDependencies": "IFC-010",
       "CrossQuarterDeps": "False",
@@ -856,7 +856,7 @@
       "Definition of Done": "Lead CRUD with tRPC, Zod validation, type-safe client",
       "Status": "Backlog",
       "KPIs": "100% type coverage, API response <50ms",
-      "Target Sprint": "7",
+      "Target Sprint": "6",
       "Artifacts To Track": "apps/api/src/modules/crm/leads.router.ts, packages/api-client/*, artifacts/misc/coverage/lcov-report/index.html",
       "Validation Method": "Types covered, response fast, client working"
     },
@@ -869,10 +869,10 @@
       "CleanDependencies": "IFC-013",
       "CrossQuarterDeps": "False",
       "Pre-requisites": "shadcn/ui setup, Tailwind configured",
-      "Definition of Done": "Lead management UI with RSC, optimistic updates",
+      "Definition of Done": "Lead management UI with RSC, optimistic updates; Next.js 16.0.10 App Router uses Turbopack FS caching and Cache Components; proxy replaces middleware where required",
       "Status": "Backlog",
       "KPIs": "Core Web Vitals green, accessibility 100%",
-      "Target Sprint": "8",
+      "Target Sprint": "7",
       "Artifacts To Track": "apps/web/app/(dashboard)/*, apps/web/components/ui/*, artifacts/reports/web-vitals-report.json, artifacts/misc/axe-audit-results.json",
       "Validation Method": "Vitals green, a11y passed, UI responsive"
     },
@@ -888,7 +888,7 @@
       "Definition of Done": "Async job processing for AI scoring, retry logic",
       "Status": "Backlog",
       "KPIs": "Jobs processing reliably, dashboard active",
-      "Target Sprint": "8",
+      "Target Sprint": "7",
       "Artifacts To Track": "apps/ai-worker/src/workers/*, apps/api/src/queues/*, artifacts/misc/bull-board-screenshot.png, artifacts/metrics/job-metrics.json",
       "Validation Method": "Queue working, retries tested, dashboard live"
     },
@@ -904,7 +904,7 @@
       "Definition of Done": "Live updates for lead scores and activities",
       "Status": "Backlog",
       "KPIs": "<100ms latency, connection stable",
-      "Target Sprint": "9",
+      "Target Sprint": "7",
       "Artifacts To Track": "apps/api/src/subscriptions/*, apps/web/hooks/use-subscription.ts, artifacts/misc/websocket-test-results.json",
       "Validation Method": "WebSockets working, latency low, reconnection tested"
     },
@@ -920,7 +920,7 @@
       "Definition of Done": "Type-safe database queries, pgvector configured",
       "Status": "Backlog",
       "KPIs": "Zero data loss, queries <20ms",
-      "Target Sprint": "9",
+      "Target Sprint": "6",
       "Artifacts To Track": "packages/db/prisma/migrations/*, packages/db/src/client.ts, artifacts/benchmarks/query-performance.csv, artifacts/misc/pgvector-test.sql",
       "Validation Method": "Migrations applied, queries fast, vectors working"
     },
@@ -936,7 +936,7 @@
       "Definition of Done": "Unit + integration tests, >80% coverage",
       "Status": "Backlog",
       "KPIs": "All critical paths tested, CI green",
-      "Target Sprint": "11",
+      "Target Sprint": "7",
       "Artifacts To Track": "apps/api/src/shared/vitest.config.ts, artifacts/misc/coverage/coverage-summary.json, artifacts/reports/test-report.html, artifacts/misc/ci-test-results.xml",
       "Validation Method": "Tests passing, coverage >80%, CI integrated"
     }
@@ -954,7 +954,7 @@
       "Definition of Done": "Continue/pivot decision based on MVP success",
       "Status": "Backlog",
       "KPIs": "ROI projection validated, budget approved",
-      "Target Sprint": "11",
+      "Target Sprint": "8",
       "Artifacts To Track": "artifacts/misc/investment-gate-1-deck.pptx, artifacts/metrics/week-1-metrics.xlsx, artifacts/reports/roi-projection.pdf, artifacts/misc/cfo-approval.email",
       "Validation Method": "ROI validated, budget approved, continue decision"
     },
@@ -1036,7 +1036,7 @@
       "Definition of Done": "Lead qualifier, email writer, follow-up agents",
       "Status": "Backlog",
       "KPIs": "Agents cooperating, tasks orchestrated",
-      "Target Sprint": "12",
+      "Target Sprint": "13",
       "Artifacts To Track": "apps/ai-worker/src/agents/*, artifacts/misc/crew-config.yaml, artifacts/logs/agent-interaction-logs.json, apps/api/src/agent/orchestration-test.ts",
       "Validation Method": "Agents working, tasks orchestrated, cooperation tested"
     },
@@ -1312,7 +1312,7 @@
       "Definition of Done": "Railway production config, Vercel optimized, monitoring active",
       "Status": "Backlog",
       "KPIs": "99.9% uptime achievable, security certified",
-      "Target Sprint": "24",
+      "Target Sprint": "25",
       "Artifacts To Track": "docs/shared/production-checklist.md, artifacts/reports/security-scan-final.pdf, artifacts/benchmarks/performance-baseline.json, docs/shared/monitoring-runbook.md",
       "Validation Method": "Production ready, security certified, monitoring active"
     }
@@ -1330,7 +1330,7 @@
       "Definition of Done": "Comprehensive guide with CodeSandbox examples",
       "Status": "Backlog",
       "KPIs": "100% features documented, interactive demos",
-      "Target Sprint": "Continuous",
+      "Target Sprint": "22",
       "Artifacts To Track": "docs/user-manual/*, artifacts/misc/codesandbox-examples.json, artifacts/coverage/feature-coverage-matrix.xlsx",
       "Validation Method": "Manual complete, examples working, coverage 100%"
     },
@@ -1346,7 +1346,7 @@
       "Definition of Done": "NPM package docs, TypeScript examples",
       "Status": "Backlog",
       "KPIs": "SDK published, autocomplete working",
-      "Target Sprint": "Continuous",
+      "Target Sprint": "12",
       "Artifacts To Track": "packages/sdk/README.md, artifacts/misc/sdk-examples/*, artifacts/misc/npm-publish-log.txt, artifacts/misc/autocomplete-demo.gif",
       "Validation Method": "SDK published, examples running, autocomplete working"
     },
@@ -1362,7 +1362,7 @@
       "Definition of Done": "Incident response, deployment, rollback procedures",
       "Status": "Backlog",
       "KPIs": "All procedures tested, <30min MTTR",
-      "Target Sprint": "20",
+      "Target Sprint": "25",
       "Artifacts To Track": "docs/operations/runbooks/*, docs/operations/incident-response-flowchart.svg, docs/operations/deployment-checklist.md, artifacts/logs/rollback-test.log",
       "Validation Method": "Runbooks tested, MTTR <30min, procedures clear"
     },
@@ -1376,10 +1376,10 @@
       "CrossQuarterDeps": "False",
       "Pre-requisites": "Turborepo ready, markdown templates created",
       "Definition of Done": "Docusaurus site with LLM-friendly structure",
-      "Status": "Backlog",
+      "Status": "Completed",
       "KPIs": "Site deployed, search working",
-      "Target Sprint": "2",
-      "Artifacts To Track": "docs/docusaurus.config.js, docs/sidebars.js, .github/workflows/deploy-docs.yml, artifacts/misc/search-index.json",
+      "Target Sprint": "7",
+      "Artifacts To Track": "docs/docusaurus.config.js, docs/sidebars.js, .github/workflows/deploy-docs.yml, docs/search-index.json",
       "Validation Method": "Docs deployed, search working, LLM optimized"
     },
     {
@@ -1392,9 +1392,9 @@
       "CrossQuarterDeps": "False",
       "Pre-requisites": "Docusaurus ready, chunking strategy defined",
       "Definition of Done": "Templates with metadata, semantic structure, glossary",
-      "Status": "Backlog",
+      "Status": "Completed",
       "KPIs": "100% docs follow template, chunks optimized",
-      "Target Sprint": "2",
+      "Target Sprint": "7",
       "Artifacts To Track": "docs/templates/*, docs/glossary.md, docs/templates/chunking-strategy.md, artifacts/reports/llm-optimization-report.json",
       "Validation Method": "Templates created, glossary complete, chunks optimized"
     },
@@ -1410,7 +1410,7 @@
       "Definition of Done": "Auto-generated API docs, Postman collection",
       "Status": "Backlog",
       "KPIs": "All endpoints documented, examples included",
-      "Target Sprint": "Continuous",
+      "Target Sprint": "12",
       "Artifacts To Track": "apps/api/openapi.json, artifacts/misc/postman-collection.json, artifacts/misc/api-docs/*, artifacts/misc/example-requests/*",
       "Validation Method": "API documented, Postman working, examples tested"
     },
@@ -1426,7 +1426,7 @@
       "Definition of Done": "Bounded contexts, aggregates, workflows documented",
       "Status": "Backlog",
       "KPIs": "Knowledge graph complete, searchable",
-      "Target Sprint": "4",
+      "Target Sprint": "7",
       "Artifacts To Track": "docs/domain/*, artifacts/misc/domain-model-diagrams/*, artifacts/misc/knowledge-graph.json, docs/shared/context-map.puml",
       "Validation Method": "Domain documented, graph searchable, contexts mapped"
     },
@@ -1458,7 +1458,7 @@
       "Definition of Done": "Loom videos for key features, embedded in docs",
       "Status": "Backlog",
       "KPIs": "10+ videos created, >80% satisfaction",
-      "Target Sprint": "25",
+      "Target Sprint": "27",
       "Artifacts To Track": "artifacts/misc/video-scripts/*, artifacts/misc/video-links.json, artifacts/misc/viewer-analytics.csv, docs/shared/feedback-summary.md",
       "Validation Method": "Videos created, satisfaction >80%, embedded in docs"
     },
@@ -1474,7 +1474,7 @@
       "Definition of Done": "All significant design decisions captured via ADRs; developer guide updated per sprint",
       "Status": "Backlog",
       "KPIs": "ADR coverage 100%; developer satisfaction >80%",
-      "Target Sprint": "3",
+      "Target Sprint": "12",
       "Artifacts To Track": "docs/adr/*.md, docs/dev-guide.md, artifacts/misc/adr-index.csv",
       "Validation Method": "ADR reviews complete; doc site updated"
     }
@@ -1490,7 +1490,7 @@
       "CrossQuarterDeps": "False",
       "Pre-requisites": "Vitest configured, TDD workflow adopted",
       "Definition of Done": "90%+ coverage, all business logic tested",
-      "Status": "In Progress",
+      "Status": "Completed",
       "KPIs": "Coverage >90%, tests fast (<30s)",
       "Target Sprint": "0",
       "Artifacts To Track": "artifacts/coverage/lcov.info, artifacts/logs/test-execution-time.log, artifacts/metrics/tdd-compliance.csv, artifacts/reports/mutation-test.html",
@@ -1508,7 +1508,7 @@
       "Definition of Done": "API integrations tested with mocks",
       "Status": "Backlog",
       "KPIs": "All external calls mocked, reliable tests",
-      "Target Sprint": "Continuous",
+      "Target Sprint": "14",
       "Artifacts To Track": "tests/integration/*, artifacts/misc/msw-handlers/*, artifacts/misc/test-data-factories/*, artifacts/coverage/integration-coverage.json",
       "Validation Method": "APIs mocked, factories working, tests reliable"
     },
@@ -1524,7 +1524,7 @@
       "Definition of Done": "Automated security scanning in CI/CD",
       "Status": "Backlog",
       "KPIs": "0 high vulnerabilities, OWASP compliant",
-      "Target Sprint": "Continuous",
+      "Target Sprint": "23",
       "Artifacts To Track": ".github/workflows/security.yml, artifacts/misc/zap-report.xml, artifacts/reports/snyk-report.json, docs/security/security-baseline.md",
       "Validation Method": "Scans clean, CI working, baseline set"
     },
@@ -1540,7 +1540,7 @@
       "Definition of Done": "Automated performance regression prevention",
       "Status": "Backlog",
       "KPIs": "p99 <100ms maintained, Core Web Vitals green",
-      "Target Sprint": "Continuous",
+      "Target Sprint": "22",
       "Artifacts To Track": "artifacts/misc/k6/tests/*, .lighthouserc.js, artifacts/benchmarks/performance-budgets.json, artifacts/misc/regression-alerts.yaml",
       "Validation Method": "p99 maintained, vitals green, alerts configured"
     },
@@ -1570,7 +1570,7 @@
       "CrossQuarterDeps": "False",
       "Pre-requisites": "Testing infrastructure ready",
       "Definition of Done": "TDD guidelines documented, coverage threshold 90% enforced via CI, code review checklist established",
-      "Status": "Backlog",
+      "Status": "Completed",
       "KPIs": "Coverage ≥90%, zero lint errors, code review time <24h",
       "Target Sprint": "2",
       "Artifacts To Track": "docs/tdd-guidelines.md, artifacts/misc/ci-coverage-config.yml, docs/shared/review-checklist.md",
@@ -1670,7 +1670,7 @@
       "Definition of Done": "24/7 support for 2 weeks, then business hours",
       "Status": "Backlog",
       "KPIs": "<15min response time, 99% uptime",
-      "Target Sprint": "Continuous",
+      "Target Sprint": "28",
       "Artifacts To Track": "artifacts/reports/hypercare-schedule.xlsx, artifacts/logs/incident-log.csv, artifacts/reports/response-time-report.pdf, artifacts/misc/uptime-dashboard.png",
       "Validation Method": "Support active, response <15min, uptime >99%"
     }
@@ -1688,7 +1688,7 @@
       "Definition of Done": "Weekly assessment of technical debt and complexity",
       "Status": "Backlog",
       "KPIs": "Tech debt <10%, complexity manageable",
-      "Target Sprint": "Continuous",
+      "Target Sprint": "7",
       "Artifacts To Track": "artifacts/reports/sonarqube-debt-report.html, artifacts/metrics/complexity-metrics.json, docs/shared/refactoring-backlog.md, artifacts/misc/team-velocity.csv",
       "Validation Method": "Debt <10%, complexity managed, velocity stable"
     },
@@ -1704,7 +1704,7 @@
       "Definition of Done": "Weekly spend review with projections and alerts",
       "Status": "Backlog",
       "KPIs": "Budget variance <10%, no surprise costs",
-      "Target Sprint": "Continuous",
+      "Target Sprint": "8",
       "Artifacts To Track": "artifacts/reports/weekly-cost-report.xlsx, artifacts/misc/usage-alerts-config.yaml, docs/shared/cost-optimization-actions.md, artifacts/misc/invoice-tracker.csv",
       "Validation Method": "Costs tracked, alerts configured, variance <10%"
     },
@@ -1717,10 +1717,10 @@
       "CleanDependencies": "IFC-009",
       "CrossQuarterDeps": "False",
       "Pre-requisites": "Training paths for modern stack created",
-      "Definition of Done": "Continuous learning: tRPC, Next.js 16.0.10, LangChain",
+      "Definition of Done": "Continuous learning: tRPC, Next.js 16.0.10 (Turbopack FS caching, Cache Components, proxy replacing middleware), LangChain",
       "Status": "Backlog",
       "KPIs": "Team velocity increasing, confidence >4/5",
-      "Target Sprint": "Continuous",
+      "Target Sprint": "9",
       "Artifacts To Track": "artifacts/misc/learning-paths/*, artifacts/misc/skill-assessment-results.csv, artifacts/reports/training-completion.xlsx, artifacts/reports/confidence-survey.pdf",
       "Validation Method": "Skills improving, training completed, confidence >4/5"
     },
@@ -1736,7 +1736,7 @@
       "Definition of Done": "Can migrate from Supabase/Vercel if needed",
       "Status": "Backlog",
       "KPIs": "Migration tested, <1 week effort",
-      "Target Sprint": "Continuous",
+      "Target Sprint": "9",
       "Artifacts To Track": "docs/shared/vendor-abstraction-layers.md, artifacts/misc/migration-test-plan.yaml, artifacts/logs/portability-test.log, artifacts/reports/alternatives.xlsx",
       "Validation Method": "Abstractions documented, migration <1 week, alternatives ready"
     },
@@ -1752,7 +1752,7 @@
       "Definition of Done": "Risk register created, risks scored by impact/likelihood, mitigation owners assigned; review scheduled per sprint",
       "Status": "Backlog",
       "KPIs": "All identified risks tracked, mitigation actions completed on time",
-      "Target Sprint": "2",
+      "Target Sprint": "8",
       "Artifacts To Track": "artifacts/reports/risk-register.xlsx, docs/shared/risk-mitigation-plan.md, docs/shared/risk-review-agenda.md",
       "Validation Method": "Risk review sessions held; register updated; no untracked risks"
     }
@@ -1802,7 +1802,7 @@
       "Definition of Done": "DPIA complete for AI processing and data storage",
       "Status": "Completed",
       "KPIs": "All risks mitigated, controls documented",
-      "Target Sprint": "1",
+      "Target Sprint": "2",
       "Artifacts To Track": "artifacts/reports/dpia-report.pdf, artifacts/reports/risk-mitigation-controls.xlsx, artifacts/misc/data-flow-maps/*, artifacts/reports/legal-review.pdf",
       "Validation Method": "DPIA complete, risks mitigated, controls documented"
     },
@@ -1811,8 +1811,8 @@
       "Section": "Compliance",
       "Description": "Encrypt and aggregate audit logs; automate compliance reporting",
       "Owner": "Security Eng + Compliance",
-      "Dependencies": "IFC-098,PG-112",
-      "CleanDependencies": "IFC-098,PG-112",
+      "Dependencies": "IFC-098",
+      "CleanDependencies": "IFC-098",
       "CrossQuarterDeps": "False",
       "Pre-requisites": "Audit logging implemented",
       "Definition of Done": "Audit logs encrypted and stored centrally; scheduled exports for compliance frameworks; data minimization applied",
@@ -1834,7 +1834,7 @@
       "Definition of Done": "DSAR workflow implemented with identity verification; retention schedules enforced per entity; legal hold exceptions; per-tenant key management with rotation; residency controls and subprocessor registry; documentation and tests",
       "Status": "Backlog",
       "KPIs": "DSAR turnaround <7 days; encryption coverage 100%; retention and legal hold compliance audited",
-      "Target Sprint": "7",
+      "Target Sprint": "11",
       "Artifacts To Track": "docs/data-governance/dsar-process.md, docs/data-governance/retention-policy.md, artifacts/misc/kms-key-config.json, apps/api/src/workflow/dsar-workflow.ts, artifacts/misc/compliance-tests/data-governance.spec.ts",
       "Validation Method": "Mock DSAR processed; retention jobs run; encryption keys rotated; compliance audit passes"
     }
@@ -1852,7 +1852,7 @@
       "Definition of Done": "Modern stack ROI validated, future roadmap",
       "Status": "Backlog",
       "KPIs": "All targets met, Phase 2 planned",
-      "Target Sprint": "33",
+      "Target Sprint": "28",
       "Artifacts To Track": "artifacts/metrics/success-metrics-dashboard.pdf, artifacts/reports/roi-calculation.xlsx, artifacts/misc/phase-2-proposal.pptx, docs/shared/lessons-learned.md",
       "Validation Method": "Metrics met, ROI validated, Phase 2 planned"
     }
@@ -1904,7 +1904,7 @@
       "Definition of Done": "Multi-region database replication active",
       "Status": "Backlog",
       "KPIs": "RPO <5min, RTO <30min, tested monthly",
-      "Target Sprint": "24",
+      "Target Sprint": "25",
       "Artifacts To Track": "docs/shared/multi-region-architecture.puml, artifacts/metrics/replication-lag-metrics.json, artifacts/misc/dr-test-results/*, artifacts/reports/cost-comparison.xlsx",
       "Validation Method": "Replication working, RPO/RTO met, tests passed"
     },
@@ -1920,7 +1920,7 @@
       "Definition of Done": "Automated backups scheduled, restore scripts tested, DR documentation prepared",
       "Status": "Backlog",
       "KPIs": "RPO <5m, RTO <30m, backup success rate 100%",
-      "Target Sprint": "8",
+      "Target Sprint": "25",
       "Artifacts To Track": "artifacts/misc/backup-scripts.sh, docs/shared/dr-plan.md, artifacts/reports/restore-test-report.csv",
       "Validation Method": "Simulated recovery successful"
     },
@@ -1954,7 +1954,7 @@
       "Definition of Done": "Zero trust with RLS, API authentication, mTLS",
       "Status": "Completed",
       "KPIs": "All endpoints secured, penetration tested",
-      "Target Sprint": "1",
+      "Target Sprint": "2",
       "Artifacts To Track": "docs/security/zero-trust-design.md, artifacts/misc/rls-implementation/*, artifacts/misc/mtls-certificates/*, artifacts/reports/pentest-report.pdf",
       "Validation Method": "Zero trust implemented, pentest passed, endpoints secured"
     },
@@ -1968,9 +1968,9 @@
       "CrossQuarterDeps": "False",
       "Pre-requisites": "Upstash Redis ready, rate limit strategy defined",
       "Definition of Done": "Rate limiting on all public endpoints",
-      "Status": "Completed",
+      "Status": "In Progress",
       "KPIs": "DDoS protection active, legit traffic unaffected",
-      "Target Sprint": "1",
+      "Target Sprint": "8",
       "Artifacts To Track": "apps/api/src/middleware/rate-limit.ts, artifacts/misc/rate-limit-config.yaml, artifacts/misc/load-test-with-limits.json, artifacts/misc/false-positive.csv",
       "Validation Method": "Rate limits working, DDoS protected, false positives <0.1%"
     },
@@ -1986,7 +1986,7 @@
       "Definition of Done": "100% actions logged, RBAC functional",
       "Status": "Backlog",
       "KPIs": "100% actions logged, RBAC functional",
-      "Target Sprint": "9",
+      "Target Sprint": "5",
       "Artifacts To Track": "apps/api/src/auth/rbac/*, packages/db/prisma/schema-audit.prisma, apps/api/src/security/audit-coverage-test.ts",
       "Validation Method": "RBAC working, audit 100%, permissions tested"
     },
@@ -2002,7 +2002,7 @@
       "Definition of Done": "Secrets stored in vault, encrypted connections (TLS/mTLS), data encryption implemented",
       "Status": "Backlog",
       "KPIs": "No secrets in repo, 100% encrypted endpoints",
-      "Target Sprint": "6",
+      "Target Sprint": "10",
       "Artifacts To Track": "artifacts/misc/vault-config.yml, artifacts/misc/encryption-keys/*, docs/security/encryption-tests.md",
       "Validation Method": "Secrets scan passes, encryption verified"
     },
@@ -2042,7 +2042,7 @@
       "Task ID": "IFC-127",
       "Section": "Security",
       "Description": "Implement tenant isolation at database and application layers",
-      "Owner": "Backend Dev + DevOps",
+      "Owner": "Backend Dev",
       "Dependencies": "IFC-098,IFC-072",
       "CleanDependencies": "IFC-098,IFC-072",
       "CrossQuarterDeps": "False",
@@ -2058,7 +2058,7 @@
       "Task ID": "IFC-132",
       "Section": "Security",
       "Description": "Supply chain security: dependency pinning + SBOM generation in CI (npm/pnpm + container)",
-      "Owner": "Security Engineer + DevOps",
+      "Owner": "Security Engineer + Backend Dev",
       "Dependencies": "ENV-005-AI",
       "CleanDependencies": "ENV-005-AI",
       "CrossQuarterDeps": "False",
@@ -2074,7 +2074,7 @@
       "Task ID": "IFC-133",
       "Section": "Security",
       "Description": "Supply chain security: artifact signing + provenance for build outputs (images + releases)",
-      "Owner": "DevOps Engineer",
+      "Owner": "Backend Dev",
       "Dependencies": "IFC-132",
       "CleanDependencies": "IFC-132",
       "CrossQuarterDeps": "False",
@@ -2082,7 +2082,7 @@
       "Definition of Done": "Artifacts signed; verification step added; provenance attached; docs updated",
       "Status": "Backlog",
       "KPIs": "100% prod-bound artifacts signed; verification enforced in deployment pipeline",
-      "Target Sprint": "6",
+      "Target Sprint": "7",
       "Artifacts To Track": "docs/security/signing.md, .github/workflows/signing.yml, scripts/verify-signature.*",
       "Validation Method": "Signed artifact verified in CI and deployment; tamper test fails as expected"
     },
@@ -2098,7 +2098,7 @@
       "Definition of Done": "Image scan runs on every build; policy blocks critical vulns; exceptions process documented",
       "Status": "Backlog",
       "KPIs": "0 critical vulns in prod images; scan coverage 100% for deployable images",
-      "Target Sprint": "6",
+      "Target Sprint": "7",
       "Artifacts To Track": "docs/security/image-scanning.md, .github/workflows/image-scan.yml",
       "Validation Method": "CI blocks image with known critical vuln; report archived"
     },
@@ -2114,7 +2114,7 @@
       "Definition of Done": "Threat model documented; abuse cases enumerated; mitigation tasks created; penetration test executed and findings triaged; cookie consent banner implemented; compliance checks passed",
       "Status": "Backlog",
       "KPIs": "All critical threats mitigated; pen test high severity issues <5; cookie compliance tests pass",
-      "Target Sprint": "6",
+      "Target Sprint": "11",
       "Artifacts To Track": "docs/security/threat-model.puml, docs/security/abuse-cases.md, artifacts/reports/pen-test-report.pdf, artifacts/logs/mitigation-backlog.csv, artifacts/misc/cookie-consent-component.tsx",
       "Validation Method": "Threat model reviewed; pen test results validated; cookie banner tested across browsers; compliance attestation"
     }
@@ -2198,7 +2198,7 @@
       "Definition of Done": "Blue/green deployment pipeline configured, automated health checks, rollback scripts ready",
       "Status": "Backlog",
       "KPIs": "Deployment switch <1m, no downtime",
-      "Target Sprint": "6",
+      "Target Sprint": "5",
       "Artifacts To Track": "artifacts/misc/deployment-configs/*.yaml, artifacts/misc/rollback-scripts/*.sh, artifacts/metrics/blue-green-metrics.csv",
       "Validation Method": "Canary tested, rollback verified"
     }
@@ -2232,7 +2232,7 @@
       "Definition of Done": "Quality gates enforced, technical debt tracked",
       "Status": "Backlog",
       "KPIs": "Code quality A rating, debt ratio <3%",
-      "Target Sprint": "Continuous",
+      "Target Sprint": "14",
       "Artifacts To Track": "artifacts/misc/sonarqube-project.properties, artifacts/misc/quality-gate-config.json, artifacts/reports/debt-trending.pdf, docs/shared/action-items.md",
       "Validation Method": "Quality A rating, debt <3%, trends improving"
     },
@@ -2282,7 +2282,7 @@
       "Definition of Done": "Event contract catalogue created (schema + versioning); transactional outbox implemented; idempotency keys enforced; publisher emits metrics/traces; unit/integration tests",
       "Status": "Backlog",
       "KPIs": "0 lost events in tests; publish latency p95 <200ms; 100% events schema-validated",
-      "Target Sprint": "3",
+      "Target Sprint": "8",
       "Artifacts To Track": "docs/events/contracts-v1.yaml, packages/platform/outbox/*, packages/platform/events/*, tests/events/*, docs/shared/ADR-###-events.md",
       "Validation Method": "Integration tests validate outbox consistency; duplicate publish prevented; dashboards show event flow"
     },
@@ -2298,7 +2298,7 @@
       "Definition of Done": "Consumer SDK supports retries/backoff; DLQ storage/triage workflow; idempotent handlers; poison-message handling; metrics and alerts; chaos tests",
       "Status": "Backlog",
       "KPIs": "DLQ drain success >95%; retry success >90%; MTTR for consumer incidents <30 min",
-      "Target Sprint": "4",
+      "Target Sprint": "9",
       "Artifacts To Track": "packages/platform/consumers/*, packages/platform/dlq/*, docs/operations/runbooks/dlq-triage.md, artifacts/misc/chaos-tests/events/*, artifacts/misc/alerts/events/*",
       "Validation Method": "Chaos tests inject failures; DLQ receives poison messages; alerts fire; handlers remain idempotent"
     },
@@ -2314,7 +2314,7 @@
       "Definition of Done": "apps/workers structure created; workers run with shared configuration and telemetry; queues configured; health checks and dashboards added; deployment artifacts produced; restore/replay procedures documented",
       "Status": "Backlog",
       "KPIs": "Worker job success >=99%; processing latency p95 <30s; 100% workers emit traces/metrics/logs",
-      "Target Sprint": "6",
+      "Target Sprint": "13",
       "Artifacts To Track": "apps/workers/events-worker/src/main.ts, apps/workers/events-worker/src/outbox/pollOutbox.ts, apps/workers/ingestion-worker/src/main.ts, apps/workers/ingestion-worker/src/jobs/extractText.job.ts, apps/workers/notifications-worker/src/main.ts, apps/workers/notifications-worker/src/channels/email.ts, packages/platform/src/telemetry/*, infra/monitoring/dashboards/workers.json, docs/operations/workers-runbook.md",
       "Validation Method": "Run workers locally via docker-compose; simulate outbox publish and ingestion triggers; verify dashboards populate; chaos test restart and confirm idempotent resume"
     }
@@ -2330,10 +2330,10 @@
       "CrossQuarterDeps": "False",
       "Pre-requisites": "Docker setup, Llama 3.1 downloaded",
       "Definition of Done": "Local LLM for dev/test, cost savings",
-      "Status": "Backlog",
+      "Status": "Completed",
       "KPIs": "Dev costs reduced 90%, same accuracy",
       "Target Sprint": "2",
-      "Artifacts To Track": "artifacts/misc/ollama-setup.sh, artifacts/misc/model-comparison.csv, artifacts/reports/cost-savings-report.xlsx, artifacts/benchmarks/accuracy-benchmarks.json",
+      "Artifacts To Track": "artifacts/misc/ollama-setup.sh, artifacts/misc/model-comparison.csv, artifacts/reports/cost-savings-report.json, artifacts/benchmarks/accuracy-benchmarks.json",
       "Validation Method": "Ollama running, costs reduced 90%, accuracy maintained"
     },
     {
@@ -2382,7 +2382,7 @@
       "Definition of Done": "Layered caching added, critical queries optimized, cache invalidation strategy documented",
       "Status": "Backlog",
       "KPIs": "p99 latency reduced 30%, cache hit rate >90%",
-      "Target Sprint": "8",
+      "Target Sprint": "21",
       "Artifacts To Track": "apps/api/src/shared/cache-config.ts, artifacts/benchmarks/performance-benchmarks.csv, docs/shared/cache-invalidation.md",
       "Validation Method": "Benchmarks confirm improvements; no stale data"
     }
@@ -4182,7 +4182,7 @@
       "Definition of Done": "Response <200ms, Lighthouse ≥90, chat functional",
       "Status": "Backlog",
       "KPIs": "Chat working, agents connected, messages flowing",
-      "Target Sprint": "16",
+      "Target Sprint": "22",
       "Artifacts To Track": "apps/web/app/(support)/support/chat/page.tsx, apps/web/components/shared/chat-widget.tsx, apps/web/lib/shared/agent-router.ts",
       "Validation Method": "Chat functional, agents connected, messages sent"
     }
@@ -4365,7 +4365,7 @@
       "CleanDependencies": "BRAND-001,ENV-002-AI",
       "CrossQuarterDeps": "False",
       "Pre-requisites": "Tailwind + shadcn/ui baseline present; agreement on token naming convention",
-      "Definition of Done": "Mapping document from brand tokens to Tailwind/shadcn variables created; includes light/dark theme rules, semantic color tokens, component states, and migration guidelines; produces a minimal \"theme reference\" page spec",
+      "Definition of Done": "Mapping document from brand tokens to Tailwind/shadcn variables created; includes light/dark theme rules, semantic color tokens, component states, and migration guidelines; produces a minimal theme reference\" page spec\"",
       "Status": "Completed",
       "KPIs": "Token mapping coverage ≥90% of components used in Sprint 0/1; zero ambiguous token names; theme reference spec approved",
       "Target Sprint": "1",
@@ -4434,7 +4434,7 @@
       "CrossQuarterDeps": "False",
       "Pre-requisites": "Agreement on commercial narrative; chosen qualification framework (BANT/MEDDIC/etc.)",
       "Definition of Done": "Defined sales motion: lead sources, qualification steps, discovery script, demo script, objection handling, follow-up cadence; includes at least 2 outreach sequences (email + LinkedIn) and a handoff policy to implementation/support",
-      "Status": "Backlog",
+      "Status": "Completed",
       "KPIs": "≥2 sequences ready; discovery+demo scripts usable end-to-end; first pilot run documented",
       "Target Sprint": "2",
       "Artifacts To Track": "docs/sales/sales-motion-playbook.md; docs/sales/discovery-script.md; docs/sales/demo-script.md; docs/sales/outreach-sequences.md",
@@ -4469,9 +4469,9 @@
       "CleanDependencies": "ENV-002-AI,ENV-005-AI,ENV-010-AI",
       "CrossQuarterDeps": "False",
       "Pre-requisites": "CI pipeline baseline; lint/typecheck/test scripts present",
-      "Definition of Done": "Engineering handbook written: branching strategy, PR checklist, code review standards, required gates (audit-matrix Tier 1), release flow, rollback steps, incident basics, and docs conventions; includes “strict vs local” policy for WARN/FAIL",
+      "Definition of Done": "Engineering handbook written: branching strategy, PR checklist, code review standards, required gates (audit-matrix Tier 1), release flow, rollback steps, incident basics, and docs conventions; includes strict vs local\" policy for WARN/FAIL\"",
       "Status": "Completed",
-      "KPIs": "PR checklist adopted; gate mapping complete; rollback procedure documented; ≤1 page “fast path” summary included",
+      "KPIs": "PR checklist adopted; gate mapping complete; rollback procedure documented; ≤1 page fast path\" summary included\"",
       "Target Sprint": "0",
       "Artifacts To Track": "docs/operations/engineering-playbook.md; docs/operations/quality-gates.md; docs/operations/pr-checklist.md; docs/operations/release-rollback.md",
       "Validation Method": "Team sign-off; markdownlint/cspell pass; PR template updated (if applicable)"
@@ -4647,8 +4647,8 @@
       "Section": "Settings",
       "Description": "Audit Log",
       "Owner": "Platform FE+BE",
-      "Dependencies": "IFC-098",
-      "CleanDependencies": "IFC-098",
+      "Dependencies": "IFC-098,IFC-124",
+      "CleanDependencies": "IFC-098,IFC-124",
       "CrossQuarterDeps": "False",
       "Pre-requisites": "Activity tracking, filtering",
       "Definition of Done": "Response <200ms, Lighthouse ≥90, logs searchable",
@@ -4841,8 +4841,8 @@
       "Section": "Architecture",
       "Description": "Define Hexagonal module boundaries + create canonical packages/application + packages/adapters skeleton",
       "Owner": "Tech Lead + Backend Dev",
-      "Dependencies": "IFC-002,IFC-131",
-      "CleanDependencies": "IFC-002,IFC-131",
+      "Dependencies": "IFC-002",
+      "CleanDependencies": "IFC-002",
       "CrossQuarterDeps": "False",
       "Pre-requisites": "Domain model for all entities implemented",
       "Definition of Done": "Application layer created (ports + use-cases); adapters layer created; module boundary rules enforced in CI; architecture tests passing; ADR updated",
@@ -4916,7 +4916,7 @@
       "Definition of Done": "ICS generation and delivery implemented; reschedule/cancel semantics correct; reminders scheduled; audit trail; integration tests",
       "Status": "Backlog",
       "KPIs": "Invite delivery >=95%; reminder delivery >=99%; zero duplicate invites on retries",
-      "Target Sprint": "8",
+      "Target Sprint": "11",
       "Artifacts To Track": "packages/scheduling/invites/*, packages/scheduling/reminders/*, artifacts/misc/ics-fixtures/*, tests/scheduling-comms/*",
       "Validation Method": "E2E booking sends invite; reschedule updates; cancel notifies; retry does not duplicate"
     }
@@ -4950,7 +4950,7 @@
       "Definition of Done": "Outbound emails signed with SPF/DKIM/DMARC configured; inbound email parser implemented with attachments handling; webhooks infrastructure with idempotency and retries; OpenAPI spec version 1 published covering major endpoints; baseline email send/receive tested",
       "Status": "Backlog",
       "KPIs": "Outbound deliverability >=95%; inbound parse accuracy >=99%; API spec coverage 100%; zero duplicate webhook processing",
-      "Target Sprint": "7",
+      "Target Sprint": "10",
       "Artifacts To Track": "packages/adapters/src/messaging/email/outbound.ts, packages/adapters/src/messaging/email/inbound.ts, artifacts/misc/webhooks/framework.ts, artifacts/misc/api-spec/openapi-v1.yaml, artifacts/misc/email-tests/*",
       "Validation Method": "Emails delivered and parsed; DMARC reports show pass; webhook tests simulate duplicates; API spec validated by tools"
     }
@@ -4984,7 +4984,7 @@
       "Definition of Done": "Database schema created; conversation records stored with metadata (case ID; timestamps; user/agent ID; tool calls); search API implemented; access control enforced; retention and DSAR compliance built-in; tests covering privacy controls",
       "Status": "Backlog",
       "KPIs": "100% conversations recorded; retrieval latency <=50ms; access control passes; DSAR deletion executed",
-      "Target Sprint": "6",
+      "Target Sprint": "12",
       "Artifacts To Track": "packages/db/prisma/conversation.sql, apps/api/src/modules/conversation.ts, artifacts/misc/search/conversation-index.ts, artifacts/misc/conversations-tests/*, artifacts/misc/data-retention-config.yaml",
       "Validation Method": "Unit and integration tests; manual search; DSAR deletion tested; audit logs verified"
     },
@@ -5016,7 +5016,7 @@
       "Definition of Done": "Agent tool implemented (retrieve_case_context); responses include source references; injection defenses applied; approval needed for external send; tests",
       "Status": "Backlog",
       "KPIs": "0 unauthorized retrievals; response time p95 <2s; hallucination rate reduced via eval suite",
-      "Target Sprint": "9",
+      "Target Sprint": "13",
       "Artifacts To Track": "packages/ai/tools/retrieve-case-context.ts, artifacts/misc/evals/case-rag/*, docs/security/prompt-injection-tests/*, docs/agent/case-rag.md",
       "Validation Method": "Red-team prompts blocked; eval suite passes; tool logs show tenant/case scoping"
     }
@@ -5026,7 +5026,7 @@
       "Task ID": "IFC-141",
       "Section": "Workflow",
       "Description": "Evaluate n8n; custom engine; and Temporal; document decision via ADR; build event-driven minimal rules engine and integrate selected workflow engine",
-      "Owner": "Tech Lead + DevOps + Product Manager",
+      "Owner": "Tech Lead + Backend Dev + Product Manager",
       "Dependencies": "IFC-136,IFC-137,IFC-135,IFC-150,IFC-151",
       "CleanDependencies": "IFC-136,IFC-137,IFC-135,IFC-150,IFC-151",
       "CrossQuarterDeps": "False",
@@ -5034,7 +5034,7 @@
       "Definition of Done": "Comparative analysis of workflow options; ADR published; POC implemented; events published for case status changes; selected engine integrated to process simple workflows; training delivered",
       "Status": "Backlog",
       "KPIs": "Decision ratified; POC demonstrates reliability; workflow execution success rate >95%",
-      "Target Sprint": "4",
+      "Target Sprint": "10",
       "Artifacts To Track": "docs/adr/adr-workflow-decision.md, artifacts/misc/workflow-poc/*, artifacts/misc/events-spec.yaml, artifacts/misc/simple-workflow-tests/*",
       "Validation Method": "ADR reviewed; POC results documented; event-driven flow tested"
     }
@@ -5086,7 +5086,7 @@
       "Definition of Done": "Timeline shows unified chronological events (tasks/deadlines/docs/comms/agent actions); filters; permissions enforced; E2E tests",
       "Status": "Backlog",
       "KPIs": "Timeline load <1s; user task completion improved; 0 unauthorized events visible",
-      "Target Sprint": "9",
+      "Target Sprint": "13",
       "Artifacts To Track": "apps/web/app/cases/timeline/*, apps/api/src/modules/misc/timeline.ts, apps/web/lib/documents/timeline-event-model.ts, tests/ui/case-timeline/*",
       "Validation Method": "User testing validates readability; E2E tests cover permissions; performance checks pass"
     }
@@ -5104,7 +5104,7 @@
       "Definition of Done": "CaseDocument aggregate and repository implemented; ACL mapping rules defined; versioning semantics; audit events on read/write; tests",
       "Status": "Backlog",
       "KPIs": "Access control test pass 100%; audit log coverage 100%; CRUD latency p95 <50ms",
-      "Target Sprint": "6",
+      "Target Sprint": "11",
       "Artifacts To Track": "packages/domain/src/legal/cases/case-document.ts, packages/db/prisma/case-document.sql, apps/api/src/modules/crm/documents.router.ts, tests/case-document/*",
       "Validation Method": "Isolation tests prove tenant/case scoping; audit entries present for all actions; API contract tests pass"
     },
@@ -5120,7 +5120,7 @@
       "Definition of Done": "Upload + inbound email attachments land in storage; AV scan gate; metadata extracted; ingestion events emitted; failure handling + retries; integration tests",
       "Status": "Backlog",
       "KPIs": "Ingestion success >=99%; AV scan blocks 100% known samples; duplicate ingestion rate <1%",
-      "Target Sprint": "7",
+      "Target Sprint": "12",
       "Artifacts To Track": "apps/api/src/ingestion/*, packages/adapters/src/messaging/email/attachments/*, docs/security/av-scan/*, tests/ingestion/*, docs/operations/runbooks/ingestion.md",
       "Validation Method": "E2E ingest from UI + inbound email; malicious sample blocked; retries succeed; ingestion metrics visible"
     },
@@ -5136,7 +5136,7 @@
       "Definition of Done": "OCR worker processes supported formats; stores extracted text with provenance; handles retries; quality metrics recorded; tests",
       "Status": "Backlog",
       "KPIs": "OCR throughput >= X pages/min baseline; extraction accuracy benchmarked; failure rate <1%",
-      "Target Sprint": "8",
+      "Target Sprint": "12",
       "Artifacts To Track": "apps/workers/ocr/*, artifacts/benchmarks/ocr-quality-benchmarks.csv, artifacts/misc/extracted-text-schema.json, tests/ocr/*",
       "Validation Method": "Benchmark run against sample corpus; extraction stored and searchable; retries verified"
     }
@@ -5154,7 +5154,7 @@
       "Definition of Done": "FTS index and vector embeddings built; retrieval APIs enforce tenant/case ACL; re-index job; purge on DSAR rules; tests",
       "Status": "Backlog",
       "KPIs": "Retrieval latency p95 <200ms; zero cross-tenant leakage; relevance eval >=80% on test set",
-      "Target Sprint": "8",
+      "Target Sprint": "12",
       "Artifacts To Track": "packages/search/case-index/*, packages/search/retrieval.ts, artifacts/misc/reindex-jobs/*, tests/search-permissions/*, artifacts/misc/relevance-eval.json",
       "Validation Method": "Automated tests prove ACL enforcement; relevance suite runs in CI; load test meets latency"
     }
@@ -5172,7 +5172,7 @@
       "Definition of Done": "Notification domain + templates implemented; delivery adapters; preference defaults stored; audit entries; retries/DLQ; tests",
       "Status": "Backlog",
       "KPIs": "Delivery success >=99%; template rendering errors 0 in CI; audit coverage 100%",
-      "Target Sprint": "7",
+      "Target Sprint": "11",
       "Artifacts To Track": "packages/notifications/*, artifacts/misc/templates/*, tests/notifications/*, docs/operations/runbooks/notifications.md",
       "Validation Method": "Send test notifications; simulate provider failure; retries succeed; audit logs validated"
     }

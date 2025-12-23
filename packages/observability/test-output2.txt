@@ -1,0 +1,103 @@
+
+> @intelliflow/observability@0.1.0 test C:\taly\intelliFlow-CRM\packages\observability
+> vitest run "tracing.test.ts"
+
+▲ [WARNING] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    package.json:13:6:
+      13 │       "types": "./dist/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    package.json:11:6:
+      11 │       "import": "./dist/index.mjs",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    package.json:12:6:
+      12 │       "require": "./dist/index.js",
+         ╵       ~~~~~~~~~
+
+▲ [WARNING] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    package.json:18:6:
+      18 │       "types": "./dist/tracer.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    package.json:16:6:
+      16 │       "import": "./dist/tracer.mjs",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    package.json:17:6:
+      17 │       "require": "./dist/tracer.js",
+         ╵       ~~~~~~~~~
+
+▲ [WARNING] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    package.json:23:6:
+      23 │       "types": "./dist/tracing.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    package.json:21:6:
+      21 │       "import": "./dist/tracing.mjs",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    package.json:22:6:
+      22 │       "require": "./dist/tracing.js",
+         ╵       ~~~~~~~~~
+
+▲ [WARNING] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    package.json:28:6:
+      28 │       "types": "./dist/metrics.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    package.json:26:6:
+      26 │       "import": "./dist/metrics.mjs",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    package.json:27:6:
+      27 │       "require": "./dist/metrics.js",
+         ╵       ~~~~~~~~~
+
+▲ [WARNING] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    package.json:33:6:
+      33 │       "types": "./dist/logging.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    package.json:31:6:
+      31 │       "import": "./dist/logging.mjs",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    package.json:32:6:
+      32 │       "require": "./dist/logging.js",
+         ╵       ~~~~~~~~~
+
+
+[1m[46m RUN [49m[22m [36mv4.0.16 [39m[90mC:/taly/intelliFlow-CRM/packages/observability[39m
+
+No test files found, exiting with code 0
+
+[2mfilter: [22m[33mtracing.test.ts[39m
+[2minclude: [22m[33m**/*.{test,spec}.?(c|m)[jt]s?(x)[39m
+[2mexclude:  [22m[33m**/node_modules/**[2m, [22m**/.git/**[39m
+

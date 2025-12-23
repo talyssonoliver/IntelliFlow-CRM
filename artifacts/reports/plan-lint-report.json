@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2025-12-21T22:11:35.318Z",
+    "generated_at": "2025-12-23T19:04:06.461Z",
     "schema_version": "1.0.0",
     "sprint_scope": 0
   },
@@ -426,7 +426,7 @@
       "task_id": "ENV-017-AI",
       "tier": "B",
       "section": "Foundation Setup",
-      "status": "Completed",
+      "status": "In Progress",
       "owner": "Tech Lead",
       "reasons": [
         "Has waiver or debt_allowed"
@@ -439,7 +439,7 @@
       "task_id": "ENV-018-AI",
       "tier": "B",
       "section": "Foundation Setup",
-      "status": "Completed",
+      "status": "In Progress",
       "owner": "PM",
       "reasons": [
         "Has waiver or debt_allowed"
@@ -452,7 +452,7 @@
       "task_id": "AUTOMATION-001",
       "tier": "B",
       "section": "AI Foundation",
-      "status": "Completed",
+      "status": "In Progress",
       "owner": "AI Specialist",
       "reasons": [
         "Has waiver or debt_allowed"
@@ -465,7 +465,7 @@
       "task_id": "AUTOMATION-002",
       "tier": "B",
       "section": "AI Foundation",
-      "status": "Completed",
+      "status": "In Progress",
       "owner": "DevOps Engineer",
       "reasons": [
         "Has waiver or debt_allowed"

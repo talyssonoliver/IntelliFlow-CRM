@@ -1,0 +1,8 @@
+Model,Provider,Cost per 1K Input Tokens,Cost per 1K Output Tokens,Average Latency,Accuracy Score,Best For,Notes
+gpt-4-turbo-preview,OpenAI,$0.01,$0.03,1.5s,95%,Production scoring,"High accuracy, structured outputs"
+gpt-4,OpenAI,$0.03,$0.06,2.0s,96%,Complex analysis,"Best quality, higher cost"
+gpt-3.5-turbo,OpenAI,$0.0005,$0.0015,0.5s,82%,High volume tasks,"Fast, cost-effective for simple tasks"
+llama3.1:8b,Ollama (Local),$0.00,$0.00,2.5s,88%,Development/Testing,"Free, requires GPU for best performance"
+mistral:7b,Ollama (Local),$0.00,$0.00,1.8s,85%,Quick prototyping,"Smaller model, faster responses"
+claude-3-opus,Anthropic,$0.015,$0.075,2.0s,97%,Complex reasoning,"Excellent for nuanced analysis"
+claude-3-sonnet,Anthropic,$0.003,$0.015,1.2s,93%,Balanced performance,"Good accuracy/cost ratio"

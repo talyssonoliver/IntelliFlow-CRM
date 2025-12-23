@@ -130,7 +130,7 @@ export function createRateLimitMiddleware(
 
 /**
  * Creates aggressive rate limiting for sensitive endpoints
- * (e.g., authentication, password reset)
+ * (e.g., authentication, credential reset)
  * Use with t.middleware() in server.ts
  */
 export function createStrictRateLimitMiddleware() {

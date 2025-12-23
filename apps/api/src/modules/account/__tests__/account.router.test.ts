@@ -6,8 +6,9 @@ import { TEST_UUIDS } from '../../../test/setup';
  * - create, getById, list, update, delete, stats
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
+import { Prisma } from '@prisma/client';
 import { accountRouter } from '../account.router';
 import { prismaMock, createTestContext, mockAccount, mockUser, mockContact, mockOpportunity } from '../../../test/setup';
 
@@ -31,6 +32,7 @@ describe('Account Router', () => {
       prismaMock.account.create.mockResolvedValue({
         ...mockAccount,
         ...input,
+        revenue: new Prisma.Decimal(input.revenue),
       });
 
       const result = await caller.create(input);
@@ -190,7 +192,7 @@ describe('Account Router', () => {
     it('should update account with valid data', async () => {
       prismaMock.account.findUnique.mockResolvedValue(mockAccount);
 
-      const updated = { ...mockAccount, name: 'Updated Corp', revenue: 2000000 };
+      const updated = { ...mockAccount, name: 'Updated Corp', revenue: new Prisma.Decimal(2000000) };
       prismaMock.account.update.mockResolvedValue(updated);
 
       const result = await caller.update({
@@ -200,7 +202,7 @@ describe('Account Router', () => {
       });
 
       expect(result.name).toBe('Updated Corp');
-      expect(result.revenue).toBe(2000000);
+      expect(Number(result.revenue)).toBe(2000000);
     });
 
     it('should throw NOT_FOUND when updating non-existent account', async () => {
@@ -272,14 +274,14 @@ describe('Account Router', () => {
   describe('stats', () => {
     it('should return account statistics', async () => {
       prismaMock.account.count.mockResolvedValueOnce(100); // total
-      prismaMock.account.groupBy.mockResolvedValue([
+      vi.mocked(prismaMock.account.groupBy).mockResolvedValue([
         { industry: 'Technology', _count: 40 },
         { industry: 'Finance', _count: 30 },
-      ] as any);
+      ] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>);
       prismaMock.account.count.mockResolvedValueOnce(75); // withContacts
       prismaMock.account.aggregate.mockResolvedValue({
-        _sum: { revenue: 50000000 },
-      } as any);
+        _sum: { revenue: new Prisma.Decimal(50000000) },
+      } as Awaited<ReturnType<typeof prismaMock.account.aggregate>>);
 
       const result = await caller.stats();
 
@@ -295,11 +297,11 @@ describe('Account Router', () => {
 
     it('should handle zero revenue', async () => {
       prismaMock.account.count.mockResolvedValueOnce(0);
-      prismaMock.account.groupBy.mockResolvedValue([]);
+      vi.mocked(prismaMock.account.groupBy).mockResolvedValue([]);
       prismaMock.account.count.mockResolvedValueOnce(0);
       prismaMock.account.aggregate.mockResolvedValue({
         _sum: { revenue: null },
-      } as any);
+      } as Awaited<ReturnType<typeof prismaMock.account.aggregate>>);
 
       const result = await caller.stats();
 

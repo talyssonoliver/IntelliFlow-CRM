@@ -256,12 +256,13 @@ describe('System Router', () => {
       const caller = systemRouter.createCaller(createPublicContext());
       const result = await caller.capabilities();
 
-      const expectedEndpoints = ['lead', 'contact', 'account', 'opportunity', 'task', 'health', 'system'];
+      const expectedEndpoints = ['lead', 'contact', 'account', 'opportunity', 'task', 'health', 'system'] as const;
+      type EndpointKey = typeof expectedEndpoints[number];
 
       expectedEndpoints.forEach(endpoint => {
         expect(result.endpoints).toHaveProperty(endpoint);
-        expect(result.endpoints[endpoint].operations).toBeDefined();
-        expect(result.endpoints[endpoint].features).toBeDefined();
+        expect(result.endpoints[endpoint as EndpointKey].operations).toBeDefined();
+        expect(result.endpoints[endpoint as EndpointKey].features).toBeDefined();
       });
     });
   });

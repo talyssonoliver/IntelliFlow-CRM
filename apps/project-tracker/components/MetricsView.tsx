@@ -58,7 +58,7 @@ interface MetricsViewProps {
   selectedSprint: number | 'all' | 'Continuous';
 }
 
-export default function MetricsView({ selectedSprint }: MetricsViewProps) {
+export default function MetricsView({ selectedSprint }: Readonly<MetricsViewProps>) {
   const [sprintSummary, setSprintSummary] = useState<SprintSummary | null>(null);
   const [phases, setPhases] = useState<PhaseMetrics[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -331,7 +331,7 @@ export default function MetricsView({ selectedSprint }: MetricsViewProps) {
         <h2 className="text-xl font-semibold mb-4">Key Performance Indicators</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Object.entries(sprintSummary.kpi_summary).map(([key, kpi]) => (
-            <div key={key} className={`p-4 rounded-lg ${getStatusColor(kpi.status)}`}>
+            <div key={key} className={`p-4 rounded-lg ${getStatusColor(kpi.status ?? 'UNKNOWN')}`}>
               <h3 className="font-semibold text-sm mb-2 capitalize">{key.replaceAll('_', ' ')}</h3>
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-bold">
@@ -344,7 +344,7 @@ export default function MetricsView({ selectedSprint }: MetricsViewProps) {
                 {typeof kpi.target === 'number' ? kpi.target.toFixed(1) : (kpi.target ?? 'N/A')}{' '}
                 {kpi.unit}
               </p>
-              <p className="text-xs font-semibold mt-1">{(kpi.status || 'unknown').replaceAll('_', ' ')}</p>
+              <p className="text-xs font-semibold mt-1">{(kpi.status ?? 'UNKNOWN').replaceAll('_', ' ')}</p>
             </div>
           ))}
         </div>

@@ -160,7 +160,7 @@
     "notifications": {
       "email": {
         "enabled": true,
-        "recipients": ["sre@intelliflow.dev"],
+        "recipients": ["sre-team@example.com"],
         "workflow": "only_new_issues"
       },
       "slack": {

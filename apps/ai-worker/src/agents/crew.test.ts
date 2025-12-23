@@ -94,7 +94,7 @@ describe('Crew', () => {
   });
 
   describe('execute', () => {
-    it('should throw error for sequential execution (not implemented)', async () => {
+    it('should return failure for sequential execution (not implemented)', async () => {
       const crew = new Crew(crewConfig);
 
       const task: CrewTask = {
@@ -103,16 +103,14 @@ describe('Crew', () => {
         expectedOutput: 'Completed analysis',
       };
 
-      try {
-        await crew.execute(task);
-        expect.fail('Should have thrown an error');
-      } catch (error) {
-        expect(error).toBeInstanceOf(Error);
-        expect((error as Error).message).toContain('Sequential execution not yet implemented');
-      }
+      const result = await crew.execute(task);
+
+      expect(result.success).toBe(false);
+      expect(result.errors).toBeDefined();
+      expect(result.errors?.[0]).toContain('Sequential execution not yet implemented');
     });
 
-    it('should throw error for parallel execution (not implemented)', async () => {
+    it('should return failure for parallel execution (not implemented)', async () => {
       const config: CrewConfig = {
         ...crewConfig,
         process: 'parallel',
@@ -126,16 +124,14 @@ describe('Crew', () => {
         expectedOutput: 'Combined results',
       };
 
-      try {
-        await crew.execute(task);
-        expect.fail('Should have thrown an error');
-      } catch (error) {
-        expect(error).toBeInstanceOf(Error);
-        expect((error as Error).message).toContain('Parallel execution not yet implemented');
-      }
+      const result = await crew.execute(task);
+
+      expect(result.success).toBe(false);
+      expect(result.errors).toBeDefined();
+      expect(result.errors?.[0]).toContain('Parallel execution not yet implemented');
     });
 
-    it('should throw error for hierarchical execution (not implemented)', async () => {
+    it('should return failure for hierarchical execution (not implemented)', async () => {
       const config: CrewConfig = {
         ...crewConfig,
         process: 'hierarchical',
@@ -149,13 +145,11 @@ describe('Crew', () => {
         expectedOutput: 'Manager-coordinated results',
       };
 
-      try {
-        await crew.execute(task);
-        expect.fail('Should have thrown an error');
-      } catch (error) {
-        expect(error).toBeInstanceOf(Error);
-        expect((error as Error).message).toContain('Hierarchical execution not yet implemented');
-      }
+      const result = await crew.execute(task);
+
+      expect(result.success).toBe(false);
+      expect(result.errors).toBeDefined();
+      expect(result.errors?.[0]).toContain('Hierarchical execution not yet implemented');
     });
 
     it('should measure execution duration on error', async () => {

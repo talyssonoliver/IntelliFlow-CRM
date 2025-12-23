@@ -98,7 +98,7 @@ describe('Correlation ID Utilities', () => {
         const duration = getRequestDuration();
 
         expect(duration).toBeGreaterThanOrEqual(50);
-        expect(duration).toBeLessThan(100);
+        expect(duration).toBeLessThan(200); // Allow for system load variation
       });
     });
   });

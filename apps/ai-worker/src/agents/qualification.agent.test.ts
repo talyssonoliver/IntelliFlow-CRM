@@ -8,30 +8,37 @@ import {
   qualificationOutputSchema,
 } from './qualification.agent';
 
-// Mock the BaseAgent's LLM invocation
-vi.mock('@langchain/openai', () => ({
-  ChatOpenAI: vi.fn().mockImplementation(() => ({
-    invoke: vi.fn().mockResolvedValue({
-      content: JSON.stringify({
-        qualified: true,
-        qualificationLevel: 'HIGH',
-        confidence: 0.9,
-        reasoning: 'Strong buying signals with decision-maker title and corporate email',
-        strengths: ['VP title indicates decision-making authority', 'Corporate email domain'],
-        concerns: [],
-        recommendedActions: [
-          {
-            action: 'Schedule discovery call',
-            priority: 'HIGH',
-            reasoning: 'High qualification score warrants immediate outreach',
-          },
-        ],
-        nextSteps: ['Send personalized email', 'Schedule call within 48 hours'],
-        estimatedConversionProbability: 0.75,
-      }),
-    }),
-  })),
-}));
+// Mock the BaseAgent's LLM invocation with proper class
+vi.mock('@langchain/openai', () => {
+  const mockResponse = JSON.stringify({
+    qualified: true,
+    qualificationLevel: 'HIGH',
+    confidence: 0.9,
+    reasoning: 'Strong buying signals with decision-maker title and corporate email',
+    strengths: ['VP title indicates decision-making authority', 'Corporate email domain'],
+    concerns: [],
+    recommendedActions: [
+      {
+        action: 'Schedule discovery call',
+        priority: 'HIGH',
+        reasoning: 'High qualification score warrants immediate outreach',
+      },
+    ],
+    nextSteps: ['Send personalized email', 'Schedule call within 48 hours'],
+    estimatedConversionProbability: 0.75,
+  });
+
+  return {
+    ChatOpenAI: class MockChatOpenAI {
+      constructor(config: unknown) {
+        // Store config for potential inspection
+      }
+      async invoke(messages: unknown[]): Promise<{ content: string }> {
+        return { content: mockResponse };
+      }
+    },
+  };
+});
 
 // Mock StructuredOutputParser
 vi.mock('@langchain/core/output_parsers', () => ({
@@ -189,11 +196,9 @@ describe('LeadQualificationAgent', () => {
     it('should handle parsing errors gracefully', async () => {
       const failingAgent = new LeadQualificationAgent();
 
-      // Mock parser to throw error
-      (failingAgent as any).parser = {
-        parse: vi.fn().mockRejectedValue(new Error('Parse error')),
-        getFormatInstructions: vi.fn(() => 'Format instructions'),
-      };
+      // Spy on the parser's parse method and mock it to reject
+      const parserParseError = new Error('Parse error');
+      vi.spyOn((failingAgent as any).parser, 'parse').mockRejectedValue(parserParseError);
 
       const input: QualificationInput = {
         leadId: 'lead-005',
@@ -202,7 +207,7 @@ describe('LeadQualificationAgent', () => {
       };
 
       const task = createQualificationTask(input);
-      const result = await agent.execute(task);
+      const result = await failingAgent.execute(task); // Use failingAgent, not agent
 
       expect(result.success).toBe(true);
       expect(result.output).toBeDefined();

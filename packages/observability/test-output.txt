@@ -1,0 +1,340 @@
+
+> @intelliflow/observability@0.1.0 test C:\taly\intelliFlow-CRM\packages\observability
+> vitest run "tracing.test.ts"
+
+▲ [WARNING] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    package.json:13:6:
+      13 │       "types": "./dist/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    package.json:11:6:
+      11 │       "import": "./dist/index.mjs",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    package.json:12:6:
+      12 │       "require": "./dist/index.js",
+         ╵       ~~~~~~~~~
+
+▲ [WARNING] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    package.json:18:6:
+      18 │       "types": "./dist/tracer.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    package.json:16:6:
+      16 │       "import": "./dist/tracer.mjs",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    package.json:17:6:
+      17 │       "require": "./dist/tracer.js",
+         ╵       ~~~~~~~~~
+
+▲ [WARNING] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    package.json:23:6:
+      23 │       "types": "./dist/tracing.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    package.json:21:6:
+      21 │       "import": "./dist/tracing.mjs",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    package.json:22:6:
+      22 │       "require": "./dist/tracing.js",
+         ╵       ~~~~~~~~~
+
+▲ [WARNING] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    package.json:28:6:
+      28 │       "types": "./dist/metrics.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    package.json:26:6:
+      26 │       "import": "./dist/metrics.mjs",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    package.json:27:6:
+      27 │       "require": "./dist/metrics.js",
+         ╵       ~~~~~~~~~
+
+▲ [WARNING] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    package.json:33:6:
+      33 │       "types": "./dist/logging.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    package.json:31:6:
+      31 │       "import": "./dist/logging.mjs",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    package.json:32:6:
+      32 │       "require": "./dist/logging.js",
+         ╵       ~~~~~~~~~
+
+
+[1m[46m RUN [49m[22m [36mv4.0.16 [39m[90mC:/taly/intelliFlow-CRM/packages/observability[39m
+
+ [31m❯[39m __tests__/tracing.test.ts [2m([22m[2m105 tests[22m[2m | [22m[31m105 failed[39m[2m)[22m[33m 634[2mms[22m[39m
+[31m       [31m×[31m should initialize SDK with service name[39m[32m 254[2mms[22m[39m
+[31m       [31m×[31m should use default service version if not provided[39m[32m 4[2mms[22m[39m
+[31m       [31m×[31m should respect custom service version[39m[32m 4[2mms[22m[39m
+[31m       [31m×[31m should use custom environment[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should use custom OTLP endpoint[39m[32m 18[2mms[22m[39m
+[31m       [31m×[31m should skip initialization if tracing is disabled[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should warn if already initialized[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should setup SIGTERM handler for graceful shutdown[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should configure auto-instrumentations[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should shutdown SDK when initialized[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should clear tracer reference after shutdown[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should be safe to call when not initialized[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should be idempotent[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should return tracer when initialized[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should throw error when not initialized[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should throw error after shutdown[39m[32m 8[2mms[22m[39m
+[31m       [31m×[31m should create span with given name[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should set OK status on success[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should end span on success[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should return function result[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should set ERROR status on exception[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should record exception on error[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should end span even on error[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should propagate thrown error[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should pass span to callback function[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should support custom span kind[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should default to INTERNAL span kind[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should support initial attributes[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should handle non-Error exceptions[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should support synchronous functions[39m[32m 4[2mms[22m[39m
+[31m       [31m×[31m should allow span modification in callback[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should create span with given name[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should support custom span kind[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should support initial attributes[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should default to INTERNAL kind[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should return span instance[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should add event to active span[39m[32m 7[2mms[22m[39m
+[31m       [31m×[31m should add event with attributes[39m[32m 4[2mms[22m[39m
+[31m       [31m×[31m should be no-op when no active span[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should handle null active span[39m[32m 5[2mms[22m[39m
+[31m       [31m×[31m should add attributes to active span[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should support multiple attribute types[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should be no-op when no active span[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should handle null active span[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should record exception to active span[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should set ERROR status with message[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should be no-op when no active span[39m[32m 7[2mms[22m[39m
+[31m       [31m×[31m should handle null active span[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should return trace ID from active span[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should return undefined when no active span[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should return undefined for null active span[39m[32m 7[2mms[22m[39m
+[31m       [31m×[31m should use optional chaining safely[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should return span ID from active span[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should return undefined when no active span[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should return undefined for null active span[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should use optional chaining safely[39m[32m 5[2mms[22m[39m
+[31m       [31m×[31m should trace decorated method[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should use custom span name[39m[32m 7[2mms[22m[39m
+[31m       [31m×[31m should auto-generate span name from class and method[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should add method and class attributes[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should preserve method context (this)[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should pass arguments to original method[39m[32m 4[2mms[22m[39m
+[31m       [31m×[31m should propagate errors from decorated method[39m[32m 3[2mms[22m[39m
+[31m         [31m×[31m should run function with specific span context[39m[32m 3[2mms[22m[39m
+[31m         [31m×[31m should return function result[39m[32m 3[2mms[22m[39m
+[31m         [31m×[31m should propagate exceptions[39m[32m 3[2mms[22m[39m
+[31m         [31m×[31m should return current active context[39m[32m 7[2mms[22m[39m
+[31m         [31m×[31m should call context.active from OTel API[39m[32m 3[2mms[22m[39m
+[31m         [31m×[31m should return active context (placeholder implementation)[39m[32m 3[2mms[22m[39m
+[31m         [31m×[31m should handle empty carrier[39m[32m 3[2mms[22m[39m
+[31m         [31m×[31m should not throw with carrier object[39m[32m 3[2mms[22m[39m
+[31m         [31m×[31m should be callable with empty carrier[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should export SERVER span kind[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should export CLIENT span kind[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should export PRODUCER span kind[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should export CONSUMER span kind[39m[32m 4[2mms[22m[39m
+[31m       [31m×[31m should export INTERNAL span kind[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should have all five span kinds[39m[32m 4[2mms[22m[39m
+[31m       [31m×[31m should define USER_ID attribute[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should define USER_EMAIL attribute[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should define USER_ROLE attribute[39m[32m 4[2mms[22m[39m
+[31m       [31m×[31m should define LEAD_ID attribute[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should define LEAD_SCORE attribute[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should define CONTACT_ID attribute[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should define ACCOUNT_ID attribute[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should define OPPORTUNITY_ID attribute[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should define AI_MODEL attribute[39m[32m 9[2mms[22m[39m
+[31m       [31m×[31m should define AI_MODEL_VERSION attribute[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should define AI_CONFIDENCE attribute[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should define AI_COST attribute[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should define AI_LATENCY attribute[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should define DB_OPERATION attribute[39m[32m 4[2mms[22m[39m
+[31m       [31m×[31m should define DB_TABLE attribute[39m[32m 6[2mms[22m[39m
+[31m       [31m×[31m should define DB_QUERY_TIME attribute[39m[32m 4[2mms[22m[39m
+[31m       [31m×[31m should define HTTP_METHOD attribute[39m[32m 4[2mms[22m[39m
+[31m       [31m×[31m should define HTTP_URL attribute[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should define HTTP_STATUS_CODE attribute[39m[32m 5[2mms[22m[39m
+[31m       [31m×[31m should have all semantic attributes defined[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should support nested traces[39m[32m 4[2mms[22m[39m
+[31m       [31m×[31m should allow manual span creation within traced function[39m[32m 4[2mms[22m[39m
+[31m       [31m×[31m should support adding events during traced execution[39m[32m 5[2mms[22m[39m
+[31m       [31m×[31m should support adding attributes during traced execution[39m[32m 4[2mms[22m[39m
+[31m       [31m×[31m should maintain trace context across async operations[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should support using semantic attributes[39m[32m 4[2mms[22m[39m
+[31m       [31m×[31m should handle errors with context preservation[39m[32m 5[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 105 [49m[22m[31m⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22minitTracing[2m > [22mshould initialize SDK with service name
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22minitTracing[2m > [22mshould use default service version if not provided
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22minitTracing[2m > [22mshould respect custom service version
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22minitTracing[2m > [22mshould use custom environment
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22minitTracing[2m > [22mshould use custom OTLP endpoint
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22minitTracing[2m > [22mshould skip initialization if tracing is disabled
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22minitTracing[2m > [22mshould warn if already initialized
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22minitTracing[2m > [22mshould setup SIGTERM handler for graceful shutdown
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22minitTracing[2m > [22mshould configure auto-instrumentations
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mshutdownTracing[2m > [22mshould shutdown SDK when initialized
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mshutdownTracing[2m > [22mshould clear tracer reference after shutdown
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mshutdownTracing[2m > [22mshould be safe to call when not initialized
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mshutdownTracing[2m > [22mshould be idempotent
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mgetTracer[2m > [22mshould return tracer when initialized
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mgetTracer[2m > [22mshould throw error when not initialized
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mgetTracer[2m > [22mshould throw error after shutdown
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mtrace[2m > [22mshould create span with given name
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mtrace[2m > [22mshould set OK status on success
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mtrace[2m > [22mshould end span on success
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mtrace[2m > [22mshould return function result
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mtrace[2m > [22mshould set ERROR status on exception
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mtrace[2m > [22mshould record exception on error
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mtrace[2m > [22mshould end span even on error
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mtrace[2m > [22mshould propagate thrown error
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mtrace[2m > [22mshould pass span to callback function
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mtrace[2m > [22mshould support custom span kind
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mtrace[2m > [22mshould default to INTERNAL span kind
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mtrace[2m > [22mshould support initial attributes
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mtrace[2m > [22mshould handle non-Error exceptions
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mtrace[2m > [22mshould support synchronous functions
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mtrace[2m > [22mshould allow span modification in callback
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mcreateSpan[2m > [22mshould create span with given name
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mcreateSpan[2m > [22mshould support custom span kind
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mcreateSpan[2m > [22mshould support initial attributes
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mcreateSpan[2m > [22mshould default to INTERNAL kind
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mcreateSpan[2m > [22mshould return span instance
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22maddEvent[2m > [22mshould add event to active span
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22maddEvent[2m > [22mshould add event with attributes
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22maddEvent[2m > [22mshould be no-op when no active span
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22maddEvent[2m > [22mshould handle null active span
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22maddAttributes[2m > [22mshould add attributes to active span
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22maddAttributes[2m > [22mshould support multiple attribute types
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22maddAttributes[2m > [22mshould be no-op when no active span
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22maddAttributes[2m > [22mshould handle null active span
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mrecordException[2m > [22mshould record exception to active span
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mrecordException[2m > [22mshould set ERROR status with message
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mrecordException[2m > [22mshould be no-op when no active span
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mrecordException[2m > [22mshould handle null active span
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mgetTraceId[2m > [22mshould return trace ID from active span
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mgetTraceId[2m > [22mshould return undefined when no active span
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mgetTraceId[2m > [22mshould return undefined for null active span
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mgetTraceId[2m > [22mshould use optional chaining safely
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mgetSpanId[2m > [22mshould return span ID from active span
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mgetSpanId[2m > [22mshould return undefined when no active span
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mgetSpanId[2m > [22mshould return undefined for null active span
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mgetSpanId[2m > [22mshould use optional chaining safely
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mTrace decorator[2m > [22mshould trace decorated method
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mTrace decorator[2m > [22mshould use custom span name
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mTrace decorator[2m > [22mshould auto-generate span name from class and method
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mTrace decorator[2m > [22mshould add method and class attributes
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mTrace decorator[2m > [22mshould preserve method context (this)
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mTrace decorator[2m > [22mshould pass arguments to original method
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mTrace decorator[2m > [22mshould propagate errors from decorated method
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mSpanKinds[2m > [22mshould export SERVER span kind
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mSpanKinds[2m > [22mshould export CLIENT span kind
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mSpanKinds[2m > [22mshould export PRODUCER span kind
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mSpanKinds[2m > [22mshould export CONSUMER span kind
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mSpanKinds[2m > [22mshould export INTERNAL span kind
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mSpanKinds[2m > [22mshould have all five span kinds
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mSemanticAttributes[2m > [22mshould define USER_ID attribute
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mSemanticAttributes[2m > [22mshould define USER_EMAIL attribute
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mSemanticAttributes[2m > [22mshould define USER_ROLE attribute
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mSemanticAttributes[2m > [22mshould define LEAD_ID attribute
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mSemanticAttributes[2m > [22mshould define LEAD_SCORE attribute
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mSemanticAttributes[2m > [22mshould define CONTACT_ID attribute
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mSemanticAttributes[2m > [22mshould define ACCOUNT_ID attribute
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mSemanticAttributes[2m > [22mshould define OPPORTUNITY_ID attribute
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mSemanticAttributes[2m > [22mshould define AI_MODEL attribute
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mSemanticAttributes[2m > [22mshould define AI_MODEL_VERSION attribute
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mSemanticAttributes[2m > [22mshould define AI_CONFIDENCE attribute
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mSemanticAttributes[2m > [22mshould define AI_COST attribute
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mSemanticAttributes[2m > [22mshould define AI_LATENCY attribute
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mSemanticAttributes[2m > [22mshould define DB_OPERATION attribute
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mSemanticAttributes[2m > [22mshould define DB_TABLE attribute
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mSemanticAttributes[2m > [22mshould define DB_QUERY_TIME attribute
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mSemanticAttributes[2m > [22mshould define HTTP_METHOD attribute
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mSemanticAttributes[2m > [22mshould define HTTP_URL attribute
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mSemanticAttributes[2m > [22mshould define HTTP_STATUS_CODE attribute
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mSemanticAttributes[2m > [22mshould have all semantic attributes defined
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mIntegration scenarios[2m > [22mshould support nested traces
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mIntegration scenarios[2m > [22mshould allow manual span creation within traced function
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mIntegration scenarios[2m > [22mshould support adding events during traced execution
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mIntegration scenarios[2m > [22mshould support adding attributes during traced execution
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mIntegration scenarios[2m > [22mshould maintain trace context across async operations
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mIntegration scenarios[2m > [22mshould support using semantic attributes
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mIntegration scenarios[2m > [22mshould handle errors with context preservation
+[31m[1mTypeError[22m: otelTrace.getTracer.mockReturnValue is not a function[39m
+[36m [2m❯[22m __tests__/tracing.test.ts:[2m136:25[22m[39m
+    [90m134| [39m    [90m// Setup default behavior[39m
+    [90m135| [39m    const { trace: otelTrace, context: otelContext } = require('@opent…
+    [90m136| [39m    otelTrace[33m.[39mgetTracer[33m.[39m[34mmockReturnValue[39m(mockTracer)[33m;[39m
+    [90m   | [39m                        [31m^[39m
+    [90m137| [39m    otelTrace[33m.[39mgetActiveSpan[33m.[39m[34mmockReturnValue[39m(mockSpan)[33m;[39m
+    [90m138| [39m    otelContext[33m.[39mactive[33m.[39m[34mmockReturnValue[39m(mockActiveContext)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/105]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mtraceContext[2m > [22mwith[2m > [22mshould run function with specific span context
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mtraceContext[2m > [22mwith[2m > [22mshould return function result
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mtraceContext[2m > [22mwith[2m > [22mshould propagate exceptions
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mtraceContext[2m > [22mactive[2m > [22mshould return current active context
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mtraceContext[2m > [22mactive[2m > [22mshould call context.active from OTel API
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mtraceContext[2m > [22mextract[2m > [22mshould return active context (placeholder implementation)
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mtraceContext[2m > [22mextract[2m > [22mshould handle empty carrier
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mtraceContext[2m > [22minject[2m > [22mshould not throw with carrier object
+[41m[1m FAIL [22m[49m __tests__/tracing.test.ts[2m > [22mTracing Module[2m > [22mtraceContext[2m > [22minject[2m > [22mshould be callable with empty carrier
+[31m[1mTypeError[22m: otelTrace.getTracer.mockReturnValue is not a function[39m
+[36m [2m❯[22m __tests__/tracing.test.ts:[2m136:25[22m[39m
+    [90m134| [39m    [90m// Setup default behavior[39m
+    [90m135| [39m    const { trace: otelTrace, context: otelContext } = require('@opent…
+    [90m136| [39m    otelTrace[33m.[39mgetTracer[33m.[39m[34mmockReturnValue[39m(mockTracer)[33m;[39m
+    [90m   | [39m                        [31m^[39m
+    [90m137| [39m    otelTrace[33m.[39mgetActiveSpan[33m.[39m[34mmockReturnValue[39m(mockSpan)[33m;[39m
+    [90m138| [39m    otelContext[33m.[39mactive[33m.[39m[34mmockReturnValue[39m(mockActiveContext)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/105]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m105 failed[39m[22m[90m (105)[39m
+[2m   Start at [22m 22:12:04
+[2m   Duration [22m 3.21s[2m (transform 829ms, setup 0ms, import 1.14s, tests 634ms, environment 1ms)[22m
+
+ ELIFECYCLE  Test failed. See above for more details.

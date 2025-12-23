@@ -73,7 +73,7 @@ const STOA_VALIDATION_SCRIPTS: Record<StoaRole, Array<{ name: string; command: s
   Intelligence: [],
   Domain: [],
   Automation: [
-    { name: 'sprint-validation', command: 'tsx tools/scripts/sprint0-validation.ts' },
+    { name: 'sprint-validation', command: 'tsx tools/scripts/sprint-validation.ts' },
     { name: 'sprint-data-validation', command: 'tsx tools/scripts/validate-sprint-data.ts' },
   ],
 };

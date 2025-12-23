@@ -1,323 +1,1439 @@
 ﻿
-apps/
-|-- ai-worker/
-|   |-- src/
-|   |   |-- agents/
-|   |   |   |-- base.agent.ts
-|   |   |   |-- crew.ts
-|   |   |   +-- qualification.agent.ts
-|   |   |-- chains/
-|   |   |   |-- embedding.chain.test.ts
-|   |   |   |-- embedding.chain.ts
-|   |   |   |-- scoring.chain.test.ts
-|   |   |   +-- scoring.chain.ts
-|   |   |-- config/
-|   |   |   +-- ai.config.ts
-|   |   |-- examples/
-|   |   |   +-- usage.ts
-|   |   |-- scripts/
-|   |   |   +-- benchmark.ts
-|   |   |-- types/
+intelliFlow-CRM/
+|-- .claude/
+|   |-- commands/
+|   |   |-- create-aggregate.md
+|   |   |-- create-component.md
+|   |   |-- create-migration.md
+|   |   |-- create-router.md
+|   |   |-- deploy.md
+|   |   |-- generate-schema.md
+|   |   |-- matop-execute.md
+|   |   |-- review-ai-output.md
+|   |   |-- run-tests.md
+|   |   |-- setup-monorepo.md
+|   |   |-- stoa-automation.md
+|   |   |-- stoa-domain.md
+|   |   |-- stoa-foundation.md
+|   |   |-- stoa-intelligence.md
+|   |   |-- stoa-quality.md
+|   |   +-- stoa-security.md
+|   |-- hooks/
+|   |   |-- post-push.md
+|   |   |-- pre-commit.md
+|   |   +-- pr-review.md
+|   +-- settings.local.json
+|-- .github/
+|   |-- copilot/
+|   |   |-- exclusions.yaml
+|   |   |-- suggestions.yaml
+|   |   +-- team-settings.json
+|   |-- workflows/
+|   |   |-- artifact-lint.yml
+|   |   |-- cd.yml
+|   |   |-- ci.yml
+|   |   |-- pr-checks.yml
+|   |   |-- release.yml
+|   |   |-- runtime-path-lint.yml
+|   |   |-- security.yml
+|   |   |-- system-audit.yml
+|   |   |-- system-audit-integrity.yml
+|   |   |-- system-audit-nightly.yml
+|   |   |-- terraform.yml
+|   |   |-- terraform-drift.yml
+|   |   |-- validate-sprint.yml
+|   |   +-- validate-sprint-data.yml
+|   +-- CODEOWNERS
+|-- .specify/
+|   |-- memory/
+|   |   +-- constitution.md
+|   |-- planning/
+|   +-- specifications/
+|-- apps/
+|   |-- ai-worker/
+|   |   |-- src/
+|   |   |   |-- agents/
+|   |   |   |   |-- base.agent.test.ts
+|   |   |   |   |-- base.agent.ts
+|   |   |   |   |-- crew.test.ts
+|   |   |   |   |-- crew.ts
+|   |   |   |   |-- qualification.agent.test.ts
+|   |   |   |   +-- qualification.agent.ts
+|   |   |   |-- chains/
+|   |   |   |   |-- embedding.chain.test.ts
+|   |   |   |   |-- embedding.chain.ts
+|   |   |   |   |-- scoring.chain.test.ts
+|   |   |   |   +-- scoring.chain.ts
+|   |   |   |-- config/
+|   |   |   |   +-- ai.config.ts
+|   |   |   |-- examples/
+|   |   |   |   +-- usage.ts
+|   |   |   |-- prompts/
+|   |   |   |   |-- index.ts
+|   |   |   |   |-- scoring-system.txt
+|   |   |   |   +-- scoring-user.txt
+|   |   |   |-- scripts/
+|   |   |   |   +-- benchmark.ts
+|   |   |   |-- types/
+|   |   |   |   +-- index.ts
+|   |   |   |-- utils/
+|   |   |   |   |-- cost-tracker.test.ts
+|   |   |   |   |-- cost-tracker.ts
+|   |   |   |   |-- logger.test.ts
+|   |   |   |   |-- logger.ts
+|   |   |   |   |-- retry.test.ts
+|   |   |   |   +-- retry.ts
 |   |   |   +-- index.ts
-|   |   |-- utils/
-|   |   |   |-- cost-tracker.ts
-|   |   |   |-- logger.ts
-|   |   |   +-- retry.ts
-|   |   +-- index.ts
-|   |-- .env.example
-|   |-- .eslintrc.js
-|   |-- .gitignore
-|   |-- package.json
-|   |-- QUICKSTART.md
-|   |-- README.md
-|   |-- STRUCTURE.txt
-|   |-- tsconfig.json
-|   +-- vitest.config.ts
-|-- api/
-|   |-- src/
-|   |   |-- middleware/
-|   |   |   |-- auth.ts
-|   |   |   |-- index.ts
-|   |   |   |-- logging.ts
-|   |   |   +-- rate-limit.ts
-|   |   |-- modules/
-|   |   |   |-- account/
-|   |   |   |   +-- account.router.ts
-|   |   |   |-- contact/
-|   |   |   |   +-- contact.router.ts
-|   |   |   |-- lead/
-|   |   |   |   +-- lead.router.ts
-|   |   |   |-- misc/
-|   |   |   |   |-- health.router.ts
-|   |   |   |   +-- system.router.ts
-|   |   |   |-- opportunity/
-|   |   |   |   +-- opportunity.router.ts
-|   |   |   +-- task/
-|   |   |       +-- task.router.ts
-|   |   |-- shared/
-|   |   |   |-- e2e-type-safety-test.ts
-|   |   |   |-- performance-benchmark.ts
-|   |   |   +-- subscription-demo.ts
-|   |   |-- context.ts
-|   |   |-- index.ts
-|   |   |-- router.ts
-|   |   |-- server.ts
-|   |   +-- trpc.ts
-|   |-- package.json
-|   |-- README.md
-|   +-- tsconfig.json
-|-- project-tracker/
-|   |-- __tests__/
-|   |   |-- ENV-007-AI_generated.test.ts
-|   |   |-- ENV-009-AI_generated.test.ts
-|   |   |-- ENV-012-AI_generated.test.ts
-|   |   +-- IFC-160_generated.test.ts
-|   |-- app/
-|   |   |-- api/
-|   |   |   |-- audit/
-|   |   |   |   |-- affected/
-|   |   |   |   |   +-- route.ts
-|   |   |   |   |-- bundles/
-|   |   |   |   |   |-- [runId]/
-|   |   |   |   |   |   +-- route.ts
-|   |   |   |   |   +-- route.ts
-|   |   |   |   |-- matrix/
-|   |   |   |   |   +-- route.ts
-|   |   |   |   +-- stream/
-|   |   |   |       +-- route.ts
-|   |   |   |-- governance/
-|   |   |   |   |-- debt/
-|   |   |   |   |   +-- route.ts
-|   |   |   |   |-- digest/
-|   |   |   |   |   +-- route.ts
-|   |   |   |   |-- lint-report/
-|   |   |   |   |   +-- route.ts
-|   |   |   |   |-- migrate/
-|   |   |   |   |   +-- route.ts
-|   |   |   |   |-- phantom-audit/
-|   |   |   |   |   +-- route.ts
-|   |   |   |   |-- review-queue/
-|   |   |   |   |   +-- route.ts
-|   |   |   |   |-- run-lint/
-|   |   |   |   |   +-- route.ts
-|   |   |   |   |-- summary/
-|   |   |   |   |   +-- route.ts
+|   |   |-- .env.example
+|   |   |-- .eslintrc.js
+|   |   |-- .gitignore
+|   |   |-- package.json
+|   |   |-- QUICKSTART.md
+|   |   |-- README.md
+|   |   |-- STRUCTURE.txt
+|   |   |-- tsconfig.json
+|   |   +-- vitest.config.ts
+|   |-- api/
+|   |   |-- src/
+|   |   |   |-- middleware/
+|   |   |   |   |-- __tests__/
+|   |   |   |   |   |-- auth.test.ts
+|   |   |   |   |   |-- logging.test.ts
+|   |   |   |   |   +-- rate-limit.test.ts
+|   |   |   |   |-- auth.ts
+|   |   |   |   |-- index.ts
+|   |   |   |   |-- logging.ts
+|   |   |   |   +-- rate-limit.ts
+|   |   |   |-- modules/
+|   |   |   |   |-- account/
+|   |   |   |   |   |-- __tests__/
+|   |   |   |   |   |   +-- account.router.test.ts
+|   |   |   |   |   +-- account.router.ts
+|   |   |   |   |-- contact/
+|   |   |   |   |   |-- __tests__/
+|   |   |   |   |   |   +-- contact.router.test.ts
+|   |   |   |   |   +-- contact.router.ts
+|   |   |   |   |-- lead/
+|   |   |   |   |   |-- __tests__/
+|   |   |   |   |   |   +-- lead.router.test.ts
+|   |   |   |   |   +-- lead.router.ts
+|   |   |   |   |-- misc/
+|   |   |   |   |   |-- __tests__/
+|   |   |   |   |   |   |-- health.router.test.ts
+|   |   |   |   |   |   +-- system.router.test.ts
+|   |   |   |   |   |-- health.router.ts
+|   |   |   |   |   +-- system.router.ts
+|   |   |   |   |-- opportunity/
+|   |   |   |   |   |-- __tests__/
+|   |   |   |   |   |   +-- opportunity.router.test.ts
+|   |   |   |   |   +-- opportunity.router.ts
 |   |   |   |   +-- task/
-|   |   |   |       +-- [taskId]/
-|   |   |   |           +-- route.ts
-|   |   |   |-- metrics/
-|   |   |   |   |-- phases/
-|   |   |   |   |   +-- route.ts
-|   |   |   |   |-- sprint/
-|   |   |   |   |   +-- route.ts
-|   |   |   |   |-- task/
-|   |   |   |   |   +-- [taskId]/
-|   |   |   |   |       +-- route.ts
-|   |   |   |   +-- watch/
-|   |   |   |       +-- route.ts
-|   |   |   |-- sprint-plan/
-|   |   |   |   +-- route.ts
-|   |   |   |-- swarm/
-|   |   |   |   |-- active-tasks/
-|   |   |   |   |   +-- route.ts
-|   |   |   |   |-- cli/
-|   |   |   |   |   +-- route.ts
-|   |   |   |   |-- explain/
-|   |   |   |   |   +-- [taskId]/
-|   |   |   |   |       +-- route.ts
-|   |   |   |   |-- health/
-|   |   |   |   |   +-- route.ts
-|   |   |   |   |-- kill-task/
-|   |   |   |   |   +-- [taskId]/
-|   |   |   |   |       +-- route.ts
-|   |   |   |   |-- questions/
-|   |   |   |   |   |-- [taskId]/
-|   |   |   |   |   |   +-- route.ts
-|   |   |   |   |   +-- route.ts
-|   |   |   |   |-- restart-task/
-|   |   |   |   |   +-- [taskId]/
-|   |   |   |   |       +-- route.ts
-|   |   |   |   |-- start/
-|   |   |   |   |   +-- route.ts
-|   |   |   |   |-- stop/
-|   |   |   |   |   +-- route.ts
-|   |   |   |   |-- stream-log/
-|   |   |   |   |   +-- route.ts
-|   |   |   |   |-- terminal/
-|   |   |   |   |   +-- [taskId]/
-|   |   |   |   |       +-- route.ts
-|   |   |   |   +-- view-log/
-|   |   |   |       +-- [taskId]/
-|   |   |   |           +-- route.ts
-|   |   |   +-- sync-metrics/
-|   |   |       +-- route.ts
-|   |   |-- swarm/
-|   |   |   +-- page.tsx
-|   |   |-- terminal/
-|   |   |   +-- [taskId]/
-|   |   |       +-- page.tsx
-|   |   |-- globals.css
-|   |   |-- layout.tsx
-|   |   |-- page.tsx
-|   |   +-- providers.tsx
-|   |-- components/
-|   |   |-- AnalyticsView.tsx
-|   |   |-- AuditView.tsx
-|   |   |-- DashboardView.tsx
-|   |   |-- GovernanceView.tsx
-|   |   |-- KanbanView.tsx
-|   |   |-- MetricsView.tsx
-|   |   |-- SettingsView.tsx
-|   |   |-- SwarmMonitor.tsx
-|   |   +-- TaskModal.tsx
-|   |-- docs/
-|   |   |-- .specify/
-|   |   |   |-- memory/
-|   |   |   |   +-- constitution.md
-|   |   |   |-- planning/
-|   |   |   +-- specifications/
-|   |   |-- artifacts/
-|   |   |   |-- contexts/
-|   |   |   |   +-- .gitkeep
-|   |   |   |-- qualitative-reviews/
-|   |   |   |   +-- .gitkeep
-|   |   |   |-- reports/
-|   |   |   |   +-- .gitkeep
-|   |   |   |-- status/
-|   |   |   |   +-- .gitkeep
-|   |   |   |-- validation/
-|   |   |   |   +-- .gitkeep
-|   |   |   |-- work/
-|   |   |   |   +-- .gitkeep
-|   |   |   +-- .gitkeep
-|   |   |-- docs/
-|   |   |   +-- references/
-|   |   |-- logs/
-|   |   |-- metrics/
-|   |   |   |-- _global/
-|   |   |   |   |-- audit_playbook.md
-|   |   |   |   |-- dependency-graph.json
-|   |   |   |   |-- intelliflow_audit_improvements_prompt.md
-|   |   |   |   |-- kpi-definitions.json
-|   |   |   |   |-- Sprint_plan.csv
-|   |   |   |   |-- Sprint_plan.json
-|   |   |   |   +-- task-registry.json
-|   |   |   |-- schemas/
-|   |   |   |   |-- dependency-graph.schema.json
-|   |   |   |   |-- kpi-definitions.schema.json
-|   |   |   |   |-- phase-summary.schema.json
-|   |   |   |   |-- sprint-summary.schema.json
-|   |   |   |   |-- task-registry.schema.json
-|   |   |   |   +-- task-status.schema.json
-|   |   |   |-- sprint-0/
-|   |   |   |   |-- phase-0-initialisation/
-|   |   |   |   |   |-- _phase-summary.json
-|   |   |   |   |   |-- EXC-INIT-001.json
-|   |   |   |   |   +-- IFC-000.json
-|   |   |   |   |-- phase-1-ai-foundation/
-|   |   |   |   |   |-- _phase-summary.json
-|   |   |   |   |   +-- AI-SETUP-001.json
-|   |   |   |   |-- phase-2-parallel/
-|   |   |   |   |   |-- parallel-a/
-|   |   |   |   |   |   |-- AI-SETUP-002.json
-|   |   |   |   |   |   +-- AI-SETUP-003.json
-|   |   |   |   |   |-- parallel-b/
-|   |   |   |   |   |   |-- ENV-001-AI.json
-|   |   |   |   |   |   |-- ENV-002-AI.json
-|   |   |   |   |   |   |-- ENV-003-AI.json
-|   |   |   |   |   |   |-- ENV-005-AI.json
-|   |   |   |   |   |   |-- ENV-009-AI.json
-|   |   |   |   |   |   |-- ENV-012-AI.json
-|   |   |   |   |   |   +-- ENV-014-AI.json
-|   |   |   |   |   |-- parallel-c/
-|   |   |   |   |   |   |-- EXC-SEC-001.json
-|   |   |   |   |   |   +-- IFC-160.json
-|   |   |   |   |   +-- _phase-summary.json
-|   |   |   |   |-- phase-3-dependencies/
-|   |   |   |   |   |-- _phase-summary.json
-|   |   |   |   |   |-- ENV-004-AI.json
-|   |   |   |   |   |-- ENV-006-AI.json
-|   |   |   |   |   |-- ENV-007-AI.json
-|   |   |   |   |   |-- ENV-008-AI.json
-|   |   |   |   |   |-- ENV-010-AI.json
-|   |   |   |   |   |-- ENV-011-AI.json
-|   |   |   |   |   |-- ENV-013-AI.json
-|   |   |   |   |   |-- ENV-015-AI.json
-|   |   |   |   |   |-- ENV-016-AI.json
-|   |   |   |   |   +-- EP-001-AI.json
-|   |   |   |   |-- phase-4-final-setup/
-|   |   |   |   |   |-- _phase-summary.json
-|   |   |   |   |   +-- ENV-017-AI.json
-|   |   |   |   |-- phase-5-completion/
-|   |   |   |   |   |-- _phase-summary.json
-|   |   |   |   |   |-- ANALYTICS-001.json
-|   |   |   |   |   |-- AUTOMATION-001.json
-|   |   |   |   |   |-- AUTOMATION-002.json
-|   |   |   |   |   |-- BRAND-001.json
-|   |   |   |   |   |-- DOC-001.json
-|   |   |   |   |   |-- ENG-OPS-001.json
-|   |   |   |   |   |-- ENV-018-AI.json
-|   |   |   |   |   |-- GTM-001.json
-|   |   |   |   |   |-- GTM-002.json
-|   |   |   |   |   +-- PM-OPS-001.json
-|   |   |   |   +-- _summary.json
-|   |   |   |-- plan-overrides.yaml
-|   |   |   |-- plan-remediation.csv
-|   |   |   |-- README.md
-|   |   |   |-- review-queue.json
-|   |   |   +-- validation.yaml
-|   |   +-- DATA_SYNC.md
-|   |-- lib/
-|   |   |-- api.ts
-|   |   |-- csv-parser.ts
-|   |   |-- data-sync.ts
-|   |   |-- data-validator.ts
-|   |   |-- governance.ts
-|   |   |-- paths.ts
-|   |   |-- run-assistant.ts
-|   |   |-- types.ts
-|   |   +-- utils.ts
-|   |-- scripts/
-|   |   |-- generate_tree.ps1
-|   |   +-- sync-metrics.ts
-|   |-- .browserslistrc
-|   |-- .gitignore
-|   |-- eslint.config.js
-|   |-- next.config.js
-|   |-- next-env.d.ts
-|   |-- package.json
-|   |-- postcss.config.js
-|   |-- tailwind.config.ts
-|   |-- tsconfig.json
-|   +-- tsconfig.tsbuildinfo
-|-- web/
-|   |-- src/
+|   |   |   |       |-- __tests__/
+|   |   |   |       |   +-- task.router.test.ts
+|   |   |   |       +-- task.router.ts
+|   |   |   |-- shared/
+|   |   |   |   |-- e2e-type-safety-test.ts
+|   |   |   |   |-- performance-benchmark.ts
+|   |   |   |   |-- scoring-output-schema.zod.ts
+|   |   |   |   +-- subscription-demo.ts
+|   |   |   |-- test/
+|   |   |   |   +-- setup.ts
+|   |   |   |-- tracing/
+|   |   |   |   |-- correlation.ts
+|   |   |   |   |-- example.ts
+|   |   |   |   |-- index.ts
+|   |   |   |   |-- middleware.test.ts
+|   |   |   |   |-- middleware.ts
+|   |   |   |   |-- otel.test.ts
+|   |   |   |   |-- otel.ts
+|   |   |   |   |-- sentry.test.ts
+|   |   |   |   |-- sentry.ts
+|   |   |   |   +-- tracing.test.ts
+|   |   |   |-- context.ts
+|   |   |   |-- index.ts
+|   |   |   |-- router.ts
+|   |   |   |-- server.ts
+|   |   |   +-- trpc.ts
+|   |   |-- package.json
+|   |   |-- README.md
+|   |   +-- tsconfig.json
+|   |-- project-tracker/
+|   |   |-- __tests__/
+|   |   |   |-- ENV-007-AI_generated.test.ts
+|   |   |   |-- ENV-009-AI_generated.test.ts
+|   |   |   |-- ENV-012-AI_generated.test.ts
+|   |   |   +-- IFC-160_generated.test.ts
 |   |   |-- app/
-|   |   |   |-- analytics/
+|   |   |   |-- api/
+|   |   |   |   |-- audit/
+|   |   |   |   |   |-- affected/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- bundles/
+|   |   |   |   |   |   |-- [runId]/
+|   |   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- matrix/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   +-- stream/
+|   |   |   |   |       +-- route.ts
+|   |   |   |   |-- governance/
+|   |   |   |   |   |-- debt/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- digest/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- lint-report/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- migrate/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- phantom-audit/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- review-queue/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- run-lint/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- summary/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   +-- task/
+|   |   |   |   |       +-- [taskId]/
+|   |   |   |   |           +-- route.ts
+|   |   |   |   |-- matop/
+|   |   |   |   |   +-- sprint-runs/
+|   |   |   |   |       +-- route.ts
+|   |   |   |   |-- metrics/
+|   |   |   |   |   |-- phases/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- sprint/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- task/
+|   |   |   |   |   |   +-- [taskId]/
+|   |   |   |   |   |       +-- route.ts
+|   |   |   |   |   +-- watch/
+|   |   |   |   |       +-- route.ts
+|   |   |   |   |-- sprint-plan/
+|   |   |   |   |   +-- route.ts
+|   |   |   |   |-- swarm/
+|   |   |   |   |   |-- active-tasks/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- cli/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- explain/
+|   |   |   |   |   |   +-- [taskId]/
+|   |   |   |   |   |       +-- route.ts
+|   |   |   |   |   |-- health/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- kill-task/
+|   |   |   |   |   |   +-- [taskId]/
+|   |   |   |   |   |       +-- route.ts
+|   |   |   |   |   |-- questions/
+|   |   |   |   |   |   |-- [taskId]/
+|   |   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- restart-task/
+|   |   |   |   |   |   +-- [taskId]/
+|   |   |   |   |   |       +-- route.ts
+|   |   |   |   |   |-- start/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- stop/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- stream-log/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   |-- terminal/
+|   |   |   |   |   |   +-- [taskId]/
+|   |   |   |   |   |       +-- route.ts
+|   |   |   |   |   +-- view-log/
+|   |   |   |   |       +-- [taskId]/
+|   |   |   |   |           +-- route.ts
+|   |   |   |   +-- sync-metrics/
+|   |   |   |       +-- route.ts
+|   |   |   |-- swarm/
 |   |   |   |   +-- page.tsx
-|   |   |   |-- contacts/
-|   |   |   |   +-- page.tsx
-|   |   |   |-- dashboard/
-|   |   |   |   +-- page.tsx
-|   |   |   |-- leads/
-|   |   |   |   +-- page.tsx
+|   |   |   |-- terminal/
+|   |   |   |   +-- [taskId]/
+|   |   |   |       +-- page.tsx
 |   |   |   |-- globals.css
 |   |   |   |-- layout.tsx
 |   |   |   |-- page.tsx
 |   |   |   +-- providers.tsx
 |   |   |-- components/
-|   |   |   |-- navigation.tsx
-|   |   |   +-- theme-provider.tsx
-|   |   +-- lib/
-|   |       +-- trpc.ts
-|   |-- components.json
-|   |-- next.config.js
-|   |-- next-env.d.ts
+|   |   |   |-- AnalyticsView.tsx
+|   |   |   |-- AuditView.tsx
+|   |   |   |-- DashboardView.tsx
+|   |   |   |-- GovernanceView.tsx
+|   |   |   |-- KanbanView.tsx
+|   |   |   |-- MetricsView.tsx
+|   |   |   |-- SettingsView.tsx
+|   |   |   |-- SwarmMonitor.tsx
+|   |   |   +-- TaskModal.tsx
+|   |   |-- docs/
+|   |   |   |-- .specify/
+|   |   |   |   |-- memory/
+|   |   |   |   |   +-- constitution.md
+|   |   |   |   |-- planning/
+|   |   |   |   +-- specifications/
+|   |   |   |-- artifacts/
+|   |   |   |   |-- contexts/
+|   |   |   |   |   +-- .gitkeep
+|   |   |   |   |-- qualitative-reviews/
+|   |   |   |   |   +-- .gitkeep
+|   |   |   |   |-- reports/
+|   |   |   |   |   +-- .gitkeep
+|   |   |   |   |-- status/
+|   |   |   |   |   +-- .gitkeep
+|   |   |   |   |-- validation/
+|   |   |   |   |   +-- .gitkeep
+|   |   |   |   |-- work/
+|   |   |   |   |   +-- .gitkeep
+|   |   |   |   +-- .gitkeep
+|   |   |   |-- docs/
+|   |   |   |   +-- references/
+|   |   |   |-- logs/
+|   |   |   |-- metrics/
+|   |   |   |   |-- _global/
+|   |   |   |   |   |-- audit_playbook.md
+|   |   |   |   |   |-- dependency-graph.json
+|   |   |   |   |   |-- kpi-definitions.json
+|   |   |   |   |   |-- Sprint_plan.csv
+|   |   |   |   |   |-- Sprint_plan.json
+|   |   |   |   |   +-- task-registry.json
+|   |   |   |   |-- schemas/
+|   |   |   |   |   |-- dependency-graph.schema.json
+|   |   |   |   |   |-- kpi-definitions.schema.json
+|   |   |   |   |   |-- phase-summary.schema.json
+|   |   |   |   |   |-- sprint-summary.schema.json
+|   |   |   |   |   |-- task-registry.schema.json
+|   |   |   |   |   +-- task-status.schema.json
+|   |   |   |   |-- sprint-0/
+|   |   |   |   |   |-- phase-0-initialisation/
+|   |   |   |   |   |   |-- _phase-summary.json
+|   |   |   |   |   |   |-- EXC-INIT-001.json
+|   |   |   |   |   |   +-- IFC-000.json
+|   |   |   |   |   |-- phase-1-ai-foundation/
+|   |   |   |   |   |   |-- _phase-summary.json
+|   |   |   |   |   |   +-- AI-SETUP-001.json
+|   |   |   |   |   |-- phase-2-parallel/
+|   |   |   |   |   |   |-- parallel-a/
+|   |   |   |   |   |   |   |-- AI-SETUP-002.json
+|   |   |   |   |   |   |   +-- AI-SETUP-003.json
+|   |   |   |   |   |   |-- parallel-b/
+|   |   |   |   |   |   |   |-- ENV-001-AI.json
+|   |   |   |   |   |   |   |-- ENV-002-AI.json
+|   |   |   |   |   |   |   |-- ENV-003-AI.json
+|   |   |   |   |   |   |   |-- ENV-005-AI.json
+|   |   |   |   |   |   |   |-- ENV-009-AI.json
+|   |   |   |   |   |   |   |-- ENV-012-AI.json
+|   |   |   |   |   |   |   +-- ENV-014-AI.json
+|   |   |   |   |   |   |-- parallel-c/
+|   |   |   |   |   |   |   |-- EXC-SEC-001.json
+|   |   |   |   |   |   |   +-- IFC-160.json
+|   |   |   |   |   |   +-- _phase-summary.json
+|   |   |   |   |   |-- phase-3-dependencies/
+|   |   |   |   |   |   |-- _phase-summary.json
+|   |   |   |   |   |   |-- ENV-004-AI.json
+|   |   |   |   |   |   |-- ENV-006-AI.json
+|   |   |   |   |   |   |-- ENV-007-AI.json
+|   |   |   |   |   |   |-- ENV-008-AI.json
+|   |   |   |   |   |   |-- ENV-010-AI.json
+|   |   |   |   |   |   |-- ENV-011-AI.json
+|   |   |   |   |   |   |-- ENV-013-AI.json
+|   |   |   |   |   |   |-- ENV-015-AI.json
+|   |   |   |   |   |   |-- ENV-016-AI.json
+|   |   |   |   |   |   +-- EP-001-AI.json
+|   |   |   |   |   |-- phase-4-final-setup/
+|   |   |   |   |   |   |-- _phase-summary.json
+|   |   |   |   |   |   +-- ENV-017-AI.json
+|   |   |   |   |   |-- phase-5-completion/
+|   |   |   |   |   |   |-- _phase-summary.json
+|   |   |   |   |   |   |-- ANALYTICS-001.json
+|   |   |   |   |   |   |-- AUTOMATION-001.json
+|   |   |   |   |   |   |-- AUTOMATION-002.json
+|   |   |   |   |   |   |-- BRAND-001.json
+|   |   |   |   |   |   |-- DOC-001.json
+|   |   |   |   |   |   |-- ENG-OPS-001.json
+|   |   |   |   |   |   |-- ENV-018-AI.json
+|   |   |   |   |   |   |-- GTM-001.json
+|   |   |   |   |   |   |-- GTM-002.json
+|   |   |   |   |   |   +-- PM-OPS-001.json
+|   |   |   |   |   +-- _summary.json
+|   |   |   |   |-- sprint-1/
+|   |   |   |   |   |-- phase-1-validation/
+|   |   |   |   |   |   |-- _phase-summary.json
+|   |   |   |   |   |   |-- BRAND-002.json
+|   |   |   |   |   |   |-- GOV-001.json
+|   |   |   |   |   |   |-- IFC-001.json
+|   |   |   |   |   |   |-- IFC-002.json
+|   |   |   |   |   |   |-- IFC-003.json
+|   |   |   |   |   |   |-- IFC-072.json
+|   |   |   |   |   |   |-- IFC-073.json
+|   |   |   |   |   |   |-- IFC-074.json
+|   |   |   |   |   |   |-- IFC-075.json
+|   |   |   |   |   |   |-- IFC-077.json
+|   |   |   |   |   |   |-- IFC-106.json
+|   |   |   |   |   |   |-- IFC-119.json
+|   |   |   |   |   |   |-- IFC-135.json
+|   |   |   |   |   |   +-- SALES-001.json
+|   |   |   |   |   +-- _summary.json
+|   |   |   |   |-- sprint-2/
+|   |   |   |   |   |-- phase-1-validation/
+|   |   |   |   |   |   +-- _phase-summary.json
+|   |   |   |   |   |-- phase-2-domain/
+|   |   |   |   |   |   +-- _phase-summary.json
+|   |   |   |   |   |-- phase-3-documentation/
+|   |   |   |   |   |   +-- _phase-summary.json
+|   |   |   |   |   |-- _summary.json
+|   |   |   |   |   |-- IFC-004.json
+|   |   |   |   |   |-- IFC-005.json
+|   |   |   |   |   |-- IFC-085.json
+|   |   |   |   |   |-- IFC-109.json
+|   |   |   |   |   |-- IFC-146.json
+|   |   |   |   |   +-- SALES-002.json
+|   |   |   |   |-- plan-overrides.yaml
+|   |   |   |   |-- plan-remediation.csv
+|   |   |   |   |-- README.md
+|   |   |   |   |-- review-queue.json
+|   |   |   |   +-- validation.yaml
+|   |   |   +-- DATA_SYNC.md
+|   |   |-- lib/
+|   |   |   |-- api.ts
+|   |   |   |-- csv-parser.ts
+|   |   |   |-- data-sync.ts
+|   |   |   |-- data-validator.ts
+|   |   |   |-- governance.ts
+|   |   |   |-- paths.ts
+|   |   |   |-- run-assistant.ts
+|   |   |   |-- types.ts
+|   |   |   +-- utils.ts
+|   |   |-- scripts/
+|   |   |   |-- generate_tree.ps1
+|   |   |   +-- sync-metrics.ts
+|   |   |-- .browserslistrc
+|   |   |-- .gitignore
+|   |   |-- eslint.config.js
+|   |   |-- next.config.js
+|   |   |-- next-env.d.ts
+|   |   |-- package.json
+|   |   |-- postcss.config.js
+|   |   |-- tailwind.config.ts
+|   |   |-- tsconfig.json
+|   |   +-- tsconfig.tsbuildinfo
+|   |-- web/
+|   |   |-- src/
+|   |   |   |-- app/
+|   |   |   |   |-- analytics/
+|   |   |   |   |   +-- page.tsx
+|   |   |   |   |-- contacts/
+|   |   |   |   |   +-- page.tsx
+|   |   |   |   |-- dashboard/
+|   |   |   |   |   +-- page.tsx
+|   |   |   |   |-- leads/
+|   |   |   |   |   +-- page.tsx
+|   |   |   |   |-- globals.css
+|   |   |   |   |-- layout.tsx
+|   |   |   |   |-- page.tsx
+|   |   |   |   +-- providers.tsx
+|   |   |   |-- components/
+|   |   |   |   |-- lead-form.tsx
+|   |   |   |   |-- navigation.tsx
+|   |   |   |   +-- theme-provider.tsx
+|   |   |   +-- lib/
+|   |   |       +-- trpc.ts
+|   |   |-- components.json
+|   |   |-- eslint.config.mjs
+|   |   |-- next.config.js
+|   |   |-- next-env.d.ts
+|   |   |-- package.json
+|   |   |-- postcss.config.js
+|   |   |-- tailwind.config.ts
+|   |   |-- tsconfig.json
+|   |   +-- tsconfig.tsbuildinfo
+|   +-- tree_intelliflow_crm.txt
+|-- artifacts/
+|   |-- backups/
+|   |   |-- sprint-plan/
+|   |   +-- .gitkeep
+|   |-- benchmarks/
+|   |   |-- accuracy-benchmarks.json
+|   |   |-- baseline.json
+|   |   +-- performance-benchmark.json
+|   |-- contexts/
+|   |   |-- ENV-004-AI-context.md
+|   |   |-- ENV-005-AI-context.md
+|   |   |-- ENV-007-AI-context.md
+|   |   |-- ENV-008-AI-context.md
+|   |   |-- ENV-009-AI-context.md
+|   |   |-- ENV-012-AI-context.md
+|   |   |-- ENV-014-AI-context.md
+|   |   |-- ENV-015-AI-context.md
+|   |   |-- ENV-016-AI-context.md
+|   |   |-- IFC-000-context.md
+|   |   |-- IFC-001-context.md
+|   |   |-- IFC-002-context.md
+|   |   |-- IFC-003-context.md
+|   |   |-- IFC-072-context.md
+|   |   |-- IFC-073-context.md
+|   |   |-- IFC-074-context.md
+|   |   |-- IFC-075-context.md
+|   |   |-- IFC-076-context.md
+|   |   |-- IFC-077-context.md
+|   |   |-- IFC-106-context.md
+|   |   |-- IFC-119-context.md
+|   |   +-- IFC-160-context.md
+|   |-- forensics/
+|   |-- lighthouse/
+|   |   +-- .gitkeep
+|   |-- logs/
+|   |   |-- swarm/
+|   |   |   |-- ENV-008-AI.log
+|   |   |   |-- ENV-014-AI.log
+|   |   |   |-- ENV-015-AI.log
+|   |   |   |-- ENV-016-AI.log
+|   |   |   |-- swarm.log
+|   |   |   +-- swarm-health.json
+|   |   |-- .gitkeep
+|   |   |-- backlog-updates-log.json
+|   |   |-- optimization-log.csv
+|   |   |-- patch-log.csv
+|   |   +-- test-generation-log.json
+|   |-- metrics/
+|   |   |-- automation-metrics.json
+|   |   |-- confidence-metrics.csv
+|   |   |-- container-metrics.json
+|   |   |-- handoff-metrics.json
+|   |   |-- insights-accuracy.csv
+|   |   |-- metrics-realtime.json
+|   |   |-- prediction-accuracy.json
+|   |   |-- response-metrics.csv
+|   |   +-- risk-kpis.json
+|   |-- misc/
+|   |   |-- .locks/
+|   |   |-- .status/
+|   |   |-- agent-coordination/
+|   |   |   |-- README.md
+|   |   |   +-- routing-rules.json
+|   |   |-- ai-dashboard/
+|   |   |   |-- dashboard-spec.json
+|   |   |   +-- README.md
+|   |   |-- analytics/
+|   |   |   |-- event-schema.json
+|   |   |   +-- README.md
+|   |   |-- architecture-spike/
+|   |   |   |-- performance-test.ts
+|   |   |   |-- README.md
+|   |   |   +-- type-safety-validation.ts
+|   |   |-- otel-implementation/
+|   |   |   |-- correlation-patterns.md
+|   |   |   |-- implementation-guide.md
+|   |   |   +-- instrumentation-checklist.md
+|   |   |-- sales/
+|   |   |   +-- pitch-deck-source-link.txt
+|   |   |-- sprint-planning/
+|   |   |   +-- README.md
+|   |   |-- tasks/
+|   |   |-- templates/
+|   |   |   |-- backlog-refinement.md
+|   |   |   |-- daily-standup.md
+|   |   |   |-- sprint-planning.md
+|   |   |   |-- sprint-retrospective.md
+|   |   |   +-- sprint-review.md
+|   |   |-- ab-test-results.csv
+|   |   |-- access-policy.json
+|   |   |-- anomaly-detection.json
+|   |   |-- cache-config.yaml
+|   |   |-- capacity-model.csv
+|   |   |-- ceremony-calendar.ics
+|   |   |-- ci-coverage-config.yml
+|   |   |-- command-test-results.csv
+|   |   |-- commitlint.config.js
+|   |   |-- correlation-test.csv
+|   |   |-- docusaurus.config.js
+|   |   |-- drift-detection-config.yaml
+|   |   |-- env-validation-results.json
+|   |   |-- false-positive.csv
+|   |   |-- health-check.yaml
+|   |   |-- lint-results.json
+|   |   |-- load-test-with-limits.json
+|   |   |-- model-comparison.csv
+|   |   |-- mttr-baseline.json
+|   |   |-- ollama-setup.sh
+|   |   |-- optimization-loop.yaml
+|   |   |-- orchestration-config.yaml
+|   |   |-- otel-config.yaml
+|   |   |-- pipeline-status.yaml
+|   |   |-- privacy-config.json
+|   |   |-- profiling-results.json
+|   |   |-- rate-limit-config.yaml
+|   |   |-- roi-tracking.csv
+|   |   |-- rollout-config.json
+|   |   |-- sandbox-security.json
+|   |   |-- security-baseline.json
+|   |   |-- security-scan-results.json
+|   |   |-- self-healing-rules.yaml
+|   |   |-- sentry-project-config.json
+|   |   |-- team-licenses.csv
+|   |   |-- test-orchestration.json
+|   |   |-- vault-config.yaml
+|   |   |-- velocity-prediction.json
+|   |   +-- workflow-automation.yaml
+|   |-- performance/
+|   |   +-- README.md
+|   |-- qualitative-reviews/
+|   |-- reports/
+|   |   |-- attestation/
+|   |   |   |-- sprint-0-latest.json
+|   |   |   +-- sprint-0-latest.md
+|   |   |-- security/
+|   |   |   |-- gitleaks-report.json
+|   |   |   +-- pnpm-audit-latest.json
+|   |   |-- sprint-runs/
+|   |   |   |-- sprint-2-20251222-211121-e7ff96d7.json
+|   |   |   +-- sprint-2-20251222-211121-e7ff96d7.md
+|   |   |-- system-audit/
+|   |   |   |-- 20251222-201705-b57b8de5/
+|   |   |   |   |-- gates/
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   +-- task-updates/
+|   |   |   |-- 20251222-211124-d01dd204/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Automation.json
+|   |   |   |   |   +-- Domain.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- remediation.md
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251222-211356-505a23b8/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   +-- turbo-test-coverage.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Domain.json
+|   |   |   |   |   +-- Intelligence.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- csv-patch-proposal.json
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251222-211454-7aac6bbb/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   +-- turbo-test-coverage.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Domain.json
+|   |   |   |   |   +-- Intelligence.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- csv-patch-proposal.json
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251222-211500-9a6fa614/
+|   |   |   |   |-- gates/
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Domain.json
+|   |   |   |   |   +-- Security.json
+|   |   |   |   +-- task-updates/
+|   |   |   |-- 20251222-211532-eca8cc2d/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Automation.json
+|   |   |   |   |   +-- Domain.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- remediation.md
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251222-211645-5159b335/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Automation.json
+|   |   |   |   |   +-- Domain.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- remediation.md
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251222-211828-1a7c95a2/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Automation.json
+|   |   |   |   |   +-- Domain.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- remediation.md
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- 20251222-211918-6e7017cf/
+|   |   |   |   |-- gates/
+|   |   |   |   |   |-- dependency-cruiser-validate.log
+|   |   |   |   |   |-- eslint-max-warnings-0.log
+|   |   |   |   |   |-- turbo-test-coverage.log
+|   |   |   |   |   +-- turbo-typecheck.log
+|   |   |   |   |-- stoa-verdicts/
+|   |   |   |   |   |-- Automation.json
+|   |   |   |   |   +-- Domain.json
+|   |   |   |   |-- task-updates/
+|   |   |   |   |-- evidence-hashes.txt
+|   |   |   |   |-- gate-selection.json
+|   |   |   |   |-- remediation.md
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   |-- full-audit-20251221T193347/
+|   |   |   |   |-- summary.json
+|   |   |   |   |-- summary.md
+|   |   |   |   |-- tier2-results.json
+|   |   |   |   +-- tier3-results.json
+|   |   |   |-- full-audit-20251221T222032/
+|   |   |   |   |-- gates/
+|   |   |   |   |-- summary.json
+|   |   |   |   +-- summary.md
+|   |   |   +-- sprint1-20251221T190726/
+|   |   |       |-- gates/
+|   |   |       |-- stoa-verdicts/
+|   |   |       |-- summary.json
+|   |   |       +-- summary.md
+|   |   |-- validation/
+|   |   |   |-- audit-report.json
+|   |   |   |-- sprint-0-latest.json
+|   |   |   |-- sprint-0-latest.md
+|   |   |   |-- validation-ENV-007-AI.json
+|   |   |   |-- validation-ENV-012-AI.json
+|   |   |   +-- validation-IFC-160.json
+|   |   |-- artifact-containment-analysis.md
+|   |   |-- ARTIFACT-CONTAINMENT-SUMMARY.md
+|   |   |-- audit-report.json
+|   |   |-- business-case.pdf
+|   |   |-- completed-task-ids.txt
+|   |   |-- compliance-report.pdf
+|   |   |-- cost-savings-report.json
+|   |   |-- csv-patch-history.jsonl
+|   |   |-- debt-ledger.json
+|   |   |-- financial-model.xlsx
+|   |   |-- gdpr-compliance.pdf
+|   |   |-- ifc-000-completion-manifest.json
+|   |   |-- IFC-075-implementation-summary.md
+|   |   |-- phantom-completion-audit.json
+|   |   |-- plan-lint-report.json
+|   |   |-- retro-action-items.md
+|   |   |-- review-queue.json
+|   |   |-- review-queue.md
+|   |   |-- risk-matrix.xlsx
+|   |   |-- runtime-path-linter-design.md
+|   |   |-- SALES-001-quick-reference.md
+|   |   |-- SALES-001-validation-report.md
+|   |   |-- status-snapshot.json
+|   |   |-- stoa-review-queue.json
+|   |   |-- swot-analysis.xlsx
+|   |   |-- traceability-matrix.json
+|   |   +-- turbo-validation.json
+|   |-- sprint0/
+|   |   +-- codex-run/
+|   |       |-- manifests/
+|   |       |   |-- Impl-CoreScaffold.json
+|   |       |   |-- Impl-Remaining.json
+|   |       |   |-- Integrator.json
+|   |       |   |-- Planner.json
+|   |       |   |-- Reporter.json
+|   |       |   |-- TaskExtractor.json
+|   |       |   +-- Validator.json
+|   |       |-- pr-drafts/
+|   |       |   |-- AI-SETUP-001.md
+|   |       |   |-- AI-SETUP-002.md
+|   |       |   |-- AI-SETUP-003.md
+|   |       |   |-- AUTOMATION-001.md
+|   |       |   |-- AUTOMATION-002.md
+|   |       |   |-- ENV-001-AI.md
+|   |       |   |-- ENV-002-AI.md
+|   |       |   |-- ENV-008-AI.md
+|   |       |   |-- ENV-010-AI.md
+|   |       |   |-- ENV-013-AI.md
+|   |       |   |-- ENV-014-AI.md
+|   |       |   |-- ENV-015-AI.md
+|   |       |   |-- ENV-016-AI.md
+|   |       |   |-- ENV-017-AI.md
+|   |       |   |-- ENV-018-AI.md
+|   |       |   |-- IFC-000.md
+|   |       |   |-- REPO-track-artifacts.md
+|   |       |   |-- SPRINT0-metrics-sync.md
+|   |       |   +-- SPRINT0-validation-output.md
+|   |       |-- check-MATOA.md
+|   |       |-- Framework.md
+|   |       |-- governance.md
+|   |       |-- plan.json
+|   |       |-- prompt.md
+|   |       |-- report.md
+|   |       |-- tasks.json
+|   |       +-- validation-output.txt
+|   |-- status/
+|   |-- test-results/
+|   |   +-- .gitkeep
+|   |-- validation/
+|   |-- blockers.json
+|   |-- debt-ledger.jsonl
+|   |-- debt-ledger.md
+|   |-- human-intervention-required.json
+|   |-- monitoring-config-hashes.txt
+|   |-- move-map.csv
+|   |-- Sprint0_prompt.md
+|   +-- Sprint1_prompt.md
+|-- docs/
+|   |-- agent/
+|   |   +-- setup-complete-checklist.md
+|   |-- analytics/
+|   |   |-- dashboards-requirements.md
+|   |   |-- event-taxonomy.md
+|   |   +-- rfm-abc-spec.md
+|   |-- api/
+|   |   |-- overview.md
+|   |   +-- trpc-routes.md
+|   |-- architecture/
+|   |   |-- adr/
+|   |   |   |-- 000-template.md
+|   |   |   +-- 001-hexagonal-architecture.md
+|   |   |-- arp/
+|   |   |   +-- 000-template.md
+|   |   |-- diagrams/
+|   |   |   +-- README.md
+|   |   |-- flowcharts/
+|   |   |   +-- README.md
+|   |   |-- artifact-conventions.md
+|   |   |-- decision-workflow.md
+|   |   |-- overview.md
+|   |   +-- repo-layout.md
+|   |-- company/
+|   |   |-- brand/
+|   |   |   |-- palette.tokens.json
+|   |   |   |-- spacing.tokens.json
+|   |   |   |-- typography.tokens.json
+|   |   |   +-- visual-identity.md
+|   |   |-- go-to-market/
+|   |   |   |-- icp.md
+|   |   |   |-- icp-personas.md
+|   |   |   |-- objections.md
+|   |   |   +-- personas.md
+|   |   |-- messaging/
+|   |   |   |-- copy-blocks.md
+|   |   |   |-- cta-library.md
+|   |   |   |-- positioning.md
+|   |   |   |-- tone-of-voice.md
+|   |   |   +-- value-props.md
+|   |   |-- product/
+|   |   |   +-- product-vision.md
+|   |   +-- master-brief.md
+|   |-- compliance/
+|   |   |-- gdpr-checklist.md
+|   |   +-- retention-policy.md
+|   |-- design-system/
+|   |   |-- theme-reference-spec.md
+|   |   |-- token-mapping.md
+|   |   |-- token-naming.md
+|   |   +-- VALIDATION.md
+|   |-- governance/
+|   |   +-- risk-register.md
+|   |-- guides/
+|   |   |-- getting-started.md
+|   |   +-- sprint-data-consistency.md
+|   |-- implementation/
+|   |   +-- ENV-007-AI-tRPC-API-Setup.md
+|   |-- observability/
+|   |   +-- IFC-074-IMPLEMENTATION.md
+|   |-- operations/
+|   |   |-- abc-classification.md
+|   |   |-- easypanel-runbook.md
+|   |   |-- engineering-playbook.md
+|   |   |-- monitoring-runbook.md
+|   |   |-- pr-checklist.md
+|   |   |-- project-playbook.md
+|   |   |-- quality-gates.md
+|   |   |-- raci.md
+|   |   |-- release-rollback.md
+|   |   |-- ticket-sizing.md
+|   |   |-- validation-scripts.md
+|   |   +-- wip-policy.md
+|   |-- ops/
+|   |   |-- playbooks/
+|   |   |   |-- audit_playbook.md
+|   |   |   |-- operator_observability_playbook.md
+|   |   |   +-- sprint0_comprehensive_audit_playbook_v2.md
+|   |   |-- audit-performance-and-iteration.md
+|   |   |-- intelliflow_audit_improvements_prompt.md
+|   |   |-- intelliflow_deep_daily_ops_and_integrity.md
+|   |   +-- system-audit.md
+|   |-- planning/
+|   |   |-- adr/
+|   |   |   |-- ADR-001-modern-stack.md
+|   |   |   |-- ADR-002-csv-source-of-truth.md
+|   |   |   |-- ADR-002-domain-driven-design.md
+|   |   |   |-- ADR-003-sprint-scoped-validation.md
+|   |   |   |-- ADR-003-type-safe-api-design.md
+|   |   |   |-- ADR-004-multi-tenancy.md
+|   |   |   |-- ADR-005-workflow-engine.md
+|   |   |   |-- ADR-006-agent-tools.md
+|   |   |   |-- ADR-007-data-governance.md
+|   |   |   |-- ADR-008-audit-logging.md
+|   |   |   |-- ADR-009-zero-trust-security.md
+|   |   |   |-- README.md
+|   |   |   +-- template.md
+|   |   |-- ADR-000-feasibility.md
+|   |   |-- DDD-context-map.puml
+|   |   |-- definition-of-ready.md
+|   |   |-- iso42001-gap-analysis.md
+|   |   |-- prd-template.md
+|   |   +-- user-journey-template.md
+|   |-- references/
+|   |   +-- README.md
+|   |-- sales/
+|   |   |-- demo-script.md
+|   |   |-- discovery-script.md
+|   |   |-- one-pager.md
+|   |   |-- outreach-sequences.md
+|   |   |-- pitch-deck-outline.md
+|   |   +-- sales-motion-playbook.md
+|   |-- security/
+|   |   |-- data-flows.md
+|   |   |-- dpia.md
+|   |   |-- multi-tenant-isolation.md
+|   |   |-- owasp-checklist.md
+|   |   |-- README.md
+|   |   +-- rls-design.md
+|   |-- setup/
+|   |   |-- docker-compose-overlays.md
+|   |   |-- sonarqube-setup.md
+|   |   +-- sonarqube-token-guide.md
+|   |-- shared/
+|   |   |-- copilot-instructions.md
+|   |   +-- review-checklist.md
+|   |-- src/
+|   |   +-- css/
+|   |       +-- custom.css
+|   |-- attestation-schema.yaml
+|   |-- debt-ledger.yaml
+|   |-- docusaurus.config.js
+|   |-- evidence-pack-schema.yaml
+|   |-- getting-started.md
+|   |-- index.md
+|   |-- intro.md
 |   |-- package.json
-|   |-- postcss.config.js
-|   |-- tailwind.config.ts
-|   |-- tsconfig.json
-|   +-- tsconfig.tsbuildinfo
-+-- tree_temp.txt
+|   |-- plan-change-log.md
+|   |-- plan-governance.md
+|   |-- quality-gates.md
+|   |-- sidebars.js
+|   |-- sprint-0-completion-summary.md
+|   +-- tdd-guidelines.md
+|-- infra/
+|   |-- docker/
+|   |   |-- postgres/
+|   |   |   +-- init.sql
+|   |   |-- docker-compose.ollama.yml
+|   |   |-- Dockerfile.ai-worker
+|   |   |-- Dockerfile.api
+|   |   +-- Dockerfile.web
+|   |-- easypanel/
+|   |   |-- backup.sh
+|   |   +-- README.md
+|   |-- monitoring/
+|   |   |-- alerts/
+|   |   |   +-- intelliflow-alerts.yaml
+|   |   |-- dashboards/
+|   |   |   +-- main.json
+|   |   |-- grafana/
+|   |   |   +-- provisioning/
+|   |   |       |-- dashboards/
+|   |   |       |   +-- dashboards.yml
+|   |   |       +-- datasources/
+|   |   |           +-- datasources.yml
+|   |   |-- docker-compose.monitoring.yml
+|   |   |-- health-checks.yaml
+|   |   |-- loki-config.yml
+|   |   |-- otel-collector.yaml
+|   |   |-- otel-config.yaml
+|   |   |-- performance-budgets.json
+|   |   |-- prometheus.yml
+|   |   |-- README.md
+|   |   +-- tempo-config.yml
+|   |-- security/
+|   |   |-- dependency-check.yaml
+|   |   |-- mtls-config.yaml
+|   |   +-- trivy.yaml
+|   |-- supabase/
+|   |   |-- functions/
+|   |   |   |-- hello/
+|   |   |   |   +-- index.ts
+|   |   |   |-- deno.json
+|   |   |   +-- README.md
+|   |   |-- migrations/
+|   |   |   |-- 20250101000000_initial_schema.sql
+|   |   |   |-- 20250122000000_enable_rls.sql
+|   |   |   |-- 20250123000000_rls_helper_functions.sql
+|   |   |   +-- 20250124000000_rls_policies.sql
+|   |   |-- .env.local.example
+|   |   |-- config.toml
+|   |   |-- IMPLEMENTATION-GUIDE.md
+|   |   |-- README.md
+|   |   |-- rls-policies.sql
+|   |   |-- setup-local.ps1
+|   |   |-- setup-local.sh
+|   |   |-- storage-config.json
+|   |   +-- storage-setup.sql
+|   +-- terraform/
+|       |-- environments/
+|       |   |-- dev/
+|       |   |-- production/
+|       |   +-- staging/
+|       |-- modules/
+|       |   |-- railway/
+|       |   |   |-- main.tf
+|       |   |   |-- outputs.tf
+|       |   |   |-- README.md
+|       |   |   +-- variables.tf
+|       |   |-- supabase/
+|       |   |   |-- main.tf
+|       |   |   |-- outputs.tf
+|       |   |   |-- README.md
+|       |   |   +-- variables.tf
+|       |   |-- vercel/
+|       |   |   |-- main.tf
+|       |   |   |-- outputs.tf
+|       |   |   |-- README.md
+|       |   |   +-- variables.tf
+|       |   +-- README.md
+|       |-- .gitignore
+|       |-- main.tf
+|       |-- outputs.tf
+|       |-- providers.tf
+|       |-- README.md
+|       |-- terraform.tfvars.example
+|       +-- variables.tf
+|-- logs/
+|-- packages/
+|   |-- adapters/
+|   |   |-- __tests__/
+|   |   |   |-- InMemoryCache.test.ts
+|   |   |   |-- InMemoryEventBus.test.ts
+|   |   |   |-- InMemoryLeadRepository.test.ts
+|   |   |   |-- MockAIService.test.ts
+|   |   |   +-- PrismaLeadRepository.test.ts
+|   |   |-- artifacts/
+|   |   |-- src/
+|   |   |   |-- external/
+|   |   |   |   |-- index.ts
+|   |   |   |   |-- InMemoryCache.ts
+|   |   |   |   |-- InMemoryEventBus.ts
+|   |   |   |   +-- MockAIService.ts
+|   |   |   |-- repositories/
+|   |   |   |   |-- index.ts
+|   |   |   |   |-- InMemoryLeadRepository.ts
+|   |   |   |   +-- PrismaLeadRepository.ts
+|   |   |   +-- index.ts
+|   |   |-- package.json
+|   |   +-- tsconfig.json
+|   |-- api-client/
+|   |   |-- src/
+|   |   |   |-- index.ts
+|   |   |   |-- react-client.tsx
+|   |   |   +-- vanilla-client.ts
+|   |   |-- package.json
+|   |   |-- README.md
+|   |   +-- tsconfig.json
+|   |-- application/
+|   |   |-- __tests__/
+|   |   |   |-- ConvertLeadUseCase.test.ts
+|   |   |   |-- CreateLeadUseCase.test.ts
+|   |   |   |-- QualifyLeadUseCase.test.ts
+|   |   |   +-- ScoreLeadUseCase.test.ts
+|   |   |-- artifacts/
+|   |   |-- src/
+|   |   |   |-- errors/
+|   |   |   |   |-- ApplicationErrors.ts
+|   |   |   |   +-- index.ts
+|   |   |   |-- ports/
+|   |   |   |   |-- external/
+|   |   |   |   |   |-- AIServicePort.ts
+|   |   |   |   |   |-- AuthServicePort.ts
+|   |   |   |   |   |-- CachePort.ts
+|   |   |   |   |   |-- EventBusPort.ts
+|   |   |   |   |   +-- index.ts
+|   |   |   |   |-- repositories/
+|   |   |   |   |   |-- AccountRepositoryPort.ts
+|   |   |   |   |   |-- ContactRepositoryPort.ts
+|   |   |   |   |   |-- index.ts
+|   |   |   |   |   |-- LeadRepositoryPort.ts
+|   |   |   |   |   |-- OpportunityRepositoryPort.ts
+|   |   |   |   |   +-- TaskRepositoryPort.ts
+|   |   |   |   +-- index.ts
+|   |   |   |-- usecases/
+|   |   |   |   |-- leads/
+|   |   |   |   |   |-- ConvertLeadUseCase.ts
+|   |   |   |   |   |-- CreateLeadUseCase.ts
+|   |   |   |   |   |-- index.ts
+|   |   |   |   |   |-- QualifyLeadUseCase.ts
+|   |   |   |   |   +-- ScoreLeadUseCase.ts
+|   |   |   |   +-- index.ts
+|   |   |   +-- index.ts
+|   |   |-- package.json
+|   |   +-- tsconfig.json
+|   |-- db/
+|   |   |-- prisma/
+|   |   |   |-- schema.prisma
+|   |   |   +-- seed.ts
+|   |   |-- src/
+|   |   |   |-- client.ts
+|   |   |   +-- index.ts
+|   |   |-- .env.example
+|   |   |-- .gitignore
+|   |   |-- package.json
+|   |   +-- tsconfig.json
+|   |-- domain/
+|   |   |-- __tests__/
+|   |   |   +-- lead.test.ts
+|   |   |-- artifacts/
+|   |   |-- src/
+|   |   |   |-- crm/
+|   |   |   |   |-- account/
+|   |   |   |   |   |-- __tests__/
+|   |   |   |   |   |   |-- Account.test.ts
+|   |   |   |   |   |   +-- AccountId.test.ts
+|   |   |   |   |   |-- Account.ts
+|   |   |   |   |   |-- AccountEvents.ts
+|   |   |   |   |   |-- AccountId.ts
+|   |   |   |   |   +-- AccountRepository.ts
+|   |   |   |   |-- contact/
+|   |   |   |   |   |-- __tests__/
+|   |   |   |   |   |   |-- Contact.test.ts
+|   |   |   |   |   |   +-- ContactId.test.ts
+|   |   |   |   |   |-- Contact.ts
+|   |   |   |   |   |-- ContactEvents.ts
+|   |   |   |   |   |-- ContactId.ts
+|   |   |   |   |   +-- ContactRepository.ts
+|   |   |   |   |-- lead/
+|   |   |   |   |   |-- __tests__/
+|   |   |   |   |   |   |-- Email.test.ts
+|   |   |   |   |   |   |-- Lead.test.ts
+|   |   |   |   |   |   |-- LeadId.test.ts
+|   |   |   |   |   |   +-- LeadScore.test.ts
+|   |   |   |   |   |-- Email.ts
+|   |   |   |   |   |-- Lead.ts
+|   |   |   |   |   |-- LeadEvents.ts
+|   |   |   |   |   |-- LeadId.ts
+|   |   |   |   |   |-- LeadRepository.ts
+|   |   |   |   |   +-- LeadScore.ts
+|   |   |   |   |-- opportunity/
+|   |   |   |   |   |-- __tests__/
+|   |   |   |   |   |   |-- Opportunity.test.ts
+|   |   |   |   |   |   +-- OpportunityId.test.ts
+|   |   |   |   |   |-- Opportunity.ts
+|   |   |   |   |   |-- OpportunityEvents.ts
+|   |   |   |   |   |-- OpportunityId.ts
+|   |   |   |   |   +-- OpportunityRepository.ts
+|   |   |   |   +-- task/
+|   |   |   |       |-- __tests__/
+|   |   |   |       |   |-- Task.test.ts
+|   |   |   |       |   +-- TaskId.test.ts
+|   |   |   |       |-- Task.ts
+|   |   |   |       |-- TaskEvents.ts
+|   |   |   |       |-- TaskId.ts
+|   |   |   |       +-- TaskRepository.ts
+|   |   |   |-- shared/
+|   |   |   |   |-- __tests__/
+|   |   |   |   |   |-- AggregateRoot.test.ts
+|   |   |   |   |   |-- DomainEvent.test.ts
+|   |   |   |   |   |-- Entity.test.ts
+|   |   |   |   |   |-- Result.test.ts
+|   |   |   |   |   +-- ValueObject.test.ts
+|   |   |   |   |-- AggregateRoot.ts
+|   |   |   |   |-- DomainEvent.ts
+|   |   |   |   |-- Entity.ts
+|   |   |   |   |-- QueryTypes.ts
+|   |   |   |   |-- Result.ts
+|   |   |   |   +-- ValueObject.ts
+|   |   |   +-- index.ts
+|   |   |-- package.json
+|   |   +-- tsconfig.json
+|   |-- observability/
+|   |   |-- __tests__/
+|   |   |   |-- logging.test.ts
+|   |   |   +-- tracing.test.ts
+|   |   |-- artifacts/
+|   |   |-- src/
+|   |   |   |-- index.ts
+|   |   |   |-- logging.ts
+|   |   |   |-- metrics.ts
+|   |   |   |-- tracer.ts
+|   |   |   +-- tracing.ts
+|   |   |-- package.json
+|   |   |-- README.md
+|   |   |-- test-output.txt
+|   |   |-- test-output2.txt
+|   |   |-- tsconfig.json
+|   |   +-- vitest.config.ts
+|   |-- platform/
+|   |   |-- src/
+|   |   |   |-- feature-flags/
+|   |   |   |   |-- index.ts
+|   |   |   |   |-- in-memory-provider.ts
+|   |   |   |   |-- schema.ts
+|   |   |   |   +-- types.ts
+|   |   |   +-- index.ts
+|   |   |-- package.json
+|   |   |-- README.md
+|   |   +-- tsconfig.json
+|   |-- typescript-config/
+|   |   |-- base.json
+|   |   |-- nextjs.json
+|   |   |-- package.json
+|   |   |-- react.json
+|   |   +-- react-library.json
+|   |-- ui/
+|   |   |-- src/
+|   |   |   |-- components/
+|   |   |   |   |-- button.tsx
+|   |   |   |   |-- card.tsx
+|   |   |   |   |-- data-table.tsx
+|   |   |   |   |-- form.tsx
+|   |   |   |   |-- input.tsx
+|   |   |   |   |-- label.tsx
+|   |   |   |   +-- table.tsx
+|   |   |   |-- lib/
+|   |   |   |   +-- utils.ts
+|   |   |   +-- index.ts
+|   |   |-- package.json
+|   |   +-- tsconfig.json
+|   +-- validators/
+|       |-- __tests__/
+|       |   |-- account.test.ts
+|       |   |-- common.test.ts
+|       |   |-- contact.test.ts
+|       |   |-- lead.test.ts
+|       |   |-- opportunity.test.ts
+|       |   +-- task.test.ts
+|       |-- src/
+|       |   |-- account.ts
+|       |   |-- common.ts
+|       |   |-- contact.ts
+|       |   |-- index.ts
+|       |   |-- lead.ts
+|       |   |-- opportunity.ts
+|       |   +-- task.ts
+|       |-- package.json
+|       +-- tsconfig.json
+|-- scripts/
+|   |-- migration/
+|   |   |-- artifact-move-map.csv
+|   |   +-- README.md
+|   |-- swarm/
+|   |   |-- orchestrator.sh
+|   |   +-- swarm-manager.sh
+|   |-- clean-fake-task-data.ps1
+|   |-- fix-task-json-schema.ps1
+|   |-- fix-uppercase-sha256.ps1
+|   |-- pnpm-audit-report.js
+|   |-- run-soft.js
+|   |-- setup-ollama.sh
+|   |-- setup-quality-tools.sh
+|   |-- sonar-iterative.js
+|   |-- sonar-new-issues.js
+|   |-- sonarqube-helper.js
+|   |-- sonar-report-generator.js
+|   |-- sonar-scan.js
+|   |-- sonar-set-new-code-baseline.js
+|   |-- sonar-status.js
+|   |-- sonar-tracker.js
+|   +-- validate-artifact-paths.sh
+|-- supabase/
+|   |-- .gitignore
+|   +-- config.toml
+|-- tests/
+|   |-- architecture/
+|   |   |-- boundary-tests.ts
+|   |   |-- dependency-rules.ts
+|   |   |-- package.json
+|   |   |-- README.md
+|   |   +-- tsconfig.json
+|   |-- e2e/
+|   |   |-- global-setup.ts
+|   |   |-- global-teardown.ts
+|   |   +-- smoke.spec.ts
+|   |-- integration/
+|   |   |-- api.test.ts
+|   |   |-- db.test.ts
+|   |   |-- README.md
+|   |   +-- setup.ts
+|   |-- mocks/
+|   |   +-- prisma.mock.ts
+|   |-- utils/
+|   |   |-- db.ts
+|   |   |-- fixtures.ts
+|   |   |-- mocks.ts
+|   |   +-- test-helpers.ts
+|   +-- setup.ts
+|-- tools/
+|   |-- audit/
+|   |   |-- policies/
+|   |   |   |-- QUICK-REFERENCE.md
+|   |   |   |-- README.md
+|   |   |   +-- runtime-path-policy.yml
+|   |   |-- tests/
+|   |   |   |-- fixtures/
+|   |   |   |   +-- sample_plan.csv
+|   |   |   |-- conftest.py
+|   |   |   |-- test_affected.py
+|   |   |   |-- test_attestation.py
+|   |   |   |-- test_run_audit_matrix.py
+|   |   |   |-- test_run_audit_merge.py
+|   |   |   |-- test_sprint0_audit_rules.py
+|   |   |   +-- test_status_snapshot.py
+|   |   |-- affected.py
+|   |   |-- attestation.py
+|   |   |-- commit_msg_lint.py
+|   |   |-- gitleaks_scan.py
+|   |   |-- README.md
+|   |   |-- run_audit.py
+|   |   |-- runtime-path-linter.ts
+|   |   |-- sprint0_audit.py
+|   |   |-- status_snapshot.py
+|   |   +-- tool_versions.py
+|   |-- integrations/
+|   |   |-- codex/
+|   |   |   |-- prompts/
+|   |   |   |   |-- code-review.md
+|   |   |   |   +-- test-generation.md
+|   |   |   |-- cli-config.yaml
+|   |   |   +-- test-suite.ts
+|   |   +-- jules/
+|   |       |-- workflows/
+|   |       |   +-- code-analysis.yaml
+|   |       |-- connection.yaml
+|   |       +-- test-suite.ts
+|   |-- lint/
+|   |   +-- artifact-paths.ts
+|   |-- llm_prompts/
+|   |-- perf/
+|   |   |-- benchmark.ts
+|   |   +-- lighthouse.config.js
+|   |-- plan/
+|   |   |-- src/
+|   |   |   |-- adapters/
+|   |   |   |   |-- __init__.py
+|   |   |   |   |-- cli.py
+|   |   |   |   |-- csv_repository.py
+|   |   |   |   |-- json_writer.py
+|   |   |   |   +-- yaml_loader.py
+|   |   |   |-- application/
+|   |   |   |   |-- __init__.py
+|   |   |   |   |-- lint_plan.py
+|   |   |   |   +-- migrate_schema.py
+|   |   |   |-- domain/
+|   |   |   |   |-- __init__.py
+|   |   |   |   |-- debt.py
+|   |   |   |   |-- dependency_graph.py
+|   |   |   |   |-- task.py
+|   |   |   |   +-- validation_rules.py
+|   |   |   +-- __init__.py
+|   |   |-- tests/
+|   |   |   |-- fixtures/
+|   |   |   |   |-- plan_with_cross_sprint.csv
+|   |   |   |   |-- plan_with_cycle.csv
+|   |   |   |   +-- sample_plan.csv
+|   |   |   |-- integration/
+|   |   |   |   |-- __init__.py
+|   |   |   |   +-- test_cli.py
+|   |   |   |-- unit/
+|   |   |   |   |-- __init__.py
+|   |   |   |   |-- test_dependency_graph.py
+|   |   |   |   +-- test_task.py
+|   |   |   +-- __init__.py
+|   |   |-- pyproject.toml
+|   |   +-- README.md
+|   |-- plan-linter/
+|   |   |-- config.yaml
+|   |   |-- index.js
+|   |   |-- package.json
+|   |   +-- package-lock.json
+|   |-- scripts/
+|   |   |-- lib/
+|   |   |   |-- stoa/
+|   |   |   |   |-- attestation.ts
+|   |   |   |   |-- csv-governance.ts
+|   |   |   |   |-- evidence.ts
+|   |   |   |   |-- gate-runner.ts
+|   |   |   |   |-- gate-selection.ts
+|   |   |   |   |-- index.ts
+|   |   |   |   |-- orchestrator.ts
+|   |   |   |   |-- remediation.ts
+|   |   |   |   |-- stoa-assignment.ts
+|   |   |   |   |-- types.ts
+|   |   |   |   |-- verdict.ts
+|   |   |   |   +-- waiver.ts
+|   |   |   |-- output-paths.ts
+|   |   |   |-- validation-utils.test.ts
+|   |   |   +-- validation-utils.ts
+|   |   |-- attest-sprint.ts
+|   |   |-- capture-validation-output.ts
+|   |   |-- check-dependencies.ts
+|   |   |-- health-check.ts
+|   |   |-- migrate-runtime-artifacts.ps1
+|   |   |-- quality-report.ts
+|   |   |-- README.md
+|   |   |-- sprint-validation.ts
+|   |   |-- validate-env.ts
+|   |   |-- validate-sprint-data.ts
+|   |   +-- validate-turbo.ts
+|   +-- stoa/
+|       |-- matop-execute.ts
+|       |-- matop-sprint.ts
+|       +-- run-stoa.ts
+|-- .browserslistrc
+|-- .depcheckrc
+|-- .dependency-cruiser.cjs
+|-- .env.development
+|-- .env.example
+|-- .env.local.example
+|-- .env.test
+|-- .eslintrc.js
+|-- .gitignore
+|-- .gitleaks.toml
+|-- .prettierignore
+|-- audit-cutover.yml
+|-- audit-matrix.yml
+|-- CLAUDE.md
+|-- docker-compose.ollama.yml
+|-- docker-compose.sonarqube.yml
+|-- docker-compose.yml
+|-- knip.json
+|-- lighthouserc.js
+|-- 
+|-- package.json
+|-- PLANNING_ANALYSIS.md
+|-- playwright.config.ts
+|-- QUICK-START.md
+|-- README.md
+|-- SECURITY.md
+|-- SETUP.md
+|-- sonar-project.properties
+|-- tree_temp.txt
+|-- TRPC_QUICKSTART.md
+|-- tsconfig.json
+|-- VALIDATION.md
++-- vitest.config.ts
 
 

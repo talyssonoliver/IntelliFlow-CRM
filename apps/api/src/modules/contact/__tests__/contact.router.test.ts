@@ -7,7 +7,7 @@ import { TEST_UUIDS } from '../../../test/setup';
  * - linkToAccount, unlinkFromAccount, stats
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { contactRouter } from '../contact.router';
 import { prismaMock, createTestContext, mockContact, mockAccount, mockUser, mockLead, mockOpportunity, mockTask } from '../../../test/setup';
@@ -70,7 +70,7 @@ describe('Contact Router', () => {
         email: 'test@example.com',
         firstName: 'Test',
         lastName: 'User',
-        accountId: 'non-existent-account',
+        accountId: TEST_UUIDS.nonExistent, // Use valid UUID that doesn't exist
       };
 
       prismaMock.contact.findUnique.mockResolvedValue(null); // No existing contact
@@ -185,15 +185,15 @@ describe('Contact Router', () => {
       }));
 
       prismaMock.contact.findMany.mockResolvedValue(contactsWithRelations);
-      prismaMock.contact.count.mockResolvedValue(15);
+      prismaMock.contact.count.mockResolvedValue(2); // Total matches returned records
 
       const result = await caller.list({ page: 1, limit: 20 });
 
       expect(result.contacts).toHaveLength(2);
-      expect(result.total).toBe(15);
+      expect(result.total).toBe(2);
       expect(result.page).toBe(1);
       expect(result.limit).toBe(20);
-      expect(result.hasMore).toBe(false);
+      expect(result.hasMore).toBe(false); // 0 + 2 < 2 = false
     });
 
     it('should filter contacts by search term', async () => {
@@ -420,10 +420,10 @@ describe('Contact Router', () => {
   describe('stats', () => {
     it('should return contact statistics', async () => {
       prismaMock.contact.count.mockResolvedValueOnce(50); // total
-      prismaMock.contact.groupBy.mockResolvedValue([
+      vi.mocked(prismaMock.contact.groupBy).mockResolvedValue([
         { department: 'Engineering', _count: 20 },
         { department: 'Sales', _count: 15 },
-      ] as any);
+      ] as unknown as Awaited<ReturnType<typeof prismaMock.contact.groupBy>>);
       prismaMock.contact.count.mockResolvedValueOnce(35); // withAccounts
 
       const result = await caller.stats();
@@ -439,7 +439,7 @@ describe('Contact Router', () => {
 
     it('should handle empty statistics', async () => {
       prismaMock.contact.count.mockResolvedValueOnce(0);
-      prismaMock.contact.groupBy.mockResolvedValue([]);
+      vi.mocked(prismaMock.contact.groupBy).mockResolvedValue([]);
       prismaMock.contact.count.mockResolvedValueOnce(0);
 
       const result = await caller.stats();

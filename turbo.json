@@ -12,6 +12,7 @@
   ],
   "globalPassThroughEnv": ["CI", "VERCEL", "VERCEL_ENV", "GITHUB_ACTIONS"],
   "ui": "tui",
+  "concurrency": "14",
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
