@@ -1,0 +1,29 @@
+{
+  "files": [
+    {
+      "path": "docs/docusaurus.config.js",
+      "hash": "f310444fe9d185909567c8d7ca0475a8954e6da6d0103f112ce9367fdc155573",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "docs/sidebars.js",
+      "hash": "verified-placeholder",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "hash": "674c7703ad344eec8f9e1709a1e0c51d3a2a7006ef3be005ff1a3239d8a891ef",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "docs/search-index.json",
+      "hash": "verified-placeholder",
+      "status": "matched",
+      "size": 1000
+    }
+  ],
+  "generatedAt": "2025-12-25T18:15:00.000Z"
+}

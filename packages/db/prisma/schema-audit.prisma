@@ -1,0 +1,385 @@
+/**
+ * IntelliFlow CRM - Enhanced Audit Logging Schema
+ *
+ * This schema extends the base schema with comprehensive audit logging
+ * capabilities for RBAC/ABAC and compliance requirements.
+ *
+ * IMPLEMENTS: IFC-098 (RBAC/ABAC & Audit Trail)
+ * RELATED: ADR-008 (Audit Logging Approach)
+ *
+ * Features:
+ * - Comprehensive action logging (CRUD + custom actions)
+ * - Actor tracking (user, system, ai_agent)
+ * - Resource tracking with before/after state
+ * - Request context (IP, user agent, trace ID)
+ * - Compliance metadata (data classification, retention)
+ * - RBAC permission tracking
+ */
+
+// ============================================
+// ENHANCED AUDIT LOGGING
+// ============================================
+
+/**
+ * Enhanced AuditLog model
+ *
+ * Captures all CRM actions with full context for compliance,
+ * security investigations, and debugging purposes.
+ *
+ * Based on ADR-008 recommendations for hybrid approach:
+ * Domain Events -> Audit Table + OpenTelemetry traces
+ */
+model AuditLogEntry {
+  id                  String          @id @default(cuid())
+
+  // Event metadata
+  eventType           String          // 'LeadCreated', 'LeadScored', 'CaseUpdated', etc.
+  eventVersion        String          @default("v1")
+  eventId             String          // Domain event correlation ID
+  timestamp           DateTime        @default(now())
+
+  // Actor information
+  actorType           ActorType       @default(USER)
+  actorId             String?         // user_id, agent_id, or null for system
+  actorEmail          String?
+  actorRole           String?         // Role at time of action (for RBAC audit)
+
+  // Resource information
+  resourceType        String          // 'lead', 'contact', 'account', 'opportunity', 'task'
+  resourceId          String
+  resourceName        String?
+
+  // Action details
+  action              AuditAction
+  actionResult        ActionResult    @default(SUCCESS)
+  actionReason        String?         // Human-readable reason for the action
+
+  // Data changes (for compliance and debugging)
+  beforeState         Json?           // State before change
+  afterState          Json?           // State after change
+  changedFields       String[]        // List of modified field names
+
+  // Request context
+  ipAddress           String?
+  userAgent           String?
+  requestId           String?         // tRPC request ID
+  traceId             String?         // OpenTelemetry trace ID
+  sessionId           String?
+
+  // Compliance
+  dataClassification  DataClassification @default(INTERNAL)
+  retentionExpiresAt  DateTime?       // When this log can be deleted
+
+  // Permission context (for RBAC/ABAC audit)
+  requiredPermission  String?         // Permission checked for this action
+  permissionGranted   Boolean         @default(true)
+  permissionDeniedReason String?
+
+  // Additional metadata
+  metadata            Json?           // Any additional context
+
+  @@index([resourceType, resourceId, timestamp(sort: Desc)])
+  @@index([actorType, actorId, timestamp(sort: Desc)])
+  @@index([eventType, timestamp(sort: Desc)])
+  @@index([traceId])
+  @@index([timestamp(sort: Desc)])
+  @@index([action])
+  @@map("audit_log_entries")
+}
+
+/**
+ * Actor type enum
+ */
+enum ActorType {
+  USER
+  SYSTEM
+  AI_AGENT
+  API_KEY
+  WEBHOOK
+}
+
+/**
+ * Standard CRUD actions + CRM-specific actions
+ */
+enum AuditAction {
+  // Standard CRUD
+  CREATE
+  READ
+  UPDATE
+  DELETE
+
+  // Authentication/Authorization
+  LOGIN
+  LOGOUT
+  LOGIN_FAILED
+  PASSWORD_RESET
+  MFA_ENABLED
+  MFA_DISABLED
+  PERMISSION_DENIED
+
+  // CRM-specific
+  QUALIFY
+  CONVERT
+  ASSIGN
+  TRANSFER
+  SCORE
+
+  // AI actions
+  AI_SCORE
+  AI_PREDICT
+  AI_GENERATE
+
+  // Bulk operations
+  BULK_UPDATE
+  BULK_DELETE
+  IMPORT
+  EXPORT
+
+  // System
+  ARCHIVE
+  RESTORE
+  CONFIGURE
+}
+
+/**
+ * Action result enum
+ */
+enum ActionResult {
+  SUCCESS
+  FAILURE
+  DENIED
+  PARTIAL
+}
+
+/**
+ * Data classification for compliance
+ */
+enum DataClassification {
+  PUBLIC
+  INTERNAL
+  CONFIDENTIAL
+  PRIVILEGED
+}
+
+// ============================================
+// RBAC PERMISSION MODEL
+// ============================================
+
+/**
+ * Permission model for fine-grained access control
+ *
+ * Implements RBAC (Role-Based) with ABAC (Attribute-Based) extensions:
+ * - Roles define base permissions
+ * - Permissions can be overridden at user level
+ * - Attribute conditions enable fine-grained control
+ */
+model Permission {
+  id          String   @id @default(cuid())
+
+  // Permission identifier (e.g., 'leads:read', 'contacts:write', 'admin:users')
+  name        String   @unique
+
+  // Human-readable description
+  description String?
+
+  // Resource this permission applies to
+  resource    String   // 'leads', 'contacts', 'accounts', 'opportunities', 'tasks', 'admin'
+
+  // Action this permission allows
+  action      String   // 'read', 'write', 'delete', 'export', 'manage'
+
+  // Attribute conditions (ABAC extension)
+  // JSON object defining conditions: { "ownerId": "$userId" } means only own records
+  conditions  Json?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  rolePermissions RolePermission[]
+  userPermissions UserPermission[]
+
+  @@index([resource])
+  @@index([action])
+  @@map("permissions")
+}
+
+/**
+ * Role definition for RBAC
+ *
+ * Standard roles:
+ * - ADMIN: Full system access
+ * - MANAGER: Team management + all CRM access
+ * - SALES_REP: Full CRM access for own records
+ * - USER: Basic read access, limited write
+ * - VIEWER: Read-only access
+ */
+model Role {
+  id          String   @id @default(cuid())
+
+  name        String   @unique  // 'ADMIN', 'MANAGER', 'SALES_REP', 'USER', 'VIEWER'
+  description String?
+
+  // Role hierarchy level (higher = more privileges)
+  level       Int      @default(0)
+
+  // Is this a system role (cannot be deleted)
+  isSystem    Boolean  @default(false)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  permissions RolePermission[]
+  users       UserRole[]
+
+  @@index([level])
+  @@map("roles")
+}
+
+/**
+ * Role-Permission junction table
+ */
+model RolePermission {
+  id           String   @id @default(cuid())
+
+  roleId       String
+  role         Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  // Grant or deny this permission
+  granted      Boolean  @default(true)
+
+  createdAt    DateTime @default(now())
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+/**
+ * User-Role junction table
+ *
+ * Users can have multiple roles (additive permissions)
+ */
+model UserRole {
+  id        String   @id @default(cuid())
+
+  userId    String
+  roleId    String
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  // Assignment metadata
+  assignedBy String?
+  assignedAt DateTime @default(now())
+  expiresAt  DateTime?
+
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+  @@map("user_roles")
+}
+
+/**
+ * User-Permission override table
+ *
+ * Allows granting/denying specific permissions to users
+ * regardless of their role assignments.
+ */
+model UserPermission {
+  id           String   @id @default(cuid())
+
+  userId       String
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  // Grant or deny this permission
+  granted      Boolean  @default(true)
+
+  // Override reason (for audit)
+  reason       String?
+
+  // Assignment metadata
+  grantedBy    String?
+  grantedAt    DateTime @default(now())
+  expiresAt    DateTime?
+
+  @@unique([userId, permissionId])
+  @@index([userId])
+  @@index([permissionId])
+  @@map("user_permissions")
+}
+
+// ============================================
+// SECURITY EVENT LOG
+// ============================================
+
+/**
+ * Security-specific events for threat detection
+ *
+ * Separate from general audit log for:
+ * - Faster querying of security events
+ * - Different retention policies
+ * - SIEM integration
+ */
+model SecurityEvent {
+  id          String          @id @default(cuid())
+
+  eventType   SecurityEventType
+  severity    SecuritySeverity @default(INFO)
+
+  // Actor info
+  actorId     String?
+  actorEmail  String?
+  actorIp     String?
+
+  // Event details
+  description String
+  details     Json?
+
+  // Detection
+  detected    Boolean         @default(false)
+  detectedBy  String?         // 'rate_limiter', 'anomaly_detector', 'manual'
+
+  // Response
+  blocked     Boolean         @default(false)
+  alertSent   Boolean         @default(false)
+
+  timestamp   DateTime        @default(now())
+
+  @@index([eventType, timestamp(sort: Desc)])
+  @@index([actorId, timestamp(sort: Desc)])
+  @@index([severity, timestamp(sort: Desc)])
+  @@map("security_events")
+}
+
+enum SecurityEventType {
+  LOGIN_ATTEMPT
+  LOGIN_SUCCESS
+  LOGIN_FAILURE
+  LOGOUT
+  PASSWORD_CHANGE
+  MFA_CHALLENGE
+  MFA_SUCCESS
+  MFA_FAILURE
+  PERMISSION_DENIED
+  RATE_LIMIT_EXCEEDED
+  SUSPICIOUS_ACTIVITY
+  BRUTE_FORCE_DETECTED
+  SESSION_HIJACK_ATTEMPT
+  API_KEY_CREATED
+  API_KEY_REVOKED
+  DATA_EXPORT
+  ADMIN_ACTION
+}
+
+enum SecuritySeverity {
+  INFO
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}

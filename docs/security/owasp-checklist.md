@@ -1,16 +1,16 @@
 # OWASP Top 10 Security Checklist
 
-**Document Version**: 1.0
-**Last Updated**: 2025-12-22
-**Related Task**: IFC-008 (Security Assessment)
-**Review Frequency**: Quarterly
-**Owner**: Security Team
+**Document Version**: 1.0 **Last Updated**: 2025-12-22 **Related Task**: IFC-008
+(Security Assessment) **Review Frequency**: Quarterly **Owner**: Security Team
 
 ## Introduction
 
-This document provides a comprehensive security checklist based on the OWASP Top 10 (2021) for the IntelliFlow CRM application. All items must be verified before production deployment and reviewed quarterly.
+This document provides a comprehensive security checklist based on the OWASP Top
+10 (2021) for the IntelliFlow CRM application. All items must be verified before
+production deployment and reviewed quarterly.
 
 **OWASP Top 10 (2021)**:
+
 1. Broken Access Control (A01)
 2. Cryptographic Failures (A02)
 3. Injection (A03)
@@ -69,7 +69,8 @@ This document provides a comprehensive security checklist based on the OWASP Top
 
 - [ ] **Verify ownership on all CRUD operations**
   - Example: `UPDATE leads WHERE id = ? AND user_id = ?`
-  - Location: All repository implementations in `packages/adapters/src/repositories/`
+  - Location: All repository implementations in
+    `packages/adapters/src/repositories/`
 
 - [ ] **Prevent Insecure Direct Object References (IDOR)**
   - Test: User cannot access `/api/leads/123` if lead belongs to another user
@@ -102,8 +103,8 @@ This document provides a comprehensive security checklist based on the OWASP Top
     cors({
       origin: process.env.ALLOWED_ORIGINS?.split(','),
       credentials: true,
-      maxAge: 86400
-    })
+      maxAge: 86400,
+    });
     ```
 
 #### Access Control Testing
@@ -198,12 +199,15 @@ This document provides a comprehensive security checklist based on the OWASP Top
   - ✅ Prisma provides automatic parameterization
   - ✅ No raw SQL queries (or use `prisma.$queryRaw` with parameters)
   - Example:
+
     ```typescript
     // ✅ Safe
     await prisma.lead.findMany({ where: { email } });
 
     // ❌ Unsafe
-    await prisma.$executeRawUnsafe(`SELECT * FROM leads WHERE email = '${email}'`);
+    await prisma.$executeRawUnsafe(
+      `SELECT * FROM leads WHERE email = '${email}'`
+    );
 
     // ✅ Safe raw query
     await prisma.$queryRaw`SELECT * FROM leads WHERE email = ${email}`;
@@ -232,11 +236,13 @@ This document provides a comprehensive security checklist based on the OWASP Top
 - [ ] **No shell command execution with user input**
   - Pattern: Use libraries instead of shell commands
   - Example: Use `node-postgres` instead of `psql` CLI
-  - If unavoidable: Use `child_process.execFile()` with argument array (not string)
+  - If unavoidable: Use `child_process.execFile()` with argument array (not
+    string)
 
 - [ ] **Validate file paths for file operations**
   - Pattern: Use path.resolve() and check for directory traversal
   - Example:
+
     ```typescript
     import path from 'path';
 
@@ -305,11 +311,12 @@ This document provides a comprehensive security checklist based on the OWASP Top
 
 #### Rate Limiting & DoS Prevention
 
-- [ ] **Rate limiting on all public APIs**
+- [x] **Rate limiting on all public APIs**
   - Location: `apps/api/src/middleware/rate-limit.ts`
-  - Implementation: Upstash Redis with sliding window
-  - Limits: 100 req/min per IP, 1000 req/min per authenticated user
-  - Status: ✅ Planned (ENV-012-AI, Sprint 0)
+  - Implementation: In-memory with Redis fallback (Upstash)
+  - Limits: 100 req/min per IP, 1000 req/min per authenticated user, 10 req/min for AI, 5 req/min for auth
+  - Status: ✅ Implemented (IFC-114, Sprint 7)
+  - Features: Tiered limits, burst detection, DDoS protection, automatic blocking
 
 - [ ] **Resource quotas enforced**
   - Upload limits: Max 10MB per file
@@ -333,7 +340,10 @@ This document provides a comprehensive security checklist based on the OWASP Top
       if (lead.version !== input.version) {
         throw new ConflictError('Lead was modified');
       }
-      await tx.lead.update({ where: { id }, data: { version: lead.version + 1, ...input } });
+      await tx.lead.update({
+        where: { id },
+        data: { version: lead.version + 1, ...input },
+      });
     });
     ```
 
@@ -341,7 +351,8 @@ This document provides a comprehensive security checklist based on the OWASP Top
 
 ## A05: Security Misconfiguration
 
-**Risk**: Insecure default configurations, unnecessary features enabled, verbose errors.
+**Risk**: Insecure default configurations, unnecessary features enabled, verbose
+errors.
 
 ### Checklist Items
 
@@ -390,7 +401,10 @@ This document provides a comprehensive security checklist based on the OWASP Top
       // Business logic
     } catch (error) {
       logger.error('Lead creation failed', { error, userId: ctx.user.id });
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create lead' });
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to create lead',
+      });
     }
     ```
 
@@ -404,11 +418,20 @@ This document provides a comprehensive security checklist based on the OWASP Top
       { key: 'X-Content-Type-Options', value: 'nosniff' },
       { key: 'X-Frame-Options', value: 'DENY' },
       { key: 'X-XSS-Protection', value: '1; mode=block' },
-      { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
-      { key: 'Content-Security-Policy', value: "default-src 'self'; script-src 'self' 'unsafe-inline'" },
+      {
+        key: 'Strict-Transport-Security',
+        value: 'max-age=31536000; includeSubDomains',
+      },
+      {
+        key: 'Content-Security-Policy',
+        value: "default-src 'self'; script-src 'self' 'unsafe-inline'",
+      },
       { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-      { key: 'Permissions-Policy', value: 'geolocation=(), microphone=(), camera=()' }
-    ]
+      {
+        key: 'Permissions-Policy',
+        value: 'geolocation=(), microphone=(), camera=()',
+      },
+    ];
     ```
 
 - [ ] **Verify headers in production**
@@ -612,7 +635,7 @@ This document provides a comprehensive security checklist based on the OWASP Top
   - Example:
     ```typescript
     const data = JSON.parse(input);
-    const validated = LeadSchema.parse(data);  // Throws if invalid
+    const validated = LeadSchema.parse(data); // Throws if invalid
     ```
 
 - [ ] **No pickle/marshal for untrusted data**
@@ -887,7 +910,7 @@ This document provides a comprehensive security checklist based on the OWASP Top
 - [ ] Security tools configured (gitleaks, pnpm audit)
 - [ ] mTLS configuration defined
 
-**Sign-off**: ___________________ Date: ___________
+**Sign-off**: **\*\*\*\***\_\_\_**\*\*\*\*** Date: \***\*\_\_\_\*\***
 
 ### Pre-Production
 
@@ -896,14 +919,14 @@ This document provides a comprehensive security checklist based on the OWASP Top
 - [ ] Security code review completed
 - [ ] Incident response plan tested
 
-**Sign-off**: ___________________ Date: ___________
+**Sign-off**: **\*\*\*\***\_\_\_**\*\*\*\*** Date: \***\*\_\_\_\*\***
 
 ### Quarterly Reviews
 
-**Q1 2026**: ___________________ Date: ___________
-**Q2 2026**: ___________________ Date: ___________
-**Q3 2026**: ___________________ Date: ___________
-**Q4 2026**: ___________________ Date: ___________
+**Q1 2026**: **\*\*\*\***\_\_\_**\*\*\*\*** Date: \***\*\_\_\_\*\*** **Q2
+2026**: **\*\*\*\***\_\_\_**\*\*\*\*** Date: \***\*\_\_\_\*\*** **Q3 2026**:
+**\*\*\*\***\_\_\_**\*\*\*\*** Date: \***\*\_\_\_\*\*** **Q4 2026**:
+**\*\*\*\***\_\_\_**\*\*\*\*** Date: \***\*\_\_\_\*\***
 
 ---
 
@@ -917,8 +940,5 @@ This document provides a comprehensive security checklist based on the OWASP Top
 
 ---
 
-**Document Status**: ✅ Created
-**Last Review**: 2025-12-22
-**Next Review**: 2026-03-22 (Quarterly)
-**Owner**: Security Team
-**Approver**: CTO
+**Document Status**: ✅ Created **Last Review**: 2025-12-22 **Next Review**:
+2026-03-22 (Quarterly) **Owner**: Security Team **Approver**: CTO

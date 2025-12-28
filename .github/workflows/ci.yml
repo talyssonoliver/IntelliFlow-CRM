@@ -92,10 +92,60 @@ jobs:
           files: ./artifacts/coverage/lcov.info
           fail_ci_if_error: false
 
+  # ==========================================
+  # IFC-131: Architecture Boundary Enforcement
+  # ==========================================
+  architecture:
+    name: Architecture Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install architecture test dependencies
+        run: cd tests/architecture && pnpm install --frozen-lockfile
+        continue-on-error: true
+
+      - name: Run architecture boundary tests
+        run: cd tests/architecture && pnpm test
+        id: arch-tests
+
+      - name: Architecture boundary check summary
+        if: always()
+        run: |
+          echo "## Architecture Boundary Enforcement" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Hexagonal Architecture Rules (IFC-131)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Layer | Can Depend On | Cannot Depend On |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|---------------|------------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Domain | (none) | Application, Adapters, Infrastructure |" >> $GITHUB_STEP_SUMMARY
+          echo "| Application | Domain | Adapters, Infrastructure |" >> $GITHUB_STEP_SUMMARY
+          echo "| Adapters | Domain, Application | (none - outer layer) |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.arch-tests.outcome }}" == "success" ]; then
+            echo ":white_check_mark: **All architecture boundary tests passed**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo ":x: **Architecture boundary violations detected!**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Please review the test output for details on which imports violate hexagonal architecture rules." >> $GITHUB_STEP_SUMMARY
+          fi
+
   build:
     name: Build
     runs-on: ubuntu-latest
-    needs: [lint, typecheck, test]
+    needs: [lint, typecheck, test, architecture]
     steps:
       - uses: actions/checkout@v4
 

@@ -2,25 +2,30 @@
 
 ## Overview
 
-This script provides a structured framework for conducting discovery calls with prospects. The goal is to uncover pain points, understand the business context, and qualify the opportunity using the MEDDIC framework.
+This script provides a structured framework for conducting discovery calls with
+prospects. The goal is to uncover pain points, understand the business context,
+and qualify the opportunity using the MEDDIC framework.
 
-**Duration**: 45-60 minutes
-**Attendees**: Prospect stakeholders, Account Executive, optionally Sales Engineer
-**Outcome**: Qualified opportunity with clear next steps OR disqualification with reason
+**Duration**: 45-60 minutes **Attendees**: Prospect stakeholders, Account
+Executive, optionally Sales Engineer **Outcome**: Qualified opportunity with
+clear next steps OR disqualification with reason
 
 ---
 
 ## Pre-Call Preparation (15 minutes)
 
 **Research Checklist**:
+
 - [ ] Review company website and recent news
 - [ ] Check LinkedIn profiles of attendees
 - [ ] Review company size, industry, tech stack (ZoomInfo, LinkedIn)
 - [ ] Identify potential pain points based on industry/size
 - [ ] Prepare 3-5 hypothesis-driven questions
-- [ ] Review any prior interactions (emails, form submissions, content downloads)
+- [ ] Review any prior interactions (emails, form submissions, content
+      downloads)
 
 **Set Your Objective**:
+
 - What do you need to learn to qualify this opportunity?
 - What MEDDIC elements can you uncover in this call?
 - What would make this a great fit vs. not a fit?
@@ -32,6 +37,7 @@ This script provides a structured framework for conducting discovery calls with 
 ### 1. Opening (5 minutes)
 
 **Build Rapport**:
+
 ```
 "Hi [Name], great to meet you! Before we dive in, how's your day going?"
 [Brief small talk - weather, location, shared connection, recent news about their company]
@@ -40,6 +46,7 @@ This script provides a structured framework for conducting discovery calls with 
 ```
 
 **Set Agenda**:
+
 ```
 "Here's what I'd like to cover in our time together:
 - First, I'd love to learn about you and your role at [Company]
@@ -51,6 +58,7 @@ Does that sound good? Anything you'd like to make sure we cover?"
 ```
 
 **Confirm Time**:
+
 ```
 "I have us down for [45] minutes - does that still work on your end?"
 ```
@@ -60,6 +68,7 @@ Does that sound good? Anything you'd like to make sure we cover?"
 ### 2. Understand Their Role (5 minutes)
 
 **Questions**:
+
 ```
 "Tell me about your role at [Company]. What does your day-to-day look like?"
 
@@ -71,6 +80,7 @@ Does that sound good? Anything you'd like to make sure we cover?"
 ```
 
 **What You're Listening For**:
+
 - Their level of seniority and decision-making authority
 - Pain points in their daily workflow
 - Strategic vs. tactical role
@@ -84,6 +94,7 @@ Does that sound good? Anything you'd like to make sure we cover?"
 ### 3. Understand the Business (10 minutes)
 
 **Current State Questions**:
+
 ```
 "Walk me through your current sales process. What does it look like from lead capture to closed deal?"
 
@@ -97,6 +108,7 @@ Does that sound good? Anything you'd like to make sure we cover?"
 ```
 
 **Context Questions**:
+
 ```
 "What's been your biggest win as a sales team in the past year?"
 
@@ -106,6 +118,7 @@ Does that sound good? Anything you'd like to make sure we cover?"
 ```
 
 **What You're Listening For**:
+
 - Current baseline metrics (leads, conversion, response time, etc.)
 - Technology landscape and integration requirements
 - Team maturity and sales sophistication
@@ -117,9 +130,11 @@ Does that sound good? Anything you'd like to make sure we cover?"
 
 ### 4. Identify Pain (15 minutes)
 
-This is the most critical part of the call. Use the SPIN framework (Situation, Problem, Implication, Need-Payoff).
+This is the most critical part of the call. Use the SPIN framework (Situation,
+Problem, Implication, Need-Payoff).
 
 **Situation Questions** (establish context):
+
 ```
 "How do you currently manage incoming leads?"
 
@@ -129,6 +144,7 @@ This is the most critical part of the call. Use the SPIN framework (Situation, P
 ```
 
 **Problem Questions** (uncover challenges):
+
 ```
 "What's not working well with your current setup?"
 
@@ -140,6 +156,7 @@ This is the most critical part of the call. Use the SPIN framework (Situation, P
 ```
 
 **Implication Questions** (amplify the pain):
+
 ```
 "What's the impact of [problem] on your revenue/team/growth?"
 
@@ -151,6 +168,7 @@ This is the most critical part of the call. Use the SPIN framework (Situation, P
 ```
 
 **Need-Payoff Questions** (envision the solution):
+
 ```
 "If you could wave a magic wand and fix [problem], what would that look like?"
 
@@ -160,6 +178,7 @@ This is the most critical part of the call. Use the SPIN framework (Situation, P
 ```
 
 **Example Pain Discovery Flow**:
+
 ```
 Rep: "How do you currently handle inbound leads from your website?"
 Prospect: "They go into a spreadsheet, and then we manually assign them to reps."
@@ -182,6 +201,7 @@ Rep: "What would it be worth to your business to cut that response time from hou
 ```
 
 **What You're Listening For**:
+
 - Specific, quantifiable pain points
 - Urgency (why now?)
 - Impact of inaction (cost of doing nothing)
@@ -194,6 +214,7 @@ Rep: "What would it be worth to your business to cut that response time from hou
 ### 5. Understand the Buying Process (10 minutes)
 
 **Decision-Making Questions**:
+
 ```
 "Have you purchased a CRM or similar software before? Walk me through how that process went."
 
@@ -205,6 +226,7 @@ Rep: "What would it be worth to your business to cut that response time from hou
 ```
 
 **Timeline Questions**:
+
 ```
 "What's your timeline for making a decision?"
 
@@ -214,6 +236,7 @@ Rep: "What would it be worth to your business to cut that response time from hou
 ```
 
 **Budget Questions**:
+
 ```
 "Have you allocated budget for this project?"
 
@@ -223,6 +246,7 @@ Rep: "What would it be worth to your business to cut that response time from hou
 ```
 
 **Evaluation Criteria Questions**:
+
 ```
 "What are the must-haves vs. nice-to-haves in a solution?"
 
@@ -234,6 +258,7 @@ Rep: "What would it be worth to your business to cut that response time from hou
 ```
 
 **What You're Listening For**:
+
 - Decision timeline (realistic or aspirational?)
 - Stakeholders and decision-making roles
 - Budget availability and flexibility
@@ -241,6 +266,7 @@ Rep: "What would it be worth to your business to cut that response time from hou
 - Potential deal-killers or roadblocks
 
 **MEDDIC Elements**:
+
 - Economic Buyer (who signs?)
 - Decision Criteria (what matters most?)
 - Decision Process (steps and timeline)
@@ -250,6 +276,7 @@ Rep: "What would it be worth to your business to cut that response time from hou
 ### 6. Identify Champion (5 minutes)
 
 **Champion Questions**:
+
 ```
 "Who internally is most excited about solving this problem?"
 
@@ -261,6 +288,7 @@ Rep: "What would it be worth to your business to cut that response time from hou
 ```
 
 **What You're Listening For**:
+
 - Is this person willing to champion internally?
 - Do they have influence with the Economic Buyer?
 - What's their personal motivation?
@@ -275,6 +303,7 @@ Rep: "What would it be worth to your business to cut that response time from hou
 **Only after you've uncovered pain should you pitch.**
 
 **Tailored Value Proposition**:
+
 ```
 "Based on what you've shared, it sounds like your biggest challenges are:
 1. [Pain #1 - slow lead response]
@@ -295,6 +324,7 @@ Does that resonate with what you're trying to achieve?"
 ```
 
 **Keep It Brief**:
+
 - Focus on their pains, not all your features
 - Use metrics that matter to them
 - Social proof from similar companies
@@ -305,6 +335,7 @@ Does that resonate with what you're trying to achieve?"
 ### 8. Next Steps (5 minutes)
 
 **If Qualified** (all MEDDIC elements present or discoverable):
+
 ```
 "This sounds like a great fit. Here's what I'd suggest for next steps:
 
@@ -318,6 +349,7 @@ Does that work? What's your calendar look like next week?"
 ```
 
 **If More Information Needed**:
+
 ```
 "I want to make sure I bring you the right solution. Before we move to a demo,
 I'd love to connect with [Economic Buyer / IT / other stakeholder] to understand
@@ -327,6 +359,7 @@ Can you make an introduction?"
 ```
 
 **If Not Qualified**:
+
 ```
 "Based on our conversation, it sounds like [reason - timing isn't right / you need X feature we don't have / budget constraints].
 
@@ -335,6 +368,7 @@ when [condition changes]? In the meantime, I'll send over [resource] that might 
 ```
 
 **Schedule Next Meeting Before Hanging Up**:
+
 - Never end with "I'll send you some times"
 - Book the meeting while you have them
 - Send calendar invite immediately after call
@@ -344,6 +378,7 @@ when [condition changes]? In the meantime, I'll send over [resource] that might 
 ## Post-Call Actions (15 minutes)
 
 **Immediate (within 1 hour)**:
+
 - [ ] Log detailed notes in CRM
 - [ ] Document all MEDDIC elements discovered
 - [ ] Update opportunity stage (Discovery → Qualification if qualified)
@@ -352,6 +387,7 @@ when [condition changes]? In the meantime, I'll send over [resource] that might 
 - [ ] Flag any blockers or missing information
 
 **Within 24 hours**:
+
 - [ ] Share any promised resources (case studies, white papers, etc.)
 - [ ] Research any questions you couldn't answer on the call
 - [ ] Prepare personalized demo based on their use cases
@@ -395,6 +431,7 @@ P.S. - Here's the calendar invite for our demo. See you then!
 ## Common Mistakes to Avoid
 
 **Don't**:
+
 - Pitch before understanding their pain
 - Talk more than the prospect talks (aim for 70/30 them/you)
 - Skip budget/timeline questions (feels awkward but essential)
@@ -403,6 +440,7 @@ P.S. - Here's the calendar invite for our demo. See you then!
 - Forget to identify Economic Buyer early
 
 **Do**:
+
 - Ask follow-up questions to get specifics
 - Quantify pain with metrics whenever possible
 - Listen for emotional cues (frustration, excitement, urgency)
@@ -425,7 +463,7 @@ Rate yourself after each call (1-5 scale):
 - [ ] Did the prospect talk more than I did? (1-5)
 - [ ] Did I book the next meeting before hanging up? (1-5)
 
-**Total Score**: ____ / 40
+**Total Score**: \_\_\_\_ / 40
 
 - 35-40: Excellent discovery
 - 28-34: Good, some gaps to fill
@@ -435,4 +473,5 @@ Rate yourself after each call (1-5 scale):
 ---
 
 **Document History**:
+
 - v1.0 (2025-12-22): Initial discovery script creation

@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { readFile, access } from 'node:fs/promises';
-import { join } from 'node:path';
 import { parse } from 'csv-parse/sync';
+import { normalizeStatus, TASK_STATUSES, STATUS_GROUPS } from '@/lib/csv-parser';
+import { PATHS, getSprintSummaryPath } from '@/lib/paths';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -20,7 +21,7 @@ function getSprintDataFromCsv(tasks: CsvTask[], sprintNumber: string) {
   // Filter tasks for this sprint
   const sprintTasks = tasks.filter((task) => task['Target Sprint'] === sprintNumber);
 
-  // Count statuses
+  // Count statuses using shared normalizeStatus function
   const statusCounts = {
     total: sprintTasks.length,
     done: 0,
@@ -31,14 +32,14 @@ function getSprintDataFromCsv(tasks: CsvTask[], sprintNumber: string) {
   };
 
   for (const task of sprintTasks) {
-    const status = (task.Status || '').toLowerCase();
-    if (status === 'completed' || status === 'done') {
+    const status = normalizeStatus(task.Status || '');
+    if (STATUS_GROUPS.completed.includes(status)) {
       statusCounts.done++;
-    } else if (status === 'in progress' || status === 'in_progress') {
+    } else if (STATUS_GROUPS.active.includes(status)) {
       statusCounts.in_progress++;
-    } else if (status === 'blocked') {
+    } else if (status === TASK_STATUSES.BLOCKED || status === TASK_STATUSES.NEEDS_HUMAN) {
       statusCounts.blocked++;
-    } else if (status === 'failed') {
+    } else if (status === TASK_STATUSES.FAILED) {
       statusCounts.failed++;
     } else {
       statusCounts.not_started++;
@@ -53,39 +54,41 @@ function getSprintDataFromCsv(tasks: CsvTask[], sprintNumber: string) {
       sections[section] = { total: 0, done: 0 };
     }
     sections[section].total++;
-    const status = (task.Status || '').toLowerCase();
-    if (status === 'completed' || status === 'done') {
+    const status = normalizeStatus(task.Status || '');
+    if (STATUS_GROUPS.completed.includes(status)) {
       sections[section].done++;
     }
   }
 
   // Create KPI summary
-  const kpiSummary: Record<string, { target: number; actual: number; status: string; unit: string }> =
-    {
-      completion_rate: {
-        target: 100,
-        actual: statusCounts.total > 0 ? (statusCounts.done / statusCounts.total) * 100 : 0,
-        status:
-          statusCounts.done === statusCounts.total
-            ? 'MET'
-            : statusCounts.done > 0
-              ? 'MEASURING'
-              : 'BELOW_TARGET',
-        unit: 'percent',
-      },
-      tasks_completed: {
-        target: statusCounts.total,
-        actual: statusCounts.done,
-        status: statusCounts.done === statusCounts.total ? 'MET' : 'MEASURING',
-        unit: 'count',
-      },
-    };
+  const kpiSummary: Record<
+    string,
+    { target: number; actual: number; status: string; unit: string }
+  > = {
+    completion_rate: {
+      target: 100,
+      actual: statusCounts.total > 0 ? (statusCounts.done / statusCounts.total) * 100 : 0,
+      status:
+        statusCounts.done === statusCounts.total
+          ? 'MET'
+          : statusCounts.done > 0
+            ? 'MEASURING'
+            : 'BELOW_TARGET',
+      unit: 'percent',
+    },
+    tasks_completed: {
+      target: statusCounts.total,
+      actual: statusCounts.done,
+      status: statusCounts.done === statusCounts.total ? 'MET' : 'MEASURING',
+      unit: 'count',
+    },
+  };
 
   // Get completed tasks list
   const completedTasks = sprintTasks
     .filter((t) => {
-      const status = (t.Status || '').toLowerCase();
-      return status === 'completed' || status === 'done';
+      const status = normalizeStatus(t.Status || '');
+      return STATUS_GROUPS.completed.includes(status);
     })
     .map((t) => ({
       task_id: t['Task ID'],
@@ -97,8 +100,12 @@ function getSprintDataFromCsv(tasks: CsvTask[], sprintNumber: string) {
     sprint: `sprint-${sprintNumber}`,
     name: `Sprint ${sprintNumber}`,
     target_date: new Date().toISOString(),
-    started_at: statusCounts.done > 0 || statusCounts.in_progress > 0 ? new Date().toISOString() : null,
-    completed_at: statusCounts.done === statusCounts.total && statusCounts.total > 0 ? new Date().toISOString() : null,
+    started_at:
+      statusCounts.done > 0 || statusCounts.in_progress > 0 ? new Date().toISOString() : null,
+    completed_at:
+      statusCounts.done === statusCounts.total && statusCounts.total > 0
+        ? new Date().toISOString()
+        : null,
     task_summary: statusCounts,
     kpi_summary: kpiSummary,
     blockers: [],
@@ -119,7 +126,7 @@ export async function GET(request: Request) {
 
     // Handle 'all' case - aggregate all sprints
     if (sprintParam === 'all') {
-      const csvPath = join(process.cwd(), 'docs', 'metrics', '_global', 'Sprint_plan.csv');
+      const csvPath = PATHS.sprintTracking.SPRINT_PLAN_CSV;
       const csvContent = await readFile(csvPath, 'utf-8');
       const tasks = parse(csvContent, {
         columns: true,
@@ -128,7 +135,7 @@ export async function GET(request: Request) {
         relax_column_count: true,
       }) as CsvTask[];
 
-      // Count all tasks
+      // Count all tasks using shared normalizeStatus
       const statusCounts = {
         total: tasks.length,
         done: 0,
@@ -139,14 +146,14 @@ export async function GET(request: Request) {
       };
 
       for (const task of tasks) {
-        const status = (task.Status || '').toLowerCase();
-        if (status === 'completed' || status === 'done') {
+        const status = normalizeStatus(task.Status || '');
+        if (STATUS_GROUPS.completed.includes(status)) {
           statusCounts.done++;
-        } else if (status === 'in progress' || status === 'in_progress') {
+        } else if (STATUS_GROUPS.active.includes(status)) {
           statusCounts.in_progress++;
-        } else if (status === 'blocked') {
+        } else if (status === TASK_STATUSES.BLOCKED || status === TASK_STATUSES.NEEDS_HUMAN) {
           statusCounts.blocked++;
-        } else if (status === 'failed') {
+        } else if (status === TASK_STATUSES.FAILED) {
           statusCounts.failed++;
         } else {
           statusCounts.not_started++;
@@ -184,7 +191,7 @@ export async function GET(request: Request) {
 
     // Handle 'continuous' - filter continuous tasks
     if (sprintParam === 'continuous') {
-      const csvPath = join(process.cwd(), 'docs', 'metrics', '_global', 'Sprint_plan.csv');
+      const csvPath = PATHS.sprintTracking.SPRINT_PLAN_CSV;
       const csvContent = await readFile(csvPath, 'utf-8');
       const tasks = parse(csvContent, {
         columns: true,
@@ -206,9 +213,8 @@ export async function GET(request: Request) {
     }
 
     const sprintNumber = sprintParam;
-    const sprintFolder = `sprint-${sprintNumber}`;
-    const csvPath = join(process.cwd(), 'docs', 'metrics', '_global', 'Sprint_plan.csv');
-    const metricsPath = join(process.cwd(), 'docs', 'metrics', sprintFolder, '_summary.json');
+    const csvPath = PATHS.sprintTracking.SPRINT_PLAN_CSV;
+    const metricsPath = getSprintSummaryPath(sprintNumber);
 
     // ALWAYS read from CSV first (source of truth for task counts)
     try {
@@ -274,7 +280,7 @@ export async function GET(request: Request) {
       console.error('Error reading CSV:', csvError);
       return NextResponse.json(
         {
-          sprint: sprintFolder,
+          sprint: `sprint-${sprintNumber}`,
           name: `Sprint ${sprintNumber}`,
           target_date: new Date().toISOString(),
           started_at: null,

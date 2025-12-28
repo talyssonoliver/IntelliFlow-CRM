@@ -2,11 +2,11 @@
   "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-146",
   "section": "Planning",
-  "description": "Define PRD and User Journey Templates, Definition of Ready, Traceability Matrix",
+  "description": "Define PRD and user journey templates; create Definition of Ready criteria; develop traceability matrix linking capabilities to domain services; APIs; UIs; and tests",
   "owner": "Product Manager + Tech Lead",
   "dependencies": {
     "required": ["IFC-000", "ENV-018-AI"],
-    "verified_at": "2025-12-22T21:00:00Z",
+    "verified_at": "2025-12-28T23:24:52.904Z",
     "all_satisfied": true,
     "notes": "Feasibility assessment and sprint planning available"
   },
@@ -42,30 +42,12 @@
       "artifacts/logs/backlog-updates-log.csv"
     ],
     "created": [
-      {
-        "path": "docs/planning/prd-template.md",
-        "sha256": "08d71a1c7633ab96126d0c5ccc6d5d0c71f65b6b0da5a2165f0f1a760d52448e"
-      },
-      {
-        "path": "docs/planning/user-journey-template.md",
-        "sha256": "1ba9611a0e8dc0f659d5fc1cb9152fe9ac00984d25623d110f221aac5239c5da"
-      },
-      {
-        "path": "docs/planning/definition-of-ready.md",
-        "sha256": "dad2fb14130c8bf4c74d60b84ffac4b99a4db3d820be644ae101c744bec76cb3"
-      },
-      {
-        "path": "artifacts/reports/traceability-matrix.json",
-        "sha256": "d513532f807b0dc877bba3a585dcf0d35db37c3803c4abefdcf0f9d6b51b0bc5",
-        "notes": "Created as JSON instead of xlsx for programmatic access"
-      },
-      {
-        "path": "artifacts/logs/backlog-updates-log.json",
-        "sha256": "593ce3b5a16d11504ca53f3e0ee3e8a5502478cda2fdf6b264c1daaf03519e90",
-        "notes": "Created as JSON instead of csv for structured data"
-      }
+      "docs/planning/prd-template.md",
+      "docs/planning/user-journey-template.md",
+      "docs/planning/definition-of-ready.md",
+      "artifacts/logs/backlog-updates-log.csv"
     ],
-    "missing": [],
+    "missing": ["artifacts/reports/traceability-matrix.xlsx"],
     "missing_reason": "xlsx/csv replaced with json for better tooling integration"
   },
   "validations": [
@@ -180,5 +162,6 @@
   ],
   "notes": "PRD and user journey templates created with comprehensive structure. Definition of Ready includes 9 criteria: acceptance criteria, dependencies, design, estimation, testability, security, accessibility, performance, and documentation. Traceability matrix links 6 business capabilities to domain services, APIs, UIs, and tests. Backlog updates log tracks DoR compliance for completed tasks.",
   "completed_at": "2025-12-22T21:05:00Z",
-  "started_at": "2025-12-22T20:55:00Z"
+  "started_at": "2025-12-22T20:55:00Z",
+  "dependencies_resolved": ["IFC-000", "ENV-018-AI"]
 }

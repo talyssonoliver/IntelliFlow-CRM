@@ -9,7 +9,7 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2025-12-23T22:38:34.151Z",
+    "verified_at": "2025-12-28T23:24:52.285Z",
     "required": ["ENV-007-AI", "ENV-009-AI"]
   },
   "dependencies_resolved": ["ENV-007-AI", "ENV-009-AI"],

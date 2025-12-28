@@ -9,6 +9,7 @@ import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import Papa from 'papaparse';
+import { splitSprintPlan } from '../../../tools/scripts/split-sprint-plan';
 
 const nodeRequire = createRequire(import.meta.url);
 
@@ -127,6 +128,33 @@ export interface SyncResult {
 }
 
 /**
+ * Sync all metrics using default paths (for auto-sync from SSE watcher)
+ * Automatically determines csvPath and metricsDir from process.cwd()
+ */
+export async function syncAllMetrics(): Promise<SyncResult> {
+  // Determine paths - assumes running from apps/project-tracker
+  const metricsDir = join(process.cwd(), 'docs', 'metrics');
+  const csvPath = join(metricsDir, '_global', 'Sprint_plan.csv');
+
+  // Fallback if running from monorepo root
+  const altMetricsDir = join(process.cwd(), 'apps', 'project-tracker', 'docs', 'metrics');
+  const altCsvPath = join(altMetricsDir, '_global', 'Sprint_plan.csv');
+
+  if (existsSync(csvPath)) {
+    return syncMetricsFromCSV(csvPath, metricsDir);
+  } else if (existsSync(altCsvPath)) {
+    return syncMetricsFromCSV(altCsvPath, altMetricsDir);
+  } else {
+    return {
+      success: false,
+      filesUpdated: [],
+      errors: [`CSV not found at ${csvPath} or ${altCsvPath}`],
+      summary: { tasksProcessed: 0, filesWritten: 0, timeElapsed: 0 },
+    };
+  }
+}
+
+/**
  * Sync all metrics files from CSV (Single Source of Truth)
  */
 export function syncMetricsFromCSV(csvPath: string, metricsDir: string): SyncResult {
@@ -143,6 +171,16 @@ export function syncMetricsFromCSV(csvPath: string, metricsDir: string): SyncRes
     // Update all metrics files
     updateAllMetricsFiles(tasks, metricsDir, filesUpdated, errors);
     tryFormatMetricsJson(metricsDir);
+
+    // Auto-regenerate Claude Code-readable split files when source CSV changes
+    const splitResult = splitSprintPlan();
+    if (splitResult.success) {
+      for (const part of splitResult.parts) {
+        filesUpdated.push(`Sprint_plan_${part.name}.csv`);
+      }
+    } else if (splitResult.error) {
+      errors.push(`CSV split: ${splitResult.error}`);
+    }
 
     const timeElapsed = Date.now() - startTime;
 
@@ -198,40 +236,74 @@ function updateAllMetricsFiles(
     errors.push(`${registryResult.file}: ${registryResult.error}`);
   }
 
-  // Update individual task files for Sprint 0
-  const sprint0Tasks = tasks.filter((t) => String(t['Target Sprint']) === '0');
-  for (const task of sprint0Tasks) {
-    const taskResult = safeUpdate(
-      () => updateIndividualTaskFile(task, metricsDir, tasks),
-      `${task['Task ID']}.json`
-    );
-    if (taskResult.success) {
-      filesUpdated.push(taskResult.file);
-    } else {
-      errors.push(`${taskResult.file}: ${taskResult.error}`);
+  // Group tasks by sprint
+  const tasksBySprint = new Map<number, any[]>();
+  for (const task of tasks) {
+    const sprintRaw = task['Target Sprint'];
+    const sprintNum = parseInt(sprintRaw, 10);
+    if (!isNaN(sprintNum) && sprintNum >= 0) {
+      if (!tasksBySprint.has(sprintNum)) {
+        tasksBySprint.set(sprintNum, []);
+      }
+      tasksBySprint.get(sprintNum)!.push(task);
     }
   }
 
-  // Update phase summaries
-  const phaseResult = safeUpdate(
-    () => updatePhaseSummaries(sprint0Tasks, metricsDir),
-    'phase summaries'
-  );
-  if (phaseResult.success) {
-    filesUpdated.push(phaseResult.file);
-  } else {
-    errors.push(`${phaseResult.file}: ${phaseResult.error}`);
+  // Process each sprint that has a directory
+  for (const [sprintNum, sprintTasks] of tasksBySprint) {
+    const sprintDir = join(metricsDir, `sprint-${sprintNum}`);
+
+    // Skip if sprint directory doesn't exist
+    if (!existsSync(sprintDir)) continue;
+
+    // Update individual task files for this sprint
+    for (const task of sprintTasks) {
+      const taskResult = safeUpdate(
+        () => updateIndividualTaskFile(task, metricsDir, tasks, sprintNum),
+        `sprint-${sprintNum}/${task['Task ID']}.json`
+      );
+      if (taskResult.success) {
+        filesUpdated.push(taskResult.file);
+      } else if (!taskResult.error?.includes('not found')) {
+        // Only log errors that aren't "file not found" (new tasks won't have files yet)
+        errors.push(`${taskResult.file}: ${taskResult.error}`);
+      }
+    }
+
+    // Update phase summaries for Sprint 0 only (other sprints don't have phases yet)
+    if (sprintNum === 0) {
+      const phaseResult = safeUpdate(
+        () => updatePhaseSummaries(sprintTasks, metricsDir),
+        'sprint-0/phase summaries'
+      );
+      if (phaseResult.success) {
+        filesUpdated.push(phaseResult.file);
+      } else {
+        errors.push(`${phaseResult.file}: ${phaseResult.error}`);
+      }
+    }
+
+    // Update sprint summary
+    const summaryResult = safeUpdate(
+      () => updateSprintSummaryGeneric(sprintTasks, metricsDir, sprintNum),
+      `sprint-${sprintNum}/_summary.json`
+    );
+    if (summaryResult.success) {
+      filesUpdated.push(summaryResult.file);
+    } else {
+      errors.push(`${summaryResult.file}: ${summaryResult.error}`);
+    }
   }
 
-  // Update sprint summary
-  const summaryResult = safeUpdate(
-    () => updateSprintSummary(sprint0Tasks, metricsDir),
-    '_summary.json'
+  // Update dependency graph
+  const graphResult = safeUpdate(
+    () => updateDependencyGraph(tasks, metricsDir),
+    'dependency-graph.json'
   );
-  if (summaryResult.success) {
-    filesUpdated.push(summaryResult.file);
+  if (graphResult.success) {
+    filesUpdated.push(graphResult.file);
   } else {
-    errors.push(`${summaryResult.file}: ${summaryResult.error}`);
+    errors.push(`${graphResult.file}: ${graphResult.error}`);
   }
 }
 
@@ -393,12 +465,17 @@ function updateTaskRegistry(tasks: any[], metricsDir: string): void {
   writeJsonFile(registryPath, registry, 2);
 }
 
-function updateIndividualTaskFile(task: any, metricsDir: string, allTasks?: any[]): void {
+function updateIndividualTaskFile(
+  task: any,
+  metricsDir: string,
+  allTasks?: any[],
+  sprintNum: number = 0
+): void {
   const taskId = task['Task ID'];
 
-  // Find the task file
-  const sprint0Dir = join(metricsDir, 'sprint-0');
-  const taskFile = findTaskFile(taskId, sprint0Dir);
+  // Find the task file in the appropriate sprint directory
+  const sprintDir = join(metricsDir, `sprint-${sprintNum}`);
+  const taskFile = findTaskFile(taskId, sprintDir);
 
   if (!taskFile) {
     throw new Error(`Task file not found for ${taskId}`);
@@ -615,6 +692,328 @@ function mapCsvStatusToRegistry(status: string): string {
 
 function mapCsvStatusToIndividual(status: string): string {
   return mapCsvStatusToRegistry(status);
+}
+
+// Type definitions for dependency graph
+interface DependencyNode {
+  task_id: string;
+  sprint: number;
+  status: 'DONE' | 'IN_PROGRESS' | 'BLOCKED' | 'PLANNED' | 'BACKLOG' | 'FAILED';
+  dependencies: string[];
+  dependents: string[];
+}
+
+interface CrossSprintDep {
+  from_task: string;
+  to_task: string;
+  from_sprint: number;
+  to_sprint: number;
+  dependency_type: 'REQUIRED' | 'OPTIONAL' | 'BLOCKED_BY';
+  description?: string;
+}
+
+interface CriticalPath {
+  name: string;
+  tasks: string[];
+  total_duration_estimate_minutes: number;
+  completion_percentage: number;
+  blocking_status: string;
+}
+
+/**
+ * Update dependency-graph.json with current task states
+ * Computes ready_to_start, blocked_tasks, and dependency relationships
+ */
+function updateDependencyGraph(tasks: any[], metricsDir: string): void {
+  const graphPath = join(metricsDir, '_global', 'dependency-graph.json');
+
+  // Build nodes map from all tasks
+  const nodes: Record<string, DependencyNode> = {};
+  const taskStatusMap = new Map<string, string>();
+  const taskSprintMap = new Map<string, number>();
+  const taskDescMap = new Map<string, string>();
+
+  for (const task of tasks) {
+    const taskId = task['Task ID'];
+    if (!taskId) continue;
+
+    const status = mapCsvStatusToGraph(task.Status);
+    const sprintRaw = task['Target Sprint'];
+    const sprint = sprintRaw === 'Continuous' ? -1 : parseInt(sprintRaw, 10) || 0;
+
+    // Parse dependencies
+    const depsString = task.CleanDependencies || task.Dependencies || '';
+    const deps = depsString
+      .split(',')
+      .map((d: string) => d.trim())
+      .filter((d: string) => d.length > 0 && d !== 'None' && d !== '-');
+
+    taskStatusMap.set(taskId, status);
+    taskSprintMap.set(taskId, sprint);
+    taskDescMap.set(taskId, task.Description || '');
+
+    nodes[taskId] = {
+      task_id: taskId,
+      sprint,
+      status,
+      dependencies: deps,
+      dependents: [], // Will be filled in second pass
+    };
+  }
+
+  // Build dependents (reverse lookup) - only for nodes that exist
+  for (const [taskId, node] of Object.entries(nodes)) {
+    for (const depId of node.dependencies) {
+      if (nodes[depId]) {
+        nodes[depId].dependents.push(taskId);
+      }
+    }
+  }
+
+  // Compute ready_to_start and blocked_tasks
+  const ready_to_start: string[] = [];
+  const blocked_tasks: string[] = [];
+
+  for (const [taskId, node] of Object.entries(nodes)) {
+    // Skip tasks that are already running/finished/failed; ready list is for backlog/planned only
+    if (
+      node.status === 'DONE' ||
+      node.status === 'IN_PROGRESS' ||
+      node.status === 'FAILED'
+    )
+      continue;
+
+    // Check if all dependencies are satisfied
+    const allDepsComplete = node.dependencies.every((depId) => {
+      const depStatus = taskStatusMap.get(depId);
+      return depStatus === 'DONE';
+    });
+
+    if (allDepsComplete && (node.status === 'PLANNED' || node.status === 'BACKLOG')) {
+      ready_to_start.push(taskId);
+    } else {
+      blocked_tasks.push(taskId);
+    }
+  }
+
+  // Sort ready_to_start by sprint (lower sprints first)
+  ready_to_start.sort((a, b) => {
+    const sprintA = nodes[a]?.sprint ?? 999;
+    const sprintB = nodes[b]?.sprint ?? 999;
+    return sprintA - sprintB;
+  });
+
+  // Sort blocked_tasks by sprint
+  blocked_tasks.sort((a, b) => {
+    const sprintA = nodes[a]?.sprint ?? 999;
+    const sprintB = nodes[b]?.sprint ?? 999;
+    return sprintA - sprintB;
+  });
+
+  // Compute cross-sprint dependencies
+  const cross_sprint_dependencies: CrossSprintDep[] = [];
+  for (const [taskId, node] of Object.entries(nodes)) {
+    for (const depId of node.dependencies) {
+      const depSprint = taskSprintMap.get(depId);
+      if (
+        depSprint !== undefined &&
+        depSprint !== node.sprint &&
+        depSprint >= 0 &&
+        node.sprint >= 0
+      ) {
+        cross_sprint_dependencies.push({
+          from_task: depId,
+          to_task: taskId,
+          from_sprint: depSprint,
+          to_sprint: node.sprint,
+          dependency_type: 'REQUIRED',
+        });
+      }
+    }
+  }
+
+  // Compute parallel execution groups (tasks with same dependencies that can run together)
+  const parallel_execution_groups = computeParallelGroups(nodes);
+
+  // Compute critical paths (simplified - longest dependency chains)
+  const critical_paths = computeCriticalPaths(nodes, taskStatusMap);
+
+  // Detect dependency violations (circular deps, missing deps)
+  const dependency_violations = detectDependencyViolations(nodes);
+
+  // Build final graph
+  const graph = {
+    $schema: '../schemas/dependency-graph.schema.json',
+    version: '1.0.0',
+    last_updated: new Date().toISOString(),
+    description: 'Cross-sprint dependency tracking for all tasks',
+    nodes,
+    critical_paths,
+    cross_sprint_dependencies,
+    blocked_tasks,
+    ready_to_start,
+    dependency_violations,
+    parallel_execution_groups,
+  };
+
+  writeJsonFile(graphPath, graph, 2);
+}
+
+/**
+ * Map CSV status to graph status enum
+ */
+function mapCsvStatusToGraph(
+  status: string
+): 'DONE' | 'IN_PROGRESS' | 'BLOCKED' | 'PLANNED' | 'BACKLOG' | 'FAILED' {
+  if (status === 'Done' || status === 'Completed') return 'DONE';
+  if (status === 'In Progress' || status === 'Validating') return 'IN_PROGRESS';
+  if (status === 'Blocked' || status === 'Needs Human') return 'BLOCKED';
+  if (status === 'Failed') return 'FAILED';
+  if (status === 'Backlog' || status === 'Not Started') return 'BACKLOG';
+  return 'PLANNED';
+}
+
+/**
+ * Compute parallel execution groups - tasks that can run at the same time
+ */
+function computeParallelGroups(
+  nodes: Record<string, DependencyNode>
+): Record<string, Record<string, string[]>> {
+  const groups: Record<string, Record<string, string[]>> = {};
+
+  // Group by sprint
+  const tasksBySprint: Record<number, string[]> = {};
+  for (const [taskId, node] of Object.entries(nodes)) {
+    if (node.sprint < 0) continue; // Skip continuous tasks
+    if (!tasksBySprint[node.sprint]) {
+      tasksBySprint[node.sprint] = [];
+    }
+    tasksBySprint[node.sprint].push(taskId);
+  }
+
+  // For each sprint, find tasks with the same dependencies (can run in parallel)
+  for (const [sprintNum, taskIds] of Object.entries(tasksBySprint)) {
+    const sprint = parseInt(sprintNum, 10);
+    if (sprint < 0) continue;
+
+    // Group by dependency signature
+    const depGroups: Record<string, string[]> = {};
+    for (const taskId of taskIds) {
+      const node = nodes[taskId];
+      if (node.status !== 'DONE') {
+        const depKey = node.dependencies.sort().join(',') || 'no-deps';
+        if (!depGroups[depKey]) {
+          depGroups[depKey] = [];
+        }
+        depGroups[depKey].push(taskId);
+      }
+    }
+
+    // Only include groups with >1 task
+    const parallelGroups: Record<string, string[]> = {};
+    let groupIndex = 1;
+    for (const [, taskList] of Object.entries(depGroups)) {
+      if (taskList.length > 1) {
+        parallelGroups[`group-${groupIndex}`] = taskList;
+        groupIndex++;
+      }
+    }
+
+    if (Object.keys(parallelGroups).length > 0) {
+      groups[`sprint-${sprint}`] = parallelGroups;
+    }
+  }
+
+  return groups;
+}
+
+/**
+ * Compute critical paths - longest dependency chains
+ */
+function computeCriticalPaths(
+  nodes: Record<string, DependencyNode>,
+  taskStatusMap: Map<string, string>
+): CriticalPath[] {
+  const paths: CriticalPath[] = [];
+
+  // Find tasks with no dependents (end of chains) that are not done
+  const endTasks = Object.values(nodes).filter(
+    (n) => n.dependents.length === 0 && n.status !== 'DONE'
+  );
+
+  // For each end task, trace back to find the longest path
+  for (const endNode of endTasks.slice(0, 5)) {
+    // Limit to 5 paths
+    const path: string[] = [];
+    const visited = new Set<string>();
+
+    const tracePath = (taskId: string): void => {
+      if (visited.has(taskId)) return;
+      visited.add(taskId);
+      path.unshift(taskId);
+
+      const node = nodes[taskId];
+      if (node && node.dependencies.length > 0) {
+        // Follow the first dependency (simplification)
+        const firstDep = node.dependencies.find((d) => nodes[d]);
+        if (firstDep) {
+          tracePath(firstDep);
+        }
+      }
+    };
+
+    tracePath(endNode.task_id);
+
+    if (path.length > 1) {
+      const doneCount = path.filter((t) => taskStatusMap.get(t) === 'DONE').length;
+      const completionPct = (doneCount / path.length) * 100;
+
+      // Find first non-done task as blocking
+      const blockingTask =
+        path.find((t) => taskStatusMap.get(t) !== 'DONE') || path[path.length - 1];
+
+      paths.push({
+        name: `Path to ${endNode.task_id}`,
+        tasks: path,
+        total_duration_estimate_minutes: path.length * 15, // Estimate 15 min per task
+        completion_percentage: Math.round(completionPct * 10) / 10,
+        blocking_status: blockingTask,
+      });
+    }
+  }
+
+  return paths;
+}
+
+/**
+ * Detect dependency violations (circular deps, missing refs)
+ */
+function detectDependencyViolations(
+  nodes: Record<string, DependencyNode>
+): Array<{ task_id: string; violation: string }> {
+  const violations: Array<{ task_id: string; violation: string }> = [];
+
+  for (const [taskId, node] of Object.entries(nodes)) {
+    // Check for missing dependencies
+    for (const depId of node.dependencies) {
+      if (!nodes[depId]) {
+        violations.push({
+          task_id: taskId,
+          violation: `Missing dependency: ${depId} does not exist`,
+        });
+      }
+    }
+
+    // Check for circular dependencies (simple check - self-reference)
+    if (node.dependencies.includes(taskId)) {
+      violations.push({
+        task_id: taskId,
+        violation: 'Self-referencing dependency',
+      });
+    }
+  }
+
+  return violations;
 }
 
 /**
@@ -854,6 +1253,104 @@ function updateSprintSummary(tasks: any[], metricsDir: string): void {
   if (updatedPhases.length > 0) {
     summary.phases = updatedPhases;
   }
+
+  // Update notes
+  const pct = tasks.length > 0 ? Math.round((done / tasks.length) * 100) : 0;
+  summary.notes = `${done}/${tasks.length} tasks DONE (${pct}%). Last synced: ${new Date().toISOString()}`;
+
+  writeJsonFile(summaryPath, summary, 2);
+}
+
+/**
+ * Generic sprint summary updater that works for any sprint number
+ */
+function updateSprintSummaryGeneric(tasks: any[], metricsDir: string, sprintNum: number): void {
+  const sprintDir = join(metricsDir, `sprint-${sprintNum}`);
+  const summaryPath = join(sprintDir, '_summary.json');
+
+  if (!existsSync(summaryPath)) {
+    // Create a new summary file for this sprint
+    const newSummary = {
+      sprint: `sprint-${sprintNum}`,
+      name: `Sprint ${sprintNum}`,
+      target_date: null,
+      started_at: null,
+      completed_at: null,
+      phases: [],
+      task_summary: {
+        total: tasks.length,
+        done: 0,
+        in_progress: 0,
+        blocked: 0,
+        not_started: tasks.length,
+        failed: 0,
+      },
+      notes: `Sprint ${sprintNum} - initialized`,
+    };
+    writeJsonFile(summaryPath, newSummary, 2);
+  }
+
+  const summary = readJsonTolerant(summaryPath);
+
+  // Calculate task counts from CSV
+  const done = tasks.filter((t) => t.Status === 'Done' || t.Status === 'Completed').length;
+  const inProgress = tasks.filter(
+    (t) => t.Status === 'In Progress' || t.Status === 'Validating'
+  ).length;
+  const blocked = tasks.filter((t) => t.Status === 'Blocked').length;
+  const backlog = tasks.filter((t) => t.Status === 'Backlog').length;
+  const planned = tasks.filter((t) => t.Status === 'Planned').length;
+  const failed = tasks.filter((t) => t.Status === 'Failed').length;
+  const needsHuman = tasks.filter((t) => t.Status === 'Needs Human').length;
+  const inReview = tasks.filter((t) => t.Status === 'In Review').length;
+  const notStarted = backlog + planned + inReview;
+
+  // Update task_summary
+  summary.task_summary = {
+    total: tasks.length,
+    done,
+    in_progress: inProgress,
+    blocked: blocked + needsHuman,
+    not_started: notStarted,
+    failed,
+  };
+
+  // Update completed_tasks list from individual task files
+  const completedTasks: Array<{ task_id: string; completed_at: string; duration_minutes: number }> =
+    [];
+
+  const searchForCompleted = (dir: string): void => {
+    if (!existsSync(dir)) return;
+    const entries = readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = join(dir, entry.name);
+      if (entry.isFile() && entry.name.endsWith('.json') && !entry.name.startsWith('_')) {
+        try {
+          const taskData = readJsonTolerant(fullPath);
+          if (taskData.status === 'DONE' && taskData.completed_at) {
+            completedTasks.push({
+              task_id: taskData.task_id || taskData.taskId || entry.name.replace('.json', ''),
+              completed_at: taskData.completed_at,
+              duration_minutes:
+                taskData.actual_duration_minutes || taskData.target_duration_minutes || 15,
+            });
+          }
+        } catch {
+          // Skip invalid files
+        }
+      } else if (entry.isDirectory()) {
+        searchForCompleted(fullPath);
+      }
+    }
+  };
+
+  searchForCompleted(sprintDir);
+
+  // Sort by completion time
+  completedTasks.sort(
+    (a, b) => new Date(a.completed_at).getTime() - new Date(b.completed_at).getTime()
+  );
+  summary.completed_tasks = completedTasks;
 
   // Update notes
   const pct = tasks.length > 0 ? Math.round((done / tasks.length) * 100) : 0;

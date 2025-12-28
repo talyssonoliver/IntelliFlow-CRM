@@ -23,40 +23,40 @@ describe('tRPC Configuration', () => {
 
   describe('exports', () => {
     it('should export createTRPCRouter', async () => {
-      const { createTRPCRouter } = await import('../trpc');
+      const { createTRPCRouter } = await import('../trpc.js');
       expect(createTRPCRouter).toBeDefined();
       expect(typeof createTRPCRouter).toBe('function');
     });
 
     it('should export publicProcedure', async () => {
-      const { publicProcedure } = await import('../trpc');
+      const { publicProcedure } = await import('../trpc.js');
       expect(publicProcedure).toBeDefined();
     });
 
     it('should export protectedProcedure', async () => {
-      const { protectedProcedure } = await import('../trpc');
+      const { protectedProcedure } = await import('../trpc.js');
       expect(protectedProcedure).toBeDefined();
     });
 
     it('should export adminProcedure', async () => {
-      const { adminProcedure } = await import('../trpc');
+      const { adminProcedure } = await import('../trpc.js');
       expect(adminProcedure).toBeDefined();
     });
 
     it('should export loggedProcedure', async () => {
-      const { loggedProcedure } = await import('../trpc');
+      const { loggedProcedure } = await import('../trpc.js');
       expect(loggedProcedure).toBeDefined();
     });
 
     it('should export router for backward compatibility', async () => {
-      const { router } = await import('../trpc');
+      const { router } = await import('../trpc.js');
       expect(router).toBeDefined();
     });
   });
 
   describe('isAuthed middleware', () => {
     it('should throw UNAUTHORIZED when user is not in context', async () => {
-      const { createTRPCRouter, protectedProcedure } = await import('../trpc');
+      const { createTRPCRouter, protectedProcedure } = await import('../trpc.js');
 
       const router = createTRPCRouter({
         test: protectedProcedure.query(() => 'success'),
@@ -71,7 +71,7 @@ describe('tRPC Configuration', () => {
     });
 
     it('should allow access when user is in context', async () => {
-      const { createTRPCRouter, protectedProcedure } = await import('../trpc');
+      const { createTRPCRouter, protectedProcedure } = await import('../trpc.js');
 
       const router = createTRPCRouter({
         test: protectedProcedure.query(() => 'success'),
@@ -88,7 +88,7 @@ describe('tRPC Configuration', () => {
 
   describe('isAdmin middleware', () => {
     it('should throw FORBIDDEN when user is not admin', async () => {
-      const { createTRPCRouter, adminProcedure } = await import('../trpc');
+      const { createTRPCRouter, adminProcedure } = await import('../trpc.js');
 
       const router = createTRPCRouter({
         test: adminProcedure.query(() => 'admin-only'),
@@ -105,7 +105,7 @@ describe('tRPC Configuration', () => {
     });
 
     it('should allow access when user is admin', async () => {
-      const { createTRPCRouter, adminProcedure } = await import('../trpc');
+      const { createTRPCRouter, adminProcedure } = await import('../trpc.js');
 
       const router = createTRPCRouter({
         test: adminProcedure.query(() => 'admin-only'),
@@ -120,7 +120,7 @@ describe('tRPC Configuration', () => {
     });
 
     it('should throw FORBIDDEN when no user in context', async () => {
-      const { createTRPCRouter, adminProcedure } = await import('../trpc');
+      const { createTRPCRouter, adminProcedure } = await import('../trpc.js');
 
       const router = createTRPCRouter({
         test: adminProcedure.query(() => 'admin-only'),
@@ -134,7 +134,7 @@ describe('tRPC Configuration', () => {
 
   describe('loggingMiddleware', () => {
     it('should log request type and path', async () => {
-      const { createTRPCRouter, loggedProcedure } = await import('../trpc');
+      const { createTRPCRouter, loggedProcedure } = await import('../trpc.js');
 
       const router = createTRPCRouter({
         test: loggedProcedure.query(() => 'logged'),
@@ -143,13 +143,11 @@ describe('tRPC Configuration', () => {
       const caller = router.createCaller({} as any);
       await caller.test();
 
-      expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('[tRPC]')
-      );
+      expect(console.log).toHaveBeenCalledWith(expect.stringContaining('[tRPC]'));
     });
 
     it('should warn for slow requests over 50ms', async () => {
-      const { createTRPCRouter, loggedProcedure } = await import('../trpc');
+      const { createTRPCRouter, loggedProcedure } = await import('../trpc.js');
 
       const router = createTRPCRouter({
         slowEndpoint: loggedProcedure.query(async () => {
@@ -161,22 +159,22 @@ describe('tRPC Configuration', () => {
       const caller = router.createCaller({} as any);
       await caller.slowEndpoint();
 
-      expect(console.warn).toHaveBeenCalledWith(
-        expect.stringContaining('SLOW REQUEST')
-      );
+      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('SLOW REQUEST'));
     });
   });
 
   describe('errorFormatter', () => {
     it('should include zodError in error response for validation errors', async () => {
-      const { createTRPCRouter, publicProcedure } = await import('../trpc');
+      const { createTRPCRouter, publicProcedure } = await import('../trpc.js');
 
       const schema = z.object({
         email: z.string().email(),
       });
 
       const router = createTRPCRouter({
-        validateEmail: publicProcedure.input(schema).query(({ input }) => input),
+        validateEmail: publicProcedure
+          .input(schema)
+          .query(({ input }: { input: { email: string } }) => input),
       });
 
       const caller = router.createCaller({} as any);
@@ -194,7 +192,7 @@ describe('tRPC Configuration', () => {
 
   describe('publicProcedure', () => {
     it('should work without authentication', async () => {
-      const { createTRPCRouter, publicProcedure } = await import('../trpc');
+      const { createTRPCRouter, publicProcedure } = await import('../trpc.js');
 
       const router = createTRPCRouter({
         health: publicProcedure.query(() => ({ status: 'ok' })),

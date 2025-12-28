@@ -24,9 +24,9 @@ const leadFormSchema = z.object({
 type LeadFormData = z.infer<typeof leadFormSchema>;
 
 interface LeadFormProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSuccess?: () => void;
+  readonly isOpen: boolean;
+  readonly onClose: () => void;
+  readonly onSuccess?: () => void;
 }
 
 export function LeadForm({ isOpen, onClose, onSuccess }: LeadFormProps) {
@@ -98,9 +98,7 @@ export function LeadForm({ isOpen, onClose, onSuccess }: LeadFormProps) {
       <div className="relative w-full max-w-md mx-4 bg-white dark:bg-gray-800 rounded-xl shadow-2xl animate-in fade-in zoom-in duration-200">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            Add New Lead
-          </h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Add New Lead</h2>
           <button
             onClick={handleClose}
             className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
@@ -130,7 +128,10 @@ export function LeadForm({ isOpen, onClose, onSuccess }: LeadFormProps) {
 
           {/* Email Field - Required */}
           <div className="space-y-2">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Email <span className="text-red-500">*</span>
             </label>
             <input
@@ -150,7 +151,10 @@ export function LeadForm({ isOpen, onClose, onSuccess }: LeadFormProps) {
           {/* Name Fields - Grid Layout */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="firstName"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 First Name
               </label>
               <input
@@ -168,7 +172,10 @@ export function LeadForm({ isOpen, onClose, onSuccess }: LeadFormProps) {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="lastName"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 Last Name
               </label>
               <input
@@ -188,7 +195,10 @@ export function LeadForm({ isOpen, onClose, onSuccess }: LeadFormProps) {
 
           {/* Company Field */}
           <div className="space-y-2">
-            <label htmlFor="company" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="company"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Company
             </label>
             <input
@@ -202,7 +212,10 @@ export function LeadForm({ isOpen, onClose, onSuccess }: LeadFormProps) {
 
           {/* Title Field */}
           <div className="space-y-2">
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="title"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Job Title
             </label>
             <input
@@ -216,7 +229,10 @@ export function LeadForm({ isOpen, onClose, onSuccess }: LeadFormProps) {
 
           {/* Phone Field */}
           <div className="space-y-2">
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="phone"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Phone
             </label>
             <input
@@ -230,7 +246,10 @@ export function LeadForm({ isOpen, onClose, onSuccess }: LeadFormProps) {
 
           {/* Source Field */}
           <div className="space-y-2">
-            <label htmlFor="source" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="source"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Lead Source
             </label>
             <select

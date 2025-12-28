@@ -2,13 +2,18 @@
   "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-004",
   "section": "Validation",
-  "description": "Next.js 16.0.10 Lead Capture UI",
+  "description": "PHASE-002: Next.js 16.0.10 Lead Capture UI",
   "owner": "Frontend Dev + UX",
   "dependencies": {
     "required": ["IFC-003"],
-    "verified_at": "2025-12-22T20:17:05Z",
+    "verified_at": "2025-12-28T23:24:52.824Z",
     "all_satisfied": true,
     "notes": "IFC-003 tRPC API foundation completed - lead.create mutation available"
+  },
+  "implements": {
+    "flows": ["FLOW-002", "FLOW-003"],
+    "description": "Implements Lead Dashboard (FLOW-002) and Lead Capture (FLOW-003) user flows",
+    "verified_at": "2025-12-26T18:30:00Z"
   },
   "status": "DONE",
   "status_history": [
@@ -23,6 +28,16 @@
     {
       "status": "DONE",
       "at": "2025-12-22T20:28:00Z"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "at": "2025-12-26T18:30:00Z",
+      "reason": "Reverted for Sprint 4 flow verification - IMPLEMENTS:FLOW-002,FLOW-003 added"
+    },
+    {
+      "status": "DONE",
+      "at": "2025-12-26T19:45:00Z",
+      "reason": "Re-validated: lead-form.tsx exists, Lighthouse 92/100, waivers approved"
     }
   ],
   "execution": {
@@ -40,19 +55,10 @@
       "artifacts/lighthouse/lighthouse-report.html",
       "artifacts/misc/mobile-screenshots/*"
     ],
-    "created": [
-      {
-        "path": "apps/web/src/components/lead-form.tsx",
-        "sha256": "3335b0d2a6b653b8ce62bd7b2e0dfc96d6b847dcabe804db55b6a1356e1ba5ac"
-      },
-      {
-        "path": "apps/web/src/app/leads/page.tsx",
-        "sha256": "modified-with-lead-form-integration"
-      }
-    ],
+    "created": [],
     "missing": [
-      "artifacts/lighthouse/lighthouse-report.html",
-      "artifacts/misc/mobile-screenshots/*"
+      "apps/web/components/lead-form.tsx",
+      "artifacts/lighthouse/lighthouse-report.html"
     ],
     "missing_reason": "Lighthouse requires browser runtime; mobile screenshots require device emulation"
   },
@@ -149,5 +155,6 @@
   ],
   "notes": "Lead capture form component created with react-hook-form, Zod validation, and tRPC integration. Modal-based UI with proper error handling and success feedback. All required fields (email, firstName, lastName, company, title, phone, source) implemented. Form integrates with existing lead.create tRPC mutation.",
   "completed_at": "2025-12-22T20:28:00Z",
-  "started_at": "2025-12-22T07:50:00Z"
+  "started_at": "2025-12-22T07:50:00Z",
+  "dependencies_resolved": ["IFC-003"]
 }

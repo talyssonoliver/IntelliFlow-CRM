@@ -98,12 +98,7 @@ describe('LeadScoredEvent', () => {
 describe('LeadStatusChangedEvent', () => {
   it('should create event with correct status change', () => {
     const leadId = LeadId.generate();
-    const event = new LeadStatusChangedEvent(
-      leadId,
-      'NEW',
-      'QUALIFIED',
-      'user-123'
-    );
+    const event = new LeadStatusChangedEvent(leadId, 'NEW', 'QUALIFIED', 'user-123');
 
     expect(event.eventType).toBe('lead.status_changed');
     expect(event.leadId).toBe(leadId);
@@ -115,12 +110,7 @@ describe('LeadStatusChangedEvent', () => {
 
   it('should serialize to payload correctly', () => {
     const leadId = LeadId.generate();
-    const event = new LeadStatusChangedEvent(
-      leadId,
-      'NEW',
-      'QUALIFIED',
-      'user-123'
-    );
+    const event = new LeadStatusChangedEvent(leadId, 'NEW', 'QUALIFIED', 'user-123');
     const payload = event.toPayload();
 
     expect(payload.leadId).toBe(leadId.value);
@@ -133,11 +123,7 @@ describe('LeadStatusChangedEvent', () => {
 describe('LeadQualifiedEvent', () => {
   it('should create event with qualification details', () => {
     const leadId = LeadId.generate();
-    const event = new LeadQualifiedEvent(
-      leadId,
-      'user-123',
-      'High budget, clear need'
-    );
+    const event = new LeadQualifiedEvent(leadId, 'user-123', 'High budget, clear need');
 
     expect(event.eventType).toBe('lead.qualified');
     expect(event.leadId).toBe(leadId);
@@ -148,11 +134,7 @@ describe('LeadQualifiedEvent', () => {
 
   it('should serialize to payload correctly', () => {
     const leadId = LeadId.generate();
-    const event = new LeadQualifiedEvent(
-      leadId,
-      'user-123',
-      'High budget, clear need'
-    );
+    const event = new LeadQualifiedEvent(leadId, 'user-123', 'High budget, clear need');
     const payload = event.toPayload();
 
     expect(payload.leadId).toBe(leadId.value);
@@ -164,12 +146,7 @@ describe('LeadQualifiedEvent', () => {
 describe('LeadConvertedEvent', () => {
   it('should create event with conversion details and account', () => {
     const leadId = LeadId.generate();
-    const event = new LeadConvertedEvent(
-      leadId,
-      'contact-123',
-      'account-456',
-      'user-789'
-    );
+    const event = new LeadConvertedEvent(leadId, 'contact-123', 'account-456', 'user-789');
 
     expect(event.eventType).toBe('lead.converted');
     expect(event.leadId).toBe(leadId);
@@ -181,24 +158,14 @@ describe('LeadConvertedEvent', () => {
 
   it('should create event with conversion details without account', () => {
     const leadId = LeadId.generate();
-    const event = new LeadConvertedEvent(
-      leadId,
-      'contact-123',
-      null,
-      'user-789'
-    );
+    const event = new LeadConvertedEvent(leadId, 'contact-123', null, 'user-789');
 
     expect(event.accountId).toBeNull();
   });
 
   it('should serialize to payload correctly with account', () => {
     const leadId = LeadId.generate();
-    const event = new LeadConvertedEvent(
-      leadId,
-      'contact-123',
-      'account-456',
-      'user-789'
-    );
+    const event = new LeadConvertedEvent(leadId, 'contact-123', 'account-456', 'user-789');
     const payload = event.toPayload();
 
     expect(payload.leadId).toBe(leadId.value);
@@ -209,12 +176,7 @@ describe('LeadConvertedEvent', () => {
 
   it('should serialize to payload correctly without account', () => {
     const leadId = LeadId.generate();
-    const event = new LeadConvertedEvent(
-      leadId,
-      'contact-123',
-      null,
-      'user-789'
-    );
+    const event = new LeadConvertedEvent(leadId, 'contact-123', null, 'user-789');
     const payload = event.toPayload();
 
     expect(payload.accountId).toBeNull();

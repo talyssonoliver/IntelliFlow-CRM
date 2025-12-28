@@ -2,15 +2,19 @@
 
 ## Overview
 
-The Definition of Ready is a checklist that ensures user stories are sufficiently detailed and prepared before being pulled into a sprint. This prevents blocked work, reduces waste, and improves sprint predictability.
+The Definition of Ready is a checklist that ensures user stories are
+sufficiently detailed and prepared before being pulled into a sprint. This
+prevents blocked work, reduces waste, and improves sprint predictability.
 
 **Purpose:**
+
 - Ensure stories are clear and actionable
 - Reduce mid-sprint clarifications and blockers
 - Enable accurate estimation
 - Improve sprint commitment reliability
 
 **When to Use:**
+
 - Before sprint planning
 - During backlog refinement
 - When accepting new feature requests
@@ -217,6 +221,7 @@ The Definition of Ready is a checklist that ensures user stories are sufficientl
 ### Ideal Story Size
 
 A ready story should be:
+
 - **Completable in 1-3 days** by one developer
 - **Independently deployable** (or clearly part of a feature set)
 - **Testable in isolation** (or with minimal dependencies)
@@ -225,6 +230,7 @@ A ready story should be:
 ### When to Split Stories
 
 Split if:
+
 - Estimate exceeds team's maximum story size
 - Story spans multiple user personas
 - Story has multiple independent acceptance criteria
@@ -248,13 +254,16 @@ Split if:
 - **Too vague**: "As a user, I want the system to work better"
   - Fix: Specify what "better" means with measurable criteria
 
-- **Too technical**: "As a developer, I want to refactor the authentication module"
+- **Too technical**: "As a developer, I want to refactor the authentication
+  module"
   - Fix: Reframe from user perspective or create a technical task
 
-- **Hidden dependencies**: Story seems ready but blocks on undiscovered dependency
+- **Hidden dependencies**: Story seems ready but blocks on undiscovered
+  dependency
   - Fix: Conduct dependency mapping session
 
-- **Over-specified**: Story includes implementation details that constrain developers
+- **Over-specified**: Story includes implementation details that constrain
+  developers
   - Fix: Focus on "what" and "why", not "how"
 
 - **Missing acceptance criteria**: Story has title but no clear done state
@@ -279,6 +288,7 @@ In rare cases, a story may enter a sprint without meeting full DoR if:
    - Must still have: Clear deliverable, dependencies verified, DoD defined
 
 **Process for Exceptions:**
+
 - Product Owner must explicitly approve exception
 - Team must acknowledge increased risk
 - Story must be marked with "DoR Exception" label
@@ -286,13 +296,13 @@ In rare cases, a story may enter a sprint without meeting full DoR if:
 
 ## Definition of Ready vs Definition of Done
 
-| Definition of Ready (DoR) | Definition of Done (DoD) |
-|---------------------------|--------------------------|
-| **Before** work starts | **After** work completes |
+| Definition of Ready (DoR)              | Definition of Done (DoD)                 |
+| -------------------------------------- | ---------------------------------------- |
+| **Before** work starts                 | **After** work completes                 |
 | Story is **ready to pull** into sprint | Story is **ready to ship** to production |
-| Ensures clarity and preparation | Ensures quality and completeness |
-| Prevents blocked work | Prevents technical debt |
-| Owned by **Product Owner** + Team | Owned by **Team** |
+| Ensures clarity and preparation        | Ensures quality and completeness         |
+| Prevents blocked work                  | Prevents technical debt                  |
+| Owned by **Product Owner** + Team      | Owned by **Team**                        |
 
 ## Checklist Review Process
 
@@ -322,9 +332,12 @@ In rare cases, a story may enter a sprint without meeting full DoR if:
 ### Sprint Plan Integration
 
 All stories should reference tasks in:
-- **Sprint Plan CSV**: `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`
+
+- **Sprint Plan CSV**:
+  `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`
 
 Verify:
+
 - Task ID exists in Sprint_plan.csv
 - Dependencies column lists all prerequisites
 - Definition of Done column matches acceptance criteria
@@ -352,12 +365,13 @@ Monitor these metrics to improve DoR effectiveness:
 
 ## Revision History
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2025-12-22 | System | Initial template based on IFC-146 requirements |
+| Version | Date       | Author | Changes                                        |
+| ------- | ---------- | ------ | ---------------------------------------------- |
+| 1.0     | 2025-12-22 | System | Initial template based on IFC-146 requirements |
 
 ## References
 
-- IntelliFlow CRM Sprint Plan: `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`
+- IntelliFlow CRM Sprint Plan:
+  `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`
 - Agile Best Practices: Definition of Ready criteria
 - Team Working Agreement: `docs/planning/team-working-agreement.md` (if exists)

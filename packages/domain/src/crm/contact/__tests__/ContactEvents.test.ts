@@ -14,13 +14,7 @@ describe('ContactCreatedEvent', () => {
     const contactId = ContactId.generate();
     const emailResult = Email.create('john.doe@example.com');
     const email = emailResult.value;
-    const event = new ContactCreatedEvent(
-      contactId,
-      email,
-      'John',
-      'Doe',
-      'owner-123'
-    );
+    const event = new ContactCreatedEvent(contactId, email, 'John', 'Doe', 'owner-123');
 
     expect(event.eventType).toBe('contact.created');
     expect(event.contactId).toBe(contactId);
@@ -35,13 +29,7 @@ describe('ContactCreatedEvent', () => {
     const contactId = ContactId.generate();
     const emailResult = Email.create('john.doe@example.com');
     const email = emailResult.value;
-    const event = new ContactCreatedEvent(
-      contactId,
-      email,
-      'John',
-      'Doe',
-      'owner-123'
-    );
+    const event = new ContactCreatedEvent(contactId, email, 'John', 'Doe', 'owner-123');
     const payload = event.toPayload();
 
     expect(payload.contactId).toBe(contactId.value);
@@ -88,11 +76,7 @@ describe('ContactUpdatedEvent', () => {
 describe('ContactAccountAssociatedEvent', () => {
   it('should create event with account association', () => {
     const contactId = ContactId.generate();
-    const event = new ContactAccountAssociatedEvent(
-      contactId,
-      'account-123',
-      'user-456'
-    );
+    const event = new ContactAccountAssociatedEvent(contactId, 'account-123', 'user-456');
 
     expect(event.eventType).toBe('contact.account_associated');
     expect(event.contactId).toBe(contactId);
@@ -103,11 +87,7 @@ describe('ContactAccountAssociatedEvent', () => {
 
   it('should serialize to payload correctly', () => {
     const contactId = ContactId.generate();
-    const event = new ContactAccountAssociatedEvent(
-      contactId,
-      'account-123',
-      'user-456'
-    );
+    const event = new ContactAccountAssociatedEvent(contactId, 'account-123', 'user-456');
     const payload = event.toPayload();
 
     expect(payload.contactId).toBe(contactId.value);
@@ -119,11 +99,7 @@ describe('ContactAccountAssociatedEvent', () => {
 describe('ContactAccountDisassociatedEvent', () => {
   it('should create event with account disassociation', () => {
     const contactId = ContactId.generate();
-    const event = new ContactAccountDisassociatedEvent(
-      contactId,
-      'account-123',
-      'user-456'
-    );
+    const event = new ContactAccountDisassociatedEvent(contactId, 'account-123', 'user-456');
 
     expect(event.eventType).toBe('contact.account_disassociated');
     expect(event.contactId).toBe(contactId);
@@ -134,11 +110,7 @@ describe('ContactAccountDisassociatedEvent', () => {
 
   it('should serialize to payload correctly', () => {
     const contactId = ContactId.generate();
-    const event = new ContactAccountDisassociatedEvent(
-      contactId,
-      'account-123',
-      'user-456'
-    );
+    const event = new ContactAccountDisassociatedEvent(contactId, 'account-123', 'user-456');
     const payload = event.toPayload();
 
     expect(payload.contactId).toBe(contactId.value);
@@ -150,11 +122,7 @@ describe('ContactAccountDisassociatedEvent', () => {
 describe('ContactConvertedFromLeadEvent', () => {
   it('should create event with lead conversion', () => {
     const contactId = ContactId.generate();
-    const event = new ContactConvertedFromLeadEvent(
-      contactId,
-      'lead-123',
-      'user-456'
-    );
+    const event = new ContactConvertedFromLeadEvent(contactId, 'lead-123', 'user-456');
 
     expect(event.eventType).toBe('contact.converted_from_lead');
     expect(event.contactId).toBe(contactId);
@@ -165,11 +133,7 @@ describe('ContactConvertedFromLeadEvent', () => {
 
   it('should serialize to payload correctly', () => {
     const contactId = ContactId.generate();
-    const event = new ContactConvertedFromLeadEvent(
-      contactId,
-      'lead-123',
-      'user-456'
-    );
+    const event = new ContactConvertedFromLeadEvent(contactId, 'lead-123', 'user-456');
     const payload = event.toPayload();
 
     expect(payload.contactId).toBe(contactId.value);

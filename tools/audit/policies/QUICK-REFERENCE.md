@@ -1,6 +1,7 @@
 # Runtime Path Linter - Quick Reference
 
-> **TL;DR**: Keep artifacts organized. One canonical copy of critical files. No runtime files in docs/. CI enforces strictly.
+> **TL;DR**: Keep artifacts organized. One canonical copy of critical files. No
+> runtime files in docs/. CI enforces strictly.
 
 ---
 
@@ -105,25 +106,25 @@ mv apps/project-tracker/docs/artifacts/file.json artifacts/misc/
 
 ## Severity Levels
 
-| Local Mode | CI Mode | Meaning |
-|------------|---------|---------|
-| ❌ ERROR | ❌ ERROR | Forbidden path, duplicate |
-| ⚠️ WARNING | ❌ ERROR | Policy pending (active) |
-| ⚠️ WARNING | ❌ ERROR | Policy pending (expired) |
+| Local Mode | CI Mode    | Meaning                        |
+| ---------- | ---------- | ------------------------------ |
+| ❌ ERROR   | ❌ ERROR   | Forbidden path, duplicate      |
+| ⚠️ WARNING | ❌ ERROR   | Policy pending (active)        |
+| ⚠️ WARNING | ❌ ERROR   | Policy pending (expired)       |
 | ⚠️ WARNING | ⚠️ WARNING | Canonical missing (non-strict) |
-| ℹ️ INFO | ℹ️ INFO | Informational only |
+| ℹ️ INFO    | ℹ️ INFO    | Informational only             |
 
 ---
 
 ## Exit Codes
 
-| Code | Meaning |
-|------|---------|
-| 0 | ✅ Success |
-| 1 | ❌ Violation (forbidden/duplicate) |
-| 2 | ❌ Canonical file missing |
-| 3 | ❌ Policy deadline expired |
-| 4 | ❌ Config error |
+| Code | Meaning                            |
+| ---- | ---------------------------------- |
+| 0    | ✅ Success                         |
+| 1    | ❌ Violation (forbidden/duplicate) |
+| 2    | ❌ Canonical file missing          |
+| 3    | ❌ Policy deadline expired         |
+| 4    | ❌ Config error                    |
 
 ---
 
@@ -143,11 +144,13 @@ mv apps/project-tracker/docs/artifacts/file.json artifacts/misc/
 ## CI Integration
 
 ### When It Runs
+
 - Pull requests to `main`/`develop`
 - Pushes to `main`/`develop`
 - Manual workflow dispatch
 
 ### What It Checks
+
 1. ✅ No forbidden paths
 2. ✅ No duplicates
 3. ✅ Canonical files exist
@@ -155,7 +158,9 @@ mv apps/project-tracker/docs/artifacts/file.json artifacts/misc/
 5. ✅ .gitignore coverage
 
 ### PR Comment
+
 If violations detected, bot comments on PR with:
+
 - List of violations
 - Suggested fixes
 - Links to docs
@@ -165,12 +170,14 @@ If violations detected, bot comments on PR with:
 ## Skipping Linter
 
 ### Local
+
 ```bash
 export SKIP_RUNTIME_PATH_LINT=true
 git commit -m "..."
 ```
 
 ### CI
+
 ❌ **Not recommended** - Use `policy_pending` for temporary exceptions
 
 ---
@@ -179,12 +186,13 @@ git commit -m "..."
 
 Active migrations with deadlines:
 
-| Pattern | Deadline | Status |
-|---------|----------|--------|
+| Pattern               | Deadline   | Status                       |
+| --------------------- | ---------- | ---------------------------- |
 | `docs/artifacts/**/*` | 2025-01-15 | ⏳ Migrating to `artifacts/` |
-| `local-*` audit runs | 2025-01-31 | ⏳ Should be .gitignored |
+| `local-*` audit runs  | 2025-01-31 | ⏳ Should be .gitignored     |
 
 **Actions**:
+
 - Before deadline: Local = WARN, CI = ERROR
 - After deadline: Local = ERROR, CI = ERROR
 
@@ -252,6 +260,7 @@ Fix:
 ### Q: Linter fails but I don't see violations
 
 **A**: Check artifacts uploaded to GitHub Actions:
+
 ```
 Actions → Runtime Path Linting → Artifacts → runtime-path-lint-results
 ```
@@ -259,17 +268,19 @@ Actions → Runtime Path Linting → Artifacts → runtime-path-lint-results
 ### Q: How do I add an exception?
 
 **A**: Edit policy YAML:
+
 ```yaml
 forbidden:
   - pattern: '/*.json'
     exceptions:
       - 'package.json'
-      - 'my-special-file.json'  # Add here
+      - 'my-special-file.json' # Add here
 ```
 
 ### Q: Linter too strict in local development?
 
 **A**: Don't use `--strict` flag locally:
+
 ```bash
 # Local (warnings only)
 pnpm tsx tools/audit/runtime-path-linter.ts
@@ -281,6 +292,7 @@ pnpm tsx tools/audit/runtime-path-linter.ts --strict
 ### Q: Need temporary exception during migration?
 
 **A**: Use `policy_pending` section:
+
 ```yaml
 policy_pending:
   - pattern: 'my-migration/**/*'
@@ -291,6 +303,4 @@ policy_pending:
 
 ---
 
-**Last Updated**: 2025-12-21
-**Version**: 1.0.0
-**Maintainer**: Tech Lead
+**Last Updated**: 2025-12-21 **Version**: 1.0.0 **Maintainer**: Tech Lead

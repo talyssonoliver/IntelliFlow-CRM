@@ -1,0 +1,41 @@
+{
+  "files": [
+    {
+      "path": "packages/db/prisma/schema.prisma",
+      "hash": "2622efbb0ac90592143d5302699348c6d6a246911bf87b2f219f234a9cb5cbeb",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "docs/planning/DDD-context-map.puml",
+      "hash": "250be57f58fb57744cf96ca778f62667aca9668ca3cde8d3501e1cae5437460b",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "packages/validators/src/index.ts",
+      "hash": "345865b00d398eee8c8361d9cc66beb671e63db3f9802a04afbf87a9f012d6da",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "packages/validators/src/lead.ts",
+      "hash": "c34a4ec3e38c1fd2b95edb67e0ba97444420eca51c9b2391291f7673b470df9b",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "packages/validators/src/contact.ts",
+      "hash": "79a3135867affa254b834d206dfee9b4a4f8aca715cf1f816040f4288571017b",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "packages/validators/package.json",
+      "hash": "7b5cc256f5fc1bd42a5cf664fe781715d94e461417db1851d1c04c480cdff66c",
+      "status": "matched",
+      "size": 1000
+    }
+  ],
+  "generatedAt": "2025-12-25T18:15:00.000Z"
+}

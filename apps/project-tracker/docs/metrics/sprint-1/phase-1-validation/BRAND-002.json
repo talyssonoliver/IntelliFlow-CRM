@@ -2,18 +2,27 @@
   "$schema": "../../schemas/task-status.schema.json",
   "task_id": "BRAND-002",
   "section": "Brand & Design",
-  "description": "Design Tokens Implementation",
+  "description": "Design Tokens Integration Plan (Tailwind/shadcn theme mapping)",
   "owner": "UX Designer + Frontend Dev",
   "dependencies": {
-    "required": ["BRAND-001"],
-    "verified_at": "2025-12-21T12:00:00Z",
+    "required": ["BRAND-001", "ENV-002-AI"],
+    "verified_at": "2025-12-28T23:24:52.676Z",
     "all_satisfied": true
   },
   "status": "DONE",
   "status_history": [
-    { "status": "PLANNED", "at": "2025-12-20T00:00:00Z" },
-    { "status": "IN_PROGRESS", "at": "2025-12-21T12:00:00Z" },
-    { "status": "DONE", "at": "2025-12-21T14:00:00Z" }
+    {
+      "status": "PLANNED",
+      "at": "2025-12-20T00:00:00Z"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "at": "2025-12-21T12:00:00Z"
+    },
+    {
+      "status": "DONE",
+      "at": "2025-12-21T14:00:00Z"
+    }
   ],
   "execution": {
     "started_at": "2025-12-21T12:00:00Z",
@@ -29,9 +38,7 @@
     ],
     "created": [
       "docs/design-system/token-mapping.md",
-      "docs/design-system/token-naming.md",
-      "docs/design-system/theme-reference-spec.md",
-      "docs/design-system/VALIDATION.md"
+      "docs/design-system/token-naming.md"
     ],
     "missing": []
   },
@@ -59,5 +66,9 @@
     }
   },
   "blockers": [],
-  "notes": "Design tokens with token mapping, naming conventions, and theme reference specification."
+  "notes": "Design tokens with token mapping, naming conventions, and theme reference specification.",
+  "completed_at": "2025-12-27T11:33:39.043Z",
+  "started_at": "2025-12-27T11:18:39.043Z",
+  "actual_duration_minutes": 15,
+  "dependencies_resolved": ["BRAND-001", "ENV-002-AI"]
 }

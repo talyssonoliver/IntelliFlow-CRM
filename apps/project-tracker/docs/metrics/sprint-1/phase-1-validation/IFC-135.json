@@ -2,18 +2,27 @@
   "$schema": "../../schemas/task-status.schema.json",
   "task_id": "IFC-135",
   "section": "Architecture",
-  "description": "ADR Pack Implementation",
+  "description": "Create ADR pack for multi-tenancy; workflow engine choice; agent tool-calling; data classification & retention; audit logging",
   "owner": "Tech Lead",
   "dependencies": {
-    "required": ["IFC-001"],
-    "verified_at": "2025-12-21T12:00:00Z",
+    "required": ["IFC-002", "GOV-001"],
+    "verified_at": "2025-12-28T23:24:52.760Z",
     "all_satisfied": true
   },
   "status": "DONE",
   "status_history": [
-    { "status": "PLANNED", "at": "2025-12-20T00:00:00Z" },
-    { "status": "IN_PROGRESS", "at": "2025-12-21T12:00:00Z" },
-    { "status": "DONE", "at": "2025-12-21T14:00:00Z" }
+    {
+      "status": "PLANNED",
+      "at": "2025-12-20T00:00:00Z"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "at": "2025-12-21T12:00:00Z"
+    },
+    {
+      "status": "DONE",
+      "at": "2025-12-21T14:00:00Z"
+    }
   ],
   "execution": {
     "started_at": "2025-12-21T12:00:00Z",
@@ -24,14 +33,7 @@
   },
   "artifacts": {
     "expected": ["docs/planning/adr/*"],
-    "created": [
-      "docs/planning/adr/ADR-001-modern-stack.md",
-      "docs/planning/adr/ADR-004-multi-tenancy.md",
-      "docs/planning/adr/ADR-005-workflow-engine.md",
-      "docs/planning/adr/ADR-006-agent-tools.md",
-      "docs/planning/adr/ADR-007-data-governance.md",
-      "docs/planning/adr/ADR-008-audit-logging.md"
-    ],
+    "created": [],
     "missing": []
   },
   "validations": [
@@ -44,8 +46,17 @@
     }
   ],
   "kpis": {
-    "adrs_created": { "target": 6, "actual": 6, "met": true, "unit": "count" }
+    "adrs_created": {
+      "target": 6,
+      "actual": 6,
+      "met": true,
+      "unit": "count"
+    }
   },
   "blockers": [],
-  "notes": "Complete ADR pack with architecture decisions for multi-tenancy, workflow engine, agent tools, data governance, and audit logging."
+  "notes": "Complete ADR pack with architecture decisions for multi-tenancy, workflow engine, agent tools, data governance, and audit logging.",
+  "completed_at": "2025-12-27T11:33:39.135Z",
+  "started_at": "2025-12-27T11:18:39.135Z",
+  "actual_duration_minutes": 15,
+  "dependencies_resolved": ["IFC-002", "GOV-001"]
 }

@@ -1,8 +1,8 @@
 # IntelliFlow Sprint 0 Audit Cutover and "All Tools" Audit System
 
-A standalone implementation brief and Codex prompt for establishing (1) an
-**audit cutover** during an ongoing Sprint 0 and (2) a comprehensive, tiered
-**all-tools** audit framework with evidence bundles.
+A standalone implementation brief for establishing (1) an **audit cutover**
+during an ongoing Sprint 0 and (2) a comprehensive, tiered **all-tools** audit
+framework with evidence bundles.
 
 ---
 

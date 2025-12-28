@@ -284,11 +284,7 @@ describe('Retry Utilities', () => {
           })
       );
 
-      const result = await withRetryAndTimeout(
-        mockFn,
-        { maxAttempts: 2, initialDelay: 10 },
-        100
-      );
+      const result = await withRetryAndTimeout(mockFn, { maxAttempts: 2, initialDelay: 10 }, 100);
 
       expect(result).toBe('success');
       vi.useFakeTimers();

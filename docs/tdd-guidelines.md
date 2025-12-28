@@ -2,7 +2,9 @@
 
 ## Overview
 
-This document outlines the Test-Driven Development (TDD) process for the IntelliFlow CRM project. TDD is a core practice that ensures code quality, maintainability, and confidence in refactoring.
+This document outlines the Test-Driven Development (TDD) process for the
+IntelliFlow CRM project. TDD is a core practice that ensures code quality,
+maintainability, and confidence in refactoring.
 
 ## TDD Workflow: Red-Green-Refactor
 
@@ -12,7 +14,8 @@ The TDD cycle follows three distinct phases:
 
 - Write a test for the next bit of functionality you want to add
 - Run the test suite and verify the new test fails (red)
-- Ensure the test fails for the right reason (not due to syntax errors or missing dependencies)
+- Ensure the test fails for the right reason (not due to syntax errors or
+  missing dependencies)
 
 **Example:**
 
@@ -90,14 +93,14 @@ export class LeadScore extends ValueObject {
 
 Coverage thresholds are enforced by CI and will fail builds if not met.
 
-| Layer | Coverage Requirement | Enforcement |
-|-------|---------------------|-------------|
-| **Domain Layer** | ≥95% line coverage | CI enforced (hard fail) |
-| **Application Layer** | ≥90% line coverage | CI enforced (hard fail) |
-| **API Routes** | ≥85% endpoint coverage | CI enforced (hard fail) |
-| **Overall Project** | ≥90% line coverage | CI enforced (hard fail) |
-| **Unit Tests** | ≥90% line coverage | Team standard |
-| **Integration Tests** | ≥80% endpoint coverage | Team standard |
+| Layer                 | Coverage Requirement   | Enforcement             |
+| --------------------- | ---------------------- | ----------------------- |
+| **Domain Layer**      | ≥95% line coverage     | CI enforced (hard fail) |
+| **Application Layer** | ≥90% line coverage     | CI enforced (hard fail) |
+| **API Routes**        | ≥85% endpoint coverage | CI enforced (hard fail) |
+| **Overall Project**   | ≥90% line coverage     | CI enforced (hard fail) |
+| **Unit Tests**        | ≥90% line coverage     | Team standard           |
+| **Integration Tests** | ≥80% endpoint coverage | Team standard           |
 
 ### Viewing Coverage Reports
 
@@ -143,17 +146,18 @@ export default defineConfig({
 
 IntelliFlow CRM uses three categories of tests, each serving a distinct purpose:
 
-| Category | Purpose | Tools | Speed | Coverage Target |
-|----------|---------|-------|-------|-----------------|
-| **Unit Tests** | Test individual functions, classes, and modules in isolation | Vitest | Fast (<1s per suite) | ≥90% line coverage |
+| Category              | Purpose                                                               | Tools            | Speed                   | Coverage Target        |
+| --------------------- | --------------------------------------------------------------------- | ---------------- | ----------------------- | ---------------------- |
+| **Unit Tests**        | Test individual functions, classes, and modules in isolation          | Vitest           | Fast (<1s per suite)    | ≥90% line coverage     |
 | **Integration Tests** | Test interactions between components, API endpoints, database queries | Vitest + Test DB | Medium (1-5s per suite) | ≥80% endpoint coverage |
-| **E2E Tests** | Test complete user workflows through the UI | Playwright | Slow (10-60s per test) | Critical paths only |
+| **E2E Tests**         | Test complete user workflows through the UI                           | Playwright       | Slow (10-60s per test)  | Critical paths only    |
 
 ### Unit Tests
 
 **Purpose**: Validate individual units of code in isolation.
 
 **Characteristics**:
+
 - No external dependencies (database, network, file system)
 - Use mocks/stubs for dependencies
 - Fast execution (milliseconds)
@@ -202,6 +206,7 @@ describe('Email Value Object', () => {
 **Purpose**: Validate interactions between components and external systems.
 
 **Characteristics**:
+
 - Use test database (isolated from production)
 - Test API endpoints end-to-end
 - Verify database queries and transactions
@@ -257,13 +262,15 @@ describe('Lead Router', () => {
 
 **Location**: `apps/*/src/**/__tests__/` or `tests/integration/`
 
-**Naming Convention**: `{routerName}.router.test.ts` or `{feature}.integration.test.ts`
+**Naming Convention**: `{routerName}.router.test.ts` or
+`{feature}.integration.test.ts`
 
 ### E2E Tests
 
 **Purpose**: Validate complete user workflows from the UI perspective.
 
 **Characteristics**:
+
 - Use real browser (Chromium, Firefox, WebKit)
 - Test critical user journeys
 - Verify UI interactions and visual elements
@@ -364,8 +371,10 @@ intelliFlow-CRM/
 
 ### Location Guidelines
 
-1. **Co-locate unit tests**: Place `__tests__` directory next to the code being tested
-2. **Integration tests**: Use `apps/*/src/**/__tests__/` for API/module integration tests
+1. **Co-locate unit tests**: Place `__tests__` directory next to the code being
+   tested
+2. **Integration tests**: Use `apps/*/src/**/__tests__/` for API/module
+   integration tests
 3. **Shared integration tests**: Use `tests/integration/` for cross-module tests
 4. **E2E tests**: Always use `tests/e2e/` for Playwright tests
 
@@ -589,7 +598,10 @@ class LeadScorer {
 
 ```typescript
 class Rectangle {
-  constructor(protected width: number, protected height: number) {}
+  constructor(
+    protected width: number,
+    protected height: number
+  ) {}
 
   setWidth(width: number): void {
     this.width = width;
@@ -621,7 +633,10 @@ interface Shape {
 }
 
 class Rectangle implements Shape {
-  constructor(private width: number, private height: number) {}
+  constructor(
+    private width: number,
+    private height: number
+  ) {}
 
   area(): number {
     return this.width * this.height;
@@ -829,8 +844,10 @@ it('should find lead by id', async () => {
 - **Vitest Documentation**: https://vitest.dev/
 - **Playwright Documentation**: https://playwright.dev/
 - **Testing Library**: https://testing-library.com/
-- **Kent C. Dodds - Testing Best Practices**: https://kentcdodds.com/blog/common-mistakes-with-react-testing-library
-- **Martin Fowler - Test Pyramid**: https://martinfowler.com/bliki/TestPyramid.html
+- **Kent C. Dodds - Testing Best Practices**:
+  https://kentcdodds.com/blog/common-mistakes-with-react-testing-library
+- **Martin Fowler - Test Pyramid**:
+  https://martinfowler.com/bliki/TestPyramid.html
 
 ## Getting Help
 

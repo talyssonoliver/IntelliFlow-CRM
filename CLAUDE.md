@@ -9,9 +9,10 @@ code in this repository.
 optimized for AI-first development. The project emphasizes automation, type
 safety, and AI-assisted workflows throughout the development lifecycle.
 
-**Project Status**: Currently in planning/foundation phase (Sprint 0). The
-codebase will be built incrementally following the comprehensive sprint plan in
-`Sprint_plan.csv` (303 tasks across 34 sprints).
+**Project Status**: Currently in Sprint 6 (MVP implementation phase). IFC-010
+(Phase 1 Go/No-Go Decision) passed on 2025-12-27 with unanimous GO decision.
+The codebase will be built incrementally following the comprehensive sprint plan
+in `Sprint_plan.csv` (316 tasks across 34 sprints).
 
 ### Sprint Plan Structure
 
@@ -30,6 +31,7 @@ All project tasks are tracked in `Sprint_plan.csv` with the following structure:
 - **Key CSV Columns**:
   - `Section`: Feature area (AI Foundation, Validation, Core CRM, etc.)
   - `Dependencies`: Task IDs that must complete first
+  - `Pre-requisites`: Files, policies, and environment requirements (see prefixes below)
   - `Definition of Done`: Specific completion criteria
   - `KPIs`: Measurable success metrics (e.g., "Coverage >90%", "Response
     <200ms")
@@ -37,9 +39,62 @@ All project tasks are tracked in `Sprint_plan.csv` with the following structure:
   - `Artifacts To Track`: Specific files/directories to be created
   - `Validation Method`: How to verify task completion
 
+- **Pre-requisite Prefixes** (in `Pre-requisites` column):
+  - `FILE:path/to/file` - Required file must exist
+  - `ENV:description` - Environment/configuration requirement
+  - `POLICY:description` - Policy or process requirement
+  - `IMPLEMENTS:FLOW-XXX` - Implements a specific flow
+  - `DESIGN:path/to/mockup.png` - **UI Design mockup to match** (CRITICAL for UI tasks)
+
+**IMPORTANT - UI Tasks**: All UI/page tasks (IFC-090, IFC-091, PG-*) **MUST**
+reference design mockups via `DESIGN:` prefix. Implementation must match the
+design. See `docs/design/README.md` for mockup locations and component checklists.
+
 **Important**: When implementing any task from the sprint plan, always reference
 the CSV for the exact artifacts expected, KPIs to meet, and validation methods
 required.
+
+### Reading the Sprint Plan (Claude Code)
+
+**CRITICAL**: The main `Sprint_plan.csv` file exceeds Claude Code's 25000 token
+read limit. To read sprint plan data, use the **split files** instead:
+
+```
+apps/project-tracker/docs/metrics/_global/
+├── Sprint_plan.csv      # Source of truth (DO NOT read directly - too large)
+├── Sprint_plan_A.csv    # Rows 1-90 (read this for early tasks)
+├── Sprint_plan_B.csv    # Rows 91-180
+├── Sprint_plan_C.csv    # Rows 181-270
+└── Sprint_plan_D.csv    # Rows 271-316 (read this for later tasks)
+```
+
+**Rules**:
+
+- **To READ**: Use `Sprint_plan_A.csv`, `B`, `C`, or `D` based on the task range
+- **To EDIT**: Only edit `Sprint_plan.csv` (source of truth)
+- **Not committed**: Split files are gitignored (local only, derived data)
+- **Auto-regeneration**: Split files are auto-regenerated:
+  - On git commit (pre-commit hook detects CSV changes)
+  - On data-sync (UI sync button or API call)
+  - Manually: `npx tsx tools/scripts/split-sprint-plan.ts`
+  - On fresh clone: Run the script once to generate local splits
+
+**Finding a task by ID**:
+
+- Sprint 0 tasks: Usually in `Sprint_plan_A.csv` or `Sprint_plan_B.csv`
+- Sprint 1-15 tasks: Check `Sprint_plan_B.csv` and `Sprint_plan_C.csv`
+- Sprint 16+ tasks: Check `Sprint_plan_C.csv` and `Sprint_plan_D.csv`
+
+  | View       | Purpose in Prompt                              | When to Use                                             |
+  | ---------- | ---------------------------------------------- | ------------------------------------------------------- |
+  | Dashboard  | Sprint overview, task counts, progress bars    | Start of sprint, quick status checks                    |
+  | Kanban     | Visual task board by status                    | Track task flow: Backlog → Planned → In Progress → Done |
+  | Analytics  | Charts, trends, velocity metrics               | Mid-sprint reviews, identify bottlenecks                |
+  | Metrics    | KPI tracking, phase summaries, evidence        | Verify KPIs met, check attestations                     |
+  | Execution  | Sprint orchestration, parallel spawning        | Execute sprints, monitor sub-agents                     |
+  | Governance | Policy compliance, STOA gate results           | Verify governance requirements met                      |
+  | Contracts  | Task agreements, SLAs, commitments             | Review task contracts before completion                 |
+  | Audit      | Full audit runs, security scans, quality gates | Final validation before marking Done                    |
 
 ### Core Technology Stack
 

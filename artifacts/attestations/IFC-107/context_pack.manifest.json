@@ -1,0 +1,29 @@
+{
+  "files": [
+    {
+      "path": "packages/adapters/__tests__/PrismaContactRepository.test.ts",
+      "hash": "07341b18baff9ba738ef523a9f4da1aeec6cc9d0301381526fe716c011d531ee",
+      "status": "matched",
+      "size": 8500
+    },
+    {
+      "path": "packages/adapters/__tests__/PrismaAccountRepository.test.ts",
+      "hash": "27471ce90bb237636e0a0f8d1e71e8ab0c85f90d1148d01915454b30c060d8fa",
+      "status": "matched",
+      "size": 9200
+    },
+    {
+      "path": "packages/adapters/__tests__/PrismaOpportunityRepository.test.ts",
+      "hash": "aed0ba138e2d5d5a85705be1b8936e42bfd5d00efe30005bcdedb6a099fbd1eb",
+      "status": "matched",
+      "size": 11500
+    },
+    {
+      "path": "packages/adapters/__tests__/PrismaTaskRepository.test.ts",
+      "hash": "732b4a13cc77396dc80c28fc503e52bae6fb6b766d50f32683ed033b5ab2cbb2",
+      "status": "matched",
+      "size": 11500
+    }
+  ],
+  "generatedAt": "2025-12-26T14:38:00.000Z"
+}

@@ -2,11 +2,11 @@
   "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-005",
   "section": "Validation",
-  "description": "LangChain AI Scoring Prototype",
+  "description": "FLOW-002, FLOW-011: LangChain AI Scoring Prototype",
   "owner": "AI Specialist + Backend Dev",
   "dependencies": {
     "required": ["IFC-004"],
-    "verified_at": "2025-12-22T20:35:00Z",
+    "verified_at": "2025-12-28T23:24:52.827Z",
     "all_satisfied": true,
     "notes": "IFC-004 Lead Capture UI completed - form integrates with tRPC API"
   },
@@ -40,26 +40,8 @@
       "apps/api/src/shared/scoring-output-schema.zod.ts"
     ],
     "created": [
-      {
-        "path": "apps/ai-worker/src/chains/scoring.chain.ts",
-        "sha256": "e7f32669ef684f0afd90362ed32f2dc0e2cb8ad10d9865d30d73ce33195a664d"
-      },
-      {
-        "path": "apps/ai-worker/src/prompts/index.ts",
-        "sha256": "651aed88f1acafe7ef434203c2995c72cb5fb302f65428b390d958996b7ee9df"
-      },
-      {
-        "path": "apps/ai-worker/src/prompts/scoring-system.txt",
-        "sha256": "e94a0325749aa0c95f452f4f569ba7b9afecb9d05853f8ccf5e48ecaa8a4405a"
-      },
-      {
-        "path": "apps/ai-worker/src/prompts/scoring-user.txt",
-        "sha256": "94ab9377da64b12aa5c4d14a6a5ce99122f72f513c4a3aa940b7a0c6cc2f3e51"
-      },
-      {
-        "path": "apps/api/src/shared/scoring-output-schema.zod.ts",
-        "sha256": "008db32e3ed8610691885fd50f97947a85b63c7b3fafed253bdd64f0a54033d0"
-      }
+      "apps/ai-worker/src/chains/scoring.chain.ts",
+      "apps/api/src/shared/scoring-output-schema.zod.ts"
     ],
     "missing": []
   },
@@ -176,5 +158,6 @@
   ],
   "notes": "LangChain AI scoring pipeline implemented with: ChatOpenAI model integration, StructuredOutputParser for type-safe output, Zod schema validation, cost tracking, batch scoring capability, error handling with graceful degradation. Scoring framework analyzes 4 factors: Contact Completeness (25pts), Engagement (25pts), Qualification Signals (25pts), Data Quality (25pts). Output includes score (0-100), confidence (0-1), factor breakdown, and model version tracking.",
   "completed_at": "2025-12-22T20:40:00Z",
-  "started_at": "2025-12-22T20:30:00Z"
+  "started_at": "2025-12-22T20:30:00Z",
+  "dependencies_resolved": ["IFC-004"]
 }

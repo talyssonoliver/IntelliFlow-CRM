@@ -9,37 +9,37 @@
       "id": "phase-0-initialisation",
       "status": "DONE",
       "started_at": "2025-12-14T20:00:00Z",
-      "completed_at": "2025-12-23T22:38:34.546Z"
+      "completed_at": "2025-12-27T11:30:12.602Z"
     },
     {
       "id": "phase-1-ai-foundation",
       "status": "DONE",
       "started_at": "2025-12-14T20:05:00Z",
-      "completed_at": "2025-12-23T22:38:34.550Z"
+      "completed_at": "2025-12-27T11:30:12.621Z"
     },
     {
       "id": "phase-2-parallel",
       "status": "DONE",
       "started_at": "2025-12-14T20:35:00Z",
-      "completed_at": "2025-12-23T22:38:34.614Z"
+      "completed_at": "2025-12-27T11:30:12.664Z"
     },
     {
       "id": "phase-3-dependencies",
       "status": "DONE",
       "started_at": "2025-12-14T20:20:00Z",
-      "completed_at": "2025-12-23T22:38:34.630Z"
+      "completed_at": "2025-12-27T11:30:12.682Z"
     },
     {
       "id": "phase-4-final-setup",
-      "status": "DONE",
+      "status": "NOT_STARTED",
       "started_at": "2025-12-19T00:43:54Z",
-      "completed_at": "2025-12-23T22:38:34.647Z"
+      "completed_at": null
     },
     {
       "id": "phase-5-completion",
       "status": "DONE",
       "started_at": "2025-12-19T00:00:00Z",
-      "completed_at": "2025-12-23T22:38:34.654Z"
+      "completed_at": "2025-12-27T11:30:12.700Z"
     }
   ],
   "task_summary": {
@@ -156,11 +156,6 @@
     {
       "task_id": "ENV-005-AI",
       "completed_at": "2025-12-15T00:30:00Z",
-      "duration_minutes": 30
-    },
-    {
-      "task_id": "ENV-018-AI",
-      "completed_at": "2025-12-15T00:45:00Z",
       "duration_minutes": 30
     },
     {
@@ -284,17 +279,12 @@
       "duration_minutes": 30
     },
     {
-      "task_id": "ENV-017-AI",
-      "completed_at": "2025-12-23T19:14:00.000Z",
-      "duration_minutes": 15
-    },
-    {
       "task_id": "IFC-044",
       "completed_at": "2025-12-23T21:30:00.000Z",
       "duration_minutes": 30
     }
   ],
-  "notes": "34/34 tasks DONE (100%). Last synced: 2025-12-23T22:38:34.800Z",
+  "notes": "34/34 tasks DONE (100%). Last synced: 2025-12-28T23:24:52.589Z",
   "section": "Other",
   "dependencies": {
     "all_satisfied": true,

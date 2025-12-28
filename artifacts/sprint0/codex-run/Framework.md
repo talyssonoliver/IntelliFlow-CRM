@@ -55,10 +55,20 @@ The `artifacts/` directory has a **hybrid policy**: some content is committed (p
 
 | Category | Path | Purpose |
 |----------|------|---------|
-| Task Contexts | `artifacts/contexts/` | LLM context files for tasks (IFC-*, ENV-*) |
+| Task Contexts | `artifacts/context/{task_id}/` | LLM context packs (one per task, timestamp in metadata) |
 | Baseline Benchmarks | `artifacts/benchmarks/` | Performance baselines |
 | Misc Configs | `artifacts/misc/` | Config files (commitlint, vault, otel, etc.) |
 | Sprint Prompts | `artifacts/Sprint0_prompt.md` | Sprint planning prompts |
+
+**Context Pack Structure** (per task):
+```
+artifacts/context/{task_id}/
+├── context_pack.md              # Human-readable file excerpts
+├── context_pack.manifest.json   # SHA256 hashes + metadata (includes runId)
+└── context_ack.json             # Agent acknowledgment
+```
+
+Note: Each task has exactly ONE context pack. The `runId` is stored as metadata inside the manifest, not as a directory name. This prevents exponential file growth.
 
 #### 1.2.2 Runtime Artifacts (Git-ignored, ephemeral)
 
@@ -854,3 +864,138 @@ By the end of Sprint 0, every completion claim is supported by reproducible evid
 - Required-but-disabled tools are tracked via waiver system (not silently skipped)
 - CSV modifications follow proposal-based governance (human approval required)
 - Coverage gates are provably enforcing thresholds (not just running tests)
+
+---
+
+## Appendix E: CSV Contract Tag Grammar
+
+This section defines the strict grammar for machine-enforceable contract tags in CSV columns.
+
+### E.1 Contract Columns
+
+The following CSV columns contain contract tags:
+
+| Column | Purpose | Tag Types |
+|--------|---------|-----------|
+| `Pre-requisites` | Required context (files, dirs, env, policies) | `FILE:`, `DIR:`, `ENV:`, `POLICY:` |
+| `Artifacts To Track` | Required evidence to produce | `EVIDENCE:` |
+| `Validation Method` | Required validation gates | `VALIDATE:`, `AUDIT:`, `GATE:` |
+
+### E.2 Tag Syntax
+
+Each tag follows the pattern: `TYPE:value`
+
+- Tags are separated by semicolons (`;`)
+- Whitespace around tags is trimmed
+- Tag types are case-sensitive (uppercase only)
+- Values cannot be empty
+
+**Valid Examples:**
+```
+FILE:packages/db/prisma/schema.prisma;ENV:SUPABASE_URL;POLICY:zero-trust
+EVIDENCE:context_ack;EVIDENCE:test_output;EVIDENCE:benchmark_results
+VALIDATE:pnpm test:integration;GATE:supabase-healthcheck;AUDIT:db-schema-drift
+```
+
+### E.3 Tag Type Definitions
+
+**Pre-requisites Tags:**
+
+| Tag | Description | Example |
+|-----|-------------|---------|
+| `FILE:` | Specific file that must exist and be read | `FILE:packages/db/prisma/schema.prisma` |
+| `DIR:` | Directory that must exist | `DIR:tests/integration` |
+| `ENV:` | Environment variable that must be set | `ENV:SUPABASE_URL` |
+| `POLICY:` | Policy document that must be acknowledged | `POLICY:zero-trust-db-access` |
+
+**Artifacts To Track Tags:**
+
+| Tag | Description | Example |
+|-----|-------------|---------|
+| `EVIDENCE:` | Evidence artifact to produce | `EVIDENCE:context_ack` |
+
+**Validation Method Tags:**
+
+| Tag | Description | Example |
+|-----|-------------|---------|
+| `VALIDATE:` | Validation command to run | `VALIDATE:pnpm test:integration` |
+| `AUDIT:` | Audit tool ID from audit-matrix.yml | `AUDIT:db-schema-drift` |
+| `GATE:` | Gate identifier for custom checks | `GATE:supabase-healthcheck` |
+
+### E.4 NOELLIPSIS Rule
+
+Contract fields containing literal `...` are invalid:
+
+- **Local mode (default):** WARN - logged but does not block
+- **Strict mode (CI):** FAIL - blocks the run
+
+This prevents placeholder text like "FILE:path/to/..." from being accepted.
+
+### E.5 Context Pack and Acknowledgement
+
+When `EVIDENCE:context_ack` is specified:
+
+1. **Context Pack Builder** creates `artifacts/context/<run_id>/<task_id>/context_pack.md`
+   - Embeds bounded excerpts (120 lines max per file)
+   - Creates `context_pack.manifest.json` with SHA256 hashes
+
+2. **Context Ack Gatekeeper** requires `context_ack.json` before code changes:
+   ```typescript
+   interface ContextAck {
+     task_id: string;           // Must match task being executed
+     run_id: string;            // YYYYMMDD-HHMMSS-<task_id>-<random_4_hex>
+     files_read: FileReadEntry[];  // Path + SHA256 for each file
+     invariants_acknowledged: string[];  // Min 5 items
+     created_at: string;        // ISO 8601
+   }
+   ```
+
+3. **Validation Gates (Gate 9, Gate 10):**
+   - Gate 9: Contract Tag Parser - validates tag syntax, NOELLIPSIS rule
+   - Gate 10: Context Ack Gate - validates context_ack.json for In Progress tasks
+
+### E.6 Implementation Reference
+
+| File | Purpose |
+|------|---------|
+| `tools/scripts/lib/contract-parser.ts` | Tag parsing and validation |
+| `tools/scripts/lib/context-pack-builder.ts` | Context pack generation |
+| `tools/scripts/lib/context-ack-gatekeeper.ts` | Ack validation |
+| `tools/scripts/lib/column-deprecation.ts` | Column deprecation plan |
+| `tools/scripts/sprint-validation.ts` | Gate 9/10 integration |
+
+---
+
+## Appendix F: Column Deprecation Plan
+
+The following CSV columns are scheduled for deprecation as they can be derived automatically:
+
+### F.1 CleanDependencies
+
+**Derivation Rule:** `generateCleanDependencies(Dependencies)`
+- Split by comma
+- Trim whitespace
+- Remove duplicates
+- Sort alphabetically
+- Rejoin with commas
+
+**Timeline:**
+- Sprint N (current): Warn when CSV diverges from generated value
+- Sprint N+1: Fail in strict mode if divergence detected
+- Sprint N+2: Remove column from CSV; registry generates value
+
+### F.2 CrossQuarterDeps
+
+**Derivation Rule:** `computeCrossQuarterDeps(task, allTasks)`
+- Parse task's Target Sprint
+- Parse each dependency's Target Sprint
+- If any dependency is in a different quarter (4 sprints per quarter), return True
+
+**Timeline:** Same as CleanDependencies
+
+### F.3 Migration Notes
+
+- Do NOT manually edit these columns
+- Use sync tooling to regenerate from Dependencies/Target Sprint
+- Deprecation warnings appear in validation output
+- Full plan: `artifacts/reports/deprecation/<run_id>/csv-deprecation-plan.md`

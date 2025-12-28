@@ -126,6 +126,9 @@ apps/project-tracker/docs/metrics/backups/
 apps/project-tracker/docs/metrics/artifacts/
 apps/project-tracker/docs/metrics/_global/*.tmp
 
+# Sprint plan split files (derived from Sprint_plan.csv - regenerated locally)
+apps/project-tracker/docs/metrics/_global/Sprint_plan_[A-Z].csv
+
 # ============================================
 # Runtime Artifacts - Sprint 0 Remediation
 # ============================================
@@ -189,27 +192,9 @@ artifacts/reports/sprint-runs/*.md
 # Sprint patches (intermediate build artifacts)
 artifacts/sprint*/codex-run/patches/
 
-# Future sprint context files (generate only for current sprint)
-# Keep: IFC-001 through IFC-003, IFC-072 through IFC-077, IFC-106, IFC-119, IFC-135
-# Keep: GOV-001, BRAND-002, SALES-001, AI-SETUP-*, ENV-*, EXC-*, AUTOMATION-*, EP-*
-artifacts/contexts/IFC-0[0-4][0-9]-context.md
-artifacts/contexts/IFC-0[5-6][0-9]-context.md
-artifacts/contexts/IFC-07[0-1]-context.md
-artifacts/contexts/IFC-07[8-9]-context.md
-artifacts/contexts/IFC-0[8-9][0-9]-context.md
-artifacts/contexts/IFC-1[0-5][0-9]-context.md
-!artifacts/contexts/IFC-001-context.md
-!artifacts/contexts/IFC-002-context.md
-!artifacts/contexts/IFC-003-context.md
-!artifacts/contexts/IFC-072-context.md
-!artifacts/contexts/IFC-073-context.md
-!artifacts/contexts/IFC-074-context.md
-!artifacts/contexts/IFC-075-context.md
-!artifacts/contexts/IFC-076-context.md
-!artifacts/contexts/IFC-077-context.md
-!artifacts/contexts/IFC-106-context.md
-!artifacts/contexts/IFC-119-context.md
-!artifacts/contexts/IFC-135-context.md
+# Task context files - now use timestamped structure under artifacts/context/{timestamp}/
+# Legacy artifacts/contexts/ directory was removed (superseded by new structure)
+# Context files are tracked in git for audit trail
 
 # All logs under artifacts
 artifacts/logs/**/*.log
@@ -217,3 +202,19 @@ artifacts/logs/**/*.log
 
 # Supabase temp files
 supabase/.temp/
+
+# ============================================
+# Terraform - Added 2025-12-23
+# ============================================
+
+# Terraform state files (contain secrets - NEVER commit)
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json

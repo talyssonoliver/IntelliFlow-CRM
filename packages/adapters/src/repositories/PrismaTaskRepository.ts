@@ -274,4 +274,63 @@ export class PrismaTaskRepository implements TaskRepository {
       {} as Record<string, number>
     );
   }
+
+  async findByPriority(priority: TaskPriority, ownerId?: string): Promise<Task[]> {
+    const records = await this.prisma.task.findMany({
+      where: {
+        priority,
+        ...(ownerId ? { ownerId } : {}),
+      },
+      orderBy: [{ dueDate: 'asc' }],
+    });
+
+    return records.map((record) =>
+      Task.reconstitute(createTaskId(record.id), {
+        title: record.title,
+        description: record.description ?? undefined,
+        dueDate: record.dueDate ?? undefined,
+        priority: record.priority as TaskPriority,
+        status: record.status as TaskStatus,
+        leadId: record.leadId ?? undefined,
+        contactId: record.contactId ?? undefined,
+        opportunityId: record.opportunityId ?? undefined,
+        ownerId: record.ownerId,
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt,
+        completedAt: record.completedAt ?? undefined,
+      })
+    );
+  }
+
+  async findDueSoon(ownerId?: string): Promise<Task[]> {
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const records = await this.prisma.task.findMany({
+      where: {
+        dueDate: { gte: now, lte: tomorrow },
+        status: { notIn: ['COMPLETED', 'CANCELLED'] },
+        ...(ownerId ? { ownerId } : {}),
+      },
+      orderBy: { dueDate: 'asc' },
+    });
+
+    return records.map((record) =>
+      Task.reconstitute(createTaskId(record.id), {
+        title: record.title,
+        description: record.description ?? undefined,
+        dueDate: record.dueDate ?? undefined,
+        priority: record.priority as TaskPriority,
+        status: record.status as TaskStatus,
+        leadId: record.leadId ?? undefined,
+        contactId: record.contactId ?? undefined,
+        opportunityId: record.opportunityId ?? undefined,
+        ownerId: record.ownerId,
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt,
+        completedAt: record.completedAt ?? undefined,
+      })
+    );
+  }
 }

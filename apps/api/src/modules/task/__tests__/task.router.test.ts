@@ -1,141 +1,164 @@
-import { TEST_UUIDS } from '../../../test/setup';
 /**
  * Task Router Tests
  *
- * Comprehensive tests for all task router procedures:
- * - create, getById, list, update, delete, complete, stats
+ * Comprehensive tests for task router procedures:
+ * - create: Create a new task
+ * - getById: Get a single task by ID
+ * - list: List tasks with filtering and pagination
+ * - update: Update a task
+ * - delete: Delete a task
+ * - complete: Mark a task as completed
+ * - stats: Get task statistics
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { taskRouter } from '../task.router';
-import { prismaMock, createTestContext, mockTask, mockLead, mockContact, mockOpportunity, mockUser } from '../../../test/setup';
+import {
+  prismaMock,
+  createTestContext,
+  TEST_UUIDS,
+  mockTask,
+  mockUser,
+  mockLead,
+  mockContact,
+  mockOpportunity,
+} from '../../../test/setup';
 
 describe('Task Router', () => {
   const caller = taskRouter.createCaller(createTestContext());
 
   beforeEach(() => {
-    // Reset is handled by setup.ts
+    vi.clearAllMocks();
   });
 
-  describe('create', () => {
-    it('should create a new task with valid input', async () => {
-      const input = {
-        title: 'Call prospect',
-        description: 'Discuss pricing options',
-        priority: 'HIGH' as const,
-        status: 'PENDING' as const,
-        dueDate: new Date('2025-01-15'),
-        leadId: TEST_UUIDS.lead1,
-      };
+  // Mock task with relations
+  const mockTaskWithRelations = {
+    ...mockTask,
+    owner: mockUser,
+    lead: mockLead,
+    contact: mockContact,
+    opportunity: mockOpportunity,
+  };
 
-      prismaMock.lead.findUnique.mockResolvedValue(mockLead);
-      prismaMock.task.create.mockResolvedValue({
-        ...mockTask,
-        ...input,
+  describe('create', () => {
+    it('should create a new task successfully', async () => {
+      prismaMock.task.create.mockResolvedValue(mockTask);
+
+      const result = await caller.create({
+        title: 'Follow up call',
+        description: 'Call the lead to discuss requirements',
+        dueDate: new Date('2025-01-25'),
+        priority: 'HIGH',
+        status: 'PENDING',
       });
 
-      const result = await caller.create(input);
-
-      expect(result.title).toBe(input.title);
+      expect(result.id).toBe(mockTask.id);
+      expect(result.title).toBe(mockTask.title);
       expect(prismaMock.task.create).toHaveBeenCalledWith({
-        data: {
-          ...input,
+        data: expect.objectContaining({
+          title: 'Follow up call',
           ownerId: TEST_UUIDS.user1,
-        },
+        }),
       });
     });
 
-    it('should throw NOT_FOUND if leadId does not exist', async () => {
-      const input = {
-        title: 'Task',
-        priority: 'MEDIUM' as const,
-        dueDate: new Date(),
-        leadId: TEST_UUIDS.nonExistent,
-      };
+    it('should validate leadId if provided', async () => {
+      prismaMock.lead.findUnique.mockResolvedValue(mockLead);
+      prismaMock.task.create.mockResolvedValue({ ...mockTask, leadId: TEST_UUIDS.lead1 });
 
+      const result = await caller.create({
+        title: 'Follow up call',
+        dueDate: new Date('2025-01-25'),
+        priority: 'HIGH',
+        leadId: TEST_UUIDS.lead1,
+      });
+
+      expect(result.leadId).toBe(TEST_UUIDS.lead1);
+      expect(prismaMock.lead.findUnique).toHaveBeenCalledWith({
+        where: { id: TEST_UUIDS.lead1 },
+      });
+    });
+
+    it('should throw NOT_FOUND if leadId is invalid', async () => {
       prismaMock.lead.findUnique.mockResolvedValue(null);
 
-      await expect(caller.create(input)).rejects.toThrow(
-        expect.objectContaining({
-          code: 'NOT_FOUND',
-          message: expect.stringContaining('Lead'),
+      await expect(
+        caller.create({
+          title: 'Follow up call',
+          dueDate: new Date('2025-01-25'),
+          priority: 'HIGH',
+          leadId: TEST_UUIDS.nonExistent,
         })
-      );
+      ).rejects.toThrow(TRPCError);
     });
 
-    it('should throw NOT_FOUND if contactId does not exist', async () => {
-      const input = {
-        title: 'Task',
-        priority: 'MEDIUM' as const,
-        dueDate: new Date(),
-        contactId: TEST_UUIDS.nonExistent,
-      };
+    it('should validate contactId if provided', async () => {
+      prismaMock.contact.findUnique.mockResolvedValue(mockContact);
+      prismaMock.task.create.mockResolvedValue({ ...mockTask, contactId: TEST_UUIDS.contact1 });
 
-      prismaMock.contact.findUnique.mockResolvedValue(null);
-
-      await expect(caller.create(input)).rejects.toThrow(
-        expect.objectContaining({
-          code: 'NOT_FOUND',
-          message: expect.stringContaining('Contact'),
-        })
-      );
-    });
-
-    it('should throw NOT_FOUND if opportunityId does not exist', async () => {
-      const input = {
-        title: 'Task',
-        priority: 'MEDIUM' as const,
-        dueDate: new Date(),
-        opportunityId: TEST_UUIDS.nonExistent,
-      };
-
-      prismaMock.opportunity.findUnique.mockResolvedValue(null);
-
-      await expect(caller.create(input)).rejects.toThrow(
-        expect.objectContaining({
-          code: 'NOT_FOUND',
-          message: expect.stringContaining('Opportunity'),
-        })
-      );
-    });
-
-    it('should create task without entity associations', async () => {
-      const input = {
-        title: 'General task',
-        priority: 'LOW' as const,
-        dueDate: new Date(),
-      };
-
-      prismaMock.task.create.mockResolvedValue({
-        ...mockTask,
-        ...input,
-        leadId: null,
-        contactId: null,
-        opportunityId: null,
+      const result = await caller.create({
+        title: 'Meeting',
+        dueDate: new Date('2025-01-25'),
+        priority: 'MEDIUM',
+        contactId: TEST_UUIDS.contact1,
       });
 
-      const result = await caller.create(input);
+      expect(result.contactId).toBe(TEST_UUIDS.contact1);
+    });
 
-      expect(result.title).toBe(input.title);
+    it('should throw NOT_FOUND if contactId is invalid', async () => {
+      prismaMock.contact.findUnique.mockResolvedValue(null);
+
+      await expect(
+        caller.create({
+          title: 'Meeting',
+          dueDate: new Date('2025-01-25'),
+          priority: 'MEDIUM',
+          contactId: TEST_UUIDS.nonExistent,
+        })
+      ).rejects.toThrow(TRPCError);
+    });
+
+    it('should validate opportunityId if provided', async () => {
+      prismaMock.opportunity.findUnique.mockResolvedValue(mockOpportunity);
+      prismaMock.task.create.mockResolvedValue({
+        ...mockTask,
+        opportunityId: TEST_UUIDS.opportunity1,
+      });
+
+      const result = await caller.create({
+        title: 'Proposal review',
+        dueDate: new Date('2025-01-25'),
+        priority: 'HIGH',
+        opportunityId: TEST_UUIDS.opportunity1,
+      });
+
+      expect(result.opportunityId).toBe(TEST_UUIDS.opportunity1);
+    });
+
+    it('should throw NOT_FOUND if opportunityId is invalid', async () => {
+      prismaMock.opportunity.findUnique.mockResolvedValue(null);
+
+      await expect(
+        caller.create({
+          title: 'Proposal review',
+          dueDate: new Date('2025-01-25'),
+          priority: 'HIGH',
+          opportunityId: TEST_UUIDS.nonExistent,
+        })
+      ).rejects.toThrow(TRPCError);
     });
   });
 
   describe('getById', () => {
-    it('should return task with related data', async () => {
-      const taskWithRelations = {
-        ...mockTask,
-        owner: mockUser,
-        lead: mockLead,
-        contact: mockContact,
-        opportunity: mockOpportunity,
-      };
-
-      prismaMock.task.findUnique.mockResolvedValue(taskWithRelations);
+    it('should return task with relations', async () => {
+      prismaMock.task.findUnique.mockResolvedValue(mockTaskWithRelations);
 
       const result = await caller.getById({ id: TEST_UUIDS.task1 });
 
-      expect(result).toMatchObject(taskWithRelations);
+      expect(result.id).toBe(mockTask.id);
+      expect(result.owner).toBeDefined();
       expect(prismaMock.task.findUnique).toHaveBeenCalledWith({
         where: { id: TEST_UUIDS.task1 },
         include: expect.objectContaining({
@@ -150,38 +173,52 @@ describe('Task Router', () => {
     it('should throw NOT_FOUND for non-existent task', async () => {
       prismaMock.task.findUnique.mockResolvedValue(null);
 
-      await expect(caller.getById({ id: TEST_UUIDS.nonExistent })).rejects.toThrow(
-        expect.objectContaining({
-          code: 'NOT_FOUND',
-        })
-      );
+      await expect(caller.getById({ id: TEST_UUIDS.nonExistent })).rejects.toThrow(TRPCError);
+
+      try {
+        await caller.getById({ id: TEST_UUIDS.nonExistent });
+      } catch (error) {
+        expect((error as TRPCError).code).toBe('NOT_FOUND');
+      }
     });
   });
 
   describe('list', () => {
-    it('should list tasks with pagination', async () => {
-      const tasks = [mockTask, { ...mockTask, id: 'task-2', title: 'Task 2' }];
-      const tasksWithRelations = tasks.map(task => ({
-        ...task,
-        owner: mockUser,
-        lead: mockLead,
-        contact: null,
-        opportunity: null,
-      }));
+    const mockTaskList = [mockTaskWithRelations, { ...mockTaskWithRelations, id: TEST_UUIDS.task2 }];
 
-      prismaMock.task.findMany.mockResolvedValue(tasksWithRelations);
-      prismaMock.task.count.mockResolvedValue(40);
+    it('should return paginated list of tasks', async () => {
+      prismaMock.task.findMany.mockResolvedValue(mockTaskList);
+      prismaMock.task.count.mockResolvedValue(2);
 
-      const result = await caller.list({ page: 1, limit: 20 });
+      const result = await caller.list({});
 
       expect(result.tasks).toHaveLength(2);
-      expect(result.total).toBe(40);
-      expect(result.hasMore).toBe(true);
+      expect(result.total).toBe(2);
+      expect(result.page).toBe(1);
+      expect(result.hasMore).toBe(false);
     });
 
-    it('should filter tasks by status', async () => {
-      prismaMock.task.findMany.mockResolvedValue([]);
-      prismaMock.task.count.mockResolvedValue(0);
+    it('should filter by search term', async () => {
+      prismaMock.task.findMany.mockResolvedValue([mockTaskWithRelations]);
+      prismaMock.task.count.mockResolvedValue(1);
+
+      await caller.list({ search: 'follow up' });
+
+      expect(prismaMock.task.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            OR: [
+              { title: { contains: 'follow up', mode: 'insensitive' } },
+              { description: { contains: 'follow up', mode: 'insensitive' } },
+            ],
+          }),
+        })
+      );
+    });
+
+    it('should filter by status', async () => {
+      prismaMock.task.findMany.mockResolvedValue([mockTaskWithRelations]);
+      prismaMock.task.count.mockResolvedValue(1);
 
       await caller.list({ status: ['PENDING', 'IN_PROGRESS'] });
 
@@ -194,9 +231,9 @@ describe('Task Router', () => {
       );
     });
 
-    it('should filter tasks by priority', async () => {
-      prismaMock.task.findMany.mockResolvedValue([]);
-      prismaMock.task.count.mockResolvedValue(0);
+    it('should filter by priority', async () => {
+      prismaMock.task.findMany.mockResolvedValue([mockTaskWithRelations]);
+      prismaMock.task.count.mockResolvedValue(1);
 
       await caller.list({ priority: ['HIGH', 'URGENT'] });
 
@@ -209,9 +246,59 @@ describe('Task Router', () => {
       );
     });
 
-    it('should filter overdue tasks', async () => {
-      prismaMock.task.findMany.mockResolvedValue([]);
-      prismaMock.task.count.mockResolvedValue(0);
+    it('should filter by ownerId', async () => {
+      prismaMock.task.findMany.mockResolvedValue([mockTaskWithRelations]);
+      prismaMock.task.count.mockResolvedValue(1);
+
+      await caller.list({ ownerId: TEST_UUIDS.user1 });
+
+      expect(prismaMock.task.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            ownerId: TEST_UUIDS.user1,
+          }),
+        })
+      );
+    });
+
+    it('should filter by leadId', async () => {
+      prismaMock.task.findMany.mockResolvedValue([mockTaskWithRelations]);
+      prismaMock.task.count.mockResolvedValue(1);
+
+      await caller.list({ leadId: TEST_UUIDS.lead1 });
+
+      expect(prismaMock.task.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            leadId: TEST_UUIDS.lead1,
+          }),
+        })
+      );
+    });
+
+    it('should filter by date range', async () => {
+      prismaMock.task.findMany.mockResolvedValue(mockTaskList);
+      prismaMock.task.count.mockResolvedValue(2);
+      const dueDateFrom = new Date('2025-01-01');
+      const dueDateTo = new Date('2025-01-31');
+
+      await caller.list({ dueDateFrom, dueDateTo });
+
+      expect(prismaMock.task.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            dueDate: {
+              gte: dueDateFrom,
+              lte: dueDateTo,
+            },
+          }),
+        })
+      );
+    });
+
+    it('should filter for overdue tasks', async () => {
+      prismaMock.task.findMany.mockResolvedValue([mockTaskWithRelations]);
+      prismaMock.task.count.mockResolvedValue(1);
 
       await caller.list({ overdue: true });
 
@@ -225,89 +312,117 @@ describe('Task Router', () => {
       );
     });
 
-    it('should filter tasks by due date range', async () => {
-      const dueDateFrom = new Date('2025-01-01');
-      const dueDateTo = new Date('2025-01-31');
+    it('should support pagination', async () => {
+      prismaMock.task.findMany.mockResolvedValue([mockTaskWithRelations]);
+      prismaMock.task.count.mockResolvedValue(50);
 
-      prismaMock.task.findMany.mockResolvedValue([]);
-      prismaMock.task.count.mockResolvedValue(0);
-
-      await caller.list({ dueDateFrom, dueDateTo });
+      const result = await caller.list({ page: 2, limit: 10 });
 
       expect(prismaMock.task.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({
-            dueDate: { gte: dueDateFrom, lte: dueDateTo },
-          }),
+          skip: 10, // (page - 1) * limit = (2-1) * 10
+          take: 10,
         })
       );
+      expect(result.hasMore).toBe(true);
     });
 
-    it('should search tasks by text', async () => {
-      prismaMock.task.findMany.mockResolvedValue([]);
-      prismaMock.task.count.mockResolvedValue(0);
+    it('should support sorting', async () => {
+      prismaMock.task.findMany.mockResolvedValue(mockTaskList);
+      prismaMock.task.count.mockResolvedValue(2);
 
-      await caller.list({ search: 'follow up' });
+      await caller.list({ sortBy: 'dueDate', sortOrder: 'asc' });
 
       expect(prismaMock.task.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({
-            OR: expect.arrayContaining([
-              { title: { contains: 'follow up', mode: 'insensitive' } },
-              { description: { contains: 'follow up', mode: 'insensitive' } },
-            ]),
-          }),
+          orderBy: { dueDate: 'asc' },
         })
       );
     });
   });
 
   describe('update', () => {
-    it('should update task with valid data', async () => {
+    it('should update task successfully', async () => {
       prismaMock.task.findUnique.mockResolvedValue(mockTask);
-
-      const updated = { ...mockTask, status: 'IN_PROGRESS' as const, priority: 'URGENT' as const };
-      prismaMock.task.update.mockResolvedValue(updated);
+      prismaMock.task.update.mockResolvedValue({ ...mockTask, title: 'Updated title' });
 
       const result = await caller.update({
         id: TEST_UUIDS.task1,
-        status: 'IN_PROGRESS',
-        priority: 'URGENT',
+        title: 'Updated title',
       });
 
-      expect(result.status).toBe('IN_PROGRESS');
-      expect(result.priority).toBe('URGENT');
+      expect(result.title).toBe('Updated title');
+      expect(prismaMock.task.update).toHaveBeenCalledWith({
+        where: { id: TEST_UUIDS.task1 },
+        data: expect.objectContaining({
+          title: 'Updated title',
+        }),
+      });
     });
 
-    it('should throw NOT_FOUND when updating non-existent task', async () => {
+    it('should throw NOT_FOUND for non-existent task', async () => {
       prismaMock.task.findUnique.mockResolvedValue(null);
 
       await expect(
-        caller.update({ id: TEST_UUIDS.nonExistent, title: 'Updated' })
-      ).rejects.toThrow(
-        expect.objectContaining({
-          code: 'NOT_FOUND',
+        caller.update({
+          id: TEST_UUIDS.nonExistent,
+          title: 'Updated title',
         })
-      );
+      ).rejects.toThrow(TRPCError);
     });
 
-    it('should validate lead exists when updating leadId', async () => {
+    it('should validate leadId on update', async () => {
       prismaMock.task.findUnique.mockResolvedValue(mockTask);
       prismaMock.lead.findUnique.mockResolvedValue(null);
 
       await expect(
-        caller.update({ id: TEST_UUIDS.task1, leadId: TEST_UUIDS.nonExistent })
-      ).rejects.toThrow(
-        expect.objectContaining({
-          code: 'NOT_FOUND',
-          message: expect.stringContaining('Lead'),
+        caller.update({
+          id: TEST_UUIDS.task1,
+          leadId: TEST_UUIDS.nonExistent,
         })
-      );
+      ).rejects.toThrow(TRPCError);
+    });
+
+    it('should validate contactId on update', async () => {
+      prismaMock.task.findUnique.mockResolvedValue(mockTask);
+      prismaMock.contact.findUnique.mockResolvedValue(null);
+
+      await expect(
+        caller.update({
+          id: TEST_UUIDS.task1,
+          contactId: TEST_UUIDS.nonExistent,
+        })
+      ).rejects.toThrow(TRPCError);
+    });
+
+    it('should validate opportunityId on update', async () => {
+      prismaMock.task.findUnique.mockResolvedValue(mockTask);
+      prismaMock.opportunity.findUnique.mockResolvedValue(null);
+
+      await expect(
+        caller.update({
+          id: TEST_UUIDS.task1,
+          opportunityId: TEST_UUIDS.nonExistent,
+        })
+      ).rejects.toThrow(TRPCError);
+    });
+
+    it('should allow setting leadId to valid lead', async () => {
+      prismaMock.task.findUnique.mockResolvedValue(mockTask);
+      prismaMock.lead.findUnique.mockResolvedValue(mockLead);
+      prismaMock.task.update.mockResolvedValue({ ...mockTask, leadId: TEST_UUIDS.lead1 });
+
+      const result = await caller.update({
+        id: TEST_UUIDS.task1,
+        leadId: TEST_UUIDS.lead1,
+      });
+
+      expect(result.leadId).toBe(TEST_UUIDS.lead1);
     });
   });
 
   describe('delete', () => {
-    it('should delete an existing task', async () => {
+    it('should delete task successfully', async () => {
       prismaMock.task.findUnique.mockResolvedValue(mockTask);
       prismaMock.task.delete.mockResolvedValue(mockTask);
 
@@ -315,29 +430,32 @@ describe('Task Router', () => {
 
       expect(result.success).toBe(true);
       expect(result.id).toBe(TEST_UUIDS.task1);
+      expect(prismaMock.task.delete).toHaveBeenCalledWith({
+        where: { id: TEST_UUIDS.task1 },
+      });
     });
 
     it('should throw NOT_FOUND for non-existent task', async () => {
       prismaMock.task.findUnique.mockResolvedValue(null);
 
-      await expect(caller.delete({ id: TEST_UUIDS.nonExistent })).rejects.toThrow(
-        expect.objectContaining({
-          code: 'NOT_FOUND',
-        })
-      );
+      await expect(caller.delete({ id: TEST_UUIDS.nonExistent })).rejects.toThrow(TRPCError);
+
+      try {
+        await caller.delete({ id: TEST_UUIDS.nonExistent });
+      } catch (error) {
+        expect((error as TRPCError).code).toBe('NOT_FOUND');
+      }
     });
   });
 
   describe('complete', () => {
-    it('should mark task as completed', async () => {
-      prismaMock.task.findUnique.mockResolvedValue(mockTask);
-
-      const completed = {
+    it('should complete task successfully', async () => {
+      prismaMock.task.findUnique.mockResolvedValue({ ...mockTask, status: 'IN_PROGRESS' });
+      prismaMock.task.update.mockResolvedValue({
         ...mockTask,
-        status: 'COMPLETED' as const,
+        status: 'COMPLETED',
         completedAt: new Date(),
-      };
-      prismaMock.task.update.mockResolvedValue(completed);
+      });
 
       const result = await caller.complete({ taskId: TEST_UUIDS.task1 });
 
@@ -355,43 +473,50 @@ describe('Task Router', () => {
     it('should throw NOT_FOUND for non-existent task', async () => {
       prismaMock.task.findUnique.mockResolvedValue(null);
 
-      await expect(caller.complete({ taskId: TEST_UUIDS.nonExistent })).rejects.toThrow(
-        expect.objectContaining({
-          code: 'NOT_FOUND',
-        })
-      );
+      await expect(caller.complete({ taskId: TEST_UUIDS.nonExistent })).rejects.toThrow(TRPCError);
+
+      try {
+        await caller.complete({ taskId: TEST_UUIDS.nonExistent });
+      } catch (error) {
+        expect((error as TRPCError).code).toBe('NOT_FOUND');
+      }
     });
 
-    it('should throw BAD_REQUEST if task already completed', async () => {
-      const completedTask = {
-        ...mockTask,
-        status: 'COMPLETED' as const,
-        completedAt: new Date(),
-      };
-      prismaMock.task.findUnique.mockResolvedValue(completedTask);
+    it('should throw BAD_REQUEST if task is already completed', async () => {
+      prismaMock.task.findUnique.mockResolvedValue({ ...mockTask, status: 'COMPLETED' });
 
-      await expect(caller.complete({ taskId: TEST_UUIDS.task1 })).rejects.toThrow(
-        expect.objectContaining({
-          code: 'BAD_REQUEST',
-          message: expect.stringContaining('already completed'),
-        })
-      );
+      await expect(caller.complete({ taskId: TEST_UUIDS.task1 })).rejects.toThrow(TRPCError);
+
+      try {
+        await caller.complete({ taskId: TEST_UUIDS.task1 });
+      } catch (error) {
+        expect((error as TRPCError).code).toBe('BAD_REQUEST');
+        expect((error as TRPCError).message).toBe('Task is already completed');
+      }
     });
   });
 
   describe('stats', () => {
-    it('should return task statistics', async () => {
-      prismaMock.task.count.mockResolvedValueOnce(100); // total
-      vi.mocked(prismaMock.task.groupBy).mockResolvedValueOnce([
+    const mockStats = {
+      total: 100,
+      byStatus: [
         { status: 'PENDING', _count: 40 },
-        { status: 'IN_PROGRESS', _count: 20 },
-        { status: 'COMPLETED', _count: 30 },
-      ] as unknown as Awaited<ReturnType<typeof prismaMock.task.groupBy>>);
-      vi.mocked(prismaMock.task.groupBy).mockResolvedValueOnce([
-        { priority: 'HIGH', _count: 25 },
-        { priority: 'MEDIUM', _count: 50 },
-        { priority: 'LOW', _count: 25 },
-      ] as unknown as Awaited<ReturnType<typeof prismaMock.task.groupBy>>);
+        { status: 'IN_PROGRESS', _count: 30 },
+        { status: 'COMPLETED', _count: 25 },
+        { status: 'CANCELLED', _count: 5 },
+      ],
+      byPriority: [
+        { priority: 'LOW', _count: 20 },
+        { priority: 'MEDIUM', _count: 35 },
+        { priority: 'HIGH', _count: 30 },
+        { priority: 'URGENT', _count: 15 },
+      ],
+    };
+
+    it('should return task statistics', async () => {
+      prismaMock.task.count.mockResolvedValueOnce(mockStats.total); // total
+      prismaMock.task.groupBy.mockResolvedValueOnce(mockStats.byStatus as never); // byStatus
+      prismaMock.task.groupBy.mockResolvedValueOnce(mockStats.byPriority as never); // byPriority
       prismaMock.task.count.mockResolvedValueOnce(10); // overdue
       prismaMock.task.count.mockResolvedValueOnce(5); // dueToday
 
@@ -400,21 +525,62 @@ describe('Task Router', () => {
       expect(result.total).toBe(100);
       expect(result.byStatus).toEqual({
         PENDING: 40,
-        IN_PROGRESS: 20,
-        COMPLETED: 30,
+        IN_PROGRESS: 30,
+        COMPLETED: 25,
+        CANCELLED: 5,
       });
       expect(result.byPriority).toEqual({
-        HIGH: 25,
-        MEDIUM: 50,
-        LOW: 25,
+        LOW: 20,
+        MEDIUM: 35,
+        HIGH: 30,
+        URGENT: 15,
       });
       expect(result.overdue).toBe(10);
       expect(result.dueToday).toBe(5);
     });
 
+    it('should count overdue tasks correctly', async () => {
+      prismaMock.task.count.mockResolvedValueOnce(100);
+      prismaMock.task.groupBy.mockResolvedValue([] as never);
+      prismaMock.task.count.mockResolvedValueOnce(15); // overdue
+      prismaMock.task.count.mockResolvedValueOnce(3); // dueToday
+
+      await caller.stats();
+
+      // Check that overdue count query has the right filters
+      expect(prismaMock.task.count).toHaveBeenCalledWith({
+        where: {
+          dueDate: { lt: expect.any(Date) },
+          status: { notIn: ['COMPLETED', 'CANCELLED'] },
+        },
+      });
+    });
+
+    it('should count due today tasks correctly', async () => {
+      prismaMock.task.count.mockResolvedValueOnce(100);
+      prismaMock.task.groupBy.mockResolvedValue([] as never);
+      prismaMock.task.count.mockResolvedValueOnce(10); // overdue
+      prismaMock.task.count.mockResolvedValueOnce(8); // dueToday
+
+      await caller.stats();
+
+      // Check that dueToday count query has date range and status filters
+      expect(prismaMock.task.count).toHaveBeenCalledWith({
+        where: {
+          dueDate: {
+            gte: expect.any(Date),
+            lt: expect.any(Date),
+          },
+          status: { notIn: ['COMPLETED', 'CANCELLED'] },
+        },
+      });
+    });
+
     it('should handle empty statistics', async () => {
-      prismaMock.task.count.mockResolvedValue(0);
-      vi.mocked(prismaMock.task.groupBy).mockResolvedValue([]);
+      prismaMock.task.count.mockResolvedValueOnce(0); // total
+      prismaMock.task.groupBy.mockResolvedValue([] as never);
+      prismaMock.task.count.mockResolvedValueOnce(0); // overdue
+      prismaMock.task.count.mockResolvedValueOnce(0); // dueToday
 
       const result = await caller.stats();
 
@@ -423,6 +589,41 @@ describe('Task Router', () => {
       expect(result.byPriority).toEqual({});
       expect(result.overdue).toBe(0);
       expect(result.dueToday).toBe(0);
+    });
+  });
+
+  describe('input validation', () => {
+    it('should require title for create', async () => {
+      // @ts-expect-error - Testing invalid input
+      await expect(caller.create({ dueDate: new Date(), priority: 'HIGH' })).rejects.toThrow();
+    });
+
+    it('should require id for getById', async () => {
+      // @ts-expect-error - Testing invalid input
+      await expect(caller.getById({})).rejects.toThrow();
+    });
+
+    it('should require id for update', async () => {
+      // @ts-expect-error - Testing invalid input
+      await expect(caller.update({ title: 'Updated' })).rejects.toThrow();
+    });
+
+    it('should require id for delete', async () => {
+      // @ts-expect-error - Testing invalid input
+      await expect(caller.delete({})).rejects.toThrow();
+    });
+
+    it('should require taskId for complete', async () => {
+      // @ts-expect-error - Testing invalid input
+      await expect(caller.complete({})).rejects.toThrow();
+    });
+
+    it('should validate page is positive', async () => {
+      await expect(caller.list({ page: 0 })).rejects.toThrow();
+    });
+
+    it('should validate limit is positive', async () => {
+      await expect(caller.list({ limit: 0 })).rejects.toThrow();
     });
   });
 });

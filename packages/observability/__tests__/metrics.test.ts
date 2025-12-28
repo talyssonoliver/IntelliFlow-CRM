@@ -114,9 +114,7 @@ describe('Metrics Module', () => {
         })
       );
       expect(mockSetGlobalMeterProvider).toHaveBeenCalled();
-      expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('metrics initialized')
-      );
+      expect(console.log).toHaveBeenCalledWith(expect.stringContaining('metrics initialized'));
     });
 
     it('should create resource with service version', async () => {
@@ -280,9 +278,7 @@ describe('Metrics Module', () => {
       await shutdownMetrics();
 
       expect(mockMeterProviderShutdown).toHaveBeenCalled();
-      expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('shut down')
-      );
+      expect(console.log).toHaveBeenCalledWith(expect.stringContaining('shut down'));
     });
 
     it('should handle shutdown when not initialized', async () => {
@@ -361,10 +357,7 @@ describe('Metrics Module', () => {
       });
 
       expect(result).toBe('done');
-      expect(mockHistogram.record).toHaveBeenCalledWith(
-        expect.any(Number),
-        undefined
-      );
+      expect(mockHistogram.record).toHaveBeenCalledWith(expect.any(Number), undefined);
     });
 
     it('should measure sync function duration', async () => {
@@ -393,10 +386,7 @@ describe('Metrics Module', () => {
 
       await measureTime(mockHistogram as any, () => 'result', { method: 'GET' });
 
-      expect(mockHistogram.record).toHaveBeenCalledWith(
-        expect.any(Number),
-        { method: 'GET' }
-      );
+      expect(mockHistogram.record).toHaveBeenCalledWith(expect.any(Number), { method: 'GET' });
     });
   });
 

@@ -1,0 +1,15 @@
+# pnpm workspace configuration for IntelliFlow CRM monorepo
+# This file defines the workspace structure for the monorepo
+
+packages:
+  # Applications
+  - 'apps/*'
+
+  # Shared packages
+  - 'packages/*'
+
+  # Infrastructure tooling
+  - 'tools/*'
+
+  # Testing utilities
+  - 'tests/*'

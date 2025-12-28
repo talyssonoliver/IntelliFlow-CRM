@@ -1,0 +1,18 @@
+{
+  "sprint": "sprint-6",
+  "name": "Sprint 6",
+  "target_date": null,
+  "started_at": null,
+  "completed_at": null,
+  "phases": [],
+  "task_summary": {
+    "total": 10,
+    "done": 10,
+    "in_progress": 0,
+    "blocked": 0,
+    "not_started": 0,
+    "failed": 0
+  },
+  "notes": "10/10 tasks DONE (100%). Last synced: 2025-12-28T23:24:53.034Z",
+  "completed_tasks": []
+}

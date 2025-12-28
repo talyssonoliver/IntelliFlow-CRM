@@ -87,12 +87,7 @@ describe('OpportunityStageChangedEvent', () => {
 describe('OpportunityValueUpdatedEvent', () => {
   it('should create event with value change', () => {
     const opportunityId = OpportunityId.generate();
-    const event = new OpportunityValueUpdatedEvent(
-      opportunityId,
-      500000,
-      750000,
-      'user-123'
-    );
+    const event = new OpportunityValueUpdatedEvent(opportunityId, 500000, 750000, 'user-123');
 
     expect(event.eventType).toBe('opportunity.value_updated');
     expect(event.opportunityId).toBe(opportunityId);
@@ -104,12 +99,7 @@ describe('OpportunityValueUpdatedEvent', () => {
 
   it('should serialize to payload correctly', () => {
     const opportunityId = OpportunityId.generate();
-    const event = new OpportunityValueUpdatedEvent(
-      opportunityId,
-      500000,
-      750000,
-      'user-123'
-    );
+    const event = new OpportunityValueUpdatedEvent(opportunityId, 500000, 750000, 'user-123');
     const payload = event.toPayload();
 
     expect(payload.opportunityId).toBe(opportunityId.value);
@@ -122,11 +112,7 @@ describe('OpportunityValueUpdatedEvent', () => {
 describe('OpportunityWonEvent', () => {
   it('should create event when opportunity is won', () => {
     const opportunityId = OpportunityId.generate();
-    const event = new OpportunityWonEvent(
-      opportunityId,
-      750000,
-      'user-123'
-    );
+    const event = new OpportunityWonEvent(opportunityId, 750000, 'user-123');
 
     expect(event.eventType).toBe('opportunity.won');
     expect(event.opportunityId).toBe(opportunityId);
@@ -137,11 +123,7 @@ describe('OpportunityWonEvent', () => {
 
   it('should serialize to payload correctly', () => {
     const opportunityId = OpportunityId.generate();
-    const event = new OpportunityWonEvent(
-      opportunityId,
-      750000,
-      'user-123'
-    );
+    const event = new OpportunityWonEvent(opportunityId, 750000, 'user-123');
     const payload = event.toPayload();
 
     expect(payload.opportunityId).toBe(opportunityId.value);
@@ -184,12 +166,7 @@ describe('OpportunityLostEvent', () => {
 describe('OpportunityProbabilityUpdatedEvent', () => {
   it('should create event with probability change', () => {
     const opportunityId = OpportunityId.generate();
-    const event = new OpportunityProbabilityUpdatedEvent(
-      opportunityId,
-      50,
-      75,
-      'user-123'
-    );
+    const event = new OpportunityProbabilityUpdatedEvent(opportunityId, 50, 75, 'user-123');
 
     expect(event.eventType).toBe('opportunity.probability_updated');
     expect(event.opportunityId).toBe(opportunityId);
@@ -201,12 +178,7 @@ describe('OpportunityProbabilityUpdatedEvent', () => {
 
   it('should serialize to payload correctly', () => {
     const opportunityId = OpportunityId.generate();
-    const event = new OpportunityProbabilityUpdatedEvent(
-      opportunityId,
-      50,
-      75,
-      'user-123'
-    );
+    const event = new OpportunityProbabilityUpdatedEvent(opportunityId, 50, 75, 'user-123');
     const payload = event.toPayload();
 
     expect(payload.opportunityId).toBe(opportunityId.value);
@@ -220,12 +192,7 @@ describe('OpportunityCloseDateChangedEvent', () => {
   it('should create event with initial close date (no previous)', () => {
     const opportunityId = OpportunityId.generate();
     const newDate = new Date('2025-03-31');
-    const event = new OpportunityCloseDateChangedEvent(
-      opportunityId,
-      null,
-      newDate,
-      'user-123'
-    );
+    const event = new OpportunityCloseDateChangedEvent(opportunityId, null, newDate, 'user-123');
 
     expect(event.eventType).toBe('opportunity.close_date_changed');
     expect(event.opportunityId).toBe(opportunityId);
@@ -253,12 +220,7 @@ describe('OpportunityCloseDateChangedEvent', () => {
   it('should serialize to payload correctly without previous date', () => {
     const opportunityId = OpportunityId.generate();
     const newDate = new Date('2025-03-31');
-    const event = new OpportunityCloseDateChangedEvent(
-      opportunityId,
-      null,
-      newDate,
-      'user-123'
-    );
+    const event = new OpportunityCloseDateChangedEvent(opportunityId, null, newDate, 'user-123');
     const payload = event.toPayload();
 
     expect(payload.opportunityId).toBe(opportunityId.value);

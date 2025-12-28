@@ -378,7 +378,9 @@ class RuntimePathLinter {
     if (this.policy.reporting.pr_mode.enabled && process.env.GITHUB_EVENT_NAME === 'pull_request') {
       const changedFiles = getChangedFiles(this.policy.reporting.pr_mode.git_diff_base);
       changedFiles.forEach((f) => files.add(f));
-      console.log(`${colors.gray}PR mode: Scanning ${changedFiles.length} changed files${colors.reset}`);
+      console.log(
+        `${colors.gray}PR mode: Scanning ${changedFiles.length} changed files${colors.reset}`
+      );
     } else {
       // Full scan
       if (this.policy.enforcement.detection.git_tracked) {
@@ -589,9 +591,13 @@ class RuntimePathLinter {
 
     // Summary
     if (this.stats.errors > 0) {
-      console.log(`${colors.red}✗ Linting failed with ${this.stats.errors} error(s)${colors.reset}\n`);
+      console.log(
+        `${colors.red}✗ Linting failed with ${this.stats.errors} error(s)${colors.reset}\n`
+      );
     } else if (this.stats.warnings > 0) {
-      console.log(`${colors.yellow}⚠ Linting passed with ${this.stats.warnings} warning(s)${colors.reset}\n`);
+      console.log(
+        `${colors.yellow}⚠ Linting passed with ${this.stats.warnings} warning(s)${colors.reset}\n`
+      );
     } else {
       console.log(`${colors.green}✓ Linting passed${colors.reset}\n`);
     }
@@ -601,7 +607,8 @@ class RuntimePathLinter {
    * Print a single violation
    */
   private printViolation(violation: Violation): void {
-    const icon = violation.severity === 'error' ? '✗' : violation.severity === 'warning' ? '⚠' : 'ℹ';
+    const icon =
+      violation.severity === 'error' ? '✗' : violation.severity === 'warning' ? '⚠' : 'ℹ';
     const color =
       violation.severity === 'error'
         ? colors.red
@@ -635,7 +642,9 @@ class RuntimePathLinter {
     // Canonical files status
     const canonicalOk = Object.values(this.stats.canonical_files_status).every((v) => v === true);
     const statusColor = canonicalOk ? colors.green : colors.red;
-    console.log(`  Canonical files: ${statusColor}${canonicalOk ? 'OK' : 'MISSING'}${colors.reset}`);
+    console.log(
+      `  Canonical files: ${statusColor}${canonicalOk ? 'OK' : 'MISSING'}${colors.reset}`
+    );
     console.log('');
   }
 

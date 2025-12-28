@@ -149,8 +149,9 @@ export const healthRouter = createTRPCRouter({
    */
   dbStats: publicProcedure.query(async ({ ctx }) => {
     try {
-      const metricsProvider = (ctx.prisma as unknown as { $metrics?: { json: () => Promise<unknown> } })
-        .$metrics;
+      const metricsProvider = (
+        ctx.prisma as unknown as { $metrics?: { json: () => Promise<unknown> } }
+      ).$metrics;
       if (!metricsProvider?.json) {
         return {
           status: 'unsupported',

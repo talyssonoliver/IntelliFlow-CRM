@@ -210,4 +210,55 @@ export class PrismaOpportunityRepository implements OpportunityRepository {
       {} as Record<string, number>
     );
   }
+
+  async findByContactId(contactId: string): Promise<Opportunity[]> {
+    const records = await this.prisma.opportunity.findMany({
+      where: { contactId },
+      orderBy: { expectedCloseDate: 'asc' },
+    });
+
+    return records.map((record) =>
+      Opportunity.reconstitute(createOpportunityId(record.id), {
+        name: record.name,
+        value: Number(record.value),
+        stage: record.stage as OpportunityStage,
+        probability: record.probability,
+        expectedCloseDate: record.expectedCloseDate ?? undefined,
+        description: record.description ?? undefined,
+        accountId: record.accountId,
+        contactId: record.contactId ?? undefined,
+        ownerId: record.ownerId,
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt,
+        closedAt: record.closedAt ?? undefined,
+      })
+    );
+  }
+
+  async findHighValue(minValue: number, ownerId?: string): Promise<Opportunity[]> {
+    const records = await this.prisma.opportunity.findMany({
+      where: {
+        value: { gte: new Decimal(minValue) },
+        ...(ownerId ? { ownerId } : {}),
+      },
+      orderBy: { value: 'desc' },
+    });
+
+    return records.map((record) =>
+      Opportunity.reconstitute(createOpportunityId(record.id), {
+        name: record.name,
+        value: Number(record.value),
+        stage: record.stage as OpportunityStage,
+        probability: record.probability,
+        expectedCloseDate: record.expectedCloseDate ?? undefined,
+        description: record.description ?? undefined,
+        accountId: record.accountId,
+        contactId: record.contactId ?? undefined,
+        ownerId: record.ownerId,
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt,
+        closedAt: record.closedAt ?? undefined,
+      })
+    );
+  }
 }

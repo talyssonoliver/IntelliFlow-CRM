@@ -1,0 +1,17 @@
+{
+  "files": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "hash": "674c7703ad344eec8f9e1709a1e0c51d3a2a7006ef3be005ff1a3239d8a891ef",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": ".github/workflows/cd.yml",
+      "hash": "abbbdb51a3d2fe9a46647daef556b61872e0b7ba2ad1b9cabe650f61362e1f98",
+      "status": "matched",
+      "size": 1000
+    }
+  ],
+  "generatedAt": "2025-12-25T18:15:00.000Z"
+}

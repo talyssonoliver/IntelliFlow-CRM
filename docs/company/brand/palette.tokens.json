@@ -1,25 +1,85 @@
 {
+  "$schema": "https://design-tokens.org/schema.json",
   "color": {
     "brand": {
-      "primary": { "value": "#2563EB" },
-      "secondary": { "value": "#0F172A" },
-      "accent": { "value": "#22C55E" }
+      "primary": { "value": "#137fec", "description": "Main brand color - buttons, links, active states" },
+      "primary-hover": { "value": "#0e6ac7", "description": "Primary hover state" },
+      "primary-muted": { "value": "#137fec1a", "description": "Primary at 10% opacity for backgrounds" }
     },
-    "neutral": {
-      "0": { "value": "#FFFFFF" },
-      "50": { "value": "#F8FAFC" },
-      "100": { "value": "#F1F5F9" },
-      "200": { "value": "#E2E8F0" },
-      "300": { "value": "#CBD5E1" },
-      "600": { "value": "#475569" },
-      "800": { "value": "#1F2937" },
-      "900": { "value": "#0F172A" }
+    "background": {
+      "light": { "value": "#f6f7f8", "description": "Main page background (light mode)" },
+      "dark": { "value": "#101922", "description": "Main page background (dark mode)" }
+    },
+    "surface": {
+      "light": { "value": "#ffffff", "description": "Card/panel background (light mode)" },
+      "dark": { "value": "#1e2936", "description": "Card/panel background (dark mode)" },
+      "elevated-light": { "value": "#ffffff", "description": "Elevated surface (light mode)" },
+      "elevated-dark": { "value": "#1e2936", "description": "Elevated surface (dark mode)" }
+    },
+    "border": {
+      "light": { "value": "#e2e8f0", "description": "Border color (light mode) - slate-200" },
+      "dark": { "value": "#334155", "description": "Border color (dark mode) - slate-700" },
+      "subtle-light": { "value": "#f1f5f9", "description": "Subtle border (light mode) - slate-100" },
+      "subtle-dark": { "value": "#1e293b", "description": "Subtle border (dark mode) - slate-800" }
+    },
+    "text": {
+      "primary-light": { "value": "#0f172a", "description": "Primary text (light mode) - slate-900" },
+      "primary-dark": { "value": "#f8fafc", "description": "Primary text (dark mode) - slate-50" },
+      "secondary-light": { "value": "#475569", "description": "Secondary text (light mode) - slate-600" },
+      "secondary-dark": { "value": "#94a3b8", "description": "Secondary text (dark mode) - slate-400" },
+      "muted-light": { "value": "#64748b", "description": "Muted text (light mode) - slate-500" },
+      "muted-dark": { "value": "#64748b", "description": "Muted text (dark mode) - slate-500" }
     },
     "status": {
-      "success": { "value": "#22C55E" },
-      "warning": { "value": "#F59E0B" },
-      "danger": { "value": "#EF4444" },
-      "info": { "value": "#2563EB" }
+      "success": { "value": "#22c55e", "description": "Success - green-500" },
+      "success-bg": { "value": "#dcfce7", "description": "Success background - green-100" },
+      "success-text": { "value": "#166534", "description": "Success text - green-800" },
+      "warning": { "value": "#f59e0b", "description": "Warning - amber-500" },
+      "warning-bg": { "value": "#fef3c7", "description": "Warning background - amber-100" },
+      "warning-text": { "value": "#92400e", "description": "Warning text - amber-800" },
+      "danger": { "value": "#ef4444", "description": "Danger/Error - red-500" },
+      "danger-bg": { "value": "#fee2e2", "description": "Danger background - red-100" },
+      "danger-text": { "value": "#991b1b", "description": "Danger text - red-800" },
+      "info": { "value": "#137fec", "description": "Info - primary" },
+      "info-bg": { "value": "#dbeafe", "description": "Info background - blue-100" },
+      "info-text": { "value": "#1e40af", "description": "Info text - blue-800" }
+    },
+    "priority": {
+      "high": { "value": "#ef4444", "description": "High priority - red-500" },
+      "high-bg": { "value": "#fef2f2", "description": "High priority background - red-50" },
+      "medium": { "value": "#f59e0b", "description": "Medium priority - amber-500" },
+      "medium-bg": { "value": "#fffbeb", "description": "Medium priority background - amber-50" },
+      "low": { "value": "#22c55e", "description": "Low priority - green-500" },
+      "low-bg": { "value": "#f0fdf4", "description": "Low priority background - green-50" }
+    },
+    "pipeline": {
+      "qualification": { "value": "#137fec", "description": "Qualification stage - primary" },
+      "proposal": { "value": "#6366f1", "description": "Proposal stage - indigo-500" },
+      "negotiation": { "value": "#f59e0b", "description": "Negotiation stage - amber-500" },
+      "closed-won": { "value": "#22c55e", "description": "Closed Won - green-500" },
+      "closed-lost": { "value": "#ef4444", "description": "Closed Lost - red-500" }
+    },
+    "chart": {
+      "blue": { "value": "#137fec", "description": "Chart color 1" },
+      "indigo": { "value": "#6366f1", "description": "Chart color 2" },
+      "purple": { "value": "#a855f7", "description": "Chart color 3" },
+      "pink": { "value": "#ec4899", "description": "Chart color 4" },
+      "rose": { "value": "#f43f5e", "description": "Chart color 5" },
+      "orange": { "value": "#f97316", "description": "Chart color 6" },
+      "amber": { "value": "#f59e0b", "description": "Chart color 7" },
+      "emerald": { "value": "#10b981", "description": "Chart color 8" }
+    }
+  },
+  "tailwind": {
+    "mapping": {
+      "primary": "text-primary bg-primary",
+      "primary-hover": "hover:bg-primary-hover",
+      "background": "bg-background-light dark:bg-background-dark",
+      "surface": "bg-white dark:bg-slate-900",
+      "border": "border-slate-200 dark:border-slate-800",
+      "text-primary": "text-slate-900 dark:text-white",
+      "text-secondary": "text-slate-600 dark:text-slate-400",
+      "text-muted": "text-slate-500"
     }
   }
 }

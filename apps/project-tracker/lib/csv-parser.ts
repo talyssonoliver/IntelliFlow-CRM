@@ -3,7 +3,8 @@
  */
 
 import Papa from 'papaparse';
-import type { Task, SprintNumber } from './types';
+import type { Task, SprintNumber, TaskStatus } from './types';
+import { TASK_STATUSES, STATUS_ALIASES, STATUS_GROUPS } from './types';
 
 export interface ParsedCSVData {
   tasks: Task[];
@@ -137,18 +138,40 @@ function parseSprint(sprintValue: string | number): SprintNumber {
 }
 
 /**
- * Normalize status value
+ * Normalize status value - case-insensitive with alias support
+ * Uses canonical status values from types.ts
+ *
+ * @param status - Raw status string from CSV or API
+ * @returns Canonical TaskStatus value
+ *
+ * @example
+ * normalizeStatus('done') // => 'Completed'
+ * normalizeStatus('IN PROGRESS') // => 'In Progress'
+ * normalizeStatus('') // => 'Backlog'
  */
-function normalizeStatus(status: string): Task['status'] {
-  const normalized = (status || 'Backlog').trim();
+export function normalizeStatus(status: string): TaskStatus {
+  if (!status || status.trim() === '') {
+    return TASK_STATUSES.BACKLOG;
+  }
 
-  if (normalized === 'Backlog') return 'Backlog';
-  if (normalized === 'Planned') return 'Planned';
-  if (normalized === 'In Progress') return 'In Progress';
-  if (normalized === 'Completed' || normalized === 'Done') return 'Completed';
-  if (normalized === 'Blocked') return 'Blocked';
+  const trimmed = status.trim();
+  const lowercased = trimmed.toLowerCase();
 
-  return 'Backlog';
+  // Check if it's already a canonical status (exact match, case-insensitive)
+  for (const canonicalStatus of Object.values(TASK_STATUSES)) {
+    if (canonicalStatus.toLowerCase() === lowercased) {
+      return canonicalStatus;
+    }
+  }
+
+  // Check aliases
+  if (lowercased in STATUS_ALIASES) {
+    return STATUS_ALIASES[lowercased];
+  }
+
+  // Default to Backlog for unrecognized statuses
+  console.warn(`Unknown status "${status}", defaulting to Backlog`);
+  return TASK_STATUSES.BACKLOG;
 }
 
 /**
@@ -178,36 +201,43 @@ export function groupTasksBySprint(tasks: Task[]): Map<SprintNumber, Task[]> {
 }
 
 /**
- * Count tasks by status
+ * Count tasks by status using canonical STATUS_GROUPS
+ * Returns counts that match API response format (snake_case)
  */
 export function countTasksByStatus(tasks: Task[]) {
-  const backlog = tasks.filter((t) => t.status === 'Backlog' || t.status === 'In Review').length;
-  const planned = tasks.filter((t) => t.status === 'Planned').length;
-  const inProgress = tasks.filter(
-    (t) => t.status === 'In Progress' || t.status === 'Validating'
-  ).length;
-  const completed = tasks.filter((t) => t.status === 'Completed' || t.status === 'Done').length;
-  const blocked = tasks.filter((t) => t.status === 'Blocked').length;
-  const failed = tasks.filter((t) => t.status === 'Failed').length;
-  const needsHuman = tasks.filter((t) => t.status === 'Needs Human').length;
+  // Use STATUS_GROUPS for consistent grouping across all views
+  const backlog = tasks.filter((t) => STATUS_GROUPS.backlog.includes(t.status)).length;
+  const planned = tasks.filter((t) => STATUS_GROUPS.planned.includes(t.status)).length;
+  const inProgress = tasks.filter((t) => STATUS_GROUPS.active.includes(t.status)).length;
+  const completed = tasks.filter((t) => STATUS_GROUPS.completed.includes(t.status)).length;
+  const blocked = tasks.filter((t) => t.status === TASK_STATUSES.BLOCKED).length;
+  const failed = tasks.filter((t) => t.status === TASK_STATUSES.FAILED).length;
+  const needsHuman = tasks.filter((t) => t.status === TASK_STATUSES.NEEDS_HUMAN).length;
 
   return {
     backlog,
     planned,
     inProgress,
+    in_progress: inProgress, // API-compatible alias
     completed,
+    done: completed, // API-compatible alias
     blocked,
     failed,
     needsHuman,
+    needs_human: needsHuman, // API-compatible alias
+    not_started: backlog + planned, // API-compatible field
     total: tasks.length,
   };
 }
 
 /**
- * Calculate completion rate
+ * Calculate completion rate using canonical STATUS_GROUPS
  */
 export function calculateCompletionRate(tasks: Task[]): number {
   if (tasks.length === 0) return 0;
-  const completed = tasks.filter((t) => t.status === 'Completed' || t.status === 'Done').length;
+  const completed = tasks.filter((t) => STATUS_GROUPS.completed.includes(t.status)).length;
   return Math.round((completed / tasks.length) * 100);
 }
+
+// Re-export status constants for convenience
+export { TASK_STATUSES, STATUS_ALIASES, STATUS_GROUPS } from './types';

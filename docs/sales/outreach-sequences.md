@@ -2,34 +2,36 @@
 
 ## Overview
 
-This document defines structured outreach sequences for prospecting and nurturing leads for IntelliFlow CRM. Each sequence includes timing, channel, messaging, and expected actions.
+This document defines structured outreach sequences for prospecting and
+nurturing leads for IntelliFlow CRM. Each sequence includes timing, channel,
+messaging, and expected actions.
 
-**Version**: 1.0
-**Last Updated**: 2025-12-22
-**Owner**: Sales Team
+**Version**: 1.0 **Last Updated**: 2025-12-22 **Owner**: Sales Team
 
 ---
 
 ## Sequence 1: Email Outreach (Cold Prospect)
 
 ### Target Audience
+
 - Decision makers at SMB legal firms (10-50 attorneys)
 - Key personas: Managing Partner, COO, Director of Operations
 
 ### Sequence Structure
 
-| Day | Action | Channel | Subject/Template |
-|-----|--------|---------|------------------|
-| 0 | Initial Email | Email | "Quick question about [Company] case management" |
-| 3 | Follow-up Email | Email | "Re: Case management efficiency" |
-| 7 | Value Add Email | Email | "3 ways AI is transforming legal operations" |
-| 10 | LinkedIn Connect | LinkedIn | Personalized connection request |
-| 14 | Phone Call | Phone | Discovery call attempt |
-| 17 | Breakup Email | Email | "Should I close your file?" |
+| Day | Action           | Channel  | Subject/Template                                 |
+| --- | ---------------- | -------- | ------------------------------------------------ |
+| 0   | Initial Email    | Email    | "Quick question about [Company] case management" |
+| 3   | Follow-up Email  | Email    | "Re: Case management efficiency"                 |
+| 7   | Value Add Email  | Email    | "3 ways AI is transforming legal operations"     |
+| 10  | LinkedIn Connect | LinkedIn | Personalized connection request                  |
+| 14  | Phone Call       | Phone    | Discovery call attempt                           |
+| 17  | Breakup Email    | Email    | "Should I close your file?"                      |
 
 ### Email Templates
 
 #### Day 0: Initial Email
+
 ```
 Subject: Quick question about [Company] case management
 
@@ -52,6 +54,7 @@ Best,
 ```
 
 #### Day 3: Follow-up Email
+
 ```
 Subject: Re: Case management efficiency
 
@@ -71,6 +74,7 @@ Best,
 ```
 
 #### Day 7: Value Add Email
+
 ```
 Subject: 3 ways AI is transforming legal operations
 
@@ -92,6 +96,7 @@ Best,
 ```
 
 #### Day 17: Breakup Email
+
 ```
 Subject: Should I close your file?
 
@@ -114,29 +119,32 @@ Best,
 ## Sequence 2: LinkedIn Outreach (Warm Prospect)
 
 ### Target Audience
+
 - Prospects who engaged with content (webinar, whitepaper, blog)
 - Existing connections or mutual network
 
 ### Sequence Structure
 
-| Day | Action | Channel | Content |
-|-----|--------|---------|---------|
-| 0 | Connection Request | LinkedIn | Personalized note referencing content engagement |
-| 2 | Welcome Message | LinkedIn | Thank for connecting, share relevant resource |
-| 5 | Engage with Content | LinkedIn | Like/comment on their recent posts |
-| 8 | Value Share | LinkedIn | Share relevant content, tag if appropriate |
-| 12 | Discovery Ask | LinkedIn | Propose brief call |
-| 18 | Follow-up | LinkedIn | Final touchpoint |
+| Day | Action              | Channel  | Content                                          |
+| --- | ------------------- | -------- | ------------------------------------------------ |
+| 0   | Connection Request  | LinkedIn | Personalized note referencing content engagement |
+| 2   | Welcome Message     | LinkedIn | Thank for connecting, share relevant resource    |
+| 5   | Engage with Content | LinkedIn | Like/comment on their recent posts               |
+| 8   | Value Share         | LinkedIn | Share relevant content, tag if appropriate       |
+| 12  | Discovery Ask       | LinkedIn | Propose brief call                               |
+| 18  | Follow-up           | LinkedIn | Final touchpoint                                 |
 
 ### LinkedIn Message Templates
 
 #### Day 0: Connection Request
+
 ```
 Hi [First Name] - saw you attended our webinar on "AI in Legal Practice."
 Would love to connect and hear your thoughts on the session!
 ```
 
 #### Day 2: Welcome Message
+
 ```
 Thanks for connecting, [First Name]! Really glad to have you in my network.
 
@@ -151,6 +159,7 @@ market.
 ```
 
 #### Day 12: Discovery Ask
+
 ```
 Hi [First Name] - hope this week is treating you well!
 
@@ -166,22 +175,24 @@ Would love to share some ideas over a quick 15-minute call if you're open to it.
 ## Sequence 3: Inbound Demo Request (Fast Track)
 
 ### Target Audience
+
 - Prospects who explicitly requested a demo
 - High-intent, needs immediate response
 
 ### Sequence Structure
 
-| Time | Action | Channel |
-|------|--------|---------|
-| < 5 min | Phone Call | Phone |
-| + 15 min | SMS/Email | Multi-channel |
-| + 1 hour | Email | Email - detailed demo options |
-| + 4 hours | Phone Call | Phone - second attempt |
-| + 1 day | Email | Email - calendar link |
-| + 2 days | LinkedIn | LinkedIn message |
-| + 4 days | Final Email | Email - close the loop |
+| Time      | Action      | Channel                       |
+| --------- | ----------- | ----------------------------- |
+| < 5 min   | Phone Call  | Phone                         |
+| + 15 min  | SMS/Email   | Multi-channel                 |
+| + 1 hour  | Email       | Email - detailed demo options |
+| + 4 hours | Phone Call  | Phone - second attempt        |
+| + 1 day   | Email       | Email - calendar link         |
+| + 2 days  | LinkedIn    | LinkedIn message              |
+| + 4 days  | Final Email | Email - close the loop        |
 
 ### Response Time SLA
+
 - **Target**: First contact within 5 minutes
 - **Acceptable**: Within 1 hour
 - **Escalation**: Notify sales manager if > 1 hour
@@ -191,14 +202,18 @@ Would love to share some ideas over a quick 15-minute call if you're open to it.
 ## Handoff Policy
 
 ### From Marketing to Sales
+
 - **Trigger**: MQL score > 70 OR demo request OR pricing page view + form fill
 - **SLA**: Sales contacts within 1 business hour
-- **Handoff Data**: Lead source, engagement history, score breakdown, company research
+- **Handoff Data**: Lead source, engagement history, score breakdown, company
+  research
 
 ### From Sales to Implementation
+
 - **Trigger**: Signed contract
 - **SLA**: Kickoff call within 2 business days
-- **Handoff Data**: Contract terms, key stakeholders, use case priorities, timeline
+- **Handoff Data**: Contract terms, key stakeholders, use case priorities,
+  timeline
 
 ---
 
@@ -206,14 +221,15 @@ Would love to share some ideas over a quick 15-minute call if you're open to it.
 
 ### Sequence Performance Metrics
 
-| Metric | Email Sequence | LinkedIn Sequence | Demo Fast Track |
-|--------|---------------|-------------------|-----------------|
-| Open Rate Target | 45% | N/A | 80% |
-| Reply Rate Target | 8% | 15% | 50% |
-| Meeting Booked Rate | 3% | 10% | 40% |
-| Sequence Completion | 100% | 100% | 100% |
+| Metric              | Email Sequence | LinkedIn Sequence | Demo Fast Track |
+| ------------------- | -------------- | ----------------- | --------------- |
+| Open Rate Target    | 45%            | N/A               | 80%             |
+| Reply Rate Target   | 8%             | 15%               | 50%             |
+| Meeting Booked Rate | 3%             | 10%               | 40%             |
+| Sequence Completion | 100%           | 100%              | 100%            |
 
 ### A/B Testing
+
 - Test subject lines weekly
 - Rotate value propositions monthly
 - Review and update case studies quarterly

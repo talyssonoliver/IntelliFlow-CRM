@@ -23,8 +23,7 @@
       "@intelliflow/api-client": ["../../packages/api-client/src"],
       "@intelliflow/ui": ["../../packages/ui/src"],
       "@intelliflow/validators": ["../../packages/validators/src"]
-    },
-    "baseUrl": "."
+    }
   },
   "include": [
     "next-env.d.ts",

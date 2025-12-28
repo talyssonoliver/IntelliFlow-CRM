@@ -5,7 +5,10 @@ import { Result, DomainError } from '../Result';
 class ValidationError extends DomainError {
   readonly code = 'VALIDATION_ERROR';
 
-  constructor(message: string, public readonly field: string) {
+  constructor(
+    message: string,
+    public readonly field: string
+  ) {
     super(message);
   }
 }
@@ -13,7 +16,10 @@ class ValidationError extends DomainError {
 class NotFoundError extends DomainError {
   readonly code = 'NOT_FOUND';
 
-  constructor(message: string, public readonly id: string) {
+  constructor(
+    message: string,
+    public readonly id: string
+  ) {
     super(message);
   }
 }
@@ -286,13 +292,9 @@ describe('Result', () => {
         return n < 100 ? Result.ok(n) : Result.fail('Must be less than 100');
       };
 
-      const validResult = Result.ok(50)
-        .flatMap(validatePositive)
-        .flatMap(validateLessThan100);
+      const validResult = Result.ok(50).flatMap(validatePositive).flatMap(validateLessThan100);
 
-      const invalidResult = Result.ok(-5)
-        .flatMap(validatePositive)
-        .flatMap(validateLessThan100);
+      const invalidResult = Result.ok(-5).flatMap(validatePositive).flatMap(validateLessThan100);
 
       expect(validResult.isSuccess).toBe(true);
       expect(validResult.value).toBe(50);

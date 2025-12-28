@@ -2,18 +2,22 @@
 
 ## Overview
 
-This script provides a framework for delivering compelling product demos that showcase IntelliFlow CRM's value in the context of the prospect's specific needs. The demo should be tailored based on discovery insights and focused on solving their documented pain points.
+This script provides a framework for delivering compelling product demos that
+showcase IntelliFlow CRM's value in the context of the prospect's specific
+needs. The demo should be tailored based on discovery insights and focused on
+solving their documented pain points.
 
-**Duration**: 60 minutes
-**Attendees**: Prospect stakeholders (including Economic Buyer if possible), AE, SE (Sales Engineer)
-**Prerequisites**: Completed discovery call with MEDDIC documented
-**Outcome**: Enthusiastic prospect requesting proposal OR clear objections to address
+**Duration**: 60 minutes **Attendees**: Prospect stakeholders (including
+Economic Buyer if possible), AE, SE (Sales Engineer) **Prerequisites**:
+Completed discovery call with MEDDIC documented **Outcome**: Enthusiastic
+prospect requesting proposal OR clear objections to address
 
 ---
 
 ## Pre-Demo Preparation (30-60 minutes)
 
 **Review Discovery Notes**:
+
 - [ ] Re-read discovery call notes and MEDDIC elements
 - [ ] Identify top 3 pain points to address
 - [ ] Review stakeholder roles and what each cares about
@@ -21,6 +25,7 @@ This script provides a framework for delivering compelling product demos that sh
 - [ ] Note any specific features or integrations they asked about
 
 **Customize Demo Environment**:
+
 - [ ] Pre-populate demo with relevant data (their industry, use cases)
 - [ ] Set up scenarios that mirror their workflows
 - [ ] Configure integrations they mentioned (Outlook, Slack, etc.)
@@ -28,6 +33,7 @@ This script provides a framework for delivering compelling product demos that sh
 - [ ] Load sample leads/contacts that resemble their ICP
 
 **Prepare Materials**:
+
 - [ ] Slide deck with tailored value proposition (5-7 slides max)
 - [ ] Customer case study from similar industry/size
 - [ ] ROI calculator pre-filled with their metrics
@@ -35,6 +41,7 @@ This script provides a framework for delivering compelling product demos that sh
 - [ ] Pricing proposal draft (for discussion if they ask)
 
 **Technical Checklist**:
+
 - [ ] Test screen sharing and audio 15 minutes before
 - [ ] Close unnecessary browser tabs and apps
 - [ ] Mute notifications (Slack, email, phone)
@@ -42,6 +49,7 @@ This script provides a framework for delivering compelling product demos that sh
 - [ ] Ensure stable internet connection
 
 **Coordinate with Team**:
+
 - [ ] Align with SE on demo flow and who presents what
 - [ ] Prepare SE for technical deep dives if needed
 - [ ] Designate one person to take notes during demo
@@ -54,6 +62,7 @@ This script provides a framework for delivering compelling product demos that sh
 ### 1. Opening (5 minutes)
 
 **Welcome and Introductions**:
+
 ```
 "Thanks everyone for joining! Before we dive in, let's do quick intros.
 I'm [Name], Account Executive. With me is [SE Name], our Sales Engineer who will
@@ -64,11 +73,13 @@ to get out of today's demo?"
 ```
 
 **What You're Listening For**:
+
 - Who is the Economic Buyer (if present)?
 - What are individual stakeholder priorities?
 - Any new pain points or requirements not mentioned in discovery?
 
 **Recap Discovery**:
+
 ```
 "Great. So just to make sure we're all aligned, here's what we heard from [Discovery Contact]
 in our initial conversation:
@@ -83,6 +94,7 @@ Did I get that right? Anything to add or change?"
 ```
 
 **Set Agenda**:
+
 ```
 "Here's what we'll cover in the next hour:
 
@@ -101,6 +113,7 @@ We want this to be interactive, so please jump in with questions anytime. Sound 
 **Brief Product Positioning** (3 slides max):
 
 **Slide 1: The Problem**
+
 ```
 "Most CRMs are data entry tools that slow your reps down. Sales teams spend 65% of their time
 on non-selling activities - logging calls, updating fields, chasing down information.
@@ -109,6 +122,7 @@ Meanwhile, leads go cold, pipelines are inaccurate, and revenue is at risk."
 ```
 
 **Slide 2: The IntelliFlow Approach**
+
 ```
 "IntelliFlow is different. We're an AI-first CRM that automates the busywork so your reps
 can focus on selling.
@@ -124,6 +138,7 @@ The result? 40% faster lead response, 25% higher conversion, and 15 hours/week b
 ```
 
 **Slide 3: Customer Proof Point**
+
 ```
 [Show case study from similar company]
 
@@ -136,6 +151,7 @@ Today, I'll show you how we can deliver similar results for [Prospect Company]."
 ```
 
 **Transition to Demo**:
+
 ```
 "Alright, let's see it in action. I'm going to share my screen now."
 ```
@@ -144,11 +160,13 @@ Today, I'll show you how we can deliver similar results for [Prospect Company]."
 
 ### 3. Core Demo (35 minutes)
 
-**Important**: Follow the "Problem → Solution → Impact" structure for each section.
+**Important**: Follow the "Problem → Solution → Impact" structure for each
+section.
 
 #### Section A: Lead Capture & Routing (10 minutes)
 
 **Problem Recap**:
+
 ```
 "You mentioned that leads from your website sit in a spreadsheet for hours before anyone
 responds. Let's see how IntelliFlow solves that."
@@ -157,6 +175,7 @@ responds. Let's see how IntelliFlow solves that."
 **Demo Flow**:
 
 1. **Show Inbound Lead Capture**:
+
    ```
    [Navigate to Leads dashboard]
 
@@ -172,6 +191,7 @@ responds. Let's see how IntelliFlow solves that."
    ```
 
 2. **Show AI Enrichment**:
+
    ```
    [Click into lead record]
 
@@ -182,6 +202,7 @@ responds. Let's see how IntelliFlow solves that."
    ```
 
 3. **Show Intelligent Routing**:
+
    ```
    [Navigate to routing rules]
 
@@ -194,6 +215,7 @@ responds. Let's see how IntelliFlow solves that."
    ```
 
 4. **Show Speed to Lead**:
+
    ```
    [Show lead response time dashboard]
 
@@ -204,6 +226,7 @@ responds. Let's see how IntelliFlow solves that."
    ```
 
 **Impact Statement**:
+
 ```
 "So to recap: Instead of leads sitting in a spreadsheet for hours, they're in a rep's hands,
 fully enriched, within 60 seconds. That's how you capture 30+ deals per month you're losing today.
@@ -212,6 +235,7 @@ Make sense?"
 ```
 
 **Pause for Questions**:
+
 ```
 "Any questions on lead capture before we move on?"
 ```
@@ -221,6 +245,7 @@ Make sense?"
 #### Section B: AI-Powered Automation (10 minutes)
 
 **Problem Recap**:
+
 ```
 "You also mentioned your reps spend 15 hours a week on data entry and manual follow-ups.
 Let's see how IntelliFlow gets that time back."
@@ -229,6 +254,7 @@ Let's see how IntelliFlow gets that time back."
 **Demo Flow**:
 
 1. **Show Email Sync & Auto-Logging**:
+
    ```
    [Navigate to activity timeline]
 
@@ -243,6 +269,7 @@ Let's see how IntelliFlow gets that time back."
    ```
 
 2. **Show AI Email Generation**:
+
    ```
    [Click "AI Compose"]
 
@@ -257,6 +284,7 @@ Let's see how IntelliFlow gets that time back."
    ```
 
 3. **Show Automated Sequences**:
+
    ```
    [Navigate to sequences]
 
@@ -270,6 +298,7 @@ Let's see how IntelliFlow gets that time back."
    ```
 
 4. **Show Smart Reminders**:
+
    ```
    [Show task inbox]
 
@@ -282,6 +311,7 @@ Let's see how IntelliFlow gets that time back."
    ```
 
 **Impact Statement**:
+
 ```
 "Bottom line: We estimate this saves each rep 15+ hours per week. That's 15 hours they can
 spend selling instead of doing data entry. At $200k quota per rep, that's material revenue impact.
@@ -294,6 +324,7 @@ Questions?"
 #### Section C: Pipeline Visibility & Forecasting (10 minutes)
 
 **Problem Recap**:
+
 ```
 "Finally, you mentioned lack of pipeline visibility makes forecasting a nightmare. Let's fix that."
 ```
@@ -301,6 +332,7 @@ Questions?"
 **Demo Flow**:
 
 1. **Show Real-Time Dashboard**:
+
    ```
    [Navigate to pipeline dashboard]
 
@@ -314,6 +346,7 @@ Questions?"
    ```
 
 2. **Show Deal Insights**:
+
    ```
    [Click into an opportunity]
 
@@ -327,6 +360,7 @@ Questions?"
    ```
 
 3. **Show Forecasting**:
+
    ```
    [Navigate to forecast view]
 
@@ -339,6 +373,7 @@ Questions?"
    ```
 
 4. **Show Customizable Reports**:
+
    ```
    [Navigate to reports]
 
@@ -352,6 +387,7 @@ Questions?"
    ```
 
 **Impact Statement**:
+
 ```
 "So instead of flying blind, you have complete visibility into your pipeline, real-time insights,
 and AI-powered predictions. That's how you hit your number with confidence.
@@ -364,6 +400,7 @@ Questions on reporting and forecasting?"
 #### Section D: Integration & Workflow (5 minutes)
 
 **Show Key Integrations**:
+
 ```
 [Navigate to integrations page]
 
@@ -381,6 +418,7 @@ Zero manual work."
 ```
 
 **Show Mobile App** (if relevant):
+
 ```
 [Share mobile screen or show screenshots]
 
@@ -404,6 +442,7 @@ Sales doesn't happen at a desk anymore. IntelliFlow goes where your reps go."
 ```
 
 **Common Deep Dive Topics**:
+
 - Custom fields and object models (for complex orgs)
 - Security and permissions (for enterprise buyers)
 - API and developer tools (for technical stakeholders)
@@ -411,6 +450,7 @@ Sales doesn't happen at a desk anymore. IntelliFlow goes where your reps go."
 - Reporting and analytics (for executives)
 
 **Keep It Brief**:
+
 - 2-3 minutes max per deep dive
 - Delegate to SE for highly technical questions
 - Offer to schedule separate session if needed
@@ -420,6 +460,7 @@ Sales doesn't happen at a desk anymore. IntelliFlow goes where your reps go."
 ### 5. Q&A (15 minutes)
 
 **Open the Floor**:
+
 ```
 "Alright, let's pause there. What questions do you have?"
 ```
@@ -427,6 +468,7 @@ Sales doesn't happen at a desk anymore. IntelliFlow goes where your reps go."
 **Common Questions & Responses**:
 
 **Q: "How long does implementation take?"**
+
 ```
 A: "Great question. For a team your size, we typically see:
 - Week 1: Data migration and initial setup
@@ -439,6 +481,7 @@ implementation manager to ensure success."
 ```
 
 **Q: "What about data migration from our current CRM?"**
+
 ```
 A: "We handle that. Our implementation team will:
 - Audit your current data
@@ -451,6 +494,7 @@ You mentioned you're on [current CRM]. We've migrated 50+ companies from there. 
 ```
 
 **Q: "How much does it cost?"**
+
 ```
 A: "Pricing depends on team size and features. For [X users] with the capabilities we've shown,
 we're typically in the range of [$Y-$Z per user/month].
@@ -463,6 +507,7 @@ Does that work?"
 ```
 
 **Q: "How does this compare to [Competitor]?"**
+
 ```
 A: "Good question. We see a lot of companies evaluate us against [Competitor].
 
@@ -478,6 +523,7 @@ Would a free trial or pilot make sense?"
 ```
 
 **Q: "What if we need custom features?"**
+
 ```
 A: "We have a robust API and developer platform. Many customers build custom integrations
 and workflows. We also have a professional services team that can build custom solutions if needed.
@@ -486,6 +532,7 @@ What specific customizations are you thinking about?"
 ```
 
 **Handle Technical Questions**:
+
 ```
 [Defer to SE]
 
@@ -497,11 +544,13 @@ What specific customizations are you thinking about?"
 ### 6. Next Steps (5 minutes)
 
 **Gauge Interest**:
+
 ```
 "So, what do you think? Does IntelliFlow look like it could solve [pain #1, #2, #3]?"
 ```
 
 **If Positive**:
+
 ```
 "Awesome. Here's what I propose for next steps:
 
@@ -520,6 +569,7 @@ Does that timeline work for you? Any concerns or blockers we should address now?
 ```
 
 **If Hesitant**:
+
 ```
 "I'm sensing some hesitation. What are your concerns?"
 
@@ -529,6 +579,7 @@ Does that timeline work for you? Any concerns or blockers we should address now?
 ```
 
 **If Need More Time/Stakeholders**:
+
 ```
 "I understand. Who else needs to see this before a decision can be made?
 
@@ -538,12 +589,14 @@ I want to make sure everyone's questions are answered before you make a decision
 ```
 
 **Book the Next Meeting**:
+
 ```
 "Let's get the next meeting on the calendar while we're all here. What does next
 [Tuesday/Wednesday/Thursday] look like?"
 ```
 
 **Send Materials**:
+
 ```
 "I'll send over:
 - Recording of today's demo
@@ -560,6 +613,7 @@ You should have everything by end of day. Sound good?"
 ### 7. Closing (1 minute)
 
 **Express Enthusiasm**:
+
 ```
 "Thanks so much for your time today. I'm excited about the possibility of working together
 and helping [Company] [achieve their goals].
@@ -569,6 +623,7 @@ in the meantime!"
 ```
 
 **Confirm Action Items**:
+
 ```
 [Recap who's doing what]
 
@@ -585,6 +640,7 @@ Did I miss anything?"
 ## Post-Demo Actions (30 minutes)
 
 **Immediate (within 1 hour)**:
+
 - [ ] Send thank you email with recap and next steps
 - [ ] Send calendar invite for follow-up meeting (if scheduled)
 - [ ] Send demo recording link
@@ -593,6 +649,7 @@ Did I miss anything?"
 - [ ] Log all attendees and their roles
 
 **Within 24 hours**:
+
 - [ ] Send detailed proposal with pricing and ROI
 - [ ] Send case study(s) from similar customers
 - [ ] Send competitive comparison (if evaluating alternatives)
@@ -601,6 +658,7 @@ Did I miss anything?"
 - [ ] Alert Manager on deal status and next steps
 
 **Within 3 days**:
+
 - [ ] Follow up if no response to proposal
 - [ ] Reach out to individual stakeholders for 1:1 conversations
 - [ ] Schedule technical deep dive or trial if requested
@@ -650,6 +708,7 @@ P.S. - [SE Name] is available if you have technical questions. Just reply to thi
 ## Demo Best Practices
 
 **Do**:
+
 - ✅ Customize demo to their specific use cases and pains
 - ✅ Use their industry terminology and examples
 - ✅ Show real data and workflows, not generic demos
@@ -659,6 +718,7 @@ P.S. - [SE Name] is available if you have technical questions. Just reply to thi
 - ✅ Drive toward clear next steps before ending
 
 **Don't**:
+
 - ❌ Show every feature (death by demo)
 - ❌ Talk for 60 minutes straight without interaction
 - ❌ Dive into technical details unless asked
@@ -682,7 +742,7 @@ Rate yourself after each demo (1-5 scale):
 - [ ] Did stakeholders seem excited and engaged? (1-5)
 - [ ] Did I move the deal forward? (1-5)
 
-**Total Score**: ____ / 40
+**Total Score**: \_\_\_\_ / 40
 
 - 35-40: Excellent demo, high win probability
 - 28-34: Good, some opportunities to improve
@@ -694,12 +754,14 @@ Rate yourself after each demo (1-5 scale):
 ## Technical Difficulties Backup Plan
 
 **If Demo Environment Fails**:
+
 1. Have pre-recorded demo video ready (narrate over it)
 2. Use slides with screenshots as backup
 3. Schedule technical deep dive for another day
 4. Don't panic - stay professional
 
 **Script**:
+
 ```
 "Looks like we're having a technical hiccup. Rather than waste your time troubleshooting,
 let me walk you through this with a pre-recorded demo, and we'll schedule a live session
@@ -709,4 +771,5 @@ for you to try it hands-on. Sound good?"
 ---
 
 **Document History**:
+
 - v1.0 (2025-12-22): Initial demo script creation

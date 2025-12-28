@@ -201,11 +201,7 @@ describe('InMemoryEventBus', () => {
 
   describe('publishAll()', () => {
     it('should publish all events in array', async () => {
-      const events = [
-        new TestEvent('first'),
-        new TestEvent('second'),
-        new TestEvent('third'),
-      ];
+      const events = [new TestEvent('first'), new TestEvent('second'), new TestEvent('third')];
 
       await eventBus.publishAll(events);
 
@@ -215,11 +211,7 @@ describe('InMemoryEventBus', () => {
     });
 
     it('should publish events in order', async () => {
-      const events = [
-        new TestEvent('first'),
-        new AnotherTestEvent(2),
-        new TestEvent('third'),
-      ];
+      const events = [new TestEvent('first'), new AnotherTestEvent(2), new TestEvent('third')];
 
       await eventBus.publishAll(events);
 
@@ -278,12 +270,7 @@ describe('InMemoryEventBus', () => {
       await eventBus.publishAll(events);
 
       // Events are published sequentially, so should see start and end pairs in order
-      expect(processingOrder).toEqual([
-        'start-first',
-        'end-first',
-        'start-second',
-        'end-second',
-      ]);
+      expect(processingOrder).toEqual(['start-first', 'end-first', 'start-second', 'end-second']);
     });
   });
 

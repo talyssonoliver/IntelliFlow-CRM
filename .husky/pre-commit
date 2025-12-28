@@ -6,6 +6,17 @@
 
 echo "🔍 Running pre-commit checks..."
 
+# Auto-regenerate Sprint Plan split files if source CSV changed
+# (Split files are gitignored - they exist locally for Claude Code to read)
+if git diff --cached --name-only | grep -q "Sprint_plan\.csv$"; then
+  echo "📊 Sprint_plan.csv changed - regenerating local split files..."
+  npx tsx tools/scripts/split-sprint-plan.ts || {
+    echo "❌ Failed to split Sprint_plan.csv"
+    exit 1
+  }
+  echo "✅ Local split files regenerated (not committed - gitignored)"
+fi
+
 # Run linting
 echo "📋 Linting code..."
 pnpm run lint --filter=!project-tracker || {

@@ -1,0 +1,32 @@
+date,total_actions,approved,rejected,modified,rolled_back,expired,avg_review_time_ms,approval_rate,avg_confidence_approved,avg_confidence_rejected,agent_id,agent_name,entity_type,action_type
+2025-01-01,0,0,0,0,0,0,0,0,0,0,,,
+# =============================================================================
+# Agent Approvals Metrics Template
+# =============================================================================
+#
+# This CSV tracks approval metrics for agent-initiated actions.
+# Used by IFC-149: Action preview and rollback UI
+#
+# Columns:
+# - date: ISO 8601 date (YYYY-MM-DD)
+# - total_actions: Total agent actions in period
+# - approved: Number of actions approved
+# - rejected: Number of actions rejected
+# - modified: Number of actions modified before approval
+# - rolled_back: Number of actions rolled back after approval
+# - expired: Number of actions that expired without review
+# - avg_review_time_ms: Average time to review actions (milliseconds)
+# - approval_rate: Percentage of actions approved (0-100)
+# - avg_confidence_approved: Average AI confidence score of approved actions
+# - avg_confidence_rejected: Average AI confidence score of rejected actions
+# - agent_id: (Optional) Filter by specific agent ID
+# - agent_name: (Optional) Human-readable agent name
+# - entity_type: (Optional) Filter by entity type (lead, contact, deal, task)
+# - action_type: (Optional) Filter by action type
+#
+# KPIs tracked (from IFC-149):
+# - 100% agent actions previewed
+# - Zero unauthorized changes
+# - Approval rate and latency tracked
+#
+# =============================================================================

@@ -3,13 +3,89 @@
  * Maps directly to Sprint_plan.csv columns
  */
 
+// =============================================================================
+// CANONICAL STATUS VALUES - Single Source of Truth
+// =============================================================================
+
+/**
+ * Canonical task status values used throughout the application.
+ * All status comparisons should use these constants.
+ */
+export const TASK_STATUSES = {
+  BACKLOG: 'Backlog',
+  PLANNED: 'Planned',
+  IN_PROGRESS: 'In Progress',
+  VALIDATING: 'Validating',
+  COMPLETED: 'Completed',
+  BLOCKED: 'Blocked',
+  FAILED: 'Failed',
+  NEEDS_HUMAN: 'Needs Human',
+  IN_REVIEW: 'In Review',
+} as const;
+
+/**
+ * Status aliases that get normalized to canonical values.
+ * Keys are lowercase for case-insensitive matching.
+ */
+export const STATUS_ALIASES: Record<string, TaskStatus> = {
+  // Completed aliases
+  done: 'Completed',
+  complete: 'Completed',
+  finished: 'Completed',
+  // In Progress aliases
+  'in progress': 'In Progress',
+  in_progress: 'In Progress',
+  inprogress: 'In Progress',
+  started: 'In Progress',
+  active: 'In Progress',
+  // Backlog aliases
+  backlog: 'Backlog',
+  todo: 'Backlog',
+  'to do': 'Backlog',
+  'not started': 'Backlog',
+  not_started: 'Backlog',
+  // Planned aliases
+  planned: 'Planned',
+  scheduled: 'Planned',
+  // Blocked aliases
+  blocked: 'Blocked',
+  waiting: 'Blocked',
+  on_hold: 'Blocked',
+  'on hold': 'Blocked',
+  // Failed aliases
+  failed: 'Failed',
+  error: 'Failed',
+  // Validating aliases
+  validating: 'Validating',
+  testing: 'Validating',
+  reviewing: 'Validating',
+  // Needs Human aliases
+  'needs human': 'Needs Human',
+  needs_human: 'Needs Human',
+  manual: 'Needs Human',
+  // In Review aliases
+  'in review': 'In Review',
+  in_review: 'In Review',
+  review: 'In Review',
+};
+
+/**
+ * Status groupings for dashboard/kanban display
+ */
+export const STATUS_GROUPS = {
+  backlog: [TASK_STATUSES.BACKLOG, TASK_STATUSES.IN_REVIEW] as TaskStatus[],
+  planned: [TASK_STATUSES.PLANNED] as TaskStatus[],
+  active: [TASK_STATUSES.IN_PROGRESS, TASK_STATUSES.VALIDATING] as TaskStatus[],
+  blocked: [TASK_STATUSES.BLOCKED, TASK_STATUSES.NEEDS_HUMAN, TASK_STATUSES.FAILED] as TaskStatus[],
+  completed: [TASK_STATUSES.COMPLETED] as TaskStatus[],
+} as const;
+
 export type TaskStatus =
   | 'Backlog'
   | 'Planned'
   | 'In Progress'
   | 'Validating'
   | 'Completed'
-  | 'Done' // Alias for Completed
   | 'Blocked'
   | 'Failed'
   | 'Needs Human'

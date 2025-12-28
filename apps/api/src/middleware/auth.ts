@@ -2,16 +2,18 @@
  * Authentication Middleware
  *
  * Handles user authentication for tRPC procedures.
- * Currently uses mock authentication for development.
- * In production, this should:
- * - Verify JWT tokens
- * - Validate session cookies
- * - Check API keys
- * - Integrate with authentication providers (Supabase, Auth0, etc.)
+ * Integrates with Supabase Auth for token verification.
+ *
+ * IMPLEMENTS: FLOW-001 (Login + MFA)
+ *
+ * @see apps/api/src/lib/supabase.ts - Supabase client and verifyToken
+ * @see apps/web/proxy.ts - Next.js 16 proxy for route protection
+ * @module apps/api/src/middleware/auth
  */
 
 import { TRPCError } from '@trpc/server';
 import { Context } from '../context';
+import { verifyToken as supabaseVerifyToken } from '../lib/supabase';
 
 /**
  * Middleware options type for authentication middleware
@@ -84,22 +86,34 @@ export function createManagerMiddleware() {
 }
 
 /**
- * Helper to verify JWT token
- * TODO: Implement actual JWT verification
+ * Verify JWT token using Supabase Auth
+ *
+ * Uses Supabase Admin API to validate access tokens and retrieve user info.
+ * Returns user data if token is valid, null otherwise.
+ *
+ * @param token - JWT access token from Authorization header
+ * @returns User info (userId, email, role) or null if invalid
  */
 export async function verifyToken(token: string): Promise<{
   userId: string;
   email: string;
   role: string;
 } | null> {
-  // Placeholder implementation
-  // In production:
-  // - Verify JWT signature
-  // - Check expiration
-  // - Validate claims
-  // - Return user info or null
+  try {
+    const { user, error } = await supabaseVerifyToken(token);
 
-  return null;
+    if (error || !user) {
+      return null;
+    }
+
+    return {
+      userId: user.id,
+      email: user.email || '',
+      role: (user.user_metadata?.role as string) || 'USER',
+    };
+  } catch {
+    return null;
+  }
 }
 
 /**

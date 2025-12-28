@@ -1,0 +1,24 @@
+{
+  "sprint": "sprint-8",
+  "name": "Sprint 8",
+  "target_date": null,
+  "started_at": null,
+  "completed_at": null,
+  "phases": [],
+  "task_summary": {
+    "total": 8,
+    "done": 3,
+    "in_progress": 0,
+    "blocked": 0,
+    "not_started": 5,
+    "failed": 0
+  },
+  "notes": "3/8 tasks DONE (38%). Last synced: 2025-12-28T23:24:53.079Z",
+  "completed_tasks": [
+    {
+      "task_id": "IFC-077",
+      "completed_at": "2025-12-27T11:33:39.930Z",
+      "duration_minutes": 15
+    }
+  ]
+}

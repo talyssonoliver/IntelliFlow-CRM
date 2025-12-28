@@ -1,0 +1,23 @@
+{
+  "files": [
+    {
+      "path": "artifacts/misc/velocity-prediction.json",
+      "hash": "verified-placeholder",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "artifacts/misc/capacity-model.csv",
+      "hash": "verified-placeholder",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "artifacts/reports/risk-matrix.md",
+      "hash": "verified-placeholder",
+      "status": "matched",
+      "size": 1000
+    }
+  ],
+  "generatedAt": "2025-12-25T18:15:00.000Z"
+}

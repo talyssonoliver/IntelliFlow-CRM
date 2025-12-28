@@ -10,12 +10,20 @@ import {
   OpportunityLostEvent,
   OpportunityProbabilityUpdatedEvent,
   OpportunityCloseDateChangedEvent,
+  OpportunityReopenedEvent,
 } from './OpportunityEvents';
 
 export class OpportunityAlreadyClosedError extends DomainError {
   readonly code = 'OPPORTUNITY_ALREADY_CLOSED';
   constructor() {
     super('Opportunity has already been closed');
+  }
+}
+
+export class OpportunityNotLostError extends DomainError {
+  readonly code = 'OPPORTUNITY_NOT_LOST';
+  constructor() {
+    super('Only lost opportunities can be reopened');
   }
 }
 
@@ -289,6 +297,21 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     this.props.updatedAt = new Date();
 
     this.addDomainEvent(new OpportunityLostEvent(this.id, reason, closedBy));
+
+    return Result.ok(undefined);
+  }
+
+  reopen(reopenedBy: string): Result<void, OpportunityNotLostError> {
+    if (!this.isLost) {
+      return Result.fail(new OpportunityNotLostError());
+    }
+
+    this.props.stage = 'PROSPECTING';
+    this.props.probability = this.getDefaultProbabilityForStage('PROSPECTING');
+    this.props.closedAt = undefined;
+    this.props.updatedAt = new Date();
+
+    this.addDomainEvent(new OpportunityReopenedEvent(this.id, reopenedBy));
 
     return Result.ok(undefined);
   }

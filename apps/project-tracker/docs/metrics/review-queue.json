@@ -1,8 +1,8 @@
 {
   "meta": {
-    "generated_at": "2025-12-23T19:04:06.511Z",
+    "generated_at": "2025-12-25T20:01:25.708Z",
     "sprint_scope": 0,
-    "total_items": 31
+    "total_items": 29
   },
   "items": [
     {
@@ -20,7 +20,7 @@
       "task_id": "ENV-010-AI",
       "tier": "B",
       "section": "Foundation Setup",
-      "status": "In Progress",
+      "status": "Completed",
       "owner": "QA Lead",
       "reasons": ["High fan-out (4 dependents)", "Has waiver or debt_allowed"],
       "dependent_count": 4,
@@ -88,32 +88,10 @@
       "priority": "medium"
     },
     {
-      "task_id": "ENV-017-AI",
-      "tier": "B",
-      "section": "Foundation Setup",
-      "status": "In Progress",
-      "owner": "Tech Lead",
-      "reasons": ["Has waiver or debt_allowed"],
-      "dependent_count": 2,
-      "waiver_expiry": "2026-02-28",
-      "priority": "medium"
-    },
-    {
-      "task_id": "ENV-018-AI",
-      "tier": "B",
-      "section": "Foundation Setup",
-      "status": "In Progress",
-      "owner": "PM",
-      "reasons": ["Has waiver or debt_allowed"],
-      "dependent_count": 1,
-      "waiver_expiry": "2026-01-31",
-      "priority": "medium"
-    },
-    {
       "task_id": "AUTOMATION-001",
       "tier": "B",
       "section": "AI Foundation",
-      "status": "In Progress",
+      "status": "Completed",
       "owner": "AI Specialist",
       "reasons": ["Has waiver or debt_allowed"],
       "dependent_count": 2,
@@ -124,7 +102,7 @@
       "task_id": "AUTOMATION-002",
       "tier": "B",
       "section": "AI Foundation",
-      "status": "In Progress",
+      "status": "Completed",
       "owner": "DevOps Engineer",
       "reasons": ["Has waiver or debt_allowed"],
       "dependent_count": 1,
@@ -289,7 +267,7 @@
       "task_id": "IFC-044",
       "tier": "A",
       "section": "Testing",
-      "status": "In Progress",
+      "status": "Completed",
       "owner": "Backend Dev",
       "reasons": [
         "Tier A task - requires explicit validation",

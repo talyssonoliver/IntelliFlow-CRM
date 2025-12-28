@@ -1,0 +1,163 @@
+{
+  "$schema": "https://design-tokens.org/schema.json",
+  "icons": {
+    "library": {
+      "name": "Material Symbols Outlined",
+      "url": "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL@24,400,0",
+      "version": "latest",
+      "description": "Google Material Symbols with outlined style"
+    },
+    "config": {
+      "opticalSize": 24,
+      "weight": 400,
+      "fill": 0,
+      "grade": 0
+    },
+    "sizes": {
+      "xs": { "value": "14px", "description": "Extra small icons (inline text)" },
+      "sm": { "value": "16px", "description": "Small icons" },
+      "md": { "value": "20px", "description": "Medium icons (default)" },
+      "lg": { "value": "24px", "description": "Large icons" },
+      "xl": { "value": "32px", "description": "Extra large icons" },
+      "2xl": { "value": "48px", "description": "Feature/empty state icons" }
+    }
+  },
+  "iconSet": {
+    "navigation": {
+      "dashboard": { "name": "dashboard", "description": "Main dashboard" },
+      "home": { "name": "home", "description": "Home page" },
+      "menu": { "name": "menu", "description": "Hamburger menu" },
+      "menu_open": { "name": "menu_open", "description": "Menu open state" },
+      "arrow_back": { "name": "arrow_back", "description": "Navigate back" },
+      "arrow_forward": { "name": "arrow_forward", "description": "Navigate forward" },
+      "expand_more": { "name": "expand_more", "description": "Expand dropdown" },
+      "expand_less": { "name": "expand_less", "description": "Collapse dropdown" },
+      "chevron_left": { "name": "chevron_left", "description": "Previous" },
+      "chevron_right": { "name": "chevron_right", "description": "Next" }
+    },
+    "actions": {
+      "add": { "name": "add", "description": "Add/Create new" },
+      "edit": { "name": "edit", "description": "Edit item" },
+      "delete": { "name": "delete", "description": "Delete item" },
+      "save": { "name": "save", "description": "Save changes" },
+      "close": { "name": "close", "description": "Close/Dismiss" },
+      "check": { "name": "check", "description": "Confirm/Complete" },
+      "more_vert": { "name": "more_vert", "description": "More options (vertical)" },
+      "more_horiz": { "name": "more_horiz", "description": "More options (horizontal)" },
+      "refresh": { "name": "refresh", "description": "Refresh/Reload" },
+      "download": { "name": "download", "description": "Download file" },
+      "upload": { "name": "upload", "description": "Upload file" },
+      "share": { "name": "share", "description": "Share item" },
+      "copy": { "name": "content_copy", "description": "Copy to clipboard" },
+      "print": { "name": "print", "description": "Print document" }
+    },
+    "search_filter": {
+      "search": { "name": "search", "description": "Search" },
+      "filter_list": { "name": "filter_list", "description": "Filter options" },
+      "sort": { "name": "sort", "description": "Sort items" },
+      "tune": { "name": "tune", "description": "Advanced filters" }
+    },
+    "crm": {
+      "person": { "name": "person", "description": "Contact/Person" },
+      "people": { "name": "people", "description": "Group/Team" },
+      "business": { "name": "business", "description": "Company/Account" },
+      "handshake": { "name": "handshake", "description": "Deal/Opportunity" },
+      "leaderboard": { "name": "leaderboard", "description": "Lead" },
+      "task": { "name": "task", "description": "Task item" },
+      "assignment": { "name": "assignment", "description": "Assignment/Case" },
+      "support_agent": { "name": "support_agent", "description": "Support ticket" },
+      "campaign": { "name": "campaign", "description": "Marketing campaign" },
+      "folder": { "name": "folder", "description": "Document folder" }
+    },
+    "communication": {
+      "mail": { "name": "mail", "description": "Email" },
+      "phone": { "name": "phone", "description": "Phone call" },
+      "chat": { "name": "chat", "description": "Chat message" },
+      "videocam": { "name": "videocam", "description": "Video call" },
+      "send": { "name": "send", "description": "Send message" },
+      "notifications": { "name": "notifications", "description": "Notifications" },
+      "mark_email_read": { "name": "mark_email_read", "description": "Read email" },
+      "mark_email_unread": { "name": "mark_email_unread", "description": "Unread email" }
+    },
+    "time_calendar": {
+      "calendar_today": { "name": "calendar_today", "description": "Calendar" },
+      "event": { "name": "event", "description": "Event/Appointment" },
+      "schedule": { "name": "schedule", "description": "Schedule/Time" },
+      "history": { "name": "history", "description": "History/Activity" },
+      "update": { "name": "update", "description": "Last updated" },
+      "timer": { "name": "timer", "description": "Timer/Duration" }
+    },
+    "status": {
+      "check_circle": { "name": "check_circle", "description": "Success/Complete" },
+      "error": { "name": "error", "description": "Error state" },
+      "warning": { "name": "warning", "description": "Warning state" },
+      "info": { "name": "info", "description": "Information" },
+      "help": { "name": "help", "description": "Help/Support" },
+      "pending": { "name": "pending", "description": "Pending state" },
+      "hourglass_empty": { "name": "hourglass_empty", "description": "Waiting" },
+      "block": { "name": "block", "description": "Blocked/Forbidden" }
+    },
+    "data_charts": {
+      "bar_chart": { "name": "bar_chart", "description": "Bar chart" },
+      "pie_chart": { "name": "pie_chart", "description": "Pie chart" },
+      "show_chart": { "name": "show_chart", "description": "Line chart" },
+      "analytics": { "name": "analytics", "description": "Analytics" },
+      "trending_up": { "name": "trending_up", "description": "Trending up" },
+      "trending_down": { "name": "trending_down", "description": "Trending down" },
+      "trending_flat": { "name": "trending_flat", "description": "No change" },
+      "insights": { "name": "insights", "description": "AI insights" }
+    },
+    "files_documents": {
+      "description": { "name": "description", "description": "Document" },
+      "attach_file": { "name": "attach_file", "description": "Attachment" },
+      "picture_as_pdf": { "name": "picture_as_pdf", "description": "PDF file" },
+      "image": { "name": "image", "description": "Image file" },
+      "cloud_upload": { "name": "cloud_upload", "description": "Upload to cloud" },
+      "cloud_download": { "name": "cloud_download", "description": "Download from cloud" }
+    },
+    "settings_system": {
+      "settings": { "name": "settings", "description": "Settings" },
+      "account_circle": { "name": "account_circle", "description": "User profile" },
+      "logout": { "name": "logout", "description": "Log out" },
+      "login": { "name": "login", "description": "Log in" },
+      "security": { "name": "security", "description": "Security settings" },
+      "lock": { "name": "lock", "description": "Locked/Private" },
+      "visibility": { "name": "visibility", "description": "Show/Visible" },
+      "visibility_off": { "name": "visibility_off", "description": "Hide/Hidden" },
+      "dark_mode": { "name": "dark_mode", "description": "Dark mode" },
+      "light_mode": { "name": "light_mode", "description": "Light mode" }
+    },
+    "money": {
+      "attach_money": { "name": "attach_money", "description": "Money/Currency" },
+      "payments": { "name": "payments", "description": "Payments" },
+      "receipt": { "name": "receipt", "description": "Invoice/Receipt" },
+      "account_balance": { "name": "account_balance", "description": "Banking" },
+      "credit_card": { "name": "credit_card", "description": "Credit card" }
+    },
+    "priority": {
+      "priority_high": { "name": "priority_high", "description": "High priority" },
+      "flag": { "name": "flag", "description": "Flagged item" },
+      "star": { "name": "star", "description": "Starred/Favorite" },
+      "star_outline": { "name": "star_outline", "description": "Not starred" },
+      "bookmark": { "name": "bookmark", "description": "Bookmarked" },
+      "bookmark_outline": { "name": "bookmark_border", "description": "Not bookmarked" }
+    },
+    "ai": {
+      "auto_awesome": { "name": "auto_awesome", "description": "AI-powered feature" },
+      "psychology": { "name": "psychology", "description": "AI/ML brain" },
+      "smart_toy": { "name": "smart_toy", "description": "AI assistant" },
+      "assistant": { "name": "assistant", "description": "AI helper" },
+      "lightbulb": { "name": "lightbulb", "description": "AI suggestion/insight" }
+    }
+  },
+  "usage": {
+    "html": "<span class=\"material-symbols-outlined\">icon_name</span>",
+    "tailwind": "text-[20px] leading-none",
+    "sizing": {
+      "sm": "text-[16px]",
+      "md": "text-[20px]",
+      "lg": "text-[24px]",
+      "xl": "text-[32px]"
+    }
+  }
+}

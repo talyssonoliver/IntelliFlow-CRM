@@ -66,12 +66,7 @@ describe('AccountUpdatedEvent', () => {
 describe('AccountRevenueUpdatedEvent', () => {
   it('should create event with initial revenue (no previous)', () => {
     const accountId = AccountId.generate();
-    const event = new AccountRevenueUpdatedEvent(
-      accountId,
-      null,
-      1000000,
-      'user-123'
-    );
+    const event = new AccountRevenueUpdatedEvent(accountId, null, 1000000, 'user-123');
 
     expect(event.eventType).toBe('account.revenue_updated');
     expect(event.accountId).toBe(accountId);
@@ -83,12 +78,7 @@ describe('AccountRevenueUpdatedEvent', () => {
 
   it('should create event with revenue change', () => {
     const accountId = AccountId.generate();
-    const event = new AccountRevenueUpdatedEvent(
-      accountId,
-      1000000,
-      1500000,
-      'user-123'
-    );
+    const event = new AccountRevenueUpdatedEvent(accountId, 1000000, 1500000, 'user-123');
 
     expect(event.previousRevenue).toBe(1000000);
     expect(event.newRevenue).toBe(1500000);
@@ -96,12 +86,7 @@ describe('AccountRevenueUpdatedEvent', () => {
 
   it('should serialize to payload correctly without previous revenue', () => {
     const accountId = AccountId.generate();
-    const event = new AccountRevenueUpdatedEvent(
-      accountId,
-      null,
-      1000000,
-      'user-123'
-    );
+    const event = new AccountRevenueUpdatedEvent(accountId, null, 1000000, 'user-123');
     const payload = event.toPayload();
 
     expect(payload.accountId).toBe(accountId.value);
@@ -112,12 +97,7 @@ describe('AccountRevenueUpdatedEvent', () => {
 
   it('should serialize to payload correctly with previous revenue', () => {
     const accountId = AccountId.generate();
-    const event = new AccountRevenueUpdatedEvent(
-      accountId,
-      1000000,
-      1500000,
-      'user-123'
-    );
+    const event = new AccountRevenueUpdatedEvent(accountId, 1000000, 1500000, 'user-123');
     const payload = event.toPayload();
 
     expect(payload.previousRevenue).toBe(1000000);
@@ -128,11 +108,7 @@ describe('AccountRevenueUpdatedEvent', () => {
 describe('AccountIndustryCategorizedEvent', () => {
   it('should create event with industry categorization', () => {
     const accountId = AccountId.generate();
-    const event = new AccountIndustryCategorizedEvent(
-      accountId,
-      'Technology',
-      'user-123'
-    );
+    const event = new AccountIndustryCategorizedEvent(accountId, 'Technology', 'user-123');
 
     expect(event.eventType).toBe('account.industry_categorized');
     expect(event.accountId).toBe(accountId);
@@ -143,11 +119,7 @@ describe('AccountIndustryCategorizedEvent', () => {
 
   it('should serialize to payload correctly', () => {
     const accountId = AccountId.generate();
-    const event = new AccountIndustryCategorizedEvent(
-      accountId,
-      'Technology',
-      'user-123'
-    );
+    const event = new AccountIndustryCategorizedEvent(accountId, 'Technology', 'user-123');
     const payload = event.toPayload();
 
     expect(payload.accountId).toBe(accountId.value);

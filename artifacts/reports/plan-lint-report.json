@@ -1,26 +1,54 @@
 {
   "meta": {
-    "generated_at": "2025-12-23T19:04:06.461Z",
+    "generated_at": "2025-12-25T20:01:25.697Z",
     "schema_version": "1.0.0",
     "sprint_scope": 0
   },
   "summary": {
-    "total_tasks": 36,
+    "total_tasks": 34,
     "tier_breakdown": {
       "A": 19,
-      "B": 10,
+      "B": 8,
       "C": 7
     },
-    "error_count": 0,
-    "warning_count": 30,
-    "review_queue_size": 31,
+    "error_count": 3,
+    "warning_count": 27,
+    "review_queue_size": 29,
     "validation_coverage": {
-      "tasks_with_validation": 35,
+      "tasks_with_validation": 33,
       "tasks_without_validation": 1,
       "coverage_percentage": 97
     }
   },
-  "errors": [],
+  "errors": [
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-112 missing gate_profile",
+      "tasks": [
+        "IFC-112"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-112 missing acceptance_owner",
+      "tasks": [
+        "IFC-112"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-112 missing evidence_required",
+      "tasks": [
+        "IFC-112"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    }
+  ],
   "warnings": [
     {
       "rule": "MISSING_VALIDATION",
@@ -273,36 +301,6 @@
     {
       "rule": "WAIVER_USED",
       "severity": "info",
-      "message": "Task ENV-017-AI has debt_allowed=true",
-      "tasks": [
-        "ENV-017-AI"
-      ],
-      "priority": "low",
-      "waiver_expiry": "2026-02-28"
-    },
-    {
-      "rule": "EXCEPTION_POLICY",
-      "severity": "info",
-      "message": "Task ENV-017-AI uses exception_policy: stub_contract",
-      "tasks": [
-        "ENV-017-AI"
-      ],
-      "priority": "medium",
-      "policy": "stub_contract"
-    },
-    {
-      "rule": "WAIVER_USED",
-      "severity": "info",
-      "message": "Task ENV-018-AI has debt_allowed=true",
-      "tasks": [
-        "ENV-018-AI"
-      ],
-      "priority": "low",
-      "waiver_expiry": "2026-01-31"
-    },
-    {
-      "rule": "WAIVER_USED",
-      "severity": "info",
       "message": "Task AUTOMATION-001 has debt_allowed=true",
       "tasks": [
         "AUTOMATION-001"
@@ -340,7 +338,7 @@
       "task_id": "ENV-010-AI",
       "tier": "B",
       "section": "Foundation Setup",
-      "status": "In Progress",
+      "status": "Completed",
       "owner": "QA Lead",
       "reasons": [
         "High fan-out (4 dependents)",
@@ -423,36 +421,10 @@
       "priority": "medium"
     },
     {
-      "task_id": "ENV-017-AI",
-      "tier": "B",
-      "section": "Foundation Setup",
-      "status": "In Progress",
-      "owner": "Tech Lead",
-      "reasons": [
-        "Has waiver or debt_allowed"
-      ],
-      "dependent_count": 2,
-      "waiver_expiry": "2026-02-28",
-      "priority": "medium"
-    },
-    {
-      "task_id": "ENV-018-AI",
-      "tier": "B",
-      "section": "Foundation Setup",
-      "status": "In Progress",
-      "owner": "PM",
-      "reasons": [
-        "Has waiver or debt_allowed"
-      ],
-      "dependent_count": 1,
-      "waiver_expiry": "2026-01-31",
-      "priority": "medium"
-    },
-    {
       "task_id": "AUTOMATION-001",
       "tier": "B",
       "section": "AI Foundation",
-      "status": "In Progress",
+      "status": "Completed",
       "owner": "AI Specialist",
       "reasons": [
         "Has waiver or debt_allowed"
@@ -465,7 +437,7 @@
       "task_id": "AUTOMATION-002",
       "tier": "B",
       "section": "AI Foundation",
-      "status": "In Progress",
+      "status": "Completed",
       "owner": "DevOps Engineer",
       "reasons": [
         "Has waiver or debt_allowed"
@@ -642,7 +614,7 @@
       "task_id": "IFC-044",
       "tier": "A",
       "section": "Testing",
-      "status": "In Progress",
+      "status": "Completed",
       "owner": "Backend Dev",
       "reasons": [
         "Tier A task - requires explicit validation",
@@ -743,8 +715,6 @@
       "ENV-010-AI",
       "ENV-011-AI",
       "ENV-014-AI",
-      "ENV-017-AI",
-      "ENV-018-AI",
       "AUTOMATION-001",
       "AUTOMATION-002",
       "IFC-160"

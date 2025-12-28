@@ -10,7 +10,15 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { Prisma } from '@prisma/client';
 import { opportunityRouter } from '../opportunity.router';
-import { prismaMock, createTestContext, mockOpportunity, mockAccount, mockContact, mockUser, mockTask } from '../../../test/setup';
+import {
+  prismaMock,
+  createTestContext,
+  mockOpportunity,
+  mockAccount,
+  mockContact,
+  mockUser,
+  mockTask,
+} from '../../../test/setup';
 
 describe('Opportunity Router', () => {
   const caller = opportunityRouter.createCaller(createTestContext());
@@ -134,7 +142,7 @@ describe('Opportunity Router', () => {
   describe('list', () => {
     it('should list opportunities with pagination', async () => {
       const opportunities = [mockOpportunity, { ...mockOpportunity, id: 'opp-2', name: 'Deal 2' }];
-      const opportunitiesWithRelations = opportunities.map(opp => ({
+      const opportunitiesWithRelations = opportunities.map((opp) => ({
         ...opp,
         owner: mockUser,
         account: mockAccount,
@@ -335,7 +343,9 @@ describe('Opportunity Router', () => {
         { value: new Prisma.Decimal(200000), probability: 90, stage: 'NEGOTIATION' as const },
       ];
 
-      prismaMock.opportunity.findMany.mockResolvedValue(forecastData as Awaited<ReturnType<typeof prismaMock.opportunity.findMany>>);
+      prismaMock.opportunity.findMany.mockResolvedValue(
+        forecastData as Awaited<ReturnType<typeof prismaMock.opportunity.findMany>>
+      );
 
       const result = await caller.forecast();
 

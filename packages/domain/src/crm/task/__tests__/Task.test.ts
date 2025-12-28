@@ -8,11 +8,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import {
-  Task,
-  TaskAlreadyCompletedError,
-  TaskAlreadyCancelledError,
-} from '../Task';
+import { Task, TaskAlreadyCompletedError, TaskAlreadyCancelledError } from '../Task';
 import { TaskId } from '../TaskId';
 import {
   TaskStatus,

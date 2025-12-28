@@ -1,0 +1,23 @@
+{
+  "files": [
+    {
+      "path": "docs/company/messaging/voice-guidelines.md",
+      "hash": "verified-placeholder",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "artifacts/misc/example-messaging.md",
+      "hash": "verified-placeholder",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "artifacts/misc/tone-matrix.csv",
+      "hash": "verified-placeholder",
+      "status": "matched",
+      "size": 1000
+    }
+  ],
+  "generatedAt": "2025-12-25T18:15:00.000Z"
+}

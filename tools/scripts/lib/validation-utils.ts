@@ -679,3 +679,262 @@ export function findRepoRoot(startDir: string = process.cwd()): string {
   }
   return startDir;
 }
+
+// ============================================================================
+// Sprint Start Gate
+// ============================================================================
+
+export interface SprintStartGateResult {
+  targetSprint: number;
+  prerequisiteSprints: number[];
+  allPrerequisitesComplete: boolean;
+  incompletePrerequisites: Array<{
+    sprint: number;
+    total: number;
+    completed: number;
+    incomplete: number;
+    incompleteTasks: string[];
+  }>;
+  gateResult: GateResult;
+}
+
+/**
+ * Check if all prior sprints are complete before allowing current sprint to start.
+ * This is the Sprint Start Gate that prevents premature sprint progression.
+ */
+export function checkSprintStartGate(
+  tasks: SprintTask[],
+  targetSprint: number
+): SprintStartGateResult {
+  const prerequisiteSprints = Array.from({ length: targetSprint }, (_, i) => i);
+  const incompletePrerequisites: SprintStartGateResult['incompletePrerequisites'] = [];
+
+  for (const sprint of prerequisiteSprints) {
+    const completion = checkSprintCompletion(tasks, String(sprint));
+    if (!completion.isComplete && completion.totalTasks > 0) {
+      incompletePrerequisites.push({
+        sprint,
+        total: completion.totalTasks,
+        completed: completion.completedTasks,
+        incomplete: completion.incompleteTasks.length,
+        incompleteTasks: completion.incompleteTasks.map((t) => t['Task ID']),
+      });
+    }
+  }
+
+  const allPrerequisitesComplete = incompletePrerequisites.length === 0;
+
+  let gateResult: GateResult;
+  if (targetSprint === 0) {
+    gateResult = {
+      name: 'Sprint Start Gate',
+      severity: 'PASS',
+      message: 'Sprint 0 has no prerequisites',
+    };
+  } else if (allPrerequisitesComplete) {
+    gateResult = {
+      name: 'Sprint Start Gate',
+      severity: 'PASS',
+      message: `All ${prerequisiteSprints.length} prerequisite sprint(s) are complete`,
+      details: prerequisiteSprints.map((s) => `Sprint ${s}: Complete`),
+    };
+  } else {
+    const details: string[] = [];
+    for (const prereq of incompletePrerequisites) {
+      details.push(`Sprint ${prereq.sprint}: ${prereq.incomplete}/${prereq.total} incomplete`);
+      for (const taskId of prereq.incompleteTasks.slice(0, 3)) {
+        details.push(`  - ${taskId}`);
+      }
+      if (prereq.incompleteTasks.length > 3) {
+        details.push(`  ... and ${prereq.incompleteTasks.length - 3} more`);
+      }
+    }
+
+    gateResult = {
+      name: 'Sprint Start Gate',
+      severity: 'WARN', // WARN in default mode, FAIL in strict
+      message: `${incompletePrerequisites.length} prerequisite sprint(s) have incomplete tasks`,
+      details,
+    };
+  }
+
+  return {
+    targetSprint,
+    prerequisiteSprints,
+    allPrerequisitesComplete,
+    incompletePrerequisites,
+    gateResult,
+  };
+}
+
+// ============================================================================
+// Audit Matrix Waiver Enforcement
+// ============================================================================
+
+export interface AuditTool {
+  id: string;
+  tier: number;
+  enabled: boolean;
+  required: boolean;
+  owner: string;
+  command: string | null;
+  requires_env?: string[];
+}
+
+export interface AuditMatrixResult {
+  tools: AuditTool[];
+  disabledButRequired: AuditTool[];
+  missingWaivers: string[];
+  gateResult: GateResult;
+}
+
+/**
+ * Parse audit-matrix.yml and check for disabled but required tools.
+ * Returns a gate result that WARN/FAILs if required tools are disabled without waivers.
+ */
+export function checkAuditMatrixWaivers(repoRoot: string): AuditMatrixResult {
+  const matrixPath = join(repoRoot, 'audit-matrix.yml');
+
+  if (!existsSync(matrixPath)) {
+    return {
+      tools: [],
+      disabledButRequired: [],
+      missingWaivers: [],
+      gateResult: {
+        name: 'Audit Matrix Waivers',
+        severity: 'SKIP',
+        message: 'audit-matrix.yml not found',
+      },
+    };
+  }
+
+  try {
+    const content = readFileSync(matrixPath, 'utf-8');
+
+    // Simple YAML parsing for tool entries
+    const tools: AuditTool[] = [];
+    const lines = content.split(/\r?\n/);
+    let currentTool: Partial<AuditTool> | null = null;
+
+    for (const line of lines) {
+      // Match tool entry start: "  - id: <tool-id>"
+      const idMatch = line.match(/^\s+-\s+id:\s*['"]?([^'"]+)['"]?\s*$/);
+      if (idMatch) {
+        if (currentTool && currentTool.id) {
+          tools.push(currentTool as AuditTool);
+        }
+        currentTool = { id: idMatch[1] };
+        continue;
+      }
+
+      if (!currentTool) continue;
+
+      // Parse tool properties
+      const tierMatch = line.match(/^\s+tier:\s*(\d+)\s*$/);
+      if (tierMatch) {
+        currentTool.tier = parseInt(tierMatch[1], 10);
+        continue;
+      }
+
+      const enabledMatch = line.match(/^\s+enabled:\s*(true|false)\s*$/);
+      if (enabledMatch) {
+        currentTool.enabled = enabledMatch[1] === 'true';
+        continue;
+      }
+
+      const requiredMatch = line.match(/^\s+required:\s*(true|false)\s*$/);
+      if (requiredMatch) {
+        currentTool.required = requiredMatch[1] === 'true';
+        continue;
+      }
+
+      const ownerMatch = line.match(/^\s+owner:\s*['"]?([^'"]+)['"]?\s*$/);
+      if (ownerMatch) {
+        currentTool.owner = ownerMatch[1];
+        continue;
+      }
+
+      const commandMatch = line.match(/^\s+command:\s*(.+)$/);
+      if (commandMatch) {
+        const cmd = commandMatch[1].trim();
+        currentTool.command = cmd === 'null' ? null : cmd.replace(/^['"]|['"]$/g, '');
+        continue;
+      }
+    }
+
+    // Push last tool
+    if (currentTool && currentTool.id) {
+      tools.push(currentTool as AuditTool);
+    }
+
+    // Find Tier 1 tools that are disabled but required
+    const disabledButRequired = tools.filter(
+      (t) => t.tier === 1 && t.required === true && t.enabled === false
+    );
+
+    // Check for waiver files (waiver records would be in a waivers directory)
+    const waiverDir = join(repoRoot, 'tools/audit/waivers');
+    const existingWaivers: string[] = [];
+
+    if (existsSync(waiverDir)) {
+      try {
+        const waiverFiles = require('fs').readdirSync(waiverDir) as string[];
+        existingWaivers.push(
+          ...waiverFiles.map((f: string) => f.replace(/\.(json|yaml|yml)$/, ''))
+        );
+      } catch {
+        // Ignore errors reading waiver directory
+      }
+    }
+
+    const missingWaivers = disabledButRequired
+      .filter((t) => !existingWaivers.includes(t.id))
+      .map((t) => t.id);
+
+    let gateResult: GateResult;
+    if (disabledButRequired.length === 0) {
+      gateResult = {
+        name: 'Audit Matrix Waivers',
+        severity: 'PASS',
+        message: 'All required Tier-1 tools are enabled',
+      };
+    } else if (missingWaivers.length === 0) {
+      gateResult = {
+        name: 'Audit Matrix Waivers',
+        severity: 'PASS',
+        message: `${disabledButRequired.length} disabled required tool(s) have valid waivers`,
+        details: disabledButRequired.map((t) => `${t.id}: waiver exists`),
+      };
+    } else {
+      gateResult = {
+        name: 'Audit Matrix Waivers',
+        severity: 'WARN', // WARN in default mode, FAIL in strict
+        message: `${missingWaivers.length} required Tier-1 tool(s) are disabled without waivers`,
+        details: [
+          ...missingWaivers.map((id) => `${id}: WAIVER REQUIRED`),
+          '',
+          'To resolve: Either enable the tool or create a waiver file at:',
+          `  tools/audit/waivers/<tool-id>.json`,
+        ],
+      };
+    }
+
+    return {
+      tools,
+      disabledButRequired,
+      missingWaivers,
+      gateResult,
+    };
+  } catch (error) {
+    return {
+      tools: [],
+      disabledButRequired: [],
+      missingWaivers: [],
+      gateResult: {
+        name: 'Audit Matrix Waivers',
+        severity: 'WARN',
+        message: `Failed to parse audit-matrix.yml: ${error instanceof Error ? error.message : String(error)}`,
+      },
+    };
+  }
+}

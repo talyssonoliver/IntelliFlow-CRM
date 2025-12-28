@@ -13,7 +13,9 @@ import { opportunityRouter } from './modules/opportunity/opportunity.router';
 import { taskRouter } from './modules/task/task.router';
 import { healthRouter } from './modules/misc/health.router';
 import { systemRouter } from './modules/misc/system.router';
+import { timelineRouter } from './modules/misc/timeline.router';
 import subscriptionRouter from './shared/subscription-demo';
+import { appointmentsRouter } from './modules/legal/appointments.router';
 
 /**
  * Main application router
@@ -48,9 +50,13 @@ export const appRouter = createTRPCRouter({
   opportunity: opportunityRouter,
   task: taskRouter,
 
+  // Legal domain
+  appointments: appointmentsRouter,
+
   // System utilities
   health: healthRouter,
   system: systemRouter,
+  timeline: timelineRouter,
 
   // Real-time subscriptions
   subscriptions: subscriptionRouter,

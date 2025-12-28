@@ -188,9 +188,7 @@ describe('DomainEvent', () => {
       }
 
       // Sort by occurredAt
-      const sorted = [...events].sort(
-        (a, b) => a.occurredAt.getTime() - b.occurredAt.getTime()
-      );
+      const sorted = [...events].sort((a, b) => a.occurredAt.getTime() - b.occurredAt.getTime());
 
       // Should maintain creation order (or be very close due to fast execution)
       sorted.forEach((event, index) => {

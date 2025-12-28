@@ -187,7 +187,7 @@ const outPath = path.join(outDir, 'new-issues.json');
 
 **Problem:**
 - GitHub Action writes to root by default
-- Not using artifacts directory structure
+- Not using artifacts directory structure 
 
 **Proposed Fix:**
 ```yaml
@@ -250,7 +250,7 @@ const outPath = path.join(outDir, 'new-issues.json');
 
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync } from 'node:fs'; 
 
 // ============================================================================
 // Environment Configuration

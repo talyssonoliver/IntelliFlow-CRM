@@ -6,7 +6,7 @@
   "owner": "Sales + CEO",
   "dependencies": {
     "required": ["SALES-001", "GTM-002"],
-    "verified_at": "2025-12-22T21:05:00Z",
+    "verified_at": "2025-12-28T23:24:52.881Z",
     "all_satisfied": true,
     "notes": "Commercial narrative established, qualification framework (BANT) documented"
   },
@@ -41,22 +41,10 @@
       "docs/sales/outreach-sequences.md"
     ],
     "created": [
-      {
-        "path": "docs/sales/sales-motion-playbook.md",
-        "sha256": "c23387b8f777edec759fe5e4c80227615369778132a687ec11fa30f7bd48c0a3"
-      },
-      {
-        "path": "docs/sales/discovery-script.md",
-        "sha256": "5d385bdf0c3d71ac19989bea7de2599dce35810585812306a597f44d2b362af5"
-      },
-      {
-        "path": "docs/sales/demo-script.md",
-        "sha256": "0c2027c2bddb29dfc153c680da315b7c4e4f494914f0e6b10ee342af523e0bc4"
-      },
-      {
-        "path": "docs/sales/outreach-sequences.md",
-        "sha256": "e9da801414366a1506904a692d0ca04d46df5d3a8fbc3b6788c826fe816f44be"
-      }
+      "docs/sales/sales-motion-playbook.md",
+      "docs/sales/discovery-script.md",
+      "docs/sales/demo-script.md",
+      "docs/sales/outreach-sequences.md"
     ],
     "missing": []
   },
@@ -160,5 +148,6 @@
   "waivers": [],
   "notes": "Complete sales motion playbook with BANT qualification framework. Three outreach sequences defined: Email (6-touch cold prospect), LinkedIn (warm prospect nurture), Demo Fast Track (inbound high-intent). Discovery and demo scripts provide end-to-end coverage. Handoff policies for Marketing-to-Sales and Sales-to-Implementation. Compliance notes for CAN-SPAM, GDPR, and platform limits included.",
   "completed_at": "2025-12-22T21:15:00Z",
-  "started_at": "2025-12-22T21:05:00Z"
+  "started_at": "2025-12-22T21:05:00Z",
+  "dependencies_resolved": ["SALES-001", "GTM-002"]
 }

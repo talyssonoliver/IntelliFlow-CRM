@@ -19,7 +19,6 @@ import {
   convertLeadSchema,
   idSchema,
 } from '@intelliflow/validators/lead';
-import { LeadStatus } from '@intelliflow/db';
 
 export const leadRouter = createTRPCRouter({
   /**

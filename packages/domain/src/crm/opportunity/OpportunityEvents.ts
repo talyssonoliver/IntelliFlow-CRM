@@ -182,3 +182,24 @@ export class OpportunityCloseDateChangedEvent extends DomainEvent {
     };
   }
 }
+
+/**
+ * Event: Lost opportunity was reopened
+ */
+export class OpportunityReopenedEvent extends DomainEvent {
+  readonly eventType = 'opportunity.reopened';
+
+  constructor(
+    public readonly opportunityId: OpportunityId,
+    public readonly reopenedBy: string
+  ) {
+    super();
+  }
+
+  toPayload(): Record<string, unknown> {
+    return {
+      opportunityId: this.opportunityId.value,
+      reopenedBy: this.reopenedBy,
+    };
+  }
+}

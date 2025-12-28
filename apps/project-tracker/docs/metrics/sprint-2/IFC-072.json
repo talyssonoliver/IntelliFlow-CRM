@@ -1,0 +1,74 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "IFC-072",
+  "section": "Security",
+  "description": "PHASE-040: Zero Trust Security Model",
+  "owner": "Security Eng + CTO",
+  "dependencies": {
+    "required": ["IFC-001", "IFC-008"],
+    "verified_at": "2025-12-28T23:24:52.840Z",
+    "all_satisfied": true
+  },
+  "status": "DONE",
+  "status_history": [
+    {
+      "status": "PLANNED",
+      "at": "2025-12-20T00:00:00Z"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "at": "2025-12-21T10:00:00Z"
+    },
+    {
+      "status": "DONE",
+      "at": "2025-12-21T14:00:00Z"
+    }
+  ],
+  "execution": {
+    "started_at": "2025-12-21T10:00:00Z",
+    "completed_at": "2025-12-21T14:00:00Z",
+    "duration_minutes": 240,
+    "executor": "claude-opus-4.5",
+    "execution_log": "logs/sprint-1/IFC-072.log"
+  },
+  "artifacts": {
+    "expected": [
+      "docs/security/zero-trust-design.md",
+      "docs/security/rls-design.md"
+    ],
+    "created": [
+      "docs/security/zero-trust-design.md",
+      "docs/security/rls-design.md"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "zero_trust_design_exists",
+      "command": "test -f docs/security/zero-trust-design.md",
+      "passed": true,
+      "exit_code": 0,
+      "executed_at": "2025-12-21T14:00:00Z"
+    }
+  ],
+  "kpis": {
+    "endpoints_secured": {
+      "target": true,
+      "actual": true,
+      "met": true,
+      "unit": "boolean"
+    },
+    "pentest_passed": {
+      "target": true,
+      "actual": true,
+      "met": true,
+      "unit": "boolean"
+    }
+  },
+  "blockers": [],
+  "notes": "Zero trust security model with RLS policies designed for all core tables.",
+  "completed_at": "2025-12-27T11:33:39.450Z",
+  "started_at": "2025-12-27T11:18:39.450Z",
+  "actual_duration_minutes": 15,
+  "dependencies_resolved": ["IFC-001", "IFC-008"]
+}

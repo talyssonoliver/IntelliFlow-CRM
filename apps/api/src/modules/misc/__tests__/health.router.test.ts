@@ -69,7 +69,7 @@ describe('Health Router', () => {
 
     it('should measure database latency', async () => {
       vi.mocked(prismaMock.$queryRaw).mockImplementation((async () => {
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
         return [{ '?column?': 1 }];
       }) as unknown as typeof prismaMock.$queryRaw);
 
@@ -82,15 +82,13 @@ describe('Health Router', () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       vi.mocked(prismaMock.$queryRaw).mockImplementation((async () => {
-        await new Promise(resolve => setTimeout(resolve, 25));
+        await new Promise((resolve) => setTimeout(resolve, 25));
         return [{ '?column?': 1 }];
       }) as unknown as typeof prismaMock.$queryRaw);
 
       await caller.check();
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Database latency high')
-      );
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Database latency high'));
 
       consoleSpy.mockRestore();
     });

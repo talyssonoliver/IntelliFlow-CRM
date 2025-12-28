@@ -17,9 +17,7 @@ export default defineConfig({
     environment: 'node',
     passWithNoTests: true,
     // Use jsdom for UI component tests
-    environmentMatchGlobs: [
-      ['packages/ui/**/*.{test,spec}.{ts,tsx}', 'jsdom'],
-    ],
+    environmentMatchGlobs: [['packages/ui/**/*.{test,spec}.{ts,tsx}', 'jsdom']],
     // Setup files for UI tests (jest-dom matchers)
     setupFiles: ['./packages/ui/__tests__/setup.ts'],
 
@@ -113,6 +111,11 @@ export default defineConfig({
         'packages/application/src/errors/**',
         // LLM integration chains (require external services)
         'apps/ai-worker/src/chains/**',
+        // External service integrations
+        'apps/api/src/lib/supabase.ts',
+        'apps/api/src/tracing/otel.ts',
+        // Stub/placeholder files
+        'apps/api/src/modules/legal/**',
       ],
       // TDD Enforcement: Build FAILS if coverage below thresholds
       // Per CLAUDE.md: Domain >95%, Application >90%, Overall >90%

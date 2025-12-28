@@ -2,11 +2,11 @@
   "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-085",
   "section": "AI/ML",
-  "description": "Ollama Local Development",
+  "description": "PHASE-040: Ollama Local Development",
   "owner": "AI Specialist + DevOps",
   "dependencies": {
     "required": ["IFC-005"],
-    "verified_at": "2025-12-22T20:40:00Z",
+    "verified_at": "2025-12-28T23:24:52.848Z",
     "all_satisfied": true,
     "notes": "IFC-005 LangChain AI Scoring completed - scoring chain supports provider switching"
   },
@@ -41,30 +41,11 @@
       "artifacts/benchmarks/accuracy-benchmarks.json"
     ],
     "created": [
-      {
-        "path": "artifacts/misc/ollama-setup.sh",
-        "sha256": "31da443cec72688b9f08cccda48743e26ab9afc9692be4c76651771b4f55aaa4"
-      },
-      {
-        "path": "artifacts/misc/model-comparison.csv",
-        "sha256": "39f48e8477d5712e8c26ceef00e5499ad6d1f6568304f2adb6bf4e54ecaeee99"
-      },
-      {
-        "path": "artifacts/reports/cost-savings-report.json",
-        "sha256": "edaec29fe8c31556c83ff6c59aa4b5680afd6034d146d629c4471279f11221dc",
-        "notes": "Created as JSON instead of xlsx for programmatic access"
-      },
-      {
-        "path": "artifacts/benchmarks/accuracy-benchmarks.json",
-        "sha256": "81001a5a690c242c938fa133fb626ff64e215bf3e6092f4f7b75afc34a3aead9"
-      },
-      {
-        "path": "apps/ai-worker/src/config/ai.config.ts",
-        "sha256": "1f03e2c9194622dd1133253daacc0787db9244d9d388cbe9790dd85c8c6b7f40",
-        "notes": "Ollama provider configuration with environment variable support"
-      }
+      "artifacts/misc/ollama-setup.sh",
+      "artifacts/misc/model-comparison.csv",
+      "artifacts/benchmarks/accuracy-benchmarks.json"
     ],
-    "missing": [],
+    "missing": ["artifacts/reports/cost-savings-report.xlsx"],
     "missing_reason": "xlsx replaced with json for better tooling integration"
   },
   "validations": [
@@ -175,5 +156,6 @@
   ],
   "notes": "Ollama local development setup completed. Configuration in ai.config.ts supports provider switching via AI_PROVIDER env var. Setup script automates Docker container creation and model pulling. Model comparison shows 90% cost savings with acceptable accuracy trade-off (78-88% vs 95%). Benchmarks document latency and accuracy across providers.",
   "completed_at": "2025-12-22T20:50:00Z",
-  "started_at": "2025-12-22T20:40:00Z"
+  "started_at": "2025-12-22T20:40:00Z",
+  "dependencies_resolved": ["IFC-005"]
 }

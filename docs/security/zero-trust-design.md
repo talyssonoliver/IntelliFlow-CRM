@@ -1,12 +1,14 @@
 # Zero Trust Security Design
 
-**Status:** Implemented (Sprint 1)
-**Related ADR:** [ADR-009: Zero Trust Security](../planning/adr/ADR-009-zero-trust-security.md)
+**Status:** Implemented (Sprint 1) **Related ADR:**
+[ADR-009: Zero Trust Security](../planning/adr/ADR-009-zero-trust-security.md)
 **Task:** IFC-072
 
 ## Overview
 
-IntelliFlow CRM implements a zero trust security model following the principle: "Never trust, always verify." This design ensures that even if one layer is compromised, data remains protected through defense in depth.
+IntelliFlow CRM implements a zero trust security model following the principle:
+"Never trust, always verify." This design ensures that even if one layer is
+compromised, data remains protected through defense in depth.
 
 ## Architecture
 
@@ -64,7 +66,11 @@ export const authMiddleware = t.middleware(async ({ ctx, next }) => {
 
 - **Route-level checks**: Permission decorators on procedures
 - **Input validation**: Zod schemas prevent injection
-- **Rate limiting**: Upstash Redis-based limits
+- **Rate limiting**: Tiered limits with DDoS protection (IFC-114)
+  - Public: 100 req/min
+  - Authenticated: 1000 req/min
+  - AI endpoints: 10 req/min
+  - Auth endpoints: 5 req/min (brute force protection)
 
 ```typescript
 // Permission check example
@@ -88,12 +94,12 @@ See [RLS Design](./rls-design.md) for detailed policies.
 
 ## Trust Boundaries
 
-| Boundary | Trust Level | Verification |
-|----------|-------------|--------------|
-| Browser → API | Zero trust | JWT validation |
-| API → Database | Verified identity | RLS policies |
-| Service → Service | mTLS (future) | Certificate validation |
-| External API | Zero trust | API key + request signing |
+| Boundary          | Trust Level       | Verification              |
+| ----------------- | ----------------- | ------------------------- |
+| Browser → API     | Zero trust        | JWT validation            |
+| API → Database    | Verified identity | RLS policies              |
+| Service → Service | mTLS (future)     | Certificate validation    |
+| External API      | Zero trust        | API key + request signing |
 
 ## Security Controls
 

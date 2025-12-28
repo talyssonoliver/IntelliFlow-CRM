@@ -6,14 +6,23 @@
   "owner": "DevOps",
   "dependencies": {
     "required": ["IFC-001"],
-    "verified_at": "2025-12-21T12:00:00Z",
+    "verified_at": "2025-12-28T23:24:52.673Z",
     "all_satisfied": true
   },
   "status": "DONE",
   "status_history": [
-    { "status": "PLANNED", "at": "2025-12-20T00:00:00Z" },
-    { "status": "IN_PROGRESS", "at": "2025-12-21T12:00:00Z" },
-    { "status": "DONE", "at": "2025-12-21T14:00:00Z" }
+    {
+      "status": "PLANNED",
+      "at": "2025-12-20T00:00:00Z"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "at": "2025-12-21T12:00:00Z"
+    },
+    {
+      "status": "DONE",
+      "at": "2025-12-21T14:00:00Z"
+    }
   ],
   "execution": {
     "started_at": "2025-12-21T12:00:00Z",
@@ -24,10 +33,7 @@
   },
   "artifacts": {
     "expected": ["infra/terraform/*", "infra/terraform/main.tf"],
-    "created": [
-      "infra/terraform/README.md",
-      "infra/terraform/modules/supabase/README.md"
-    ],
+    "created": ["infra/terraform/main.tf"],
     "missing": []
   },
   "validations": [
@@ -54,5 +60,9 @@
     }
   },
   "blockers": [],
-  "notes": "Terraform IaC foundation with Supabase module and drift detection."
+  "notes": "Terraform IaC foundation with Supabase module and drift detection.",
+  "completed_at": "2025-12-27T11:33:39.039Z",
+  "started_at": "2025-12-27T11:18:39.039Z",
+  "actual_duration_minutes": 15,
+  "dependencies_resolved": ["IFC-001"]
 }

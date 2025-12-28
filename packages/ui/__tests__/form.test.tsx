@@ -552,9 +552,7 @@ describe('Form', () => {
                   <FormControl>
                     <input data-testid="test-input" />
                   </FormControl>
-                  <FormDescription data-testid="description">
-                    This is a description
-                  </FormDescription>
+                  <FormDescription data-testid="description">This is a description</FormDescription>
                 </FormItem>
               )}
             />
@@ -1072,7 +1070,7 @@ describe('Form', () => {
       await user.click(submitButton);
 
       // Wait a bit to ensure no submission occurred
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       expect(onSubmit).not.toHaveBeenCalled();
       expect(screen.getByText('Email is required')).toBeInTheDocument();

@@ -13,12 +13,7 @@ import { TaskId } from '../TaskId';
 describe('TaskCreatedEvent', () => {
   it('should create event with correct payload', () => {
     const taskId = TaskId.generate();
-    const event = new TaskCreatedEvent(
-      taskId,
-      'Follow up with lead',
-      'HIGH',
-      'owner-123'
-    );
+    const event = new TaskCreatedEvent(taskId, 'Follow up with lead', 'HIGH', 'owner-123');
 
     expect(event.eventType).toBe('task.created');
     expect(event.taskId).toBe(taskId);
@@ -30,12 +25,7 @@ describe('TaskCreatedEvent', () => {
 
   it('should serialize to payload correctly', () => {
     const taskId = TaskId.generate();
-    const event = new TaskCreatedEvent(
-      taskId,
-      'Follow up with lead',
-      'HIGH',
-      'owner-123'
-    );
+    const event = new TaskCreatedEvent(taskId, 'Follow up with lead', 'HIGH', 'owner-123');
     const payload = event.toPayload();
 
     expect(payload.taskId).toBe(taskId.value);
@@ -48,12 +38,7 @@ describe('TaskCreatedEvent', () => {
 describe('TaskStatusChangedEvent', () => {
   it('should create event with status change', () => {
     const taskId = TaskId.generate();
-    const event = new TaskStatusChangedEvent(
-      taskId,
-      'PENDING',
-      'IN_PROGRESS',
-      'user-123'
-    );
+    const event = new TaskStatusChangedEvent(taskId, 'PENDING', 'IN_PROGRESS', 'user-123');
 
     expect(event.eventType).toBe('task.status_changed');
     expect(event.taskId).toBe(taskId);
@@ -65,12 +50,7 @@ describe('TaskStatusChangedEvent', () => {
 
   it('should serialize to payload correctly', () => {
     const taskId = TaskId.generate();
-    const event = new TaskStatusChangedEvent(
-      taskId,
-      'PENDING',
-      'IN_PROGRESS',
-      'user-123'
-    );
+    const event = new TaskStatusChangedEvent(taskId, 'PENDING', 'IN_PROGRESS', 'user-123');
     const payload = event.toPayload();
 
     expect(payload.taskId).toBe(taskId.value);
@@ -104,11 +84,7 @@ describe('TaskCompletedEvent', () => {
 describe('TaskCancelledEvent', () => {
   it('should create event when task is cancelled', () => {
     const taskId = TaskId.generate();
-    const event = new TaskCancelledEvent(
-      taskId,
-      'No longer needed',
-      'user-123'
-    );
+    const event = new TaskCancelledEvent(taskId, 'No longer needed', 'user-123');
 
     expect(event.eventType).toBe('task.cancelled');
     expect(event.taskId).toBe(taskId);
@@ -119,11 +95,7 @@ describe('TaskCancelledEvent', () => {
 
   it('should serialize to payload correctly', () => {
     const taskId = TaskId.generate();
-    const event = new TaskCancelledEvent(
-      taskId,
-      'No longer needed',
-      'user-123'
-    );
+    const event = new TaskCancelledEvent(taskId, 'No longer needed', 'user-123');
     const payload = event.toPayload();
 
     expect(payload.taskId).toBe(taskId.value);
@@ -135,12 +107,7 @@ describe('TaskCancelledEvent', () => {
 describe('TaskPriorityChangedEvent', () => {
   it('should create event with priority change', () => {
     const taskId = TaskId.generate();
-    const event = new TaskPriorityChangedEvent(
-      taskId,
-      'MEDIUM',
-      'HIGH',
-      'user-123'
-    );
+    const event = new TaskPriorityChangedEvent(taskId, 'MEDIUM', 'HIGH', 'user-123');
 
     expect(event.eventType).toBe('task.priority_changed');
     expect(event.taskId).toBe(taskId);
@@ -152,12 +119,7 @@ describe('TaskPriorityChangedEvent', () => {
 
   it('should serialize to payload correctly', () => {
     const taskId = TaskId.generate();
-    const event = new TaskPriorityChangedEvent(
-      taskId,
-      'MEDIUM',
-      'HIGH',
-      'user-123'
-    );
+    const event = new TaskPriorityChangedEvent(taskId, 'MEDIUM', 'HIGH', 'user-123');
     const payload = event.toPayload();
 
     expect(payload.taskId).toBe(taskId.value);
@@ -171,12 +133,7 @@ describe('TaskDueDateChangedEvent', () => {
   it('should create event with initial due date (no previous)', () => {
     const taskId = TaskId.generate();
     const newDate = new Date('2025-12-31');
-    const event = new TaskDueDateChangedEvent(
-      taskId,
-      null,
-      newDate,
-      'user-123'
-    );
+    const event = new TaskDueDateChangedEvent(taskId, null, newDate, 'user-123');
 
     expect(event.eventType).toBe('task.due_date_changed');
     expect(event.taskId).toBe(taskId);
@@ -190,12 +147,7 @@ describe('TaskDueDateChangedEvent', () => {
     const taskId = TaskId.generate();
     const previousDate = new Date('2025-12-31');
     const newDate = new Date('2026-01-15');
-    const event = new TaskDueDateChangedEvent(
-      taskId,
-      previousDate,
-      newDate,
-      'user-123'
-    );
+    const event = new TaskDueDateChangedEvent(taskId, previousDate, newDate, 'user-123');
 
     expect(event.previousDueDate).toBe(previousDate);
     expect(event.newDueDate).toBe(newDate);
@@ -204,12 +156,7 @@ describe('TaskDueDateChangedEvent', () => {
   it('should serialize to payload correctly without previous date', () => {
     const taskId = TaskId.generate();
     const newDate = new Date('2025-12-31');
-    const event = new TaskDueDateChangedEvent(
-      taskId,
-      null,
-      newDate,
-      'user-123'
-    );
+    const event = new TaskDueDateChangedEvent(taskId, null, newDate, 'user-123');
     const payload = event.toPayload();
 
     expect(payload.taskId).toBe(taskId.value);
@@ -222,12 +169,7 @@ describe('TaskDueDateChangedEvent', () => {
     const taskId = TaskId.generate();
     const previousDate = new Date('2025-12-31');
     const newDate = new Date('2026-01-15');
-    const event = new TaskDueDateChangedEvent(
-      taskId,
-      previousDate,
-      newDate,
-      'user-123'
-    );
+    const event = new TaskDueDateChangedEvent(taskId, previousDate, newDate, 'user-123');
     const payload = event.toPayload();
 
     expect(payload.previousDueDate).toBe(previousDate.toISOString());
@@ -238,12 +180,7 @@ describe('TaskDueDateChangedEvent', () => {
 describe('TaskAssignedEvent', () => {
   it('should create event when task is assigned to a lead', () => {
     const taskId = TaskId.generate();
-    const event = new TaskAssignedEvent(
-      taskId,
-      'lead',
-      'lead-123',
-      'user-456'
-    );
+    const event = new TaskAssignedEvent(taskId, 'lead', 'lead-123', 'user-456');
 
     expect(event.eventType).toBe('task.assigned');
     expect(event.taskId).toBe(taskId);
@@ -255,12 +192,7 @@ describe('TaskAssignedEvent', () => {
 
   it('should create event when task is assigned to a contact', () => {
     const taskId = TaskId.generate();
-    const event = new TaskAssignedEvent(
-      taskId,
-      'contact',
-      'contact-123',
-      'user-456'
-    );
+    const event = new TaskAssignedEvent(taskId, 'contact', 'contact-123', 'user-456');
 
     expect(event.entityType).toBe('contact');
     expect(event.entityId).toBe('contact-123');
@@ -268,12 +200,7 @@ describe('TaskAssignedEvent', () => {
 
   it('should create event when task is assigned to an opportunity', () => {
     const taskId = TaskId.generate();
-    const event = new TaskAssignedEvent(
-      taskId,
-      'opportunity',
-      'opportunity-123',
-      'user-456'
-    );
+    const event = new TaskAssignedEvent(taskId, 'opportunity', 'opportunity-123', 'user-456');
 
     expect(event.entityType).toBe('opportunity');
     expect(event.entityId).toBe('opportunity-123');
@@ -281,12 +208,7 @@ describe('TaskAssignedEvent', () => {
 
   it('should serialize to payload correctly', () => {
     const taskId = TaskId.generate();
-    const event = new TaskAssignedEvent(
-      taskId,
-      'lead',
-      'lead-123',
-      'user-456'
-    );
+    const event = new TaskAssignedEvent(taskId, 'lead', 'lead-123', 'user-456');
     const payload = event.toPayload();
 
     expect(payload.taskId).toBe(taskId.value);

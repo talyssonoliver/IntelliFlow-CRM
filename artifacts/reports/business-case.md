@@ -55,7 +55,7 @@ IntelliFlow CRM is an AI-powered Customer Relationship Management system designe
 ### Technology Stack
 
 ```
-Frontend: Next.js 15+ (App Router)
+Frontend: Next.js 16+ (App Router)
 Backend: tRPC (type-safe APIs)
 Database: Supabase (PostgreSQL + pgvector)
 AI: LangChain + OpenAI/Ollama

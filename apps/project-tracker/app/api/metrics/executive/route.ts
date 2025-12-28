@@ -3,6 +3,9 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { parse } from 'csv-parse/sync';
 import { access, readdir } from 'node:fs/promises';
+import { normalizeStatus, STATUS_GROUPS } from '@/lib/csv-parser';
+import { PATHS } from '@/lib/paths';
+import { NO_CACHE_HEADERS } from '@/lib/api-types';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -19,11 +22,11 @@ interface CsvTask {
   KPIs: string;
 }
 
-// Detail types for expandable metrics
+// Detail types for expandable metrics - using snake_case for API consistency
 interface MismatchDetail {
-  taskId: string;
+  task_id: string;
   description: string;
-  missingArtifacts: string[];
+  missing_artifacts: string[];
 }
 
 interface UntrackedArtifactDetail {
@@ -32,33 +35,43 @@ interface UntrackedArtifactDetail {
 }
 
 interface ForwardDependencyDetail {
-  taskId: string;
-  taskDescription: string;
-  taskSprint: number;
-  dependsOn: string;
-  depSprint: number;
+  task_id: string;
+  task_description: string;
+  task_sprint: number;
+  depends_on: string;
+  dep_sprint: number;
 }
 
 interface BottleneckDetail {
   sprint: number;
-  dependencyCount: number;
-  blockedTasks: string[];
+  dependency_count: number;
+  blocked_tasks: string[];
+}
+
+interface TaskRequiringRevert {
+  task_id: string;
+  description: string;
+  current_status: string;
+  missing_artifacts: string[];
+  missing_evidence: string[];
 }
 
 interface ExecutiveMetrics {
-  totalTasks: number;
+  total_tasks: number;
   completed: { count: number; percentage: number };
-  inProgress: { count: number; percentage: number };
+  in_progress: { count: number; percentage: number };
   backlog: { count: number; percentage: number };
-  planVsCodeMismatches: number;
-  planVsCodeMismatchesDetails: MismatchDetail[];
-  untrackedCodeArtifacts: number;
-  untrackedCodeArtifactsDetails: UntrackedArtifactDetail[];
-  forwardDependencies: number;
-  forwardDependenciesDetails: ForwardDependencyDetail[];
-  sprintBottlenecks: string;
-  sprintBottlenecksDetails: BottleneckDetail[];
-  generatedAt: string;
+  plan_vs_code_mismatches: number;
+  plan_vs_code_mismatches_details: MismatchDetail[];
+  tasks_requiring_revert: number;
+  tasks_requiring_revert_details: TaskRequiringRevert[];
+  untracked_code_artifacts: number;
+  untracked_code_artifacts_details: UntrackedArtifactDetail[];
+  forward_dependencies: number;
+  forward_dependencies_details: ForwardDependencyDetail[];
+  sprint_bottlenecks: string;
+  sprint_bottlenecks_details: BottleneckDetail[];
+  generated_at: string;
 }
 
 function parseDependencies(deps: string): string[] {
@@ -71,14 +84,60 @@ function parseDependencies(deps: string): string[] {
     .filter((d) => d.length > 0 && d !== '-');
 }
 
-function parseArtifacts(artifacts: string): string[] {
-  if (!artifacts || artifacts.trim() === '' || artifacts === '-' || artifacts === 'N/A') {
-    return [];
+// Prefixes that represent file paths to validate
+const PATH_PREFIXES = ['ARTIFACT:', 'EVIDENCE:'] as const;
+// Prefixes that are metadata/commands, not file paths
+const METADATA_PREFIXES = ['VALIDATE:', 'GATE:', 'AUDIT:', 'FILE:', 'ENV:', 'POLICY:'] as const;
+
+interface ParsedArtifacts {
+  artifacts: string[]; // ARTIFACT: paths (code/config files)
+  evidence: string[]; // EVIDENCE: paths (attestation files)
+  raw: string[]; // All items for backward compatibility
+}
+
+function parseArtifactsWithPrefixes(artifactsStr: string): ParsedArtifacts {
+  const result: ParsedArtifacts = { artifacts: [], evidence: [], raw: [] };
+
+  if (
+    !artifactsStr ||
+    artifactsStr.trim() === '' ||
+    artifactsStr === '-' ||
+    artifactsStr === 'N/A'
+  ) {
+    return result;
   }
-  return artifacts
+
+  const items = artifactsStr
     .split(/[,;\n]+/)
     .map((a) => a.trim())
     .filter((a) => a.length > 0 && a !== '-');
+
+  for (const item of items) {
+    result.raw.push(item);
+
+    // Check for path prefixes (ARTIFACT:, EVIDENCE:)
+    const pathPrefix = PATH_PREFIXES.find((prefix) => item.startsWith(prefix));
+    if (pathPrefix) {
+      const path = item.slice(pathPrefix.length).trim();
+      if (path) {
+        if (pathPrefix === 'ARTIFACT:') {
+          result.artifacts.push(path);
+        } else if (pathPrefix === 'EVIDENCE:') {
+          result.evidence.push(path);
+        }
+      }
+    }
+    // Skip metadata prefixes (VALIDATE:, GATE:, AUDIT:, etc.)
+    else if (METADATA_PREFIXES.some((prefix) => item.startsWith(prefix))) {
+      // Intentionally skip - these are not file paths
+    }
+    // Legacy: items without prefix are treated as artifact paths
+    else {
+      result.artifacts.push(item);
+    }
+  }
+
+  return result;
 }
 
 function getSprintNumber(sprint: string): number | null {
@@ -156,28 +215,43 @@ async function getUntrackedArtifactsWithDetails(
   return { count: details.length, details };
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const csvPath = join(process.cwd(), 'docs', 'metrics', '_global', 'Sprint_plan.csv');
+    const { searchParams } = new URL(request.url);
+    const sprintParam = searchParams.get('sprint');
+
+    const csvPath = PATHS.sprintTracking.SPRINT_PLAN_CSV;
     const csvContent = await readFile(csvPath, 'utf-8');
-    const tasks = parse(csvContent, {
+    let tasks = parse(csvContent, {
       columns: true,
       skip_empty_lines: true,
       relax_quotes: true,
       relax_column_count: true,
     }) as CsvTask[];
 
-    // Count statuses
+    // Filter by sprint if specified (not 'all')
+    if (sprintParam && sprintParam !== 'all') {
+      if (sprintParam === 'continuous') {
+        tasks = tasks.filter((t) => t['Target Sprint']?.toLowerCase() === 'continuous');
+      } else {
+        const sprintNum = parseInt(sprintParam, 10);
+        if (!isNaN(sprintNum)) {
+          tasks = tasks.filter((t) => getSprintNumber(t['Target Sprint']) === sprintNum);
+        }
+      }
+    }
+
+    // Count statuses using shared normalizeStatus
     let completed = 0;
     let inProgress = 0;
     let backlog = 0;
     const total = tasks.length;
 
     for (const task of tasks) {
-      const status = (task.Status || '').toLowerCase().trim();
-      if (status === 'completed' || status === 'done') {
+      const status = normalizeStatus(task.Status || '');
+      if (STATUS_GROUPS.completed.includes(status)) {
         completed++;
-      } else if (status === 'in progress' || status === 'in_progress' || status === 'validating') {
+      } else if (STATUS_GROUPS.active.includes(status)) {
         inProgress++;
       } else {
         backlog++;
@@ -205,11 +279,11 @@ export async function GET() {
         const depSprint = taskSprintMap.get(depId);
         if (depSprint !== null && depSprint !== undefined && depSprint > taskSprint) {
           forwardDepsDetails.push({
-            taskId: task['Task ID'],
-            taskDescription: task.Description?.substring(0, 50) + '...' || '',
-            taskSprint,
-            dependsOn: depId,
-            depSprint,
+            task_id: task['Task ID'],
+            task_description: task.Description?.substring(0, 50) + '...' || '',
+            task_sprint: taskSprint,
+            depends_on: depId,
+            dep_sprint: depSprint,
           });
         }
       }
@@ -217,31 +291,59 @@ export async function GET() {
 
     // Calculate plan-vs-code mismatches with details
     const mismatchDetails: MismatchDetail[] = [];
+    const tasksRequiringRevertDetails: TaskRequiringRevert[] = [];
     const trackedArtifacts = new Set<string>();
 
     for (const task of tasks) {
-      const artifacts = parseArtifacts(task['Artifacts To Track']);
+      const parsed = parseArtifactsWithPrefixes(task['Artifacts To Track']);
       const status = (task.Status || '').toLowerCase().trim();
       const isCompleted = status === 'completed' || status === 'done';
 
-      for (const artifact of artifacts) {
+      // Track all artifact paths for untracked detection
+      for (const artifact of parsed.artifacts) {
         trackedArtifacts.add(artifact);
       }
 
       // Only check completed tasks for mismatches
-      if (isCompleted && artifacts.length > 0) {
+      if (isCompleted && (parsed.artifacts.length > 0 || parsed.evidence.length > 0)) {
         const missingArtifacts: string[] = [];
-        for (const artifact of artifacts) {
+        const missingEvidence: string[] = [];
+
+        // Check ARTIFACT: paths
+        for (const artifact of parsed.artifacts) {
           const exists = await checkArtifactExists(artifact);
           if (!exists) {
             missingArtifacts.push(artifact);
           }
         }
-        if (missingArtifacts.length > 0) {
+
+        // Check EVIDENCE: paths
+        for (const evidence of parsed.evidence) {
+          const exists = await checkArtifactExists(evidence);
+          if (!exists) {
+            missingEvidence.push(evidence);
+          }
+        }
+
+        // If any artifacts or evidence missing, track as mismatch
+        if (missingArtifacts.length > 0 || missingEvidence.length > 0) {
+          // Add to mismatch details (for backward compatibility)
           mismatchDetails.push({
-            taskId: task['Task ID'],
+            task_id: task['Task ID'],
             description: task.Description?.substring(0, 50) + '...' || '',
-            missingArtifacts,
+            missing_artifacts: [
+              ...missingArtifacts,
+              ...missingEvidence.map((e) => `EVIDENCE:${e}`),
+            ],
+          });
+
+          // Add to tasks requiring revert (new governance feature)
+          tasksRequiringRevertDetails.push({
+            task_id: task['Task ID'],
+            description: task.Description?.substring(0, 50) + '...' || '',
+            current_status: task.Status,
+            missing_artifacts: missingArtifacts,
+            missing_evidence: missingEvidence,
           });
         }
       }
@@ -275,8 +377,8 @@ export async function GET() {
 
     const bottleneckDetails: BottleneckDetail[] = sortedBottlenecks.map(([sprint, data]) => ({
       sprint,
-      dependencyCount: data.count,
-      blockedTasks: data.tasks.slice(0, 10), // Limit to first 10 tasks
+      dependency_count: data.count,
+      blocked_tasks: data.tasks.slice(0, 10), // Limit to first 10 tasks
     }));
 
     const bottleneckStr =
@@ -285,12 +387,12 @@ export async function GET() {
         : 'None';
 
     const metrics: ExecutiveMetrics = {
-      totalTasks: total,
+      total_tasks: total,
       completed: {
         count: completed,
         percentage: total > 0 ? Math.round((completed / total) * 1000) / 10 : 0,
       },
-      inProgress: {
+      in_progress: {
         count: inProgress,
         percentage: total > 0 ? Math.round((inProgress / total) * 1000) / 10 : 0,
       },
@@ -298,29 +400,24 @@ export async function GET() {
         count: backlog,
         percentage: total > 0 ? Math.round((backlog / total) * 1000) / 10 : 0,
       },
-      planVsCodeMismatches: mismatchDetails.length,
-      planVsCodeMismatchesDetails: mismatchDetails,
-      untrackedCodeArtifacts: untrackedResult.count,
-      untrackedCodeArtifactsDetails: untrackedResult.details,
-      forwardDependencies: forwardDepsDetails.length,
-      forwardDependenciesDetails: forwardDepsDetails,
-      sprintBottlenecks: bottleneckStr,
-      sprintBottlenecksDetails: bottleneckDetails,
-      generatedAt: new Date().toISOString(),
+      plan_vs_code_mismatches: mismatchDetails.length,
+      plan_vs_code_mismatches_details: mismatchDetails,
+      tasks_requiring_revert: tasksRequiringRevertDetails.length,
+      tasks_requiring_revert_details: tasksRequiringRevertDetails,
+      untracked_code_artifacts: untrackedResult.count,
+      untracked_code_artifacts_details: untrackedResult.details,
+      forward_dependencies: forwardDepsDetails.length,
+      forward_dependencies_details: forwardDepsDetails,
+      sprint_bottlenecks: bottleneckStr,
+      sprint_bottlenecks_details: bottleneckDetails,
+      generated_at: new Date().toISOString(),
     };
 
     return NextResponse.json(metrics, {
-      headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-        Pragma: 'no-cache',
-        Expires: '0',
-      },
+      headers: NO_CACHE_HEADERS,
     });
   } catch (error) {
     console.error('Error calculating executive metrics:', error);
-    return NextResponse.json(
-      { error: 'Failed to calculate executive metrics' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to calculate executive metrics' }, { status: 500 });
   }
 }

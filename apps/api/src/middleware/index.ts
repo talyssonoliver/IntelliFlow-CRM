@@ -23,5 +23,16 @@ export {
   createRateLimitMiddleware,
   createStrictRateLimitMiddleware,
   createLenientRateLimitMiddleware,
+  createTieredRateLimitMiddleware,
+  createPublicRateLimitMiddleware,
+  createAuthenticatedRateLimitMiddleware,
+  createAIRateLimitMiddleware,
+  createAuthEndpointRateLimitMiddleware,
   RedisRateLimiter,
+  getRateLimiter,
+  rateLimitConfig,
+  RATE_LIMIT_TIERS,
+  DDOS_CONFIG,
 } from './rate-limit';
+
+export type { RateLimitResult } from './rate-limit';

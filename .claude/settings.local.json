@@ -1,6 +1,11 @@
 {
   "permissions": {
-    "allow": ["Bash(dir \"C:\\taly\\intelliFlow-CRM\" /B)"],
+    "allow": [
+      "Bash(dir \"C:\\taly\\intelliFlow-CRM\" /B)",
+      "Skill(matop-execute)",
+      "Bash(powershell -Command \"[System.BitConverter]::ToString\\([System.Security.Cryptography.RandomNumberGenerator]::GetBytes\\(4\\)\\).Replace\\(''-'',''''\\).ToLower\\(\\)\")",
+      "Bash(pnpm turbo typecheck:*)"
+    ],
     "deny": [],
     "ask": []
   }

@@ -147,7 +147,10 @@ describe('Entity', () => {
   describe('inheritance', () => {
     it('should allow subclasses to add properties', () => {
       class ExtendedEntity extends Entity<string> {
-        constructor(id: string, public name: string) {
+        constructor(
+          id: string,
+          public name: string
+        ) {
           super(id);
         }
       }
@@ -159,7 +162,10 @@ describe('Entity', () => {
 
     it('should maintain identity equality in subclasses', () => {
       class ExtendedEntity extends Entity<string> {
-        constructor(id: string, public value: number) {
+        constructor(
+          id: string,
+          public value: number
+        ) {
           super(id);
         }
       }

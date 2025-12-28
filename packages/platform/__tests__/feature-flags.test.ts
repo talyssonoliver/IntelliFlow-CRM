@@ -25,7 +25,8 @@ describe('Feature Flags Module', () => {
 
   describe('InMemoryFeatureFlagProvider.fromConfig', () => {
     it('should create provider from valid config', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -46,7 +47,8 @@ describe('Feature Flags Module', () => {
     });
 
     it('should handle invalid config by failing closed (all flags disabled)', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const invalidConfig = {
         version: 2, // Invalid version
@@ -65,7 +67,8 @@ describe('Feature Flags Module', () => {
     });
 
     it('should handle missing flags array', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const invalidConfig = {
         version: 1,
@@ -79,7 +82,8 @@ describe('Feature Flags Module', () => {
     });
 
     it('should handle null/undefined config', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const provider1 = InMemoryFeatureFlagProvider.fromConfig(null);
       expect(provider1.isEnabled('test-flag')).toBe(false);
@@ -91,7 +95,8 @@ describe('Feature Flags Module', () => {
 
   describe('getDecision - missing and disabled flags', () => {
     it('should return missing_flag for undefined flags', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -109,7 +114,8 @@ describe('Feature Flags Module', () => {
     });
 
     it('should return disabled for explicitly disabled flags', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -132,7 +138,8 @@ describe('Feature Flags Module', () => {
     });
 
     it('should return default for simple enabled flag without rules or rollout', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -157,7 +164,8 @@ describe('Feature Flags Module', () => {
 
   describe('getDecision - rule matching', () => {
     it('should match rule based on context attributes', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -205,7 +213,8 @@ describe('Feature Flags Module', () => {
     });
 
     it('should match first rule when multiple rules match', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -242,7 +251,8 @@ describe('Feature Flags Module', () => {
     });
 
     it('should match rules with multiple attributes', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -279,7 +289,8 @@ describe('Feature Flags Module', () => {
     });
 
     it('should support different attribute types (string, number, boolean)', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -308,7 +319,8 @@ describe('Feature Flags Module', () => {
     });
 
     it('should not match rules without context', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -334,7 +346,8 @@ describe('Feature Flags Module', () => {
     });
 
     it('should not match rules with empty attributes', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -364,7 +377,8 @@ describe('Feature Flags Module', () => {
 
   describe('getDecision - percentage rollout', () => {
     it('should enable flag based on percentage rollout', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -401,7 +415,8 @@ describe('Feature Flags Module', () => {
     });
 
     it('should return null for rollout without subjectId', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -423,7 +438,8 @@ describe('Feature Flags Module', () => {
     });
 
     it('should handle 0% rollout (no one gets enabled)', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -449,7 +465,8 @@ describe('Feature Flags Module', () => {
     });
 
     it('should handle 100% rollout (everyone gets enabled)', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -475,7 +492,8 @@ describe('Feature Flags Module', () => {
     });
 
     it('should be deterministic for the same subjectId', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -502,7 +520,8 @@ describe('Feature Flags Module', () => {
     });
 
     it('should select variant when rollout enables and variants exist', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -532,11 +551,14 @@ describe('Feature Flags Module', () => {
 
       // Should have distributed across multiple variants
       expect(variants.size).toBeGreaterThan(1);
-      expect(Array.from(variants).every(v => ['control', 'variant-a', 'variant-b'].includes(v))).toBe(true);
+      expect(
+        Array.from(variants).every((v) => ['control', 'variant-a', 'variant-b'].includes(v))
+      ).toBe(true);
     });
 
     it('should not assign variant when rollout disables user', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -572,7 +594,8 @@ describe('Feature Flags Module', () => {
 
   describe('getDecision - priority order', () => {
     it('should prioritize rules over percentage rollout', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -606,7 +629,8 @@ describe('Feature Flags Module', () => {
     });
 
     it('should fall through to default when no rules match and no rollout', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -638,7 +662,8 @@ describe('Feature Flags Module', () => {
 
   describe('isEnabled', () => {
     it('should return true for enabled flag', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -655,7 +680,8 @@ describe('Feature Flags Module', () => {
     });
 
     it('should return false for disabled flag', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -672,7 +698,8 @@ describe('Feature Flags Module', () => {
     });
 
     it('should return false for missing flag', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -684,7 +711,8 @@ describe('Feature Flags Module', () => {
     });
 
     it('should respect context for rule-based flags', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -720,7 +748,8 @@ describe('Feature Flags Module', () => {
     });
 
     it('should respect rollout percentage', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -906,7 +935,8 @@ describe('Feature Flags Module', () => {
 
   describe('stableHashPercent implementation', () => {
     it('should produce consistent hash for same input', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -934,7 +964,8 @@ describe('Feature Flags Module', () => {
     });
 
     it('should produce different results for different inputs', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -962,7 +993,8 @@ describe('Feature Flags Module', () => {
     });
 
     it('should use flag key in hash to ensure different distribution per flag', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -998,7 +1030,8 @@ describe('Feature Flags Module', () => {
 
   describe('edge cases and integration', () => {
     it('should handle complex config with all features', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -1050,7 +1083,8 @@ describe('Feature Flags Module', () => {
     });
 
     it('should handle multiple flags independently', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -1082,7 +1116,8 @@ describe('Feature Flags Module', () => {
     });
 
     it('should preserve decision consistency across multiple calls', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,
@@ -1114,8 +1149,8 @@ describe('Feature Flags Module', () => {
         provider.getDecision('consistent-flag', premiumContext)
       );
 
-      expect(decisions1.every(d => d.variant === 'premium')).toBe(true);
-      expect(decisions1.every(d => d.reason === 'rule_match')).toBe(true);
+      expect(decisions1.every((d) => d.variant === 'premium')).toBe(true);
+      expect(decisions1.every((d) => d.reason === 'rule_match')).toBe(true);
 
       // Test rollout consistency
       const regularContext: FeatureFlagContext = {
@@ -1129,12 +1164,13 @@ describe('Feature Flags Module', () => {
       const firstEnabled = decisions2[0].enabled;
       const firstVariant = decisions2[0].variant;
 
-      expect(decisions2.every(d => d.enabled === firstEnabled)).toBe(true);
-      expect(decisions2.every(d => d.variant === firstVariant)).toBe(true);
+      expect(decisions2.every((d) => d.enabled === firstEnabled)).toBe(true);
+      expect(decisions2.every((d) => d.variant === firstVariant)).toBe(true);
     });
 
     it('should handle empty config gracefully', async () => {
-      const { InMemoryFeatureFlagProvider } = await import('../src/feature-flags/in-memory-provider');
+      const { InMemoryFeatureFlagProvider } =
+        await import('../src/feature-flags/in-memory-provider');
 
       const config: FeatureFlagsConfig = {
         version: 1,

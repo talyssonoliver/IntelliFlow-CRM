@@ -140,4 +140,28 @@ export class PrismaAccountRepository implements AccountRepository {
       where: { ownerId },
     });
   }
+
+  async existsByName(name: string): Promise<boolean> {
+    const count = await this.prisma.account.count({
+      where: { name },
+    });
+    return count > 0;
+  }
+
+  async countByIndustry(): Promise<Record<string, number>> {
+    const results = await this.prisma.account.groupBy({
+      by: ['industry'],
+      _count: true,
+    });
+
+    return results.reduce(
+      (acc, result) => {
+        if (result.industry) {
+          acc[result.industry] = result._count;
+        }
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+  }
 }

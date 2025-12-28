@@ -190,13 +190,13 @@
     }
   ],
   "sections": [
-    {"name": "Architecture", "count": 5},
-    {"name": "Security", "count": 4},
-    {"name": "Domain", "count": 5},
-    {"name": "API", "count": 2},
-    {"name": "Design System", "count": 2},
-    {"name": "Operations", "count": 2},
-    {"name": "Observability", "count": 3}
+    { "name": "Architecture", "count": 5 },
+    { "name": "Security", "count": 4 },
+    { "name": "Domain", "count": 5 },
+    { "name": "API", "count": 2 },
+    { "name": "Design System", "count": 2 },
+    { "name": "Operations", "count": 2 },
+    { "name": "Observability", "count": 3 }
   ],
   "metadata": {
     "build_tool": "docusaurus",

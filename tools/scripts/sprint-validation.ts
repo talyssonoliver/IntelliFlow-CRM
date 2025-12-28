@@ -40,6 +40,8 @@ import {
   listGitUntrackedFiles,
   parseSprintCsv,
   checkSprintCompletion,
+  checkSprintStartGate,
+  checkAuditMatrixWaivers,
   findIgnoredRuntimeArtifacts,
   getHygieneAllowlist,
   isAllowedByHygieneAllowlist,
@@ -49,7 +51,13 @@ import {
   getExitCode,
   findRepoRoot,
   type GateResult,
+  type SprintTask,
 } from './lib/validation-utils.js';
+import {
+  validateTaskContract,
+  getContractValidationSummary,
+  type TaskContractRow,
+} from './lib/contract-parser.js';
 
 // ============================================================================
 // Configuration
@@ -824,6 +832,312 @@ function runArtifactContainmentGate(): GateResult[] {
 // Main
 // ============================================================================
 
+// ============================================================================
+// Gate: Sprint Start Gate (prerequisite sprints complete)
+// ============================================================================
+
+function runSprintStartGate(targetSprint: string): GateResult[] {
+  logSection(`Gate 0: Sprint Start Gate (prerequisite sprints complete)`);
+
+  const sprintNum = parseInt(targetSprint, 10);
+  if (isNaN(sprintNum) || sprintNum < 0) {
+    const result: GateResult = {
+      name: 'Sprint Start Gate',
+      severity: 'FAIL',
+      message: `Invalid sprint number: ${targetSprint}`,
+    };
+    logGate(result);
+    return [result];
+  }
+
+  const csvPath = resolveSprintPlanPath(repoRoot);
+  if (!csvPath) {
+    const result: GateResult = {
+      name: 'Sprint Start Gate',
+      severity: 'SKIP',
+      message: 'Sprint_plan.csv not found; cannot validate prerequisite sprints',
+    };
+    logGate(result);
+    return [result];
+  }
+
+  const csvContent = fs.readFileSync(csvPath, 'utf-8');
+  const { tasks, errors } = parseSprintCsv(csvContent);
+  if (errors.length > 0) {
+    const result: GateResult = {
+      name: 'Sprint Start Gate',
+      severity: 'FAIL',
+      message: 'CSV parsing errors',
+      details: errors,
+    };
+    logGate(result);
+    return [result];
+  }
+
+  const startGateResult = checkSprintStartGate(tasks, sprintNum);
+  logGate(startGateResult.gateResult);
+  return [startGateResult.gateResult];
+}
+
+// ============================================================================
+// Gate: Audit Matrix Waivers
+// ============================================================================
+
+function runAuditMatrixGate(): GateResult[] {
+  logSection('Gate 8: Audit Matrix Waivers');
+
+  const result = checkAuditMatrixWaivers(repoRoot);
+  logGate(result.gateResult);
+  return [result.gateResult];
+}
+
+// ============================================================================
+// Gate: Contract Tag Parser (Gate 9)
+// ============================================================================
+
+function runContractTagParserGate(targetSprint: string): GateResult[] {
+  logSection(`Gate 9: Contract Tag Parser (Sprint ${targetSprint})`);
+
+  const results: GateResult[] = [];
+
+  const csvPath = resolveSprintPlanPath(repoRoot);
+  if (!csvPath) {
+    const result: GateResult = {
+      name: 'Contract Tag Parser',
+      severity: 'SKIP',
+      message: 'Sprint_plan.csv not found; cannot validate contract tags',
+    };
+    logGate(result);
+    return [result];
+  }
+
+  const csvContent = fs.readFileSync(csvPath, 'utf-8');
+  const { tasks, errors } = parseSprintCsv(csvContent);
+
+  if (errors.length > 0) {
+    const result: GateResult = {
+      name: 'Contract Tag Parser',
+      severity: 'FAIL',
+      message: 'CSV parsing errors; cannot validate contract tags',
+      details: errors,
+    };
+    logGate(result);
+    return [result];
+  }
+
+  // Filter to target sprint tasks
+  const sprintTasks = tasks.filter((t) => String(t['Target Sprint']) === targetSprint);
+
+  if (sprintTasks.length === 0) {
+    const result: GateResult = {
+      name: 'Contract Tag Parser',
+      severity: 'PASS',
+      message: `No Sprint ${targetSprint} tasks found`,
+    };
+    logGate(result);
+    return [result];
+  }
+
+  // Convert to TaskContractRow format and validate
+  const contractRows: TaskContractRow[] = sprintTasks.map((t) => ({
+    taskId: t['Task ID'],
+    prerequisites: t['Pre-requisites'] || '',
+    artifactsToTrack: t['Artifacts To Track'] || '',
+    validationMethod: t['Validation Method'] || '',
+  }));
+
+  const validationResults = contractRows.map((row) =>
+    validateTaskContract(row.taskId, row.prerequisites, row.artifactsToTrack, row.validationMethod)
+  );
+
+  const summary = getContractValidationSummary(validationResults);
+
+  // Report tasks with ellipsis (NOELLIPSIS rule)
+  const tasksWithEllipsis = validationResults.filter((r) => r.contract.hasEllipsis);
+  if (tasksWithEllipsis.length > 0) {
+    const ellipsisResult: GateResult = {
+      name: 'Contract: NOELLIPSIS Rule',
+      severity: isStrictMode() ? 'FAIL' : 'WARN',
+      message: `${tasksWithEllipsis.length} task(s) contain "..." placeholder in contract fields`,
+      details: tasksWithEllipsis.slice(0, 10).map((r) => {
+        const fields = r.contract.errors
+          .filter((e) => e.message.includes('NOELLIPSIS'))
+          .map((e) => e.field);
+        return `${r.taskId}: ${fields.join(', ')}`;
+      }),
+    };
+    results.push(ellipsisResult);
+    logGate(ellipsisResult);
+  }
+
+  // Report invalid contracts
+  const invalidContracts = validationResults.filter((r) => !r.valid);
+  if (invalidContracts.length > 0) {
+    const invalidResult: GateResult = {
+      name: 'Contract: Validation',
+      severity: isStrictMode() ? 'FAIL' : 'WARN',
+      message: `${invalidContracts.length}/${validationResults.length} task(s) have contract validation errors`,
+      details: invalidContracts
+        .slice(0, 10)
+        .flatMap((r) => [
+          `${r.taskId}:`,
+          ...r.contract.errors.map((e) => `  - [${e.field}] ${e.message}`),
+        ]),
+    };
+    results.push(invalidResult);
+    logGate(invalidResult);
+  }
+
+  // Summary result
+  if (results.length === 0) {
+    const summaryResult: GateResult = {
+      name: 'Contract Tag Parser',
+      severity: 'PASS',
+      message: `All ${summary.total} Sprint ${targetSprint} task contracts validated successfully`,
+      details: [`Tasks requiring context_ack: ${summary.requireContextAck}`],
+    };
+    results.push(summaryResult);
+    logGate(summaryResult);
+  }
+
+  return results;
+}
+
+// ============================================================================
+// Gate: Context Ack Gate (Gate 10) - Placeholder
+// ============================================================================
+
+function runContextAckGate(targetSprint: string): GateResult[] {
+  logSection(`Gate 10: Context Ack Gate (Sprint ${targetSprint})`);
+
+  // This gate checks for context_ack.json files for tasks with EVIDENCE:context_ack
+  // It only runs for tasks that are "In Progress" or have active runs
+
+  const csvPath = resolveSprintPlanPath(repoRoot);
+  if (!csvPath) {
+    const result: GateResult = {
+      name: 'Context Ack Gate',
+      severity: 'SKIP',
+      message: 'Sprint_plan.csv not found; cannot validate context acks',
+    };
+    logGate(result);
+    return [result];
+  }
+
+  const csvContent = fs.readFileSync(csvPath, 'utf-8');
+  const { tasks, errors } = parseSprintCsv(csvContent);
+
+  if (errors.length > 0) {
+    const result: GateResult = {
+      name: 'Context Ack Gate',
+      severity: 'SKIP',
+      message: 'CSV parsing errors; cannot validate context acks',
+    };
+    logGate(result);
+    return [result];
+  }
+
+  // Filter to target sprint tasks that are "In Progress"
+  const inProgressTasks = tasks.filter(
+    (t) => String(t['Target Sprint']) === targetSprint && t.Status === 'In Progress'
+  );
+
+  if (inProgressTasks.length === 0) {
+    const result: GateResult = {
+      name: 'Context Ack Gate',
+      severity: 'PASS',
+      message: `No In Progress Sprint ${targetSprint} tasks requiring context ack validation`,
+    };
+    logGate(result);
+    return [result];
+  }
+
+  // For each in-progress task, check if context_ack is required and exists
+  // This is a simplified check - full implementation would verify against active run IDs
+  const results: GateResult[] = [];
+  const tasksRequiringAck: string[] = [];
+
+  for (const task of inProgressTasks) {
+    const artifactsToTrack = task['Artifacts To Track'] || '';
+    if (artifactsToTrack.includes('EVIDENCE:context_ack')) {
+      tasksRequiringAck.push(task['Task ID']);
+    }
+  }
+
+  if (tasksRequiringAck.length === 0) {
+    const result: GateResult = {
+      name: 'Context Ack Gate',
+      severity: 'PASS',
+      message: `No In Progress Sprint ${targetSprint} tasks require EVIDENCE:context_ack`,
+    };
+    results.push(result);
+    logGate(result);
+  } else {
+    // Check for context_ack files in artifacts/context/*/
+    const contextDir = path.join(repoRoot, 'artifacts', 'context');
+    let foundAcks = 0;
+    let missingAcks: string[] = [];
+
+    for (const taskId of tasksRequiringAck) {
+      // Look for any run directory containing this task's context_ack
+      const taskHasAck = checkTaskHasContextAck(contextDir, taskId);
+      if (taskHasAck) {
+        foundAcks++;
+      } else {
+        missingAcks.push(taskId);
+      }
+    }
+
+    if (missingAcks.length === 0) {
+      const result: GateResult = {
+        name: 'Context Ack Gate',
+        severity: 'PASS',
+        message: `All ${tasksRequiringAck.length} In Progress tasks have context_ack files`,
+      };
+      results.push(result);
+      logGate(result);
+    } else {
+      const result: GateResult = {
+        name: 'Context Ack Gate',
+        severity: isStrictMode() ? 'FAIL' : 'WARN',
+        message: `${missingAcks.length}/${tasksRequiringAck.length} In Progress tasks missing context_ack`,
+        details: missingAcks.map((id) => `${id}: context_ack.json not found`),
+      };
+      results.push(result);
+      logGate(result);
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Check if a task has a context_ack.json in any run directory.
+ */
+function checkTaskHasContextAck(contextDir: string, taskId: string): boolean {
+  if (!fs.existsSync(contextDir)) {
+    return false;
+  }
+
+  try {
+    const runDirs = fs.readdirSync(contextDir);
+    for (const runDir of runDirs) {
+      const ackPath = path.join(contextDir, runDir, taskId, 'context_ack.json');
+      if (fs.existsSync(ackPath)) {
+        return true;
+      }
+    }
+  } catch {
+    return false;
+  }
+
+  return false;
+}
+
+// ============================================================================
+// Main
+// ============================================================================
+
 function main(): void {
   logHeader('IntelliFlow CRM - Sprint Validation');
 
@@ -839,6 +1153,7 @@ function main(): void {
   log(`Sprint: ${sprintArg.sprint}`, 'gray');
 
   // Run all gates
+  const sprintStartResults = runSprintStartGate(sprintArg.sprint);
   const baselineResults = runBaselineGate();
   const completionResults = runCompletionGate(sprintArg.sprint);
   const evidenceResults = runEvidenceIntegrityGate(sprintArg.sprint);
@@ -846,8 +1161,12 @@ function main(): void {
   const metricsTrackedResults = runMetricsTrackedStateGate();
   const uniquenessResults = runUniquenessGate();
   const containmentResults = runArtifactContainmentGate();
+  const auditMatrixResults = runAuditMatrixGate();
+  const contractTagResults = runContractTagParserGate(sprintArg.sprint);
+  const contextAckResults = runContextAckGate(sprintArg.sprint);
 
   const allResults: GateResult[] = [
+    ...sprintStartResults,
     ...baselineResults,
     ...completionResults,
     ...evidenceResults,
@@ -855,6 +1174,9 @@ function main(): void {
     ...metricsTrackedResults,
     ...uniquenessResults,
     ...containmentResults,
+    ...auditMatrixResults,
+    ...contractTagResults,
+    ...contextAckResults,
   ];
 
   // High-level gate summary (separate from per-check results)
@@ -875,6 +1197,13 @@ function main(): void {
   };
 
   logSection('Gate Summary');
+  logGate(
+    summarizeGate(
+      'Sprint Start Gate',
+      sprintStartResults,
+      sprintStartResults[0]?.message ?? 'NOT RUN'
+    )
+  );
   logGate(
     summarizeGate(
       'Baseline Structure',
@@ -922,6 +1251,23 @@ function main(): void {
       containmentResults[0]?.message ?? 'NOT RUN'
     )
   );
+  logGate(
+    summarizeGate(
+      'Audit Matrix Waivers',
+      auditMatrixResults,
+      auditMatrixResults[0]?.message ?? 'NOT RUN'
+    )
+  );
+  logGate(
+    summarizeGate(
+      'Contract Tag Parser',
+      contractTagResults,
+      contractTagResults.length > 0 ? (contractTagResults[0]?.message ?? 'NOT RUN') : 'NOT RUN'
+    )
+  );
+  logGate(
+    summarizeGate('Context Ack Gate', contextAckResults, contextAckResults[0]?.message ?? 'NOT RUN')
+  );
 
   // Summary
   const summary = createSummary(allResults);
@@ -932,7 +1278,10 @@ function main(): void {
 
   if (exitCode === 0) {
     if (summary.warnCount > 0) {
-      log(`\n[WARN] Sprint ${sprintArg.sprint} validation completed with ${summary.warnCount} warning(s).`, 'yellow');
+      log(
+        `\n[WARN] Sprint ${sprintArg.sprint} validation completed with ${summary.warnCount} warning(s).`,
+        'yellow'
+      );
       log('       Status: INCOMPLETE - Issues detected that require attention.', 'yellow');
       log('       Run with --strict to treat warnings as failures.', 'gray');
     } else if (summary.passCount > 0 && summary.failCount === 0) {
@@ -942,18 +1291,25 @@ function main(): void {
       log(`\n[INFO] Sprint ${sprintArg.sprint} validation completed.`, 'blue');
     }
   } else {
-    log(`\n[FAIL] Sprint ${sprintArg.sprint} validation failed with ${summary.failCount} error(s).`, 'red');
+    log(
+      `\n[FAIL] Sprint ${sprintArg.sprint} validation failed with ${summary.failCount} error(s).`,
+      'red'
+    );
     log('       Status: BLOCKED - Fix errors before proceeding.', 'red');
   }
 
   log('\nScope:', 'gray');
-  log('      - Baseline readiness (files/dirs): YES', 'gray');
-  log('      - Sprint completion (CSV status only): YES', 'gray');
-  log('      - Evidence integrity (task JSON semantics): YES', 'gray');
-  log('      - Docs hygiene (runtime artifacts under docs): YES', 'gray');
-  log('      - Metrics tracked state (untracked files under docs/metrics): YES', 'gray');
-  log('      - Canonical uniqueness (tracked files): YES', 'gray');
-  log('      - Artifact containment (root-level runtime artifacts): YES', 'gray');
+  log('      - Gate 0: Sprint start gate (prerequisite sprints complete): YES', 'gray');
+  log('      - Gate 1: Baseline readiness (files/dirs): YES', 'gray');
+  log('      - Gate 2: Sprint completion (CSV status only): YES', 'gray');
+  log('      - Gate 3: Evidence integrity (task JSON semantics): YES', 'gray');
+  log('      - Gate 4: Docs hygiene (runtime artifacts under docs): YES', 'gray');
+  log('      - Gate 5: Metrics tracked state (untracked files under docs/metrics): YES', 'gray');
+  log('      - Gate 6: Canonical uniqueness (tracked files): YES', 'gray');
+  log('      - Gate 7: Artifact containment (root-level runtime artifacts): YES', 'gray');
+  log('      - Gate 8: Audit matrix waivers (disabled required tools): YES', 'gray');
+  log('      - Gate 9: Contract tag parser (FILE:/DIR:/ENV:/POLICY:/EVIDENCE:): YES', 'gray');
+  log('      - Gate 10: Context ack gate (EVIDENCE:context_ack validation): YES', 'gray');
   log('      - Tests/typecheck/lint: NO', 'gray');
 
   process.exit(exitCode);

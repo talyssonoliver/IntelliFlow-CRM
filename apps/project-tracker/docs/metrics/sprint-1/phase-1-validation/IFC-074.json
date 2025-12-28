@@ -2,18 +2,27 @@
   "$schema": "../../schemas/task-status.schema.json",
   "task_id": "IFC-074",
   "section": "Observability",
-  "description": "Full Stack Observability",
+  "description": "PHASE-040: Full Stack Observability",
   "owner": "SRE Lead + DevOps",
   "dependencies": {
     "required": ["IFC-003"],
-    "verified_at": "2025-12-21T14:00:00Z",
+    "verified_at": "2025-12-28T23:24:52.670Z",
     "all_satisfied": true
   },
   "status": "DONE",
   "status_history": [
-    { "status": "PLANNED", "at": "2025-12-20T00:00:00Z" },
-    { "status": "IN_PROGRESS", "at": "2025-12-21T14:00:00Z" },
-    { "status": "DONE", "at": "2025-12-21T16:00:00Z" }
+    {
+      "status": "PLANNED",
+      "at": "2025-12-20T00:00:00Z"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "at": "2025-12-21T14:00:00Z"
+    },
+    {
+      "status": "DONE",
+      "at": "2025-12-21T16:00:00Z"
+    }
   ],
   "execution": {
     "started_at": "2025-12-21T14:00:00Z",
@@ -24,10 +33,7 @@
   },
   "artifacts": {
     "expected": ["apps/api/src/tracing/*", "apps/api/src/tracing/otel.ts"],
-    "created": [
-      "apps/api/src/tracing/otel.ts",
-      "apps/api/src/tracing/index.ts"
-    ],
+    "created": ["apps/api/src/tracing/otel.ts"],
     "missing": []
   },
   "validations": [
@@ -54,5 +60,9 @@
     }
   },
   "blockers": [],
-  "notes": "OpenTelemetry tracing configured with unified logs, metrics, and traces."
+  "notes": "OpenTelemetry tracing configured with unified logs, metrics, and traces.",
+  "completed_at": "2025-12-27T11:33:39.037Z",
+  "started_at": "2025-12-27T11:18:39.037Z",
+  "actual_duration_minutes": 15,
+  "dependencies_resolved": ["IFC-003"]
 }

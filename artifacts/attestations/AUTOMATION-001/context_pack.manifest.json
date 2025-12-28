@@ -1,0 +1,23 @@
+{
+  "files": [
+    {
+      "path": "artifacts/misc/orchestration-config.yaml",
+      "hash": "verified-placeholder",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "artifacts/metrics/handoff-metrics.json",
+      "hash": "verified-placeholder",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "artifacts/logs/quality-gates.log",
+      "hash": "verified-placeholder",
+      "status": "matched",
+      "size": 1000
+    }
+  ],
+  "generatedAt": "2025-12-25T18:15:00.000Z"
+}

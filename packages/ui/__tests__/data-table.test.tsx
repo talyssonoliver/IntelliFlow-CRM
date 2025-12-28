@@ -471,9 +471,7 @@ describe('DataTable', () => {
 
     it('should handle dynamic column updates', () => {
       const testData = createTestData(2);
-      const initialColumns: ColumnDef<TestData>[] = [
-        { accessorKey: 'name', header: 'Name' },
-      ];
+      const initialColumns: ColumnDef<TestData>[] = [{ accessorKey: 'name', header: 'Name' }];
 
       const { rerender } = render(<DataTable columns={initialColumns} data={testData} />);
 

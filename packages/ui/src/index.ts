@@ -8,4 +8,5 @@ export * from './components/label';
 export * from './components/form';
 export * from './components/table';
 export * from './components/data-table';
+export * from './components/layout-builder';
 export * from './lib/utils';

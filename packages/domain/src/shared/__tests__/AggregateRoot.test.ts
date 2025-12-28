@@ -28,7 +28,10 @@ class AnotherTestEvent extends DomainEvent {
 }
 
 class TestAggregate extends AggregateRoot<string> {
-  constructor(id: string, private _name?: string) {
+  constructor(
+    id: string,
+    private _name?: string
+  ) {
     super(id);
   }
 

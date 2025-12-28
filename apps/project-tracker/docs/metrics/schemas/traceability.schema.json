@@ -1,0 +1,150 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://intelliflow-crm.com/schemas/traceability.schema.json",
+  "title": "Traceability Matrix Schema",
+  "description": "Schema for IntelliFlow CRM Capability Traceability Matrix - links business capabilities to domain services, APIs, UIs, and tests",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference"
+    },
+    "title": {
+      "type": "string",
+      "description": "Title of the traceability matrix"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the traceability matrix purpose"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the matrix was created"
+    },
+    "task_reference": {
+      "type": "string",
+      "description": "Reference to the task that created this matrix"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version of the matrix"
+    },
+    "capabilities": {
+      "type": "array",
+      "description": "Array of business capabilities with their traceability links",
+      "items": {
+        "type": "object",
+        "required": ["capability_id", "name", "description"],
+        "properties": {
+          "capability_id": {
+            "type": "string",
+            "pattern": "^CAP-\\d+$",
+            "description": "Unique identifier for the capability"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name of the capability"
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of what the capability does"
+          },
+          "domain_services": {
+            "type": "array",
+            "description": "File paths to domain service implementations",
+            "items": {
+              "type": "string"
+            }
+          },
+          "api_endpoints": {
+            "type": "array",
+            "description": "API endpoint file paths or descriptions",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ui_components": {
+            "type": "array",
+            "description": "UI component file paths",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tests": {
+            "type": "array",
+            "description": "Test file paths or directories",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sprint_tasks": {
+            "type": "array",
+            "description": "Task IDs that implement this capability",
+            "items": {
+              "type": "string",
+              "pattern": "^IFC-\\d+$"
+            }
+          }
+        }
+      }
+    },
+    "coverage_summary": {
+      "type": "object",
+      "description": "Summary statistics of traceability coverage",
+      "properties": {
+        "total_capabilities": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of capabilities defined"
+        },
+        "with_domain_services": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of capabilities with domain services"
+        },
+        "with_api_endpoints": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of capabilities with API endpoints"
+        },
+        "with_ui_components": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of capabilities with UI components"
+        },
+        "with_tests": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of capabilities with tests"
+        },
+        "traceability_coverage_percentage": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Percentage of traceability coverage"
+        }
+      },
+      "required": ["total_capabilities", "traceability_coverage_percentage"]
+    },
+    "validated_by": {
+      "type": "string",
+      "description": "Identifier of the system or person who validated this matrix"
+    },
+    "validated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the matrix was validated"
+    }
+  },
+  "required": [
+    "title",
+    "description",
+    "created_at",
+    "capabilities",
+    "coverage_summary",
+    "validated_by",
+    "validated_at"
+  ]
+}

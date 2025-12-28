@@ -1274,7 +1274,10 @@ create_task_context() {
     local task_data
     task_data=$(jq ".task_details[\"${task_id}\"]" "${REGISTRY_FILE}" 2>/dev/null) || task_data="{}"
 
-    local context_file="${ARTIFACTS_DIR}/contexts/${task_id}-context.md"
+    # Use new context structure: artifacts/context/swarm/{task_id}/context.md
+    local context_dir="${ARTIFACTS_DIR}/context/swarm/${task_id}"
+    mkdir -p "${context_dir}"
+    local context_file="${context_dir}/context.md"
 
     # Extract all fields with proper null handling and carriage return stripping
     local description=$(echo "${task_data}" | jq -r '.description // "Not specified"' | tr -d '\r')
@@ -1340,7 +1343,13 @@ EOF
     # Add upstream context from dependencies
     local dependencies=$(get_dependencies "${task_id}")
     for dep in ${dependencies}; do
-        local dep_context="${ARTIFACTS_DIR}/contexts/${dep}-context.md"
+        # Check new path structure first, then fall back to legacy
+        local dep_context="${ARTIFACTS_DIR}/context/swarm/${dep}/context.md"
+        if [[ ! -f "${dep_context}" ]]; then
+            # Fall back to MATOP context pack if available
+            local matop_context=$(find "${ARTIFACTS_DIR}/context" -name "context_pack.md" -path "*/${dep}/*" 2>/dev/null | head -1)
+            [[ -n "${matop_context}" ]] && dep_context="${matop_context}"
+        fi
         if [[ -f "${dep_context}" ]]; then
             echo "### From ${dep}" >> "${context_file}"
             echo "" >> "${context_file}"
@@ -2582,7 +2591,7 @@ execute_task() {
     create_task_context "${task_id}"
 
     # NOTE: Removed artifacts/work/${task_id} creation - it was never used.
-    # All outputs go to specific locations (.specify/, __tests__/, artifacts/contexts/, logs/)
+    # All outputs go to specific locations (.specify/, __tests__/, artifacts/context/swarm/, logs/)
 
     # -------------------------------------------------------------------------
     # PHASE 1: ARCHITECT (Claude + MCP)
@@ -3302,13 +3311,26 @@ execute_ready_tasks() {
 # =============================================================================
 
 show_status() {
+    local target_sprint="${1:-all}"
+    local graph_file="${PROJECT_ROOT}/apps/project-tracker/docs/metrics/_global/dependency-graph.json"
+    local registry="${REGISTRY_FILE}"
+
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "                      📊 SPRINT 0 EXECUTION STATUS"
+    if [[ "${target_sprint}" == "all" ]]; then
+        echo "                      📊 EXECUTION STATUS (ALL SPRINTS)"
+    else
+        echo "                      📊 EXECUTION STATUS (SPRINT ${target_sprint})"
+    fi
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
 
-    local total=$(jq '.tasks | length' "${REGISTRY_FILE}")
+    if [[ ! -f "${registry}" ]]; then
+        echo "Registry file not found: ${registry}"
+        return
+    fi
+
+    local total=$(jq '.task_details | length' "${registry}")
     local completed=0
     local failed=0
     local blocked=0
@@ -3318,6 +3340,11 @@ show_status() {
     local planned=0
 
     while IFS= read -r task_id; do
+        local sprint=$(jq -r ".task_details[\"${task_id}\"] | .sprint" "${registry}")
+        if [[ "${target_sprint}" != "all" ]] && [[ "${sprint}" != "${target_sprint}" ]]; then
+            continue
+        fi
+
         local status=$(get_task_status "${task_id}")
         case "${status}" in
             "${STATUS_COMPLETED}") ((completed++)) ;;
@@ -3328,9 +3355,9 @@ show_status() {
             "${STATUS_NEEDS_HUMAN}") ((needs_human++)) ;;
             *) ((planned++)) ;;
         esac
-    done < <(jq -r '.task_details | keys[]' "${REGISTRY_FILE}" | tr -d '\r')
+    done < <(jq -r '.task_details | keys[]' "${registry}" | tr -d '\r')
 
-    local progress=$((completed * 100 / total))
+    local progress=$(( total > 0 ? (completed * 100 / total) : 0 ))
 
     echo "  Summary"
     echo "  ───────"
@@ -3356,7 +3383,7 @@ show_status() {
     echo ""
 
     # Show issues if any
-    if [[ ${needs_human} -gt 0 ]] || [[ ${blocked} -gt 0 ]]; then
+    if [[ ${needs_human} -gt 0 ]] || [[ ${blocked} -gt 0 ]] ; then
         echo "  ⚠️  Issues Requiring Attention"
         echo "  ──────────────────────────────"
 
@@ -3370,26 +3397,32 @@ show_status() {
         echo ""
     fi
 
-    # Next ready tasks
+    # Next ready tasks (from dependency graph if available)
     echo "  Next Ready Tasks"
     echo "  ────────────────"
     local count=0
-    while IFS= read -r task_id; do
-        if [[ ${count} -ge 5 ]]; then
-            break
+    if [[ -f "${graph_file}" ]]; then
+        if [[ "${target_sprint}" == "all" ]]; then
+            jq -r '.ready_to_start[]?' "${graph_file}" | tr -d '\r' | sort -V | while read -r task_id; do
+                if [[ ${count} -ge 5 ]]; then break; fi
+                local desc=$(jq -r ".task_details[\"${task_id}\"] | .description" "${registry}")
+                printf "  ${GREEN}→${NC} %s: %s\n" "${task_id}" "${desc:0:50}"
+                ((count++))
+            done
+        else
+            jq -r --argjson sprint "${target_sprint}" '
+              .ready_to_start
+              | map(select(. != null))
+              | map(select(. as $id | (.nodes[$id].sprint // 0) == $sprint))
+              | .[]
+            ' "${graph_file}" | tr -d '\r' | sort -V | while read -r task_id; do
+                if [[ ${count} -ge 5 ]]; then break; fi
+                local desc=$(jq -r ".task_details[\"${task_id}\"] | .description" "${registry}")
+                printf "  ${GREEN}→${NC} %s: %s\n" "${task_id}" "${desc:0:50}"
+                ((count++))
+            done
         fi
-
-        local status=$(get_task_status "${task_id}")
-        if [[ "${status}" != "${STATUS_PLANNED}" ]]; then
-            continue
-        fi
-
-        if check_dependencies "${task_id}" 2>/dev/null; then
-            local desc=$(jq -r ".task_details[\"${task_id}\"] | .description" "${REGISTRY_FILE}")
-            printf "  ${GREEN}→${NC} %s: %s\n" "${task_id}" "${desc:0:50}"
-            ((count++))
-        fi
-    done < <(jq -r '.task_details | keys[]' "${REGISTRY_FILE}" | tr -d '\r')
+    fi
 
     if [[ ${count} -eq 0 ]]; then
         echo "  No tasks ready (check blockers/dependencies)"
@@ -3488,15 +3521,26 @@ main() {
             ;;
 
         list-ready)
-            # SPRINT 0 ONLY: Filter by sprint and check dependencies from CSV
-            # Note: tr -d '\r' strips Windows carriage returns from JSON output
-            jq -r '.task_details | to_entries[] | select(.value.sprint == 0) | .key' "${REGISTRY_FILE}" | tr -d '\r' | sort -V | while read -r task_id; do
-                local status=$(get_task_status "${task_id}")
-                # Accept "PLANNED", "Planned", "BACKLOG", or "Backlog" status
-                if ([[ "${status}" == "${STATUS_PLANNED}" ]] || [[ "${status}" == "PLANNED" ]] || [[ "${status}" == "BACKLOG" ]] || [[ "${status}" == "Backlog" ]]) && check_dependencies "${task_id}" 2>/dev/null; then
-                    echo "${task_id}"
-                fi
-            done
+            # List ready tasks (fast path using dependency-graph ready_to_start)
+            # Optional arg: sprint number or "all"
+            local target_sprint="${2:-all}"
+            local graph_file="${PROJECT_ROOT}/apps/project-tracker/docs/metrics/_global/dependency-graph.json"
+
+            if [[ ! -f "${graph_file}" ]]; then
+                echo "dependency-graph.json not found. Run sync first." >&2
+                exit 1
+            fi
+
+            if [[ "${target_sprint}" == "all" ]]; then
+                jq -r '.ready_to_start[]?' "${graph_file}" | tr -d '\r' | sort -V
+            else
+                jq -r --argjson sprint "${target_sprint}" '
+                  .ready_to_start
+                  | map(select(. != null))
+                  | map(select(. as $id | (.nodes[$id].sprint // 0) == $sprint))
+                  | .[]
+                ' "${graph_file}" | tr -d '\r' | sort -V
+            fi
             ;;
 
         interventions)

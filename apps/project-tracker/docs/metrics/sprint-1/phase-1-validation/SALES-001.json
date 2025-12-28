@@ -2,18 +2,27 @@
   "$schema": "../../schemas/task-status.schema.json",
   "task_id": "SALES-001",
   "section": "Sales",
-  "description": "Commercial Assets Creation",
+  "description": "Commercial Narrative + Pitch Deck Outline + One-Pager",
   "owner": "PM + Marketing",
   "dependencies": {
-    "required": [],
-    "verified_at": "2025-12-21T12:00:00Z",
+    "required": ["GTM-002", "BRAND-001"],
+    "verified_at": "2025-12-28T23:24:52.678Z",
     "all_satisfied": true
   },
   "status": "DONE",
   "status_history": [
-    { "status": "PLANNED", "at": "2025-12-20T00:00:00Z" },
-    { "status": "IN_PROGRESS", "at": "2025-12-21T12:00:00Z" },
-    { "status": "DONE", "at": "2025-12-21T14:00:00Z" }
+    {
+      "status": "PLANNED",
+      "at": "2025-12-20T00:00:00Z"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "at": "2025-12-21T12:00:00Z"
+    },
+    {
+      "status": "DONE",
+      "at": "2025-12-21T14:00:00Z"
+    }
   ],
   "execution": {
     "started_at": "2025-12-21T12:00:00Z",
@@ -37,8 +46,17 @@
     }
   ],
   "kpis": {
-    "assets_created": { "target": 2, "actual": 2, "met": true, "unit": "count" }
+    "assets_created": {
+      "target": 2,
+      "actual": 2,
+      "met": true,
+      "unit": "count"
+    }
   },
   "blockers": [],
-  "notes": "Commercial assets with pitch deck outline and one-pager for sales enablement."
+  "notes": "Commercial assets with pitch deck outline and one-pager for sales enablement.",
+  "completed_at": "2025-12-27T11:33:39.124Z",
+  "started_at": "2025-12-27T11:18:39.124Z",
+  "actual_duration_minutes": 15,
+  "dependencies_resolved": ["GTM-002", "BRAND-001"]
 }

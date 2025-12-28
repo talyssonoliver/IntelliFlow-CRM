@@ -10,7 +10,16 @@ import { TEST_UUIDS } from '../../../test/setup';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { leadRouter } from '../lead.router';
-import { prismaMock, createTestContext, mockLead, mockUser, mockContact, mockAccount, mockTask, mockAIScore } from '../../../test/setup';
+import {
+  prismaMock,
+  createTestContext,
+  mockLead,
+  mockUser,
+  mockContact,
+  mockAccount,
+  mockTask,
+  mockAIScore,
+} from '../../../test/setup';
 
 describe('Lead Router', () => {
   const caller = leadRouter.createCaller(createTestContext());
@@ -104,7 +113,7 @@ describe('Lead Router', () => {
   describe('list', () => {
     it('should list leads with pagination', async () => {
       const leads = [mockLead, { ...mockLead, id: TEST_UUIDS.lead2, email: 'lead2@example.com' }];
-      const leadsWithRelations = leads.map(lead => ({
+      const leadsWithRelations = leads.map((lead) => ({
         ...lead,
         owner: mockUser,
         contact: mockContact,

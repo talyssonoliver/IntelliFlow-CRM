@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        sprint: [0, 1, 2]  # Add new sprints as they are started
+        sprint: [0, 1, 2] # Add new sprints as they are started
       fail-fast: false
 
     steps:

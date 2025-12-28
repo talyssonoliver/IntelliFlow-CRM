@@ -237,9 +237,7 @@ describe('Observability Package Index', () => {
       });
 
       // Verify success message
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        '✅ Observability initialized for test-service'
-      );
+      expect(consoleLogSpy).toHaveBeenCalledWith('✅ Observability initialized for test-service');
     });
 
     it('should initialize with custom service version', () => {
@@ -345,9 +343,7 @@ describe('Observability Package Index', () => {
       expect(mockInitMetrics).not.toHaveBeenCalled();
 
       // Success message should still be logged
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        '✅ Observability initialized for test-service'
-      );
+      expect(consoleLogSpy).toHaveBeenCalledWith('✅ Observability initialized for test-service');
     });
 
     it('should initialize logging before other systems', () => {
@@ -427,9 +423,7 @@ describe('Observability Package Index', () => {
         enabled: true,
       });
 
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        '✅ Observability initialized for production-api'
-      );
+      expect(consoleLogSpy).toHaveBeenCalledWith('✅ Observability initialized for production-api');
     });
 
     it('should handle initialization with minimal config', () => {
@@ -447,7 +441,6 @@ describe('Observability Package Index', () => {
   // TODO: Fix mocking issue - require() bypasses vi.mock, need to refactor
   describe.skip('shutdownObservability', () => {
     it('should shutdown both tracing and metrics systems', async () => {
-
       await shutdownObservability();
 
       expect(mockShutdownTracing).toHaveBeenCalled();
@@ -455,7 +448,6 @@ describe('Observability Package Index', () => {
     });
 
     it('should shutdown systems in parallel', async () => {
-
       const tracingDelay = 100;
       const metricsDelay = 100;
 
@@ -477,14 +469,12 @@ describe('Observability Package Index', () => {
     });
 
     it('should log success message after shutdown', async () => {
-
       await shutdownObservability();
 
       expect(consoleLogSpy).toHaveBeenCalledWith('✅ Observability shut down');
     });
 
     it('should handle shutdown errors gracefully', async () => {
-
       const shutdownError = new Error('Shutdown failed');
       mockShutdownTracing.mockRejectedValueOnce(shutdownError);
 
@@ -493,7 +483,6 @@ describe('Observability Package Index', () => {
     });
 
     it('should call both shutdowns even if initialized selectively', async () => {
-
       // Even if tracing/metrics weren't initialized, shutdown should still try to clean up
       await shutdownObservability();
 
@@ -502,7 +491,6 @@ describe('Observability Package Index', () => {
     });
 
     it('should be idempotent', async () => {
-
       await shutdownObservability();
       await shutdownObservability();
 
@@ -744,7 +732,6 @@ describe('Observability Package Index', () => {
   // TODO: Fix mocking issue - require() bypasses vi.mock, need to refactor
   describe.skip('Integration scenarios', () => {
     it('should allow initializing and shutting down multiple times', async () => {
-
       initObservability({ serviceName: 'service-1' });
       await shutdownObservability();
 
@@ -757,7 +744,6 @@ describe('Observability Package Index', () => {
     });
 
     it('should support typical application lifecycle', async () => {
-
       // Startup
       initObservability({
         serviceName: 'app',
@@ -779,7 +765,6 @@ describe('Observability Package Index', () => {
     });
 
     it('should handle selective initialization with shutdown', async () => {
-
       initObservability({
         serviceName: 'selective-service',
         tracingEnabled: false,

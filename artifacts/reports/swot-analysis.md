@@ -7,7 +7,7 @@
 ## Strengths
 
 ### Technical
-- **Modern Stack**: Next.js 15+, tRPC, Prisma, Supabase
+- **Modern Stack**: Next.js 16+, tRPC, Prisma, Supabase
 - **Type Safety**: End-to-end TypeScript with strict mode
 - **AI-Native**: Built with AI integration from day one
 - **Hexagonal Architecture**: Clean separation of concerns

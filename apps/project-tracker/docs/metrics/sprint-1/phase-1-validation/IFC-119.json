@@ -2,18 +2,27 @@
   "$schema": "../../schemas/task-status.schema.json",
   "task_id": "IFC-119",
   "section": "Planning",
-  "description": "Sprint Ceremonies Planning",
+  "description": "Define recurring backlog refinement, sprint planning, review and retrospective ceremonies",
   "owner": "Scrum Master + PM",
   "dependencies": {
-    "required": ["IFC-118"],
-    "verified_at": "2025-12-21T16:00:00Z",
+    "required": [],
+    "verified_at": "2025-12-28T23:24:52.688Z",
     "all_satisfied": true
   },
   "status": "DONE",
   "status_history": [
-    { "status": "PLANNED", "at": "2025-12-20T00:00:00Z" },
-    { "status": "IN_PROGRESS", "at": "2025-12-21T16:30:00Z" },
-    { "status": "DONE", "at": "2025-12-21T17:30:00Z" }
+    {
+      "status": "PLANNED",
+      "at": "2025-12-20T00:00:00Z"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "at": "2025-12-21T16:30:00Z"
+    },
+    {
+      "status": "DONE",
+      "at": "2025-12-21T17:30:00Z"
+    }
   ],
   "execution": {
     "started_at": "2025-12-21T16:30:00Z",
@@ -30,11 +39,6 @@
     ],
     "created": [
       "artifacts/misc/ceremony-calendar.ics",
-      "artifacts/misc/templates/sprint-planning.md",
-      "artifacts/misc/templates/sprint-retrospective.md",
-      "artifacts/misc/templates/backlog-refinement.md",
-      "artifacts/misc/templates/daily-standup.md",
-      "artifacts/misc/templates/sprint-review.md",
       "artifacts/reports/retro-action-items.md"
     ],
     "missing": []
@@ -70,5 +74,8 @@
     }
   },
   "blockers": [],
-  "notes": "Sprint ceremonies scheduled with calendar and templates for planning, retrospective, refinement, standup, and review."
+  "notes": "Sprint ceremonies scheduled with calendar and templates for planning, retrospective, refinement, standup, and review.",
+  "completed_at": "2025-12-27T11:33:39.132Z",
+  "started_at": "2025-12-27T11:18:39.133Z",
+  "actual_duration_minutes": 15
 }

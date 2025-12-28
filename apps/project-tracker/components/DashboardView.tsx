@@ -1,20 +1,27 @@
 'use client';
 
-import { Task } from '@/lib/types';
+import { Task, SprintNumber } from '@/lib/types';
 import { countTasksByStatus, calculateCompletionRate } from '@/lib/csv-parser';
 import { groupBy } from '@/lib/utils';
 import React from 'react';
 import { Clock, CheckCircle2, PlayCircle } from 'lucide-react';
 import ExecutiveSummary from './ExecutiveSummary';
 import SwarmMonitor from './SwarmMonitor';
+import NextStepsView from './NextStepsView';
 
 interface DashboardViewProps {
   readonly tasks: Task[];
   readonly sections: string[];
   readonly onTaskClick: (task: Task) => void;
+  readonly sprint?: SprintNumber;
 }
 
-export default function DashboardView({ tasks, sections, onTaskClick }: DashboardViewProps) {
+export default function DashboardView({
+  tasks,
+  sections,
+  onTaskClick,
+  sprint,
+}: DashboardViewProps) {
   const stats = countTasksByStatus(tasks);
   const completionRate = calculateCompletionRate(tasks);
   const tasksBySection = groupBy(tasks, 'section');
@@ -87,10 +94,19 @@ export default function DashboardView({ tasks, sections, onTaskClick }: Dashboar
       </div>
 
       {/* Executive Summary */}
-      <ExecutiveSummary />
+      <ExecutiveSummary sprint={sprint} />
 
       {/* Swarm Monitor */}
       <SwarmMonitor />
+
+      {/* Next Steps - Ready to Start Tasks */}
+      <NextStepsView
+        sprint={sprint}
+        onTaskClick={(taskId) => {
+          const task = tasks.find((t) => t.id === taskId);
+          if (task) onTaskClick(task);
+        }}
+      />
 
       {/* Section Breakdown */}
       <div className="bg-white rounded-lg shadow p-6">
@@ -163,8 +179,7 @@ export default function DashboardView({ tasks, sections, onTaskClick }: Dashboar
                   <td className="px-4 py-3 whitespace-nowrap">
                     <span
                       className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${(() => {
-                        if (task.status === 'Completed' || task.status === 'Done')
-                          return 'bg-green-100 text-green-800';
+                        if (task.status === 'Completed') return 'bg-green-100 text-green-800';
                         if (task.status === 'In Progress' || task.status === 'Validating')
                           return 'bg-blue-100 text-blue-800';
                         if (task.status === 'Blocked') return 'bg-red-100 text-red-800';

@@ -8,8 +8,8 @@ if ($args.Count -gt 0 -and (Test-Path $args[0])) { $rootPath = (Resolve-Path $ar
 # Arquivo de saída final (salvo na raiz do repositório)
 $outputFile = Join-Path $rootPath 'tree_intelliflow_crm.txt'
 
-# Arquivo temporário para gerar a árvore antes da filtragem
-$tempFile = Join-Path $rootPath 'tree_temp.txt'
+# Arquivo temporário para gerar a árvore antes da filtragem (único por processo)
+$tempFile = Join-Path ([System.IO.Path]::GetTempPath()) ("tree_temp_{0}.txt" -f $PID)
 
 # Diretórios e arquivos a serem ignorados na geração da árvore
 $excludeDirs = @(
@@ -36,10 +36,7 @@ $excludeDirs = @(
 
 $excludeFiles = @(
     "pnpm-lock.yaml",
-    "pnpm-workspace.yaml",
-    ".prettierrc",
     ".vscodeignore",
-    "turbo.json",
     ".env",
     ".env.local"
 )
@@ -56,6 +53,11 @@ function Write-Tree {
         [bool]$IsLast,
         [string]$OutFile
     )
+
+    if (-not (Test-Path -LiteralPath $Path)) {
+        Write-Warning "Skipping missing path: $Path"
+        return
+    }
     
     $item = Get-Item -LiteralPath $Path
 
@@ -78,7 +80,7 @@ function Write-Tree {
 
     if ($item.PSIsContainer) {
         $children = Get-ChildItem -LiteralPath $item.FullName -Force |
-                    Where-Object { -not ($excludeDirs -contains $_.Name) -and -not ($excludeFiles -contains $_.Name) } |
+                    Where-Object { -not ($excludeDirs -contains $_.Name) -and -not ($excludeFiles -contains $_.Name) -and $_.Name -ne 'nul' } |
                     Sort-Object @{ Expression = { -not $_.PSIsContainer } }, Name
         $childCount = $children.Count
         for ($i = 0; $i -lt $childCount; $i++) {
@@ -105,7 +107,7 @@ Add-Content -Path $tempFile -Value $rootDisplay -Encoding UTF8
 
 if ($rootItem.PSIsContainer) {
     $children = Get-ChildItem -LiteralPath $rootItem.FullName -Force |
-                Where-Object { -not ($excludeDirs -contains $_.Name) -and -not ($excludeFiles -contains $_.Name) } |
+                Where-Object { -not ($excludeDirs -contains $_.Name) -and -not ($excludeFiles -contains $_.Name) -and $_.Name -ne 'nul' } |
                 Sort-Object @{ Expression = { -not $_.PSIsContainer } }, Name
     $childCount = $children.Count
     for ($i = 0; $i -lt $childCount; $i++) {

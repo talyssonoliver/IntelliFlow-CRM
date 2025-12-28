@@ -305,3 +305,279 @@ enum EventStatus {
   PROCESSED
   FAILED
 }
+
+// ============================================
+// LEGAL DOMAIN - APPOINTMENTS
+// ============================================
+
+model Appointment {
+  id                  String              @id @default(cuid())
+  title               String
+  description         String?
+  startTime           DateTime
+  endTime             DateTime
+  appointmentType     AppointmentType     @default(MEETING)
+  status              AppointmentStatus   @default(SCHEDULED)
+  location            String?
+  notes               String?
+
+  // Buffer times
+  bufferMinutesBefore Int                 @default(0)
+  bufferMinutesAfter  Int                 @default(0)
+
+  // Recurrence (stored as JSON)
+  recurrence          Json?
+  parentAppointmentId String?
+  parentAppointment   Appointment?        @relation("RecurringSeries", fields: [parentAppointmentId], references: [id])
+  recurringInstances  Appointment[]       @relation("RecurringSeries")
+
+  // External calendar integration
+  externalCalendarId  String?
+
+  // Reminder
+  reminderMinutes     Int?
+
+  // Timestamps
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  cancelledAt         DateTime?
+  completedAt         DateTime?
+  cancellationReason  String?
+
+  // Relations
+  organizerId         String
+  attendees           AppointmentAttendee[]
+  linkedCases         AppointmentCase[]
+
+  @@index([organizerId])
+  @@index([status])
+  @@index([startTime])
+  @@index([endTime])
+  @@index([appointmentType])
+  @@index([startTime, endTime])
+  @@index([externalCalendarId])
+  @@map("appointments")
+}
+
+model AppointmentAttendee {
+  id            String      @id @default(cuid())
+  appointmentId String
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  userId        String
+  createdAt     DateTime    @default(now())
+
+  @@unique([appointmentId, userId])
+  @@index([userId])
+  @@map("appointment_attendees")
+}
+
+model AppointmentCase {
+  id            String      @id @default(cuid())
+  appointmentId String
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  caseId        String
+  createdAt     DateTime    @default(now())
+
+  @@unique([appointmentId, caseId])
+  @@index([caseId])
+  @@map("appointment_cases")
+}
+
+enum AppointmentType {
+  MEETING
+  CALL
+  HEARING
+  CONSULTATION
+  DEPOSITION
+  OTHER
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+// ============================================
+// SECURITY EVENTS - IFC-098 RBAC/ABAC
+// ============================================
+
+model SecurityEvent {
+  id              String          @id @default(cuid())
+  eventType       String          // login, logout, permission_denied, role_change, etc.
+  severity        SecuritySeverity @default(INFO)
+
+  // Actor
+  actorId         String?
+  actorEmail      String?
+  actorIp         String?
+
+  // Event details
+  description     String?
+  details         Json?
+
+  // Detection flags
+  detected        Boolean         @default(false)
+  detectedBy      String?
+  blocked         Boolean         @default(false)
+  alertSent       Boolean         @default(false)
+
+  // Timestamps
+  createdAt       DateTime        @default(now())
+
+  @@index([eventType])
+  @@index([actorId])
+  @@index([severity])
+  @@index([createdAt])
+  @@map("security_events")
+}
+
+enum SecuritySeverity {
+  INFO
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum EventOutcome {
+  SUCCESS
+  FAILURE
+  DENIED
+  ERROR
+}
+
+// ============================================
+// TICKETS & SLA TRACKING - IFC-093
+// ============================================
+
+model Ticket {
+  id                  String          @id @default(cuid())
+  ticketNumber        String          @unique // T-XXXXX format
+  subject             String
+  description         String?
+  status              TicketStatus    @default(OPEN)
+  priority            TicketPriority  @default(MEDIUM)
+
+  // SLA Tracking
+  slaPolicy           SLAPolicy       @relation(fields: [slaPolicyId], references: [id])
+  slaPolicyId         String
+  slaResponseDue      DateTime?       // First response due time
+  slaResolutionDue    DateTime?       // Resolution due time
+  slaStatus           SLAStatus       @default(ON_TRACK)
+  slaBreachedAt       DateTime?       // When SLA was first breached
+  firstResponseAt     DateTime?       // When first response was made
+  resolvedAt          DateTime?       // When ticket was resolved
+
+  // Contact & Assignment
+  contactId           String?
+  contactName         String
+  contactEmail        String
+  assigneeId          String?
+
+  // Timestamps
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  closedAt            DateTime?
+
+  // Notifications
+  slaNotifications    SLANotification[]
+
+  @@index([ticketNumber])
+  @@index([status])
+  @@index([priority])
+  @@index([slaStatus])
+  @@index([assigneeId])
+  @@index([contactId])
+  @@index([slaResolutionDue])
+  @@map("tickets")
+}
+
+model SLAPolicy {
+  id                      String        @id @default(cuid())
+  name                    String
+  description             String?
+
+  // Response time SLAs in minutes
+  criticalResponseMinutes Int           @default(15)
+  highResponseMinutes     Int           @default(60)
+  mediumResponseMinutes   Int           @default(240)  // 4 hours
+  lowResponseMinutes      Int           @default(480)  // 8 hours
+
+  // Resolution time SLAs in minutes
+  criticalResolutionMinutes Int         @default(120)  // 2 hours
+  highResolutionMinutes     Int         @default(480)  // 8 hours
+  mediumResolutionMinutes   Int         @default(1440) // 24 hours
+  lowResolutionMinutes      Int         @default(4320) // 72 hours
+
+  // Warning thresholds (percentage of time remaining)
+  warningThresholdPercent Int           @default(25)   // Warn at 25% remaining
+
+  isDefault               Boolean       @default(false)
+  isActive                Boolean       @default(true)
+
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+
+  tickets                 Ticket[]
+
+  @@map("sla_policies")
+}
+
+model SLANotification {
+  id              String                @id @default(cuid())
+  ticketId        String
+  ticket          Ticket                @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  type            SLANotificationType
+  severity        SLANotificationSeverity @default(INFO)
+  message         String
+  sentAt          DateTime              @default(now())
+  acknowledgedAt  DateTime?
+  acknowledgedBy  String?
+
+  @@index([ticketId])
+  @@index([type])
+  @@index([sentAt])
+  @@map("sla_notifications")
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_ON_CUSTOMER
+  WAITING_ON_THIRD_PARTY
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum SLAStatus {
+  ON_TRACK       // Within SLA, plenty of time
+  AT_RISK        // Getting close to breach (warning threshold)
+  BREACHED       // SLA has been breached
+  PAUSED         // SLA timer paused (waiting on customer)
+  MET            // SLA was met (resolved in time)
+}
+
+enum SLANotificationType {
+  WARNING          // Approaching SLA breach
+  BREACH           // SLA has been breached
+  ESCALATION       // Ticket has been escalated
+  ASSIGNMENT       // Ticket has been assigned
+  RESOLUTION       // Ticket has been resolved
+}
+
+enum SLANotificationSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}

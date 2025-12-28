@@ -6,7 +6,7 @@
   "owner": "QA Lead + Tech Lead",
   "dependencies": {
     "required": ["IFC-002"],
-    "verified_at": "2025-12-22T20:50:00Z",
+    "verified_at": "2025-12-28T23:24:52.901Z",
     "all_satisfied": true,
     "notes": "IFC-002 Domain Model Design completed - testing infrastructure ready"
   },
@@ -40,18 +40,9 @@
       "docs/shared/review-checklist.md"
     ],
     "created": [
-      {
-        "path": "docs/tdd-guidelines.md",
-        "sha256": "b793d19603842781e774f341123ba69462c4a9011daced7fbecff72d2de86fca"
-      },
-      {
-        "path": "docs/shared/review-checklist.md",
-        "sha256": "80e7627ecb0c2de17a0721d48c0e156803169b35939bed637faad0f163305321"
-      },
-      {
-        "path": "artifacts/misc/ci-coverage-config.yml",
-        "sha256": "178921ba3fde882335a197c3b341ab2b2b86b9d6f0a5b60f13ca1bb66c77d51f"
-      }
+      "docs/tdd-guidelines.md",
+      "artifacts/misc/ci-coverage-config.yml",
+      "docs/shared/review-checklist.md"
     ],
     "missing": []
   },
@@ -156,5 +147,6 @@
   "waivers": [],
   "notes": "TDD process documentation completed. Guidelines cover Red-Green-Refactor workflow with TypeScript examples. Coverage configuration enforces 90% global, 95% domain, 90% application, 85% API thresholds. Review checklist includes tests, code quality, security, documentation, architecture, and performance categories. All artifacts reference DDD layer architecture.",
   "completed_at": "2025-12-22T20:55:00Z",
-  "started_at": "2025-12-22T20:50:00Z"
+  "started_at": "2025-12-22T20:50:00Z",
+  "dependencies_resolved": ["IFC-002"]
 }

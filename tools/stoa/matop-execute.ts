@@ -46,6 +46,8 @@ import {
 import {
   createStatusChangeProposal,
   appendToPatchHistory,
+  applyCsvPatch,
+  type ApplyPatchResult,
 } from '../scripts/lib/stoa/csv-governance.js';
 import {
   processVerdictRemediation,
@@ -155,6 +157,7 @@ interface MatopResult {
   evidenceDir: string;
   stoaVerdicts: StoaVerdict[];
   csvPatchProposal?: CsvPatchProposal;
+  csvPatchApplied?: ApplyPatchResult;
   remediation?: RemediationResult;
 }
 
@@ -351,12 +354,13 @@ async function executeMatop(
   log(`Consensus: ${finalVerdict}`);
 
   // =========================================================================
-  // Phase 9: CSV Patch Proposal
+  // Phase 9: CSV Patch Proposal & Auto-Apply
   // =========================================================================
   let csvPatchProposal: CsvPatchProposal | undefined;
+  let csvPatchApplied: ApplyPatchResult | undefined;
 
   if (finalVerdict === 'PASS' && task.status !== 'Completed') {
-    logSection('Phase 9: CSV Patch Proposal');
+    logSection('Phase 9: CSV Patch & Auto-Apply');
 
     csvPatchProposal = createStatusChangeProposal(
       runId,
@@ -367,20 +371,46 @@ async function executeMatop(
       [`${evidenceDir}/summary.json`]
     );
 
-    appendToPatchHistory(repoRoot, {
-      proposal: csvPatchProposal,
-      appliedAt: null,
-      appliedBy: null,
-      rejected: false,
-    });
-
     writeFileSync(
       join(evidenceDir, 'csv-patch-proposal.json'),
       JSON.stringify(csvPatchProposal, null, 2)
     );
 
     log(`Proposed: ${task.status} → Completed`);
-    log(`Patch saved to: csv-patch-proposal.json`);
+
+    // Auto-apply the patch (unless dry run)
+    if (!dryRun) {
+      csvPatchApplied = applyCsvPatch(repoRoot, csvPatchProposal, 'matop-auto');
+
+      if (csvPatchApplied.success) {
+        log(`Applied: Sprint_plan.csv updated`);
+        log(`  Status: ${task.status} → Completed`);
+        log(`  Applied by: ${csvPatchApplied.appliedBy}`);
+        log(`  Applied at: ${csvPatchApplied.appliedAt}`);
+      } else {
+        log(`Failed to apply patch: ${csvPatchApplied.error}`);
+        // Still record the proposal in history as unapplied
+        appendToPatchHistory(repoRoot, {
+          proposal: csvPatchProposal,
+          appliedAt: null,
+          appliedBy: null,
+          rejected: false,
+        });
+      }
+
+      writeFileSync(
+        join(evidenceDir, 'csv-patch-applied.json'),
+        JSON.stringify(csvPatchApplied, null, 2)
+      );
+    } else {
+      log(`Dry run: patch NOT applied`);
+      appendToPatchHistory(repoRoot, {
+        proposal: csvPatchProposal,
+        appliedAt: null,
+        appliedBy: null,
+        rejected: false,
+      });
+    }
   }
 
   // =========================================================================
@@ -457,6 +487,14 @@ async function executeMatop(
     stoaVerdicts: stoaVerdicts.map((v) => ({ stoa: v.stoa, verdict: v.verdict })),
     finalVerdict,
     csvPatchProposal: csvPatchProposal ? 'proposed' : 'none',
+    csvPatchApplied: csvPatchApplied
+      ? {
+          success: csvPatchApplied.success,
+          appliedAt: csvPatchApplied.appliedAt,
+          appliedBy: csvPatchApplied.appliedBy,
+          error: csvPatchApplied.error,
+        }
+      : null,
     remediation: remediation
       ? {
           reviewQueueItemId: remediation.reviewQueueItem?.id,
@@ -491,7 +529,7 @@ ${stoaVerdicts.map((v) => `- **${v.stoa}:** ${v.verdict}`).join('\n')}
 
 ## Final Verdict: **${finalVerdict}**
 
-${csvPatchProposal ? `## CSV Patch Proposed\n${task.status} → Completed` : ''}
+${csvPatchProposal ? `## CSV Patch\n- **Proposed:** ${task.status} → Completed\n- **Applied:** ${csvPatchApplied?.success ? 'Yes' : csvPatchApplied ? `No (${csvPatchApplied.error})` : 'Dry run'}` : ''}
 
 ${
   remediation
@@ -521,6 +559,7 @@ ${remediation.actions.map((a) => `- ${a}`).join('\n')}
     evidenceDir,
     stoaVerdicts,
     csvPatchProposal,
+    csvPatchApplied,
     remediation,
   };
 }
@@ -561,7 +600,8 @@ The orchestrator will:
   5. Generate STOA verdicts
   6. Aggregate final verdict (PASS/WARN/FAIL/NEEDS_HUMAN)
   7. Create CSV patch proposal if PASS
-  8. Generate evidence bundle with SHA256 hashes
+  8. AUTO-APPLY patch to Sprint_plan.csv (unless --dry-run)
+  9. Generate evidence bundle with SHA256 hashes
 `);
 }
 

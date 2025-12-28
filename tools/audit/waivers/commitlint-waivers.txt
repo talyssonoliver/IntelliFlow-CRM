@@ -1,0 +1,7 @@
+# Commitlint Waivers
+# Historical commits with non-compliant messages that cannot be rewritten.
+# Format: SHA [optional reason]
+# Lines starting with # are comments.
+
+# Multi-line subject in historical commit (cannot rebase due to remote push)
+e21e13409194 chore(hygiene): prevent runtime artifact drift - multi-line subject

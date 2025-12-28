@@ -2,7 +2,8 @@
 
 ## Overview
 
-The **Runtime Path Linter** prevents artifact hygiene regressions by enforcing strict policies on where files can be located in the repository. It detects:
+The **Runtime Path Linter** prevents artifact hygiene regressions by enforcing
+strict policies on where files can be located in the repository. It detects:
 
 - Files in **forbidden paths** (including git-ignored files)
 - **Duplicate canonical files** (Sprint_plan.csv, task-registry.json, etc.)
@@ -67,6 +68,7 @@ canonical:
 ```
 
 **Violations:**
+
 - ❌ Multiple copies detected → ERROR
 - ❌ Canonical file missing (strict mode) → ERROR
 
@@ -84,6 +86,7 @@ forbidden:
 ```
 
 **Examples:**
+
 - ❌ `Sprint_plan_backup.csv` (root level)
 - ❌ `apps/project-tracker/docs/metrics/logs/build.log`
 - ❌ `src/debug.log`
@@ -97,12 +100,13 @@ Transitional rules with deadlines:
 policy_pending:
   - pattern: 'apps/project-tracker/docs/artifacts/**/*'
     deadline: '2025-01-15'
-    severity_local: 'warning'  # Local: WARN
-    severity_ci: 'error'        # CI: FAIL
+    severity_local: 'warning' # Local: WARN
+    severity_ci: 'error' # CI: FAIL
     reason: 'Migration from docs/artifacts to artifacts/ in progress'
 ```
 
 **Enforcement:**
+
 - **Local mode**: Shows warning
 - **CI mode**: Fails build
 - **Expired deadline**: Always fails (strict mode)
@@ -144,6 +148,7 @@ pnpm tsx tools/audit/runtime-path-linter.ts
 ```
 
 **Behavior:**
+
 - Scans tracked files only
 - `policy_pending` → WARNING
 - Warnings don't fail
@@ -156,6 +161,7 @@ pnpm tsx tools/audit/runtime-path-linter.ts --strict
 ```
 
 **Behavior:**
+
 - Scans tracked + ignored files (drift detection)
 - `policy_pending` → ERROR
 - Expired deadlines → ERROR
@@ -163,6 +169,7 @@ pnpm tsx tools/audit/runtime-path-linter.ts --strict
 - Duplicates always fail
 
 **Triggers:**
+
 - `--strict` flag
 - `CI=true` environment variable
 - `STRICT_VALIDATION=true` environment variable
@@ -205,6 +212,7 @@ The linter runs automatically in CI:
 ```
 
 **Triggers:**
+
 - Pull requests to `main` or `develop`
 - Pushes to `main` or `develop`
 - Manual workflow dispatch
@@ -226,6 +234,7 @@ git ls-files -o -i --exclude-standard
 ```
 
 Files matching `.gitignore` patterns. Scanned in **strict mode only** to detect:
+
 - Forbidden files that should never exist (even if ignored)
 - Runtime artifacts that leaked into tracked locations
 
@@ -322,19 +331,18 @@ Statistics:
 ```markdown
 # Runtime Path Lint Report
 
-**Generated:** 2025-12-21T12:34:56.789Z
-**Mode:** STRICT (CI)
-**Status:** ✗ FAILED
+**Generated:** 2025-12-21T12:34:56.789Z **Mode:** STRICT (CI) **Status:** ✗
+FAILED
 
 ## Summary
 
-| Metric | Value |
-|--------|-------|
-| Files Scanned | 1523 |
-| Errors | 3 |
-| Warnings | 0 |
-| Forbidden Violations | 2 |
-| Duplicate Violations | 1 |
+| Metric               | Value |
+| -------------------- | ----- |
+| Files Scanned        | 1523  |
+| Errors               | 3     |
+| Warnings             | 0     |
+| Forbidden Violations | 2     |
+| Duplicate Violations | 1     |
 
 ## Violations
 
@@ -351,12 +359,14 @@ Statistics:
 ### 1. Root-Level Artifacts
 
 **Problem:**
+
 ```
 ✗ debug.log
   [forbidden-path] Root-level log files are forbidden
 ```
 
 **Fix:**
+
 ```bash
 # Move to artifacts
 mkdir -p artifacts/logs
@@ -370,12 +380,14 @@ git rm --cached debug.log
 ### 2. Runtime Artifacts in docs/metrics
 
 **Problem:**
+
 ```
 ✗ apps/project-tracker/docs/metrics/.locks/task-123.lock
   [forbidden-path] Lock files in docs/metrics are forbidden
 ```
 
 **Fix:**
+
 ```bash
 # Delete runtime artifacts
 rm -rf apps/project-tracker/docs/metrics/.locks
@@ -387,12 +399,14 @@ echo "apps/project-tracker/docs/metrics/.locks" >> .gitignore
 ### 3. Duplicate Canonical Files
 
 **Problem:**
+
 ```
 ✗ Sprint_plan.csv (duplicate)
   [duplicate-violation] Multiple Sprint_plan.csv detected
 ```
 
 **Fix:**
+
 ```bash
 # Keep only canonical copy
 rm Sprint_plan.csv
@@ -405,12 +419,14 @@ rm backups/Sprint_plan.csv
 ### 4. Policy Pending (Migration)
 
 **Problem:**
+
 ```
 ⚠ apps/project-tracker/docs/artifacts/test.json
   [policy-pending] Runtime artifacts in docs/ are deprecated (Deadline: 2025-01-15, 25 days remaining)
 ```
 
 **Fix:**
+
 ```bash
 # Run migration script
 pnpm tsx tools/audit/migrate-artifacts.ts
@@ -422,13 +438,13 @@ mv apps/project-tracker/docs/artifacts/test.json artifacts/misc/
 
 ## Exit Codes
 
-| Code | Meaning |
-|------|---------|
-| 0 | Success - no violations |
-| 1 | Forbidden path violation or duplicate |
-| 2 | Canonical file missing |
-| 3 | Policy pending expired |
-| 4 | Parse error or config error |
+| Code | Meaning                               |
+| ---- | ------------------------------------- |
+| 0    | Success - no violations               |
+| 1    | Forbidden path violation or duplicate |
+| 2    | Canonical file missing                |
+| 3    | Policy pending expired                |
+| 4    | Parse error or config error           |
 
 ## Integration with CI
 
@@ -497,6 +513,7 @@ policy_pending:
 ```
 
 **Timeline:**
+
 1. **Week 1**: Add to `policy_pending` with warning
 2. **Week 2-4**: Team migrates files
 3. **Week 4**: Deadline passes → CI fails
@@ -532,6 +549,7 @@ class RuntimePathLinter {
 ### Why scan ignored files?
 
 **Drift detection**. Some files should NEVER exist, even if ignored:
+
 - Lock files in `docs/metrics/`
 - Secrets in any location
 - Duplicates of canonical files
@@ -539,18 +557,19 @@ class RuntimePathLinter {
 ### What's the difference between forbidden and policy_pending?
 
 - **Forbidden**: Never allowed, immediate failure
-- **Policy pending**: Temporary allowance during migration, deadline-based enforcement
+- **Policy pending**: Temporary allowance during migration, deadline-based
+  enforcement
 
 ### Can I disable the linter?
 
 **Local:**
+
 ```bash
 export SKIP_RUNTIME_PATH_LINT=true
 git commit -m "..."
 ```
 
-**CI:**
-Not recommended. Use `policy_pending` for temporary exceptions.
+**CI:** Not recommended. Use `policy_pending` for temporary exceptions.
 
 ### How do I test policy changes?
 

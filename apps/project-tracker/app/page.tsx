@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Upload,
@@ -13,9 +13,11 @@ import {
   Server,
   Shield,
   Terminal,
+  Zap,
 } from 'lucide-react';
-import { parseCSV, parseCSVText, type ParsedCSVData } from '@/lib/csv-parser';
-import type { Task, SprintNumber } from '@/lib/types';
+import { parseCSV, type ParsedCSVData } from '@/lib/csv-parser';
+import { useTaskData } from '@/lib/TaskDataContext';
+import type { SprintNumber } from '@/lib/types';
 import DashboardView from '@/components/DashboardView';
 import KanbanView from '@/components/KanbanView';
 import AnalyticsView from '@/components/AnalyticsView';
@@ -23,132 +25,89 @@ import SettingsView from '@/components/SettingsView';
 import MetricsView from '@/components/MetricsView';
 import GovernanceView from '@/components/GovernanceView';
 import AuditView from '@/components/AuditView';
+import ContractsView from '@/components/ContractsView';
 import TaskModal from '@/components/TaskModal';
+import SprintExecutionView from '@/components/SprintExecutionView';
 
-type Page = 'dashboard' | 'kanban' | 'analytics' | 'metrics' | 'governance' | 'audit' | 'settings';
+type Page =
+  | 'dashboard'
+  | 'kanban'
+  | 'analytics'
+  | 'metrics'
+  | 'governance'
+  | 'contracts'
+  | 'audit'
+  | 'settings'
+  | 'sprint-execution';
 
 export default function Home() {
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
-  const [allTasks, setAllTasks] = useState<Task[]>([]);
-  const [sections, setSections] = useState<string[]>([]);
-  const [sprints, setSprints] = useState<SprintNumber[]>([]);
-  const [currentSprint, setCurrentSprint] = useState<SprintNumber>(0);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  // Use shared context for all task data
+  const {
+    allTasks,
+    filteredTasks,
+    sections,
+    sprints,
+    currentSprint,
+    setCurrentSprint,
+    isLoading,
+    lastUpdated,
+    refreshData,
+    selectTask,
+    selectedTask,
+  } = useTaskData();
 
-    setIsLoading(true);
-    try {
-      const data: ParsedCSVData = await parseCSV(file);
-      setAllTasks(data.tasks);
-      setSections(data.sections);
-      setSprints(data.sprints);
-      if (data.sprints.length > 0) {
-        setCurrentSprint(data.sprints[0]);
+  const handleFileUpload = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      try {
+        const data: ParsedCSVData = await parseCSV(file);
+        // After uploading, sync to server and refresh
+        await fetch('/api/sync-metrics', { method: 'POST' });
+        await refreshData();
+        console.log('CSV uploaded and synced:', data.tasks.length, 'tasks');
+      } catch (error) {
+        console.error('Error parsing CSV:', error);
+        alert('Failed to parse CSV file. Please check the format.');
       }
-    } catch (error) {
-      console.error('Error parsing CSV:', error);
-      alert('Failed to parse CSV file. Please check the format.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    [refreshData]
+  );
 
-  const handleTaskClick = useCallback((task: Task) => {
-    setSelectedTask(task);
-  }, []);
+  const handleTaskClick = useCallback(
+    (task: any) => {
+      selectTask(task);
+    },
+    [selectTask]
+  );
 
   const handleCloseModal = useCallback(() => {
-    setSelectedTask(null);
-  }, []);
+    selectTask(null);
+  }, [selectTask]);
 
-  // Sync metrics from CSV
-  const syncMetrics = useCallback(async () => {
-    try {
-      const response = await fetch('/api/sync-metrics', {
-        method: 'POST',
-        cache: 'no-store',
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        console.log('Metrics synced successfully:', result);
-        return true;
+  const handleSprintChange = useCallback(
+    (value: string) => {
+      let sprint: SprintNumber;
+      if (value === 'all') {
+        sprint = 'all';
+      } else if (value === 'Continuous') {
+        sprint = 'Continuous';
       } else {
-        console.error('Sync failed:', await response.text());
-        return false;
+        sprint = Number.parseInt(value, 10);
       }
-    } catch (error) {
-      console.error('Error syncing metrics:', error);
-      return false;
-    }
-  }, []);
-
-  // Load Sprint_plan.csv
-  const loadSprintPlan = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      // Add timestamp to prevent caching
-      const timestamp = Date.now();
-      const response = await fetch(`/api/sprint-plan?t=${timestamp}`, {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache',
-          Pragma: 'no-cache',
-        },
-      });
-      if (!response.ok) {
-        throw new Error('Failed to load Sprint plan');
-      }
-      const csvText = await response.text();
-      const data: ParsedCSVData = parseCSVText(csvText);
-
-      // Debug logging
-      console.log('CSV loaded at:', new Date().toLocaleTimeString());
-      console.log('Total tasks:', data.tasks.length);
-      console.log('Task statuses:', {
-        planned: data.tasks.filter((t) => t.status === 'Planned').length,
-        inProgress: data.tasks.filter((t) => t.status === 'In Progress').length,
-        completed: data.tasks.filter((t) => t.status === 'Completed').length,
-        blocked: data.tasks.filter((t) => t.status === 'Blocked').length,
-      });
-
-      setAllTasks(data.tasks);
-      setSections(data.sections);
-      setSprints(data.sprints);
-      setLastUpdated(new Date());
-      if (data.sprints.length > 0 && currentSprint === 0) {
-        setCurrentSprint(data.sprints[0]);
-      }
-
-      // Auto-sync metrics after loading CSV
-      console.log('Auto-syncing metrics...');
-      await syncMetrics();
-    } catch (error) {
-      console.error('Error loading Sprint plan:', error);
-      // Don't show alert on auto-load failure, user can still upload manually
-    } finally {
-      setIsLoading(false);
-    }
-  }, [currentSprint, syncMetrics]);
-
-  // Auto-load on mount only (no polling)
-  useEffect(() => {
-    loadSprintPlan();
-  }, [loadSprintPlan]);
-
-  const filteredTasks =
-    currentSprint === 'all' ? allTasks : allTasks.filter((t) => t.sprint === currentSprint);
+      setCurrentSprint(sprint);
+    },
+    [setCurrentSprint]
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-gray-900 text-white sticky top-0 z-50 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -167,16 +126,7 @@ export default function Home() {
               {sprints.length > 0 && (
                 <select
                   value={currentSprint}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (value === 'all') {
-                      setCurrentSprint('all');
-                    } else if (value === 'Continuous') {
-                      setCurrentSprint('Continuous');
-                    } else {
-                      setCurrentSprint(Number.parseInt(value, 10));
-                    }
-                  }}
+                  onChange={(e) => handleSprintChange(e.target.value)}
                   className="bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">All Sprints</option>
@@ -190,7 +140,7 @@ export default function Home() {
 
               {/* Refresh Button */}
               <button
-                onClick={loadSprintPlan}
+                onClick={refreshData}
                 disabled={isLoading}
                 className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-4 py-2 rounded-lg transition-colors"
                 title="Refresh data"
@@ -257,6 +207,17 @@ export default function Home() {
               Metrics
             </button>
             <button
+              onClick={() => setCurrentPage('sprint-execution')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
+                currentPage === 'sprint-execution'
+                  ? 'bg-orange-600 text-white'
+                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              <Zap className="w-4 h-4" />
+              Execution
+            </button>
+            <button
               onClick={() => setCurrentPage('governance')}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
                 currentPage === 'governance'
@@ -266,6 +227,17 @@ export default function Home() {
             >
               <Shield className="w-4 h-4" />
               Governance
+            </button>
+            <button
+              onClick={() => setCurrentPage('contracts')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
+                currentPage === 'contracts'
+                  ? 'bg-green-600 text-white'
+                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              <FileText className="w-4 h-4" />
+              Contracts
             </button>
             <button
               onClick={() => setCurrentPage('audit')}
@@ -329,6 +301,7 @@ export default function Home() {
                 tasks={filteredTasks}
                 sections={sections}
                 onTaskClick={handleTaskClick}
+                sprint={currentSprint}
               />
             )}
             {currentPage === 'kanban' && (
@@ -339,8 +312,16 @@ export default function Home() {
             )}
             {currentPage === 'metrics' && <MetricsView selectedSprint={currentSprint} />}
             {currentPage === 'governance' && <GovernanceView selectedSprint={currentSprint} />}
+            {currentPage === 'contracts' && (
+              <ContractsView tasks={filteredTasks} sprint={currentSprint} />
+            )}
             {currentPage === 'audit' && <AuditView />}
             {currentPage === 'settings' && <SettingsView />}
+            {currentPage === 'sprint-execution' && (
+              <SprintExecutionView
+                sprintNumber={typeof currentSprint === 'number' ? currentSprint : undefined}
+              />
+            )}
           </>
         )}
       </main>

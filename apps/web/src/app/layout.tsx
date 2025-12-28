@@ -15,19 +15,23 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+          rel="stylesheet"
+        />
+      </head>
       <body className={inter.className}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="light"
           enableSystem
           disableTransitionOnChange
         >
           <Providers>
-            <div className="relative min-h-screen">
+            <div className="relative min-h-screen bg-background">
               <Navigation />
-              <main className="lg:pl-64">
-                <div className="container mx-auto p-6 lg:p-8">{children}</div>
-              </main>
+              <main>{children}</main>
             </div>
           </Providers>
         </ThemeProvider>

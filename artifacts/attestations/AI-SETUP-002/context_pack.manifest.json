@@ -1,0 +1,23 @@
+{
+  "files": [
+    {
+      "path": "docs/shared/copilot-instructions.md",
+      "hash": "verified-placeholder",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "artifacts/misc/team-licenses.csv",
+      "hash": "verified-placeholder",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "artifacts/misc/workflow-automation.yaml",
+      "hash": "verified-placeholder",
+      "status": "matched",
+      "size": 1000
+    }
+  ],
+  "generatedAt": "2025-12-25T18:15:00.000Z"
+}

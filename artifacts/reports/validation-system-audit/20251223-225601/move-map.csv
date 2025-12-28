@@ -1,0 +1,6 @@
+original_path,new_path,reason,timestamp,status
+apps/project-tracker/docs/metrics/sprint-0/phase-4-final-setup/ENV-017-AI.json,apps/project-tracker/docs/metrics/sprint-1/phase-1-validation/ENV-017-AI.json,CSV Target Sprint is 1 not 0,2025-12-23T22:56:01Z,DRY_RUN
+apps/project-tracker/docs/metrics/sprint-0/phase-5-completion/ENV-018-AI.json,apps/project-tracker/docs/metrics/sprint-1/phase-1-validation/ENV-018-AI.json,CSV Target Sprint is 1 not 0,2025-12-23T22:56:01Z,DRY_RUN
+apps/project-tracker/docs/metrics/sprint-1/phase-1-validation/IFC-072.json,apps/project-tracker/docs/metrics/sprint-2/IFC-072.json,CSV Target Sprint is 2 not 1,2025-12-23T22:56:01Z,DRY_RUN
+apps/project-tracker/docs/metrics/sprint-1/phase-1-validation/IFC-073.json,apps/project-tracker/docs/metrics/sprint-2/IFC-073.json,CSV Target Sprint is 2 not 1,2025-12-23T22:56:01Z,DRY_RUN
+apps/project-tracker/docs/metrics/sprint-1/phase-1-validation/IFC-077.json,apps/project-tracker/docs/metrics/sprint-8/IFC-077.json,CSV Target Sprint is 8 not 1,2025-12-23T22:56:01Z,DRY_RUN

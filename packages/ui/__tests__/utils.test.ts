@@ -50,11 +50,7 @@ describe('cn utility function', () => {
     it('should handle multiple conditional classes', () => {
       const isActive = true;
       const isDisabled = false;
-      const result = cn(
-        'base',
-        isActive && 'active',
-        isDisabled && 'disabled'
-      );
+      const result = cn('base', isActive && 'active', isDisabled && 'disabled');
       expect(result).toContain('base');
       expect(result).toContain('active');
       expect(result).not.toContain('disabled');
@@ -75,13 +71,7 @@ describe('cn utility function', () => {
     });
 
     it('should handle mixed undefined, null, and valid classes', () => {
-      const result = cn(
-        'base',
-        undefined,
-        null,
-        'valid-class',
-        false && 'not-included'
-      );
+      const result = cn('base', undefined, null, 'valid-class', false && 'not-included');
       expect(result).toContain('base');
       expect(result).toContain('valid-class');
     });

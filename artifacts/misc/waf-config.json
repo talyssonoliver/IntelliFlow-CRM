@@ -1,0 +1,273 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "IntelliFlow CRM WAF Configuration",
+  "description": "Web Application Firewall configuration for DDoS protection and security",
+  "version": "1.0.0",
+  "task_id": "IFC-114",
+  "generated_at": "2025-12-28T10:00:00Z",
+
+  "waf_provider": {
+    "primary": "cloudflare",
+    "fallback": "application-level",
+    "documentation": "https://developers.cloudflare.com/waf/"
+  },
+
+  "ddos_protection": {
+    "enabled": true,
+    "description": "Multi-layer DDoS protection configuration",
+
+    "layer_3_4": {
+      "description": "Network-level DDoS protection (handled by infrastructure)",
+      "provider": "cloudflare",
+      "features": [
+        "SYN flood protection",
+        "UDP flood protection",
+        "ICMP flood protection",
+        "IP reputation filtering"
+      ]
+    },
+
+    "layer_7": {
+      "description": "Application-level DDoS protection",
+      "enabled": true,
+      "rules": {
+        "burst_detection": {
+          "enabled": true,
+          "threshold_requests": 500,
+          "window_seconds": 1,
+          "action": "block",
+          "block_duration_minutes": 5,
+          "description": "Block IPs exceeding 500 requests per second"
+        },
+        "rate_limiting": {
+          "enabled": true,
+          "profiles": {
+            "default": {
+              "requests_per_minute": 100,
+              "action": "challenge"
+            },
+            "authenticated": {
+              "requests_per_minute": 1000,
+              "action": "throttle"
+            },
+            "api_intensive": {
+              "requests_per_minute": 10,
+              "action": "block"
+            }
+          }
+        },
+        "geographic_blocking": {
+          "enabled": false,
+          "mode": "allowlist",
+          "countries": ["GB", "US", "EU"],
+          "description": "Optional geographic restrictions"
+        }
+      }
+    }
+  },
+
+  "security_rules": {
+    "managed_rulesets": {
+      "owasp_core": {
+        "enabled": true,
+        "paranoia_level": 1,
+        "description": "OWASP ModSecurity Core Rule Set"
+      },
+      "known_bad_inputs": {
+        "enabled": true,
+        "description": "Block known malicious payloads"
+      },
+      "sqli": {
+        "enabled": true,
+        "sensitivity": "medium",
+        "description": "SQL injection protection"
+      },
+      "xss": {
+        "enabled": true,
+        "sensitivity": "medium",
+        "description": "Cross-site scripting protection"
+      },
+      "rce": {
+        "enabled": true,
+        "description": "Remote code execution protection"
+      },
+      "lfi_rfi": {
+        "enabled": true,
+        "description": "Local/Remote file inclusion protection"
+      }
+    },
+
+    "custom_rules": [
+      {
+        "id": "ifc-114-001",
+        "name": "Block excessive API requests",
+        "description": "Block clients making too many API requests",
+        "expression": "(rate(5m) > 1000)",
+        "action": "block",
+        "priority": 1
+      },
+      {
+        "id": "ifc-114-002",
+        "name": "Challenge suspicious user agents",
+        "description": "Challenge requests with suspicious or missing user agents",
+        "expression": "(not http.user_agent contains \"Mozilla\") and (not http.user_agent contains \"Chrome\")",
+        "action": "challenge",
+        "priority": 2
+      },
+      {
+        "id": "ifc-114-003",
+        "name": "Block known attack patterns",
+        "description": "Block requests containing known attack signatures",
+        "expression": "(http.request.uri.query contains \"<script\") or (http.request.uri.query contains \"' OR '1'='1\")",
+        "action": "block",
+        "priority": 3
+      },
+      {
+        "id": "ifc-114-004",
+        "name": "Protect AI endpoints",
+        "description": "Extra protection for resource-intensive AI endpoints",
+        "expression": "(http.request.uri.path contains \"/api/ai/\") and (rate(1m) > 10)",
+        "action": "block",
+        "priority": 4
+      },
+      {
+        "id": "ifc-114-005",
+        "name": "Protect auth endpoints",
+        "description": "Brute force protection for authentication",
+        "expression": "(http.request.uri.path contains \"/api/auth/\") and (rate(1m) > 5)",
+        "action": "challenge",
+        "priority": 5
+      }
+    ]
+  },
+
+  "bot_protection": {
+    "enabled": true,
+    "mode": "managed",
+    "rules": {
+      "verified_bots": {
+        "action": "allow",
+        "includes": ["googlebot", "bingbot", "slackbot"]
+      },
+      "automated_services": {
+        "action": "challenge",
+        "description": "Challenge automated/headless browsers"
+      },
+      "definitely_automated": {
+        "action": "block",
+        "description": "Block definitive bot traffic"
+      }
+    }
+  },
+
+  "response_headers": {
+    "security_headers": {
+      "X-Content-Type-Options": "nosniff",
+      "X-Frame-Options": "DENY",
+      "X-XSS-Protection": "1; mode=block",
+      "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+      "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'",
+      "Referrer-Policy": "strict-origin-when-cross-origin",
+      "Permissions-Policy": "geolocation=(), microphone=(), camera=()"
+    },
+    "rate_limit_headers": {
+      "X-RateLimit-Limit": true,
+      "X-RateLimit-Remaining": true,
+      "X-RateLimit-Reset": true,
+      "Retry-After": true
+    }
+  },
+
+  "ip_access_rules": {
+    "allowlist": {
+      "enabled": true,
+      "description": "Always allow these IPs (internal services)",
+      "ips": [
+        "127.0.0.1/32",
+        "10.0.0.0/8",
+        "172.16.0.0/12",
+        "192.168.0.0/16"
+      ]
+    },
+    "blocklist": {
+      "enabled": true,
+      "description": "Known malicious IPs (updated automatically)",
+      "source": "threat_intelligence_feed",
+      "update_frequency": "hourly"
+    }
+  },
+
+  "logging_and_monitoring": {
+    "enabled": true,
+    "log_level": "info",
+    "metrics": {
+      "requests_total": true,
+      "requests_blocked": true,
+      "requests_challenged": true,
+      "attack_types": true,
+      "top_blocked_ips": true,
+      "geographic_distribution": true
+    },
+    "alerts": {
+      "enabled": true,
+      "channels": ["slack", "pagerduty"],
+      "thresholds": {
+        "blocked_requests_per_minute": 100,
+        "unique_attackers_per_hour": 50,
+        "ddos_attack_detected": true
+      }
+    }
+  },
+
+  "application_level_fallback": {
+    "description": "Application-level rate limiting when WAF is unavailable",
+    "implementation": "apps/api/src/middleware/rate-limit.ts",
+    "features": {
+      "in_memory_tracking": true,
+      "burst_detection": true,
+      "automatic_blocking": true,
+      "tiered_rate_limits": true
+    },
+    "rate_limits": {
+      "public": { "limit": 100, "window_ms": 60000 },
+      "authenticated": { "limit": 1000, "window_ms": 60000 },
+      "ai": { "limit": 10, "window_ms": 60000 },
+      "auth": { "limit": 5, "window_ms": 60000 }
+    },
+    "ddos_config": {
+      "burst_limit": 500,
+      "burst_window_ms": 1000,
+      "block_duration_ms": 300000
+    }
+  },
+
+  "testing": {
+    "load_test_tool": "k6",
+    "test_scenarios": [
+      {
+        "name": "normal_load",
+        "vus": 100,
+        "duration": "5m",
+        "expected_result": "all_requests_succeed"
+      },
+      {
+        "name": "rate_limit_test",
+        "vus": 200,
+        "duration": "1m",
+        "expected_result": "rate_limits_enforced"
+      },
+      {
+        "name": "burst_test",
+        "vus": 1000,
+        "duration": "10s",
+        "expected_result": "ddos_protection_triggered"
+      }
+    ]
+  },
+
+  "compliance": {
+    "standards": ["OWASP Top 10", "PCI DSS", "SOC 2"],
+    "audit_logging": true,
+    "data_retention_days": 90
+  }
+}

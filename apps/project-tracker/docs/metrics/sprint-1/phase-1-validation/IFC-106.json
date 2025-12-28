@@ -2,18 +2,27 @@
   "$schema": "../../schemas/task-status.schema.json",
   "task_id": "IFC-106",
   "section": "Architecture",
-  "description": "Hexagonal Architecture Boundaries",
+  "description": "PHASE-039: Define Hexagonal module boundaries + create canonical packages/application + packages/adapters skeleton",
   "owner": "Tech Lead",
   "dependencies": {
-    "required": ["IFC-002", "IFC-131"],
-    "verified_at": "2025-12-21T14:00:00Z",
+    "required": ["IFC-002"],
+    "verified_at": "2025-12-28T23:24:52.685Z",
     "all_satisfied": true
   },
   "status": "DONE",
   "status_history": [
-    { "status": "PLANNED", "at": "2025-12-20T00:00:00Z" },
-    { "status": "IN_PROGRESS", "at": "2025-12-21T14:00:00Z" },
-    { "status": "DONE", "at": "2025-12-21T16:00:00Z" }
+    {
+      "status": "PLANNED",
+      "at": "2025-12-20T00:00:00Z"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "at": "2025-12-21T14:00:00Z"
+    },
+    {
+      "status": "DONE",
+      "at": "2025-12-21T16:00:00Z"
+    }
   ],
   "execution": {
     "started_at": "2025-12-21T14:00:00Z",
@@ -29,12 +38,7 @@
       "packages/adapters/src/*",
       "tests/architecture/*"
     ],
-    "created": [
-      "packages/application/src/ports/LeadRepository.ts",
-      "packages/application/src/usecases/leads/ConvertLeadUseCase.ts",
-      "packages/adapters/src/repositories/PrismaLeadRepository.ts",
-      "tests/architecture/README.md"
-    ],
+    "created": [],
     "missing": []
   },
   "validations": [
@@ -68,5 +72,9 @@
     }
   },
   "blockers": [],
-  "notes": "Hexagonal architecture with ports, use cases, and adapters properly separated."
+  "notes": "Hexagonal architecture with ports, use cases, and adapters properly separated.",
+  "completed_at": "2025-12-27T11:33:39.130Z",
+  "started_at": "2025-12-27T11:18:39.130Z",
+  "actual_duration_minutes": 15,
+  "dependencies_resolved": ["IFC-002"]
 }

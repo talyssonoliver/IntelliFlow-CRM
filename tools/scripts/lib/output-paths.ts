@@ -53,11 +53,7 @@ function generateRunId(): string {
   }
 
   // Local: timestamp + pid for uniqueness
-  const timestamp = new Date()
-    .toISOString()
-    .replace(/[-:]/g, '')
-    .replace(/\..+/, '')
-    .slice(0, 15); // YYYYMMDDTHHmmss
+  const timestamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\..+/, '').slice(0, 15); // YYYYMMDDTHHmmss
 
   return `${timestamp}-${process.pid}`;
 }
@@ -281,7 +277,9 @@ export async function createLatestLink(source: string, linkPath: string): Promis
       await symlink(source, linkPath);
     }
   } catch (err) {
-    console.warn(`Warning: Could not create latest link: ${err instanceof Error ? err.message : String(err)}`);
+    console.warn(
+      `Warning: Could not create latest link: ${err instanceof Error ? err.message : String(err)}`
+    );
   }
 }
 

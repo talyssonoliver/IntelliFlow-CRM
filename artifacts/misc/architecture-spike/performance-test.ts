@@ -9,7 +9,7 @@
  * Simulates real operations to measure actual performance
  */
 
-import { performance } from 'perf_hooks';
+import { performance } from 'node:perf_hooks';
 
 // ============================================
 // BENCHMARK UTILITIES
@@ -47,7 +47,7 @@ function benchmark(
     runs,
     avgTime: times.reduce((a, b) => a + b, 0) / times.length,
     minTime: times[0],
-    maxTime: times[times.length - 1],
+    maxTime: times.at(-1) ?? 0,
     p95Time: times[Math.floor(times.length * 0.95)],
     p99Time: times[Math.floor(times.length * 0.99)],
     unit: 'ms',
@@ -75,7 +75,7 @@ async function benchmarkAsync(
     runs,
     avgTime: times.reduce((a, b) => a + b, 0) / times.length,
     minTime: times[0],
-    maxTime: times[times.length - 1],
+    maxTime: times.at(-1) ?? 0,
     p95Time: times[Math.floor(times.length * 0.95)],
     p99Time: times[Math.floor(times.length * 0.99)],
     unit: 'ms',
@@ -172,18 +172,22 @@ function tRPCRequest() {
 async function runBenchmarks() {
   console.log('=== ARCHITECTURE SPIKE PERFORMANCE BENCHMARK ===\n');
 
-  const results: BenchmarkResult[] = [];
-
   // Sync benchmarks
   console.log('Running synchronous benchmarks...');
-  results.push(benchmark('Zod validation', zodValidation, 1000));
-  results.push(benchmark('JSON serialization', jsonSerialization, 1000));
-  results.push(benchmark('Database lookup (in-memory)', databaseLookup, 1000));
-  results.push(benchmark('Full tRPC request (simulated)', tRPCRequest, 1000));
+  const syncResults: BenchmarkResult[] = [
+    benchmark('Zod validation', zodValidation, 1000),
+    benchmark('JSON serialization', jsonSerialization, 1000),
+    benchmark('Database lookup (in-memory)', databaseLookup, 1000),
+    benchmark('Full tRPC request (simulated)', tRPCRequest, 1000),
+  ];
 
   // Async benchmarks
   console.log('Running asynchronous benchmarks...');
-  results.push(await benchmarkAsync('Network request (simulated)', simulateNetworkRequest, 100));
+  const asyncResults: BenchmarkResult[] = [
+    await benchmarkAsync('Network request (simulated)', simulateNetworkRequest, 100),
+  ];
+
+  const results: BenchmarkResult[] = [...syncResults, ...asyncResults];
 
   // Display results
   console.log('\n=== BENCHMARK RESULTS ===\n');

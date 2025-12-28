@@ -17,11 +17,11 @@ import {
   Server,
 } from 'lucide-react';
 
-// Detail types
+// Detail types - using snake_case to match API response
 interface MismatchDetail {
-  taskId: string;
+  task_id: string;
   description: string;
-  missingArtifacts: string[];
+  missing_artifacts: string[];
 }
 
 interface UntrackedArtifactDetail {
@@ -30,38 +30,42 @@ interface UntrackedArtifactDetail {
 }
 
 interface ForwardDependencyDetail {
-  taskId: string;
-  taskDescription: string;
-  taskSprint: number;
-  dependsOn: string;
-  depSprint: number;
+  task_id: string;
+  task_description: string;
+  task_sprint: number;
+  depends_on: string;
+  dep_sprint: number;
 }
 
 interface BottleneckDetail {
   sprint: number;
-  dependencyCount: number;
-  blockedTasks: string[];
+  dependency_count: number;
+  blocked_tasks: string[];
 }
 
 interface ExecutiveMetrics {
-  totalTasks: number;
+  total_tasks: number;
   completed: { count: number; percentage: number };
-  inProgress: { count: number; percentage: number };
+  in_progress: { count: number; percentage: number };
   backlog: { count: number; percentage: number };
-  planVsCodeMismatches: number;
-  planVsCodeMismatchesDetails: MismatchDetail[];
-  untrackedCodeArtifacts: number;
-  untrackedCodeArtifactsDetails: UntrackedArtifactDetail[];
-  forwardDependencies: number;
-  forwardDependenciesDetails: ForwardDependencyDetail[];
-  sprintBottlenecks: string;
-  sprintBottlenecksDetails: BottleneckDetail[];
-  generatedAt: string;
+  plan_vs_code_mismatches: number;
+  plan_vs_code_mismatches_details: MismatchDetail[];
+  untracked_code_artifacts: number;
+  untracked_code_artifacts_details: UntrackedArtifactDetail[];
+  forward_dependencies: number;
+  forward_dependencies_details: ForwardDependencyDetail[];
+  sprint_bottlenecks: string;
+  sprint_bottlenecks_details: BottleneckDetail[];
+  generated_at: string;
 }
 
 type ExpandableMetric = 'mismatches' | 'untracked' | 'forward' | 'bottleneck';
 
-export default function ExecutiveSummary() {
+interface ExecutiveSummaryProps {
+  readonly sprint?: number | 'all' | 'Continuous';
+}
+
+export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryProps) {
   const [metrics, setMetrics] = useState<ExecutiveMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -79,11 +83,18 @@ export default function ExecutiveSummary() {
     });
   };
 
+  const getSprintParam = (): string => {
+    if (sprint === 'all') return 'all';
+    if (sprint === 'Continuous') return 'continuous';
+    return String(sprint);
+  };
+
   const fetchMetrics = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/metrics/executive?t=${Date.now()}`);
+      const sprintParam = getSprintParam();
+      const response = await fetch(`/api/metrics/executive?sprint=${sprintParam}&t=${Date.now()}`);
       if (!response.ok) {
         throw new Error('Failed to fetch executive metrics');
       }
@@ -100,7 +111,7 @@ export default function ExecutiveSummary() {
     fetchMetrics();
     const interval = setInterval(fetchMetrics, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [sprint]);
 
   if (loading && !metrics) {
     return (
@@ -129,7 +140,7 @@ export default function ExecutiveSummary() {
   const staticRows = [
     {
       metric: 'Total Tasks',
-      value: metrics.totalTasks.toString(),
+      value: metrics.total_tasks.toString(),
       icon: <BarChart3 className="w-4 h-4" />,
       color: 'text-blue-400',
       bgColor: 'bg-blue-500/10',
@@ -143,7 +154,7 @@ export default function ExecutiveSummary() {
     },
     {
       metric: 'In Progress',
-      value: `${metrics.inProgress.count} (${metrics.inProgress.percentage}%)`,
+      value: `${metrics.in_progress.count} (${metrics.in_progress.percentage}%)`,
       icon: <Clock className="w-4 h-4" />,
       color: 'text-yellow-400',
       bgColor: 'bg-yellow-500/10',
@@ -190,7 +201,7 @@ export default function ExecutiveSummary() {
           <div>
             <h2 className="text-lg font-semibold text-white">Executive Summary</h2>
             <p className="text-xs text-slate-400">
-              Last updated: {new Date(metrics.generatedAt).toLocaleTimeString()}
+              Last updated: {new Date(metrics.generated_at).toLocaleTimeString()}
             </p>
           </div>
         </div>
@@ -246,42 +257,44 @@ export default function ExecutiveSummary() {
                 <td className="py-3 px-3">
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-8 h-8 rounded-lg ${metrics.planVsCodeMismatches > 0 ? 'bg-orange-500/10' : 'bg-green-500/10'} flex items-center justify-center ${metrics.planVsCodeMismatches > 0 ? 'text-orange-400' : 'text-green-400'}`}
+                      className={`w-8 h-8 rounded-lg ${metrics.plan_vs_code_mismatches > 0 ? 'bg-orange-500/10' : 'bg-green-500/10'} flex items-center justify-center ${metrics.plan_vs_code_mismatches > 0 ? 'text-orange-400' : 'text-green-400'}`}
                     >
                       <FileWarning className="w-4 h-4" />
                     </div>
-                    <span className="text-sm font-medium text-slate-200">Plan-vs-Code Mismatches</span>
-                    {metrics.planVsCodeMismatchesDetails.length > 0 && (
-                      expanded.has('mismatches') ? (
+                    <span className="text-sm font-medium text-slate-200">
+                      Plan-vs-Code Mismatches
+                    </span>
+                    {metrics.plan_vs_code_mismatches_details.length > 0 &&
+                      (expanded.has('mismatches') ? (
                         <ChevronDown className="w-4 h-4 text-slate-400" />
                       ) : (
                         <ChevronRight className="w-4 h-4 text-slate-400" />
-                      )
-                    )}
+                      ))}
                   </div>
                 </td>
                 <td className="py-3 px-3 text-right">
                   <span
-                    className={`text-sm font-semibold ${metrics.planVsCodeMismatches > 0 ? 'text-orange-400' : 'text-green-400'}`}
+                    className={`text-sm font-semibold ${metrics.plan_vs_code_mismatches > 0 ? 'text-orange-400' : 'text-green-400'}`}
                   >
-                    {metrics.planVsCodeMismatches}
+                    {metrics.plan_vs_code_mismatches}
                   </span>
                 </td>
               </tr>
-              {expanded.has('mismatches') && metrics.planVsCodeMismatchesDetails.length > 0 && (
+              {expanded.has('mismatches') && metrics.plan_vs_code_mismatches_details.length > 0 && (
                 <tr>
                   <td colSpan={2} className="px-3 pb-3">
                     <div className="ml-11 bg-slate-800/50 rounded-lg p-3 space-y-2">
-                      {metrics.planVsCodeMismatchesDetails.map((detail, idx) => (
-                        <div key={`mismatch-${detail.taskId}-${idx}`} className="text-xs">
+                      {metrics.plan_vs_code_mismatches_details.map((detail, idx) => (
+                        <div key={`mismatch-${detail.task_id}-${idx}`} className="text-xs">
                           <div className="flex items-center gap-2 text-slate-300">
-                            <span className="font-mono text-orange-400">{detail.taskId}</span>
+                            <span className="font-mono text-orange-400">{detail.task_id}</span>
                             <span className="text-slate-500">-</span>
                             <span className="truncate">{detail.description}</span>
                           </div>
                           <div className="ml-4 mt-1 text-slate-500">
-                            Missing: {detail.missingArtifacts.slice(0, 3).join(', ')}
-                            {detail.missingArtifacts.length > 3 && ` +${detail.missingArtifacts.length - 3} more`}
+                            Missing: {detail.missing_artifacts.slice(0, 3).join(', ')}
+                            {detail.missing_artifacts.length > 3 &&
+                              ` +${detail.missing_artifacts.length - 3} more`}
                           </div>
                         </div>
                       ))}
@@ -300,34 +313,35 @@ export default function ExecutiveSummary() {
                 <td className="py-3 px-3">
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-8 h-8 rounded-lg ${metrics.untrackedCodeArtifacts > 0 ? 'bg-orange-500/10' : 'bg-green-500/10'} flex items-center justify-center ${metrics.untrackedCodeArtifacts > 0 ? 'text-orange-400' : 'text-green-400'}`}
+                      className={`w-8 h-8 rounded-lg ${metrics.untracked_code_artifacts > 0 ? 'bg-orange-500/10' : 'bg-green-500/10'} flex items-center justify-center ${metrics.untracked_code_artifacts > 0 ? 'text-orange-400' : 'text-green-400'}`}
                     >
                       <AlertTriangle className="w-4 h-4" />
                     </div>
-                    <span className="text-sm font-medium text-slate-200">Untracked Code Artifacts</span>
-                    {metrics.untrackedCodeArtifactsDetails.length > 0 && (
-                      expanded.has('untracked') ? (
+                    <span className="text-sm font-medium text-slate-200">
+                      Untracked Code Artifacts
+                    </span>
+                    {metrics.untracked_code_artifacts_details.length > 0 &&
+                      (expanded.has('untracked') ? (
                         <ChevronDown className="w-4 h-4 text-slate-400" />
                       ) : (
                         <ChevronRight className="w-4 h-4 text-slate-400" />
-                      )
-                    )}
+                      ))}
                   </div>
                 </td>
                 <td className="py-3 px-3 text-right">
                   <span
-                    className={`text-sm font-semibold ${metrics.untrackedCodeArtifacts > 0 ? 'text-orange-400' : 'text-green-400'}`}
+                    className={`text-sm font-semibold ${metrics.untracked_code_artifacts > 0 ? 'text-orange-400' : 'text-green-400'}`}
                   >
-                    {metrics.untrackedCodeArtifacts}
+                    {metrics.untracked_code_artifacts}
                   </span>
                 </td>
               </tr>
-              {expanded.has('untracked') && metrics.untrackedCodeArtifactsDetails.length > 0 && (
+              {expanded.has('untracked') && metrics.untracked_code_artifacts_details.length > 0 && (
                 <tr>
                   <td colSpan={2} className="px-3 pb-3">
                     <div className="ml-11 bg-slate-800/50 rounded-lg p-3">
                       <div className="flex flex-wrap gap-2">
-                        {metrics.untrackedCodeArtifactsDetails.map((detail, idx) => (
+                        {metrics.untracked_code_artifacts_details.map((detail, idx) => (
                           <div
                             key={`untracked-${detail.path}-${idx}`}
                             className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs ${getTypeColor(detail.type)}`}
@@ -352,47 +366,50 @@ export default function ExecutiveSummary() {
                 <td className="py-3 px-3">
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-8 h-8 rounded-lg ${metrics.forwardDependencies > 0 ? 'bg-red-500/10' : 'bg-green-500/10'} flex items-center justify-center ${metrics.forwardDependencies > 0 ? 'text-red-400' : 'text-green-400'}`}
+                      className={`w-8 h-8 rounded-lg ${metrics.forward_dependencies > 0 ? 'bg-red-500/10' : 'bg-green-500/10'} flex items-center justify-center ${metrics.forward_dependencies > 0 ? 'text-red-400' : 'text-green-400'}`}
                     >
                       <GitBranch className="w-4 h-4" />
                     </div>
                     <span className="text-sm font-medium text-slate-200">Forward Dependencies</span>
-                    {metrics.forwardDependenciesDetails.length > 0 && (
-                      expanded.has('forward') ? (
+                    {metrics.forward_dependencies_details.length > 0 &&
+                      (expanded.has('forward') ? (
                         <ChevronDown className="w-4 h-4 text-slate-400" />
                       ) : (
                         <ChevronRight className="w-4 h-4 text-slate-400" />
-                      )
-                    )}
+                      ))}
                   </div>
                 </td>
                 <td className="py-3 px-3 text-right">
                   <span
-                    className={`text-sm font-semibold ${metrics.forwardDependencies > 0 ? 'text-red-400' : 'text-green-400'}`}
+                    className={`text-sm font-semibold ${metrics.forward_dependencies > 0 ? 'text-red-400' : 'text-green-400'}`}
                   >
-                    {metrics.forwardDependencies}
+                    {metrics.forward_dependencies}
                   </span>
                 </td>
               </tr>
-              {expanded.has('forward') && metrics.forwardDependenciesDetails.length > 0 && (
+              {expanded.has('forward') && metrics.forward_dependencies_details.length > 0 && (
                 <tr>
                   <td colSpan={2} className="px-3 pb-3">
                     <div className="ml-11 bg-slate-800/50 rounded-lg p-3 space-y-2">
                       <div className="text-xs text-slate-400 mb-2">
                         Tasks depending on tasks scheduled for later sprints:
                       </div>
-                      {metrics.forwardDependenciesDetails.slice(0, 10).map((detail, idx) => (
-                        <div key={`forward-${detail.taskId}-${detail.dependsOn}-${idx}`} className="text-xs flex items-center gap-2">
-                          <span className="font-mono text-blue-400">{detail.taskId}</span>
-                          <span className="text-slate-500">(Sprint {detail.taskSprint})</span>
+                      {metrics.forward_dependencies_details.slice(0, 10).map((detail, idx) => (
+                        <div
+                          key={`forward-${detail.task_id}-${detail.depends_on}-${idx}`}
+                          className="text-xs flex items-center gap-2"
+                        >
+                          <span className="font-mono text-blue-400">{detail.task_id}</span>
+                          <span className="text-slate-500">(Sprint {detail.task_sprint})</span>
                           <span className="text-slate-600">depends on</span>
-                          <span className="font-mono text-red-400">{detail.dependsOn}</span>
-                          <span className="text-slate-500">(Sprint {detail.depSprint})</span>
+                          <span className="font-mono text-red-400">{detail.depends_on}</span>
+                          <span className="text-slate-500">(Sprint {detail.dep_sprint})</span>
                         </div>
                       ))}
-                      {metrics.forwardDependenciesDetails.length > 10 && (
+                      {metrics.forward_dependencies_details.length > 10 && (
                         <div className="text-xs text-slate-500 pt-1">
-                          +{metrics.forwardDependenciesDetails.length - 10} more forward dependencies
+                          +{metrics.forward_dependencies_details.length - 10} more forward
+                          dependencies
                         </div>
                       )}
                     </div>
@@ -413,40 +430,39 @@ export default function ExecutiveSummary() {
                       <Target className="w-4 h-4" />
                     </div>
                     <span className="text-sm font-medium text-slate-200">Sprint Bottleneck</span>
-                    {metrics.sprintBottlenecksDetails.length > 0 && (
-                      expanded.has('bottleneck') ? (
+                    {metrics.sprint_bottlenecks_details.length > 0 &&
+                      (expanded.has('bottleneck') ? (
                         <ChevronDown className="w-4 h-4 text-slate-400" />
                       ) : (
                         <ChevronRight className="w-4 h-4 text-slate-400" />
-                      )
-                    )}
+                      ))}
                   </div>
                 </td>
                 <td className="py-3 px-3 text-right">
                   <span className="text-sm font-semibold text-purple-400">
-                    {metrics.sprintBottlenecks}
+                    {metrics.sprint_bottlenecks}
                   </span>
                 </td>
               </tr>
-              {expanded.has('bottleneck') && metrics.sprintBottlenecksDetails.length > 0 && (
+              {expanded.has('bottleneck') && metrics.sprint_bottlenecks_details.length > 0 && (
                 <tr>
                   <td colSpan={2} className="px-3 pb-3">
                     <div className="ml-11 bg-slate-800/50 rounded-lg p-3 space-y-3">
                       <div className="text-xs text-slate-400 mb-2">
                         Sprints with highest dependency concentration:
                       </div>
-                      {metrics.sprintBottlenecksDetails.map((detail) => (
+                      {metrics.sprint_bottlenecks_details.map((detail) => (
                         <div key={`bottleneck-sprint-${detail.sprint}`} className="text-xs">
                           <div className="flex items-center gap-3 mb-1">
                             <span className="px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded font-semibold">
                               Sprint {detail.sprint}
                             </span>
                             <span className="text-slate-400">
-                              {detail.dependencyCount} dependencies
+                              {detail.dependency_count} dependencies
                             </span>
                           </div>
                           <div className="ml-2 flex flex-wrap gap-1">
-                            {detail.blockedTasks.slice(0, 8).map((taskId, taskIdx) => (
+                            {detail.blocked_tasks.slice(0, 8).map((taskId, taskIdx) => (
                               <span
                                 key={`bottleneck-${detail.sprint}-task-${taskId}-${taskIdx}`}
                                 className="px-1.5 py-0.5 bg-slate-700/50 text-slate-400 rounded font-mono text-[10px]"
@@ -454,9 +470,9 @@ export default function ExecutiveSummary() {
                                 {taskId}
                               </span>
                             ))}
-                            {detail.blockedTasks.length > 8 && (
+                            {detail.blocked_tasks.length > 8 && (
                               <span className="px-1.5 py-0.5 text-slate-500 text-[10px]">
-                                +{detail.blockedTasks.length - 8} more
+                                +{detail.blocked_tasks.length - 8} more
                               </span>
                             )}
                           </div>
@@ -487,16 +503,16 @@ export default function ExecutiveSummary() {
                   : 'Needs Attention'}
             </span>
           </div>
-          {metrics.forwardDependencies > 0 && (
+          {metrics.forward_dependencies > 0 && (
             <div className="flex items-center gap-1.5 text-red-400">
               <AlertTriangle className="w-3 h-3" />
-              <span>{metrics.forwardDependencies} forward deps need review</span>
+              <span>{metrics.forward_dependencies} forward deps need review</span>
             </div>
           )}
-          {metrics.planVsCodeMismatches > 0 && (
+          {metrics.plan_vs_code_mismatches > 0 && (
             <div className="flex items-center gap-1.5 text-orange-400">
               <FileWarning className="w-3 h-3" />
-              <span>{metrics.planVsCodeMismatches} artifact mismatches</span>
+              <span>{metrics.plan_vs_code_mismatches} artifact mismatches</span>
             </div>
           )}
         </div>

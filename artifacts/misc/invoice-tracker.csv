@@ -1,0 +1,55 @@
+Invoice ID,Vendor,Service,Category,Invoice Date,Due Date,Amount (USD),Amount (GBP),Currency,Status,Payment Date,Payment Method,Budget Line,Reconciled,Notes
+INV-2025-001,Railway,API Hosting,Infrastructure,2025-12-01,2025-12-15,5.00,3.94,USD,Paid,2025-12-10,Card,Infrastructure,Yes,Starter tier - December
+INV-2025-002,OpenAI,API Usage,AI/ML,2025-12-01,2025-12-15,112.60,88.66,USD,Paid,2025-12-12,Card,AI/ML APIs,Yes,December usage - Week 1-4
+INV-2025-003,GitHub,Pro Subscription,DevOps,2025-12-01,2025-12-15,4.00,3.15,USD,Paid,2025-12-05,Card,Tools & Services,Yes,Monthly Pro subscription
+INV-2025-004,Cloudflare,DNS Services,Infrastructure,2025-12-01,N/A,0.00,0.00,USD,N/A,N/A,N/A,Infrastructure,Yes,Free tier - no charge
+INV-2025-005,Vercel,Hosting,Infrastructure,2025-12-01,N/A,0.00,0.00,USD,N/A,N/A,N/A,Infrastructure,Yes,Hobby tier - no charge
+INV-2025-006,Supabase,Database,Infrastructure,2025-12-01,N/A,0.00,0.00,USD,N/A,N/A,N/A,Infrastructure,Yes,Free tier - no charge
+INV-2025-007,Upstash,Redis,Infrastructure,2025-12-01,N/A,0.00,0.00,USD,N/A,N/A,N/A,Infrastructure,Yes,Free tier - no charge
+INV-2025-008,Sentry,Monitoring,Observability,2025-12-01,N/A,0.00,0.00,USD,N/A,N/A,N/A,Tools & Services,Yes,Free tier - no charge
+INV-2025-009,Domain Registrar,intelliflow.io,Infrastructure,2025-12-14,2026-12-14,15.00,11.81,USD,Paid,2025-12-14,Card,Infrastructure,Yes,Annual domain renewal
+INV-2025-010,Local Compute,Ollama Instance,AI/ML,2025-12-28,N/A,18.80,14.80,USD,Internal,N/A,Internal,AI/ML APIs,Yes,Estimated local compute cost (4 weeks)
+
+SUMMARY SECTION
+Period,Start Date,End Date,Total Invoiced,Total Paid,Outstanding,Budget,Variance,Variance %
+December 2025,2025-12-01,2025-12-31,155.40,155.40,0.00,500.00,-344.60,-68.9%
+
+VENDOR SUMMARY
+Vendor,YTD Spend,Monthly Average,Category,Status,Contract Type,Notes
+Railway,5.00,5.00,Infrastructure,Active,Pay-as-you-go,Starter tier
+OpenAI,112.60,112.60,AI/ML,Active,Pay-as-you-go,Usage varies with AI features
+GitHub,4.00,4.00,DevOps,Active,Subscription,Pro tier
+Cloudflare,0.00,0.00,Infrastructure,Active,Free,DNS and basic CDN
+Vercel,0.00,0.00,Infrastructure,Active,Free,Hobby tier
+Supabase,0.00,0.00,Infrastructure,Active,Free,Database and auth
+Upstash,0.00,0.00,Infrastructure,Active,Free,Redis cache
+Sentry,0.00,0.00,Observability,Active,Free,Error tracking
+Domain,15.00,1.25,Infrastructure,Active,Annual,Annual renewal
+Ollama,18.80,18.80,AI/ML,Active,Self-hosted,Local compute estimate
+
+BUDGET RECONCILIATION
+Category,Budget (Monthly),Actual (December),Variance,Status
+Infrastructure,150.00,21.25,-128.75,Under Budget
+AI/ML APIs,200.00,131.40,-68.60,Under Budget
+Tools & Services,100.00,4.00,-96.00,Under Budget
+Contingency,50.00,0.00,-50.00,Unused
+Total,500.00,156.65,-343.35,Under Budget
+
+PAYMENT SCHEDULE
+Vendor,Payment Frequency,Next Due,Estimated Amount,Auto-Pay,Notes
+Railway,Monthly,2025-01-01,5.00,Yes,Consistent monthly
+OpenAI,Monthly,2025-01-01,80.00,Yes,Varies with usage
+GitHub,Monthly,2025-01-01,4.00,Yes,Fixed subscription
+Domain,Annual,2026-12-14,15.00,No,Manual renewal
+
+ALERTS LOG
+Date,Alert Type,Vendor,Message,Action Taken,Resolved
+2025-12-15,Info,OpenAI,Weekly spend at 50% of allocation,Monitored - no action,Yes
+2025-12-20,Info,OpenAI,Daily requests above average,Reviewed - normal spike,Yes
+
+NOTES
+Entry Date,Note
+2025-12-28,Initial invoice tracker created for IFC-055 FinOps implementation
+2025-12-28,All vendors reconciled with bank statements
+2025-12-28,Free tier services confirmed - no hidden charges
+2025-12-28,Local Ollama compute cost is estimated based on electricity and hardware depreciation

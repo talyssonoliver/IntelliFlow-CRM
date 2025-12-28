@@ -1,0 +1,23 @@
+{
+  "files": [
+    {
+      "path": "packages/ui/src/index.ts",
+      "hash": "cf24c299128a0f9c3bbc21ae3b3f6edd03ebbe1b0bcfa5d20857623816d3a4b8",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "packages/ui/src/components/button.tsx",
+      "hash": "93a42b7efeb4dc682e402fa592a25ef81bea9ba353a99bac1959e8bab639504e",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "packages/ui/package.json",
+      "hash": "365e9f2f53da30768848217f4caacba1b4c492042307a38112e94a3699b2ad15",
+      "status": "matched",
+      "size": 1000
+    }
+  ],
+  "generatedAt": "2025-12-25T18:15:00.000Z"
+}

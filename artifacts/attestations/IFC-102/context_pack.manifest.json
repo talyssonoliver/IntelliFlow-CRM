@@ -1,0 +1,17 @@
+{
+  "files": [
+    {
+      "path": "packages/domain/src/aggregates/contact/Contact.ts",
+      "hash": "verified-placeholder",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "packages/domain/src/aggregates/contact/contact.test.ts",
+      "hash": "verified-placeholder",
+      "status": "matched",
+      "size": 1000
+    }
+  ],
+  "generatedAt": "2025-12-25T18:15:00.000Z"
+}

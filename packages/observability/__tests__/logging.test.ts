@@ -436,11 +436,7 @@ describe('Logging Module', () => {
         enumerable: false,
         configurable: true,
       };
-      const decoratedDescriptor = LogPerformance()(
-        LeadService.prototype,
-        'scoreLead',
-        descriptor
-      );
+      const decoratedDescriptor = LogPerformance()(LeadService.prototype, 'scoreLead', descriptor);
       LeadService.prototype.scoreLead = decoratedDescriptor.value;
 
       const service = new LeadService();

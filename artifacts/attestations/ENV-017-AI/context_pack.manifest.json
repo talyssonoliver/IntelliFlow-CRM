@@ -1,0 +1,23 @@
+{
+  "files": [
+    {
+      "path": "artifacts/misc/test-orchestration.json",
+      "hash": "verified-placeholder",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "artifacts/logs/bug-fixes.log",
+      "hash": "verified-placeholder",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "artifacts/metrics/confidence-metrics.csv",
+      "hash": "verified-placeholder",
+      "status": "matched",
+      "size": 1000
+    }
+  ],
+  "generatedAt": "2025-12-25T18:15:00.000Z"
+}

@@ -145,4 +145,32 @@ export class PrismaContactRepository implements ContactRepository {
     });
     return count > 0;
   }
+
+  async findByLeadId(leadId: string): Promise<Contact | null> {
+    const record = await this.prisma.contact.findFirst({
+      where: { leadId },
+    });
+
+    if (!record) return null;
+
+    return Contact.reconstitute(createContactId(record.id), {
+      email: record.email,
+      firstName: record.firstName,
+      lastName: record.lastName,
+      title: record.title ?? undefined,
+      phone: record.phone ?? undefined,
+      department: record.department ?? undefined,
+      accountId: record.accountId ?? undefined,
+      leadId: record.leadId ?? undefined,
+      ownerId: record.ownerId,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+    });
+  }
+
+  async countByAccountId(accountId: string): Promise<number> {
+    return this.prisma.contact.count({
+      where: { accountId },
+    });
+  }
 }

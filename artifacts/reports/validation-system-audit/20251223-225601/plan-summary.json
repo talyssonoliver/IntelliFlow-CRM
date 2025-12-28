@@ -1,0 +1,63 @@
+{
+  "run_id": "20251223-225601",
+  "generated_at": "2025-12-23T22:56:01Z",
+  "source": "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv",
+  "total_tasks": 316,
+  "current_sprint": 3,
+  "status_breakdown": {
+    "Completed": 63,
+    "In Progress": 1,
+    "Backlog": 254
+  },
+  "sprint_breakdown": {
+    "0": {
+      "total": 34,
+      "completed": 34,
+      "in_progress": 0,
+      "backlog": 0,
+      "is_complete": true
+    },
+    "1": {
+      "total": 13,
+      "completed": 13,
+      "in_progress": 0,
+      "backlog": 0,
+      "is_complete": true
+    },
+    "2": {
+      "total": 12,
+      "completed": 12,
+      "in_progress": 0,
+      "backlog": 0,
+      "is_complete": true
+    },
+    "3": {
+      "total": 8,
+      "completed": 0,
+      "in_progress": 0,
+      "backlog": 8,
+      "is_complete": false
+    }
+  },
+  "carryover_tasks": [],
+  "sprint_start_gate": {
+    "target_sprint": 3,
+    "prerequisite_sprints": [0, 1, 2],
+    "all_prerequisites_complete": true,
+    "gate_status": "PASS"
+  },
+  "in_progress_tasks": [
+    {
+      "task_id": "IFC-077",
+      "section": "Security",
+      "description": "API Rate Limiting (tRPC + Upstash)",
+      "target_sprint": 8
+    }
+  ],
+  "plan_integrity": {
+    "has_required_headers": true,
+    "duplicate_task_ids": [],
+    "malformed_dependencies": [],
+    "status": "PASS"
+  }
+}

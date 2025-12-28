@@ -296,11 +296,15 @@ export default function MetricsView({ selectedSprint }: Readonly<MetricsViewProp
         <div className="space-y-4">
           {phases.map((phase, index) => {
             const status = getPhaseStatus(phase);
-            const metrics = phase.aggregated_metrics ?? { total_tasks: 0, done: 0, in_progress: 0, blocked: 0, not_started: 0 };
+            const metrics = phase.aggregated_metrics ?? {
+              total_tasks: 0,
+              done: 0,
+              in_progress: 0,
+              blocked: 0,
+              not_started: 0,
+            };
             const phaseProgress =
-              metrics.total_tasks > 0
-                ? (metrics.done / metrics.total_tasks) * 100
-                : 0;
+              metrics.total_tasks > 0 ? (metrics.done / metrics.total_tasks) * 100 : 0;
 
             return (
               <div key={phase.phase ?? `phase-${index}`} className="border rounded-lg p-4">
@@ -344,7 +348,9 @@ export default function MetricsView({ selectedSprint }: Readonly<MetricsViewProp
                 {typeof kpi.target === 'number' ? kpi.target.toFixed(1) : (kpi.target ?? 'N/A')}{' '}
                 {kpi.unit}
               </p>
-              <p className="text-xs font-semibold mt-1">{(kpi.status ?? 'UNKNOWN').replaceAll('_', ' ')}</p>
+              <p className="text-xs font-semibold mt-1">
+                {(kpi.status ?? 'UNKNOWN').replaceAll('_', ' ')}
+              </p>
             </div>
           ))}
         </div>

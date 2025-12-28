@@ -1,17 +1,18 @@
 # Documentation Templates
 
-This directory contains LLM-optimized documentation templates for IntelliFlow CRM.
+This directory contains LLM-optimized documentation templates for IntelliFlow
+CRM.
 
 ## Available Templates
 
-| Template | Purpose | Usage |
-|----------|---------|-------|
-| `feature-spec.md` | Feature specification | New feature documentation |
-| `api-endpoint.md` | API endpoint docs | tRPC router documentation |
-| `domain-entity.md` | Domain model docs | DDD aggregate documentation |
-| `adr-template.md` | Architecture decisions | ADR creation |
-| `runbook.md` | Operations runbook | Incident response |
-| `chunking-strategy.md` | LLM chunking guide | RAG optimization |
+| Template               | Purpose                | Usage                       |
+| ---------------------- | ---------------------- | --------------------------- |
+| `feature-spec.md`      | Feature specification  | New feature documentation   |
+| `api-endpoint.md`      | API endpoint docs      | tRPC router documentation   |
+| `domain-entity.md`     | Domain model docs      | DDD aggregate documentation |
+| `adr-template.md`      | Architecture decisions | ADR creation                |
+| `runbook.md`           | Operations runbook     | Incident response           |
+| `chunking-strategy.md` | LLM chunking guide     | RAG optimization            |
 
 ## LLM Optimization
 

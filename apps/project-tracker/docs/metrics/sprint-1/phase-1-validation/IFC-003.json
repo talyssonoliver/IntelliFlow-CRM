@@ -2,18 +2,37 @@
   "$schema": "../../schemas/task-status.schema.json",
   "task_id": "IFC-003",
   "section": "Validation",
-  "description": "tRPC API Foundation",
+  "description": "PHASE-001: tRPC API Foundation",
   "owner": "Backend Dev",
   "dependencies": {
     "required": ["IFC-002"],
-    "verified_at": "2025-12-21T16:00:00Z",
+    "verified_at": "2025-12-28T23:24:52.662Z",
     "all_satisfied": true
   },
   "status": "DONE",
   "status_history": [
-    { "status": "PLANNED", "at": "2025-12-20T00:00:00Z" },
-    { "status": "IN_PROGRESS", "at": "2025-12-21T14:30:00Z" },
-    { "status": "DONE", "at": "2025-12-21T16:30:00Z" }
+    {
+      "status": "PLANNED",
+      "at": "2025-12-20T00:00:00Z"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "at": "2025-12-21T14:30:00Z"
+    },
+    {
+      "status": "DONE",
+      "at": "2025-12-21T16:30:00Z"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "at": "2025-12-26T18:30:00Z",
+      "reason": "Reverted for Sprint 4 flow verification"
+    },
+    {
+      "status": "DONE",
+      "at": "2025-12-26T19:45:00Z",
+      "reason": "Re-validated: tRPC type-safety confirmed, subscription demo verified"
+    }
   ],
   "execution": {
     "started_at": "2025-12-21T14:30:00Z",
@@ -24,11 +43,7 @@
   },
   "artifacts": {
     "expected": ["apps/api/src/modules/*", "apps/api/src/trpc.ts"],
-    "created": [
-      "apps/api/src/trpc.ts",
-      "apps/api/src/modules/leads/leads.router.ts",
-      "apps/api/src/modules/misc/health.router.ts"
-    ],
+    "created": ["apps/api/src/trpc.ts"],
     "missing": []
   },
   "validations": [
@@ -62,5 +77,9 @@
     }
   },
   "blockers": [],
-  "notes": "tRPC API foundation with type-safe routers and health endpoints."
+  "notes": "tRPC API foundation with type-safe routers and health endpoints.",
+  "completed_at": "2025-12-27T11:33:39.034Z",
+  "started_at": "2025-12-27T11:18:39.034Z",
+  "actual_duration_minutes": 15,
+  "dependencies_resolved": ["IFC-002"]
 }

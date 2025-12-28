@@ -7,3 +7,4 @@ export * from './AIServicePort';
 export * from './EventBusPort';
 export * from './CachePort';
 export * from './AuthServicePort';
+export * from './CalendarServicePort';

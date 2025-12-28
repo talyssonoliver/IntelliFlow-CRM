@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
 import { parse } from 'csv-parse/sync';
+import { normalizeStatus, TASK_STATUSES, STATUS_GROUPS } from '@/lib/csv-parser';
+import { PATHS } from '@/lib/paths';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -57,12 +58,12 @@ function getPhasesFromCsv(tasks: CsvTask[], sprintNumber: string): PhaseMetrics[
     };
 
     for (const task of sectionTasks) {
-      const status = (task.Status || '').toLowerCase();
-      if (status === 'completed' || status === 'done') {
+      const status = normalizeStatus(task.Status || '');
+      if (STATUS_GROUPS.completed.includes(status)) {
         metrics.done++;
-      } else if (status === 'in progress' || status === 'in_progress') {
+      } else if (STATUS_GROUPS.active.includes(status)) {
         metrics.in_progress++;
-      } else if (status === 'blocked') {
+      } else if (status === TASK_STATUSES.BLOCKED || status === TASK_STATUSES.NEEDS_HUMAN) {
         metrics.blocked++;
       } else {
         metrics.not_started++;
@@ -92,7 +93,7 @@ export async function GET(request: Request) {
 
     // Handle 'all' case - return phases from all sprints
     if (sprintParam === 'all') {
-      const csvPath = join(process.cwd(), 'docs', 'metrics', '_global', 'Sprint_plan.csv');
+      const csvPath = PATHS.sprintTracking.SPRINT_PLAN_CSV;
       try {
         const csvContent = await readFile(csvPath, 'utf-8');
         const tasks = parse(csvContent, {
@@ -102,7 +103,6 @@ export async function GET(request: Request) {
           relax_column_count: true,
         }) as CsvTask[];
 
-        const phases = getPhasesFromCsv(tasks, 'all');
         // For 'all', group all tasks by section regardless of sprint
         const sections: Record<string, CsvTask[]> = {};
         for (const task of tasks) {
@@ -124,12 +124,12 @@ export async function GET(request: Request) {
           };
 
           for (const task of sectionTasks) {
-            const status = (task.Status || '').toLowerCase();
-            if (status === 'completed' || status === 'done') {
+            const status = normalizeStatus(task.Status || '');
+            if (STATUS_GROUPS.completed.includes(status)) {
               metrics.done++;
-            } else if (status === 'in progress' || status === 'in_progress') {
+            } else if (STATUS_GROUPS.active.includes(status)) {
               metrics.in_progress++;
-            } else if (status === 'blocked') {
+            } else if (status === TASK_STATUSES.BLOCKED || status === TASK_STATUSES.NEEDS_HUMAN) {
               metrics.blocked++;
             } else {
               metrics.not_started++;
@@ -170,7 +170,7 @@ export async function GET(request: Request) {
 
     // Handle 'continuous' case
     if (sprintParam === 'continuous') {
-      const csvPath = join(process.cwd(), 'docs', 'metrics', '_global', 'Sprint_plan.csv');
+      const csvPath = PATHS.sprintTracking.SPRINT_PLAN_CSV;
       try {
         const csvContent = await readFile(csvPath, 'utf-8');
         const tasks = parse(csvContent, {
@@ -201,7 +201,7 @@ export async function GET(request: Request) {
     }
 
     const sprintNumber = sprintParam;
-    const csvPath = join(process.cwd(), 'docs', 'metrics', '_global', 'Sprint_plan.csv');
+    const csvPath = PATHS.sprintTracking.SPRINT_PLAN_CSV;
 
     // ALWAYS read from CSV (source of truth for task counts)
     try {

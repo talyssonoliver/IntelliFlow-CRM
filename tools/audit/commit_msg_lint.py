@@ -6,11 +6,41 @@ import re
 import subprocess
 import sys
 from dataclasses import dataclass
+from pathlib import Path
 
 
 CONVENTIONAL_COMMIT_RE = re.compile(
     r"^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\([^)]+\))?: .{1,100}$"
 )
+
+# Waiver file location (relative to repo root)
+WAIVER_FILE = "tools/audit/waivers/commitlint-waivers.txt"
+
+
+def _load_waivers() -> set[str]:
+    """Load SHA prefixes from waiver file. Lines starting with # are comments."""
+    waivers: set[str] = set()
+    # Find repo root
+    try:
+        repo_root = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, check=True
+        ).stdout.strip()
+    except Exception:
+        return waivers
+
+    waiver_path = Path(repo_root) / WAIVER_FILE
+    if not waiver_path.exists():
+        return waivers
+
+    for line in waiver_path.read_text().splitlines():
+        line = line.strip()
+        if line and not line.startswith("#"):
+            # Extract just the SHA (first token)
+            sha = line.split()[0] if line.split() else ""
+            if sha:
+                waivers.add(sha[:12])  # Use first 12 chars for matching
+    return waivers
 
 
 @dataclass(frozen=True)
@@ -48,11 +78,20 @@ def _get_recent_commit_subjects(count: int) -> list[CommitMessage]:
     return commits
 
 
-def lint_commits(commits: list[CommitMessage]) -> tuple[bool, list[str]]:
+def lint_commits(commits: list[CommitMessage], waivers: set[str]) -> tuple[bool, list[str], int]:
+    """Lint commits, returning (ok, errors, waived_count)."""
     errors: list[str] = []
+    waived_count = 0
 
     for c in commits:
         subject = c.subject
+        sha_prefix = c.sha[:12]
+
+        # Check if this commit is waived
+        if sha_prefix in waivers:
+            waived_count += 1
+            continue
+
         if subject.startswith("Merge "):
             continue
         if subject.startswith("Revert "):
@@ -60,9 +99,9 @@ def lint_commits(commits: list[CommitMessage]) -> tuple[bool, list[str]]:
         if subject.lower().startswith("initial commit"):
             continue
         if not CONVENTIONAL_COMMIT_RE.match(subject):
-            errors.append(f"{c.sha[:12]}: {subject}")
+            errors.append(f"{sha_prefix}: {subject}")
 
-    return (len(errors) == 0, errors)
+    return (len(errors) == 0, errors, waived_count)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -80,6 +119,9 @@ def main(argv: list[str] | None = None) -> int:
         help="Number of most recent commits to validate when --range is not provided (default: 20).",
     )
     args = parser.parse_args(argv)
+
+    # Load waivers
+    waivers = _load_waivers()
 
     try:
         if args.commit_range:
@@ -111,13 +153,14 @@ def main(argv: list[str] | None = None) -> int:
         print(f"ERROR: unable to read git history: {e}", file=sys.stderr)
         return 2
 
-    ok, errors = lint_commits(commits)
+    ok, errors, waived_count = lint_commits(commits, waivers)
+    label = args.commit_range or f"last {args.count}"
+
     if ok:
-        label = args.commit_range or f"last {args.count}"
-        print(f"OK: commit subjects valid for {label} ({len(commits)} commits checked)")
+        waiver_note = f", {waived_count} waived" if waived_count > 0 else ""
+        print(f"OK: commit subjects valid for {label} ({len(commits)} commits checked{waiver_note})")
         return 0
 
-    label = args.commit_range or f"last {args.count}"
     print(f"FAIL: invalid commit subjects for {label}:", file=sys.stderr)
     for err in errors:
         print(f"  - {err}", file=sys.stderr)
@@ -125,6 +168,8 @@ def main(argv: list[str] | None = None) -> int:
     print("Expected pattern:", file=sys.stderr)
     print("  type(scope?): description", file=sys.stderr)
     print("Valid types: feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert", file=sys.stderr)
+    if waivers:
+        print(f"\nNote: {len(waivers)} commit(s) waived via {WAIVER_FILE}", file=sys.stderr)
     return 1
 
 

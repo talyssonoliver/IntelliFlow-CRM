@@ -10,7 +10,14 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { Prisma } from '@prisma/client';
 import { accountRouter } from '../account.router';
-import { prismaMock, createTestContext, mockAccount, mockUser, mockContact, mockOpportunity } from '../../../test/setup';
+import {
+  prismaMock,
+  createTestContext,
+  mockAccount,
+  mockUser,
+  mockContact,
+  mockOpportunity,
+} from '../../../test/setup';
 
 describe('Account Router', () => {
   const caller = accountRouter.createCaller(createTestContext());
@@ -105,7 +112,7 @@ describe('Account Router', () => {
   describe('list', () => {
     it('should list accounts with pagination', async () => {
       const accounts = [mockAccount, { ...mockAccount, id: 'account-2', name: 'Corp 2' }];
-      const accountsWithRelations = accounts.map(account => ({
+      const accountsWithRelations = accounts.map((account) => ({
         ...account,
         owner: mockUser,
         _count: { contacts: 2, opportunities: 1 },
@@ -192,7 +199,11 @@ describe('Account Router', () => {
     it('should update account with valid data', async () => {
       prismaMock.account.findUnique.mockResolvedValue(mockAccount);
 
-      const updated = { ...mockAccount, name: 'Updated Corp', revenue: new Prisma.Decimal(2000000) };
+      const updated = {
+        ...mockAccount,
+        name: 'Updated Corp',
+        revenue: new Prisma.Decimal(2000000),
+      };
       prismaMock.account.update.mockResolvedValue(updated);
 
       const result = await caller.update({
@@ -208,9 +219,7 @@ describe('Account Router', () => {
     it('should throw NOT_FOUND when updating non-existent account', async () => {
       prismaMock.account.findUnique.mockResolvedValue(null);
 
-      await expect(
-        caller.update({ id: TEST_UUIDS.nonExistent, name: 'Test' })
-      ).rejects.toThrow(
+      await expect(caller.update({ id: TEST_UUIDS.nonExistent, name: 'Test' })).rejects.toThrow(
         expect.objectContaining({
           code: 'NOT_FOUND',
         })

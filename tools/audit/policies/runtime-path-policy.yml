@@ -1,153 +1,153 @@
 # Runtime Artifact Path Policy
 # IntelliFlow CRM - Governance-Grade Hygiene Enforcement
-schema_version: "1.0.0"
+schema_version: '1.0.0'
 
 canonical:
-  - path: "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv"
-    description: "Sprint plan master file - single source of truth"
+  - path: 'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv'
+    description: 'Sprint plan master file - single source of truth'
     referenced_by:
-      - "apps/project-tracker/app/api/sprint-plan/route.ts"
-      - "tools/plan-linter/index.js"
-      - "tools/scripts/sprint-validation.ts"
-    generated_by: "manual"
-  - path: "apps/project-tracker/docs/metrics/_global/Sprint_plan.json"
-    description: "Structured sprint plan data"
+      - 'apps/project-tracker/app/api/sprint-plan/route.ts'
+      - 'tools/plan-linter/index.js'
+      - 'tools/scripts/sprint-validation.ts'
+    generated_by: 'manual'
+  - path: 'apps/project-tracker/docs/metrics/_global/Sprint_plan.json'
+    description: 'Structured sprint plan data'
     referenced_by:
-      - "apps/project-tracker/lib/data-sync.ts"
-    generated_by: "sync:metrics"
-  - path: "apps/project-tracker/docs/metrics/_global/task-registry.json"
-    description: "Central task registry"
+      - 'apps/project-tracker/lib/data-sync.ts'
+    generated_by: 'sync:metrics'
+  - path: 'apps/project-tracker/docs/metrics/_global/task-registry.json'
+    description: 'Central task registry'
     referenced_by:
-      - "apps/project-tracker/app/api/metrics/route.ts"
-    generated_by: "sync:metrics"
+      - 'apps/project-tracker/app/api/metrics/route.ts'
+    generated_by: 'sync:metrics'
 
 forbidden:
-  - pattern: "gitleaks-report.json"
+  - pattern: 'gitleaks-report.json'
     exceptions: []
     severity: error
-    message: "Gitleaks report at repo root - must be in artifacts/"
-    fix: "mv gitleaks-report.json artifacts/reports/"
-  - pattern: "tree_*.txt"
+    message: 'Gitleaks report at repo root - must be in artifacts/'
+    fix: 'mv gitleaks-report.json artifacts/reports/'
+  - pattern: 'tree_*.txt'
     exceptions: []
     severity: error
-    message: "Tree output at repo root - must be in artifacts/misc/"
-    fix: "mv tree_*.txt artifacts/misc/ or delete"
-  - pattern: "sonar-reports"
+    message: 'Tree output at repo root - must be in artifacts/misc/'
+    fix: 'mv tree_*.txt artifacts/misc/ or delete'
+  - pattern: 'sonar-reports'
     exceptions: []
     severity: error
-    message: "SonarQube reports directory at root - must be in artifacts/"
-    fix: "rm -rf sonar-reports"
-  - pattern: ".scannerwork"
+    message: 'SonarQube reports directory at root - must be in artifacts/'
+    fix: 'rm -rf sonar-reports'
+  - pattern: '.scannerwork'
     exceptions: []
     severity: error
-    message: "Scanner work directory at root - should be gitignored"
-    fix: "rm -rf .scannerwork"
-  - pattern: "*.log"
+    message: 'Scanner work directory at root - should be gitignored'
+    fix: 'rm -rf .scannerwork'
+  - pattern: '*.log'
     exceptions:
-      - "artifacts/**/*.log"
+      - 'artifacts/**/*.log'
     severity: warning
-    message: "Log file at repo root - must be in artifacts/logs/"
-    fix: "mv *.log artifacts/logs/"
-  - pattern: "coverage"
+    message: 'Log file at repo root - must be in artifacts/logs/'
+    fix: 'mv *.log artifacts/logs/'
+  - pattern: 'coverage'
     exceptions: []
     severity: error
-    message: "Coverage directory at root - must be in artifacts/"
-    fix: "Move to artifacts/coverage/"
-  - pattern: "test-results"
+    message: 'Coverage directory at root - must be in artifacts/'
+    fix: 'Move to artifacts/coverage/'
+  - pattern: 'test-results'
     exceptions: []
     severity: error
-    message: "Test results at root - must be in artifacts/"
-    fix: "Move to artifacts/test-results/"
-  - pattern: "playwright-report"
+    message: 'Test results at root - must be in artifacts/'
+    fix: 'Move to artifacts/test-results/'
+  - pattern: 'playwright-report'
     exceptions: []
     severity: error
-    message: "Playwright report at root - must be in artifacts/"
-    fix: "Move to artifacts/playwright-report/"
-  - pattern: "**/Sprint_plan.csv"
+    message: 'Playwright report at root - must be in artifacts/'
+    fix: 'Move to artifacts/playwright-report/'
+  - pattern: '**/Sprint_plan.csv'
     exceptions:
-      - "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv"
+      - 'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv'
     severity: error
-    message: "Duplicate Sprint_plan.csv - only one canonical copy allowed"
-    fix: "Delete duplicate"
-  - pattern: "**/Sprint_plan.json"
+    message: 'Duplicate Sprint_plan.csv - only one canonical copy allowed'
+    fix: 'Delete duplicate'
+  - pattern: '**/Sprint_plan.json'
     exceptions:
-      - "apps/project-tracker/docs/metrics/_global/Sprint_plan.json"
+      - 'apps/project-tracker/docs/metrics/_global/Sprint_plan.json'
     severity: error
-    message: "Duplicate Sprint_plan.json - only one canonical copy allowed"
-    fix: "Delete duplicate"
-  - pattern: "docs/**/*.log"
+    message: 'Duplicate Sprint_plan.json - only one canonical copy allowed'
+    fix: 'Delete duplicate'
+  - pattern: 'docs/**/*.log'
     exceptions: []
     severity: error
-    message: "Log files in docs/ - must be in artifacts/logs/"
-    fix: "Move to artifacts/logs/"
-  - pattern: "docs/**/coverage/**"
+    message: 'Log files in docs/ - must be in artifacts/logs/'
+    fix: 'Move to artifacts/logs/'
+  - pattern: 'docs/**/coverage/**'
     exceptions: []
     severity: error
-    message: "Coverage in docs/ - must be in artifacts/coverage/"
-    fix: "Move to artifacts/coverage/"
+    message: 'Coverage in docs/ - must be in artifacts/coverage/'
+    fix: 'Move to artifacts/coverage/'
 
 policy_pending:
-  - pattern: "nul"
-    deadline: "2025-01-15"
+  - pattern: 'nul'
+    deadline: '2025-01-15'
     severity_local: warning
     severity_ci: error
-    reason: "Accidental Windows null device file"
-    migration_target: "delete"
-    responsible: "cleanup"
-    message: "Windows null device file - should be deleted"
-    fix: "rm nul"
-  - pattern: "artifacts/reports/system-audit/**"
-    deadline: "2025-02-01"
+    reason: 'Accidental Windows null device file'
+    migration_target: 'delete'
+    responsible: 'cleanup'
+    message: 'Windows null device file - should be deleted'
+    fix: 'rm nul'
+  - pattern: 'artifacts/reports/system-audit/**'
+    deadline: '2025-02-01'
     severity_local: info
     severity_ci: warning
-    reason: "Old audit reports structure being phased out"
-    migration_target: "artifacts/reports/audit/"
-    responsible: "automation"
-    message: "Legacy audit report structure - migrate to new format"
-    fix: "Move to artifacts/reports/audit/"
+    reason: 'Old audit reports structure being phased out'
+    migration_target: 'artifacts/reports/audit/'
+    responsible: 'automation'
+    message: 'Legacy audit report structure - migrate to new format'
+    fix: 'Move to artifacts/reports/audit/'
 
 allowed:
-  - pattern: "artifacts/**"
-    description: "All runtime artifacts go here"
+  - pattern: 'artifacts/**'
+    description: 'All runtime artifacts go here'
     exclude_patterns:
-      - "artifacts/**/*.secret"
-      - "artifacts/**/*.key"
+      - 'artifacts/**/*.secret'
+      - 'artifacts/**/*.key'
     gitignore_required: false
-  - pattern: ".github/**"
-    description: "GitHub workflows and configs"
+  - pattern: '.github/**'
+    description: 'GitHub workflows and configs'
     gitignore_required: false
-  - pattern: "infra/**"
-    description: "Infrastructure configurations"
+  - pattern: 'infra/**'
+    description: 'Infrastructure configurations'
     gitignore_required: false
-  - pattern: "docs/**/*.md"
-    description: "Documentation files"
+  - pattern: 'docs/**/*.md'
+    description: 'Documentation files'
     gitignore_required: false
-  - pattern: "apps/project-tracker/docs/metrics/**"
-    description: "Metrics tracking infrastructure"
+  - pattern: 'apps/project-tracker/docs/metrics/**'
+    description: 'Metrics tracking infrastructure'
     gitignore_required: false
 
 duplicate_rules:
-  - filename: "Sprint_plan.csv"
+  - filename: 'Sprint_plan.csv'
     max_copies: 1
-    canonical_path: "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv"
+    canonical_path: 'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv'
     severity: error
-    message: "Sprint_plan.csv must have exactly ONE canonical copy"
-  - filename: "Sprint_plan.json"
+    message: 'Sprint_plan.csv must have exactly ONE canonical copy'
+  - filename: 'Sprint_plan.json'
     max_copies: 1
-    canonical_path: "apps/project-tracker/docs/metrics/_global/Sprint_plan.json"
+    canonical_path: 'apps/project-tracker/docs/metrics/_global/Sprint_plan.json'
     severity: error
-    message: "Sprint_plan.json must have exactly ONE canonical copy"
-  - filename: "task-registry.json"
+    message: 'Sprint_plan.json must have exactly ONE canonical copy'
+  - filename: 'task-registry.json'
     max_copies: 1
-    canonical_path: "apps/project-tracker/docs/metrics/_global/task-registry.json"
+    canonical_path: 'apps/project-tracker/docs/metrics/_global/task-registry.json'
     severity: error
-    message: "task-registry.json must have exactly ONE canonical copy"
+    message: 'task-registry.json must have exactly ONE canonical copy'
 
 strict_mode:
   enabled_by:
-    - "CI"
-    - "STRICT_VALIDATION"
-    - "PRE_COMMIT_HOOK"
+    - 'CI'
+    - 'STRICT_VALIDATION'
+    - 'PRE_COMMIT_HOOK'
   policy_pending_as_failure: true
   warnings_as_failure: false
   max_warnings: 5
@@ -161,7 +161,7 @@ enforcement:
     git_tracked: true
     git_ignored: true
     git_untracked: true
-    command: "git ls-files -o -i --exclude-standard"
+    command: 'git ls-files -o -i --exclude-standard'
   exit_codes:
     success: 0
     forbidden_violation: 1
@@ -170,8 +170,8 @@ enforcement:
     config_error: 4
   output:
     console: true
-    json_report: "artifacts/reports/runtime-path-lint.json"
-    markdown_summary: "artifacts/reports/runtime-path-lint.md"
+    json_report: 'artifacts/reports/runtime-path-lint.json'
+    markdown_summary: 'artifacts/reports/runtime-path-lint.md'
 
 remediation:
   autofix_enabled: false
@@ -180,21 +180,21 @@ remediation:
     move_to_artifacts:
       enabled: true
       target_mapping:
-        "*.log": "artifacts/logs/"
-        "coverage/**": "artifacts/coverage/"
-        "test-results/**": "artifacts/test-results/"
-        "gitleaks-report.json": "artifacts/reports/"
+        '*.log': 'artifacts/logs/'
+        'coverage/**': 'artifacts/coverage/'
+        'test-results/**': 'artifacts/test-results/'
+        'gitleaks-report.json': 'artifacts/reports/'
     delete_runtime_artifacts:
       enabled: true
       patterns:
-        - ".scannerwork/**"
-        - "sonar-reports/**"
-        - "nul"
+        - '.scannerwork/**'
+        - 'sonar-reports/**'
+        - 'nul'
     update_gitignore:
       enabled: true
       add_patterns:
-        - ".scannerwork/"
-        - "nul"
+        - '.scannerwork/'
+        - 'nul'
 
 reporting:
   verbosity:
@@ -214,4 +214,4 @@ reporting:
   pr_mode:
     enabled: true
     only_changed_files: true
-    git_diff_base: "origin/main"
+    git_diff_base: 'origin/main'

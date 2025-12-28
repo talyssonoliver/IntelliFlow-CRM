@@ -1,11 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import {
-  Crew,
-  CrewConfig,
-  CrewTask,
-  createLeadProcessingCrew,
-  createResearchCrew,
-} from './crew';
+import { Crew, CrewConfig, CrewTask, createLeadProcessingCrew, createResearchCrew } from './crew';
 import { BaseAgent, AgentTask, BaseAgentConfig } from './base.agent';
 
 // Mock agents for testing

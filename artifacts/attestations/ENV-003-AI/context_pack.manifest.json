@@ -1,0 +1,17 @@
+{
+  "files": [
+    {
+      "path": "docker-compose.yml",
+      "hash": "b148dc01f387394c8ac1d15f7d5edcf27dde0073da90a897fbaa6d7047a162c1",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "artifacts/misc/health-check.yaml",
+      "hash": "d5d19d4c7d9bafd6cd0db27201884ff820541c1a64962158710dfd4d9c7ef62c",
+      "status": "matched",
+      "size": 1000
+    }
+  ],
+  "generatedAt": "2025-12-25T18:15:00.000Z"
+}

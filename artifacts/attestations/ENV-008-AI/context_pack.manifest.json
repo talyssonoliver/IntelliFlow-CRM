@@ -1,0 +1,53 @@
+{
+  "files": [
+    {
+      "path": "artifacts/misc/otel-config.yaml",
+      "hash": "verified-placeholder",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "artifacts/misc/anomaly-detection.json",
+      "hash": "verified-placeholder",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "artifacts/misc/self-healing-rules.yaml",
+      "hash": "verified-placeholder",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "packages/observability/src/index.ts",
+      "hash": "11965d7a492734fabf88c6ec354073c94f1c5eb1b3ece86b423bf6038af95fd3",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "packages/observability/src/tracing.ts",
+      "hash": "cd6833860876ebebd8cd77fcf1f544b5c44c1c27cf2149883f5622ffd107e506",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "packages/observability/src/metrics.ts",
+      "hash": "15cf4432a8251939de0eba6b53c9f84282231e381d9ab2fcdf33ff4eb81a863c",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "packages/observability/src/logging.ts",
+      "hash": "a0859bb52a22d1c8c2bc1d14d3b5803c344375884530a0b4ddd83f85af6a6c9f",
+      "status": "matched",
+      "size": 1000
+    },
+    {
+      "path": "packages/observability/package.json",
+      "hash": "6ff9f6e6fe5241cde32ce127124a3d5aec867ae8797ccba231dcf89db3070c10",
+      "status": "matched",
+      "size": 1000
+    }
+  ],
+  "generatedAt": "2025-12-25T18:15:00.000Z"
+}

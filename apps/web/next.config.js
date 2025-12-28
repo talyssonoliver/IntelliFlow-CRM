@@ -24,6 +24,17 @@ const nextConfig = {
     optimizePackageImports: ['@intelliflow/ui', 'recharts', 'lucide-react'],
   },
 
+  // Turbopack configuration (Next.js 16+ default bundler)
+  turbopack: {
+    rules: {
+      // Add support for SVG imports (equivalent to @svgr/webpack)
+      '*.svg': {
+        loaders: ['@svgr/webpack'],
+        as: '*.js',
+      },
+    },
+  },
+
   // Image optimization
   images: {
     domains: ['localhost'],

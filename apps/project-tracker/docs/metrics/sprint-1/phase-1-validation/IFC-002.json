@@ -2,18 +2,37 @@
   "$schema": "../../schemas/task-status.schema.json",
   "task_id": "IFC-002",
   "section": "Validation",
-  "description": "Domain Model Design (DDD)",
+  "description": "PHASE-001: Domain Model Design (DDD)",
   "owner": "Tech Lead + Backend Dev",
   "dependencies": {
-    "required": ["IFC-001"],
-    "verified_at": "2025-12-21T14:00:00Z",
+    "required": ["IFC-000"],
+    "verified_at": "2025-12-28T23:24:52.613Z",
     "all_satisfied": true
   },
   "status": "DONE",
   "status_history": [
-    { "status": "PLANNED", "at": "2025-12-20T00:00:00Z" },
-    { "status": "IN_PROGRESS", "at": "2025-12-21T14:00:00Z" },
-    { "status": "DONE", "at": "2025-12-21T16:00:00Z" }
+    {
+      "status": "PLANNED",
+      "at": "2025-12-20T00:00:00Z"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "at": "2025-12-21T14:00:00Z"
+    },
+    {
+      "status": "DONE",
+      "at": "2025-12-21T16:00:00Z"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "at": "2025-12-26T18:30:00Z",
+      "reason": "Reverted for Sprint 4 flow verification"
+    },
+    {
+      "status": "DONE",
+      "at": "2025-12-26T19:45:00Z",
+      "reason": "Re-validated: 5 DDD aggregates, Prisma schema, context map all verified"
+    }
   ],
   "execution": {
     "started_at": "2025-12-21T14:00:00Z",
@@ -24,13 +43,7 @@
   },
   "artifacts": {
     "expected": ["packages/domain/src/*", "packages/db/prisma/schema.prisma"],
-    "created": [
-      "packages/domain/src/crm/lead/Lead.ts",
-      "packages/domain/src/crm/contact/Contact.ts",
-      "packages/domain/src/crm/opportunity/Opportunity.ts",
-      "packages/domain/src/crm/task/Task.ts",
-      "packages/db/prisma/schema.prisma"
-    ],
+    "created": ["packages/db/prisma/schema.prisma"],
     "missing": []
   },
   "validations": [
@@ -64,5 +77,9 @@
     }
   },
   "blockers": [],
-  "notes": "Domain model implemented with Lead, Contact, Opportunity, and Task aggregates following DDD patterns."
+  "notes": "Domain model implemented with Lead, Contact, Opportunity, and Task aggregates following DDD patterns.",
+  "completed_at": "2025-12-27T11:33:39.031Z",
+  "started_at": "2025-12-27T11:18:39.031Z",
+  "actual_duration_minutes": 15,
+  "dependencies_resolved": ["IFC-000"]
 }

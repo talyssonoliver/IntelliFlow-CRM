@@ -120,9 +120,9 @@ describe('RateLimitMiddleware', () => {
       await rateLimitMiddleware({ ctx, next: mockNext });
 
       // 3rd request should fail
-      await expect(
-        rateLimitMiddleware({ ctx, next: mockNext })
-      ).rejects.toThrow('Rate limit exceeded');
+      await expect(rateLimitMiddleware({ ctx, next: mockNext })).rejects.toThrow(
+        'Rate limit exceeded'
+      );
 
       // Advance time by 61 seconds (past the window)
       vi.advanceTimersByTime(61000);
@@ -165,9 +165,9 @@ describe('RateLimitMiddleware', () => {
       await rateLimitMiddleware({ ctx: user1Ctx, next: mockNext });
 
       // User 1's 3rd request should fail
-      await expect(
-        rateLimitMiddleware({ ctx: user1Ctx, next: mockNext })
-      ).rejects.toThrow('Rate limit exceeded');
+      await expect(rateLimitMiddleware({ ctx: user1Ctx, next: mockNext })).rejects.toThrow(
+        'Rate limit exceeded'
+      );
 
       // User 2 should still be able to make requests
       const result = await rateLimitMiddleware({ ctx: user2Ctx, next: mockNext });
@@ -193,9 +193,9 @@ describe('RateLimitMiddleware', () => {
       await rateLimitMiddleware({ ctx, next: mockNext });
 
       // 3rd anonymous request should fail
-      await expect(
-        rateLimitMiddleware({ ctx, next: mockNext })
-      ).rejects.toThrow('Rate limit exceeded');
+      await expect(rateLimitMiddleware({ ctx, next: mockNext })).rejects.toThrow(
+        'Rate limit exceeded'
+      );
 
       expect(mockNext).toHaveBeenCalledTimes(2);
     });
@@ -225,9 +225,9 @@ describe('RateLimitMiddleware', () => {
       await rateLimitMiddleware({ ctx: ctx1, next: mockNext });
 
       // 4th request should fail (shared anonymous limit)
-      await expect(
-        rateLimitMiddleware({ ctx: ctx2, next: mockNext })
-      ).rejects.toThrow('Rate limit exceeded');
+      await expect(rateLimitMiddleware({ ctx: ctx2, next: mockNext })).rejects.toThrow(
+        'Rate limit exceeded'
+      );
 
       expect(mockNext).toHaveBeenCalledTimes(3);
     });
@@ -283,9 +283,9 @@ describe('RateLimitMiddleware', () => {
       }
 
       // 101st should fail
-      await expect(
-        rateLimitMiddleware({ ctx, next: mockNext })
-      ).rejects.toThrow('Rate limit exceeded');
+      await expect(rateLimitMiddleware({ ctx, next: mockNext })).rejects.toThrow(
+        'Rate limit exceeded'
+      );
 
       expect(mockNext).toHaveBeenCalledTimes(100);
     });
@@ -312,9 +312,9 @@ describe('RateLimitMiddleware', () => {
       await rateLimitMiddleware({ ctx, next: mockNext });
 
       // Should fail
-      await expect(
-        rateLimitMiddleware({ ctx, next: mockNext })
-      ).rejects.toThrow('Rate limit exceeded');
+      await expect(rateLimitMiddleware({ ctx, next: mockNext })).rejects.toThrow(
+        'Rate limit exceeded'
+      );
 
       // Advance 31 seconds
       vi.advanceTimersByTime(31000);
@@ -348,9 +348,9 @@ describe('RateLimitMiddleware', () => {
       vi.advanceTimersByTime(30000);
 
       // Should still be blocked
-      await expect(
-        rateLimitMiddleware({ ctx, next: mockNext })
-      ).rejects.toThrow('Rate limit exceeded');
+      await expect(rateLimitMiddleware({ ctx, next: mockNext })).rejects.toThrow(
+        'Rate limit exceeded'
+      );
     });
 
     it('should propagate errors from next middleware', async () => {
@@ -371,9 +371,7 @@ describe('RateLimitMiddleware', () => {
         res: undefined,
       };
 
-      await expect(
-        rateLimitMiddleware({ ctx, next: mockNext })
-      ).rejects.toThrow('Database error');
+      await expect(rateLimitMiddleware({ ctx, next: mockNext })).rejects.toThrow('Database error');
     });
 
     it('should count failed requests against limit', async () => {
@@ -403,17 +401,17 @@ describe('RateLimitMiddleware', () => {
       await rateLimitMiddleware({ ctx, next: mockNext });
 
       // Request 2: fails
-      await expect(
-        rateLimitMiddleware({ ctx, next: mockNext })
-      ).rejects.toThrow('Middle request fails');
+      await expect(rateLimitMiddleware({ ctx, next: mockNext })).rejects.toThrow(
+        'Middle request fails'
+      );
 
       // Request 3: success
       await rateLimitMiddleware({ ctx, next: mockNext });
 
       // Request 4: should be rate limited (all 3 previous requests counted)
-      await expect(
-        rateLimitMiddleware({ ctx, next: mockNext })
-      ).rejects.toThrow('Rate limit exceeded');
+      await expect(rateLimitMiddleware({ ctx, next: mockNext })).rejects.toThrow(
+        'Rate limit exceeded'
+      );
     });
 
     it('should handle limit of 1 request', async () => {
@@ -436,9 +434,9 @@ describe('RateLimitMiddleware', () => {
       await rateLimitMiddleware({ ctx, next: mockNext });
 
       // Second immediately fails
-      await expect(
-        rateLimitMiddleware({ ctx, next: mockNext })
-      ).rejects.toThrow('Rate limit exceeded');
+      await expect(rateLimitMiddleware({ ctx, next: mockNext })).rejects.toThrow(
+        'Rate limit exceeded'
+      );
 
       expect(mockNext).toHaveBeenCalledTimes(1);
     });
@@ -527,9 +525,9 @@ describe('RateLimitMiddleware', () => {
       }
 
       // Should block after 10
-      await expect(
-        strictMiddleware({ ctx, next: mockNext })
-      ).rejects.toThrow('Rate limit exceeded');
+      await expect(strictMiddleware({ ctx, next: mockNext })).rejects.toThrow(
+        'Rate limit exceeded'
+      );
     });
 
     it('should reset after 1 minute window', async () => {
@@ -554,9 +552,9 @@ describe('RateLimitMiddleware', () => {
       }
 
       // Blocked
-      await expect(
-        strictMiddleware({ ctx, next: mockNext })
-      ).rejects.toThrow('Rate limit exceeded');
+      await expect(strictMiddleware({ ctx, next: mockNext })).rejects.toThrow(
+        'Rate limit exceeded'
+      );
 
       // Advance 61 seconds
       vi.advanceTimersByTime(61000);
@@ -649,9 +647,9 @@ describe('RateLimitMiddleware', () => {
       }
 
       // Blocked
-      await expect(
-        lenientMiddleware({ ctx, next: mockNext })
-      ).rejects.toThrow('Rate limit exceeded');
+      await expect(lenientMiddleware({ ctx, next: mockNext })).rejects.toThrow(
+        'Rate limit exceeded'
+      );
 
       // Advance 61 seconds
       vi.advanceTimersByTime(61000);
@@ -804,9 +802,9 @@ describe('RateLimitMiddleware', () => {
       }
 
       // Strict should block
-      await expect(
-        strictMiddleware({ ctx: userCtx, next: mockNext })
-      ).rejects.toThrow('Rate limit exceeded');
+      await expect(strictMiddleware({ ctx: userCtx, next: mockNext })).rejects.toThrow(
+        'Rate limit exceeded'
+      );
 
       // But lenient (different limiter) should still allow
       // Using different user to avoid conflict
@@ -850,9 +848,9 @@ describe('RateLimitMiddleware', () => {
       expect(mockNext).toHaveBeenCalledTimes(1);
 
       // Second request should be blocked
-      await expect(
-        rateLimitMiddleware({ ctx, next: mockNext })
-      ).rejects.toThrow('Rate limit exceeded');
+      await expect(rateLimitMiddleware({ ctx, next: mockNext })).rejects.toThrow(
+        'Rate limit exceeded'
+      );
 
       expect(mockNext).toHaveBeenCalledTimes(1); // Still only called once
     });
@@ -878,9 +876,9 @@ describe('RateLimitMiddleware', () => {
       await rateLimitMiddleware({ ctx, next: mockNext });
 
       // Blocked
-      await expect(
-        rateLimitMiddleware({ ctx, next: mockNext })
-      ).rejects.toThrow('Rate limit exceeded');
+      await expect(rateLimitMiddleware({ ctx, next: mockNext })).rejects.toThrow(
+        'Rate limit exceeded'
+      );
 
       // Advance 101ms
       vi.advanceTimersByTime(101);
@@ -944,9 +942,9 @@ describe('RateLimitMiddleware', () => {
       await rateLimitMiddleware({ ctx, next: mockNext });
       await rateLimitMiddleware({ ctx, next: mockNext });
 
-      await expect(
-        rateLimitMiddleware({ ctx, next: mockNext })
-      ).rejects.toThrow('Rate limit exceeded');
+      await expect(rateLimitMiddleware({ ctx, next: mockNext })).rejects.toThrow(
+        'Rate limit exceeded'
+      );
 
       expect(mockNext).toHaveBeenCalledTimes(2);
     });
@@ -984,6 +982,222 @@ describe('RateLimitMiddleware', () => {
       await rateLimitMiddleware({ ctx, next: mockNext });
 
       expect(mockNext).toHaveBeenCalledTimes(6);
+    });
+  });
+
+  describe('Tiered Rate Limiting (IFC-114)', () => {
+    it('should export RATE_LIMIT_TIERS configuration', async () => {
+      const { RATE_LIMIT_TIERS } = await import('../rate-limit.js');
+
+      expect(RATE_LIMIT_TIERS.PUBLIC).toEqual({
+        limit: 100,
+        windowMs: 60000,
+        name: 'public',
+      });
+      expect(RATE_LIMIT_TIERS.AUTHENTICATED).toEqual({
+        limit: 1000,
+        windowMs: 60000,
+        name: 'authenticated',
+      });
+      expect(RATE_LIMIT_TIERS.AI).toEqual({
+        limit: 10,
+        windowMs: 60000,
+        name: 'ai',
+      });
+      expect(RATE_LIMIT_TIERS.AUTH).toEqual({
+        limit: 5,
+        windowMs: 60000,
+        name: 'auth',
+      });
+    });
+
+    it('should export DDOS_CONFIG configuration', async () => {
+      const { DDOS_CONFIG } = await import('../rate-limit.js');
+
+      expect(DDOS_CONFIG.burstLimit).toBe(500);
+      expect(DDOS_CONFIG.burstWindowMs).toBe(1000);
+      expect(DDOS_CONFIG.blockDurationMs).toBe(300000);
+    });
+
+    it('should create public rate limit middleware', async () => {
+      const { createPublicRateLimitMiddleware, RATE_LIMIT_TIERS } =
+        await import('../rate-limit.js');
+      const publicMiddleware = createPublicRateLimitMiddleware();
+      const mockNext = vi.fn(async () => ({ success: true }));
+
+      const ctx: Context = {
+        user: null,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
+      };
+
+      // Make requests up to the public limit
+      for (let i = 0; i < RATE_LIMIT_TIERS.PUBLIC.limit; i++) {
+        await publicMiddleware({ ctx, next: mockNext });
+      }
+
+      // Next request should be rate limited
+      await expect(publicMiddleware({ ctx, next: mockNext })).rejects.toThrow(
+        /Rate limit exceeded/
+      );
+    });
+
+    it('should create AI rate limit middleware with strict limits', async () => {
+      const { createAIRateLimitMiddleware, RATE_LIMIT_TIERS } =
+        await import('../rate-limit.js');
+      const aiMiddleware = createAIRateLimitMiddleware();
+      const mockNext = vi.fn(async () => ({ success: true }));
+
+      const ctx: Context = {
+        user: {
+          userId: getUniqueUserId(),
+          email: 'test@example.com',
+          role: 'USER',
+        },
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
+      };
+
+      // Make requests up to the AI limit (10)
+      for (let i = 0; i < RATE_LIMIT_TIERS.AI.limit; i++) {
+        await aiMiddleware({ ctx, next: mockNext });
+      }
+
+      // 11th request should be rate limited
+      await expect(aiMiddleware({ ctx, next: mockNext })).rejects.toThrow(
+        /Rate limit exceeded/
+      );
+
+      expect(mockNext).toHaveBeenCalledTimes(10);
+    });
+
+    it('should create auth endpoint rate limit middleware with brute force protection', async () => {
+      const { createAuthEndpointRateLimitMiddleware, RATE_LIMIT_TIERS } =
+        await import('../rate-limit.js');
+      const authMiddleware = createAuthEndpointRateLimitMiddleware();
+      const mockNext = vi.fn(async () => ({ success: true }));
+
+      const ctx: Context = {
+        user: null,
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
+      };
+
+      // Make requests up to the auth limit (5)
+      for (let i = 0; i < RATE_LIMIT_TIERS.AUTH.limit; i++) {
+        await authMiddleware({ ctx, next: mockNext });
+      }
+
+      // 6th request should be rate limited
+      await expect(authMiddleware({ ctx, next: mockNext })).rejects.toThrow(
+        /Rate limit exceeded/
+      );
+
+      expect(mockNext).toHaveBeenCalledTimes(5);
+    });
+
+    it('should export rateLimitConfig object', async () => {
+      const { rateLimitConfig } = await import('../rate-limit.js');
+
+      expect(rateLimitConfig).toHaveProperty('tiers');
+      expect(rateLimitConfig).toHaveProperty('ddos');
+      expect(rateLimitConfig.tiers.PUBLIC).toBeDefined();
+      expect(rateLimitConfig.ddos.burstLimit).toBe(500);
+    });
+
+    it('should export getRateLimiter function', async () => {
+      const { getRateLimiter } = await import('../rate-limit.js');
+      const limiter = getRateLimiter();
+
+      expect(limiter).toBeDefined();
+      expect(typeof limiter.checkLimit).toBe('function');
+      expect(typeof limiter.getRemaining).toBe('function');
+      expect(typeof limiter.getResetTime).toBe('function');
+      expect(typeof limiter.cleanup).toBe('function');
+    });
+  });
+
+  describe('DDoS Protection (IFC-114)', () => {
+    it('should provide RateLimitResult type with detailed info', async () => {
+      const { getRateLimiter, RATE_LIMIT_TIERS } = await import('../rate-limit.js');
+      const limiter = getRateLimiter();
+
+      const result = await limiter.checkLimitWithDDoS(
+        `ddos-test-${Date.now()}`,
+        RATE_LIMIT_TIERS.PUBLIC.limit,
+        RATE_LIMIT_TIERS.PUBLIC.windowMs
+      );
+
+      expect(result).toHaveProperty('allowed');
+      expect(result).toHaveProperty('remaining');
+      expect(result).toHaveProperty('resetAt');
+      expect(result.allowed).toBe(true);
+      expect(typeof result.remaining).toBe('number');
+    });
+
+    it('should support blocking and unblocking keys', async () => {
+      const { getRateLimiter } = await import('../rate-limit.js');
+      const limiter = getRateLimiter();
+      const testKey = `block-test-${Date.now()}`;
+
+      // Initially not blocked
+      expect(await limiter.isBlocked(testKey)).toBe(false);
+
+      // Block the key
+      await limiter.block(testKey, 60000);
+      expect(await limiter.isBlocked(testKey)).toBe(true);
+
+      // Unblock the key
+      await limiter.unblock(testKey);
+      expect(await limiter.isBlocked(testKey)).toBe(false);
+    });
+
+    it('should provide stats for monitoring', async () => {
+      const { getRateLimiter } = await import('../rate-limit.js');
+      const limiter = getRateLimiter();
+
+      const stats = await limiter.getStats();
+
+      expect(stats).toHaveProperty('totalKeys');
+      expect(stats).toHaveProperty('blockedKeys');
+      expect(stats).toHaveProperty('activeKeys');
+      expect(typeof stats.totalKeys).toBe('number');
+    });
+
+    it('should include tier information in error cause', async () => {
+      const { createTieredRateLimitMiddleware, RATE_LIMIT_TIERS } =
+        await import('../rate-limit.js');
+      const publicMiddleware = createTieredRateLimitMiddleware(RATE_LIMIT_TIERS.PUBLIC);
+      const mockNext = vi.fn(async () => ({}));
+
+      const ctx: Context = {
+        user: {
+          userId: getUniqueUserId(),
+          email: 'test@example.com',
+          role: 'USER',
+        },
+        prisma: {} as PrismaClient,
+        req: undefined,
+        res: undefined,
+      };
+
+      // Hit the limit
+      for (let i = 0; i < RATE_LIMIT_TIERS.PUBLIC.limit; i++) {
+        await publicMiddleware({ ctx, next: mockNext });
+      }
+
+      // Next request should include tier info in cause
+      try {
+        await publicMiddleware({ ctx, next: mockNext });
+        throw new Error('Should have thrown');
+      } catch (error: any) {
+        expect(error.cause).toBeDefined();
+        expect(error.cause.tier).toBe('public');
+        expect(error.cause.retryAfter).toBeDefined();
+      }
     });
   });
 });

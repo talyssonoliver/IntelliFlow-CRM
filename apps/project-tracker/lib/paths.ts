@@ -39,6 +39,12 @@ export const PATHS = {
     global: join(process.cwd(), 'docs', 'metrics', '_global'),
     sprint0: join(process.cwd(), 'docs', 'metrics', 'sprint-0'),
     schemas: join(process.cwd(), 'docs', 'metrics', 'schemas'),
+    // Core data files
+    SPRINT_PLAN_CSV: join(process.cwd(), 'docs', 'metrics', '_global', 'Sprint_plan.csv'),
+    SPRINT_PLAN_JSON: join(process.cwd(), 'docs', 'metrics', '_global', 'Sprint_plan.json'),
+    TASK_REGISTRY: join(process.cwd(), 'docs', 'metrics', '_global', 'task-registry.json'),
+    DEPENDENCY_GRAPH: join(process.cwd(), 'docs', 'metrics', '_global', 'dependency-graph.json'),
+    REVIEW_QUEUE: join(process.cwd(), 'docs', 'metrics', 'review-queue.json'),
   },
 
   // Documentation
@@ -128,3 +134,63 @@ export function getTaskAnswersPath(taskId: string): string {
 export function getTaskQuestionsPath(taskId: string, type: 'spec' | 'plan'): string {
   return join(PATHS.artifacts.tasks, `${taskId}_claude_${type}_questions.log`);
 }
+
+// =============================================================================
+// Sprint Tracking Path Helpers
+// =============================================================================
+
+/**
+ * Get sprint directory path
+ */
+export function getSprintDir(sprint: number | string): string {
+  return join(PATHS.sprintTracking.root, `sprint-${sprint}`);
+}
+
+/**
+ * Get sprint summary file path
+ */
+export function getSprintSummaryPath(sprint: number | string): string {
+  return join(getSprintDir(sprint), '_summary.json');
+}
+
+/**
+ * Get phase directory path
+ */
+export function getPhaseDir(sprint: number | string, phase: string): string {
+  return join(getSprintDir(sprint), phase);
+}
+
+/**
+ * Get phase summary file path
+ */
+export function getPhaseSummaryPath(sprint: number | string, phase: string): string {
+  return join(getPhaseDir(sprint, phase), '_phase-summary.json');
+}
+
+/**
+ * Get task file path
+ */
+export function getTaskFilePath(sprint: number | string, phase: string, taskId: string): string {
+  return join(getPhaseDir(sprint, phase), `${taskId}.json`);
+}
+
+/**
+ * Get governance file paths
+ */
+export const GOVERNANCE_PATHS = {
+  get PLAN_OVERRIDES() {
+    return join(PATHS.sprintTracking.global, 'plan-overrides.yaml');
+  },
+  get REVIEW_QUEUE() {
+    return PATHS.sprintTracking.REVIEW_QUEUE;
+  },
+  get LINT_REPORT() {
+    return join(PATHS.artifacts.reports, 'plan-lint-report.json');
+  },
+  get DEBT_LEDGER() {
+    return join(PATHS.artifacts.reports, 'debt-ledger.json');
+  },
+  get PHANTOM_AUDIT() {
+    return join(PATHS.artifacts.reports, 'phantom-completion-audit.json');
+  },
+} as const;

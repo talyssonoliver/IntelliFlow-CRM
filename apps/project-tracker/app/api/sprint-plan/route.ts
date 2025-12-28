@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
+import { PATHS } from '@/lib/paths';
 
 // Disable caching for this route
 export const dynamic = 'force-dynamic';
@@ -9,8 +9,8 @@ export const revalidate = 0;
 
 export async function GET() {
   try {
-    // Sprint_plan.csv is now in the metrics _global folder
-    const csvPath = join(process.cwd(), 'docs', 'metrics', '_global', 'Sprint_plan.csv');
+    // Use centralized path configuration
+    const csvPath = PATHS.sprintTracking.SPRINT_PLAN_CSV;
 
     // Debug logging
     console.log('Looking for CSV at:', csvPath);
