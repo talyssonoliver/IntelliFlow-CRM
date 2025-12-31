@@ -9,17 +9,35 @@ import path from 'path';
  * the test root.
  */
 const packageRoot = process.cwd();
+const monorepoRoot = __dirname;
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@intelliflow/domain': path.resolve(monorepoRoot, 'packages/domain/src'),
+      '@intelliflow/platform': path.resolve(monorepoRoot, 'packages/platform/src'),
+      '@intelliflow/adapters': path.resolve(monorepoRoot, 'packages/adapters/src'),
+      '@intelliflow/validators': path.resolve(monorepoRoot, 'packages/validators/src'),
+      '@intelliflow/application': path.resolve(monorepoRoot, 'packages/application/src'),
+      '@intelliflow/db': path.resolve(monorepoRoot, 'packages/db/src'),
+      '@intelliflow/webhooks': path.resolve(monorepoRoot, 'packages/webhooks/src'),
+    },
+  },
   test: {
     root: packageRoot,
     globals: true,
     environment: 'node',
     passWithNoTests: true,
     // Use jsdom for UI component tests
-    environmentMatchGlobs: [['packages/ui/**/*.{test,spec}.{ts,tsx}', 'jsdom']],
+    environmentMatchGlobs: [
+      ['packages/ui/**/*.{test,spec}.{ts,tsx}', 'jsdom'],
+      ['apps/web/**/*.{test,spec}.{ts,tsx}', 'jsdom'],
+    ],
     // Setup files for UI tests (jest-dom matchers)
-    setupFiles: ['./packages/ui/__tests__/setup.ts'],
+    setupFiles: [
+      './packages/ui/__tests__/setup.ts',
+      './apps/web/vitest.setup.ts',
+    ],
 
     include: [
       'apps/**/*.{test,spec}.ts',

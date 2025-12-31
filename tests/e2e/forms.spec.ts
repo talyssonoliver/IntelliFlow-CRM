@@ -2,10 +2,10 @@
  * Forms E2E Tests for IntelliFlow CRM (IFC-129)
  *
  * Tests form interactions:
- * - Lead creation form
+ * - Lead creation form (page-based)
  * - Contact creation form
  * - Form validation
- * - Interactive components (buttons, modals, filters)
+ * - Interactive components (buttons, pages, filters)
  *
  * @see Sprint 6 - IFC-129: UI and Contract Tests
  */
@@ -17,84 +17,23 @@ test.describe('Lead Form', () => {
     await page.goto('/leads');
   });
 
-  test.describe('Form Opening and Closing', () => {
-    test('should open lead form modal when clicking New Lead button', async ({ page }) => {
+  test.describe('Form Navigation', () => {
+    test('should navigate to lead form page when clicking New Lead button', async ({ page }) => {
       // Click New Lead button
       await page.click('button:has-text("New Lead")');
 
-      // Verify modal opens
-      const modal = page.locator('div[role="dialog"], .fixed.inset-0, div:has(h2:has-text("Add New Lead"))');
-      await expect(modal.first()).toBeVisible();
+      // Verify navigation to new lead page
+      await expect(page).toHaveURL('/leads/new');
 
       // Verify form elements are present
       const emailInput = page.locator('input#email');
       await expect(emailInput).toBeVisible();
     });
 
-    test('should close lead form modal when clicking Cancel', async ({ page }) => {
-      // Open form
-      await page.click('button:has-text("New Lead")');
-
-      // Wait for modal to be visible
-      await page.waitForSelector('input#email');
-
-      // Click Cancel button
-      await page.click('button:has-text("Cancel")');
-
-      // Wait for modal to close
-      await page.waitForTimeout(500);
-
-      // Verify modal is closed
-      const emailInput = page.locator('input#email');
-      await expect(emailInput).not.toBeVisible();
-    });
-
-    test('should close lead form modal when clicking backdrop', async ({ page }) => {
-      // Open form
-      await page.click('button:has-text("New Lead")');
-
-      // Wait for modal to be visible
-      await page.waitForSelector('input#email');
-
-      // Click backdrop (the dark overlay)
-      await page.click('.bg-black\\/50, [aria-hidden="true"]');
-
-      // Wait for modal to close
-      await page.waitForTimeout(500);
-
-      // Verify modal is closed
-      const emailInput = page.locator('input#email');
-      await expect(emailInput).not.toBeVisible();
-    });
-
-    test('should close lead form modal when clicking X button', async ({ page }) => {
-      // Open form
-      await page.click('button:has-text("New Lead")');
-
-      // Wait for modal to be visible
-      await page.waitForSelector('input#email');
-
-      // Click close button
-      const closeButton = page.locator('button[aria-label="Close"]');
-      if ((await closeButton.count()) > 0) {
-        await closeButton.click();
-      }
-
-      // Wait for modal to close
-      await page.waitForTimeout(500);
-
-      // Verify modal is closed or still checking
-      const emailInput = page.locator('input#email');
-      const isVisible = await emailInput.isVisible().catch(() => false);
-      expect(isVisible).toBe(false);
-    });
-  });
-
   test.describe('Form Fields', () => {
     test.beforeEach(async ({ page }) => {
-      // Open the lead form
-      await page.click('button:has-text("New Lead")');
-      await page.waitForSelector('input#email');
+      // Navigate to the lead form page
+      await page.goto('/leads/new');
     });
 
     test('should have all required form fields', async ({ page }) => {
@@ -209,30 +148,22 @@ test.describe('Lead Form', () => {
       await expect(submitButton).toBeEnabled();
     });
 
-    test('should reset form after closing', async ({ page }) => {
-      // Fill form
-      await page.fill('input#email', 'test@example.com');
-      await page.fill('input#firstName', 'John');
+    test('should navigate back to leads list when clicking Cancel', async ({ page }) => {
+      // Navigate to form page
+      await page.goto('/leads/new');
 
-      // Close form
+      // Click Cancel button
       await page.click('button:has-text("Cancel")');
-      await page.waitForTimeout(500);
 
-      // Reopen form
-      await page.click('button:has-text("New Lead")');
-      await page.waitForSelector('input#email');
-
-      // Verify form is reset
-      await expect(page.locator('input#email')).toHaveValue('');
-      await expect(page.locator('input#firstName')).toHaveValue('');
+      // Verify navigation back to leads list
+      await expect(page).toHaveURL('/leads');
     });
   });
 
   test.describe('Form Submission', () => {
     test.beforeEach(async ({ page }) => {
-      // Open the lead form
-      await page.click('button:has-text("New Lead")');
-      await page.waitForSelector('input#email');
+      // Navigate to the lead form page
+      await page.goto('/leads/new');
     });
 
     test('should show loading state on submit', async ({ page }) => {
