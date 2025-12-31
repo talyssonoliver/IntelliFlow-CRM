@@ -2,6 +2,9 @@
  * Common types for AI Worker
  */
 
+// Import domain constants - single source of truth
+import type { TaskPriority, TaskStatus } from '@intelliflow/domain';
+
 /**
  * LLM Provider types
  */
@@ -17,15 +20,8 @@ export type AgentRole =
   | 'follow_up_scheduler'
   | 'data_enricher';
 
-/**
- * Task priority levels
- */
-export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
-
-/**
- * Task status
- */
-export type TaskStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+// Re-export task types from domain
+export type { TaskPriority, TaskStatus };
 
 /**
  * Human-in-the-loop decision

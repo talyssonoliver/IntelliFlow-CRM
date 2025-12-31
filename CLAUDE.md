@@ -463,9 +463,58 @@ Coverage requirements:
   - No linting errors
   - Architecture tests passing (no boundary violations)
 
+### Type Definition Strategy
+
+**Enum Types - Single Source of Truth Pattern**
+
+All enum types follow the DRY (Don't Repeat Yourself) principle with domain constants as the canonical source:
+
+1. **Domain Layer** (packages/domain/) - Defines const arrays:
+   ```typescript
+   // packages/domain/src/crm/lead/Lead.ts
+   export const LEAD_STATUSES = ['NEW', 'CONTACTED', 'QUALIFIED', ...] as const;
+   export const LEAD_SOURCES = ['WEBSITE', 'REFERRAL', ...] as const;
+
+   export type LeadStatus = (typeof LEAD_STATUSES)[number];
+   export type LeadSource = (typeof LEAD_SOURCES)[number];
+   ```
+
+2. **Validator Layer** (packages/validators/) - Derives Zod schemas:
+   ```typescript
+   // packages/validators/src/lead.ts
+   import { LEAD_STATUSES, LEAD_SOURCES } from '@intelliflow/domain';
+
+   export const leadStatusSchema = z.enum(LEAD_STATUSES);
+   export const leadSourceSchema = z.enum(LEAD_SOURCES);
+   ```
+
+3. **Application Layer** - Uses schemas from validators:
+   ```typescript
+   // apps/api/src/agent/types.ts
+   import { leadStatusSchema, leadSourceSchema } from '@intelliflow/validators';
+
+   export const LeadSearchInputSchema = z.object({
+     status: z.array(leadStatusSchema).optional(),
+     source: z.array(leadSourceSchema).optional(),
+   });
+   ```
+
+**Benefits**:
+- Adding new enum values requires editing only ONE location (domain layer)
+- Type safety maintained throughout the stack
+- Architecture tests enforce consistency (`packages/validators/__tests__/enum-consistency.test.ts`)
+
+**Entities with DRY enum pattern**:
+- ✅ Lead (LeadStatus, LeadSource)
+- ✅ Opportunity (OpportunityStage)
+- ✅ Task (TaskStatus, TaskPriority)
+- ✅ Case (CaseStatus, CasePriority, CaseTaskStatus)
+- ✅ Appointment (AppointmentStatus, AppointmentType)
+- ✅ Ticket (TicketStatus, TicketPriority, SLAStatus)
+
 ### Architecture Enforcement
 
-Architecture boundaries are enforced via tests (`packages/architecture-tests/`):
+Architecture boundaries are enforced via tests (`packages/architecture-tests/` and `packages/validators/__tests__/`):
 
 ```typescript
 // Example: Domain cannot depend on infrastructure

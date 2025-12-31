@@ -18,7 +18,7 @@ const CSV_PATH = join(process.cwd(), 'apps/project-tracker/docs/metrics/_global/
 // Mandatory governance files (always included)
 const GOVERNANCE_FILES = [
   'artifacts/sprint0/codex-run/Framework.md',
-  'tools/audit/audit-matrix.yml',
+  'audit-matrix.yml',
 ];
 
 // Maximum inherited files per task (to avoid overflow)

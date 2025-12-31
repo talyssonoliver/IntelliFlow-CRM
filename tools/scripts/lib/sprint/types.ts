@@ -208,6 +208,8 @@ export interface MissionBrief {
   theme: string;
   timeline: string;
   deliverables: string[];
+  targetApp?: string;
+  targetPaths?: string[];
 }
 
 export interface SprintOverview {
@@ -215,6 +217,7 @@ export interface SprintOverview {
   bySection: Record<string, number>;
   byExecutionMode: Record<ExecutionMode, number>;
   parallelStreamCount: number;
+  webAppUrl?: string;
 }
 
 export interface ExecutionStrategySection {

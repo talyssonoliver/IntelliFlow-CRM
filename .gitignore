@@ -218,3 +218,14 @@ override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
+
+# ============================================
+# Package-level Build Artifacts - Added 2025-12-31
+# ============================================
+
+# Package-level coverage artifacts (regenerated during tests)
+packages/*/artifacts/coverage/
+packages/*/coverage/
+
+# Vitest cache files
+packages/*/node_modules/.vite/

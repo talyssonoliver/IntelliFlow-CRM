@@ -132,7 +132,7 @@ tools:
 
   - id: snyk
     tier: 1
-    enabled: false
+    enabled: true
     required: true
     owner: 'Security'
     scope: 'workspace'
@@ -145,7 +145,7 @@ tools:
 
   - id: trivy-image
     tier: 1
-    enabled: false
+    enabled: true
     required: true
     owner: 'Security'
     scope: 'workspace'
@@ -157,7 +157,7 @@ tools:
 
   - id: semgrep-security-audit
     tier: 1
-    enabled: false
+    enabled: true
     required: true
     owner: 'Security'
     scope: 'repo'
@@ -175,27 +175,17 @@ tools:
     command: 'pnpm exec depcruise --config .dependency-cruiser.cjs packages apps --output-type err'
     thresholds: {}
     expected_outputs: ['log']
-
+    
   # ---------------------------------------------------------------------------
   # Tier 2 warnings
   # ---------------------------------------------------------------------------
   - id: knip
     tier: 2
     enabled: true
-    required: false
+    required: true
     owner: 'Tech Lead'
     scope: 'workspace'
     command: "pnpm exec knip --exclude 'unlisted,unresolved'"
-    thresholds: {}
-    expected_outputs: ['log']
-
-  - id: ts-prune
-    tier: 2
-    enabled: false
-    required: false
-    owner: 'Tech Lead'
-    scope: 'workspace'
-    command: 'pnpm exec ts-prune'
     thresholds: {}
     expected_outputs: ['log']
 
