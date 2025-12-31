@@ -39,7 +39,7 @@ export class InMemoryOpportunityRepository implements OpportunityRepository {
         const matchesOwner = !ownerId || opp.ownerId === ownerId;
         return matchesStage && matchesOwner;
       })
-      .sort((a, b) => b.value - a.value);
+      .sort((a, b) => b.value.amount - a.value.amount); // Compare Money amounts
   }
 
   async findByContactId(contactId: string): Promise<Opportunity[]> {
@@ -75,12 +75,12 @@ export class InMemoryOpportunityRepository implements OpportunityRepository {
   async findHighValue(minValue: number, ownerId?: string): Promise<Opportunity[]> {
     return Array.from(this.opportunities.values())
       .filter((opp) => {
-        const isHighValue = opp.value >= minValue;
+        const isHighValue = opp.value.amount >= minValue; // Compare Money amount
         const isActive = !opp.isClosed;
         const matchesOwner = !ownerId || opp.ownerId === ownerId;
         return isHighValue && isActive && matchesOwner;
       })
-      .sort((a, b) => b.value - a.value);
+      .sort((a, b) => b.value.amount - a.value.amount); // Compare Money amounts
   }
 
   // Test helper methods

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PhoneNumber, Money, WebsiteUrl, DateRange, Percentage } from '@intelliflow/domain';
 
 // Common ID schemas
 // Use UUID as the standard ID format (database-compatible)
@@ -13,14 +14,91 @@ export const uuidSchema = idSchema;
 // Common string schemas
 export const emailSchema = z.string().email('Invalid email address').toLowerCase().trim();
 
-// Phone schema - accepts E.164 format or common formats with dashes/spaces
+// Name validation with consistent rules (used across all entities)
+export const nameSchema = z
+  .string()
+  .min(1)
+  .max(100)
+  .transform((val) => val.trim());
+
+// Phone schema - transforms to PhoneNumber Value Object
 export const phoneSchema = z
   .string()
-  .regex(/^\+?[1-9][\d\s\-()]{1,18}$/, 'Invalid phone number format')
-  .transform((val) => val.replace(/[\s\-()]/g, '')) // Normalize to digits only
-  .optional();
+  .optional()
+  .nullable()
+  .transform((val, ctx) => {
+    if (!val) return undefined;
 
-export const urlSchema = z.string().url('Invalid URL').optional();
+    const result = PhoneNumber.create(val);
+
+    if (result.isFailure) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: result.error.message,
+      });
+      return z.NEVER;
+    }
+
+    return result.value;
+  });
+
+// Money schema - transforms to Money Value Object
+export const moneySchema = z
+  .object({
+    amount: z.number().min(0, 'Amount must be non-negative'),
+    currency: z.string().default('USD'),
+  })
+  .transform((val, ctx) => {
+    const result = Money.create(val.amount, val.currency);
+
+    if (result.isFailure) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: result.error.message,
+      });
+      return z.NEVER;
+    }
+
+    return result.value;
+  });
+
+// Percentage schema - transforms to Percentage Value Object
+export const percentageSchema = z
+  .number()
+  .transform((val, ctx) => {
+    const result = Percentage.create(val);
+
+    if (result.isFailure) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: result.error.message,
+      });
+      return z.NEVER;
+    }
+
+    return result.value;
+  });
+
+// URL schema - transforms to WebsiteUrl Value Object
+export const urlSchema = z
+  .string()
+  .optional()
+  .nullable()
+  .transform((val, ctx) => {
+    if (!val) return undefined;
+
+    const result = WebsiteUrl.create(val);
+
+    if (result.isFailure) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: result.error.message,
+      });
+      return z.NEVER;
+    }
+
+    return result.value;
+  });
 
 // Pagination schemas
 export const paginationSchema = z.object({
@@ -32,13 +110,25 @@ export const paginationSchema = z.object({
 
 export type PaginationInput = z.infer<typeof paginationSchema>;
 
-// Date range schema
+// Date range schema - transforms to DateRange Value Object
 export const dateRangeSchema = z
   .object({
     start: z.coerce.date(),
     end: z.coerce.date(),
   })
-  .refine((data) => data.start <= data.end, { message: 'Start date must be before end date' });
+  .transform((val, ctx) => {
+    const result = DateRange.create(val.start, val.end);
+
+    if (result.isFailure) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: result.error.message,
+      });
+      return z.NEVER;
+    }
+
+    return result.value;
+  });
 
 export type DateRangeInput = z.infer<typeof dateRangeSchema>;
 

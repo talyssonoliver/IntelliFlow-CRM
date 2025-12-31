@@ -37,15 +37,30 @@
       "import": "./dist/task.mjs",
       "require": "./dist/task.js"
     },
+    "./ticket": {
+      "types": "./dist/ticket.d.ts",
+      "import": "./dist/ticket.mjs",
+      "require": "./dist/ticket.js"
+    },
     "./common": {
       "types": "./dist/common.d.ts",
       "import": "./dist/common.mjs",
       "require": "./dist/common.js"
+    },
+    "./env": {
+      "types": "./dist/env.d.ts",
+      "import": "./dist/env.mjs",
+      "require": "./dist/env.js"
+    },
+    "./base-schemas": {
+      "types": "./dist/base-schemas.d.ts",
+      "import": "./dist/base-schemas.mjs",
+      "require": "./dist/base-schemas.js"
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts src/lead.ts src/contact.ts src/account.ts src/opportunity.ts src/task.ts src/common.ts --format cjs,esm --dts",
-    "dev": "tsup src/index.ts src/lead.ts src/contact.ts src/account.ts src/opportunity.ts src/task.ts src/common.ts --format cjs,esm --dts --watch",
+    "build": "tsup src/index.ts src/lead.ts src/contact.ts src/account.ts src/opportunity.ts src/task.ts src/ticket.ts src/common.ts src/env.ts src/base-schemas.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts src/lead.ts src/contact.ts src/account.ts src/opportunity.ts src/task.ts src/ticket.ts src/common.ts src/env.ts src/base-schemas.ts --format cjs,esm --dts --watch",
     "clean": "rm -rf dist .turbo",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"src/**/*.ts\"",
@@ -53,6 +68,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@intelliflow/domain": "workspace:*",
     "zod": "^3.22.0"
   },
   "devDependencies": {

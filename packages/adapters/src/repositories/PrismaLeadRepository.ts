@@ -1,5 +1,5 @@
 import { PrismaClient } from '@intelliflow/db';
-import { Lead, LeadId, Email, type LeadSource, type LeadStatus } from '@intelliflow/domain';
+import { Lead, LeadId, Email, PhoneNumber, type LeadSource, type LeadStatus } from '@intelliflow/domain';
 import { LeadRepository } from '@intelliflow/application';
 
 /**
@@ -9,6 +9,20 @@ function createLeadId(id: string): LeadId {
   const result = LeadId.create(id);
   if (result.isFailure) {
     throw new Error(`Invalid LeadId: ${id}`);
+  }
+  return result.value;
+}
+
+/**
+ * Helper to convert string to PhoneNumber Value Object
+ */
+function toPhoneNumber(phone: string | null): PhoneNumber | undefined {
+  if (!phone) return undefined;
+  const result = PhoneNumber.create(phone);
+  if (result.isFailure) {
+    // Log warning but don't throw - data might be legacy
+    console.warn(`Invalid phone number in database: ${phone}`);
+    return undefined;
   }
   return result.value;
 }
@@ -31,11 +45,12 @@ export class PrismaLeadRepository implements LeadRepository {
       lastName: lead.lastName ?? null,
       company: lead.company ?? null,
       title: lead.title ?? null,
-      phone: lead.phone ?? null,
+      phone: lead.phone?.toValue() ?? null, // Convert PhoneNumber to string
       source: lead.source,
       status: lead.status,
       score: lead.score.value,
       ownerId: lead.ownerId,
+      tenantId: lead.tenantId,
       createdAt: lead.createdAt,
       updatedAt: lead.updatedAt,
     };
@@ -60,7 +75,7 @@ export class PrismaLeadRepository implements LeadRepository {
       lastName: record.lastName ?? undefined,
       company: record.company ?? undefined,
       title: record.title ?? undefined,
-      phone: record.phone ?? undefined,
+      phone: toPhoneNumber(record.phone),
       source: record.source as LeadSource,
       status: record.status as LeadStatus,
       score: {
@@ -68,6 +83,7 @@ export class PrismaLeadRepository implements LeadRepository {
         confidence: 1.0, // Default confidence since Prisma only stores score value
       },
       ownerId: record.ownerId,
+      tenantId: record.tenantId,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
@@ -87,7 +103,7 @@ export class PrismaLeadRepository implements LeadRepository {
       lastName: record.lastName ?? undefined,
       company: record.company ?? undefined,
       title: record.title ?? undefined,
-      phone: record.phone ?? undefined,
+      phone: toPhoneNumber(record.phone),
       source: record.source as LeadSource,
       status: record.status as LeadStatus,
       score: {
@@ -95,6 +111,7 @@ export class PrismaLeadRepository implements LeadRepository {
         confidence: 1.0,
       },
       ownerId: record.ownerId,
+      tenantId: record.tenantId,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
@@ -113,7 +130,7 @@ export class PrismaLeadRepository implements LeadRepository {
         lastName: record.lastName ?? undefined,
         company: record.company ?? undefined,
         title: record.title ?? undefined,
-        phone: record.phone ?? undefined,
+        phone: toPhoneNumber(record.phone),
         source: record.source as LeadSource,
         status: record.status as LeadStatus,
         score: {
@@ -121,6 +138,7 @@ export class PrismaLeadRepository implements LeadRepository {
           confidence: 1.0,
         },
         ownerId: record.ownerId,
+        tenantId: record.tenantId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
       })
@@ -143,7 +161,7 @@ export class PrismaLeadRepository implements LeadRepository {
         lastName: record.lastName ?? undefined,
         company: record.company ?? undefined,
         title: record.title ?? undefined,
-        phone: record.phone ?? undefined,
+        phone: toPhoneNumber(record.phone),
         source: record.source as LeadSource,
         status: record.status as LeadStatus,
         score: {
@@ -151,6 +169,7 @@ export class PrismaLeadRepository implements LeadRepository {
           confidence: 1.0,
         },
         ownerId: record.ownerId,
+        tenantId: record.tenantId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
       })
@@ -173,7 +192,7 @@ export class PrismaLeadRepository implements LeadRepository {
         lastName: record.lastName ?? undefined,
         company: record.company ?? undefined,
         title: record.title ?? undefined,
-        phone: record.phone ?? undefined,
+        phone: toPhoneNumber(record.phone),
         source: record.source as LeadSource,
         status: record.status as LeadStatus,
         score: {
@@ -181,6 +200,7 @@ export class PrismaLeadRepository implements LeadRepository {
           confidence: 1.0,
         },
         ownerId: record.ownerId,
+        tenantId: record.tenantId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
       })
@@ -236,7 +256,7 @@ export class PrismaLeadRepository implements LeadRepository {
         lastName: record.lastName ?? undefined,
         company: record.company ?? undefined,
         title: record.title ?? undefined,
-        phone: record.phone ?? undefined,
+        phone: toPhoneNumber(record.phone),
         source: record.source as LeadSource,
         status: record.status as LeadStatus,
         score: {
@@ -244,6 +264,7 @@ export class PrismaLeadRepository implements LeadRepository {
           confidence: 1.0,
         },
         ownerId: record.ownerId,
+        tenantId: record.tenantId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
       })

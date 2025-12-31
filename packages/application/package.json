@@ -34,6 +34,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@intelliflow/db": "workspace:*",
     "@intelliflow/domain": "workspace:*"
   },
   "devDependencies": {

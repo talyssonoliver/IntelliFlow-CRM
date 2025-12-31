@@ -1,5 +1,5 @@
 import { PrismaClient, Decimal } from '@intelliflow/db';
-import { Account, AccountId } from '@intelliflow/domain';
+import { Account, AccountId, WebsiteUrl } from '@intelliflow/domain';
 import { AccountRepository } from '@intelliflow/application';
 
 /**
@@ -9,6 +9,20 @@ function createAccountId(id: string): AccountId {
   const result = AccountId.create(id);
   if (result.isFailure) {
     throw new Error(`Invalid AccountId: ${id}`);
+  }
+  return result.value;
+}
+
+/**
+ * Helper to convert string to WebsiteUrl Value Object
+ */
+function toWebsiteUrl(url: string | null): WebsiteUrl | undefined {
+  if (!url) return undefined;
+  const result = WebsiteUrl.create(url);
+  if (result.isFailure) {
+    // Log warning but don't throw - data might be legacy
+    console.warn(`Invalid website URL in database: ${url}`);
+    return undefined;
   }
   return result.value;
 }
@@ -24,12 +38,13 @@ export class PrismaAccountRepository implements AccountRepository {
     const data = {
       id: account.id.value,
       name: account.name,
-      website: account.website ?? null,
+      website: account.website?.toValue() ?? null, // Convert WebsiteUrl to string
       industry: account.industry ?? null,
       employees: account.employees ?? null,
       revenue: account.revenue ? new Decimal(account.revenue.toString()) : null,
       description: account.description ?? null,
       ownerId: account.ownerId,
+      tenantId: account.tenantId,
       createdAt: account.createdAt,
       updatedAt: account.updatedAt,
     };
@@ -50,12 +65,13 @@ export class PrismaAccountRepository implements AccountRepository {
 
     return Account.reconstitute(createAccountId(record.id), {
       name: record.name,
-      website: record.website ?? undefined,
+      website: toWebsiteUrl(record.website),
       industry: record.industry ?? undefined,
       employees: record.employees ?? undefined,
       revenue: record.revenue ? Number(record.revenue) : undefined,
       description: record.description ?? undefined,
       ownerId: record.ownerId,
+      tenantId: record.tenantId,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
@@ -70,12 +86,13 @@ export class PrismaAccountRepository implements AccountRepository {
     return records.map((record) =>
       Account.reconstitute(createAccountId(record.id), {
         name: record.name,
-        website: record.website ?? undefined,
+        website: toWebsiteUrl(record.website),
         industry: record.industry ?? undefined,
         employees: record.employees ?? undefined,
         revenue: record.revenue ? Number(record.revenue) : undefined,
         description: record.description ?? undefined,
         ownerId: record.ownerId,
+      tenantId: record.tenantId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
       })
@@ -93,12 +110,13 @@ export class PrismaAccountRepository implements AccountRepository {
     return records.map((record) =>
       Account.reconstitute(createAccountId(record.id), {
         name: record.name,
-        website: record.website ?? undefined,
+        website: toWebsiteUrl(record.website),
         industry: record.industry ?? undefined,
         employees: record.employees ?? undefined,
         revenue: record.revenue ? Number(record.revenue) : undefined,
         description: record.description ?? undefined,
         ownerId: record.ownerId,
+      tenantId: record.tenantId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
       })
@@ -117,12 +135,13 @@ export class PrismaAccountRepository implements AccountRepository {
     return records.map((record) =>
       Account.reconstitute(createAccountId(record.id), {
         name: record.name,
-        website: record.website ?? undefined,
+        website: toWebsiteUrl(record.website),
         industry: record.industry ?? undefined,
         employees: record.employees ?? undefined,
         revenue: record.revenue ? Number(record.revenue) : undefined,
         description: record.description ?? undefined,
         ownerId: record.ownerId,
+      tenantId: record.tenantId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
       })

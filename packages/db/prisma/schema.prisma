@@ -10,7 +10,43 @@ datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
   directUrl  = env("DIRECT_URL")
-  extensions = [vector, uuid_ossp]
+  extensions = [vector]
+}
+
+// ============================================
+// MULTI-TENANCY
+// ============================================
+
+model Tenant {
+  id        String       @id @default(cuid())
+  name      String
+  slug      String       @unique
+  status    TenantStatus @default(ACTIVE)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  // Relations
+  users           User[]
+  leads           Lead[]
+  contacts        Contact[]
+  accounts        Account[]
+  opportunities   Opportunity[]
+  tasks           Task[]
+  tickets         Ticket[]
+  auditLogs       AuditLog[]
+  auditLogEntries AuditLogEntry[]
+  calendarEvents  CalendarEvent[]
+  dealRenewals    DealRenewal[]  @relation("DealRenewals")
+
+  @@index([slug])
+  @@index([status])
+  @@map("tenants")
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  TRIAL
 }
 
 // ============================================
@@ -26,6 +62,10 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  // Multi-tenancy
+  tenantId      String
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   // Relations
   leads         Lead[]
   contacts      Contact[]
@@ -37,6 +77,7 @@ model User {
 
   @@index([email])
   @@index([role])
+  @@index([tenantId])
   @@map("users")
 }
 
@@ -65,6 +106,10 @@ model Lead {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
+  // Multi-tenancy
+  tenantId      String
+  tenant        Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   // Relations
   ownerId       String
   owner         User        @relation(fields: [ownerId], references: [id])
@@ -79,6 +124,7 @@ model Lead {
   @@index([status])
   @@index([score])
   @@index([ownerId])
+  @@index([tenantId])
   @@index([createdAt])
   @@map("leads")
 }
@@ -113,6 +159,10 @@ model Contact {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  // Multi-tenancy
+  tenantId      String
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   // Relations
   ownerId       String
   owner         User      @relation(fields: [ownerId], references: [id])
@@ -122,6 +172,10 @@ model Contact {
   lead          Lead?     @relation(fields: [leadId], references: [id])
   opportunities Opportunity[]
   tasks         Task[]
+  activities    ContactActivity[]
+  notes         ContactNote[]
+  aiInsight     ContactAIInsight?
+  calendarEvents CalendarEvent[]
 
   // AI Embedding
   embedding     Unsupported("vector(1536)")?
@@ -129,6 +183,7 @@ model Contact {
   @@index([email])
   @@index([ownerId])
   @@index([accountId])
+  @@index([tenantId])
   @@map("contacts")
 }
 
@@ -143,6 +198,10 @@ model Account {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  // Multi-tenancy
+  tenantId      String
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   // Relations
   ownerId       String
   owner         User      @relation(fields: [ownerId], references: [id])
@@ -151,6 +210,7 @@ model Account {
 
   @@index([name])
   @@index([ownerId])
+  @@index([tenantId])
   @@map("accounts")
 }
 
@@ -166,6 +226,10 @@ model Opportunity {
   updatedAt     DateTime            @updatedAt
   closedAt      DateTime?
 
+  // Multi-tenancy
+  tenantId      String
+  tenant        Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   // Relations
   ownerId       String
   owner         User                @relation(fields: [ownerId], references: [id])
@@ -174,10 +238,14 @@ model Opportunity {
   contactId     String?
   contact       Contact?            @relation(fields: [contactId], references: [id])
   tasks         Task[]
+  products      DealProduct[]
+  files         DealFile[]
+  activities    ActivityEvent[]
 
   @@index([stage])
   @@index([ownerId])
   @@index([accountId])
+  @@index([tenantId])
   @@index([expectedCloseDate])
   @@map("opportunities")
 }
@@ -192,6 +260,208 @@ enum OpportunityStage {
   CLOSED_LOST
 }
 
+// ============================================
+// DEAL PRODUCTS (Line Items)
+// ============================================
+
+model DealProduct {
+  id            String      @id @default(cuid())
+  name          String
+  description   String?
+  quantity      Int         @default(1)
+  unitPrice     Decimal     @db.Decimal(15, 2)
+  totalPrice    Decimal     @db.Decimal(15, 2)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Relations
+  opportunityId String
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  @@index([opportunityId])
+  @@map("deal_products")
+}
+
+// ============================================
+// DEAL FILES (Attachments)
+// ============================================
+
+model DealFile {
+  id            String      @id @default(cuid())
+  name          String
+  size          String      // e.g., "2.4 MB"
+  sizeBytes     Int?
+  fileType      FileType    @default(OTHER)
+  url           String?
+  uploadedAt    DateTime    @default(now())
+
+  // Relations
+  opportunityId String
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  uploadedById  String?
+
+  @@index([opportunityId])
+  @@map("deal_files")
+}
+
+enum FileType {
+  PDF
+  DOC
+  DOCX
+  XLS
+  XLSX
+  IMAGE
+  OTHER
+}
+
+// ============================================
+// ACTIVITY EVENTS (Timeline)
+// ============================================
+
+model ActivityEvent {
+  id              String            @id @default(cuid())
+  type            ActivityType
+  title           String
+  description     String?
+  timestamp       DateTime          @default(now())
+  dateLabel       String?           // 'today', 'yesterday', or date string
+
+  // For email/file attachments
+  attachmentName  String?
+  attachmentType  String?
+
+  // For stage changes
+  stageFrom       String?
+  stageTo         String?
+
+  // For AI agent actions
+  agentActionId   String?
+  agentName       String?
+  confidenceScore Int?
+  agentStatus     AgentActionStatus?
+
+  // Relations
+  opportunityId   String?
+  opportunity     Opportunity?      @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  userId          String?
+
+  @@index([opportunityId])
+  @@index([type])
+  @@index([timestamp])
+  @@map("activity_events")
+}
+
+enum ActivityType {
+  EMAIL
+  CALL
+  MEETING
+  NOTE
+  TASK
+  STAGE_CHANGE
+  AGENT_ACTION
+  SYSTEM
+}
+
+enum AgentActionStatus {
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  ROLLED_BACK
+  EXPIRED
+}
+
+// ============================================
+// AGENT ACTIONS (AI Approval Queue)
+// ============================================
+
+model AgentAction {
+  id              String            @id @default(cuid())
+  actionType      String            // 'lead_update', 'email_draft', 'deal_stage_change', 'task_create'
+  description     String
+  aiReasoning     String            @db.Text
+  confidenceScore Int               // 0-100
+  status          AgentActionStatus @default(PENDING_APPROVAL)
+
+  // Entity being affected
+  entityId        String
+  entityType      String            // 'lead', 'contact', 'deal', 'task'
+  entityName      String
+
+  // State tracking (JSON)
+  previousState   Json
+  proposedState   Json
+
+  // Agent info
+  agentId         String
+  agentName       String
+
+  // Timestamps
+  createdAt       DateTime          @default(now())
+  expiresAt       DateTime
+  reviewedAt      DateTime?
+  reviewedBy      String?
+
+  // Feedback/rollback
+  feedback        String?
+  rolledBackAt    DateTime?
+  rolledBackBy    String?
+  rollbackReason  String?
+
+  @@index([status])
+  @@index([entityType])
+  @@index([createdAt])
+  @@index([expiresAt])
+  @@map("agent_actions")
+}
+
+// ============================================
+// CONTACT ACTIVITIES (Timeline for Contact Detail)
+// ============================================
+
+model ContactActivity {
+  id              String              @id @default(cuid())
+  type            ContactActivityType
+  title           String
+  description     String
+  timestamp       DateTime            @default(now())
+
+  // Author
+  userId          String?
+  userName        String
+
+  // Sentiment analysis
+  sentiment       Sentiment?
+
+  // Type-specific metadata (JSON)
+  metadata        Json?
+
+  // Relations
+  contactId       String
+  contact         Contact             @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@index([contactId])
+  @@index([type])
+  @@index([timestamp])
+  @@map("contact_activities")
+}
+
+enum ContactActivityType {
+  EMAIL
+  CALL
+  MEETING
+  CHAT
+  DOCUMENT
+  DEAL
+  TICKET
+  NOTE
+}
+
+enum Sentiment {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+}
+
 model Task {
   id            String      @id @default(cuid())
   title         String
@@ -202,6 +472,10 @@ model Task {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   completedAt   DateTime?
+
+  // Multi-tenancy
+  tenantId      String
+  tenant        Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   // Relations
   ownerId       String
@@ -215,6 +489,7 @@ model Task {
 
   @@index([status])
   @@index([ownerId])
+  @@index([tenantId])
   @@index([dueDate])
   @@map("tasks")
 }
@@ -271,12 +546,17 @@ model AuditLog {
   userAgent     String?
   createdAt     DateTime  @default(now())
 
+  // Multi-tenancy
+  tenantId      String
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   // Relations
   userId        String
   user          User      @relation(fields: [userId], references: [id])
 
   @@index([entityType, entityId])
   @@index([userId])
+  @@index([tenantId])
   @@index([createdAt])
   @@map("audit_logs")
 }
@@ -462,6 +742,10 @@ model Ticket {
   status              TicketStatus    @default(OPEN)
   priority            TicketPriority  @default(MEDIUM)
 
+  // Multi-tenancy
+  tenantId            String
+  tenant              Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   // SLA Tracking
   slaPolicy           SLAPolicy       @relation(fields: [slaPolicyId], references: [id])
   slaPolicyId         String
@@ -485,6 +769,11 @@ model Ticket {
 
   // Notifications
   slaNotifications    SLANotification[]
+  activities          TicketActivity[]
+  attachments         TicketAttachment[]
+  nextSteps           TicketNextStep[]
+  relatedTickets      RelatedTicket[]   @relation("TicketRelations")
+  aiInsight           TicketAIInsight?
 
   @@index([ticketNumber])
   @@index([status])
@@ -492,6 +781,7 @@ model Ticket {
   @@index([slaStatus])
   @@index([assigneeId])
   @@index([contactId])
+  @@index([tenantId])
   @@index([slaResolutionDue])
   @@map("tickets")
 }
@@ -580,4 +870,2019 @@ enum SLANotificationSeverity {
   INFO
   WARNING
   CRITICAL
+}
+
+// ============================================
+// TICKET ACTIVITIES (Timeline)
+// ============================================
+
+model TicketActivity {
+  id              String                @id @default(cuid())
+  type            TicketActivityType
+  content         String
+  timestamp       DateTime              @default(now())
+  isInternal      Boolean               @default(false)
+
+  // Author info
+  authorName      String
+  authorRole      String?               // 'Customer', 'Support Agent', 'System'
+  authorAvatar    String?
+
+  // Channel info
+  channel         TicketChannel         @default(PORTAL)
+
+  // AI-related
+  isAIGenerated   Boolean               @default(false)
+  aiConfidence    Float?
+
+  // System event data
+  systemEventType String?
+  systemEventData Json?
+
+  // Relations
+  ticketId        String
+  ticket          Ticket                @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+  @@index([type])
+  @@index([timestamp])
+  @@map("ticket_activities")
+}
+
+enum TicketActivityType {
+  CUSTOMER_MESSAGE
+  AGENT_REPLY
+  INTERNAL_NOTE
+  SYSTEM_EVENT
+  SLA_ALERT
+  ASSIGNMENT
+  STATUS_CHANGE
+}
+
+enum TicketChannel {
+  EMAIL
+  PORTAL
+  PHONE
+  CHAT
+  API
+  SYSTEM
+}
+
+// ============================================
+// TICKET ATTACHMENTS
+// ============================================
+
+model TicketAttachment {
+  id              String      @id @default(cuid())
+  name            String
+  size            String      // e.g., "1.2 MB"
+  sizeBytes       Int?
+  fileType        FileType    @default(OTHER)
+  url             String?
+  uploadedAt      DateTime    @default(now())
+
+  // Relations
+  ticketId        String
+  ticket          Ticket      @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  uploadedById    String?
+
+  @@index([ticketId])
+  @@map("ticket_attachments")
+}
+
+// ============================================
+// ENHANCED AUDIT LOGGING - IFC-098 RBAC/ABAC
+// ============================================
+
+/// Enhanced AuditLog model
+/// Captures all CRM actions with full context for compliance,
+/// security investigations, and debugging purposes.
+/// Based on ADR-008 recommendations for hybrid approach:
+/// Domain Events -> Audit Table + OpenTelemetry traces
+model AuditLogEntry {
+  id                  String          @id @default(cuid())
+
+  // Multi-tenancy
+  tenantId            String
+  tenant              Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Event metadata
+  eventType           String          // 'LeadCreated', 'LeadScored', 'CaseUpdated', etc.
+  eventVersion        String          @default("v1")
+  eventId             String          // Domain event correlation ID
+  timestamp           DateTime        @default(now())
+
+  // Actor information
+  actorType           ActorType       @default(USER)
+  actorId             String?         // user_id, agent_id, or null for system
+  actorEmail          String?
+  actorRole           String?         // Role at time of action (for RBAC audit)
+
+  // Resource information
+  resourceType        String          // 'lead', 'contact', 'account', 'opportunity', 'task'
+  resourceId          String
+  resourceName        String?
+
+  // Action details
+  action              AuditAction
+  actionResult        ActionResult    @default(SUCCESS)
+  actionReason        String?         // Human-readable reason for the action
+
+  // Data changes (for compliance and debugging)
+  beforeState         Json?           // State before change
+  afterState          Json?           // State after change
+  changedFields       String[]        // List of modified field names
+
+  // Request context
+  ipAddress           String?
+  userAgent           String?
+  requestId           String?         // tRPC request ID
+  traceId             String?         // OpenTelemetry trace ID
+  sessionId           String?
+
+  // Compliance
+  dataClassification  DataClassification @default(INTERNAL)
+  retentionExpiresAt  DateTime?       // When this log can be deleted
+
+  // Permission context (for RBAC/ABAC audit)
+  requiredPermission  String?         // Permission checked for this action
+  permissionGranted   Boolean         @default(true)
+  permissionDeniedReason String?
+
+  // Additional metadata
+  metadata            Json?           // Any additional context
+
+  @@index([tenantId])
+  @@index([resourceType, resourceId, timestamp(sort: Desc)])
+  @@index([actorType, actorId, timestamp(sort: Desc)])
+  @@index([eventType, timestamp(sort: Desc)])
+  @@index([traceId])
+  @@index([timestamp(sort: Desc)])
+  @@index([action])
+  @@map("audit_log_entries")
+}
+
+/// Actor type enum
+enum ActorType {
+  USER
+  SYSTEM
+  AI_AGENT
+  API_KEY
+  WEBHOOK
+}
+
+/// Standard CRUD actions + CRM-specific actions
+enum AuditAction {
+  // Standard CRUD
+  CREATE
+  READ
+  UPDATE
+  DELETE
+
+  // Authentication/Authorization
+  LOGIN
+  LOGOUT
+  LOGIN_FAILED
+  PASSWORD_RESET
+  MFA_ENABLED
+  MFA_DISABLED
+  PERMISSION_DENIED
+
+  // CRM-specific
+  QUALIFY
+  CONVERT
+  ASSIGN
+  TRANSFER
+  SCORE
+
+  // AI actions
+  AI_SCORE
+  AI_PREDICT
+  AI_GENERATE
+
+  // Bulk operations
+  BULK_UPDATE
+  BULK_DELETE
+  IMPORT
+  EXPORT
+
+  // System
+  ARCHIVE
+  RESTORE
+  CONFIGURE
+}
+
+/// Action result enum
+enum ActionResult {
+  SUCCESS
+  FAILURE
+  DENIED
+  PARTIAL
+}
+
+/// Data classification for compliance
+enum DataClassification {
+  PUBLIC
+  INTERNAL
+  CONFIDENTIAL
+  PRIVILEGED
+}
+
+/// Security event type enum for SecurityEvent model
+enum SecurityEventType {
+  LOGIN_ATTEMPT
+  LOGIN_SUCCESS
+  LOGIN_FAILURE
+  LOGOUT
+  PASSWORD_CHANGE
+  MFA_CHALLENGE
+  MFA_SUCCESS
+  MFA_FAILURE
+  PERMISSION_DENIED
+  RATE_LIMIT_EXCEEDED
+  SUSPICIOUS_ACTIVITY
+  BRUTE_FORCE_DETECTED
+  SESSION_HIJACK_ATTEMPT
+  API_KEY_CREATED
+  API_KEY_REVOKED
+  DATA_EXPORT
+  ADMIN_ACTION
+}
+
+// ============================================
+// RBAC PERMISSION MODEL - IFC-098
+// ============================================
+
+/// Permission model for fine-grained access control
+/// Implements RBAC (Role-Based) with ABAC (Attribute-Based) extensions:
+/// - Roles define base permissions
+/// - Permissions can be overridden at user level
+/// - Attribute conditions enable fine-grained control
+model Permission {
+  id          String   @id @default(cuid())
+
+  // Permission identifier (e.g., 'leads:read', 'contacts:write', 'admin:users')
+  name        String   @unique
+
+  // Human-readable description
+  description String?
+
+  // Resource this permission applies to
+  resource    String   // 'leads', 'contacts', 'accounts', 'opportunities', 'tasks', 'admin'
+
+  // Action this permission allows
+  action      String   // 'read', 'write', 'delete', 'export', 'manage'
+
+  // Attribute conditions (ABAC extension)
+  // JSON object defining conditions: { "ownerId": "$userId" } means only own records
+  conditions  Json?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  rolePermissions RolePermission[]
+  userPermissions UserPermission[]
+
+  @@index([resource])
+  @@index([action])
+  @@map("permissions")
+}
+
+/// Role definition for RBAC
+/// Standard roles: ADMIN, MANAGER, SALES_REP, USER, VIEWER
+model RBACRole {
+  id          String   @id @default(cuid())
+
+  name        String   @unique  // 'ADMIN', 'MANAGER', 'SALES_REP', 'USER', 'VIEWER'
+  description String?
+
+  // Role hierarchy level (higher = more privileges)
+  level       Int      @default(0)
+
+  // Is this a system role (cannot be deleted)
+  isSystem    Boolean  @default(false)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  permissions RolePermission[]
+  users       UserRoleAssignment[]
+
+  @@index([level])
+  @@map("rbac_roles")
+}
+
+/// Role-Permission junction table
+model RolePermission {
+  id           String   @id @default(cuid())
+
+  roleId       String
+  role         RBACRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  // Grant or deny this permission
+  granted      Boolean  @default(true)
+
+  createdAt    DateTime @default(now())
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+/// User-Role junction table (users can have multiple roles)
+model UserRoleAssignment {
+  id        String   @id @default(cuid())
+
+  userId    String
+  roleId    String
+  role      RBACRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  // Assignment metadata
+  assignedBy String?
+  assignedAt DateTime @default(now())
+  expiresAt  DateTime?
+
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+  @@map("user_role_assignments")
+}
+
+/// User-Permission override table
+/// Allows granting/denying specific permissions to users
+model UserPermission {
+  id           String   @id @default(cuid())
+
+  userId       String
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  // Grant or deny this permission
+  granted      Boolean  @default(true)
+
+  // Override reason (for audit)
+  reason       String?
+
+  // Assignment metadata
+  grantedBy    String?
+  grantedAt    DateTime @default(now())
+  expiresAt    DateTime?
+
+  @@unique([userId, permissionId])
+  @@index([userId])
+  @@index([permissionId])
+  @@map("user_permissions")
+}
+
+// ============================================
+// ADDITIONAL UI DATA MODELS
+// ============================================
+
+/// Contact notes for the contact 360 view
+model ContactNote {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  author    String
+  contactId String
+  contact   Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([contactId])
+  @@index([createdAt])
+  @@map("contact_notes")
+}
+
+/// AI insights for contacts (from contact 360 view)
+model ContactAIInsight {
+  id                    String   @id @default(cuid())
+  contactId             String   @unique
+  contact               Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  conversionProbability Int      // 0-100
+  lifetimeValue         Int      // In cents
+  churnRisk             ChurnRisk @default(LOW)
+  nextBestAction        String?
+  sentiment             String?  // 'Positive', 'Neutral', 'Negative'
+  engagementScore       Int      // 0-100
+  recommendations       Json?    // Array of recommendation strings
+  sentimentTrend        String?  // 'improving', 'stable', 'declining'
+  lastEngagementDays    Int      @default(0)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([churnRisk])
+  @@index([conversionProbability])
+  @@map("contact_ai_insights")
+}
+
+enum ChurnRisk {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+/// Calendar events for upcoming events widget
+model CalendarEvent {
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime?
+  location    String?
+  eventType   CalendarEventType @default(MEETING)
+  attendees   Json?         // Array of attendee info (names/avatars)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Multi-tenancy
+  tenantId    String
+  tenant      Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  contactId   String?
+  contact     Contact?      @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  ownerId     String?
+
+  @@index([startTime])
+  @@index([eventType])
+  @@index([contactId])
+  @@index([tenantId])
+  @@map("calendar_events")
+}
+
+enum CalendarEventType {
+  MEETING
+  CALL
+  DEADLINE
+  TASK
+  REMINDER
+}
+
+/// Team chat messages
+model TeamMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  userName  String
+  userAvatar String?
+  message   String   @db.Text
+  channel   String   @default("general")
+  createdAt DateTime @default(now())
+
+  @@index([channel])
+  @@index([createdAt])
+  @@map("team_messages")
+}
+
+/// Pipeline snapshot for dashboard widget
+model PipelineSnapshot {
+  id         String   @id @default(cuid())
+  stage      String   // 'Qualification', 'Proposal', 'Negotiation', 'Closed Won'
+  value      Int      // In cents
+  dealCount  Int
+  percentage Int      // 0-100
+  color      String   @default("bg-ds-primary")
+  snapshotDate DateTime @default(now())
+
+  @@unique([stage, snapshotDate])
+  @@index([snapshotDate])
+  @@map("pipeline_snapshots")
+}
+
+/// Traffic source analytics
+model TrafficSource {
+  id           String   @id @default(cuid())
+  name         String   // 'Direct', 'Organic', 'Referral', 'Social'
+  percentage   Int      // 0-100
+  color        String   @default("bg-ds-primary")
+  snapshotDate DateTime @default(now())
+
+  @@unique([name, snapshotDate])
+  @@index([snapshotDate])
+  @@map("traffic_sources")
+}
+
+/// Monthly growth metrics
+model GrowthMetric {
+  id         String   @id @default(cuid())
+  month      String   // 'Jan', 'Feb', etc.
+  year       Int
+  value      Int      // Normalized 0-100
+  metricType String   @default("revenue") // 'revenue', 'leads', 'deals'
+  createdAt  DateTime @default(now())
+
+  @@unique([month, year, metricType])
+  @@index([year])
+  @@index([metricType])
+  @@map("growth_metrics")
+}
+
+/// Monthly deals won metrics
+model DealsWonMetric {
+  id        String   @id @default(cuid())
+  month     String   // 'Jul', 'Aug', etc.
+  year      Int
+  value     Int      // Number of deals or value
+  createdAt DateTime @default(now())
+
+  @@unique([month, year])
+  @@index([year])
+  @@map("deals_won_metrics")
+}
+
+/// Ticket next steps/action items
+model TicketNextStep {
+  id        String   @id @default(cuid())
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  title     String
+  dueDate   String   // 'Due in 1 hour', 'Due Today', 'Tomorrow'
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([ticketId])
+  @@index([completed])
+  @@map("ticket_next_steps")
+}
+
+/// Related tickets association
+model RelatedTicket {
+  id             String   @id @default(cuid())
+  ticketId       String
+  ticket         Ticket   @relation("TicketRelations", fields: [ticketId], references: [id], onDelete: Cascade)
+  relatedId      String
+  relatedSubject String
+  relatedStatus  TicketStatus
+  similarity     Int      // 0-100 percentage match
+  createdAt      DateTime @default(now())
+
+  @@unique([ticketId, relatedId])
+  @@index([ticketId])
+  @@map("related_tickets")
+}
+
+/// Ticket AI insights
+model TicketAIInsight {
+  id                      String   @id @default(cuid())
+  ticketId                String   @unique
+  ticket                  Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  suggestedSolutions      Json     // Array of solution strings
+  sentiment               String   // 'positive', 'neutral', 'negative'
+  predictedResolutionTime String   // '2-4 hours'
+  similarResolvedTickets  Int
+  escalationRisk          String   // 'low', 'medium', 'high'
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@map("ticket_ai_insights")
+}
+
+/// Sales performance snapshot for top performers widget
+model SalesPerformance {
+  id           String   @id @default(cuid())
+  userId       String
+  userName     String
+  userAvatar   String?
+  dealCount    Int
+  revenue      Int      // In cents
+  rank         Int
+  period       String   @default("monthly") // 'daily', 'weekly', 'monthly', 'quarterly'
+  snapshotDate DateTime @default(now())
+
+  @@unique([userId, period, snapshotDate])
+  @@index([period])
+  @@index([snapshotDate])
+  @@index([rank])
+  @@map("sales_performance")
+}
+
+// ============================================
+// FLOW COVERAGE: TEAMS & WORKSPACES (FLOW-002, FLOW-004)
+// ============================================
+
+/// Workspace/Tenant for multi-company support
+model Workspace {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  logoUrl     String?
+  industry    String?
+  size        String?  // 'startup', 'small', 'medium', 'enterprise'
+  plan        String   @default("free") // 'free', 'starter', 'professional', 'enterprise'
+  isActive    Boolean  @default(true)
+  settings    Json?    // Workspace-specific configurations
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     WorkspaceMember[]
+  teams       Team[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@map("workspaces")
+}
+
+/// User membership in workspace
+model WorkspaceMember {
+  id          String   @id @default(cuid())
+  userId      String
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  role        String   @default("member") // 'owner', 'admin', 'member', 'viewer'
+  isDefault   Boolean  @default(false) // Default workspace for user
+  joinedAt    DateTime @default(now())
+  lastAccessAt DateTime?
+
+  @@unique([userId, workspaceId])
+  @@index([userId])
+  @@index([workspaceId])
+  @@map("workspace_members")
+}
+
+/// Team within a workspace
+model Team {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  leaderId    String?  // Team lead user ID
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     TeamMember[]
+
+  @@index([workspaceId])
+  @@index([leaderId])
+  @@map("teams")
+}
+
+/// Team membership
+model TeamMember {
+  id        String   @id @default(cuid())
+  userId    String
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  role      String   @default("member") // 'lead', 'member'
+  joinedAt  DateTime @default(now())
+
+  @@unique([userId, teamId])
+  @@index([userId])
+  @@index([teamId])
+  @@map("team_members")
+}
+
+// ============================================
+// FLOW COVERAGE: EMAIL & COMMUNICATION (FLOW-016)
+// ============================================
+
+/// Email template for various purposes
+model EmailTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  subject     String
+  body        String   @db.Text
+  category    String   // 'welcome', 'proposal', 'follow-up', 'reminder', 'newsletter'
+  isActive    Boolean  @default(true)
+  variables   Json?    // Available merge variables
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([isActive])
+  @@map("email_templates")
+}
+
+/// Sent email tracking
+model EmailRecord {
+  id           String   @id @default(cuid())
+  templateId   String?
+  subject      String
+  body         String   @db.Text
+  fromEmail    String
+  toEmail      String
+  ccEmails     String?
+  bccEmails    String?
+  status       EmailStatus @default(PENDING)
+  sentAt       DateTime?
+  deliveredAt  DateTime?
+  openedAt     DateTime?
+  clickedAt    DateTime?
+  bouncedAt    DateTime?
+  openCount    Int      @default(0)
+  clickCount   Int      @default(0)
+  contactId    String?
+  dealId       String?
+  userId       String?  // Sender
+  metadata     Json?    // Additional tracking data
+  createdAt    DateTime @default(now())
+
+  attachments  EmailAttachment[]
+
+  @@index([contactId])
+  @@index([dealId])
+  @@index([status])
+  @@index([sentAt])
+  @@map("email_records")
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  FAILED
+}
+
+/// Email attachment
+model EmailAttachment {
+  id          String   @id @default(cuid())
+  emailId     String
+  email       EmailRecord @relation(fields: [emailId], references: [id], onDelete: Cascade)
+  fileName    String
+  fileSize    Int
+  fileType    String
+  fileUrl     String
+  createdAt   DateTime @default(now())
+
+  @@index([emailId])
+  @@map("email_attachments")
+}
+
+// ============================================
+// FLOW COVERAGE: CHAT & MESSAGING (FLOW-017)
+// ============================================
+
+/// Chat conversation thread
+model ChatConversation {
+  id          String   @id @default(cuid())
+  channel     ChatChannel @default(INTERNAL)
+  externalId  String?  // External platform ID (WhatsApp, Teams, etc.)
+  contactId   String?
+  contactName String?
+  contactEmail String?
+  subject     String?
+  status      ChatStatus @default(OPEN)
+  assigneeId  String?
+  priority    String   @default("normal") // 'low', 'normal', 'high', 'urgent'
+  lastMessageAt DateTime?
+  closedAt    DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  messages    ChatMessage[]
+
+  @@index([channel])
+  @@index([status])
+  @@index([contactId])
+  @@index([assigneeId])
+  @@map("chat_conversations")
+}
+
+enum ChatChannel {
+  INTERNAL
+  WHATSAPP
+  TEAMS
+  SLACK
+  FACEBOOK
+  INSTAGRAM
+  WEBCHAT
+}
+
+enum ChatStatus {
+  OPEN
+  PENDING
+  RESOLVED
+  CLOSED
+}
+
+/// Individual chat message
+model ChatMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  content        String   @db.Text
+  senderType     String   // 'user', 'contact', 'bot', 'system'
+  senderId       String?
+  senderName     String
+  isRead         Boolean  @default(false)
+  readAt         DateTime?
+  attachments    Json?    // Array of attachment objects
+  metadata       Json?    // Platform-specific metadata
+  createdAt      DateTime @default(now())
+
+  @@index([conversationId])
+  @@index([createdAt])
+  @@map("chat_messages")
+}
+
+// ============================================
+// FLOW COVERAGE: CALL RECORDING (FLOW-018)
+// ============================================
+
+/// Call record with recording metadata
+model CallRecord {
+  id            String   @id @default(cuid())
+  direction     String   // 'inbound', 'outbound'
+  fromNumber    String
+  toNumber      String
+  contactId     String?
+  contactName   String?
+  userId        String?  // Agent who handled call
+  userName      String?
+  duration      Int      // In seconds
+  status        CallStatus @default(COMPLETED)
+  outcome       String?  // 'connected', 'voicemail', 'no-answer', 'busy', 'failed'
+  recordingUrl  String?
+  recordingDuration Int?
+  transcription String?  @db.Text
+  summary       String?  @db.Text // AI-generated summary
+  sentiment     String?  // 'positive', 'neutral', 'negative'
+  dealId        String?
+  ticketId      String?
+  notes         String?  @db.Text
+  startedAt     DateTime
+  endedAt       DateTime?
+  createdAt     DateTime @default(now())
+
+  @@index([contactId])
+  @@index([userId])
+  @@index([startedAt])
+  @@index([status])
+  @@map("call_records")
+}
+
+enum CallStatus {
+  RINGING
+  IN_PROGRESS
+  COMPLETED
+  MISSED
+  FAILED
+}
+
+// ============================================
+// FLOW COVERAGE: DOCUMENT MANAGEMENT (FLOW-021)
+// ============================================
+
+/// Document record
+model Document {
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+  fileName      String
+  fileSize      Int      // In bytes
+  fileType      String   // MIME type
+  fileUrl       String
+  category      String   // 'contract', 'proposal', 'invoice', 'report', 'presentation', 'other'
+  status        DocumentStatus @default(ACTIVE)
+  version       Int      @default(1)
+  parentId      String?  // For version tracking
+  ocrContent    String?  @db.Text // Extracted text from OCR
+  metadata      Json?    // Additional document metadata
+  uploadedBy    String
+  uploadedByName String
+  contactId     String?
+  accountId     String?
+  dealId        String?
+  ticketId      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  accessLogs    DocumentAccessLog[]
+  shares        DocumentShare[]
+
+  @@index([category])
+  @@index([status])
+  @@index([contactId])
+  @@index([accountId])
+  @@index([dealId])
+  @@map("documents")
+}
+
+enum DocumentStatus {
+  ACTIVE
+  ARCHIVED
+  DELETED
+}
+
+/// Document access log
+model DocumentAccessLog {
+  id          String   @id @default(cuid())
+  documentId  String
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  userId      String
+  userName    String
+  action      String   // 'view', 'download', 'edit', 'share', 'delete'
+  ipAddress   String?
+  userAgent   String?
+  accessedAt  DateTime @default(now())
+
+  @@index([documentId])
+  @@index([userId])
+  @@index([accessedAt])
+  @@map("document_access_logs")
+}
+
+/// Document sharing permissions
+model DocumentShare {
+  id          String   @id @default(cuid())
+  documentId  String
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  sharedWith  String   // User ID or email
+  sharedBy    String
+  permission  String   @default("view") // 'view', 'edit', 'admin'
+  expiresAt   DateTime?
+  accessedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  @@unique([documentId, sharedWith])
+  @@index([documentId])
+  @@index([sharedWith])
+  @@map("document_shares")
+}
+
+// ============================================
+// FLOW COVERAGE: CUSTOMER FEEDBACK (FLOW-015)
+// ============================================
+
+/// Customer feedback survey
+model FeedbackSurvey {
+  id          String   @id @default(cuid())
+  type        FeedbackType @default(NPS)
+  contactId   String
+  contactName String
+  contactEmail String
+  ticketId    String?
+  dealId      String?
+  score       Int?     // NPS: 0-10, CSAT: 1-5
+  rating      Int?     // Star rating 1-5
+  comment     String?  @db.Text
+  sentiment   String?  // 'positive', 'neutral', 'negative'
+  tags        Json?    // Array of feedback tags
+  status      FeedbackStatus @default(PENDING)
+  sentAt      DateTime?
+  respondedAt DateTime?
+  followUpAt  DateTime?
+  followUpBy  String?
+  followUpNote String? @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([type])
+  @@index([contactId])
+  @@index([status])
+  @@index([score])
+  @@map("feedback_surveys")
+}
+
+enum FeedbackType {
+  NPS
+  CSAT
+  CES  // Customer Effort Score
+  CUSTOM
+}
+
+enum FeedbackStatus {
+  PENDING
+  SENT
+  RESPONDED
+  FOLLOWED_UP
+  CLOSED
+}
+
+// ============================================
+// FLOW COVERAGE: DEAL RENEWAL & HEALTH (FLOW-010)
+// ============================================
+
+/// Deal renewal tracking
+model DealRenewal {
+  id              String   @id @default(cuid())
+  originalDealId  String
+  renewalDealId   String?  // Created when renewal deal is made
+  renewalType     String   // 'auto', 'manual', 'expansion', 'downgrade'
+  status          RenewalStatus @default(UPCOMING)
+  renewalDate     DateTime
+  notificationSentAt DateTime?
+  value           Int      // In cents
+  previousValue   Int?     // Original deal value for comparison
+  changePercent   Float?   // Value change percentage
+  notes           String?  @db.Text
+  ownerId         String
+  ownerName       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Multi-tenancy
+  tenantId        String
+  tenant          Tenant   @relation("DealRenewals", fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([originalDealId])
+  @@index([status])
+  @@index([renewalDate])
+  @@index([tenantId])
+  @@map("deal_renewals")
+}
+
+enum RenewalStatus {
+  UPCOMING
+  IN_PROGRESS
+  RENEWED
+  CHURNED
+  EXPANDED
+  DOWNGRADED
+}
+
+/// Account health score tracking
+model AccountHealthScore {
+  id              String   @id @default(cuid())
+  accountId       String
+  accountName     String
+  overallScore    Int      // 0-100
+  usageScore      Int?     // Product usage score
+  engagementScore Int?     // Communication engagement
+  supportScore    Int?     // Support health (low tickets = good)
+  paymentScore    Int?     // Payment history
+  churnRisk       ChurnRisk @default(LOW)
+  riskFactors     Json?    // Array of risk factor strings
+  recommendations Json?    // Array of recommended actions
+  calculatedAt    DateTime @default(now())
+  validUntil      DateTime?
+
+  @@index([accountId])
+  @@index([churnRisk])
+  @@index([overallScore])
+  @@map("account_health_scores")
+}
+
+// ============================================
+// FLOW COVERAGE: AGENT SKILLS & ROUTING (FLOW-012)
+// ============================================
+
+/// Agent skill profile
+model AgentSkill {
+  id          String   @id @default(cuid())
+  userId      String
+  userName    String
+  skillName   String   // 'technical', 'billing', 'sales', 'product', 'integration'
+  proficiency Int      // 1-5 skill level
+  certified   Boolean  @default(false)
+  certifiedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, skillName])
+  @@index([userId])
+  @@index([skillName])
+  @@index([proficiency])
+  @@map("agent_skills")
+}
+
+/// Agent availability status
+model AgentAvailability {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  userName    String
+  status      AgentStatus @default(OFFLINE)
+  statusMessage String?
+  currentCapacity Int  @default(0) // Current assigned tickets/chats
+  maxCapacity Int      @default(10) // Maximum capacity
+  lastActiveAt DateTime?
+  shiftStart  DateTime?
+  shiftEnd    DateTime?
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([currentCapacity])
+  @@map("agent_availability")
+}
+
+enum AgentStatus {
+  ONLINE
+  BUSY
+  AWAY
+  OFFLINE
+  ON_BREAK
+}
+
+/// Ticket routing rule
+model RoutingRule {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  priority    Int      @default(0) // Higher = evaluated first
+  isActive    Boolean  @default(true)
+  conditions  Json     // Array of condition objects
+  actions     Json     // Array of action objects (assign to user/team/skill)
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([priority])
+  @@map("routing_rules")
+}
+
+/// Routing audit log
+model RoutingAudit {
+  id          String   @id @default(cuid())
+  ticketId    String
+  ruleId      String?
+  ruleName    String?
+  fromUserId  String?
+  fromUserName String?
+  toUserId    String
+  toUserName  String
+  reason      String   // 'rule_match', 'skill_match', 'load_balance', 'manual', 'escalation'
+  details     Json?    // Additional routing context
+  createdAt   DateTime @default(now())
+
+  @@index([ticketId])
+  @@index([toUserId])
+  @@index([createdAt])
+  @@map("routing_audits")
+}
+
+// ============================================
+// FLOW COVERAGE: TICKET CATEGORIES & SLA (FLOW-011, FLOW-013)
+// ============================================
+
+/// Ticket category
+model TicketCategory {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  parentId    String?  // For nested categories
+  color       String?
+  icon        String?
+  slaPolicyId String?  // Default SLA for this category
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([parentId])
+  @@index([isActive])
+  @@map("ticket_categories")
+}
+
+/// SLA breach tracking
+model SLABreach {
+  id          String   @id @default(cuid())
+  ticketId    String
+  slaPolicyId String
+  breachType  String   // 'response', 'resolution'
+  targetTime  DateTime // When it should have been met
+  breachedAt  DateTime // When breach occurred
+  durationOverdue Int  // Minutes overdue
+  escalatedTo String?  // User ID escalated to
+  escalatedAt DateTime?
+  resolved    Boolean  @default(false)
+  resolvedAt  DateTime?
+  notes       String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  @@index([ticketId])
+  @@index([breachType])
+  @@index([resolved])
+  @@map("sla_breaches")
+}
+
+/// Escalation history
+model EscalationHistory {
+  id          String   @id @default(cuid())
+  ticketId    String
+  level       Int      // Escalation level (1, 2, 3...)
+  fromUserId  String?
+  fromUserName String?
+  toUserId    String
+  toUserName  String
+  reason      String   // 'sla_breach', 'customer_request', 'complexity', 'manual'
+  notes       String?  @db.Text
+  escalatedAt DateTime @default(now())
+  acknowledgedAt DateTime?
+  resolvedAt  DateTime?
+
+  @@index([ticketId])
+  @@index([level])
+  @@index([escalatedAt])
+  @@map("escalation_history")
+}
+
+// ============================================
+// FLOW COVERAGE: WORKFLOW & AUTOMATION (FLOW-025, FLOW-026, FLOW-027)
+// ============================================
+
+/// Workflow definition
+model WorkflowDefinition {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  category    String   // 'lead', 'deal', 'ticket', 'contact', 'custom'
+  triggerType String   // 'event', 'schedule', 'manual', 'webhook'
+  triggerConfig Json   // Trigger configuration
+  steps       Json     // Array of workflow step definitions
+  isActive    Boolean  @default(true)
+  version     Int      @default(1)
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  executions  WorkflowExecution[]
+
+  @@index([category])
+  @@index([isActive])
+  @@map("workflow_definitions")
+}
+
+/// Workflow execution instance
+model WorkflowExecution {
+  id            String   @id @default(cuid())
+  workflowId    String
+  workflow      WorkflowDefinition @relation(fields: [workflowId], references: [id])
+  status        WorkflowStatus @default(RUNNING)
+  triggeredBy   String   // 'system', 'user', 'schedule', 'webhook'
+  triggerData   Json?    // Data that triggered the workflow
+  entityType    String?  // 'lead', 'deal', 'ticket', etc.
+  entityId      String?
+  currentStep   Int      @default(0)
+  stepResults   Json?    // Array of step execution results
+  error         String?  @db.Text
+  startedAt     DateTime @default(now())
+  completedAt   DateTime?
+
+  @@index([workflowId])
+  @@index([status])
+  @@index([entityType, entityId])
+  @@index([startedAt])
+  @@map("workflow_executions")
+}
+
+enum WorkflowStatus {
+  RUNNING
+  PAUSED
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+/// Business rule definition
+model BusinessRule {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  entityType  String   // 'lead', 'deal', 'ticket', 'contact'
+  ruleType    String   // 'validation', 'automation', 'scoring', 'routing'
+  conditions  Json     // Array of condition objects
+  actions     Json     // Array of action objects
+  priority    Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  executions  BusinessRuleExecution[]
+
+  @@index([entityType])
+  @@index([ruleType])
+  @@index([isActive])
+  @@map("business_rules")
+}
+
+/// Business rule execution log
+model BusinessRuleExecution {
+  id          String   @id @default(cuid())
+  ruleId      String
+  rule        BusinessRule @relation(fields: [ruleId], references: [id])
+  entityType  String
+  entityId    String
+  triggered   Boolean  // Was the rule triggered?
+  conditionsMet Json?  // Which conditions were met
+  actionsExecuted Json? // Which actions were executed
+  result      String   // 'success', 'partial', 'failed', 'skipped'
+  error       String?  @db.Text
+  executedAt  DateTime @default(now())
+
+  @@index([ruleId])
+  @@index([entityType, entityId])
+  @@index([executedAt])
+  @@map("business_rule_executions")
+}
+
+// ============================================
+// FLOW COVERAGE: DASHBOARD & REPORTS (FLOW-022, FLOW-023)
+// ============================================
+
+/// Dashboard configuration
+model DashboardConfig {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  userId      String?  // null = shared/system dashboard
+  isDefault   Boolean  @default(false)
+  isShared    Boolean  @default(false)
+  layout      Json     // Widget layout configuration
+  widgets     Json     // Array of widget configurations
+  filters     Json?    // Default filters
+  refreshInterval Int  @default(300) // Seconds
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([isDefault])
+  @@map("dashboard_configs")
+}
+
+/// KPI definition
+model KPIDefinition {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  category    String   // 'sales', 'support', 'marketing', 'operations'
+  metric      String   // 'revenue', 'deals_won', 'tickets_resolved', etc.
+  calculation String   // 'sum', 'count', 'average', 'percentage'
+  target      Float?   // Target value
+  unit        String?  // '$', '%', 'count', etc.
+  format      String?  // Display format
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([isActive])
+  @@map("kpi_definitions")
+}
+
+/// Report definition
+model ReportDefinition {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  category    String   // 'sales', 'support', 'marketing', 'custom'
+  type        String   // 'table', 'chart', 'pivot', 'summary'
+  dataSource  String   // Entity or query source
+  columns     Json     // Column definitions
+  filters     Json?    // Filter definitions
+  sorting     Json?    // Sort configuration
+  grouping    Json?    // Group by configuration
+  chartConfig Json?    // Chart visualization config
+  isPublic    Boolean  @default(false)
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  schedules   ReportSchedule[]
+  executions  ReportExecution[]
+
+  @@index([category])
+  @@index([createdBy])
+  @@map("report_definitions")
+}
+
+/// Scheduled report
+model ReportSchedule {
+  id          String   @id @default(cuid())
+  reportId    String
+  report      ReportDefinition @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  frequency   String   // 'daily', 'weekly', 'monthly', 'quarterly'
+  dayOfWeek   Int?     // 0-6 for weekly
+  dayOfMonth  Int?     // 1-31 for monthly
+  timeOfDay   String   // HH:MM format
+  timezone    String   @default("UTC")
+  recipients  Json     // Array of email addresses
+  format      String   @default("pdf") // 'pdf', 'excel', 'csv'
+  isActive    Boolean  @default(true)
+  lastRunAt   DateTime?
+  nextRunAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([reportId])
+  @@index([isActive])
+  @@index([nextRunAt])
+  @@map("report_schedules")
+}
+
+/// Report execution history
+model ReportExecution {
+  id          String   @id @default(cuid())
+  reportId    String
+  report      ReportDefinition @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  scheduleId  String?
+  triggeredBy String   // 'schedule', 'manual', 'api'
+  status      String   // 'pending', 'running', 'completed', 'failed'
+  fileUrl     String?  // Generated report URL
+  fileSize    Int?
+  rowCount    Int?
+  executionTime Int?   // Milliseconds
+  error       String?  @db.Text
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+
+  @@index([reportId])
+  @@index([status])
+  @@index([startedAt])
+  @@map("report_executions")
+}
+
+// ============================================
+// FLOW COVERAGE: AI INSIGHTS (FLOW-024)
+// ============================================
+
+/// AI-generated insight
+model AIInsight {
+  id          String   @id @default(cuid())
+  type        String   // 'recommendation', 'prediction', 'anomaly', 'trend'
+  category    String   // 'sales', 'support', 'engagement', 'risk'
+  title       String
+  description String   @db.Text
+  confidence  Int      // 0-100
+  priority    String   @default("medium") // 'low', 'medium', 'high', 'critical'
+  entityType  String?  // 'lead', 'deal', 'contact', 'account'
+  entityId    String?
+  actionable  Boolean  @default(true)
+  suggestedActions Json? // Array of suggested action objects
+  metadata    Json?    // Additional insight data
+  status      InsightStatus @default(NEW)
+  viewedAt    DateTime?
+  actedOnAt   DateTime?
+  dismissedAt DateTime?
+  dismissReason String?
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([type])
+  @@index([category])
+  @@index([status])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("ai_insights")
+}
+
+enum InsightStatus {
+  NEW
+  VIEWED
+  ACTED_ON
+  DISMISSED
+  EXPIRED
+}
+
+// ============================================
+// FLOW COVERAGE: MONITORING & OBSERVABILITY (FLOW-031, FLOW-032, FLOW-033)
+// ============================================
+
+/// System health check result
+model HealthCheck {
+  id          String   @id @default(cuid())
+  serviceName String   // 'api', 'database', 'redis', 'ai-worker', etc.
+  status      HealthStatus @default(HEALTHY)
+  responseTime Int?    // Milliseconds
+  details     Json?    // Health check details
+  error       String?  @db.Text
+  checkedAt   DateTime @default(now())
+
+  @@index([serviceName])
+  @@index([status])
+  @@index([checkedAt])
+  @@map("health_checks")
+}
+
+enum HealthStatus {
+  HEALTHY
+  DEGRADED
+  UNHEALTHY
+  UNKNOWN
+}
+
+/// Alert incident
+model AlertIncident {
+  id          String   @id @default(cuid())
+  alertRuleId String?
+  alertName   String
+  severity    String   // 'info', 'warning', 'error', 'critical'
+  source      String   // 'system', 'application', 'security', 'performance'
+  message     String   @db.Text
+  details     Json?
+  status      AlertStatus @default(FIRING)
+  acknowledgedBy String?
+  acknowledgedAt DateTime?
+  resolvedBy  String?
+  resolvedAt  DateTime?
+  firedAt     DateTime @default(now())
+
+  @@index([severity])
+  @@index([source])
+  @@index([status])
+  @@index([firedAt])
+  @@map("alert_incidents")
+}
+
+enum AlertStatus {
+  FIRING
+  ACKNOWLEDGED
+  RESOLVED
+}
+
+/// Performance metric
+model PerformanceMetric {
+  id          String   @id @default(cuid())
+  metricName  String   // 'api_latency', 'db_query_time', 'memory_usage', etc.
+  metricType  String   // 'gauge', 'counter', 'histogram'
+  value       Float
+  unit        String?  // 'ms', 'bytes', 'percent', 'count'
+  tags        Json?    // Dimension tags
+  serviceName String?
+  recordedAt  DateTime @default(now())
+
+  @@index([metricName])
+  @@index([serviceName])
+  @@index([recordedAt])
+  @@map("performance_metrics")
+}
+
+// ============================================
+// FLOW COVERAGE: WEBHOOKS & INTEGRATIONS (FLOW-034)
+// ============================================
+
+/// Webhook endpoint configuration
+model WebhookEndpoint {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  url         String
+  secret      String?  // For signature verification
+  events      Json     // Array of event types to send
+  headers     Json?    // Custom headers
+  isActive    Boolean  @default(true)
+  retryCount  Int      @default(3)
+  timeoutMs   Int      @default(30000)
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  deliveries  WebhookDelivery[]
+
+  @@index([isActive])
+  @@map("webhook_endpoints")
+}
+
+/// Webhook delivery log
+model WebhookDelivery {
+  id          String   @id @default(cuid())
+  endpointId  String
+  endpoint    WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  eventType   String
+  payload     Json
+  status      WebhookDeliveryStatus @default(PENDING)
+  attempts    Int      @default(0)
+  lastAttemptAt DateTime?
+  responseCode Int?
+  responseBody String?  @db.Text
+  error       String?  @db.Text
+  deliveredAt DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([endpointId])
+  @@index([eventType])
+  @@index([status])
+  @@index([createdAt])
+  @@map("webhook_deliveries")
+}
+
+enum WebhookDeliveryStatus {
+  PENDING
+  DELIVERED
+  FAILED
+  RETRYING
+}
+
+// ============================================
+// FLOW COVERAGE: API MANAGEMENT (FLOW-035, FLOW-036)
+// ============================================
+
+/// API key for external access
+model APIKey {
+  id          String   @id @default(cuid())
+  name        String
+  keyHash     String   @unique // Hashed API key
+  keyPrefix   String   // First 8 chars for identification
+  userId      String
+  scopes      Json     // Array of allowed scopes
+  rateLimit   Int      @default(1000) // Requests per hour
+  isActive    Boolean  @default(true)
+  expiresAt   DateTime?
+  lastUsedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  usageRecords APIUsageRecord[]
+
+  @@index([keyPrefix])
+  @@index([userId])
+  @@index([isActive])
+  @@map("api_keys")
+}
+
+/// API usage tracking
+model APIUsageRecord {
+  id          String   @id @default(cuid())
+  apiKeyId    String
+  apiKey      APIKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  endpoint    String
+  method      String
+  statusCode  Int
+  responseTime Int     // Milliseconds
+  requestSize Int?     // Bytes
+  responseSize Int?    // Bytes
+  ipAddress   String?
+  userAgent   String?
+  recordedAt  DateTime @default(now())
+
+  @@index([apiKeyId])
+  @@index([endpoint])
+  @@index([recordedAt])
+  @@map("api_usage_records")
+}
+
+/// API version tracking
+model APIVersion {
+  id          String   @id @default(cuid())
+  version     String   // 'v1', 'v2', etc.
+  status      String   // 'current', 'deprecated', 'sunset'
+  releaseDate DateTime
+  deprecatedAt DateTime?
+  sunsetDate  DateTime?
+  changelog   String?  @db.Text
+  breakingChanges Json? // Array of breaking change descriptions
+  createdAt   DateTime @default(now())
+
+  @@unique([version])
+  @@index([status])
+  @@map("api_versions")
+}
+
+// ============================================
+// LEGAL - CASE DOCUMENTS (IFC-152)
+// ============================================
+
+/// Case document with versioning, ACL, and audit trails
+model CaseDocument {
+  id                String   @id @default(uuid())
+  tenant_id         String
+
+  // Versioning
+  version_major     Int      @default(1)
+  version_minor     Int      @default(0)
+  version_patch     Int      @default(0)
+  parent_version_id String?
+  is_latest_version Boolean  @default(true)
+
+  // Status
+  status            String   // DRAFT, UNDER_REVIEW, APPROVED, SIGNED, ARCHIVED, SUPERSEDED
+
+  // Metadata
+  title             String
+  description       String?  @db.Text
+  document_type     String   // CONTRACT, AGREEMENT, EVIDENCE, etc.
+  classification    String   // PUBLIC, INTERNAL, CONFIDENTIAL, PRIVILEGED
+  tags              String[] @default([])
+
+  // Relationships
+  related_case_id    String?
+  related_contact_id String?
+
+  // Storage
+  storage_key String
+  content_hash String // SHA-256
+  mime_type   String
+  size_bytes  BigInt
+
+  // E-Signature
+  signed_by             String?
+  signed_at             DateTime?
+  signature_hash        String?
+  signature_ip_address  String?
+  signature_user_agent  String?  @db.Text
+
+  // Audit
+  created_by String
+  created_at DateTime @default(now())
+  updated_by String
+  updated_at DateTime @updatedAt
+
+  // GDPR & Legal Hold
+  retention_until DateTime?
+  deleted_at      DateTime?
+
+  // Relations
+  acl         CaseDocumentACL[]
+  audit_logs  CaseDocumentAudit[]
+
+  @@unique([tenant_id, id])
+  @@index([tenant_id])
+  @@index([status])
+  @@index([is_latest_version])
+  @@index([parent_version_id])
+  @@index([related_case_id])
+  @@index([related_contact_id])
+  @@index([classification])
+  @@index([retention_until])
+  @@index([deleted_at])
+  @@map("case_documents")
+}
+
+/// Access Control List for documents
+model CaseDocumentACL {
+  id         String   @id @default(uuid())
+  document_id String
+  tenant_id  String
+
+  // Principal (user, role, or tenant)
+  principal_id   String
+  principal_type String // USER, ROLE, TENANT
+
+  // Access level
+  access_level String // NONE, VIEW, COMMENT, EDIT, ADMIN
+
+  // Grant metadata
+  granted_by String
+  granted_at DateTime @default(now())
+  expires_at DateTime?
+
+  // Relations
+  document CaseDocument @relation(fields: [document_id], references: [id], onDelete: Cascade)
+
+  @@unique([document_id, principal_id], name: "document_id_principal_id")
+  @@index([document_id])
+  @@index([principal_id])
+  @@index([expires_at])
+  @@map("case_document_acl")
+}
+
+/// Audit trail for all document operations
+model CaseDocumentAudit {
+  id          String   @id @default(uuid())
+  document_id String
+  tenant_id   String
+
+  // Event details
+  event_type String // CREATED, UPDATED, VERSIONED, ACCESS_GRANTED, etc.
+
+  // Actor
+  user_id    String
+  ip_address String?
+  user_agent String?  @db.Text
+
+  // Change details
+  changes  Json? // Before/after values for updates
+  metadata Json? // Additional event-specific data
+
+  // Timestamp
+  created_at DateTime @default(now())
+
+  // Relations
+  document CaseDocument @relation(fields: [document_id], references: [id], onDelete: Cascade)
+
+  @@index([document_id])
+  @@index([user_id])
+  @@index([created_at])
+  @@index([event_type])
+  @@map("case_document_audit")
+}
+
+// ============================================
+// NOTIFICATIONS (IFC-157)
+// Unified notification service with multi-channel delivery
+// ============================================
+
+/// Notification entity for all channels (in-app, email, SMS, push)
+model Notification {
+  id                String             @id @default(cuid())
+  tenantId          String
+  recipientId       String             // User ID who receives the notification
+  recipientEmail    String?            // Email for email notifications
+  recipientPhone    String?            // Phone for SMS notifications
+
+  // Content
+  channel           NotificationChannel @default(IN_APP)
+  subject           String
+  body              String             @db.Text
+  htmlBody          String?            @db.Text
+
+  // Template
+  templateId        String?
+  templateVariables Json?              // Variables used in template rendering
+
+  // Priority & Status
+  priority          NotificationPriority @default(NORMAL)
+  status            NotificationStatus   @default(PENDING)
+  category          NotificationCategory @default(SYSTEM)
+
+  // Delivery tracking
+  providerMessageId String?            // External provider message ID
+  error             String?            @db.Text
+  retryCount        Int                @default(0)
+
+  // Timestamps
+  scheduledAt       DateTime?          // For scheduled notifications
+  sentAt            DateTime?
+  deliveredAt       DateTime?
+  readAt            DateTime?          // For in-app notifications
+  failedAt          DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  // Additional metadata
+  metadata          Json?              // Context-specific data
+  sourceType        String?            // What triggered this (lead, opportunity, etc.)
+  sourceId          String?            // ID of the source entity
+
+  @@index([tenantId])
+  @@index([recipientId])
+  @@index([channel])
+  @@index([status])
+  @@index([priority])
+  @@index([scheduledAt])
+  @@index([createdAt])
+  @@index([tenantId, recipientId, status])
+  @@map("notifications")
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  SMS
+  PUSH
+  WEBHOOK
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  DELIVERED
+  FAILED
+  READ
+  BOUNCED
+}
+
+enum NotificationPriority {
+  HIGH
+  NORMAL
+  LOW
+}
+
+enum NotificationCategory {
+  SYSTEM           // System notifications (always enabled)
+  TRANSACTIONAL    // Transaction confirmations (always enabled)
+  REMINDERS        // Appointment reminders, task due dates
+  ALERTS           // Urgent alerts
+  UPDATES          // Feature updates, news
+  MARKETING        // Marketing communications (opt-in)
+  SOCIAL           // Mentions, comments, etc.
+}
+
+/// User notification preferences
+model NotificationPreference {
+  id                String   @id @default(cuid())
+  tenantId          String
+  userId            String
+
+  // Channel preferences (JSON stores ChannelPreference objects)
+  channelPreferences Json    @default("{}")
+
+  // Category preferences (enabled/disabled per category)
+  categoryPreferences Json   @default("{}")
+
+  // Quiet hours
+  quietHoursStart   String   @default("22:00")  // HH:MM format
+  quietHoursEnd     String   @default("08:00")  // HH:MM format
+  quietHoursEnabled Boolean  @default(true)
+
+  // Timezone for quiet hours calculation
+  timezone          String   @default("UTC")
+
+  // Global do not disturb
+  doNotDisturb      Boolean  @default(false)
+
+  // Timestamps
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([tenantId, userId])
+  @@index([tenantId])
+  @@index([userId])
+  @@map("notification_preferences")
+}
+
+/// Notification template for consistent messaging
+model NotificationTemplate {
+  id          String   @id @default(cuid())
+  tenantId    String?  // null for system templates
+  name        String
+  description String?
+
+  // Channel-specific content
+  channel     NotificationChannel
+  subject     String              // For email/push
+  bodyText    String   @db.Text   // Plain text version
+  bodyHtml    String?  @db.Text   // HTML version (email)
+
+  // Template category
+  category    NotificationCategory @default(SYSTEM)
+
+  // Variables this template uses (for documentation)
+  variables   Json?    // Array of variable names
+
+  // Version control
+  version     Int      @default(1)
+  isActive    Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([tenantId, name, channel, version])
+  @@index([tenantId])
+  @@index([channel])
+  @@index([category])
+  @@index([isActive])
+  @@map("notification_templates")
+}
+
+/// Notification delivery log for audit trail
+model NotificationDeliveryLog {
+  id              String   @id @default(cuid())
+  notificationId  String
+
+  // Delivery attempt details
+  attemptNumber   Int
+  channel         NotificationChannel
+  status          String   // PENDING, SUCCESS, FAILED
+
+  // Provider details
+  provider        String?  // sendgrid, twilio, fcm, etc.
+  providerMessageId String?
+  providerResponse Json?
+
+  // Error tracking
+  errorCode       String?
+  errorMessage    String?  @db.Text
+
+  // Timing
+  attemptedAt     DateTime @default(now())
+  completedAt     DateTime?
+  durationMs      Int?
+
+  @@index([notificationId])
+  @@index([status])
+  @@index([attemptedAt])
+  @@map("notification_delivery_logs")
+}
+
+/// Dead letter queue for failed notifications
+model NotificationDLQ {
+  id              String   @id @default(cuid())
+  notificationId  String
+  tenantId        String
+
+  // Original notification data
+  channel         NotificationChannel
+  recipientId     String
+  subject         String
+  body            String   @db.Text
+
+  // Failure details
+  lastError       String   @db.Text
+  retryCount      Int
+  maxRetries      Int      @default(3)
+
+  // Status
+  status          DLQStatus @default(PENDING)
+  resolvedAt      DateTime?
+  resolvedBy      String?
+  resolutionNote  String?  @db.Text
+
+  // Timestamps
+  movedToDLQAt    DateTime @default(now())
+  lastRetryAt     DateTime?
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([movedToDLQAt])
+  @@map("notification_dlq")
+}
+
+enum DLQStatus {
+  PENDING
+  RETRYING
+  RESOLVED
+  DISCARDED
 }

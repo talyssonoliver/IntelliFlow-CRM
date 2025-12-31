@@ -1,5 +1,5 @@
 import { PrismaClient, Decimal } from '@intelliflow/db';
-import { Opportunity, OpportunityId, type OpportunityStage } from '@intelliflow/domain';
+import { Opportunity, OpportunityId, Money, Percentage, type OpportunityStage } from '@intelliflow/domain';
 import { OpportunityRepository } from '@intelliflow/application';
 
 /**
@@ -9,6 +9,32 @@ function createOpportunityId(id: string): OpportunityId {
   const result = OpportunityId.create(id);
   if (result.isFailure) {
     throw new Error(`Invalid OpportunityId: ${id}`);
+  }
+  return result.value;
+}
+
+/**
+ * Helper to convert Decimal to Money Value Object
+ */
+function toMoney(value: Decimal | null): Money {
+  if (!value) return Money.zero();
+  const result = Money.create(Number(value));
+  if (result.isFailure) {
+    console.warn(`Invalid money value in database: ${value}`);
+    return Money.zero();
+  }
+  return result.value;
+}
+
+/**
+ * Helper to convert number to Percentage Value Object
+ */
+function toPercentage(value: number | null): Percentage {
+  if (value === null) return Percentage.create(0).value; // Default to 0%
+  const result = Percentage.create(value);
+  if (result.isFailure) {
+    console.warn(`Invalid percentage in database: ${value}`);
+    return Percentage.create(0).value;
   }
   return result.value;
 }
@@ -24,14 +50,15 @@ export class PrismaOpportunityRepository implements OpportunityRepository {
     const data = {
       id: opportunity.id.value,
       name: opportunity.name,
-      value: new Decimal(opportunity.value.toString()),
+      value: new Decimal(opportunity.value.amount), // Convert Money to Decimal
       stage: opportunity.stage,
-      probability: opportunity.probability,
+      probability: opportunity.probability.value, // Convert Percentage to number
       expectedCloseDate: opportunity.expectedCloseDate ?? null,
       description: opportunity.description ?? null,
       accountId: opportunity.accountId,
       contactId: opportunity.contactId ?? null,
       ownerId: opportunity.ownerId,
+      tenantId: opportunity.tenantId,
       createdAt: opportunity.createdAt,
       updatedAt: opportunity.updatedAt,
       closedAt: opportunity.closedAt ?? null,
@@ -53,14 +80,15 @@ export class PrismaOpportunityRepository implements OpportunityRepository {
 
     return Opportunity.reconstitute(createOpportunityId(record.id), {
       name: record.name,
-      value: Number(record.value),
+      value: toMoney(record.value),
       stage: record.stage as OpportunityStage,
-      probability: record.probability,
+      probability: toPercentage(record.probability),
       expectedCloseDate: record.expectedCloseDate ?? undefined,
       description: record.description ?? undefined,
       accountId: record.accountId,
       contactId: record.contactId ?? undefined,
       ownerId: record.ownerId,
+      tenantId: record.tenantId,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
       closedAt: record.closedAt ?? undefined,
@@ -76,14 +104,15 @@ export class PrismaOpportunityRepository implements OpportunityRepository {
     return records.map((record) =>
       Opportunity.reconstitute(createOpportunityId(record.id), {
         name: record.name,
-        value: Number(record.value),
+        value: toMoney(record.value),
         stage: record.stage as OpportunityStage,
-        probability: record.probability,
+        probability: toPercentage(record.probability),
         expectedCloseDate: record.expectedCloseDate ?? undefined,
         description: record.description ?? undefined,
         accountId: record.accountId,
         contactId: record.contactId ?? undefined,
         ownerId: record.ownerId,
+      tenantId: record.tenantId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
         closedAt: record.closedAt ?? undefined,
@@ -100,14 +129,15 @@ export class PrismaOpportunityRepository implements OpportunityRepository {
     return records.map((record) =>
       Opportunity.reconstitute(createOpportunityId(record.id), {
         name: record.name,
-        value: Number(record.value),
+        value: toMoney(record.value),
         stage: record.stage as OpportunityStage,
-        probability: record.probability,
+        probability: toPercentage(record.probability),
         expectedCloseDate: record.expectedCloseDate ?? undefined,
         description: record.description ?? undefined,
         accountId: record.accountId,
         contactId: record.contactId ?? undefined,
         ownerId: record.ownerId,
+      tenantId: record.tenantId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
         closedAt: record.closedAt ?? undefined,
@@ -127,14 +157,15 @@ export class PrismaOpportunityRepository implements OpportunityRepository {
     return records.map((record) =>
       Opportunity.reconstitute(createOpportunityId(record.id), {
         name: record.name,
-        value: Number(record.value),
+        value: toMoney(record.value),
         stage: record.stage as OpportunityStage,
-        probability: record.probability,
+        probability: toPercentage(record.probability),
         expectedCloseDate: record.expectedCloseDate ?? undefined,
         description: record.description ?? undefined,
         accountId: record.accountId,
         contactId: record.contactId ?? undefined,
         ownerId: record.ownerId,
+      tenantId: record.tenantId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
         closedAt: record.closedAt ?? undefined,
@@ -158,14 +189,15 @@ export class PrismaOpportunityRepository implements OpportunityRepository {
     return records.map((record) =>
       Opportunity.reconstitute(createOpportunityId(record.id), {
         name: record.name,
-        value: Number(record.value),
+        value: toMoney(record.value),
         stage: record.stage as OpportunityStage,
-        probability: record.probability,
+        probability: toPercentage(record.probability),
         expectedCloseDate: record.expectedCloseDate ?? undefined,
         description: record.description ?? undefined,
         accountId: record.accountId,
         contactId: record.contactId ?? undefined,
         ownerId: record.ownerId,
+      tenantId: record.tenantId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
         closedAt: record.closedAt ?? undefined,
@@ -220,14 +252,15 @@ export class PrismaOpportunityRepository implements OpportunityRepository {
     return records.map((record) =>
       Opportunity.reconstitute(createOpportunityId(record.id), {
         name: record.name,
-        value: Number(record.value),
+        value: toMoney(record.value),
         stage: record.stage as OpportunityStage,
-        probability: record.probability,
+        probability: toPercentage(record.probability),
         expectedCloseDate: record.expectedCloseDate ?? undefined,
         description: record.description ?? undefined,
         accountId: record.accountId,
         contactId: record.contactId ?? undefined,
         ownerId: record.ownerId,
+      tenantId: record.tenantId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
         closedAt: record.closedAt ?? undefined,
@@ -247,14 +280,15 @@ export class PrismaOpportunityRepository implements OpportunityRepository {
     return records.map((record) =>
       Opportunity.reconstitute(createOpportunityId(record.id), {
         name: record.name,
-        value: Number(record.value),
+        value: toMoney(record.value),
         stage: record.stage as OpportunityStage,
-        probability: record.probability,
+        probability: toPercentage(record.probability),
         expectedCloseDate: record.expectedCloseDate ?? undefined,
         description: record.description ?? undefined,
         accountId: record.accountId,
         contactId: record.contactId ?? undefined,
         ownerId: record.ownerId,
+      tenantId: record.tenantId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
         closedAt: record.closedAt ?? undefined,

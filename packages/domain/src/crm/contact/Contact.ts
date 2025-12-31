@@ -2,6 +2,7 @@ import { AggregateRoot } from '../../shared/AggregateRoot';
 import { Result, DomainError } from '../../shared/Result';
 import { ContactId } from './ContactId';
 import { Email } from '../lead/Email';
+import { PhoneNumber } from '../../shared/PhoneNumber';
 import {
   ContactCreatedEvent,
   ContactUpdatedEvent,
@@ -29,11 +30,12 @@ interface ContactProps {
   firstName: string;
   lastName: string;
   title?: string;
-  phone?: string;
+  phone?: PhoneNumber;
   department?: string;
   accountId?: string;
   leadId?: string;
   ownerId: string;
+  tenantId: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -43,11 +45,12 @@ export interface CreateContactProps {
   firstName: string;
   lastName: string;
   title?: string;
-  phone?: string;
+  phone?: string | PhoneNumber;
   department?: string;
   accountId?: string;
   leadId?: string;
   ownerId: string;
+  tenantId: string;
 }
 
 /**
@@ -55,7 +58,7 @@ export interface CreateContactProps {
  * Represents a person in the CRM (converted from lead or directly created)
  */
 export class Contact extends AggregateRoot<ContactId> {
-  private props: ContactProps;
+  private readonly props: ContactProps;
 
   private constructor(id: ContactId, props: ContactProps) {
     super(id);
@@ -83,7 +86,7 @@ export class Contact extends AggregateRoot<ContactId> {
     return this.props.title;
   }
 
-  get phone(): string | undefined {
+  get phone(): PhoneNumber | undefined {
     return this.props.phone;
   }
 
@@ -101,6 +104,10 @@ export class Contact extends AggregateRoot<ContactId> {
 
   get ownerId(): string {
     return this.props.ownerId;
+  }
+
+  get tenantId(): string {
+    return this.props.tenantId;
   }
 
   get createdAt(): Date {
@@ -126,6 +133,21 @@ export class Contact extends AggregateRoot<ContactId> {
       return Result.fail(emailResult.error);
     }
 
+    // Convert phone to PhoneNumber if string provided
+    let phoneNumber: PhoneNumber | undefined = undefined;
+    if (props.phone) {
+      if (typeof props.phone === 'string') {
+        const phoneResult = PhoneNumber.create(props.phone);
+        if (phoneResult.isFailure) {
+          return Result.fail(phoneResult.error);
+        }
+        phoneNumber = phoneResult.value;
+      } else {
+        // Already a PhoneNumber instance
+        phoneNumber = props.phone;
+      }
+    }
+
     const now = new Date();
     const contactId = ContactId.generate();
 
@@ -134,11 +156,12 @@ export class Contact extends AggregateRoot<ContactId> {
       firstName: props.firstName,
       lastName: props.lastName,
       title: props.title,
-      phone: props.phone,
+      phone: phoneNumber,
       department: props.department,
       accountId: props.accountId,
       leadId: props.leadId,
       ownerId: props.ownerId,
+      tenantId: props.tenantId,
       createdAt: now,
       updatedAt: now,
     });
@@ -177,11 +200,15 @@ export class Contact extends AggregateRoot<ContactId> {
 
   // Commands
   updateContactInfo(
-    updates: Partial<
-      Pick<ContactProps, 'firstName' | 'lastName' | 'title' | 'phone' | 'department'>
-    >,
+    updates: Partial<{
+      firstName: string;
+      lastName: string;
+      title: string;
+      phone: string | PhoneNumber;
+      department: string;
+    }>,
     updatedBy: string
-  ): void {
+  ): Result<void, DomainError> {
     const updatedFields: string[] = [];
 
     if (updates.firstName !== undefined && updates.firstName !== this.props.firstName) {
@@ -199,9 +226,23 @@ export class Contact extends AggregateRoot<ContactId> {
       updatedFields.push('title');
     }
 
-    if (updates.phone !== undefined && updates.phone !== this.props.phone) {
-      this.props.phone = updates.phone;
-      updatedFields.push('phone');
+    if (updates.phone !== undefined) {
+      let newPhone: PhoneNumber | undefined;
+
+      if (typeof updates.phone === 'string') {
+        const phoneResult = PhoneNumber.create(updates.phone);
+        if (phoneResult.isFailure) {
+          return Result.fail(phoneResult.error);
+        }
+        newPhone = phoneResult.value;
+      } else {
+        newPhone = updates.phone;
+      }
+
+      if (!this.props.phone?.equals(newPhone)) {
+        this.props.phone = newPhone;
+        updatedFields.push('phone');
+      }
     }
 
     if (updates.department !== undefined && updates.department !== this.props.department) {
@@ -213,6 +254,8 @@ export class Contact extends AggregateRoot<ContactId> {
       this.props.updatedAt = new Date();
       this.addDomainEvent(new ContactUpdatedEvent(this.id, updatedFields, updatedBy));
     }
+
+    return Result.ok(undefined);
   }
 
   associateWithAccount(
@@ -272,7 +315,7 @@ export class Contact extends AggregateRoot<ContactId> {
       lastName: this.lastName,
       fullName: this.fullName,
       title: this.title,
-      phone: this.phone,
+      phone: this.phone?.toValue(),
       department: this.department,
       accountId: this.accountId,
       leadId: this.leadId,

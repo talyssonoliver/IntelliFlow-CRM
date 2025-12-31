@@ -1,5 +1,5 @@
 import { PrismaClient } from '@intelliflow/db';
-import { Contact, ContactId, Email } from '@intelliflow/domain';
+import { Contact, ContactId, Email, PhoneNumber } from '@intelliflow/domain';
 import { ContactRepository } from '@intelliflow/application';
 
 /**
@@ -9,6 +9,20 @@ function createContactId(id: string): ContactId {
   const result = ContactId.create(id);
   if (result.isFailure) {
     throw new Error(`Invalid ContactId: ${id}`);
+  }
+  return result.value;
+}
+
+/**
+ * Helper to convert string to PhoneNumber Value Object
+ */
+function toPhoneNumber(phone: string | null): PhoneNumber | undefined {
+  if (!phone) return undefined;
+  const result = PhoneNumber.create(phone);
+  if (result.isFailure) {
+    // Log warning but don't throw - data might be legacy
+    console.warn(`Invalid phone number in database: ${phone}`);
+    return undefined;
   }
   return result.value;
 }
@@ -27,11 +41,12 @@ export class PrismaContactRepository implements ContactRepository {
       firstName: contact.firstName,
       lastName: contact.lastName,
       title: contact.title ?? null,
-      phone: contact.phone ?? null,
+      phone: contact.phone?.toValue() ?? null, // Convert PhoneNumber to string
       department: contact.department ?? null,
       accountId: contact.accountId ?? null,
       leadId: contact.leadId ?? null,
       ownerId: contact.ownerId,
+      tenantId: contact.tenantId,
       createdAt: contact.createdAt,
       updatedAt: contact.updatedAt,
     };
@@ -55,11 +70,12 @@ export class PrismaContactRepository implements ContactRepository {
       firstName: record.firstName,
       lastName: record.lastName,
       title: record.title ?? undefined,
-      phone: record.phone ?? undefined,
+      phone: toPhoneNumber(record.phone),
       department: record.department ?? undefined,
       accountId: record.accountId ?? undefined,
       leadId: record.leadId ?? undefined,
       ownerId: record.ownerId,
+      tenantId: record.tenantId,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
@@ -77,11 +93,12 @@ export class PrismaContactRepository implements ContactRepository {
         firstName: record.firstName,
         lastName: record.lastName,
         title: record.title ?? undefined,
-        phone: record.phone ?? undefined,
+        phone: toPhoneNumber(record.phone),
         department: record.department ?? undefined,
         accountId: record.accountId ?? undefined,
         leadId: record.leadId ?? undefined,
         ownerId: record.ownerId,
+      tenantId: record.tenantId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
       })
@@ -100,11 +117,12 @@ export class PrismaContactRepository implements ContactRepository {
         firstName: record.firstName,
         lastName: record.lastName,
         title: record.title ?? undefined,
-        phone: record.phone ?? undefined,
+        phone: toPhoneNumber(record.phone),
         department: record.department ?? undefined,
         accountId: record.accountId ?? undefined,
         leadId: record.leadId ?? undefined,
         ownerId: record.ownerId,
+      tenantId: record.tenantId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
       })
@@ -123,11 +141,12 @@ export class PrismaContactRepository implements ContactRepository {
       firstName: record.firstName,
       lastName: record.lastName,
       title: record.title ?? undefined,
-      phone: record.phone ?? undefined,
+      phone: toPhoneNumber(record.phone),
       department: record.department ?? undefined,
       accountId: record.accountId ?? undefined,
       leadId: record.leadId ?? undefined,
       ownerId: record.ownerId,
+      tenantId: record.tenantId,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
@@ -158,11 +177,12 @@ export class PrismaContactRepository implements ContactRepository {
       firstName: record.firstName,
       lastName: record.lastName,
       title: record.title ?? undefined,
-      phone: record.phone ?? undefined,
+      phone: toPhoneNumber(record.phone),
       department: record.department ?? undefined,
       accountId: record.accountId ?? undefined,
       leadId: record.leadId ?? undefined,
       ownerId: record.ownerId,
+      tenantId: record.tenantId,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });

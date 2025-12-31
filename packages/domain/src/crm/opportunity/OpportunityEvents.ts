@@ -1,14 +1,19 @@
 import { DomainEvent } from '../../shared/DomainEvent';
 import { OpportunityId } from './OpportunityId';
 
-export type OpportunityStage =
-  | 'PROSPECTING'
-  | 'QUALIFICATION'
-  | 'NEEDS_ANALYSIS'
-  | 'PROPOSAL'
-  | 'NEGOTIATION'
-  | 'CLOSED_WON'
-  | 'CLOSED_LOST';
+// Canonical enum values - single source of truth
+export const OPPORTUNITY_STAGES = [
+  'PROSPECTING',
+  'QUALIFICATION',
+  'NEEDS_ANALYSIS',
+  'PROPOSAL',
+  'NEGOTIATION',
+  'CLOSED_WON',
+  'CLOSED_LOST',
+] as const;
+
+// Derive type from const array
+export type OpportunityStage = (typeof OPPORTUNITY_STAGES)[number];
 
 /**
  * Event: Opportunity was created

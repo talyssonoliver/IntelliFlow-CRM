@@ -44,6 +44,7 @@ interface TaskProps {
   contactId?: string;
   opportunityId?: string;
   ownerId: string;
+  tenantId: string;
   createdAt: Date;
   updatedAt: Date;
   completedAt?: Date;
@@ -58,6 +59,7 @@ export interface CreateTaskProps {
   contactId?: string;
   opportunityId?: string;
   ownerId: string;
+  tenantId: string;
 }
 
 /**
@@ -107,6 +109,10 @@ export class Task extends AggregateRoot<TaskId> {
 
   get ownerId(): string {
     return this.props.ownerId;
+  }
+
+  get tenantId(): string {
+    return this.props.tenantId;
   }
 
   get createdAt(): Date {
@@ -160,6 +166,7 @@ export class Task extends AggregateRoot<TaskId> {
       contactId: props.contactId,
       opportunityId: props.opportunityId,
       ownerId: props.ownerId,
+      tenantId: props.tenantId,
       createdAt: now,
       updatedAt: now,
     });

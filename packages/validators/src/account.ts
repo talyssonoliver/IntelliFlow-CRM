@@ -1,31 +1,30 @@
 import { z } from 'zod';
-import { idSchema, paginationSchema, urlSchema } from './common';
+import { idSchema, paginationSchema, urlSchema, nameSchema } from './common';
 
 // Re-export common schemas used by API routers
 export { idSchema } from './common';
 
-// Create Account Schema
-export const createAccountSchema = z.object({
-  name: z.string().min(1).max(200),
-  website: urlSchema,
-  industry: z.string().max(100).optional(),
+// Base account fields schema (DRY - used by create and update)
+const baseAccountFieldsSchema = z.object({
+  name: z.string().min(1).max(200).transform(val => val.trim()), // Company names can be longer
+  website: urlSchema, // Uses WebsiteUrl Value Object transformer
+  industry: z.string().max(100).transform(val => val.trim()).optional(),
   employees: z.number().int().positive().optional(),
-  revenue: z.number().positive().optional(),
-  description: z.string().max(1000).optional(),
+  revenue: z.number().positive().optional(), // Could use moneySchema in future
+  description: z.string().max(1000).transform(val => val.trim()).optional(),
 });
+
+// Create Account Schema
+export const createAccountSchema = baseAccountFieldsSchema;
 
 export type CreateAccountInput = z.infer<typeof createAccountSchema>;
 
-// Update Account Schema
-export const updateAccountSchema = z.object({
-  id: idSchema,
-  name: z.string().min(1).max(200).optional(),
-  website: urlSchema,
-  industry: z.string().max(100).optional(),
-  employees: z.number().int().positive().optional(),
-  revenue: z.number().positive().optional(),
-  description: z.string().max(1000).optional(),
-});
+// Update Account Schema - all fields optional except id
+export const updateAccountSchema = baseAccountFieldsSchema
+  .partial()
+  .extend({
+    id: idSchema,
+  });
 
 export type UpdateAccountInput = z.infer<typeof updateAccountSchema>;
 
@@ -42,14 +41,14 @@ export const accountQuerySchema = paginationSchema.extend({
 
 export type AccountQueryInput = z.infer<typeof accountQuerySchema>;
 
-// Account Response Schema
+// Account Response Schema - uses Value Object transformers
 export const accountResponseSchema = z.object({
   id: idSchema,
-  name: z.string(),
-  website: z.string().nullable(),
+  name: nameSchema,
+  website: urlSchema, // Uses WebsiteUrl Value Object transformer
   industry: z.string().nullable(),
   employees: z.number().nullable(),
-  revenue: z.string().nullable(), // Decimal as string
+  revenue: z.string().nullable(), // Decimal as string (future: moneySchema)
   description: z.string().nullable(),
   ownerId: idSchema,
   createdAt: z.coerce.date(),
@@ -58,12 +57,12 @@ export const accountResponseSchema = z.object({
 
 export type AccountResponse = z.infer<typeof accountResponseSchema>;
 
-// Account List Response Schema
+// Account List Response Schema - consistent with pagination pattern
 export const accountListResponseSchema = z.object({
-  accounts: z.array(accountResponseSchema),
+  data: z.array(accountResponseSchema), // Renamed from 'accounts' to 'data'
   total: z.number().int().nonnegative(),
   page: z.number().int().positive(),
-  limit: z.number().int().positive(),
+  limit: z.number().int().positive().max(100),
   hasMore: z.boolean(),
 });
 

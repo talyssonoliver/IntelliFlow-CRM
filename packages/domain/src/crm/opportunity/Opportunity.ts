@@ -1,6 +1,8 @@
 import { AggregateRoot } from '../../shared/AggregateRoot';
 import { Result, DomainError } from '../../shared/Result';
 import { OpportunityId } from './OpportunityId';
+import { Money } from '../../shared/Money';
+import { Percentage } from '../../shared/Percentage';
 import {
   OpportunityStage,
   OpportunityCreatedEvent,
@@ -29,28 +31,29 @@ export class OpportunityNotLostError extends DomainError {
 
 export class InvalidOpportunityValueError extends DomainError {
   readonly code = 'INVALID_OPPORTUNITY_VALUE';
-  constructor(value: number) {
-    super(`Invalid opportunity value: ${value}. Value must be positive.`);
+  constructor(message: string) {
+    super(message);
   }
 }
 
 export class InvalidProbabilityError extends DomainError {
   readonly code = 'INVALID_PROBABILITY';
-  constructor(value: number) {
-    super(`Invalid probability: ${value}. Probability must be between 0 and 100.`);
+  constructor(message: string) {
+    super(message);
   }
 }
 
 interface OpportunityProps {
   name: string;
-  value: number;
+  value: Money;
   stage: OpportunityStage;
-  probability: number;
+  probability: Percentage;
   expectedCloseDate?: Date;
   description?: string;
   accountId: string;
   contactId?: string;
   ownerId: string;
+  tenantId: string;
   createdAt: Date;
   updatedAt: Date;
   closedAt?: Date;
@@ -58,12 +61,14 @@ interface OpportunityProps {
 
 export interface CreateOpportunityProps {
   name: string;
-  value: number;
+  value: number | Money;
   accountId: string;
   contactId?: string;
   expectedCloseDate?: Date;
   description?: string;
   ownerId: string;
+  tenantId: string;
+  currency?: string;
 }
 
 /**
@@ -71,7 +76,7 @@ export interface CreateOpportunityProps {
  * Represents a sales opportunity in the CRM
  */
 export class Opportunity extends AggregateRoot<OpportunityId> {
-  private props: OpportunityProps;
+  private readonly props: OpportunityProps;
 
   private constructor(id: OpportunityId, props: OpportunityProps) {
     super(id);
@@ -83,7 +88,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     return this.props.name;
   }
 
-  get value(): number {
+  get value(): Money {
     return this.props.value;
   }
 
@@ -91,7 +96,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     return this.props.stage;
   }
 
-  get probability(): number {
+  get probability(): Percentage {
     return this.props.probability;
   }
 
@@ -113,6 +118,10 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
 
   get ownerId(): string {
     return this.props.ownerId;
+  }
+
+  get tenantId(): string {
+    return this.props.tenantId;
   }
 
   get createdAt(): Date {
@@ -139,14 +148,31 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     return this.props.stage === 'CLOSED_LOST';
   }
 
-  get weightedValue(): number {
-    return (this.props.value * this.props.probability) / 100;
+  get weightedValue(): Money {
+    // Calculate weighted value: value * (probability / 100)
+    const weightedAmount = this.props.value.amount * this.props.probability.asDecimal;
+    const weightedMoney = Money.create(weightedAmount, this.props.value.currency);
+    return weightedMoney.isSuccess ? weightedMoney.value : this.props.value;
   }
 
   // Factory method
   static create(props: CreateOpportunityProps): Result<Opportunity, DomainError> {
-    if (props.value <= 0) {
-      return Result.fail(new InvalidOpportunityValueError(props.value));
+    // Convert value to Money if number provided
+    let moneyValue: Money;
+    if (typeof props.value === 'number') {
+      const moneyResult = Money.create(props.value, props.currency || 'USD');
+      if (moneyResult.isFailure) {
+        return Result.fail(new InvalidOpportunityValueError(moneyResult.error.message));
+      }
+      moneyValue = moneyResult.value;
+    } else {
+      moneyValue = props.value;
+    }
+
+    // Create default probability for prospecting stage
+    const probabilityResult = Percentage.create(10);
+    if (probabilityResult.isFailure) {
+      return Result.fail(probabilityResult.error);
     }
 
     const now = new Date();
@@ -154,14 +180,15 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
 
     const opportunity = new Opportunity(opportunityId, {
       name: props.name,
-      value: props.value,
+      value: moneyValue,
       stage: 'PROSPECTING',
-      probability: 10, // Default probability for prospecting stage
+      probability: probabilityResult.value,
       expectedCloseDate: props.expectedCloseDate,
       description: props.description,
       accountId: props.accountId,
       contactId: props.contactId,
       ownerId: props.ownerId,
+      tenantId: props.tenantId,
       createdAt: now,
       updatedAt: now,
     });
@@ -170,7 +197,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
       new OpportunityCreatedEvent(
         opportunityId,
         props.name,
-        props.value,
+        moneyValue.amount,
         props.accountId,
         props.ownerId
       )
@@ -188,7 +215,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
   changeStage(
     newStage: OpportunityStage,
     changedBy: string
-  ): Result<void, OpportunityAlreadyClosedError> {
+  ): Result<void, DomainError> {
     if (this.isClosed) {
       return Result.fail(new OpportunityAlreadyClosedError());
     }
@@ -198,7 +225,11 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     this.props.updatedAt = new Date();
 
     // Auto-adjust probability based on stage
-    this.props.probability = this.getDefaultProbabilityForStage(newStage);
+    const probabilityResult = this.getDefaultProbabilityForStage(newStage);
+    if (probabilityResult.isFailure) {
+      return Result.fail(probabilityResult.error);
+    }
+    this.props.probability = probabilityResult.value;
 
     this.addDomainEvent(
       new OpportunityStageChangedEvent(this.id, previousStage, newStage, changedBy)
@@ -207,44 +238,60 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     return Result.ok(undefined);
   }
 
-  updateValue(newValue: number, updatedBy: string): Result<void, DomainError> {
+  updateValue(newValue: number | Money, updatedBy: string): Result<void, DomainError> {
     if (this.isClosed) {
       return Result.fail(new OpportunityAlreadyClosedError());
     }
 
-    if (newValue <= 0) {
-      return Result.fail(new InvalidOpportunityValueError(newValue));
+    // Convert to Money if number provided
+    let moneyValue: Money;
+    if (typeof newValue === 'number') {
+      const moneyResult = Money.create(newValue, this.props.value.currency);
+      if (moneyResult.isFailure) {
+        return Result.fail(new InvalidOpportunityValueError(moneyResult.error.message));
+      }
+      moneyValue = moneyResult.value;
+    } else {
+      moneyValue = newValue;
     }
 
     const previousValue = this.props.value;
-    this.props.value = newValue;
+    this.props.value = moneyValue;
     this.props.updatedAt = new Date();
 
     this.addDomainEvent(
-      new OpportunityValueUpdatedEvent(this.id, previousValue, newValue, updatedBy)
+      new OpportunityValueUpdatedEvent(this.id, previousValue.amount, moneyValue.amount, updatedBy)
     );
 
     return Result.ok(undefined);
   }
 
-  updateProbability(newProbability: number, updatedBy: string): Result<void, DomainError> {
+  updateProbability(newProbability: number | Percentage, updatedBy: string): Result<void, DomainError> {
     if (this.isClosed) {
       return Result.fail(new OpportunityAlreadyClosedError());
     }
 
-    if (newProbability < 0 || newProbability > 100) {
-      return Result.fail(new InvalidProbabilityError(newProbability));
+    // Convert to Percentage if number provided
+    let percentageValue: Percentage;
+    if (typeof newProbability === 'number') {
+      const percentageResult = Percentage.create(newProbability);
+      if (percentageResult.isFailure) {
+        return Result.fail(new InvalidProbabilityError(percentageResult.error.message));
+      }
+      percentageValue = percentageResult.value;
+    } else {
+      percentageValue = newProbability;
     }
 
     const previousProbability = this.props.probability;
-    this.props.probability = newProbability;
+    this.props.probability = percentageValue;
     this.props.updatedAt = new Date();
 
     this.addDomainEvent(
       new OpportunityProbabilityUpdatedEvent(
         this.id,
-        previousProbability,
-        newProbability,
+        previousProbability.value,
+        percentageValue.value,
         updatedBy
       )
     );
@@ -271,28 +318,40 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     return Result.ok(undefined);
   }
 
-  markAsWon(closedBy: string): Result<void, OpportunityAlreadyClosedError> {
+  markAsWon(closedBy: string): Result<void, DomainError> {
     if (this.isClosed) {
       return Result.fail(new OpportunityAlreadyClosedError());
     }
 
     this.props.stage = 'CLOSED_WON';
-    this.props.probability = 100;
+
+    const probabilityResult = Percentage.create(100);
+    if (probabilityResult.isFailure) {
+      return Result.fail(probabilityResult.error);
+    }
+    this.props.probability = probabilityResult.value;
+
     this.props.closedAt = new Date();
     this.props.updatedAt = new Date();
 
-    this.addDomainEvent(new OpportunityWonEvent(this.id, this.props.value, closedBy));
+    this.addDomainEvent(new OpportunityWonEvent(this.id, this.props.value.amount, closedBy));
 
     return Result.ok(undefined);
   }
 
-  markAsLost(reason: string, closedBy: string): Result<void, OpportunityAlreadyClosedError> {
+  markAsLost(reason: string, closedBy: string): Result<void, DomainError> {
     if (this.isClosed) {
       return Result.fail(new OpportunityAlreadyClosedError());
     }
 
     this.props.stage = 'CLOSED_LOST';
-    this.props.probability = 0;
+
+    const probabilityResult = Percentage.create(0);
+    if (probabilityResult.isFailure) {
+      return Result.fail(probabilityResult.error);
+    }
+    this.props.probability = probabilityResult.value;
+
     this.props.closedAt = new Date();
     this.props.updatedAt = new Date();
 
@@ -301,13 +360,19 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     return Result.ok(undefined);
   }
 
-  reopen(reopenedBy: string): Result<void, OpportunityNotLostError> {
+  reopen(reopenedBy: string): Result<void, DomainError> {
     if (!this.isLost) {
       return Result.fail(new OpportunityNotLostError());
     }
 
     this.props.stage = 'PROSPECTING';
-    this.props.probability = this.getDefaultProbabilityForStage('PROSPECTING');
+
+    const probabilityResult = this.getDefaultProbabilityForStage('PROSPECTING');
+    if (probabilityResult.isFailure) {
+      return Result.fail(probabilityResult.error);
+    }
+    this.props.probability = probabilityResult.value;
+
     this.props.closedAt = undefined;
     this.props.updatedAt = new Date();
 
@@ -322,7 +387,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
   }
 
   // Private helpers
-  private getDefaultProbabilityForStage(stage: OpportunityStage): number {
+  private getDefaultProbabilityForStage(stage: OpportunityStage): Result<Percentage, DomainError> {
     const stageProb: Record<OpportunityStage, number> = {
       PROSPECTING: 10,
       QUALIFICATION: 20,
@@ -332,7 +397,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
       CLOSED_WON: 100,
       CLOSED_LOST: 0,
     };
-    return stageProb[stage];
+    return Percentage.create(stageProb[stage]);
   }
 
   // Serialization
@@ -340,10 +405,10 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     return {
       id: this.id.value,
       name: this.name,
-      value: this.value,
+      value: this.value.toValue(),
       stage: this.stage,
-      probability: this.probability,
-      weightedValue: this.weightedValue,
+      probability: this.probability.toValue(),
+      weightedValue: this.weightedValue.toValue(),
       expectedCloseDate: this.expectedCloseDate?.toISOString(),
       description: this.description,
       accountId: this.accountId,

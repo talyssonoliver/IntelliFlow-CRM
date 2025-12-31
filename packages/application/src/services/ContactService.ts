@@ -8,9 +8,11 @@ import {
   AccountRepository,
   AccountId,
   CreateContactProps,
+  ContactSearchParams,
+  ContactSearchResult,
 } from '@intelliflow/domain';
 import { EventBusPort } from '../ports/external';
-import { PersistenceError, ValidationError } from '../errors';
+import { PersistenceError, ValidationError, NotFoundError } from '../errors';
 
 /**
  * Contact relationship types
@@ -395,6 +397,99 @@ export class ContactService {
    */
   async getContactByLeadId(leadId: string): Promise<Contact | null> {
     return this.contactRepository.findByLeadId(leadId);
+  }
+
+  /**
+   * Get a contact by ID
+   */
+  async getContactById(contactId: string): Promise<Result<Contact, DomainError>> {
+    const contactIdResult = ContactId.create(contactId);
+    if (contactIdResult.isFailure) {
+      return Result.fail(contactIdResult.error);
+    }
+
+    const contact = await this.contactRepository.findById(contactIdResult.value);
+    if (!contact) {
+      return Result.fail(new NotFoundError(`Contact not found: ${contactId}`));
+    }
+
+    return Result.ok(contact);
+  }
+
+  /**
+   * Get a contact by email
+   */
+  async getContactByEmail(email: string): Promise<Result<Contact, DomainError>> {
+    const emailResult = Email.create(email);
+    if (emailResult.isFailure) {
+      return Result.fail(emailResult.error);
+    }
+
+    const contact = await this.contactRepository.findByEmail(emailResult.value);
+    if (!contact) {
+      return Result.fail(new NotFoundError(`Contact with email ${email} not found`));
+    }
+
+    return Result.ok(contact);
+  }
+
+  /**
+   * List contacts with filtering and pagination
+   */
+  async listContacts(params: ContactSearchParams): Promise<ContactSearchResult> {
+    const {
+      query,
+      accountId,
+      department,
+      ownerId,
+      page = 1,
+      limit = 20,
+    } = params;
+
+    // Get contacts based on filters
+    let contacts: Contact[];
+
+    if (ownerId) {
+      contacts = await this.contactRepository.findByOwnerId(ownerId);
+    } else if (accountId) {
+      contacts = await this.contactRepository.findByAccountId(accountId);
+    } else {
+      // For now, return empty - in production this would need a findAll method
+      contacts = [];
+    }
+
+    // Apply additional filters in memory (in production, this would be done in the repository)
+    let filteredContacts = contacts;
+
+    if (query) {
+      const lowerQuery = query.toLowerCase();
+      filteredContacts = filteredContacts.filter(
+        (c) =>
+          c.email.value.toLowerCase().includes(lowerQuery) ||
+          c.firstName.toLowerCase().includes(lowerQuery) ||
+          c.lastName.toLowerCase().includes(lowerQuery) ||
+          (c.title?.toLowerCase().includes(lowerQuery) ?? false)
+      );
+    }
+
+    if (department) {
+      filteredContacts = filteredContacts.filter(
+        (c) => c.department?.toLowerCase().includes(department.toLowerCase())
+      );
+    }
+
+    // Apply pagination
+    const total = filteredContacts.length;
+    const skip = (page - 1) * limit;
+    const paginatedContacts = filteredContacts.slice(skip, skip + limit);
+
+    return {
+      contacts: paginatedContacts,
+      total,
+      page,
+      limit,
+      hasMore: skip + paginatedContacts.length < total,
+    };
   }
 
   /**

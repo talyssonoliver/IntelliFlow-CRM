@@ -8,6 +8,13 @@ export * from './shared/AggregateRoot';
 export * from './shared/DomainEvent';
 export * from './shared/Result';
 
+// Common Value Objects
+export * from './shared/Money';
+export * from './shared/PhoneNumber';
+export * from './shared/WebsiteUrl';
+export * from './shared/DateRange';
+export * from './shared/Percentage';
+
 // CRM Domain - Leads
 export * from './crm/lead/Lead';
 export * from './crm/lead/LeadId';
@@ -41,12 +48,17 @@ export * from './crm/task/TaskEvents';
 export * from './crm/task/TaskRepository';
 
 // Legal Domain - Cases/Matters
-export * from './legal/cases/Case';
+export * from './legal/cases/case';
+export * from './legal/cases/case-document';
+export * from './legal/cases/DocumentIngestionEvents';
 export * from './legal/cases/CaseId';
 export * from './legal/cases/CaseTaskId';
 export * from './legal/cases/CaseTask';
 export * from './legal/cases/CaseEvents';
 export * from './legal/cases/CaseRepository';
+
+// Workflow Events (extends CaseEvents with workflow-specific events)
+export * from './events/case-events';
 
 // Legal Domain - Appointments
 export * from './legal/appointments/Appointment';
@@ -65,6 +77,12 @@ export * from './legal/deadlines/Deadline';
 export * from './legal/deadlines/DeadlineEvents';
 export * from './legal/deadlines/HolidayCalendar';
 export * from './legal/deadlines/deadline-engine';
+
+// Support Domain - Tickets
+export * from './support/TicketConstants';
+
+// Notifications Domain
+export * from './notifications';
 
 // Future exports (to be implemented)
 // export * from './intelligence/scoring/ScoringService';

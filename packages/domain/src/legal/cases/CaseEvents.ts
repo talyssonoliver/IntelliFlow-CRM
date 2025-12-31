@@ -2,9 +2,15 @@ import { DomainEvent } from '../../shared/DomainEvent';
 import { CaseId } from './CaseId';
 import { CaseTaskId } from './CaseTaskId';
 
-export type CaseStatus = 'OPEN' | 'IN_PROGRESS' | 'ON_HOLD' | 'CLOSED' | 'CANCELLED';
-export type CasePriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
-export type CaseTaskStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+// Canonical enum values - single source of truth
+export const CASE_STATUSES = ['OPEN', 'IN_PROGRESS', 'ON_HOLD', 'CLOSED', 'CANCELLED'] as const;
+export const CASE_PRIORITIES = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'] as const;
+export const CASE_TASK_STATUSES = ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] as const;
+
+// Derive types from const arrays
+export type CaseStatus = (typeof CASE_STATUSES)[number];
+export type CasePriority = (typeof CASE_PRIORITIES)[number];
+export type CaseTaskStatus = (typeof CASE_TASK_STATUSES)[number];
 
 /**
  * Event: Case was created

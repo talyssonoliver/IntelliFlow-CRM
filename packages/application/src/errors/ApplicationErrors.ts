@@ -43,3 +43,14 @@ export class ValidationError extends DomainError {
     super(message);
   }
 }
+
+/**
+ * Application layer error for not found resources
+ */
+export class NotFoundError extends DomainError {
+  readonly code = 'NOT_FOUND_ERROR';
+
+  constructor(message: string) {
+    super(message);
+  }
+}

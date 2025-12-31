@@ -1,4 +1,4 @@
-import { Case } from './Case';
+import { Case } from './case';
 import { CaseId } from './CaseId';
 import { CaseStatus, CasePriority } from './CaseEvents';
 import { DateRange } from '../../shared/QueryTypes';

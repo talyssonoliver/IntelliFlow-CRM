@@ -1,13 +1,14 @@
 import { z } from 'zod';
 import { idSchema, paginationSchema } from './common';
+import { CASE_STATUSES, CASE_PRIORITIES, CASE_TASK_STATUSES } from '@intelliflow/domain';
 
 // Re-export common schemas used by API routers
 export { idSchema } from './common';
 
-// Enums
-export const caseStatusSchema = z.enum(['OPEN', 'IN_PROGRESS', 'ON_HOLD', 'CLOSED', 'CANCELLED']);
-export const casePrioritySchema = z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']);
-export const caseTaskStatusSchema = z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']);
+// Enums - derived from domain constants (single source of truth)
+export const caseStatusSchema = z.enum(CASE_STATUSES);
+export const casePrioritySchema = z.enum(CASE_PRIORITIES);
+export const caseTaskStatusSchema = z.enum(CASE_TASK_STATUSES);
 
 export type CaseStatus = z.infer<typeof caseStatusSchema>;
 export type CasePriority = z.infer<typeof casePrioritySchema>;

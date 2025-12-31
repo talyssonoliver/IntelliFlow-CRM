@@ -3,20 +3,28 @@ import { AppointmentId } from './AppointmentId';
 import { TimeSlot } from './TimeSlot';
 import { CaseId } from '../cases/CaseId';
 
-export type AppointmentStatus =
-  | 'SCHEDULED'
-  | 'CONFIRMED'
-  | 'IN_PROGRESS'
-  | 'COMPLETED'
-  | 'CANCELLED'
-  | 'NO_SHOW';
-export type AppointmentType =
-  | 'MEETING'
-  | 'CALL'
-  | 'HEARING'
-  | 'CONSULTATION'
-  | 'DEPOSITION'
-  | 'OTHER';
+// Canonical enum values - single source of truth
+export const APPOINTMENT_STATUSES = [
+  'SCHEDULED',
+  'CONFIRMED',
+  'IN_PROGRESS',
+  'COMPLETED',
+  'CANCELLED',
+  'NO_SHOW',
+] as const;
+
+export const APPOINTMENT_TYPES = [
+  'MEETING',
+  'CALL',
+  'HEARING',
+  'CONSULTATION',
+  'DEPOSITION',
+  'OTHER',
+] as const;
+
+// Derive types from const arrays
+export type AppointmentStatus = (typeof APPOINTMENT_STATUSES)[number];
+export type AppointmentType = (typeof APPOINTMENT_TYPES)[number];
 
 /**
  * Event: Appointment was created

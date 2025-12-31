@@ -15,7 +15,7 @@ import {
   CreateTaskProps,
 } from '@intelliflow/domain';
 import { EventBusPort } from '../ports/external';
-import { PersistenceError, ValidationError } from '../errors';
+import { PersistenceError, ValidationError, NotFoundError } from '../errors';
 
 /**
  * Task assignment validation rules
@@ -78,6 +78,23 @@ export class TaskService {
     private readonly opportunityRepository: OpportunityRepository,
     private readonly eventBus: EventBusPort
   ) {}
+
+  /**
+   * Get task by ID
+   */
+  async getTaskById(taskId: string): Promise<Result<Task, DomainError>> {
+    const taskIdResult = TaskId.create(taskId);
+    if (taskIdResult.isFailure) {
+      return Result.fail(taskIdResult.error);
+    }
+
+    const task = await this.taskRepository.findById(taskIdResult.value);
+    if (!task) {
+      return Result.fail(new NotFoundError(`Task not found: ${taskId}`));
+    }
+
+    return Result.ok(task);
+  }
 
   /**
    * Create a new task with validation

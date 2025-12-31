@@ -15,6 +15,7 @@ export interface CreateLeadInput {
   phone?: string;
   source?: string;
   ownerId: string;
+  tenantId: string;
 }
 
 /**
@@ -55,6 +56,7 @@ export class CreateLeadUseCase {
       phone: input.phone,
       source: input.source as any,
       ownerId: input.ownerId,
+      tenantId: input.tenantId,
     });
 
     if (leadResult.isFailure) {
@@ -92,7 +94,7 @@ export class CreateLeadUseCase {
       lastName: lead.lastName,
       company: lead.company,
       title: lead.title,
-      phone: lead.phone,
+      phone: lead.phone?.value,
       source: lead.source,
       status: lead.status,
       ownerId: lead.ownerId,

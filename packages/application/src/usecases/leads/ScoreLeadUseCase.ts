@@ -53,7 +53,7 @@ export class ScoreLeadUseCase {
       lastName: lead.lastName,
       company: lead.company,
       title: lead.title,
-      phone: lead.phone,
+      phone: lead.phone?.value,
       source: lead.source,
     });
 

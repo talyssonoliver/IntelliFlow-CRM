@@ -9,7 +9,7 @@ import {
   CreateAccountProps,
 } from '@intelliflow/domain';
 import { EventBusPort } from '../ports/external';
-import { PersistenceError, ValidationError } from '../errors';
+import { PersistenceError, ValidationError, NotFoundError } from '../errors';
 
 /**
  * Account tier based on revenue
@@ -95,6 +95,23 @@ export class AccountService {
   }
 
   /**
+   * Get account by ID
+   */
+  async getAccountById(accountId: string): Promise<Result<Account, DomainError>> {
+    const accountIdResult = AccountId.create(accountId);
+    if (accountIdResult.isFailure) {
+      return Result.fail(accountIdResult.error);
+    }
+
+    const account = await this.accountRepository.findById(accountIdResult.value);
+    if (!account) {
+      return Result.fail(new NotFoundError(`Account not found: ${accountId}`));
+    }
+
+    return Result.ok(account);
+  }
+
+  /**
    * Update account basic information
    */
   async updateAccountInfo(
@@ -113,7 +130,7 @@ export class AccountService {
 
     const account = await this.accountRepository.findById(accountIdResult.value);
     if (!account) {
-      return Result.fail(new ValidationError(`Account not found: ${accountId}`));
+      return Result.fail(new NotFoundError(`Account not found: ${accountId}`));
     }
 
     // Check for name uniqueness if changing name
@@ -274,7 +291,7 @@ export class AccountService {
 
     // Calculate opportunity value score (0-100)
     const activeOpportunities = opportunities.filter((o) => !o.isClosed);
-    const totalOpportunityValue = activeOpportunities.reduce((sum, o) => sum + o.value, 0);
+    const totalOpportunityValue = activeOpportunities.reduce((sum, o) => sum + o.value.amount, 0);
     const opportunityValueScore = Math.min(100, Math.log10(totalOpportunityValue + 1) * 20);
 
     // Calculate contact engagement score (0-100)
@@ -355,7 +372,7 @@ export class AccountService {
     ]);
 
     const activeOpportunities = opportunities.filter((o) => !o.isClosed);
-    const totalValue = opportunities.reduce((sum, o) => sum + o.value, 0);
+    const totalValue = opportunities.reduce((sum, o) => sum + o.value.amount, 0);
 
     return Result.ok({
       account,

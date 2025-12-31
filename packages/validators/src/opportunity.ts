@@ -1,48 +1,43 @@
 import { z } from 'zod';
-import { idSchema, paginationSchema } from './common';
+import { idSchema, paginationSchema, moneySchema, percentageSchema, nameSchema } from './common';
+import { OPPORTUNITY_STAGES } from '@intelliflow/domain';
 
 // Re-export common schemas used by API routers
 export { idSchema } from './common';
 
-// Enums
-export const opportunityStageSchema = z.enum([
-  'PROSPECTING',
-  'QUALIFICATION',
-  'NEEDS_ANALYSIS',
-  'PROPOSAL',
-  'NEGOTIATION',
-  'CLOSED_WON',
-  'CLOSED_LOST',
-]);
+// Enums - derived from domain constants (single source of truth)
+export const opportunityStageSchema = z.enum(OPPORTUNITY_STAGES);
 
 export type OpportunityStage = z.infer<typeof opportunityStageSchema>;
 
-// Create Opportunity Schema
-export const createOpportunitySchema = z.object({
-  name: z.string().min(1).max(200),
-  value: z.number().positive(),
-  stage: opportunityStageSchema.default('PROSPECTING'),
-  probability: z.number().int().min(0).max(100).default(0),
+// Base opportunity fields schema (DRY - used by create and update)
+const baseOpportunityFieldsSchema = z.object({
+  name: z.string().min(1).max(200).transform(val => val.trim()), // Opportunity names can be longer
+  value: moneySchema, // Uses Money Value Object transformer
+  stage: opportunityStageSchema,
+  probability: percentageSchema, // Uses Percentage Value Object transformer
   expectedCloseDate: z.coerce.date().optional(),
-  description: z.string().max(1000).optional(),
+  description: z.string().max(1000).transform(val => val.trim()).optional(),
   accountId: idSchema,
   contactId: idSchema.optional(),
 });
 
+// Create Opportunity Schema - with defaults
+export const createOpportunitySchema = baseOpportunityFieldsSchema.extend({
+  stage: opportunityStageSchema.default('PROSPECTING'),
+  // Note: probability default handled in domain layer (10% for PROSPECTING)
+});
+
 export type CreateOpportunityInput = z.infer<typeof createOpportunitySchema>;
 
-// Update Opportunity Schema
-export const updateOpportunitySchema = z.object({
-  id: idSchema,
-  name: z.string().min(1).max(200).optional(),
-  value: z.number().positive().optional(),
-  stage: opportunityStageSchema.optional(),
-  probability: z.number().int().min(0).max(100).optional(),
-  expectedCloseDate: z.coerce.date().optional().nullable(),
-  description: z.string().max(1000).optional(),
-  accountId: idSchema.optional(),
-  contactId: idSchema.optional().nullable(),
-});
+// Update Opportunity Schema - all fields optional except id
+export const updateOpportunitySchema = baseOpportunityFieldsSchema
+  .partial()
+  .extend({
+    id: idSchema,
+    expectedCloseDate: z.coerce.date().optional().nullable(),
+    contactId: idSchema.optional().nullable(),
+  });
 
 export type UpdateOpportunityInput = z.infer<typeof updateOpportunitySchema>;
 
@@ -63,13 +58,13 @@ export const opportunityQuerySchema = paginationSchema.extend({
 
 export type OpportunityQueryInput = z.infer<typeof opportunityQuerySchema>;
 
-// Opportunity Response Schema
+// Opportunity Response Schema - uses Value Object transformers
 export const opportunityResponseSchema = z.object({
   id: idSchema,
-  name: z.string(),
-  value: z.string(), // Decimal as string
+  name: nameSchema,
+  value: moneySchema, // Uses Money Value Object transformer
   stage: opportunityStageSchema,
-  probability: z.number().int(),
+  probability: percentageSchema, // Uses Percentage Value Object transformer
   expectedCloseDate: z.coerce.date().nullable(),
   description: z.string().nullable(),
   ownerId: idSchema,
@@ -82,12 +77,12 @@ export const opportunityResponseSchema = z.object({
 
 export type OpportunityResponse = z.infer<typeof opportunityResponseSchema>;
 
-// Opportunity List Response Schema
+// Opportunity List Response Schema - consistent with pagination pattern
 export const opportunityListResponseSchema = z.object({
-  opportunities: z.array(opportunityResponseSchema),
+  data: z.array(opportunityResponseSchema), // Renamed from 'opportunities' to 'data'
   total: z.number().int().nonnegative(),
   page: z.number().int().positive(),
-  limit: z.number().int().positive(),
+  limit: z.number().int().positive().max(100),
   hasMore: z.boolean(),
 });
 

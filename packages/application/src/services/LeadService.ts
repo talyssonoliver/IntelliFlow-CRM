@@ -7,6 +7,7 @@ import {
   LeadStatus,
   LeadSource,
   Email,
+  PhoneNumber,
   LeadRepository,
   Contact,
   ContactId,
@@ -16,7 +17,7 @@ import {
 } from '@intelliflow/domain';
 import { AIServicePort, EventBusPort } from '../ports/external';
 import { ContactRepository, AccountRepository } from '../ports/repositories';
-import { PersistenceError, ValidationError } from '../errors';
+import { PersistenceError, ValidationError, NotFoundError } from '../errors';
 
 /**
  * Lead qualification thresholds
@@ -133,6 +134,51 @@ export class LeadService {
   }
 
   /**
+   * Get a lead by ID
+   */
+  async getLeadById(leadId: string): Promise<Result<Lead, DomainError>> {
+    const leadIdResult = LeadId.create(leadId);
+    if (leadIdResult.isFailure) {
+      return Result.fail(leadIdResult.error);
+    }
+
+    const lead = await this.leadRepository.findById(leadIdResult.value);
+    if (!lead) {
+      return Result.fail(new NotFoundError(`Lead not found: ${leadId}`));
+    }
+
+    return Result.ok(lead);
+  }
+
+  /**
+   * Delete a lead
+   */
+  async deleteLead(leadId: string): Promise<Result<void, DomainError>> {
+    const leadIdResult = LeadId.create(leadId);
+    if (leadIdResult.isFailure) {
+      return Result.fail(leadIdResult.error);
+    }
+
+    const lead = await this.leadRepository.findById(leadIdResult.value);
+    if (!lead) {
+      return Result.fail(new NotFoundError(`Lead not found: ${leadId}`));
+    }
+
+    // Business rule: Cannot delete converted leads
+    if (lead.isConverted) {
+      return Result.fail(new ValidationError('Cannot delete a converted lead'));
+    }
+
+    try {
+      await this.leadRepository.delete(leadIdResult.value);
+    } catch (error) {
+      return Result.fail(new PersistenceError('Failed to delete lead'));
+    }
+
+    return Result.ok(undefined);
+  }
+
+  /**
    * Score a lead using AI service
    */
   async scoreLead(leadId: string): Promise<Result<LeadScoreUpdateResult, DomainError>> {
@@ -155,7 +201,7 @@ export class LeadService {
       lastName: lead.lastName,
       company: lead.company,
       title: lead.title,
-      phone: lead.phone,
+      phone: lead.phone?.value,
       source: lead.source,
     });
 
@@ -293,6 +339,7 @@ export class LeadService {
           website: undefined,
           industry: undefined,
           ownerId: lead.ownerId,
+          tenantId: lead.tenantId,
         });
 
         if (accountResult.isSuccess) {
@@ -312,6 +359,7 @@ export class LeadService {
       title: lead.title,
       phone: lead.phone,
       accountId: accountId ?? undefined,
+      tenantId: lead.tenantId,
       leadId: lead.id.value,
       ownerId: lead.ownerId,
     });
@@ -424,7 +472,29 @@ export class LeadService {
       return Result.fail(new ValidationError('Cannot update a converted lead'));
     }
 
-    lead.updateContactInfo(updates);
+    // Convert phone string to PhoneNumber value object if provided
+    const updateProps: {
+      firstName?: string;
+      lastName?: string;
+      company?: string;
+      title?: string;
+      phone?: PhoneNumber;
+    } = {
+      firstName: updates.firstName,
+      lastName: updates.lastName,
+      company: updates.company,
+      title: updates.title,
+    };
+
+    if (updates.phone !== undefined) {
+      const phoneResult = PhoneNumber.create(updates.phone);
+      if (phoneResult.isFailure) {
+        return Result.fail(phoneResult.error);
+      }
+      updateProps.phone = phoneResult.value;
+    }
+
+    lead.updateContactInfo(updateProps);
 
     try {
       await this.leadRepository.save(lead);

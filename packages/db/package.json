@@ -29,7 +29,7 @@
     "db:migrate:create": "prisma migrate dev --create-only",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts",
+    "db:seed": "tsx --env-file=.env prisma/seed.ts",
     "db:reset": "prisma migrate reset --force",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"src/**/*.ts\"",
@@ -39,7 +39,7 @@
     "test:watch": "vitest"
   },
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx --env-file=.env prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.10.0"

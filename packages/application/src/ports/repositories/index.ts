@@ -8,3 +8,4 @@ export * from './ContactRepositoryPort';
 export * from './AccountRepositoryPort';
 export * from './OpportunityRepositoryPort';
 export * from './TaskRepositoryPort';
+export * from './CaseDocumentRepositoryPort';

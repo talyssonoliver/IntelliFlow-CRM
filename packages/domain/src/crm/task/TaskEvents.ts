@@ -1,8 +1,13 @@
 import { DomainEvent } from '../../shared/DomainEvent';
 import { TaskId } from './TaskId';
 
-export type TaskStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
-export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+// Canonical enum values - single source of truth
+export const TASK_STATUSES = ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] as const;
+export const TASK_PRIORITIES = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'] as const;
+
+// Derive types from const arrays
+export type TaskStatus = (typeof TASK_STATUSES)[number];
+export type TaskPriority = (typeof TASK_PRIORITIES)[number];
 
 /**
  * Event: Task was created

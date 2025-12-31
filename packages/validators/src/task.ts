@@ -1,12 +1,13 @@
 import { z } from 'zod';
 import { idSchema, paginationSchema } from './common';
+import { TASK_STATUSES, TASK_PRIORITIES } from '@intelliflow/domain';
 
 // Re-export common schemas used by API routers
 export { idSchema } from './common';
 
-// Enums
-export const taskPrioritySchema = z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']);
-export const taskStatusSchema = z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']);
+// Enums - derived from domain constants (single source of truth)
+export const taskPrioritySchema = z.enum(TASK_PRIORITIES);
+export const taskStatusSchema = z.enum(TASK_STATUSES);
 
 export type TaskPriority = z.infer<typeof taskPrioritySchema>;
 export type TaskStatus = z.infer<typeof taskStatusSchema>;

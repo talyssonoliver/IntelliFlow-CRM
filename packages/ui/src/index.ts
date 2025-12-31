@@ -1,12 +1,6 @@
 // IntelliFlow CRM - Shared UI Components
 // Built on Radix UI primitives with shadcn/ui patterns
+// WCAG 2.1 AA Accessible - IFC-076
 
-export * from './components/button';
-export * from './components/card';
-export * from './components/input';
-export * from './components/label';
-export * from './components/form';
-export * from './components/table';
-export * from './components/data-table';
-export * from './components/layout-builder';
+export * from './components';
 export * from './lib/utils';

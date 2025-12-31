@@ -44,6 +44,20 @@ export class CaseInvalidStatusTransitionError extends DomainError {
   }
 }
 
+export class DocumentAlreadyAttachedError extends DomainError {
+  readonly code = 'DOCUMENT_ALREADY_ATTACHED';
+  constructor(documentId: string) {
+    super(`Document ${documentId} is already attached to this case`);
+  }
+}
+
+export class DocumentNotAttachedError extends DomainError {
+  readonly code = 'DOCUMENT_NOT_ATTACHED';
+  constructor(documentId: string) {
+    super(`Document ${documentId} is not attached to this case`);
+  }
+}
+
 interface CaseProps {
   title: string;
   description?: string;
@@ -53,6 +67,7 @@ interface CaseProps {
   clientId: string;
   assignedTo: string;
   tasks: CaseTask[];
+  documentIds: string[];
   createdAt: Date;
   updatedAt: Date;
   closedAt?: Date;
@@ -158,6 +173,14 @@ export class Case extends AggregateRoot<CaseId> {
     return Math.round((this.completedTaskCount / this.props.tasks.length) * 100);
   }
 
+  get documentIds(): ReadonlyArray<string> {
+    return [...this.props.documentIds];
+  }
+
+  get documentCount(): number {
+    return this.props.documentIds.length;
+  }
+
   // Factory method
   static create(props: CreateCaseProps): Result<Case, DomainError> {
     const now = new Date();
@@ -172,6 +195,7 @@ export class Case extends AggregateRoot<CaseId> {
       clientId: props.clientId,
       assignedTo: props.assignedTo,
       tasks: [],
+      documentIds: [],
       createdAt: now,
       updatedAt: now,
     });
@@ -381,6 +405,43 @@ export class Case extends AggregateRoot<CaseId> {
     this.props.updatedAt = new Date();
   }
 
+  attachDocument(documentId: string, attachedBy: string): Result<void, DomainError> {
+    if (this.isClosed || this.isCancelled) {
+      return Result.fail(new CaseAlreadyClosedError());
+    }
+
+    if (this.props.documentIds.includes(documentId)) {
+      return Result.fail(new DocumentAlreadyAttachedError(documentId));
+    }
+
+    this.props.documentIds.push(documentId);
+    this.props.updatedAt = new Date();
+
+    // Note: Document attachment events should be emitted at the application service layer
+    // where full document details are available
+
+    return Result.ok(undefined);
+  }
+
+  detachDocument(documentId: string, detachedBy: string): Result<void, DomainError> {
+    if (this.isClosed || this.isCancelled) {
+      return Result.fail(new CaseAlreadyClosedError());
+    }
+
+    const index = this.props.documentIds.indexOf(documentId);
+    if (index === -1) {
+      return Result.fail(new DocumentNotAttachedError(documentId));
+    }
+
+    this.props.documentIds.splice(index, 1);
+    this.props.updatedAt = new Date();
+
+    // Note: Document detachment events should be emitted at the application service layer
+    // where full document details are available
+
+    return Result.ok(undefined);
+  }
+
   // Serialization
   toJSON(): Record<string, unknown> {
     return {
@@ -398,6 +459,8 @@ export class Case extends AggregateRoot<CaseId> {
       completedTaskCount: this.completedTaskCount,
       isOverdue: this.isOverdue,
       resolution: this.resolution,
+      documentIds: this.documentIds,
+      documentCount: this.documentCount,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),
       closedAt: this.closedAt?.toISOString(),
