@@ -5,8 +5,11 @@
   "description": "Create ADR pack for multi-tenancy; workflow engine choice; agent tool-calling; data classification & retention; audit logging",
   "owner": "Tech Lead",
   "dependencies": {
-    "required": ["IFC-002", "GOV-001"],
-    "verified_at": "2025-12-28T23:24:52.760Z",
+    "required": [
+      "IFC-002",
+      "GOV-001"
+    ],
+    "verified_at": "2025-12-31T06:44:27.722Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -32,7 +35,9 @@
     "execution_log": "logs/sprint-1/IFC-135.log"
   },
   "artifacts": {
-    "expected": ["docs/planning/adr/*"],
+    "expected": [
+      "docs/planning/adr/*"
+    ],
     "created": [],
     "missing": []
   },
@@ -58,5 +63,8 @@
   "completed_at": "2025-12-27T11:33:39.135Z",
   "started_at": "2025-12-27T11:18:39.135Z",
   "actual_duration_minutes": 15,
-  "dependencies_resolved": ["IFC-002", "GOV-001"]
+  "dependencies_resolved": [
+    "IFC-002",
+    "GOV-001"
+  ]
 }

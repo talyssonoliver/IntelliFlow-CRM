@@ -9,10 +9,16 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2025-12-28T23:24:52.446Z",
-    "required": ["AUTOMATION-001", "ENV-005-AI"]
+    "verified_at": "2025-12-31T06:44:26.882Z",
+    "required": [
+      "AUTOMATION-001",
+      "ENV-005-AI"
+    ]
   },
-  "dependencies_resolved": ["AUTOMATION-001", "ENV-005-AI"],
+  "dependencies_resolved": [
+    "AUTOMATION-001",
+    "ENV-005-AI"
+  ],
   "started_at": "2025-12-21T07:06:10.592Z",
   "completed_at": "2025-12-21T07:21:10.592Z",
   "target_duration_minutes": null,

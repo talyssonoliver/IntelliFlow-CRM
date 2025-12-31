@@ -5,8 +5,10 @@
   "description": "Architecture Governance Pack (ADR + ARP templates, decision workflow, flowcharts)",
   "owner": "Tech Lead + PM",
   "dependencies": {
-    "required": ["ENG-OPS-001"],
-    "verified_at": "2025-12-28T23:24:52.681Z",
+    "required": [
+      "ENG-OPS-001"
+    ],
+    "verified_at": "2025-12-31T06:44:27.709Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -70,5 +72,7 @@
   "completed_at": "2025-12-27T11:33:39.127Z",
   "started_at": "2025-12-27T11:18:39.127Z",
   "actual_duration_minutes": 15,
-  "dependencies_resolved": ["ENG-OPS-001"]
+  "dependencies_resolved": [
+    "ENG-OPS-001"
+  ]
 }

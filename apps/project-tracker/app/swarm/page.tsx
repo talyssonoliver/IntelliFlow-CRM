@@ -241,16 +241,27 @@ export default function SwarmPage() {
     }));
   };
 
-  // Poll for updates
+  // Initial fetch on mount only - no automatic polling to save memory
+  // Use the manual Refresh button to update status
   useEffect(() => {
     fetchStatus();
     fetchQuestions();
+  }, [fetchStatus, fetchQuestions]);
+
+  // DISABLED: Automatic polling - use manual refresh instead
+  // Uncomment below to enable automatic polling
+  /*
+  useEffect(() => {
+    if (activeTasks.length === 0) {
+      return;
+    }
     const interval = setInterval(() => {
       fetchStatus();
       fetchQuestions();
     }, pollInterval);
     return () => clearInterval(interval);
-  }, [fetchStatus, fetchQuestions, pollInterval]);
+  }, [activeTasks.length, pollInterval, fetchStatus, fetchQuestions]);
+  */
 
   // Auto-scroll logs
   useEffect(() => {

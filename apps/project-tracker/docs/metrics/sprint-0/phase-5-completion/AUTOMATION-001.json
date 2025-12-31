@@ -9,7 +9,7 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2025-12-28T23:24:52.373Z",
+    "verified_at": "2025-12-31T06:44:25.881Z",
     "required": [
       "AI-SETUP-001",
       "AI-SETUP-002",
@@ -54,10 +54,11 @@
     ],
     "created": [
       "artifacts/misc/orchestration-config.yaml",
-      "artifacts/metrics/handoff-metrics.json",
-      "artifacts/logs/quality-gates.log"
+      "artifacts/metrics/handoff-metrics.json"
     ],
-    "missing": []
+    "missing": [
+      "artifacts/logs/quality-gates.log"
+    ]
   },
   "validations": [
     {

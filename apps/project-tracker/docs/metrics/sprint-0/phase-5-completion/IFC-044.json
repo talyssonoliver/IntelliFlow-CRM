@@ -9,10 +9,14 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2025-12-28T23:24:52.395Z",
-    "required": ["ENV-010-AI"]
+    "verified_at": "2025-12-31T06:44:26.179Z",
+    "required": [
+      "ENV-010-AI"
+    ]
   },
-  "dependencies_resolved": ["ENV-010-AI"],
+  "dependencies_resolved": [
+    "ENV-010-AI"
+  ],
   "target_duration_minutes": 30,
   "kpis": {
     "coverage": {
@@ -38,8 +42,14 @@
     }
   },
   "artifacts": {
-    "expected": ["artifacts/coverage/lcov.info", "vitest.config.ts"],
-    "created": ["artifacts/coverage/lcov.info", "vitest.config.ts"],
+    "expected": [
+      "artifacts/coverage/lcov.info",
+      "vitest.config.ts"
+    ],
+    "created": [
+      "artifacts/coverage/lcov.info",
+      "vitest.config.ts"
+    ],
     "missing": []
   },
   "validations": [

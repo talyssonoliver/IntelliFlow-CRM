@@ -175,11 +175,11 @@ export async function POST(request: Request) {
 
     // Initialize execution state
     const initialState: SprintExecutionState = {
-      sprintNumber,
+      sprintNumber: typeof sprintNumber === 'number' ? sprintNumber : 0,
       runId,
       startedAt: new Date().toISOString(),
       status: 'running',
-      currentPhase: startFromPhase,
+      currentPhase: startFromPhase ?? 0,
       totalPhases: phases.length,
       phaseProgress: phases.map((p) => ({
         phaseNumber: p.phaseNumber,

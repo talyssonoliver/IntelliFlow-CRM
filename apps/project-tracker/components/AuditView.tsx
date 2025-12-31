@@ -9,6 +9,12 @@ import {
   AlertTriangle,
   CheckCircle2,
   XCircle,
+  ClipboardCheck,
+  FileWarning,
+  Clock,
+  Users,
+  Copy,
+  Wand2,
 } from 'lucide-react';
 
 type AuditMode = 'pr' | 'main' | 'nightly' | 'release';
@@ -16,6 +22,7 @@ type AuditScope = 'affected' | 'full';
 
 type BundleListItem = {
   runId: string;
+  type?: 'system' | 'sprint';
   updatedAt: string | null;
   summary: any | null;
   paths: { summaryJson: string; summaryMd: string };
@@ -28,6 +35,7 @@ type BundleListResponse = {
 
 type BundleDetailResponse = {
   runId: string;
+  type?: 'system' | 'sprint';
   runDir: string;
   updatedAt: string;
   summary: any;
@@ -58,13 +66,236 @@ type MatrixResponse = {
 
 type ToolStatus = { tier: number; status: string; source?: string };
 
-function getOverallBadge(overall?: string) {
+type SprintCompletionAuditResult = {
+  success: boolean;
+  runId?: string;
+  verdict?: 'PASS' | 'FAIL';
+  reportPath?: string;
+  summary?: {
+    total: number;
+    audited: number;
+    passed: number;
+    failed: number;
+    needsHuman: number;
+  };
+  attestationSummary?: {
+    by_verdict: {
+      complete: number;
+      incomplete: number;
+      partial: number;
+      blocked: number;
+      needs_human: number;
+      missing: number;
+    };
+    debt_items_created: number;
+    review_queue_items: number;
+  };
+  error?: string;
+};
+
+type AvailableSprint = {
+  sprint: number;
+  completedCount: number;
+};
+
+function getOverallBadge(overall?: string, verdict?: string) {
+  // Handle sprint audit verdict
+  if (verdict === 'PASS')
+    return { cls: 'bg-green-100 text-green-800 border-green-300', label: 'PASS' };
+  if (verdict === 'FAIL')
+    return { cls: 'bg-red-100 text-red-800 border-red-300', label: 'FAIL' };
+
+  // Handle system audit overall_status
   if (overall === 'pass')
     return { cls: 'bg-green-100 text-green-800 border-green-300', label: 'PASS' };
   if (overall === 'warn')
     return { cls: 'bg-yellow-100 text-yellow-800 border-yellow-300', label: 'WARN' };
-  if (overall === 'fail') return { cls: 'bg-red-100 text-red-800 border-red-300', label: 'FAIL' };
+  if (overall === 'fail')
+    return { cls: 'bg-red-100 text-red-800 border-red-300', label: 'FAIL' };
+
   return { cls: 'bg-gray-100 text-gray-700 border-gray-300', label: 'UNKNOWN' };
+}
+
+function getBundleTypeBadge(type?: 'system' | 'sprint') {
+  if (type === 'sprint')
+    return { cls: 'bg-teal-100 text-teal-800 border-teal-300', label: 'Sprint' };
+  return { cls: 'bg-blue-100 text-blue-800 border-blue-300', label: 'System' };
+}
+
+/**
+ * Generates a prompt for fixing failed audit issues
+ */
+function generateFixPrompt(bundle: BundleDetailResponse): string {
+  const summary = bundle.summary;
+  if (!summary || summary.verdict !== 'FAIL') {
+    return '';
+  }
+
+  const sprintNumber = summary.sprint ?? 'Unknown';
+  const taskResults = summary.task_results || [];
+
+  // Group issues by task
+  const taskIssues: Record<
+    string,
+    {
+      description: string;
+      missingArtifacts: string[];
+      foundArtifacts: string[];
+      issues: string[];
+      dodUnverified: number;
+    }
+  > = {};
+
+  for (const task of taskResults) {
+    if (task.verdict === 'FAIL') {
+      const missingArtifacts = (task.artifacts || [])
+        .filter((a: any) => a.status === 'missing')
+        .map((a: any) => a.path);
+
+      const foundArtifacts = (task.artifacts || [])
+        .filter((a: any) => a.status === 'found')
+        .map((a: any) => a.path);
+
+      // Extract DoD unverified count from issues
+      let dodUnverified = 0;
+      for (const issue of task.issues || []) {
+        const match = issue.match(/(\d+) DoD criteria unverified/);
+        if (match) {
+          dodUnverified = parseInt(match[1], 10);
+        }
+      }
+
+      taskIssues[task.taskId] = {
+        description: task.description || '',
+        missingArtifacts,
+        foundArtifacts,
+        issues: task.issues || [],
+        dodUnverified,
+      };
+    }
+  }
+
+  const timestamp = new Date().toISOString();
+
+  // Build the prompt
+  let prompt = `# Fix Sprint ${sprintNumber} Audit Failures
+
+## Context
+The Sprint ${sprintNumber} completion audit has FAILED. There are ${Object.keys(taskIssues).length} tasks with issues that need to be resolved.
+
+**Run this command after fixing to re-audit:**
+\`\`\`bash
+npx tsx tools/scripts/audit-sprint-completion.ts --sprint ${sprintNumber}
+\`\`\`
+
+## Tasks to Fix
+
+`;
+
+  for (const [taskId, info] of Object.entries(taskIssues)) {
+    prompt += `### ${taskId}: ${info.description}\n\n`;
+
+    // Separate xlsx files (need manual/special handling) from other artifacts
+    const xlsxFiles = info.missingArtifacts.filter((a) => a.endsWith('.xlsx'));
+    const otherMissing = info.missingArtifacts.filter((a) => !a.endsWith('.xlsx'));
+    const contextAckMissing = otherMissing.filter((a) => a.includes('context_ack.json'));
+    const regularMissing = otherMissing.filter((a) => !a.includes('context_ack.json'));
+
+    if (regularMissing.length > 0) {
+      prompt += `**Missing Artifacts (create these):**\n`;
+      for (const artifact of regularMissing) {
+        const cleanPath = artifact.replace(/^EVIDENCE:/, '');
+        prompt += `- \`${cleanPath}\`\n`;
+      }
+      prompt += '\n';
+    }
+
+    if (xlsxFiles.length > 0) {
+      prompt += `**Excel Files Required (create as CSV instead):**\n`;
+      for (const artifact of xlsxFiles) {
+        const csvPath = artifact.replace('.xlsx', '.csv');
+        prompt += `- \`${csvPath}\` (instead of .xlsx)\n`;
+      }
+      prompt += '\n';
+    }
+
+    if (contextAckMissing.length > 0) {
+      const cleanPath = contextAckMissing[0].replace(/^EVIDENCE:/, '');
+      prompt += `**Create attestation file:** \`${cleanPath}\`\n\n`;
+    }
+
+    if (info.dodUnverified > 0) {
+      prompt += `**DoD Criteria:** ${info.dodUnverified} unverified criteria need evidence\n\n`;
+    }
+
+    prompt += '---\n\n';
+  }
+
+  // Generate specific instructions for each task
+  prompt += `## Detailed Fix Instructions
+
+For each task above, create the required artifacts. Here are the specific actions:
+
+`;
+
+  for (const [taskId, info] of Object.entries(taskIssues)) {
+    const xlsxFiles = info.missingArtifacts.filter((a) => a.endsWith('.xlsx'));
+    const attestationDir = `artifacts/attestations/${taskId}`;
+
+    prompt += `### ${taskId}\n\n`;
+
+    // Handle xlsx → csv conversion suggestions
+    if (xlsxFiles.length > 0) {
+      for (const xlsx of xlsxFiles) {
+        const csvPath = xlsx.replace('.xlsx', '.csv');
+        if (xlsx.includes('training-completion')) {
+          prompt += `1. Create \`${csvPath}\` with columns: \`employee_id,name,course,completion_date,score\`\n`;
+        } else if (xlsx.includes('alternatives')) {
+          prompt += `1. Create \`${csvPath}\` with columns: \`vendor,service,alternative,migration_effort,notes\`\n`;
+        } else if (xlsx.includes('mapping')) {
+          prompt += `1. Create \`${csvPath}\` with columns: \`source_table,source_field,target_table,target_field,transformation\`\n`;
+        } else {
+          prompt += `1. Create \`${csvPath}\` with appropriate columns for the task\n`;
+        }
+      }
+    }
+
+    // Generate context_ack.json content
+    prompt += `${xlsxFiles.length > 0 ? '2' : '1'}. Create \`${attestationDir}/context_ack.json\`:\n`;
+    prompt += `\`\`\`json
+{
+  "task_id": "${taskId}",
+  "acknowledged_at": "${timestamp}",
+  "files_read": [${info.foundArtifacts.length > 0 ? `\n    "${info.foundArtifacts.slice(0, 3).join('",\n    "')}"${info.foundArtifacts.length > 3 ? ',\n    "..."' : ''}` : ''}
+  ],
+  "invariants_acknowledged": [
+    "All required artifacts have been created",
+    "Implementation matches task requirements",
+    "DoD criteria verified through artifact inspection"
+  ]
+}
+\`\`\`
+
+`;
+  }
+
+  prompt += `## Execution Steps
+
+1. **Read task requirements** from Sprint_plan.csv to understand each task's DoD
+2. **Create missing artifacts** using the templates above
+3. **Create context_ack.json** files for each task
+4. **Re-run the audit** to verify all issues are resolved:
+   \`\`\`bash
+   npx tsx tools/scripts/audit-sprint-completion.ts --sprint ${sprintNumber}
+   \`\`\`
+
+## Notes
+- CSV files are acceptable alternatives to XLSX (easier to create/verify)
+- The \`context_ack.json\` files prove you've reviewed the task completion
+- Focus on tasks with the most unverified DoD criteria first
+`;
+
+  return prompt;
 }
 
 export default function AuditView() {
@@ -95,6 +326,19 @@ export default function AuditView() {
 
   const [logLines, setLogLines] = useState<string[]>([]);
   const [toolStatuses, setToolStatuses] = useState<Record<string, ToolStatus>>({});
+
+  // Sprint Completion Audit state
+  const [availableSprints, setAvailableSprints] = useState<AvailableSprint[]>([]);
+  const [sprintToAudit, setSprintToAudit] = useState<number | null>(null);
+  const [strictMode, setStrictMode] = useState(false);
+  const [skipValidations, setSkipValidations] = useState(false);
+  const [sprintAuditResult, setSprintAuditResult] = useState<SprintCompletionAuditResult | null>(null);
+  const [isLoadingSprints, setIsLoadingSprints] = useState(true);
+
+  // Fix Prompt state
+  const [showFixPrompt, setShowFixPrompt] = useState(false);
+  const [fixPromptText, setFixPromptText] = useState('');
+  const [promptCopied, setPromptCopied] = useState(false);
 
   const sortedTools = useMemo(() => {
     const keys = Object.keys(toolStatuses);
@@ -217,23 +461,30 @@ export default function AuditView() {
   };
 
   const openBundle = async (runId: string) => {
+    console.log('[AuditView] Opening bundle:', runId);
     try {
       const ts = Date.now();
       const res = await fetch(`/api/audit/bundles/${encodeURIComponent(runId)}?t=${ts}`, {
         cache: 'no-store',
       });
-      if (!res.ok) return;
+      if (!res.ok) {
+        console.error('[AuditView] Failed to fetch bundle:', res.status, res.statusText);
+        const errorText = await res.text();
+        console.error('[AuditView] Error response:', errorText);
+        return;
+      }
       const data = (await res.json()) as BundleDetailResponse;
+      console.log('[AuditView] Bundle loaded:', data.runId, 'type:', data.type);
       setSelectedBundle(data);
-    } catch {
-      // ignore
+    } catch (error) {
+      console.error('[AuditView] Error fetching bundle:', error);
     }
   };
 
   const refresh = async () => {
     setIsLoading(true);
     try {
-      await Promise.all([loadBundles(), loadAffected(), loadMatrix()]);
+      await Promise.all([loadBundles(), loadAffected(), loadMatrix(), loadAvailableSprints()]);
     } finally {
       setIsLoading(false);
     }
@@ -281,8 +532,88 @@ export default function AuditView() {
     startStream(`/api/audit/stream?${params.toString()}`);
   };
 
+  const loadAvailableSprints = async () => {
+    setIsLoadingSprints(true);
+    try {
+      const res = await fetch('/api/audit/sprint-completion?list=true');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.sprints) {
+          setAvailableSprints(data.sprints);
+          // Auto-select first sprint if none selected
+          if (data.sprints.length > 0 && sprintToAudit === null) {
+            setSprintToAudit(data.sprints[0].sprint);
+          }
+        }
+      }
+    } catch {
+      // ignore
+    } finally {
+      setIsLoadingSprints(false);
+    }
+  };
+
+  const runSprintCompletionAudit = () => {
+    if (sprintToAudit === null) return;
+
+    setSprintAuditResult(null);
+
+    // Use streaming API instead of POST
+    const params = new URLSearchParams();
+    params.set('cmd', 'sprint-completion');
+    params.set('sprint', String(sprintToAudit));
+    if (strictMode) params.set('strict', 'true');
+    if (skipValidations) params.set('skipValidations', 'true');
+    startStream(`/api/audit/stream?${params.toString()}`);
+  };
+
+  const loadSprintAuditReport = async (sprint: number) => {
+    try {
+      const res = await fetch(`/api/audit/sprint-completion?sprint=${sprint}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.report) {
+          setSprintAuditResult({
+            success: true,
+            runId: data.report.run_id,
+            verdict: data.report.verdict,
+            summary: {
+              total: data.report.summary?.totalTasks || 0,
+              audited: data.report.summary?.auditedTasks || 0,
+              passed: data.report.summary?.passedTasks || 0,
+              failed: data.report.summary?.failedTasks || 0,
+              needsHuman: data.report.summary?.needsHumanTasks || 0,
+            },
+            attestationSummary: data.report.attestation_summary,
+          });
+        }
+      }
+    } catch {
+      // ignore - just means no report exists yet
+    }
+  };
+
+  const handleGenerateFixPrompt = () => {
+    if (!selectedBundle) return;
+    const prompt = generateFixPrompt(selectedBundle);
+    setFixPromptText(prompt);
+    setShowFixPrompt(true);
+    setPromptCopied(false);
+  };
+
+  const handleCopyPrompt = async () => {
+    try {
+      await navigator.clipboard.writeText(fixPromptText);
+      setPromptCopied(true);
+      setTimeout(() => setPromptCopied(false), 2000);
+    } catch {
+      console.error('Failed to copy prompt to clipboard');
+    }
+  };
+
   const selectedOverall = selectedBundle?.summary?.result?.overall_status;
-  const overallBadge = getOverallBadge(selectedOverall);
+  const selectedVerdict = selectedBundle?.summary?.verdict;
+  const overallBadge = getOverallBadge(selectedOverall, selectedVerdict);
 
   return (
     <div className="space-y-6">
@@ -448,29 +779,152 @@ export default function AuditView() {
             </button>
           </div>
 
-          <div className="border-t pt-4 space-y-2">
-            <div className="text-sm text-gray-600">Sprint 0 audit reports</div>
-            <div className="flex items-center gap-2">
-              <select
-                value={selectedRunId}
-                onChange={(e) => setSelectedRunId(e.target.value)}
-                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono"
-              >
-                {bundles.map((b) => (
-                  <option key={b.runId} value={b.runId}>
-                    {b.runId}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={runSprint0Audit}
-                disabled={isRunning || !selectedRunId}
-                className="px-3 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 text-sm"
-              >
-                Generate
-              </button>
+          <div className="border-t pt-4 space-y-3">
+            <div className="text-sm font-medium text-gray-700 flex items-center gap-2">
+              <ClipboardCheck className="w-4 h-4 text-teal-600" />
+              Sprint Completion Audit
             </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label className="text-sm">
+                <span className="block text-gray-600 mb-1">Sprint # (with completed tasks)</span>
+                {isLoadingSprints ? (
+                  <div className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-400">
+                    Loading...
+                  </div>
+                ) : availableSprints.length === 0 ? (
+                  <div className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-500 text-sm">
+                    No sprints with completed tasks
+                  </div>
+                ) : (
+                  <select
+                    value={sprintToAudit ?? ''}
+                    onChange={(e) => {
+                      const sprint = parseInt(e.target.value, 10);
+                      setSprintToAudit(sprint);
+                      loadSprintAuditReport(sprint);
+                    }}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  >
+                    {availableSprints.map((s) => (
+                      <option key={s.sprint} value={s.sprint}>
+                        Sprint {s.sprint} ({s.completedCount} completed)
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </label>
+              <div className="space-y-1">
+                <label className="flex items-center gap-2 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={strictMode}
+                    onChange={(e) => setStrictMode(e.target.checked)}
+                    className="rounded"
+                  />
+                  Strict Mode
+                </label>
+                <label className="flex items-center gap-2 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={skipValidations}
+                    onChange={(e) => setSkipValidations(e.target.checked)}
+                    className="rounded"
+                  />
+                  Skip Validations
+                </label>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={runSprintCompletionAudit}
+              disabled={isRunning || sprintToAudit === null || availableSprints.length === 0}
+              className="w-full px-3 py-2 rounded-lg bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50 text-sm flex items-center justify-center gap-2"
+            >
+              {isRunning ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  Auditing...
+                </>
+              ) : (
+                <>
+                  <Play className="w-4 h-4" />
+                  Run Completion Audit
+                </>
+              )}
+            </button>
+
+            {/* Sprint Audit Results */}
+            {sprintAuditResult && (
+              <div className="border-t pt-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">Result</span>
+                  {sprintAuditResult.verdict && (
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full border ${
+                        sprintAuditResult.verdict === 'PASS'
+                          ? 'bg-green-100 text-green-800 border-green-300'
+                          : 'bg-red-100 text-red-800 border-red-300'
+                      }`}
+                    >
+                      {sprintAuditResult.verdict}
+                    </span>
+                  )}
+                </div>
+
+                {sprintAuditResult.error && (
+                  <div className="flex items-center gap-2 text-sm text-red-600">
+                    <AlertTriangle className="w-4 h-4" />
+                    {sprintAuditResult.error}
+                  </div>
+                )}
+
+                {sprintAuditResult.summary && (
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="text-lg font-bold text-green-600">
+                        {sprintAuditResult.summary.passed}
+                      </div>
+                      <div className="text-[10px] text-gray-500">Passed</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="text-lg font-bold text-red-600">
+                        {sprintAuditResult.summary.failed}
+                      </div>
+                      <div className="text-[10px] text-gray-500">Failed</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="text-lg font-bold text-amber-600">
+                        {sprintAuditResult.summary.needsHuman}
+                      </div>
+                      <div className="text-[10px] text-gray-500">Review</div>
+                    </div>
+                  </div>
+                )}
+
+                {sprintAuditResult.attestationSummary && (
+                  <div className="text-xs text-gray-600 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <FileWarning className="w-3 h-3" />
+                      <span>
+                        Debt items: {sprintAuditResult.attestationSummary.debt_items_created}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Users className="w-3 h-3" />
+                      <span>
+                        Review queue: {sprintAuditResult.attestationSummary.review_queue_items}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {sprintAuditResult.runId && (
+                  <div className="text-[10px] text-gray-500">
+                    Run: <code>{sprintAuditResult.runId}</code>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {affected?.affected && (
@@ -545,7 +999,7 @@ export default function AuditView() {
           </div>
         )}
 
-        <pre className="bg-gray-900 text-gray-100 rounded-lg p-4 text-xs overflow-auto max-h-96">
+        <pre className="bg-gray-900 text-gray-100 rounded-lg p-4 text-xs overflow-auto">
           {logLines.join('\n')}
           <span ref={logEndRef} />
         </pre>
@@ -564,7 +1018,9 @@ export default function AuditView() {
             <div className="divide-y divide-gray-200 max-h-80 overflow-auto">
               {bundles.map((b) => {
                 const overall = b.summary?.result?.overall_status;
-                const badge = getOverallBadge(overall);
+                const verdict = b.summary?.verdict;
+                const badge = getOverallBadge(overall, verdict);
+                const typeBadge = getBundleTypeBadge(b.type);
                 return (
                   <button
                     key={b.runId}
@@ -576,11 +1032,21 @@ export default function AuditView() {
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div className="font-mono text-xs text-gray-800">{b.runId}</div>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full border ${badge.cls}`}>
-                        {badge.label}
-                      </span>
+                      <div className="flex items-center gap-1">
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full border ${typeBadge.cls}`}>
+                          {typeBadge.label}
+                        </span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full border ${badge.cls}`}>
+                          {badge.label}
+                        </span>
+                      </div>
                     </div>
-                    {b.summary?.commit_sha && (
+                    {b.type === 'sprint' && b.summary?.sprint !== undefined && (
+                      <div className="text-[11px] text-gray-500 mt-1">
+                        Sprint {b.summary.sprint} • {b.summary.summary?.auditedTasks ?? 0} tasks audited
+                      </div>
+                    )}
+                    {b.type !== 'sprint' && b.summary?.commit_sha && (
                       <div className="text-[11px] text-gray-500 mt-1">
                         {String(b.summary.commit_sha).slice(0, 12)} • {b.summary.mode ?? 'tier'} •{' '}
                         {b.summary.scope ?? ''}
@@ -604,13 +1070,25 @@ export default function AuditView() {
             <div className="p-4">
               {selectedBundle ? (
                 <>
-                  <div className="text-xs text-gray-500 mb-2">
-                    <div>
-                      Run: <code>{selectedBundle.runId}</code>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-xs text-gray-500">
+                      <div>
+                        Run: <code>{selectedBundle.runId}</code>
+                      </div>
+                      <div>
+                        Dir: <code>{selectedBundle.runDir}</code>
+                      </div>
                     </div>
-                    <div>
-                      Dir: <code>{selectedBundle.runDir}</code>
-                    </div>
+                    {selectedBundle.summary?.verdict === 'FAIL' && (
+                      <button
+                        type="button"
+                        onClick={handleGenerateFixPrompt}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-xs font-medium"
+                      >
+                        <Wand2 className="w-3.5 h-3.5" />
+                        Generate Fix Prompt
+                      </button>
+                    )}
                   </div>
                   <pre className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs overflow-auto max-h-80">
                     {selectedBundle.summaryMd?.trim() ||
@@ -684,6 +1162,60 @@ export default function AuditView() {
                   ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Fix Prompt Modal */}
+      {showFixPrompt && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center gap-2">
+                <Wand2 className="w-5 h-5 text-purple-600" />
+                <h3 className="text-lg font-semibold text-gray-900">Fix Audit Failures Prompt</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleCopyPrompt}
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    promptCopied
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {promptCopied ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      Copy to Clipboard
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowFixPrompt(false)}
+                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                >
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-auto p-6">
+              <pre className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm whitespace-pre-wrap font-mono">
+                {fixPromptText}
+              </pre>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+              <p className="text-xs text-gray-600">
+                Copy this prompt and paste it into Claude Code to automatically fix the audit failures.
+              </p>
+            </div>
           </div>
         </div>
       )}

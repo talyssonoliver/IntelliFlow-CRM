@@ -117,8 +117,7 @@ export default function SettingsView() {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
                         <option value="sonnet">Claude Sonnet 4.5 (Default)</option>
-                        <option value="opus">Claude 3 Opus</option>
-                        <option value="haiku">Claude 3.5 Haiku</option>
+                        <option value="opus">Claude 4.5 Opus</option>
                       </select>
                     </div>
                     <div>

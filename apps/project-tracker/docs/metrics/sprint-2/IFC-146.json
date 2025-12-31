@@ -5,8 +5,11 @@
   "description": "Define PRD and user journey templates; create Definition of Ready criteria; develop traceability matrix linking capabilities to domain services; APIs; UIs; and tests",
   "owner": "Product Manager + Tech Lead",
   "dependencies": {
-    "required": ["IFC-000", "ENV-018-AI"],
-    "verified_at": "2025-12-28T23:24:52.904Z",
+    "required": [
+      "IFC-000",
+      "ENV-018-AI"
+    ],
+    "verified_at": "2025-12-31T06:44:28.368Z",
     "all_satisfied": true,
     "notes": "Feasibility assessment and sprint planning available"
   },
@@ -44,10 +47,12 @@
     "created": [
       "docs/planning/prd-template.md",
       "docs/planning/user-journey-template.md",
-      "docs/planning/definition-of-ready.md",
+      "docs/planning/definition-of-ready.md"
+    ],
+    "missing": [
+      "artifacts/reports/traceability-matrix.xlsx",
       "artifacts/logs/backlog-updates-log.csv"
     ],
-    "missing": ["artifacts/reports/traceability-matrix.xlsx"],
     "missing_reason": "xlsx/csv replaced with json for better tooling integration"
   },
   "validations": [
@@ -140,7 +145,9 @@
   },
   "stoa_verdicts": {
     "lead": "Domain",
-    "supporting": ["Quality"],
+    "supporting": [
+      "Quality"
+    ],
     "domain_verdict": "PASS",
     "quality_verdict": "PASS",
     "consensus": "PASS"
@@ -163,5 +170,8 @@
   "notes": "PRD and user journey templates created with comprehensive structure. Definition of Ready includes 9 criteria: acceptance criteria, dependencies, design, estimation, testability, security, accessibility, performance, and documentation. Traceability matrix links 6 business capabilities to domain services, APIs, UIs, and tests. Backlog updates log tracks DoR compliance for completed tasks.",
   "completed_at": "2025-12-22T21:05:00Z",
   "started_at": "2025-12-22T20:55:00Z",
-  "dependencies_resolved": ["IFC-000", "ENV-018-AI"]
+  "dependencies_resolved": [
+    "IFC-000",
+    "ENV-018-AI"
+  ]
 }

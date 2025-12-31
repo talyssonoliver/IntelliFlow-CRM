@@ -249,6 +249,68 @@ export interface ArtifactValidation {
   type: 'file' | 'directory' | 'pattern';
   lastModified?: Date;
   size?: number;
+  linkedTaskId?: string;
+  isOrphan?: boolean;
+  category?: ArtifactCategory;
+}
+
+// =============================================================================
+// ARTIFACT REGISTRY TYPES
+// =============================================================================
+
+export type ArtifactCategory =
+  | 'attestation'
+  | 'benchmark'
+  | 'coverage'
+  | 'report'
+  | 'metric'
+  | 'log'
+  | 'misc'
+  | 'backup'
+  | 'forensics'
+  | 'lighthouse'
+  | 'performance'
+  | 'validation'
+  | 'status'
+  | 'test-results';
+
+export interface ArtifactEntry {
+  path: string;
+  absolutePath: string;
+  exists: boolean;
+  type: 'file' | 'directory';
+  size: number;
+  lastModified: string;
+  linkedTasks: string[];
+  isOrphan: boolean;
+  category: ArtifactCategory;
+  extension: string;
+}
+
+export interface ArtifactSummary {
+  totalArtifacts: number;
+  linkedArtifacts: number;
+  orphanArtifacts: number;
+  missingArtifacts: number;
+  totalSize: number;
+  byCategory: Record<ArtifactCategory, number>;
+  byExtension: Record<string, number>;
+  lastScanAt: string;
+}
+
+export interface MissingArtifact {
+  path: string;
+  expectedBy: string[];
+  prefix: 'ARTIFACT' | 'EVIDENCE';
+}
+
+export interface TaskArtifactStatus {
+  taskId: string;
+  linkedArtifacts: ArtifactEntry[];
+  missingArtifacts: MissingArtifact[];
+  totalExpected: number;
+  totalPresent: number;
+  completionPercentage: number;
 }
 
 export interface KPIValidation {

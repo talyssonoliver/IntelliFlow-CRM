@@ -75,11 +75,14 @@ export async function GET(request: Request) {
     // Generate ASCII graph
     const asciiGraph = generateAsciiGraph(phases, parallelStreams);
 
-    // Get sprint summary
+    // Get sprint summary (exclude completed from active totals)
     const sprintTasks =
       sprintNumber === 'all'
         ? tasks
         : tasks.filter((t) => t['Target Sprint'] === String(sprintNumber));
+    const activeTasks = sprintTasks.filter(
+      (t) => t.Status !== 'Done' && t.Status !== 'Completed'
+    );
     const completedCount = sprintTasks.filter(
       (t) => t.Status === 'Done' || t.Status === 'Completed'
     ).length;
@@ -91,10 +94,10 @@ export async function GET(request: Request) {
       success: true,
       sprintNumber,
       summary: {
-        totalTasks: sprintTasks.length,
+        totalTasks: activeTasks.length,
         completedTasks: completedCount,
         inProgressTasks: inProgressCount,
-        pendingTasks: sprintTasks.length - completedCount - inProgressCount,
+        pendingTasks: Math.max(activeTasks.length - inProgressCount, 0),
         readyToStart: readyTasks.length,
         blocked: blockedTasks.length,
       },

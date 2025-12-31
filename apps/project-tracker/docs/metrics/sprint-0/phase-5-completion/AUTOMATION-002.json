@@ -9,10 +9,14 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2025-12-28T23:24:52.380Z",
-    "required": ["AUTOMATION-001"]
+    "verified_at": "2025-12-31T06:44:25.966Z",
+    "required": [
+      "AUTOMATION-001"
+    ]
   },
-  "dependencies_resolved": ["AUTOMATION-001"],
+  "dependencies_resolved": [
+    "AUTOMATION-001"
+  ],
   "started_at": "2025-12-19T00:43:54.066Z",
   "completed_at": "2025-12-19T00:58:54.066Z",
   "target_duration_minutes": 120,

@@ -87,6 +87,10 @@ function resolvePrettierBin(repoRoot: string): string | null {
 }
 
 function tryFormatMetricsJson(metricsDir: string): void {
+  // DISABLED: Prettier formatting causes extreme slowdowns in dev (157+ minutes)
+  // Formatting can be done manually or in pre-commit hooks
+  return;
+
   if (process.env.NODE_ENV === 'production') return;
   if (process.env.INTELLIFLOW_SKIP_PRETTIER === '1') return;
 
@@ -99,13 +103,13 @@ function tryFormatMetricsJson(metricsDir: string): void {
     return;
   }
 
-  const result = spawnSync(process.execPath, [prettierBin, '--write', glob], {
+  const result = spawnSync(process.execPath, [prettierBin as string, '--write', glob], {
     cwd: repoRoot,
     encoding: 'utf-8',
   });
 
   if (result.error) {
-    console.warn(`[data-sync] Prettier formatting skipped: ${result.error.message}`);
+    console.warn(`[data-sync] Prettier formatting skipped: ${result.error?.message ?? 'Unknown error'}`);
     return;
   }
 
@@ -865,11 +869,13 @@ function updateDependencyGraph(tasks: any[], metricsDir: string): void {
 function mapCsvStatusToGraph(
   status: string
 ): 'DONE' | 'IN_PROGRESS' | 'BLOCKED' | 'PLANNED' | 'BACKLOG' | 'FAILED' {
-  if (status === 'Done' || status === 'Completed') return 'DONE';
-  if (status === 'In Progress' || status === 'Validating') return 'IN_PROGRESS';
-  if (status === 'Blocked' || status === 'Needs Human') return 'BLOCKED';
-  if (status === 'Failed') return 'FAILED';
-  if (status === 'Backlog' || status === 'Not Started') return 'BACKLOG';
+  const normalized = (status || '').trim().toLowerCase();
+  if (normalized === 'done' || normalized === 'completed') return 'DONE';
+  if (normalized === 'in progress' || normalized === 'validating') return 'IN_PROGRESS';
+  if (normalized === 'blocked' || normalized === 'needs human') return 'BLOCKED';
+  if (normalized === 'failed') return 'FAILED';
+  if (normalized === 'backlog' || normalized === 'not started') return 'BACKLOG';
+  if (normalized === 'planned') return 'PLANNED';
   return 'PLANNED';
 }
 
@@ -1263,6 +1269,12 @@ function updateSprintSummary(tasks: any[], metricsDir: string): void {
 
 /**
  * Generic sprint summary updater that works for any sprint number
+ *
+ * IMPORTANT: This function merges completed_tasks from:
+ * 1. Individual task JSON files (authoritative source with full details)
+ * 2. CSV tasks marked as Completed/Done (fallback for tasks without JSON files)
+ *
+ * This ensures completed_tasks is accurate even when task JSON files are missing.
  */
 function updateSprintSummaryGeneric(tasks: any[], metricsDir: string, sprintNum: number): void {
   const sprintDir = join(metricsDir, `sprint-${sprintNum}`);
@@ -1315,10 +1327,13 @@ function updateSprintSummaryGeneric(tasks: any[], metricsDir: string, sprintNum:
     failed,
   };
 
-  // Update completed_tasks list from individual task files
-  const completedTasks: Array<{ task_id: string; completed_at: string; duration_minutes: number }> =
-    [];
+  // Build completed_tasks from TWO sources:
+  // 1. Task JSON files (authoritative - has full execution details)
+  // 2. CSV tasks marked as Completed/Done (fallback for tasks without JSON files)
 
+  const completedTasksMap = new Map<string, { task_id: string; completed_at: string; duration_minutes: number }>();
+
+  // Source 1: Collect from task JSON files (authoritative)
   const searchForCompleted = (dir: string): void => {
     if (!existsSync(dir)) return;
     const entries = readdirSync(dir, { withFileTypes: true });
@@ -1328,8 +1343,9 @@ function updateSprintSummaryGeneric(tasks: any[], metricsDir: string, sprintNum:
         try {
           const taskData = readJsonTolerant(fullPath);
           if (taskData.status === 'DONE' && taskData.completed_at) {
-            completedTasks.push({
-              task_id: taskData.task_id || taskData.taskId || entry.name.replace('.json', ''),
+            const taskId = taskData.task_id || taskData.taskId || entry.name.replace('.json', '');
+            completedTasksMap.set(taskId, {
+              task_id: taskId,
               completed_at: taskData.completed_at,
               duration_minutes:
                 taskData.actual_duration_minutes || taskData.target_duration_minutes || 15,
@@ -1346,7 +1362,22 @@ function updateSprintSummaryGeneric(tasks: any[], metricsDir: string, sprintNum:
 
   searchForCompleted(sprintDir);
 
-  // Sort by completion time
+  // Source 2: Add CSV completed tasks that don't have JSON files yet (fallback)
+  const csvCompletedTasks = tasks.filter((t) => t.Status === 'Done' || t.Status === 'Completed');
+  for (const csvTask of csvCompletedTasks) {
+    const taskId = csvTask['Task ID'];
+    if (taskId && !completedTasksMap.has(taskId)) {
+      // Task is Completed in CSV but has no JSON file - add with estimated data
+      completedTasksMap.set(taskId, {
+        task_id: taskId,
+        completed_at: new Date().toISOString(), // Use current time as fallback
+        duration_minutes: 15, // Default estimate
+      });
+    }
+  }
+
+  // Convert map to array and sort by completion time
+  const completedTasks = Array.from(completedTasksMap.values());
   completedTasks.sort(
     (a, b) => new Date(a.completed_at).getTime() - new Date(b.completed_at).getTime()
   );

@@ -4,17 +4,18 @@
   "title": "Task Attestation Schema",
   "description": "Schema for task completion attestations combining context acknowledgment and verification evidence",
   "type": "object",
+  "additionalProperties": false,
   "required": [
     "$schema",
     "schema_version",
     "task_id",
     "verdict",
-    "attestation_timestamp"
+    "attestation_timestamp",
+    "attestor"
   ],
   "properties": {
     "$schema": {
       "type": "string",
-      "const": "https://intelliflow-crm.com/schemas/attestation.schema.json",
       "description": "Schema reference for validation"
     },
     "schema_version": {
@@ -48,11 +49,13 @@
     "context_acknowledgment": {
       "type": "object",
       "description": "Evidence that prerequisite files were read and understood",
+      "additionalProperties": false,
       "properties": {
         "files_read": {
           "type": "array",
           "items": {
             "type": "object",
+            "additionalProperties": false,
             "required": ["path", "sha256"],
             "properties": {
               "path": {
@@ -83,6 +86,7 @@
     "evidence_summary": {
       "type": "object",
       "description": "Summary counts of verification evidence",
+      "additionalProperties": false,
       "properties": {
         "artifacts_verified": {
           "type": "integer",
@@ -138,6 +142,7 @@
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["command", "exit_code", "passed", "timestamp"],
         "properties": {
           "name": {
@@ -177,6 +182,7 @@
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["gate_id", "passed"],
         "properties": {
           "gate_id": {
@@ -188,6 +194,14 @@
           },
           "exit_code": {
             "type": "integer"
+          },
+          "score": {
+            "type": "number",
+            "description": "Quantitative result of the gate (e.g. percentage)"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
           },
           "log_path": {
             "type": "string",
@@ -201,6 +215,7 @@
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["kpi", "target", "actual", "met"],
         "properties": {
           "kpi": {
@@ -232,6 +247,7 @@
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["criterion", "met"],
         "properties": {
           "criterion": {
@@ -249,6 +265,41 @@
         }
       },
       "description": "Definition of Done verification"
+    },
+    "manual_verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Results from manual audit/review",
+      "properties": {
+        "performed_by": {
+          "type": "string",
+          "description": "Person who performed the manual verification"
+        },
+        "performed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "review_notes": {
+          "type": "string"
+        },
+        "items_checked": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Environment details where attestation was generated",
+      "properties": {
+        "os": { "type": "string" },
+        "node_version": { "type": "string" },
+        "git_commit": { "type": "string" },
+        "branch": { "type": "string" }
+      }
     },
     "notes": {
       "type": "string",

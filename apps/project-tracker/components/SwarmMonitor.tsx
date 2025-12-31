@@ -116,10 +116,11 @@ export default function SwarmMonitor() {
     // Initial fetch
     fetchSwarmStatus();
 
-    // Poll every 5 seconds
-    const interval = setInterval(fetchSwarmStatus, 5000);
-
-    return () => clearInterval(interval);
+    // Only poll if there are active tasks (prevents memory waste)
+    // Polling disabled by default to save resources
+    // To enable: uncomment the lines below
+    // const interval = setInterval(fetchSwarmStatus, 10000); // 10 seconds
+    // return () => clearInterval(interval);
   }, []);
 
   if (isLoading) {

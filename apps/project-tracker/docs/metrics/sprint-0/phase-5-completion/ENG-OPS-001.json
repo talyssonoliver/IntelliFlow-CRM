@@ -9,10 +9,18 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2025-12-28T23:24:52.451Z",
-    "required": ["ENV-002-AI", "ENV-005-AI", "ENV-010-AI"]
+    "verified_at": "2025-12-31T06:44:27.035Z",
+    "required": [
+      "ENV-002-AI",
+      "ENV-005-AI",
+      "ENV-010-AI"
+    ]
   },
-  "dependencies_resolved": ["ENV-002-AI", "ENV-005-AI", "ENV-010-AI"],
+  "dependencies_resolved": [
+    "ENV-002-AI",
+    "ENV-005-AI",
+    "ENV-010-AI"
+  ],
   "started_at": "2025-12-21T07:06:10.607Z",
   "completed_at": "2025-12-21T07:21:10.607Z",
   "target_duration_minutes": null,

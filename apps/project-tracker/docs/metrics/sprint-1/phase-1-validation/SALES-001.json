@@ -5,8 +5,11 @@
   "description": "Commercial Narrative + Pitch Deck Outline + One-Pager",
   "owner": "PM + Marketing",
   "dependencies": {
-    "required": ["GTM-002", "BRAND-001"],
-    "verified_at": "2025-12-28T23:24:52.678Z",
+    "required": [
+      "GTM-002",
+      "BRAND-001"
+    ],
+    "verified_at": "2025-12-31T06:44:27.580Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -32,8 +35,14 @@
     "execution_log": "logs/sprint-1/SALES-001.log"
   },
   "artifacts": {
-    "expected": ["docs/sales/pitch-deck-outline.md", "docs/sales/one-pager.md"],
-    "created": ["docs/sales/pitch-deck-outline.md", "docs/sales/one-pager.md"],
+    "expected": [
+      "docs/sales/pitch-deck-outline.md",
+      "docs/sales/one-pager.md"
+    ],
+    "created": [
+      "docs/sales/pitch-deck-outline.md",
+      "docs/sales/one-pager.md"
+    ],
     "missing": []
   },
   "validations": [
@@ -58,5 +67,8 @@
   "completed_at": "2025-12-27T11:33:39.124Z",
   "started_at": "2025-12-27T11:18:39.124Z",
   "actual_duration_minutes": 15,
-  "dependencies_resolved": ["GTM-002", "BRAND-001"]
+  "dependencies_resolved": [
+    "GTM-002",
+    "BRAND-001"
+  ]
 }

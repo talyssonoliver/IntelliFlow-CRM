@@ -5,8 +5,10 @@
   "description": "PHASE-001: Domain Model Design (DDD)",
   "owner": "Tech Lead + Backend Dev",
   "dependencies": {
-    "required": ["IFC-000"],
-    "verified_at": "2025-12-28T23:24:52.613Z",
+    "required": [
+      "IFC-000"
+    ],
+    "verified_at": "2025-12-31T06:44:27.562Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -42,8 +44,13 @@
     "execution_log": "logs/sprint-1/IFC-002.log"
   },
   "artifacts": {
-    "expected": ["packages/domain/src/*", "packages/db/prisma/schema.prisma"],
-    "created": ["packages/db/prisma/schema.prisma"],
+    "expected": [
+      "packages/domain/src/*",
+      "packages/db/prisma/schema.prisma"
+    ],
+    "created": [
+      "packages/db/prisma/schema.prisma"
+    ],
     "missing": []
   },
   "validations": [
@@ -81,5 +88,7 @@
   "completed_at": "2025-12-27T11:33:39.031Z",
   "started_at": "2025-12-27T11:18:39.031Z",
   "actual_duration_minutes": 15,
-  "dependencies_resolved": ["IFC-000"]
+  "dependencies_resolved": [
+    "IFC-000"
+  ]
 }

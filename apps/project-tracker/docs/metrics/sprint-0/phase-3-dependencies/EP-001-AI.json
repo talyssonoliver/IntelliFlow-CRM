@@ -13,8 +13,11 @@
       "status": "completed"
     },
     "all_satisfied": true,
-    "verified_at": "2025-12-28T23:24:52.366Z",
-    "required": ["ENV-003-AI", "ENV-008-AI"]
+    "verified_at": "2025-12-31T06:44:25.866Z",
+    "required": [
+      "ENV-003-AI",
+      "ENV-008-AI"
+    ]
   },
   "status_history": [
     {
@@ -217,7 +220,10 @@
     "access_control": {
       "required": true,
       "implemented": "Grafana authentication (GF_AUTH_ANONYMOUS_ENABLED=false)",
-      "production_options": ["Tailscale (recommended)", "Cloudflare Access"],
+      "production_options": [
+        "Tailscale (recommended)",
+        "Cloudflare Access"
+      ],
       "warning": "Do NOT use public subdomains without access control"
     },
     "config_fixes": [
@@ -237,5 +243,8 @@
   "completed_at": "2025-12-20T19:31:55.100Z",
   "started_at": "2025-12-20T19:16:55.100Z",
   "actual_duration_minutes": 15,
-  "dependencies_resolved": ["ENV-003-AI", "ENV-008-AI"]
+  "dependencies_resolved": [
+    "ENV-003-AI",
+    "ENV-008-AI"
+  ]
 }

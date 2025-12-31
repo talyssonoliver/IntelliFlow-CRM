@@ -15,24 +15,50 @@ type AuditBundleSummary = {
   commit_sha?: string;
   started_at?: string;
   finished_at?: string;
+  generated_at?: string;
   mode?: string | null;
   scope?: string;
+  sprint?: number;
+  verdict?: string;
   result?: { overall_status?: string };
+  summary?: {
+    totalTasks?: number;
+    auditedTasks?: number;
+    passedTasks?: number;
+    failedTasks?: number;
+  };
 };
 
-export async function GET() {
-  const repoRoot = getRepoRootDir();
-  const bundlesDir = path.join(repoRoot, 'artifacts', 'reports', 'system-audit');
+type BundleItem = {
+  runId: string;
+  type: 'system' | 'sprint';
+  summary: AuditBundleSummary | null;
+  updatedAt: string | null;
+  paths: {
+    summaryJson: string;
+    summaryMd: string;
+  };
+};
+
+async function loadBundlesFromDir(
+  repoRoot: string,
+  bundlesDir: string,
+  type: 'system' | 'sprint',
+  summaryFilename: string = 'summary.json',
+  mdFilename: string = 'summary.md'
+): Promise<BundleItem[]> {
+  const items: BundleItem[] = [];
 
   try {
     const entries = await readdir(bundlesDir, { withFileTypes: true });
-    const runIds = entries.filter((e) => e.isDirectory()).map((e) => e.name);
+    const runIds = entries
+      .filter((e) => e.isDirectory() && !e.name.endsWith('-latest'))
+      .map((e) => e.name);
     runIds.sort((a, b) => b.localeCompare(a));
 
-    const items = [];
-    for (const runId of runIds.slice(0, 50)) {
-      const summaryPath = path.join(bundlesDir, runId, 'summary.json');
-      const summaryMdPath = path.join(bundlesDir, runId, 'summary.md');
+    for (const runId of runIds.slice(0, 25)) {
+      const summaryPath = path.join(bundlesDir, runId, summaryFilename);
+      const summaryMdPath = path.join(bundlesDir, runId, mdFilename);
       try {
         const [summaryRaw, summaryStat] = await Promise.all([
           readFile(summaryPath, 'utf-8'),
@@ -41,6 +67,7 @@ export async function GET() {
         const summary = JSON.parse(summaryRaw) as AuditBundleSummary;
         items.push({
           runId,
+          type,
           summary,
           updatedAt: summaryStat.mtime.toISOString(),
           paths: {
@@ -49,30 +76,36 @@ export async function GET() {
           },
         });
       } catch {
-        items.push({
-          runId,
-          summary: null,
-          updatedAt: null,
-          paths: {
-            summaryJson: path.relative(repoRoot, summaryPath).replaceAll('\\', '/'),
-            summaryMd: path.relative(repoRoot, summaryMdPath).replaceAll('\\', '/'),
-          },
-        });
+        // Skip bundles without a valid summary file (incomplete runs)
+        // Don't add them to the list
       }
     }
-
-    return NextResponse.json({
-      bundlesDir: path.relative(repoRoot, bundlesDir).replaceAll('\\', '/'),
-      items,
-    });
-  } catch (error) {
-    return NextResponse.json(
-      {
-        bundlesDir: path.relative(repoRoot, bundlesDir).replaceAll('\\', '/'),
-        items: [],
-        error: String(error),
-      },
-      { status: 200 }
-    );
+  } catch {
+    // Directory doesn't exist or can't be read
   }
+
+  return items;
+}
+
+export async function GET() {
+  const repoRoot = getRepoRootDir();
+  const systemBundlesDir = path.join(repoRoot, 'artifacts', 'reports', 'system-audit');
+  const sprintBundlesDir = path.join(repoRoot, 'artifacts', 'reports', 'sprint-audit');
+
+  // Load bundles from both directories in parallel
+  const [systemBundles, sprintBundles] = await Promise.all([
+    loadBundlesFromDir(repoRoot, systemBundlesDir, 'system', 'summary.json', 'summary.md'),
+    loadBundlesFromDir(repoRoot, sprintBundlesDir, 'sprint', 'audit.json', 'audit.md'),
+  ]);
+
+  // Combine and sort by runId (which includes timestamp)
+  const allItems = [...systemBundles, ...sprintBundles];
+  allItems.sort((a, b) => b.runId.localeCompare(a.runId));
+
+  return NextResponse.json({
+    bundlesDir: 'artifacts/reports',
+    systemBundlesDir: path.relative(repoRoot, systemBundlesDir).replaceAll('\\', '/'),
+    sprintBundlesDir: path.relative(repoRoot, sprintBundlesDir).replaceAll('\\', '/'),
+    items: allItems.slice(0, 50),
+  });
 }

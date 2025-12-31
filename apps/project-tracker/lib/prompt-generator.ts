@@ -84,7 +84,9 @@ function generateHeader(sprintNumber: number, projectName: string): string {
 
 You are orchestrating Sprint ${sprintNumber} of the **${projectName}** project.
 
-**Execution Model**: Use \`claude --dangerously-skip-permissions\` for autonomous sub-agent spawning with the \`Task\` tool for parallel orchestration.`;
+**Execution Model**: Use \`claude --dangerously-skip-permissions\` for autonomous sub-agent spawning with the \`Task\` tool for parallel orchestration.
+
+**Target Application**: All implementation work targets the **web app** (\`apps/web/\` at \`http://localhost:3000\`), not the project-tracker.`;
 }
 
 /**
@@ -98,10 +100,20 @@ function generateMissionBrief(sprintNumber: number, projectName: string, theme: 
 **Theme**: ${theme}
 
 ### Key Objectives
+- Code: Deliver high-quality, tested code for the web app
+- Integration: Seamlessly integrate new features into existing architecture
+- Security: Ensure robust security and compliance
+- Performance: Optimize for speed and responsiveness
+- Aviability: Ensure high availability and reliability
+- Maintainability: Write clean, maintainable code
+- Documentation: Provide clear documentation and specs
+
+### Execution Guidelines
 - Complete all achievable tasks for this sprint
 - Spawn parallel sub-agents where possible for efficiency
 - Validate all deliverables meet KPIs before marking complete
-- Escalate blockers and human-intervention tasks promptly`;
+- Escalate blockers and human-intervention tasks promptly
+- All implementation targets \`apps/web/\` and \`apps/api/\``;
 }
 
 /**
@@ -141,7 +153,8 @@ function generateOverviewTable(
 | **Phases** | ${phases.length} |
 | **Parallel Tasks** | ${parallelTaskCount} |
 | **Theme** | ${theme || inferTheme(allTasks)} |
-| **Key Focus Areas** | ${topSections.join(', ')} |`;
+| **Key Focus Areas** | ${topSections.join(', ')} |
+| **Web App** | http://localhost:3000 |`;
 }
 
 /**
@@ -313,6 +326,16 @@ function generateTaskSpecification(csvTask: CSVTask, phaseEntry: TaskPhaseEntry)
 
   lines.push(`### ${csvTask['Task ID']}: ${csvTask.Description}`);
   lines.push('');
+  lines.push('### Key Objectives');
+  lines.push('');
+  lines.push('- Code: Deliver high-quality, tested code for the web app');
+  lines.push('- Integration: Seamlessly integrate new features into existing architecture');
+  lines.push('- Security: Ensure robust security and compliance');
+  lines.push('- Performance: Optimize for speed and responsiveness');
+  lines.push('- Aviability: Ensure high availability and reliability');
+  lines.push('- Maintainability: Write clean, maintainable code');
+  lines.push('- Documentation: Provide clear documentation and specs');
+  lines.push('');
   lines.push('#### Context');
   lines.push(`Dependency: ${csvTask.Dependencies || 'None'}`);
   lines.push(`Owner: ${csvTask.Owner}`);
@@ -340,6 +363,16 @@ function generateTaskSpecification(csvTask: CSVTask, phaseEntry: TaskPhaseEntry)
         taskNum++;
       }
     }
+    lines.push('### Key Objectives');
+    lines.push('');
+    lines.push('- Code: Deliver high-quality, tested code for the web app');
+    lines.push('- Integration: Seamlessly integrate new features into existing architecture');
+    lines.push('- Security: Ensure robust security and compliance');
+    lines.push('- Performance: Optimize for speed and responsiveness');
+    lines.push('- Aviability: Ensure high availability and reliability');
+    lines.push('- Maintainability: Write clean, maintainable code');
+    lines.push('- Documentation: Provide clear documentation and specs');
+    lines.push('');
     lines.push('');
   }
 
@@ -365,16 +398,54 @@ function generateTaskSpecification(csvTask: CSVTask, phaseEntry: TaskPhaseEntry)
     lines.push('');
   }
 
-  // Artifacts
+  // Artifacts - use table format for better clarity
   if (csvTask['Artifacts To Track']) {
     lines.push('#### Artifacts');
-    const artifacts = csvTask['Artifacts To Track'].split(',').map((a) => a.trim());
+    lines.push('| Type | Path | Description |');
+    lines.push('|------|------|-------------|');
+    const artifacts = csvTask['Artifacts To Track'].split(';').map((a) => a.trim());
     for (const artifact of artifacts) {
-      if (artifact) lines.push(`- ${artifact}`);
+      if (artifact) {
+        // Parse artifact type prefix (ARTIFACT:, EVIDENCE:, SPEC:, PLAN:)
+        const match = artifact.match(/^(ARTIFACT|EVIDENCE|SPEC|PLAN):(.+)$/);
+        if (match) {
+          const type = match[1];
+          const path = match[2].trim();
+          const desc = inferArtifactDescription(path);
+          lines.push(`| ${type} | ${path} | ${desc} |`);
+        } else {
+          // Legacy format without prefix
+          lines.push(`| ARTIFACT | ${artifact} | ${inferArtifactDescription(artifact)} |`);
+        }
+      }
     }
   }
 
   return lines.join('\n');
+}
+
+/**
+ * Infer artifact description from path
+ */
+function inferArtifactDescription(path: string): string {
+  const filename = path.split('/').pop() || path;
+  const baseName = filename.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+
+  // Common patterns
+  if (path.includes('attestation')) return 'Completion attestation';
+  if (path.includes('context_ack')) return 'Context acknowledgment';
+  if (path.includes('context_pack')) return 'Prerequisites manifest';
+  if (path.includes('.test.') || path.includes('.spec.')) return 'Test file';
+  if (path.includes('schema')) return 'Schema definition';
+  if (path.endsWith('.sql')) return 'Database migration';
+  if (path.endsWith('.yaml') || path.endsWith('.yml')) return 'Configuration file';
+  if (path.endsWith('.md')) return 'Documentation';
+  if (path.includes('dashboard')) return 'Dashboard configuration';
+  if (path.includes('metrics')) return 'Metrics data';
+  if (path.includes('report')) return 'Report output';
+
+  // Capitalize first letter of each word
+  return baseName.replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
 /**
@@ -462,6 +533,16 @@ This sprint should be executed using Claude Code with sub-agent orchestration. F
 **Before starting any task, gather context from previous work:**
 
 \`\`\`bash
+### Key Objectives
+');
+- Code: Deliver high-quality, tested code for the web app
+- Integration: Seamlessly integrate new features into existing architecture
+- Security: Ensure robust security and compliance
+- Performance: Optimize for speed and responsiveness
+- Aviability: Ensure high availability and reliability
+- Maintainability: Write clean, maintainable code
+- Documentation: Provide clear documentation and specs
+
 # 1. Read completed tasks from previous sprint(s) for context
 cat apps/project-tracker/docs/metrics/sprint-${prevSprint}/_summary.json
 
@@ -509,30 +590,21 @@ mkdir -p artifacts/specs/<TASK_ID>
 # - Test strategy
 # - Acceptance criteria
 
-# Update CSV status to "Planned"
-# The system will auto-update via MATOP/SWARM, or manually:
-curl -X POST http://localhost:3002/api/tasks/<TASK_ID>/plan \\
-  -H "Content-Type: application/json" \\
-  -d '{"status": "Planned", "specPath": "artifacts/specs/<TASK_ID>/spec.md"}'
+# Update Sprint_plan.csv status to "Planned"
+# Edit the CSV directly or use sync tools
 \`\`\`
 
 #### Step 2: Start Implementation (Planned → In Progress)
 \`\`\`bash
-# Update status to "In Progress"
-curl -X POST http://localhost:3002/api/tasks/<TASK_ID>/start \\
-  -H "Content-Type: application/json" \\
-  -d '{"status": "In Progress"}'
-
+# Update status to "In Progress" in Sprint_plan.csv
 # Execute via SWARM or MATOP (see sections below)
 \`\`\`
 
 #### Step 3: Complete & Validate (In Progress → Done)
 \`\`\`bash
 # Run validation and audit (see Section 8)
-# Update status to "Done" with evidence
-curl -X POST http://localhost:3002/api/tasks/<TASK_ID>/complete \\
-  -H "Content-Type: application/json" \\
-  -d '{"status": "Done", "evidencePath": "artifacts/stoa-runs/<TASK_ID>/"}'
+# Update status to "Done" in Sprint_plan.csv with evidence
+# Create attestation in artifacts/attestations/<TASK_ID>/
 \`\`\`
 
 ### 2. Parallel Task Spawning
@@ -630,10 +702,9 @@ After completing each task, the system will automatically:
 
 **Manual status updates:**
 \`\`\`bash
-# Update via API
-curl -X POST http://localhost:3002/api/sprint/status \\
-  -H "Content-Type: application/json" \\
-  -d '{"runId": "<RUN_ID>", "update": {"type": "task_complete", "taskId": "<TASK_ID>"}}'
+# Update Sprint_plan.csv directly
+# Then sync metrics
+pnpm --filter project-tracker sync-metrics
 \`\`\`
 
 ### 7. Error Handling
@@ -682,55 +753,52 @@ npx tsx tools/scripts/attest-sprint.ts ${sprintNumber}
 cat artifacts/reports/attestation/sprint-${sprintNumber}-latest.json
 \`\`\`
 
-### 9. Project Tracker Dashboard Workflow
+### 9. Web App Development Workflow
 
-**Use the Project Tracker Dashboard (http://localhost:3002) to monitor and validate progress:**
+**Use the Web App (http://localhost:3000) for development and testing:**
 
-| View | Purpose | When to Use |
-|------|---------|-------------|
-| **Dashboard** | Sprint overview, task counts, progress bars | Start of sprint, quick status checks |
-| **Kanban** | Visual task board by status | Track task flow: Backlog → Planned → In Progress → Done |
-| **Analytics** | Charts, trends, velocity metrics | Mid-sprint reviews, identify bottlenecks |
-| **Metrics** | KPI tracking, phase summaries, evidence | Verify KPIs met, check attestations |
-| **Execution** | Sprint orchestration, parallel spawning | Execute sprints, monitor sub-agents |
-| **Governance** | Policy compliance, STOA gate results | Verify governance requirements met |
-| **Contracts** | Task agreements, SLAs, commitments | Review task contracts before completion |
-| **Audit** | Full audit runs, security scans, quality gates | Final validation before marking Done |
+| Area | Path | Description |
+|------|------|-------------|
+| **Dashboard** | \`/dashboard\` | Main CRM dashboard |
+| **Leads** | \`/leads\` | Lead management |
+| **Contacts** | \`/contacts\` | Contact management |
+| **Deals** | \`/deals\` | Deal pipeline |
+| **Tickets** | \`/tickets\` | Support tickets |
+| **Cases** | \`/cases/timeline\` | Case timeline |
+| **Analytics** | \`/analytics\` | Analytics dashboard |
+| **Agent Approvals** | \`/agent-approvals/preview\` | AI agent approval workflow |
 
-**Workflow Integration:**
-
-1. **Before Starting a Task:**
-   - Check **Dashboard** for overall sprint status
-   - Review **Kanban** to see task dependencies and blockers
-   - Check **Governance** for any policy requirements
-
-2. **During Task Execution:**
-   - Monitor **Execution** view for sub-agent status
-   - Check **Metrics** for real-time KPI tracking
-   - Review **Analytics** for velocity and progress
-
-3. **Before Completing a Task:**
-   - Run **Audit** view to execute all quality gates
-   - Verify **Governance** compliance passes
-   - Check **Contracts** view for task acceptance criteria
-   - Confirm **Metrics** show KPIs met
-
-4. **API Endpoints for Dashboard:**
+**Development Commands:**
 \`\`\`bash
-# Dashboard data
-curl http://localhost:3002/api/sprint-plan
+# Start the web app
+pnpm --filter web dev
 
-# Metrics & KPIs
-curl http://localhost:3002/api/metrics/sprint?sprint=${sprintNumber}
+# Start the API
+pnpm --filter api dev
 
-# Governance status
-curl http://localhost:3002/api/governance/summary?sprint=${sprintNumber}
+# Start all apps
+pnpm dev
 
-# Audit results
-curl http://localhost:3002/api/audit/stream
+# Run web app tests
+pnpm --filter web test
 
-# Execution status
-curl http://localhost:3002/api/sprint/status?runId=<RUN_ID>
+# Build the web app
+pnpm --filter web build
+
+# Type check
+pnpm --filter web typecheck
+\`\`\`
+
+**API Development (tRPC):**
+\`\`\`bash
+# API is served at http://localhost:3001/trpc
+# tRPC client types are auto-generated
+
+# Run API tests
+pnpm --filter api test
+
+# Type check API
+pnpm --filter api typecheck
 \`\`\`
 
 ### 10. Execution Order Summary
@@ -747,13 +815,22 @@ function generateDefinitionOfDone(sprintNumber: number): string {
   return `## Definition of Done
 
 A task is considered **DONE** when:
+  ### Key Objectives
+  - Code: Deliver high-quality, tested code for the web app
+  - Integration: Seamlessly integrate new features into existing architecture
+  - Security: Ensure robust security and compliance
+  - Performance: Optimize for speed and responsiveness
+  - Aviability: Ensure high availability and reliability
+  - Maintainability: Write clean, maintainable code
+  - Documentation: Provide clear documentation and specs
 
 1. ✅ All validation commands pass (exit code 0)
 2. ✅ All artifacts listed are created and accessible
 3. ✅ All KPIs meet or exceed target values
 4. ✅ No blocking issues or errors remain
 5. ✅ Status updated to "Done" in Sprint_plan.csv
-6. ✅ Evidence bundle generated (if MATOP task)
+6. ✅ Attestation created in \`artifacts/attestations/<TASK_ID>/\`
+7. ✅ Code merged to main branch (if applicable)
 
 ### Sprint ${sprintNumber} Completion Gate
 
@@ -762,7 +839,8 @@ The sprint is complete when:
 - Deferred tasks documented with target sprint
 - Blockers escalated with clear resolution path
 - Phase summaries updated with final metrics
-- Sprint summary reflects accurate totals`;
+- Sprint summary reflects accurate totals
+- All attestations generated with COMPLETE verdict`;
 }
 
 /**
@@ -852,6 +930,8 @@ export function generateSprintPromptData(options: GeneratorOptions): SprintPromp
     theme: inferredTheme,
     timeline: `Sprint ${sprintNumber}`,
     deliverables: sprintTasks.map((t) => t.Description),
+    targetApp: 'http://localhost:3000',
+    targetPaths: ['apps/web/', 'apps/api/'],
   };
 
   // Overview
@@ -870,6 +950,7 @@ export function generateSprintPromptData(options: GeneratorOptions): SprintPromp
     bySection: sectionCounts,
     byExecutionMode: modeCounts as Record<'swarm' | 'matop' | 'manual', number>,
     parallelStreamCount: parallelStreams.length,
+    webAppUrl: 'http://localhost:3000',
   };
 
   // Execution Strategy
@@ -954,12 +1035,29 @@ export function generateSprintPromptData(options: GeneratorOptions): SprintPromp
 
   // Definition of Done
   const definitionOfDone = [
+    '### Key Objectives',
+    '- Code: Deliver high-quality, tested code for the web app',
+    '- Integration: Seamlessly integrate new features into existing architecture',
+    '- Security: Ensure robust security and compliance',
+    '- Performance: Optimize for speed and responsiveness',
+    '- Aviability: Ensure high availability and reliability',
+    '- Maintainability: Write clean, maintainable code',
+    '- Documentation: Provide clear documentation and specs',
+    '',
+    '### Sprint ${sprintNumber} Completion Gate',
+    'The sprint is complete when:',
+    '✅ All achievable tasks marked as Done',
+    '✅ Deferred tasks documented with target sprint',
+    '✅ Blockers escalated with clear resolution path',
+    '✅ Phase summaries updated with final metrics',
+    '✅ Sprint summary reflects accurate totals',
     'All validation commands pass (exit code 0)',
     'All artifacts listed are created and accessible',
     'All KPIs meet or exceed target values',
     'No blocking issues or errors remain',
     'Status updated to "Done" in Sprint_plan.csv',
-    'Evidence bundle generated (if MATOP task)',
+    'Attestation created in artifacts/attestations/<TASK_ID>/',
+    'Code merged to main branch (if applicable)',
   ];
 
   return {

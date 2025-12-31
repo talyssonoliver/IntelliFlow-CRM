@@ -1,20 +1,44 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Task } from '@/lib/types';
-import { X, RefreshCw } from 'lucide-react';
+import {
+  X,
+  RefreshCw,
+  FileText,
+  FilePlus,
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  ExternalLink,
+  ChevronRight,
+} from 'lucide-react';
 import ContractTagList, { parseContractTags, hasContractTags } from './ContractTagList';
 import ContextPackStatus, { ContextPackData } from './ContextPackStatus';
 
 interface TaskModalProps {
   task: Task;
   onClose: () => void;
+  onNavigateToTask?: (taskId: string) => void;
 }
 
-export default function TaskModal({ task, onClose }: TaskModalProps) {
+interface PlanStatus {
+  taskId: string;
+  hasSpec: boolean;
+  hasPlan: boolean;
+  isPlanned: boolean;
+  specPath: string | null;
+  planPath: string | null;
+}
+
+export default function TaskModal({ task, onClose, onNavigateToTask }: TaskModalProps) {
   const [contextData, setContextData] = useState<ContextPackData | null>(null);
   const [loadingContext, setLoadingContext] = useState(false);
   const [activeTab, setActiveTab] = useState<'details' | 'contract' | 'context'>('details');
+  const [planStatus, setPlanStatus] = useState<PlanStatus | null>(null);
+  const [loadingPlanStatus, setLoadingPlanStatus] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
 
   // Check if task has contract tags
   const hasPrereqTags = hasContractTags(task.prerequisites);
@@ -43,6 +67,82 @@ export default function TaskModal({ task, onClose }: TaskModalProps) {
         });
     }
   }, [activeTab, task.id, contextData, loadingContext]);
+
+  // Load plan status on mount
+  useEffect(() => {
+    setLoadingPlanStatus(true);
+    fetch(`/api/tasks/plan?taskId=${task.id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.taskId) {
+          setPlanStatus(data);
+        }
+      })
+      .catch(() => {
+        // Plan status not critical
+      })
+      .finally(() => {
+        setLoadingPlanStatus(false);
+      });
+  }, [task.id]);
+
+  const handleGeneratePlan = useCallback(async () => {
+    setActionLoading('plan');
+    setActionMessage(null);
+    try {
+      const response = await fetch('/api/tasks/plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskId: task.id }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setActionMessage(`Spec & Plan generated: ${data.specPath}`);
+        // Refresh plan status
+        const planRes = await fetch(`/api/tasks/plan?taskId=${task.id}`);
+        if (planRes.ok) {
+          setPlanStatus(await planRes.json());
+        }
+      } else {
+        setActionMessage(`Error: ${data.error || 'Failed to generate plan'}`);
+      }
+    } catch (err) {
+      setActionMessage(`Error: ${err instanceof Error ? err.message : 'Failed'}`);
+    } finally {
+      setActionLoading(null);
+    }
+  }, [task.id]);
+
+  const handleGeneratePrompt = useCallback(async () => {
+    setActionLoading('prompt');
+    setActionMessage(null);
+    try {
+      const response = await fetch('/api/tasks/generate-prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskIds: [task.id] }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setActionMessage(`Prompt saved to: ${data.savedTo}`);
+      } else {
+        setActionMessage(`Error: ${data.error || 'Failed to generate prompt'}`);
+      }
+    } catch (err) {
+      setActionMessage(`Error: ${err instanceof Error ? err.message : 'Failed'}`);
+    } finally {
+      setActionLoading(null);
+    }
+  }, [task.id]);
+
+  const handleDependencyClick = useCallback(
+    (depId: string) => {
+      if (onNavigateToTask) {
+        onNavigateToTask(depId);
+      }
+    },
+    [onNavigateToTask]
+  );
 
   const refreshContext = () => {
     setLoadingContext(true);
@@ -187,17 +287,81 @@ export default function TaskModal({ task, onClose }: TaskModalProps) {
               {/* Dependencies */}
               {task.dependencies.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">Dependencies</h3>
-                  <div className="flex flex-wrap gap-2">
+                  <h3 className="text-sm font-medium text-gray-500 mb-2">
+                    Dependencies ({task.dependencies.length})
+                  </h3>
+                  <div className="space-y-1">
                     {task.dependencies.map((dep) => (
-                      <span
+                      <button
                         key={dep}
-                        className="px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded"
+                        onClick={() => handleDependencyClick(dep)}
+                        disabled={!onNavigateToTask}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left w-full transition-colors ${
+                          onNavigateToTask
+                            ? 'bg-gray-50 hover:bg-blue-50 cursor-pointer group'
+                            : 'bg-gray-50 cursor-default'
+                        }`}
                       >
-                        {dep}
-                      </span>
+                        <ChevronRight
+                          className={`w-4 h-4 text-gray-400 ${onNavigateToTask ? 'group-hover:text-blue-500' : ''}`}
+                        />
+                        <span className="font-mono text-sm text-blue-700">{dep}</span>
+                        {onNavigateToTask && (
+                          <>
+                            <span className="text-xs text-gray-400 ml-auto">Click to view</span>
+                            <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-blue-500" />
+                          </>
+                        )}
+                      </button>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Plan Status */}
+              {planStatus && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">Spec & Plan Status</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center gap-2">
+                      {planStatus.hasSpec ? (
+                        <CheckCircle2 className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-gray-400" />
+                      )}
+                      <span className="text-sm">
+                        Specification: {planStatus.hasSpec ? 'Exists' : 'Missing'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {planStatus.hasPlan ? (
+                        <CheckCircle2 className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-gray-400" />
+                      )}
+                      <span className="text-sm">
+                        Plan: {planStatus.hasPlan ? 'Exists' : 'Missing'}
+                      </span>
+                    </div>
+                  </div>
+                  {planStatus.specPath && (
+                    <p className="text-xs text-gray-500 mt-2 font-mono truncate">
+                      {planStatus.specPath}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Action Message */}
+              {actionMessage && (
+                <div
+                  className={`p-3 rounded-lg text-sm ${
+                    actionMessage.startsWith('Error')
+                      ? 'bg-red-50 text-red-700'
+                      : 'bg-green-50 text-green-700'
+                  }`}
+                >
+                  {actionMessage}
                 </div>
               )}
             </div>
@@ -362,10 +526,50 @@ export default function TaskModal({ task, onClose }: TaskModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-gray-50 px-6 py-4 flex justify-end border-t border-gray-200">
+        <div className="sticky bottom-0 bg-gray-50 px-6 py-4 flex items-center justify-between border-t border-gray-200">
+          <div className="flex items-center gap-2">
+            {/* Generate Spec & Plan - Show when loading OR when not planned */}
+            {(loadingPlanStatus || (planStatus && !planStatus.isPlanned)) && (
+              <button
+                onClick={handleGeneratePlan}
+                disabled={actionLoading === 'plan' || loadingPlanStatus}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center gap-2 text-sm disabled:opacity-50 transition-colors"
+              >
+                {actionLoading === 'plan' || loadingPlanStatus ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <FilePlus className="w-4 h-4" />
+                )}
+                {loadingPlanStatus ? 'Checking...' : 'Generate Spec & Plan'}
+              </button>
+            )}
+
+            {/* Show badge if already planned */}
+            {planStatus?.isPlanned && (
+              <span className="px-3 py-2 bg-green-100 text-green-700 rounded-lg flex items-center gap-2 text-sm">
+                <CheckCircle2 className="w-4 h-4" />
+                Spec & Plan exists
+              </span>
+            )}
+
+            {/* Generate Implementation Prompt */}
+            <button
+              onClick={handleGeneratePrompt}
+              disabled={actionLoading === 'prompt'}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 text-sm disabled:opacity-50 transition-colors"
+            >
+              {actionLoading === 'prompt' ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <FileText className="w-4 h-4" />
+              )}
+              Generate Prompt
+            </button>
+          </div>
+
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors"
           >
             Close
           </button>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { clsx } from 'clsx';
 import {
   Play,
@@ -19,7 +19,9 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
+  Info,
 } from 'lucide-react';
+import TaskDetailModal from './TaskDetailModal';
 
 interface ExecutionPhase {
   phaseNumber: number;
@@ -35,6 +37,7 @@ interface TaskEntry {
   description: string;
   executionMode: 'swarm' | 'matop' | 'manual';
   parallelStreamId?: string;
+  dependencies?: string[];
 }
 
 interface PhaseProgress {
@@ -128,6 +131,54 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
   const [historyStats, setHistoryStats] = useState<HistoryStats | null>(null);
   const [historyExpanded, setHistoryExpanded] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [promptMessage, setPromptMessage] = useState<string | null>(null);
+  const [promptLoading, setPromptLoading] = useState(false);
+
+  // Task detail modal state
+  const [selectedTask, setSelectedTask] = useState<TaskEntry | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  // Build allTasks map for dependency navigation
+  const allTasks = useMemo(() => {
+    const map = new Map<string, TaskEntry>();
+    phases.forEach((phase) => {
+      phase.tasks.forEach((task) => {
+        map.set(task.taskId, task);
+      });
+    });
+    return map;
+  }, [phases]);
+
+  // Open task modal
+  const openTaskModal = useCallback((task: TaskEntry) => {
+    setSelectedTask(task);
+    setModalOpen(true);
+  }, []);
+
+  // Navigate to another task (from dependencies)
+  const navigateToTask = useCallback(
+    (taskId: string) => {
+      const task = allTasks.get(taskId);
+      if (task) {
+        setSelectedTask(task);
+        // Modal stays open, content updates
+      } else {
+        // Task might be in a different sprint - create a minimal entry
+        setSelectedTask({
+          taskId,
+          description: 'Loading...',
+          executionMode: 'manual',
+        });
+      }
+    },
+    [allTasks]
+  );
+
+  // Close modal
+  const closeModal = useCallback(() => {
+    setModalOpen(false);
+    setSelectedTask(null);
+  }, []);
 
   // Reset state when sprint changes
   useEffect(() => {
@@ -377,6 +428,28 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
     }
   };
 
+  const generateTaskPrompt = async (taskIds: string[], label: string) => {
+    setPromptLoading(true);
+    setPromptMessage(null);
+    try {
+      const response = await fetch('/api/tasks/generate-prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskIds }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setPromptMessage(`Prompt generated for ${label}. Saved to: ${data.savedTo || 'n/a'}`);
+      } else {
+        setPromptMessage(data.error || 'Failed to generate prompt');
+      }
+    } catch (err) {
+      setPromptMessage(err instanceof Error ? err.message : 'Failed to generate prompt');
+    } finally {
+      setPromptLoading(false);
+    }
+  };
+
   const getTrendIcon = (trend: HistoryStats['trend']) => {
     switch (trend) {
       case 'improving':
@@ -559,16 +632,18 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
           return (
             <div key={phase.phaseNumber} className="border rounded-lg overflow-hidden">
               {/* Phase Header */}
-              <button
-                onClick={() => togglePhase(phase.phaseNumber)}
-                className={clsx('w-full px-4 py-3 flex items-center justify-between text-left', {
+              <div
+                className={clsx('w-full px-4 py-3 flex items-center justify-between', {
                   'bg-green-50': status === 'completed',
                   'bg-blue-50': status === 'in_progress',
                   'bg-red-50': status === 'failed',
                   'bg-white': status === 'pending',
                 })}
               >
-                <div className="flex items-center gap-3">
+                <button
+                  onClick={() => togglePhase(phase.phaseNumber)}
+                  className="flex items-center gap-3 text-left flex-1"
+                >
                   {isExpanded ? (
                     <ChevronDown className="w-4 h-4" />
                   ) : (
@@ -579,7 +654,7 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
                     <span className="font-medium">Phase {phase.phaseNumber}</span>
                     <span className="text-gray-500 ml-2">{phase.name}</span>
                   </div>
-                </div>
+                </button>
 
                 <div className="flex items-center gap-4">
                   <span
@@ -596,8 +671,21 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
                       ? `${progress.completedTasks}/${progress.totalTasks}`
                       : `${phase.taskCount} tasks`}
                   </span>
+
+                  <button
+                    onClick={() => {
+                      generateTaskPrompt(
+                        phase.tasks.map((t) => t.taskId),
+                        `Phase ${phase.phaseNumber}`
+                      );
+                    }}
+                    className="px-2 py-1 text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 rounded disabled:opacity-50"
+                    disabled={promptLoading}
+                  >
+                    Generate Phase Prompt
+                  </button>
                 </div>
-              </button>
+              </div>
 
               {/* Phase Tasks */}
               {isExpanded && (
@@ -617,11 +705,16 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
                       return (
                         <div
                           key={task.taskId}
-                          className={clsx('flex items-center gap-3 p-2 rounded bg-white border', {
-                            'border-green-300 bg-green-50': isCompleted,
-                            'border-red-300 bg-red-50': isFailed,
-                            'border-yellow-300 bg-yellow-50': needsHuman,
-                          })}
+                          onClick={() => openTaskModal(task)}
+                          className={clsx(
+                            'flex items-center gap-3 p-2 rounded bg-white border cursor-pointer hover:shadow-md transition-shadow',
+                            {
+                              'border-green-300 bg-green-50 hover:bg-green-100': isCompleted,
+                              'border-red-300 bg-red-50 hover:bg-red-100': isFailed,
+                              'border-yellow-300 bg-yellow-50 hover:bg-yellow-100': needsHuman,
+                              'hover:bg-gray-50': !isCompleted && !isFailed && !needsHuman,
+                            }
+                          )}
                         >
                           {getExecutionModeIcon(task.executionMode)}
 
@@ -636,9 +729,37 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
                             </span>
                           )}
 
+                          {task.dependencies && task.dependencies.length > 0 && (
+                            <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
+                              {task.dependencies.length} deps
+                            </span>
+                          )}
+
                           {isCompleted && <CheckCircle2 className="w-4 h-4 text-green-500" />}
                           {isFailed && <XCircle className="w-4 h-4 text-red-500" />}
                           {needsHuman && <AlertTriangle className="w-4 h-4 text-yellow-500" />}
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openTaskModal(task);
+                            }}
+                            className="px-2 py-1 text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 rounded"
+                            title="View task details"
+                          >
+                            <Info className="w-3 h-3" />
+                          </button>
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              generateTaskPrompt([task.taskId], task.taskId);
+                            }}
+                            className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded"
+                            disabled={promptLoading}
+                          >
+                            Prompt
+                          </button>
                         </div>
                       );
                     })}
@@ -658,6 +779,13 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
           <p className="text-sm mt-2">
             Make sure dependency-graph.json is synced and tasks exist for this sprint.
           </p>
+        </div>
+      )}
+
+      {/* Prompt message */}
+      {promptMessage && (
+        <div className="p-3 bg-blue-50 border border-blue-200 text-blue-700 rounded">
+          {promptMessage}
         </div>
       )}
 
@@ -829,6 +957,17 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
           </div>
         )}
       </div>
+
+      {/* Task Detail Modal */}
+      {selectedTask && (
+        <TaskDetailModal
+          task={selectedTask}
+          isOpen={modalOpen}
+          onClose={closeModal}
+          onNavigateToTask={navigateToTask}
+          allTasks={allTasks}
+        />
+      )}
     </div>
   );
 }

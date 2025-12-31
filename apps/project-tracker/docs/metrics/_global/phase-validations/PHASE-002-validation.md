@@ -82,11 +82,11 @@ The following section documents the original PHASE-002 tasks that were previousl
 - [ ] Next.js 16.0.10 App Router implementation
 - [x] LangChain AI scoring pipeline (apps/ai-worker/src/chains/scoring.chain.ts)
 - [x] Supabase integration with RLS (apps/api/src/lib/supabase.ts)
-- [x] Lead capture form components (apps/web/src/components/lead-form.tsx)
+- [x] Lead capture form components (apps/web/src/app/leads/(list)/new/page.tsx)
 
 ### Artifacts (A)
 
-- [x] apps/web/src/components/lead-form.tsx
+- [x] apps/web/src/app/leads/(list)/new/page.tsx
 - [x] apps/ai-worker/src/chains/scoring.chain.ts
 - [x] apps/api/src/lib/supabase.ts
 - [x] artifacts/lighthouse/lighthouse-report.json

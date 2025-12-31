@@ -8,14 +8,15 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const runtime = 'nodejs';
 
-type AuditStreamCommand = 'run-audit' | 'status-snapshot' | 'sprint0-audit' | 'affected';
+type AuditStreamCommand = 'run-audit' | 'status-snapshot' | 'sprint0-audit' | 'affected' | 'sprint-completion';
 
 function isAuditStreamCommand(value: string | null): value is AuditStreamCommand {
   return (
     value === 'run-audit' ||
     value === 'status-snapshot' ||
     value === 'sprint0-audit' ||
-    value === 'affected'
+    value === 'affected' ||
+    value === 'sprint-completion'
   );
 }
 
@@ -75,7 +76,7 @@ function getIntParam(searchParams: URLSearchParams, key: string, fallback: numbe
 function buildCommand(
   cmd: AuditStreamCommand,
   searchParams: URLSearchParams
-): { displayName: string; runId?: string; argv: string[] } {
+): { displayName: string; runId?: string; argv: string[]; useShell?: boolean } {
   const python = getPythonCommand();
 
   if (cmd === 'run-audit') {
@@ -126,6 +127,33 @@ function buildCommand(
     };
   }
 
+  if (cmd === 'sprint-completion') {
+    const sprint = getIntParam(searchParams, 'sprint', 0);
+    const strict = getBoolParam(searchParams, 'strict');
+    const skipValidations = getBoolParam(searchParams, 'skipValidations');
+    const runId = generateRunId(`sprint${sprint}-audit`);
+
+    // Use pnpm tsx which is more reliable across platforms
+    const args: string[] = [
+      'pnpm',
+      'tsx',
+      path.join('tools', 'scripts', 'audit-sprint-completion.ts'),
+      '--sprint',
+      String(sprint),
+      '--run-id',
+      runId,
+    ];
+    if (strict) args.push('--strict');
+    if (skipValidations) args.push('--skip-validations');
+
+    return {
+      displayName: `Sprint ${sprint} Completion Audit`,
+      runId,
+      argv: args,
+      useShell: true, // Required for pnpm/npx on Windows
+    };
+  }
+
   // cmd === 'affected'
   {
     const baseRef = getStringParam(searchParams, 'baseRef') ?? 'origin/main';
@@ -152,7 +180,7 @@ export async function GET(request: NextRequest) {
     return new Response(
       JSON.stringify({
         error: 'Invalid cmd',
-        valid: ['run-audit', 'status-snapshot', 'sprint0-audit', 'affected'],
+        valid: ['run-audit', 'status-snapshot', 'sprint0-audit', 'affected', 'sprint-completion'],
       }),
       { status: 400, headers: { 'Content-Type': 'application/json' } }
     );
@@ -192,7 +220,7 @@ export async function GET(request: NextRequest) {
       };
 
       try {
-        const { displayName, runId, argv } = buildCommand(cmdRaw, searchParams);
+        const { displayName, runId, argv, useShell } = buildCommand(cmdRaw, searchParams);
 
         sendSse(controller, encoder, 'start', {
           cmd: cmdRaw,
@@ -216,7 +244,7 @@ export async function GET(request: NextRequest) {
           cwd: repoRoot,
           env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
           stdio: ['ignore', 'pipe', 'pipe'],
-          shell: false,
+          shell: useShell ?? false,
         });
 
         let stdoutBuf = '';

@@ -14,6 +14,7 @@ import {
   Shield,
   Terminal,
   Zap,
+  FolderOpen,
 } from 'lucide-react';
 import { parseCSV, type ParsedCSVData } from '@/lib/csv-parser';
 import { useTaskData } from '@/lib/TaskDataContext';
@@ -28,12 +29,14 @@ import AuditView from '@/components/AuditView';
 import ContractsView from '@/components/ContractsView';
 import TaskModal from '@/components/TaskModal';
 import SprintExecutionView from '@/components/SprintExecutionView';
+import ArtifactsView from '@/components/ArtifactsView';
 
 type Page =
   | 'dashboard'
   | 'kanban'
   | 'analytics'
   | 'metrics'
+  | 'artifacts'
   | 'governance'
   | 'contracts'
   | 'audit'
@@ -207,6 +210,17 @@ export default function Home() {
               Metrics
             </button>
             <button
+              onClick={() => setCurrentPage('artifacts')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
+                currentPage === 'artifacts'
+                  ? 'bg-amber-600 text-white'
+                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              <FolderOpen className="w-4 h-4" />
+              Artifacts
+            </button>
+            <button
               onClick={() => setCurrentPage('sprint-execution')}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
                 currentPage === 'sprint-execution'
@@ -311,6 +325,14 @@ export default function Home() {
               <AnalyticsView tasks={filteredTasks} sections={sections} />
             )}
             {currentPage === 'metrics' && <MetricsView selectedSprint={currentSprint} />}
+            {currentPage === 'artifacts' && (
+              <ArtifactsView
+                onTaskClick={(taskId) => {
+                  const task = allTasks.find((t) => t.id === taskId);
+                  if (task) handleTaskClick(task);
+                }}
+              />
+            )}
             {currentPage === 'governance' && <GovernanceView selectedSprint={currentSprint} />}
             {currentPage === 'contracts' && (
               <ContractsView tasks={filteredTasks} sprint={currentSprint} />
@@ -327,7 +349,18 @@ export default function Home() {
       </main>
 
       {/* Task Modal */}
-      {selectedTask && <TaskModal task={selectedTask} onClose={handleCloseModal} />}
+      {selectedTask && (
+        <TaskModal
+          task={selectedTask}
+          onClose={handleCloseModal}
+          onNavigateToTask={(taskId) => {
+            const task = allTasks.find((t) => t.id === taskId);
+            if (task) {
+              selectTask(task);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

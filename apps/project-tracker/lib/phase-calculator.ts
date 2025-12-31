@@ -47,7 +47,10 @@ export function calculatePhases(
       sprint === String(sprintNumber) ||
       (sprintNumber === -1 && sprint === 'Continuous');
 
-    return inSprint && t.Status !== 'Done' && t.Status !== 'Completed';
+    const statusNorm = (t.Status || '').trim().toLowerCase();
+    const isCompleted = statusNorm === 'done' || statusNorm === 'completed';
+
+    return inSprint && !isCompleted;
   });
 
   const taskIds = new Set(sprintTasks.map((t) => t['Task ID']));
@@ -447,7 +450,8 @@ export function getReadyTasks(
         sprint === String(sprintNumber) ||
         (sprintNumber === -1 && sprint === 'Continuous');
       const isReady = readyTaskIds.has(t['Task ID']);
-      const notDone = t.Status !== 'Done' && t.Status !== 'Completed';
+      const statusNorm = (t.Status || '').trim().toLowerCase();
+      const notDone = statusNorm !== 'done' && statusNorm !== 'completed';
 
       return isTargetSprint && isReady && notDone;
     })
@@ -473,7 +477,8 @@ export function getBlockedTasks(
         sprint === String(sprintNumber) ||
         (sprintNumber === -1 && sprint === 'Continuous');
       const isBlocked = blockedTaskIds.has(t['Task ID']);
-      const notDone = t.Status !== 'Done' && t.Status !== 'Completed';
+      const statusNorm = (t.Status || '').trim().toLowerCase();
+      const notDone = statusNorm !== 'done' && statusNorm !== 'completed';
 
       return isTargetSprint && isBlocked && notDone;
     })

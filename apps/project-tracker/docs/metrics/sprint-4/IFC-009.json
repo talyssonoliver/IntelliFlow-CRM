@@ -8,12 +8,18 @@
   "phase": "phase-002-capability-assessment",
   "stream": null,
   "dependencies": {
-    "required": ["IFC-001", "IFC-005"],
-    "verified_at": "2025-12-28T23:24:52.999Z",
+    "required": [
+      "IFC-001",
+      "IFC-005"
+    ],
+    "verified_at": "2025-12-31T06:44:28.935Z",
     "all_satisfied": true,
     "notes": "IFC-001 (Technical Architecture Spike) and IFC-005 (Technology Stack Validation) verified as DONE"
   },
-  "dependencies_resolved": ["IFC-001", "IFC-005"],
+  "dependencies_resolved": [
+    "IFC-001",
+    "IFC-005"
+  ],
   "status": "DONE",
   "started_at": "2025-12-26T21:55:00Z",
   "completed_at": "2025-12-26T22:05:00Z",
@@ -41,7 +47,10 @@
     "completed_at": "2025-12-26T22:05:00Z",
     "duration_minutes": 10,
     "executor": "Claude Code Agent (STOA-Foundation)",
-    "agents": ["STOA-Foundation", "Claude-Opus-4.5"],
+    "agents": [
+      "STOA-Foundation",
+      "Claude-Opus-4.5"
+    ],
     "execution_log": "artifacts/attestations/IFC-009/context_ack.json",
     "log_path": "artifacts/attestations/IFC-009/context_ack.json",
     "retry_count": 0,

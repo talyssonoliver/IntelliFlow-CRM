@@ -13,6 +13,42 @@
     "not_started": 0,
     "failed": 0
   },
-  "notes": "7/7 tasks DONE (100%). Last synced: 2025-12-28T23:24:53.089Z",
-  "completed_tasks": []
+  "notes": "7/7 tasks DONE (100%). Last synced: 2025-12-31T06:44:30.001Z",
+  "completed_tasks": [
+    {
+      "task_id": "IFC-089",
+      "completed_at": "2025-12-31T06:44:30.001Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-098",
+      "completed_at": "2025-12-31T06:44:30.001Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-111",
+      "completed_at": "2025-12-31T06:44:30.001Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-112",
+      "completed_at": "2025-12-31T06:44:30.001Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-130",
+      "completed_at": "2025-12-31T06:44:30.001Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-138",
+      "completed_at": "2025-12-31T06:44:30.001Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-147",
+      "completed_at": "2025-12-31T06:44:30.001Z",
+      "duration_minutes": 15
+    }
+  ]
 }

@@ -5,8 +5,10 @@
   "description": "IaC with Terraform",
   "owner": "DevOps",
   "dependencies": {
-    "required": ["IFC-001"],
-    "verified_at": "2025-12-28T23:24:52.673Z",
+    "required": [
+      "IFC-001"
+    ],
+    "verified_at": "2025-12-31T06:44:27.574Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -32,8 +34,13 @@
     "execution_log": "logs/sprint-1/IFC-075.log"
   },
   "artifacts": {
-    "expected": ["infra/terraform/*", "infra/terraform/main.tf"],
-    "created": ["infra/terraform/main.tf"],
+    "expected": [
+      "infra/terraform/*",
+      "infra/terraform/main.tf"
+    ],
+    "created": [
+      "infra/terraform/main.tf"
+    ],
     "missing": []
   },
   "validations": [
@@ -64,5 +71,7 @@
   "completed_at": "2025-12-27T11:33:39.039Z",
   "started_at": "2025-12-27T11:18:39.039Z",
   "actual_duration_minutes": 15,
-  "dependencies_resolved": ["IFC-001"]
+  "dependencies_resolved": [
+    "IFC-001"
+  ]
 }

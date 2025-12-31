@@ -346,12 +346,19 @@ export async function GET(request: Request) {
   const specExists = existsSync(specFile);
   const planExists = existsSync(planFile);
 
-  return NextResponse.json({
-    taskId,
-    hasSpec: specExists,
-    hasPlan: planExists,
-    isPlanned: specExists && planExists,
-    specPath: specExists ? `.specify/specifications/${taskId}.md` : null,
-    planPath: planExists ? `.specify/planning/${taskId}.md` : null,
-  });
+  return NextResponse.json(
+    {
+      taskId,
+      hasSpec: specExists,
+      hasPlan: planExists,
+      isPlanned: specExists && planExists,
+      specPath: specExists ? `.specify/specifications/${taskId}.md` : null,
+      planPath: planExists ? `.specify/planning/${taskId}.md` : null,
+    },
+    {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0',
+      },
+    }
+  );
 }
