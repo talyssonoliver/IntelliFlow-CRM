@@ -433,7 +433,7 @@ function WinRateTrendCard({ data }: { data: WinRateData[] }) {
       <div className="h-24 flex items-end gap-1 mt-4">
         {data.map((item, index) => (
           <div
-            key={item.month}
+            key={`${item.month}-${index}`}
             className={`flex-1 rounded-t transition-all hover:opacity-80 ${
               item.isProjected
                 ? 'bg-slate-200 dark:bg-slate-700 border-t-2 border-dashed border-slate-400'
@@ -447,8 +447,8 @@ function WinRateTrendCard({ data }: { data: WinRateData[] }) {
         ))}
       </div>
       <div className="flex justify-between mt-2 text-[10px] text-slate-400">
-        {data.map((item) => (
-          <span key={item.month}>{item.month}</span>
+        {data.map((item, index) => (
+          <span key={`${item.month}-label-${index}`}>{item.month}</span>
         ))}
       </div>
     </Card>

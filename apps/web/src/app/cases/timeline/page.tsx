@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@intelliflow/ui';
 import {
@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
+import { useRemindersOptional } from '@/lib/cases/reminders-context';
 
 // Timeline event types
 type TimelineEventType =
@@ -308,7 +309,7 @@ const formatDate = (date: Date): string => {
   return date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
-    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+    year: date.getFullYear() === now.getFullYear() ? undefined : 'numeric',
   });
 };
 
@@ -639,7 +640,7 @@ function StatsSummary({ events }: Readonly<StatsSummaryProps>) {
 }
 
 // Main Timeline Component
-export function CaseTimeline({
+function CaseTimeline({
   caseId: _caseId,
   events: externalEvents,
   onEventClick,
@@ -929,11 +930,14 @@ function transformApiEvent(apiEvent: any): TimelineEvent {
   };
 }
 
-// Page Component
-export default function CaseTimelinePage() {
+// Inner Page Content Component (uses searchParams)
+function CaseTimelinePageContent() {
   const searchParams = useSearchParams();
   const dealId = searchParams.get('dealId');
   const caseId = searchParams.get('caseId') || dealId || 'demo-case-1';
+
+  // Get reminders context (optional - works without provider)
+  const reminders = useRemindersOptional();
 
   // Fetch timeline data from API
   const {
@@ -959,6 +963,22 @@ export default function CaseTimelinePage() {
     if (!timelineData?.events) return null;
     return timelineData.events.map(transformApiEvent);
   }, [timelineData]);
+
+  // Create reminders from timeline events
+  React.useEffect(() => {
+    if (apiEvents && reminders) {
+      // Create reminders from future events (tasks, deadlines, appointments)
+      // Map to TimelineEvent format expected by reminders service
+      const reminderEvents = apiEvents.map(e => ({
+        ...e,
+        timestamp: e.date,
+      })) as any[];
+      reminders.createFromTimelineEvents(reminderEvents);
+    }
+    // Only depend on apiEvents - we want to recreate reminders when events change,
+    // not when the reminders service state changes (which would cause infinite loop)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiEvents]);
 
   const handleEventClick = (event: TimelineEvent) => {
     console.log('Event clicked:', event);
@@ -1028,5 +1048,26 @@ export default function CaseTimelinePage() {
         onAddAppointment={handleAddAppointment}
       />
     </div>
+  );
+}
+
+// Loading fallback
+function TimelineLoadingFallback() {
+  return (
+    <div className="container mx-auto py-8 px-4 max-w-5xl">
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <span className="ml-3 text-gray-600">Loading timeline...</span>
+      </div>
+    </div>
+  );
+}
+
+// Page Component - wrapped with Suspense
+export default function CaseTimelinePage() {
+  return (
+    <Suspense fallback={<TimelineLoadingFallback />}>
+      <CaseTimelinePageContent />
+    </Suspense>
   );
 }

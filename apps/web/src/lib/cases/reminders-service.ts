@@ -7,7 +7,7 @@
  * Task: IFC-147 - Case Timeline UI with Deadline Engine
  */
 
-import type { TimelineEvent, TimelinePriority } from '@/lib/timeline/types';
+import type { TimelineEvent, TimelinePriority } from '../../../lib/timeline/types';
 
 // =============================================================================
 // Types
@@ -155,7 +155,7 @@ class RemindersService {
           type: this.mapEventTypeToReminderType(event.type),
           title: event.title,
           description: event.description || undefined,
-          dueDate: event.date,
+          dueDate: event.timestamp,
           priority: event.priority || 'medium',
           entityType: this.mapEntityType(event.type),
           entityId: event.id,
@@ -345,7 +345,7 @@ class RemindersService {
   private shouldCreateReminder(event: TimelineEvent): boolean {
     // Create reminders for future tasks, deadlines, and appointments
     const now = new Date();
-    if (event.date <= now) return false;
+    if (event.timestamp <= now) return false;
 
     const reminderTypes = ['task', 'deadline', 'appointment'];
     return reminderTypes.includes(event.type);

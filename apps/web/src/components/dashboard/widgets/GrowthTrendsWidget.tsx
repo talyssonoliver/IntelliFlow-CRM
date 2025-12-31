@@ -1,11 +1,44 @@
 'use client';
 
+import { trpc } from '@/lib/trpc';
 import type { WidgetProps } from './index';
 
+interface GrowthTrendData {
+  value: number;
+  month: string;
+  yoyChange?: number;
+}
+
 export function GrowthTrendsWidget(_props: WidgetProps) {
-  // Sample data points for the line chart (normalized 0-100)
-  const dataPoints = [20, 35, 28, 45, 42, 55, 48, 62, 58, 72, 68, 85];
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const { data: trendData, isLoading } = trpc.analytics.growthTrends.useQuery({
+    metric: 'revenue',
+    months: 12,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="p-5 h-full flex flex-col animate-pulse">
+        <div className="flex items-center justify-between mb-4">
+          <div className="h-6 w-40 rounded bg-slate-200 dark:bg-slate-700" />
+          <div className="h-6 w-20 rounded bg-slate-200 dark:bg-slate-700" />
+        </div>
+        <div className="flex-1 min-h-[120px] rounded bg-slate-200 dark:bg-slate-700" />
+        <div className="flex justify-between mt-2">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-3 w-8 rounded bg-slate-200 dark:bg-slate-700" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!trendData || trendData.length === 0) {
+    return null;
+  }
+
+  const dataPoints = trendData.map((d: GrowthTrendData) => d.value);
+  const months = trendData.map((d: GrowthTrendData) => d.month);
+  const yoyChange = trendData[trendData.length - 1]?.yoyChange || 0;
 
   return (
     <div className="p-5 h-full flex flex-col">
@@ -14,9 +47,15 @@ export function GrowthTrendsWidget(_props: WidgetProps) {
           <span className="material-symbols-outlined text-slate-400">show_chart</span>
           Growth Trends
         </h3>
-        <span className="text-xs font-medium text-emerald-500 flex items-center bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded">
-          +24.5% YoY
-        </span>
+        {yoyChange !== 0 && (
+          <span className={`text-xs font-medium flex items-center px-1.5 py-0.5 rounded ${
+            yoyChange >= 0
+              ? 'text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10'
+              : 'text-red-500 bg-red-50 dark:bg-red-500/10'
+          }`}>
+            {yoyChange >= 0 ? '+' : ''}{yoyChange}% YoY
+          </span>
+        )}
       </div>
 
       {/* Simple line chart visualization */}
@@ -29,14 +68,14 @@ export function GrowthTrendsWidget(_props: WidgetProps) {
 
           {/* Area fill */}
           <path
-            d={`M0,${100 - dataPoints[0]} ${dataPoints.map((p, i) => `L${(i / (dataPoints.length - 1)) * 300},${100 - p}`).join(' ')} L300,100 L0,100 Z`}
+            d={`M0,${100 - dataPoints[0]} ${dataPoints.map((p: number, i: number) => `L${(i / (dataPoints.length - 1)) * 300},${100 - p}`).join(' ')} L300,100 L0,100 Z`}
             fill="url(#gradient)"
             opacity="0.2"
           />
 
           {/* Line */}
           <path
-            d={`M0,${100 - dataPoints[0]} ${dataPoints.map((p, i) => `L${(i / (dataPoints.length - 1)) * 300},${100 - p}`).join(' ')}`}
+            d={`M0,${100 - dataPoints[0]} ${dataPoints.map((p: number, i: number) => `L${(i / (dataPoints.length - 1)) * 300},${100 - p}`).join(' ')}`}
             fill="none"
             stroke="#137fec"
             strokeWidth="2"
@@ -56,7 +95,7 @@ export function GrowthTrendsWidget(_props: WidgetProps) {
 
       {/* X-axis labels */}
       <div className="flex justify-between mt-2 text-xs text-slate-400">
-        {months.filter((_, i) => i % 3 === 0).map((month) => (
+        {months.filter((_: string, i: number) => i % 3 === 0).map((month: string) => (
           <span key={month}>{month}</span>
         ))}
       </div>

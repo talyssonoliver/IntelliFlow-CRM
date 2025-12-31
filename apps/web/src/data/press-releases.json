@@ -1,0 +1,82 @@
+{
+  "metadata": {
+    "lastUpdated": "2025-01-15",
+    "totalReleases": 4
+  },
+  "releases": [
+    {
+      "id": "pr-004",
+      "date": "2025-01-15",
+      "title": "IntelliFlow CRM Launches AI-Powered Lead Scoring Engine",
+      "summary": "New machine learning capabilities enable sales teams to prioritize leads with 95% accuracy, reducing time-to-conversion by 40%.",
+      "category": "Product",
+      "featured": true
+    },
+    {
+      "id": "pr-003",
+      "date": "2024-12-20",
+      "title": "IntelliFlow CRM Achieves ISO 27001 Certification",
+      "summary": "Enterprise-grade security validation demonstrates commitment to protecting customer data with governance-grade controls.",
+      "category": "Security",
+      "featured": false
+    },
+    {
+      "id": "pr-002",
+      "date": "2024-11-15",
+      "title": "IntelliFlow CRM Announces Partnership with Major ERP Providers",
+      "summary": "New integrations with SAP and Oracle enable seamless data flow between CRM and enterprise resource planning systems.",
+      "category": "Partnership",
+      "featured": false
+    },
+    {
+      "id": "pr-001",
+      "date": "2024-10-01",
+      "title": "IntelliFlow CRM Emerges from Stealth with $5M Seed Funding",
+      "summary": "AI-first CRM platform launches with backing from leading venture capital firms, targeting modern sales teams seeking automation with governance.",
+      "category": "Company",
+      "featured": false
+    }
+  ],
+  "mediaKit": {
+    "description": "Download our media kit for brand assets, executive bios, product screenshots, and company fact sheet.",
+    "downloadUrl": "/media/intelliflow-media-kit.zip",
+    "lastUpdated": "2025-01-01"
+  },
+  "pressContact": {
+    "name": "Media Relations",
+    "email": "press@intelliflow-crm.com",
+    "phone": "+1 (555) 123-4567"
+  },
+  "companyFacts": [
+    {
+      "label": "Founded",
+      "value": "2024"
+    },
+    {
+      "label": "Headquarters",
+      "value": "London, UK"
+    },
+    {
+      "label": "Employees",
+      "value": "25+"
+    },
+    {
+      "label": "Customers",
+      "value": "100+"
+    }
+  ],
+  "awards": [
+    {
+      "id": "award-1",
+      "title": "Best AI CRM Solution 2025",
+      "organization": "CRM Magazine",
+      "year": 2025
+    },
+    {
+      "id": "award-2",
+      "title": "Top 10 B2B Startups to Watch",
+      "organization": "TechCrunch",
+      "year": 2024
+    }
+  ]
+}

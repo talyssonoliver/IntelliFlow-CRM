@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
+import { SLAStatusBadge as SLAStatusBadgeModule } from '../../../lib/tickets/sla-badge';
 
 // =============================================================================
 // Types
@@ -219,19 +220,15 @@ function SLATimer({ slaStatus, timeRemaining }: { slaStatus: SLAStatus; timeRema
 }
 
 // =============================================================================
-// SLA Status Badge Component
+// SLA Status Badge Component (Using Module Implementation)
 // =============================================================================
 
+/**
+ * Wrapper for SLA Status Badge from lib/tickets/sla-badge.tsx
+ * Using real SLA module implementation (IFC-093)
+ */
 function SLAStatusBadge({ slaStatus }: { slaStatus: SLAStatus }) {
-  const config = getSLAConfig(slaStatus);
-
-  return (
-    <span
-      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${config.badgeBg} ${config.badgeText} border ${config.borderColor}`}
-    >
-      {config.label}
-    </span>
-  );
+  return <SLAStatusBadgeModule status={slaStatus} size="md" />;
 }
 
 // =============================================================================

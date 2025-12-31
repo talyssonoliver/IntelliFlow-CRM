@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Card } from '@intelliflow/ui';
+import { Card, ToastProvider, ToastViewport, Toast, ToastTitle, ToastDescription, ToastClose } from '@intelliflow/ui';
+import { trpc } from '@/lib/trpc';
 
 // Step configuration
 type StepId = 'basic' | 'company' | 'qualification';
@@ -121,12 +122,25 @@ const timelineOptions = [
   { value: 'unknown', label: 'Unknown / Not discussed' },
 ];
 
+type ToastData = {
+  open: boolean;
+  variant: 'default' | 'destructive' | 'success';
+  title: string;
+  description: string;
+};
+
 export default function CreateNewLeadPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<StepId>('basic');
   const [formData, setFormData] = useState<LeadFormData>(initialFormData);
   const [errors, setErrors] = useState<Partial<Record<keyof LeadFormData, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [toast, setToast] = useState<ToastData>({
+    open: false,
+    variant: 'default',
+    title: '',
+    description: '',
+  });
 
   const currentStepIndex = steps.findIndex(s => s.id === currentStep);
 
@@ -179,26 +193,81 @@ export default function CreateNewLeadPage() {
     }
   };
 
+  // tRPC mutation for creating leads (IFC-004 integration)
+  const createLead = trpc.lead.create.useMutation({
+    onSuccess: () => {
+      // Show success toast
+      setToast({
+        open: true,
+        variant: 'success',
+        title: 'Success!',
+        description: 'Lead created successfully. Redirecting...',
+      });
+
+      // Redirect to leads list after a short delay
+      setTimeout(() => {
+        router.push('/leads');
+      }, 1500);
+    },
+    onError: (error) => {
+      console.error('Failed to create lead:', error.message);
+
+      // Show error toast
+      setToast({
+        open: true,
+        variant: 'destructive',
+        title: 'Failed to create lead',
+        description: error.message,
+      });
+    },
+  });
+
   // Handle form submission
   const handleSubmit = async () => {
     if (!validateStep()) return;
 
     setIsSubmitting(true);
     try {
-      // TODO: Call tRPC mutation to create lead
-      console.log('Creating lead:', formData);
+      // Map form data to API schema (createLeadSchema from @intelliflow/validators)
+      // Note: Additional BANT qualification fields (budget, authority, need, timeline)
+      // are not yet supported by the API schema - TODO: Extend schema or store separately
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Helper to convert empty strings to undefined
+      const toOptional = (value: string): string | undefined =>
+        value.trim() ? value.trim() : undefined;
 
-      // Redirect to leads list on success
-      router.push('/leads');
+      const leadData = {
+        email: formData.email.trim(),
+        firstName: toOptional(formData.firstName),
+        lastName: toOptional(formData.lastName),
+        company: toOptional(formData.company),
+        title: toOptional(formData.jobTitle),
+        phone: toOptional(formData.phone),
+        source: mapSourceToEnum(formData.source),
+      };
+
+      await createLead.mutateAsync(leadData);
+      // Success handled by mutation onSuccess callback
     } catch (error) {
-      console.error('Failed to create lead:', error);
+      // Error handled by mutation onError callback
+      console.error('Mutation error:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Map UI source values to API enum
+  function mapSourceToEnum(source: string): 'WEBSITE' | 'REFERRAL' | 'SOCIAL' | 'EMAIL' | 'COLD_CALL' | 'EVENT' | 'OTHER' {
+    const sourceMap: Record<string, 'WEBSITE' | 'REFERRAL' | 'SOCIAL' | 'EMAIL' | 'COLD_CALL' | 'EVENT' | 'OTHER'> = {
+      'website': 'WEBSITE',
+      'referral': 'REFERRAL',
+      'linkedin': 'SOCIAL',
+      'conference': 'EVENT',
+      'cold_outreach': 'COLD_CALL',
+      'other': 'OTHER',
+    };
+    return sourceMap[source] || 'OTHER';
+  }
 
   // Cancel and go back
   const handleCancel = () => {
@@ -223,7 +292,8 @@ export default function CreateNewLeadPage() {
   };
 
   return (
-    <div className="flex flex-col gap-8">
+    <ToastProvider>
+      <div className="flex flex-col gap-8">
       {/* Breadcrumb */}
       <div className="flex flex-col gap-4">
         <nav aria-label="Breadcrumb" className="flex">
@@ -758,5 +828,16 @@ export default function CreateNewLeadPage() {
         </div>
       </div>
     </div>
+
+    {/* Toast Notifications */}
+    <Toast open={toast.open} onOpenChange={(open) => setToast({ ...toast, open })} variant={toast.variant}>
+      <div className="grid gap-1">
+        <ToastTitle>{toast.title}</ToastTitle>
+        <ToastDescription>{toast.description}</ToastDescription>
+      </div>
+      <ToastClose />
+    </Toast>
+    <ToastViewport />
+  </ToastProvider>
   );
 }

@@ -8,8 +8,60 @@ import { Navigation } from '@/components/navigation';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'IntelliFlow CRM',
-  description: 'AI-powered CRM for intelligent sales automation',
+  title: {
+    default: 'IntelliFlow CRM - AI-Powered Customer Relationship Management',
+    template: '%s | IntelliFlow CRM',
+  },
+  description:
+    'Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.',
+  keywords: [
+    'CRM',
+    'customer relationship management',
+    'AI CRM',
+    'lead scoring',
+    'sales automation',
+    'pipeline management',
+    'sales analytics',
+  ],
+  authors: [{ name: 'IntelliFlow Team' }],
+  creator: 'IntelliFlow',
+  publisher: 'IntelliFlow',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  metadataBase: new URL('https://intelliflow-crm.com'),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: 'IntelliFlow CRM - AI-Powered Sales Intelligence',
+    description:
+      'Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.',
+    url: 'https://intelliflow-crm.com',
+    siteName: 'IntelliFlow CRM',
+    locale: 'en_GB',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'IntelliFlow CRM - AI-Powered Sales Intelligence',
+    description:
+      'Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.',
+    creator: '@intelliflowcrm',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

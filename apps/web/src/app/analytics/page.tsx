@@ -1,8 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
+import {
+  exportAnalyticsToCSV,
+  exportPipelineToCSV,
+  exportAnalyticsToPDF,
+  type AnalyticsMetric,
+  type PipelineStage,
+} from '@/lib/export';
 
 const reportViews = [
   { id: 'overview', label: 'Overview', icon: 'dashboard', count: null },
@@ -17,8 +24,67 @@ const savedReports = [
   { id: 'quarterly', label: 'Q4 Performance', color: 'bg-amber-500' },
 ];
 
+// Analytics data for display and export
+const analyticsMetrics: AnalyticsMetric[] = [
+  { name: 'Lead Conversion Rate', value: '32%', trend: '+5.2%', period: 'vs last period' },
+  { name: 'Average Deal Size', value: '$24,500', trend: '+12%', period: 'vs last period' },
+  { name: 'Sales Cycle', value: '28 days', trend: '-3 days', period: 'vs last period' },
+  { name: 'AI Score Accuracy', value: '94%', trend: '+2%', period: 'prediction accuracy' },
+];
+
+const pipelineStages: PipelineStage[] = [
+  { stage: 'Qualification', value: '$12,400', deals: 8, percentage: 15 },
+  { stage: 'Proposal', value: '$34,200', deals: 12, percentage: 40 },
+  { stage: 'Negotiation', value: '$120,000', deals: 4, percentage: 25 },
+  { stage: 'Closed Won', value: '$40,000', deals: 2, percentage: 20 },
+];
+
 export default function AnalyticsPage() {
   const [activeView, setActiveView] = useState('overview');
+  const [selectedPeriod, setSelectedPeriod] = useState('30d');
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const exportMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close export menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
+        setExportMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const getPeriodLabel = () => {
+    const labels: Record<string, string> = {
+      '7d': 'Last 7 days',
+      '30d': 'Last 30 days',
+      '90d': 'Last 90 days',
+      'ytd': 'Year to date',
+    };
+    return labels[selectedPeriod] || 'Last 30 days';
+  };
+
+  const handleExportCSV = (type: 'metrics' | 'pipeline' | 'all') => {
+    const timestamp = new Date().toISOString().split('T')[0];
+    if (type === 'metrics' || type === 'all') {
+      exportAnalyticsToCSV(analyticsMetrics, `analytics-metrics-${timestamp}`);
+    }
+    if (type === 'pipeline' || type === 'all') {
+      exportPipelineToCSV(pipelineStages, `pipeline-report-${timestamp}`);
+    }
+    setExportMenuOpen(false);
+  };
+
+  const handleExportPDF = () => {
+    exportAnalyticsToPDF({
+      metrics: analyticsMetrics,
+      pipeline: pipelineStages,
+      period: getPeriodLabel(),
+    });
+    setExportMenuOpen(false);
+  };
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)]">
@@ -103,16 +169,73 @@ export default function AnalyticsPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <select className="px-3 py-2 border border-border-light dark:border-border-dark rounded-lg bg-surface-light dark:bg-surface-dark text-slate-700 dark:text-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#137fec]">
+            <select
+              value={selectedPeriod}
+              onChange={(e) => setSelectedPeriod(e.target.value)}
+              className="px-3 py-2 border border-border-light dark:border-border-dark rounded-lg bg-surface-light dark:bg-surface-dark text-slate-700 dark:text-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#137fec]"
+            >
               <option value="7d">Last 7 days</option>
               <option value="30d">Last 30 days</option>
               <option value="90d">Last 90 days</option>
               <option value="ytd">Year to date</option>
             </select>
-            <button className="inline-flex items-center gap-2 bg-ds-primary hover:bg-ds-primary-hover text-white font-bold py-2.5 px-5 rounded-lg shadow-sm shadow-ds-primary/30 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-ds-primary focus:ring-offset-2 group">
-              <span className="material-symbols-outlined text-lg transition-transform group-hover:scale-110">download</span>
-              Export
-            </button>
+
+            {/* Export Dropdown */}
+            <div className="relative" ref={exportMenuRef}>
+              <button
+                onClick={() => setExportMenuOpen(!exportMenuOpen)}
+                className="inline-flex items-center gap-2 bg-ds-primary hover:bg-ds-primary-hover text-white font-bold py-2.5 px-5 rounded-lg shadow-sm shadow-ds-primary/30 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-ds-primary focus:ring-offset-2 group"
+              >
+                <span className="material-symbols-outlined text-lg transition-transform group-hover:scale-110">download</span>
+                Export
+                <span className={`material-symbols-outlined text-sm transition-transform ${exportMenuOpen ? 'rotate-180' : ''}`}>
+                  expand_more
+                </span>
+              </button>
+
+              {/* Export Menu */}
+              {exportMenuOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-surface-dark rounded-lg shadow-lg border border-border-light dark:border-border-dark z-50 overflow-hidden">
+                  <div className="py-1">
+                    <div className="px-3 py-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-border-light dark:border-border-dark">
+                      CSV Export
+                    </div>
+                    <button
+                      onClick={() => handleExportCSV('metrics')}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-lg text-slate-400">table_chart</span>
+                      Metrics Only
+                    </button>
+                    <button
+                      onClick={() => handleExportCSV('pipeline')}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-lg text-slate-400">waterfall_chart</span>
+                      Pipeline Only
+                    </button>
+                    <button
+                      onClick={() => handleExportCSV('all')}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-lg text-slate-400">download</span>
+                      All Data (CSV)
+                    </button>
+
+                    <div className="px-3 py-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-t border-b border-border-light dark:border-border-dark mt-1">
+                      PDF Export
+                    </div>
+                    <button
+                      onClick={handleExportPDF}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-lg text-red-500">picture_as_pdf</span>
+                      Full Report (PDF)
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

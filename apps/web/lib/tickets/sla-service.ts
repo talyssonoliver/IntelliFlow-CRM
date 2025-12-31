@@ -8,16 +8,14 @@
  * @implements FLOW-013 (SLA management flow)
  */
 
-// SLA status types matching Prisma schema
-export type SLAStatus = 'ON_TRACK' | 'AT_RISK' | 'BREACHED' | 'PAUSED' | 'MET';
-export type TicketPriority = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
-export type TicketStatus =
-  | 'OPEN'
-  | 'IN_PROGRESS'
-  | 'WAITING_ON_CUSTOMER'
-  | 'WAITING_ON_THIRD_PARTY'
-  | 'RESOLVED'
-  | 'CLOSED';
+// Import domain constants - single source of truth
+import type { SLAStatus, TicketPriority, TicketStatus } from '@intelliflow/domain';
+
+// Re-export domain types for consumers of this module
+export type { SLAStatus, TicketPriority, TicketStatus };
+
+// Extended ticket status for SLA service (includes waiting states)
+export type ExtendedTicketStatus = TicketStatus | 'WAITING_ON_CUSTOMER' | 'WAITING_ON_THIRD_PARTY';
 
 export interface SLAPolicy {
   id: string;
@@ -39,7 +37,7 @@ export interface Ticket {
   ticketNumber: string;
   subject: string;
   description?: string;
-  status: TicketStatus;
+  status: ExtendedTicketStatus;
   priority: TicketPriority;
   slaPolicy: SLAPolicy;
   slaResponseDue?: Date;
@@ -162,7 +160,7 @@ export class SLATrackingService {
   calculateSLATimer(
     dueTime: Date,
     policy: SLAPolicy,
-    ticketStatus: TicketStatus,
+    ticketStatus: ExtendedTicketStatus,
     now: Date = new Date()
   ): SLATimerResult {
     // If ticket is paused (waiting on customer), return paused status

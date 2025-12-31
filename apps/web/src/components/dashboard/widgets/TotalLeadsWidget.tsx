@@ -1,8 +1,28 @@
 'use client';
 
+import { trpc } from '@/lib/trpc';
 import type { WidgetProps } from './index';
 
 export function TotalLeadsWidget(_props: WidgetProps) {
+  const { data: stats, isLoading, error } = trpc.lead.stats.useQuery();
+
+  if (isLoading) {
+    return (
+      <div className="p-6 h-full flex flex-col animate-pulse">
+        <div className="flex items-start justify-between">
+          <div className="w-12 h-12 rounded-lg bg-slate-200 dark:bg-slate-700" />
+          <div className="w-16 h-5 rounded bg-slate-200 dark:bg-slate-700" />
+        </div>
+        <div className="h-4 w-24 rounded bg-slate-200 dark:bg-slate-700 mt-4" />
+        <div className="h-9 w-32 rounded bg-slate-200 dark:bg-slate-700 mt-1" />
+      </div>
+    );
+  }
+
+  if (error || !stats) {
+    return null;
+  }
+
   return (
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-start justify-between">
@@ -15,7 +35,9 @@ export function TotalLeadsWidget(_props: WidgetProps) {
         </span>
       </div>
       <p className="text-sm text-slate-500 dark:text-slate-400 mt-4">Total Leads</p>
-      <p className="text-3xl font-bold text-slate-900 dark:text-white mt-1">1,248</p>
+      <p className="text-3xl font-bold text-slate-900 dark:text-white mt-1">
+        {stats.total.toLocaleString()}
+      </p>
     </div>
   );
 }

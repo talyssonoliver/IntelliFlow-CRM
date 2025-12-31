@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, Button } from '@intelliflow/ui';
 import {
@@ -21,11 +21,12 @@ import {
   Shield,
   Zap,
 } from 'lucide-react';
+// IFC-149 Integration: Use barrel export for cleaner imports
 import {
   type AgentAction,
   type ActionStatus,
   type ApprovalMetrics,
-} from '@/lib/agent/rollback-service';
+} from '@/lib/agent';
 
 // =============================================================================
 // Types
@@ -722,7 +723,8 @@ function MetricsCard({ metrics }: MetricsCardProps) {
 // Main Page Component
 // =============================================================================
 
-export default function AgentApprovalsPreviewPage() {
+// Inner component that uses searchParams
+function AgentApprovalsPreviewContent() {
   const searchParams = useSearchParams();
   const actionIdFromUrl = searchParams.get('actionId');
 
@@ -1056,5 +1058,25 @@ export default function AgentApprovalsPreviewPage() {
         </div>
       </Card>
     </div>
+  );
+}
+
+// Loading fallback
+function PreviewLoadingFallback() {
+  return (
+    <div className="container mx-auto py-8 px-4 max-w-6xl">
+      <div className="flex items-center justify-center py-12">
+        <p className="text-gray-600">Loading approvals...</p>
+      </div>
+    </div>
+  );
+}
+
+// Page component with Suspense boundary
+export default function AgentApprovalsPreviewPage() {
+  return (
+    <Suspense fallback={<PreviewLoadingFallback />}>
+      <AgentApprovalsPreviewContent />
+    </Suspense>
   );
 }

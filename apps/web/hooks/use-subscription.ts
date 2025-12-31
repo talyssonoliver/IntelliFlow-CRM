@@ -104,6 +104,19 @@ export function useSubscription<T = unknown>(options: SubscriptionOptions<T>) {
   const connectionStartRef = useRef<number | null>(null);
   const latencyHistoryRef = useRef<number[]>([]);
 
+  // Store callbacks in refs to avoid recreating subscriptions when they change
+  const onDataRef = useRef(onData);
+  const onStatusChangeRef = useRef(onStatusChange);
+
+  // Update refs when callbacks change
+  useEffect(() => {
+    onDataRef.current = onData;
+  }, [onData]);
+
+  useEffect(() => {
+    onStatusChangeRef.current = onStatusChange;
+  }, [onStatusChange]);
+
   const log = useCallback(
     (message: string, ...args: unknown[]) => {
       if (debug) {
@@ -116,10 +129,10 @@ export function useSubscription<T = unknown>(options: SubscriptionOptions<T>) {
   const updateStatus = useCallback(
     (newStatus: ConnectionStatus) => {
       setStatus(newStatus);
-      onStatusChange?.(newStatus);
+      onStatusChangeRef.current?.(newStatus);
       log(`Status changed to: ${newStatus}`);
     },
-    [onStatusChange, log]
+    [log]
   );
 
   const handlePayload = useCallback(
@@ -159,9 +172,9 @@ export function useSubscription<T = unknown>(options: SubscriptionOptions<T>) {
         );
       }
 
-      onData?.(subscriptionPayload);
+      onDataRef.current?.(subscriptionPayload);
     },
-    [onData, log, table]
+    [log, table]
   );
 
   const subscribe = useCallback(() => {
@@ -179,17 +192,15 @@ export function useSubscription<T = unknown>(options: SubscriptionOptions<T>) {
     const channel = supabase.channel(channelName);
 
     // Configure postgres changes subscription
-    const eventConfig: Parameters<typeof channel.on>[1] = {
+    const eventConfig = {
       event: events.includes('*') ? '*' : (events[0] as 'INSERT' | 'UPDATE' | 'DELETE'),
       schema,
       table,
-    };
-
-    if (filter) {
-      eventConfig.filter = filter;
-    }
+      filter: filter || undefined,
+    } as const;
 
     channel
+      // @ts-expect-error - Supabase types don't properly support filter parameter
       .on('postgres_changes', eventConfig, handlePayload)
       .on('system', { event: '*' }, (payload) => {
         log('System event:', payload);
@@ -237,13 +248,73 @@ export function useSubscription<T = unknown>(options: SubscriptionOptions<T>) {
     }
   }, [updateStatus, log]);
 
-  // Auto-subscribe on mount
+  // Auto-subscribe on mount - only runs once
   useEffect(() => {
-    subscribe();
+    // Call subscribe directly on mount
+    if (channelRef.current) {
+      log('Already subscribed, skipping...');
+      return;
+    }
+
+    log('Subscribing...');
+    updateStatus('connecting');
+    connectionStartRef.current = Date.now();
+
+    const channel = supabase
+      .channel(`${schema}:${table}:${filter || 'all'}`)
+      .on(
+        'postgres_changes' as any,
+        {
+          event: events.length === 1 && events[0] !== '*' ? events[0] : '*',
+          schema,
+          table,
+          filter,
+        },
+        handlePayload
+      )
+      .subscribe((status, err) => {
+        if (err) {
+          console.error(`[useSubscription:${table}] Subscription error:`, err);
+          updateStatus('error');
+          return;
+        }
+
+        if (status === 'SUBSCRIBED') {
+          updateStatus('connected');
+          log('Successfully subscribed');
+        } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+          updateStatus('disconnected');
+          setMetrics((prev) => ({
+            ...prev,
+            reconnectCount: prev.reconnectCount + 1,
+          }));
+        }
+      });
+
+    channelRef.current = channel;
+
+    // Cleanup on unmount
     return () => {
-      unsubscribe();
+      if (!channelRef.current) {
+        return;
+      }
+
+      log('Unsubscribing...');
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+      updateStatus('disconnected');
+
+      // Calculate total uptime
+      if (connectionStartRef.current) {
+        setMetrics((prev) => ({
+          ...prev,
+          connectionUptime: prev.connectionUptime + (Date.now() - connectionStartRef.current!),
+        }));
+        connectionStartRef.current = null;
+      }
     };
-  }, [subscribe, unsubscribe]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount/unmount
 
   // Update uptime periodically when connected
   useEffect(() => {
@@ -332,30 +403,32 @@ export interface ActivitySubscriptionOptions {
   onActivity?: (activity: ActivityRecord) => void;
 }
 
-interface ActivityRecord {
+export interface ActivityRecord {
   id: string;
   type: string;
-  entity_type: string;
-  entity_id: string;
-  description: string;
-  created_at: string;
-  created_by: string;
+  title: string;
+  description: string | null;
+  timestamp: string;
+  dateLabel: string | null;
+  opportunityId: string | null;
+  userId: string | null;
+  agentName: string | null;
+  agentStatus: string | null;
 }
 
 export function useActivitySubscription(options: ActivitySubscriptionOptions = {}) {
   const { entityType, entityId, onActivity } = options;
   const [activities, setActivities] = useState<ActivityRecord[]>([]);
 
+  // Filter by opportunityId if entityType is 'opportunity'
   const filter =
-    entityType && entityId
-      ? `entity_type=eq.${entityType},entity_id=eq.${entityId}`
-      : entityType
-        ? `entity_type=eq.${entityType}`
-        : undefined;
+    entityType === 'opportunity' && entityId
+      ? `opportunityId=eq.${entityId}`
+      : undefined;
 
   const subscription = useSubscription<ActivityRecord>({
-    table: 'activity',
-    events: ['INSERT'],
+    table: 'activity_events',
+    events: ['INSERT', 'UPDATE'],
     filter,
     onData: (payload) => {
       if (payload.new) {
