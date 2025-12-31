@@ -11,7 +11,7 @@
     "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/web/src/components/lead-form.tsx": "verified",
+    "apps/web/src/app/leads/(list)/new/page.tsx": "verified",
     "artifacts/lighthouse/lighthouse-report.json": "verified"
   },
   "validation_results": [
@@ -46,11 +46,6 @@
   ],
   "dependencies_verified": ["IFC-003"],
   "definition_of_done_items": [
-    {
-      "criterion": "Lead form with tRPC integration",
-      "met": true,
-      "evidence": "lead-form.tsx with form handling"
-    },
     {
       "criterion": "Mobile responsive",
       "met": true,

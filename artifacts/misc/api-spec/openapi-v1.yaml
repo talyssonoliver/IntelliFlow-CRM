@@ -1,0 +1,778 @@
+openapi: 3.0.3
+info:
+  title: IntelliFlow CRM API
+  description: |
+    IntelliFlow CRM API specification covering core CRM operations,
+    AI integrations, and webhook endpoints.
+
+    ## Authentication
+    All endpoints require JWT authentication via Bearer token.
+
+    ## Rate Limiting
+    - Standard: 100 requests/minute
+    - Premium: 1000 requests/minute
+
+    ## Task Reference
+    IFC-144 - Email Infrastructure with Webhooks and OpenAPI Spec
+  version: 1.0.0
+  contact:
+    name: IntelliFlow Engineering
+    email: api@intelliflow.com
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://api.intelliflow.com/v1
+    description: Production
+  - url: https://api.staging.intelliflow.com/v1
+    description: Staging
+  - url: http://localhost:3001/v1
+    description: Development
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Leads
+    description: Lead management operations
+  - name: Contacts
+    description: Contact management operations
+  - name: Accounts
+    description: Account management operations
+  - name: Opportunities
+    description: Opportunity management operations
+  - name: Tasks
+    description: Task management operations
+  - name: AI
+    description: AI-powered operations
+  - name: Webhooks
+    description: Webhook management
+  - name: Email
+    description: Email operations
+
+paths:
+  /leads:
+    get:
+      tags: [Leads]
+      summary: List leads
+      operationId: listLeads
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [NEW, CONTACTED, QUALIFIED, CONVERTED, LOST]
+        - name: source
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeadListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+    post:
+      tags: [Leads]
+      summary: Create a lead
+      operationId: createLead
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLeadRequest"
+      responses:
+        "201":
+          description: Lead created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /leads/{leadId}:
+    get:
+      tags: [Leads]
+      summary: Get a lead
+      operationId: getLead
+      parameters:
+        - $ref: "#/components/parameters/LeadIdParam"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    patch:
+      tags: [Leads]
+      summary: Update a lead
+      operationId: updateLead
+      parameters:
+        - $ref: "#/components/parameters/LeadIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLeadRequest"
+      responses:
+        "200":
+          description: Lead updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+
+    delete:
+      tags: [Leads]
+      summary: Delete a lead
+      operationId: deleteLead
+      parameters:
+        - $ref: "#/components/parameters/LeadIdParam"
+      responses:
+        "204":
+          description: Lead deleted
+
+  /leads/{leadId}/score:
+    post:
+      tags: [Leads, AI]
+      summary: Score a lead using AI
+      operationId: scoreLead
+      parameters:
+        - $ref: "#/components/parameters/LeadIdParam"
+      responses:
+        "200":
+          description: Lead scored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeadScore"
+
+  /contacts:
+    get:
+      tags: [Contacts]
+      summary: List contacts
+      operationId: listContacts
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - name: accountId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactListResponse"
+
+    post:
+      tags: [Contacts]
+      summary: Create a contact
+      operationId: createContact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateContactRequest"
+      responses:
+        "201":
+          description: Contact created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contact"
+
+  /accounts:
+    get:
+      tags: [Accounts]
+      summary: List accounts
+      operationId: listAccounts
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountListResponse"
+
+    post:
+      tags: [Accounts]
+      summary: Create an account
+      operationId: createAccount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAccountRequest"
+      responses:
+        "201":
+          description: Account created
+
+  /opportunities:
+    get:
+      tags: [Opportunities]
+      summary: List opportunities
+      operationId: listOpportunities
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - name: stage
+          in: query
+          schema:
+            type: string
+        - name: accountId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpportunityListResponse"
+
+  /tasks:
+    get:
+      tags: [Tasks]
+      summary: List tasks
+      operationId: listTasks
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [TODO, IN_PROGRESS, DONE, CANCELLED]
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskListResponse"
+
+  /email/send:
+    post:
+      tags: [Email]
+      summary: Send an email
+      operationId: sendEmail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendEmailRequest"
+      responses:
+        "202":
+          description: Email queued for sending
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailSendResult"
+
+  /email/templates:
+    get:
+      tags: [Email]
+      summary: List email templates
+      operationId: listEmailTemplates
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EmailTemplate"
+
+  /webhooks:
+    get:
+      tags: [Webhooks]
+      summary: List webhook subscriptions
+      operationId: listWebhooks
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Webhook"
+
+    post:
+      tags: [Webhooks]
+      summary: Create a webhook subscription
+      operationId: createWebhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWebhookRequest"
+      responses:
+        "201":
+          description: Webhook created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Webhook"
+
+  /webhooks/{webhookId}:
+    delete:
+      tags: [Webhooks]
+      summary: Delete a webhook subscription
+      operationId: deleteWebhook
+      parameters:
+        - name: webhookId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Webhook deleted
+
+  /ai/predict:
+    post:
+      tags: [AI]
+      summary: Generate AI predictions
+      operationId: generatePrediction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PredictionRequest"
+      responses:
+        "200":
+          description: Prediction generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PredictionResult"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    LimitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    LeadIdParam:
+      name: leadId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+    Lead:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        company:
+          type: string
+        status:
+          type: string
+          enum: [NEW, CONTACTED, QUALIFIED, CONVERTED, LOST]
+        source:
+          type: string
+        score:
+          type: number
+        ownerId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    LeadListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Lead"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    CreateLeadRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        company:
+          type: string
+        source:
+          type: string
+
+    UpdateLeadRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        company:
+          type: string
+        status:
+          type: string
+
+    LeadScore:
+      type: object
+      properties:
+        leadId:
+          type: string
+          format: uuid
+        score:
+          type: number
+          minimum: 0
+          maximum: 100
+        confidence:
+          type: number
+        factors:
+          type: object
+        scoredAt:
+          type: string
+          format: date-time
+
+    Contact:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        accountId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+    ContactListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Contact"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    CreateContactRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        accountId:
+          type: string
+          format: uuid
+
+    AccountListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    CreateAccountRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        industry:
+          type: string
+        website:
+          type: string
+
+    OpportunityListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    TaskListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    SendEmailRequest:
+      type: object
+      required:
+        - to
+        - subject
+      properties:
+        to:
+          type: array
+          items:
+            type: string
+            format: email
+        cc:
+          type: array
+          items:
+            type: string
+            format: email
+        bcc:
+          type: array
+          items:
+            type: string
+            format: email
+        subject:
+          type: string
+        textBody:
+          type: string
+        htmlBody:
+          type: string
+        templateId:
+          type: string
+        templateVariables:
+          type: object
+
+    EmailSendResult:
+      type: object
+      properties:
+        messageId:
+          type: string
+        status:
+          type: string
+          enum: [QUEUED, SENT, FAILED]
+        queuedAt:
+          type: string
+          format: date-time
+
+    EmailTemplate:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        subject:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    Webhook:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        url:
+          type: string
+          format: uri
+        events:
+          type: array
+          items:
+            type: string
+        secret:
+          type: string
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateWebhookRequest:
+      type: object
+      required:
+        - url
+        - events
+      properties:
+        url:
+          type: string
+          format: uri
+        events:
+          type: array
+          items:
+            type: string
+            enum:
+              - lead.created
+              - lead.updated
+              - lead.converted
+              - contact.created
+              - contact.updated
+              - opportunity.created
+              - opportunity.stage_changed
+              - task.completed
+
+    PredictionRequest:
+      type: object
+      required:
+        - entityType
+        - entityId
+        - predictionType
+      properties:
+        entityType:
+          type: string
+          enum: [lead, opportunity, account]
+        entityId:
+          type: string
+          format: uuid
+        predictionType:
+          type: string
+          enum: [conversion, churn, value, engagement]
+
+    PredictionResult:
+      type: object
+      properties:
+        entityId:
+          type: string
+          format: uuid
+        predictionType:
+          type: string
+        prediction:
+          type: number
+        confidence:
+          type: number
+        factors:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              weight:
+                type: number
+        generatedAt:
+          type: string
+          format: date-time
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        hasMore:
+          type: boolean

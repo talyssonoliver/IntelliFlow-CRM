@@ -4,7 +4,7 @@
 
 ### Pre-requisites Verified
 - artifacts/sprint0/codex-run/Framework.md - MATOP protocol
-- tools/audit/audit-matrix.yml - Audit requirements
+- audit-matrix.yml - Audit requirements
 - packages/adapters/src/repositories/PrismaLeadRepository.ts
 - packages/adapters/src/repositories/PrismaContactRepository.ts
 - packages/adapters/src/repositories/PrismaAccountRepository.ts

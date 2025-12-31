@@ -115,7 +115,7 @@
     },
     {
       "type": "FILE",
-      "path": "tools/audit/audit-matrix.yml",
+      "path": "audit-matrix.yml",
       "verified": true,
       "notes": "File is at repo root: audit-matrix.yml"
     },

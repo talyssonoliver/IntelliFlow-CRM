@@ -18,7 +18,7 @@
         "verified_at": "2025-12-26T14:32:00Z"
       },
       {
-        "path": "tools/audit/audit-matrix.yml",
+        "path": "audit-matrix.yml",
         "status": "verified",
         "verified_at": "2025-12-26T14:32:00Z"
       },

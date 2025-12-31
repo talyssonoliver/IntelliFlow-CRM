@@ -26,7 +26,7 @@
       "status": "verified",
       "notes": "Framework document read and understood"
     },
-    "tools/audit/audit-matrix.yml": {
+    "audit-matrix.yml": {
       "status": "missing",
       "notes": "File does not exist in repository - noted as expected gap"
     }

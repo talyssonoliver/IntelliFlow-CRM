@@ -9,7 +9,7 @@
     "estimatedEffort": "2h",
     "createdAt": "2025-12-21T09:17:12.172Z",
     "dueBy": "2026-01-20T09:17:12.172Z",
-    "resolvedAt": null
+    "resolvedAt": "2025-12-29T12:01:01Z"
   },
   {
     "id": "DEBT-waiver-snyk",
@@ -21,7 +21,7 @@
     "estimatedEffort": "1h",
     "createdAt": "2025-12-21T09:17:12.184Z",
     "dueBy": "2026-01-20T09:17:12.184Z",
-    "resolvedAt": null
+    "resolvedAt": "2025-12-29T12:01:01Z"
   },
   {
     "id": "DEBT-waiver-trivy",
@@ -33,7 +33,7 @@
     "estimatedEffort": "1h",
     "createdAt": "2025-12-21T09:17:12.207Z",
     "dueBy": "2026-01-20T09:17:12.207Z",
-    "resolvedAt": null
+    "resolvedAt": "2025-12-29T12:01:01Z"
   },
   {
     "id": "DEBT-waiver-gitleaks",
@@ -45,7 +45,7 @@
     "estimatedEffort": "1h",
     "createdAt": "2025-12-21T13:15:00.320Z",
     "dueBy": "2026-01-20T13:15:00.320Z",
-    "resolvedAt": null
+    "resolvedAt": "2025-12-29T12:01:01Z"
   },
   {
     "id": "DEBT-1766342311250-y8cq2b",
@@ -57,7 +57,7 @@
     "estimatedEffort": null,
     "createdAt": "2025-12-21T18:38:31.250Z",
     "dueBy": "2026-01-20T18:38:31.250Z",
-    "resolvedAt": null
+    "resolvedAt": "2025-12-29T12:01:01Z"
   },
   {
     "id": "DEBT-1766342311254-6geebv",
@@ -69,7 +69,7 @@
     "estimatedEffort": null,
     "createdAt": "2025-12-21T18:38:31.254Z",
     "dueBy": "2026-01-20T18:38:31.254Z",
-    "resolvedAt": null
+    "resolvedAt": "2025-12-29T12:01:01Z"
   },
   {
     "id": "DEBT-1766342311274-okqwci",
@@ -81,7 +81,7 @@
     "estimatedEffort": null,
     "createdAt": "2025-12-21T18:38:31.274Z",
     "dueBy": "2026-01-20T18:38:31.274Z",
-    "resolvedAt": null
+    "resolvedAt": "2025-12-29T12:01:01Z"
   },
   {
     "id": "DEBT-1766343048493-4krgkm",
@@ -93,7 +93,7 @@
     "estimatedEffort": null,
     "createdAt": "2025-12-21T18:50:48.493Z",
     "dueBy": "2026-01-20T18:50:48.493Z",
-    "resolvedAt": null
+    "resolvedAt": "2025-12-29T12:01:01Z"
   },
   {
     "id": "DEBT-1766343048495-xjk1u2",
@@ -105,7 +105,7 @@
     "estimatedEffort": null,
     "createdAt": "2025-12-21T18:50:48.496Z",
     "dueBy": "2026-01-20T18:50:48.495Z",
-    "resolvedAt": null
+    "resolvedAt": "2025-12-29T12:01:01Z"
   },
   {
     "id": "DEBT-1766343048522-rmchvg",
@@ -117,7 +117,7 @@
     "estimatedEffort": null,
     "createdAt": "2025-12-21T18:50:48.522Z",
     "dueBy": "2026-01-20T18:50:48.522Z",
-    "resolvedAt": null
+    "resolvedAt": "2025-12-29T12:01:01Z"
   },
   {
     "id": "DEBT-1766343370376-dyb1m9",
@@ -129,7 +129,7 @@
     "estimatedEffort": null,
     "createdAt": "2025-12-21T18:56:10.376Z",
     "dueBy": "2026-01-20T18:56:10.376Z",
-    "resolvedAt": null
+    "resolvedAt": "2025-12-29T12:01:01Z"
   },
   {
     "id": "DEBT-1766343370378-kk4sej",
@@ -141,7 +141,7 @@
     "estimatedEffort": null,
     "createdAt": "2025-12-21T18:56:10.379Z",
     "dueBy": "2026-01-20T18:56:10.378Z",
-    "resolvedAt": null
+    "resolvedAt": "2025-12-29T12:01:01Z"
   },
   {
     "id": "DEBT-1766343370403-rzab80",
@@ -153,6 +153,6 @@
     "estimatedEffort": null,
     "createdAt": "2025-12-21T18:56:10.403Z",
     "dueBy": "2026-01-20T18:56:10.403Z",
-    "resolvedAt": null
+    "resolvedAt": "2025-12-29T12:01:01Z"
   }
 ]

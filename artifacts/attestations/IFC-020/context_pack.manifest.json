@@ -1,0 +1,54 @@
+{
+  "task_id": "IFC-020",
+  "description": "LangChain Pipeline Design",
+  "created_at": "2025-12-31T03:36:53.761Z",
+  "runId": "20251231-zsg4",
+  "files_read": [
+    {
+      "path": "artifacts/sprint0/codex-run/Framework.md",
+      "sha256": "58d6d8ba1603cf0825e5496203e1006af75be84a5bbfc24c04587749bb75a872",
+      "size": 38416,
+      "purpose": "STOA governance framework and evidence requirements"
+    },
+    {
+      "path": "audit-matrix.yml",
+      "sha256": "872fb4c829ddae17fab1147d1bdf6254880734269ad142eb6b68d6f07ab98182",
+      "size": 9425,
+      "purpose": "Canonical tool matrix for validation gates"
+    },
+    {
+      "path": "docs/company/brand/visual-identity.md",
+      "sha256": "a97cfeddf7d1fea5bc2eeb310a25e1533c371d9dab5a90ca7d67ed3d0a538b14",
+      "size": 8222,
+      "purpose": "Brand guidelines and design tokens"
+    },
+    {
+      "path": "apps/ai-worker/src/chains/scoring.chain.ts",
+      "sha256": "e7f32669ef684f0afd90362ed32f2dc0e2cb8ad10d9865d30d73ce33195a664d",
+      "size": 8589,
+      "purpose": "Existing LangChain implementation patterns"
+    },
+    {
+      "path": "apps/ai-worker/src/agents/base.agent.ts",
+      "sha256": "38dc07e2951aeef12182a47531d01c94c4481ff986edaae109cc3fac61fd7384",
+      "size": 8069,
+      "purpose": "BaseAgent architecture and execution patterns"
+    },
+    {
+      "path": "apps/ai-worker/src/config/ai.config.ts",
+      "sha256": "1f03e2c9194622dd1133253daacc0787db9244d9d388cbe9790dd85c8c6b7f40",
+      "size": 4755,
+      "purpose": "AI provider configuration and cost tracking"
+    }
+  ],
+  "environment_requirements_verified": [
+    "LangChain patterns researched",
+    "Prompts tested (lead scoring)",
+    "Zep integration planned",
+    "Tool definitions pending"
+  ],
+  "invariants_count": 10,
+  "dependencies_verified": [
+    "IFC-019 (DONE)"
+  ]
+}

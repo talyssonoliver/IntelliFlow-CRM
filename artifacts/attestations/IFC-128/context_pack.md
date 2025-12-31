@@ -4,7 +4,7 @@
 
 ### Pre-requisites Verified
 - artifacts/sprint0/codex-run/Framework.md - MATOP protocol
-- tools/audit/audit-matrix.yml - Audit requirements
+- audit-matrix.yml - Audit requirements
 - docs/shared/review-checklist.md - Review guidelines
 - docs/operations/pr-checklist.md - PR review process
 - artifacts/misc/test-orchestration.json - Test orchestration config

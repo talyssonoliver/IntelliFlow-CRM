@@ -1,0 +1,109 @@
+{
+  "task_id": "PG-005",
+  "task_name": "Contact Page",
+  "sprint": 11,
+  "section": "Public Pages",
+  "owner": "Growth FE (STOA-Foundation)",
+  "status": "in_progress",
+  "created_at": "2025-12-31T00:00:00.000Z",
+  "context_verification": {
+    "constitution_reviewed": true,
+    "brand_guidelines_reviewed": true,
+    "prerequisites_verified": true,
+    "dependencies_acknowledged": true
+  },
+  "prerequisites": {
+    "files_verified": [
+      ".specify/memory/constitution.md",
+      "docs/design/page-registry.md",
+      "audit-matrix.yml",
+      "docs/company/brand/visual-identity.md",
+      "docs/company/brand/style-guide.md",
+      "docs/company/brand/dos-and-donts.md",
+      "docs/company/brand/accessibility-patterns.md",
+      "docs/company/messaging/positioning.md",
+      "apps/web/src/app/(public)/page.tsx",
+      "apps/web/src/app/(public)/layout.tsx"
+    ],
+    "environment_verified": [
+      "Contact form design understood",
+      "Validation rules defined (Zod)",
+      "Public layout structure exists"
+    ]
+  },
+  "dependencies": {
+    "PG-001": {
+      "status": "PLANNED",
+      "decision": "Proceeding with existing (public) layout structure",
+      "risk": "low",
+      "mitigation": "Using established layout patterns from home page"
+    },
+    "GTM-002": {
+      "status": "DONE",
+      "verified": true
+    },
+    "BRAND-001": {
+      "status": "DONE",
+      "verified": true
+    }
+  },
+  "brand_compliance": {
+    "primary_color": "#137fec",
+    "font_family": "Inter",
+    "icon_library": "Material Symbols Outlined",
+    "accessibility_standard": "WCAG 2.1 AA",
+    "dark_mode_support": true
+  },
+  "technical_constraints": {
+    "framework": "Next.js 16.0.10",
+    "styling": "Tailwind CSS 4",
+    "validation": "Zod",
+    "testing": "Vitest + Playwright",
+    "architecture": "Hexagonal",
+    "type_safety": "Strict TypeScript (no any)"
+  },
+  "definition_of_done": {
+    "performance": {
+      "response_time_p95_ms": 200,
+      "lighthouse_min": 90,
+      "form_functional": true
+    },
+    "artifacts": [
+      "apps/web/src/app/(public)/contact/page.tsx",
+      "apps/web/src/components/shared/contact-form.tsx",
+      "apps/web/src/lib/shared/email-handler.ts",
+      "artifacts/attestations/PG-005/context_ack.json"
+    ],
+    "validation": [
+      "Manual review",
+      "Lighthouse audit ≥90",
+      "Keyboard navigation tested",
+      "Screen reader compatible"
+    ]
+  },
+  "security_checklist": [
+    "Input validation with Zod",
+    "No secrets in code",
+    "XSS prevention",
+    "CSRF protection",
+    "Rate limiting",
+    "Spam prevention"
+  ],
+  "accessibility_checklist": [
+    "Focus rings visible",
+    "Color contrast ≥4.5:1",
+    "Form labels associated",
+    "Required fields marked",
+    "Error states with ARIA",
+    "Semantic HTML",
+    "Keyboard navigation"
+  ],
+  "implementation_approach": "TDD",
+  "agent_acknowledgement": {
+    "context_understood": true,
+    "requirements_clear": true,
+    "ready_to_proceed": true,
+    "estimated_complexity": "medium",
+    "confidence_level": "high"
+  }
+}

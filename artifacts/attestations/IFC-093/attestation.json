@@ -13,7 +13,7 @@
         "sha256": "verified_on_read"
       },
       {
-        "path": "apps/web/components/lead-form.tsx",
+        "path": "apps/web/src/app/leads/(list)/new/page.tsx",
         "sha256": "verified_on_read"
       }
     ],

@@ -1,0 +1,276 @@
+# Dependency Vulnerability Scanning Workflow
+# Task: IFC-121 - Dependency Vulnerability Updates
+# Created: 2025-12-29
+
+name: Dependency Security Scan
+
+on:
+  schedule:
+    # Run weekly on Monday at 3 AM UTC
+    - cron: '0 3 * * 1'
+  push:
+    branches: [main]
+    paths:
+      - 'pnpm-lock.yaml'
+      - 'package.json'
+      - '**/package.json'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'pnpm-lock.yaml'
+      - 'package.json'
+      - '**/package.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: write
+
+jobs:
+  npm-audit:
+    name: NPM Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run pnpm audit
+        id: audit
+        continue-on-error: true
+        run: |
+          pnpm audit --json > audit-result.json 2>&1 || true
+          echo "vulnerabilities=$(jq '.metadata.vulnerabilities' audit-result.json)" >> $GITHUB_OUTPUT
+
+      - name: Upload audit results
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-results
+          path: audit-result.json
+
+  snyk-scan:
+    name: Snyk Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --all-projects --severity-threshold=high --json-file-output=snyk-results.json
+
+      - name: Upload Snyk results
+        uses: actions/upload-artifact@v4
+        with:
+          name: snyk-results
+          path: snyk-results.json
+
+  trivy-scan:
+    name: Trivy Filesystem Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Upload Trivy results
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-results
+          path: trivy-results.sarif
+
+  osv-scan:
+    name: OSV Scanner
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run OSV Scanner
+        uses: google/osv-scanner-action@v1
+        with:
+          scan-args: |-
+            --lockfile=pnpm-lock.yaml
+            --format=json
+            --output=osv-results.json
+        continue-on-error: true
+
+      - name: Upload OSV results
+        uses: actions/upload-artifact@v4
+        with:
+          name: osv-results
+          path: osv-results.json
+
+  aggregate-results:
+    name: Aggregate & Report
+    needs: [npm-audit, snyk-scan, trivy-scan, osv-scan]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: scan-results
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generate consolidated report
+        run: |
+          cat > docs/security/dependency-scan-report.md << 'EOF'
+          # Dependency Security Scan Report
+
+          **Generated**: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          **Workflow Run**: ${{ github.run_id }}
+          **Branch**: ${{ github.ref_name }}
+
+          ## Summary
+
+          | Scanner | Status | Critical | High | Medium | Low |
+          |---------|--------|----------|------|--------|-----|
+          | pnpm audit | ${{ needs.npm-audit.result }} | - | - | - | - |
+          | Snyk | ${{ needs.snyk-scan.result }} | - | - | - | - |
+          | Trivy | ${{ needs.trivy-scan.result }} | - | - | - | - |
+          | OSV | ${{ needs.osv-scan.result }} | - | - | - | - |
+
+          ## Remediation Actions
+
+          See individual scanner results in workflow artifacts.
+
+          ## SLA Compliance
+
+          | Severity | SLA | Status |
+          |----------|-----|--------|
+          | Critical | 24 hours | Pending |
+          | High | 7 days | Pending |
+          | Medium | 30 days | Pending |
+          | Low | 90 days | Pending |
+          EOF
+
+      - name: Check for critical vulnerabilities
+        id: check-critical
+        run: |
+          # Check if any critical vulnerabilities exist
+          CRITICAL_COUNT=0
+
+          if [ -f scan-results/trivy-results/trivy-results.sarif ]; then
+            CRITICAL_COUNT=$(jq '[.runs[].results[] | select(.level == "error")] | length' scan-results/trivy-results/trivy-results.sarif)
+          fi
+
+          echo "critical_count=$CRITICAL_COUNT" >> $GITHUB_OUTPUT
+
+          if [ "$CRITICAL_COUNT" -gt 0 ]; then
+            echo "::error::Found $CRITICAL_COUNT critical vulnerabilities!"
+          fi
+
+      - name: Create issue for critical vulnerabilities
+        if: steps.check-critical.outputs.critical_count > 0
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[SECURITY] Critical vulnerabilities found - ${new Date().toISOString().split('T')[0]}`,
+              body: `## Critical Vulnerabilities Detected
+
+              **Scan Run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+              **Count**: ${{ steps.check-critical.outputs.critical_count }} critical vulnerabilities
+
+              ### Required Actions
+              1. Review scan results in workflow artifacts
+              2. Prioritize and remediate within 24-hour SLA
+              3. Update vulnerability baseline once resolved
+
+              /cc @security-team`,
+              labels: ['security', 'critical', 'vulnerability']
+            });
+
+  auto-update:
+    name: Auto-Update Dependencies
+    needs: aggregate-results
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.ADMIN_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Update dependencies
+        run: |
+          pnpm update --latest
+          pnpm audit fix --force || true
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.ADMIN_TOKEN }}
+          commit-message: 'chore(deps): automated security updates'
+          title: '[Security] Automated Dependency Updates'
+          body: |
+            ## Automated Security Updates
+
+            This PR contains automated dependency updates from the weekly security scan.
+
+            ### Changes
+            - Updated vulnerable dependencies
+            - Applied available security patches
+
+            ### Verification
+            - [ ] CI passes
+            - [ ] No breaking changes
+            - [ ] Security scan passes
+          branch: automated/dependency-updates
+          labels: dependencies,security,automated

@@ -11,7 +11,7 @@
 | Type | Convention | Example |
 |------|------------|---------|
 | **Code** | `apps/web/src/app/{route}/page.tsx` | `apps/web/src/app/contacts/(list)/page.tsx` |
-| **Components** | `apps/web/src/components/{name}.tsx` | `apps/web/src/components/lead-form.tsx` |
+| **Components** | `apps/web/src/components/{name}.tsx` | `apps/web/src/app/leads/(list)/new/page.tsx` |
 | **Design Mockups** | `docs/design/mockups/{name}.png` | `docs/design/mockups/contact-360-view.png` |
 | **E2E Tests** | `tests/e2e/{name}.spec.ts` | `tests/e2e/contacts.spec.ts` |
 | **API Routers** | `apps/api/src/modules/{domain}/{name}.router.ts` | `apps/api/src/modules/contact/contact.router.ts` |
@@ -50,7 +50,7 @@ apps/web/src/app/
 ### Lead Capture (/leads/new)
 - **Task**: IFC-004
 - **KPIs**: Submission <1s, Lighthouse >90
-- **Code**: `apps/web/src/app/leads/page.tsx`, `apps/web/src/components/lead-form.tsx`
+- **Code**: `apps/web/src/app/leads/page.tsx`, `apps/web/src/app/leads/(list)/new/page.tsx`
 - **API**: `apps/api/src/modules/lead/lead.router.ts`
 - **Tests**: `tests/e2e/leads.spec.ts`
 - **RACI**: R: Frontend Dev / A: PM / C: Sales / I: CEO

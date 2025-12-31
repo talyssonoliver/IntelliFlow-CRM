@@ -62,11 +62,6 @@
           "description": "Deals Pipeline Kanban Board page with drag-and-drop"
         },
         {
-          "path": "apps/web/lib/deals/drag-drop-test.e2e.ts",
-          "type": "e2e-test",
-          "description": "Playwright E2E tests for drag-drop functionality"
-        },
-        {
           "path": "artifacts/attestations/IFC-091/context_ack.json",
           "type": "attestation",
           "description": "Task completion attestation"
@@ -180,23 +175,6 @@
       "actual": "~50-100ms (client-side state update)",
       "met": true,
       "evidence": "Performance indicator shows stage change time on screen"
-    }
-  },
-  "validation": {
-    "method": "Manual review of drag-drop functionality",
-    "e2eTests": {
-      "file": "apps/web/lib/deals/drag-drop-test.e2e.ts",
-      "testCount": 15,
-      "coverage": [
-        "Kanban board rendering",
-        "Deal card display",
-        "Stage change via modal",
-        "Drag-and-drop functionality",
-        "Chart rendering",
-        "Keyboard navigation",
-        "Responsive design",
-        "Performance KPI"
-      ]
     }
   },
   "navigation": {

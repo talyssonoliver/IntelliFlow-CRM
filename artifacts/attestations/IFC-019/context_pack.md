@@ -56,7 +56,7 @@ Per user request, the following format changes were made:
 
 ### Files
 - [x] `artifacts/sprint0/codex-run/Framework.md`
-- [x] `tools/audit/audit-matrix.yml`
+- [x] `audit-matrix.yml`
 - [x] `docs/shared/review-checklist.md`
 - [x] `docs/operations/quality-gates.md`
 

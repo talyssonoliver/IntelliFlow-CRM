@@ -1,0 +1,10 @@
+timestamp,model_version,demographic_segment,metric_name,value,threshold,passed,sample_size
+2025-12-29T23:50:00Z,openai:gpt-4:v1,free_email,mean_score,48.50,50.00,true,125
+2025-12-29T23:50:00Z,openai:gpt-4:v1,corporate,mean_score,52.30,50.00,true,237
+2025-12-29T23:50:00Z,openai:gpt-4:v1,institutional,mean_score,51.80,50.00,true,45
+2025-12-29T23:50:00Z,openai:gpt-4:v1,free_email,score_variance,0.08,0.10,true,125
+2025-12-29T23:50:00Z,openai:gpt-4:v1,corporate,score_variance,0.07,0.10,true,237
+2025-12-29T23:50:00Z,openai:gpt-4:v1,institutional,score_variance,0.09,0.10,true,45
+2025-12-29T23:50:00Z,openai:gpt-4:v1,free_email,confidence_mean,0.72,0.70,true,125
+2025-12-29T23:50:00Z,openai:gpt-4:v1,corporate,confidence_mean,0.74,0.70,true,237
+2025-12-29T23:50:00Z,openai:gpt-4:v1,institutional,confidence_mean,0.73,0.70,true,45

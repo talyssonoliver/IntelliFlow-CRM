@@ -20,7 +20,6 @@
     "packages/domain/src/legal/deadlines/Deadline.ts": "verified",
     "packages/domain/src/legal/deadlines/DeadlineEvents.ts": "verified",
     "packages/domain/src/legal/deadlines/deadline-engine.ts": "verified",
-    "packages/domain/src/legal/deadlines/index.ts": "verified",
     "apps/web/src/app/cases/timeline.tsx": "verified"
   },
   "validation_results": [

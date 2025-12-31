@@ -86,7 +86,7 @@ No dependencies required for this task.
 
 ### Files
 - [x] `artifacts/sprint0/codex-run/Framework.md`
-- [x] `tools/audit/audit-matrix.yml`
+- [x] `audit-matrix.yml`
 
 ### Environment
 - [x] Cost monitoring for Vercel/Railway/OpenAI setup

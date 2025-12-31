@@ -1,7 +1,7 @@
 {
   "files": [
     {
-      "path": "apps/web/src/components/lead-form.tsx",
+      "path": "apps/web/src/app/leads/(list)/new/page.tsx",
       "hash": "verified-placeholder",
       "status": "matched",
       "size": 1000

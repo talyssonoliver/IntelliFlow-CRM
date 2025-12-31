@@ -1,0 +1,227 @@
+# Sprint Completion Audit Workflow
+#
+# Verifies that completed sprint tasks have real implementations
+# with no fake results or placeholders.
+#
+# Triggers:
+#   - workflow_dispatch: Manual trigger with sprint number
+#   - workflow_call: Called from other workflows
+#
+# Outputs:
+#   - Audit reports as artifacts
+#   - Exit code 0 = PASS, 1 = FAIL
+
+name: Sprint Completion Audit
+
+on:
+  workflow_dispatch:
+    inputs:
+      sprint:
+        description: 'Sprint number to audit'
+        required: true
+        type: number
+      strict:
+        description: 'Strict mode (fail on placeholders/KPIs)'
+        required: false
+        type: boolean
+        default: false
+      skip-validations:
+        description: 'Skip running validation commands'
+        required: false
+        type: boolean
+        default: false
+
+  workflow_call:
+    inputs:
+      sprint:
+        description: 'Sprint number to audit'
+        required: true
+        type: number
+      strict:
+        description: 'Strict mode'
+        required: false
+        type: boolean
+        default: false
+      skip-validations:
+        description: 'Skip validations'
+        required: false
+        type: boolean
+        default: false
+    outputs:
+      verdict:
+        description: 'Audit verdict (PASS or FAIL)'
+        value: ${{ jobs.audit.outputs.verdict }}
+      report-path:
+        description: 'Path to audit report'
+        value: ${{ jobs.audit.outputs.report-path }}
+
+jobs:
+  audit:
+    name: Audit Sprint ${{ inputs.sprint }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    outputs:
+      verdict: ${{ steps.audit.outputs.verdict }}
+      report-path: ${{ steps.audit.outputs.report-path }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Cache pnpm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Sprint Completion Audit
+        id: audit
+        run: |
+          # Build the audit command
+          AUDIT_CMD="npx tsx tools/scripts/audit-sprint-completion.ts --sprint ${{ inputs.sprint }}"
+
+          if [ "${{ inputs.strict }}" = "true" ]; then
+            AUDIT_CMD="$AUDIT_CMD --strict"
+          fi
+
+          if [ "${{ inputs.skip-validations }}" = "true" ]; then
+            AUDIT_CMD="$AUDIT_CMD --skip-validations"
+          fi
+
+          echo "Running: $AUDIT_CMD"
+
+          # Run audit and capture exit code
+          set +e
+          $AUDIT_CMD
+          EXIT_CODE=$?
+          set -e
+
+          # Determine verdict from exit code
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "verdict=PASS" >> $GITHUB_OUTPUT
+          else
+            echo "verdict=FAIL" >> $GITHUB_OUTPUT
+          fi
+
+          # Find the latest report
+          LATEST_DIR="artifacts/reports/sprint-audit/sprint-${{ inputs.sprint }}-latest"
+          if [ -d "$LATEST_DIR" ]; then
+            echo "report-path=$LATEST_DIR/audit.md" >> $GITHUB_OUTPUT
+          fi
+
+          # Exit with original code
+          exit $EXIT_CODE
+
+      - name: Upload Audit Reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sprint-${{ inputs.sprint }}-audit-report
+          path: |
+            artifacts/reports/sprint-audit/sprint-${{ inputs.sprint }}-latest/
+          retention-days: 30
+
+      - name: Create Job Summary
+        if: always()
+        run: |
+          REPORT_DIR="artifacts/reports/sprint-audit/sprint-${{ inputs.sprint }}-latest"
+
+          echo "# Sprint ${{ inputs.sprint }} Completion Audit" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f "$REPORT_DIR/verdict.json" ]; then
+            VERDICT=$(jq -r '.verdict' "$REPORT_DIR/verdict.json")
+            PASSED=$(jq -r '.summary.passed' "$REPORT_DIR/verdict.json")
+            FAILED=$(jq -r '.summary.failed' "$REPORT_DIR/verdict.json")
+            NEEDS_HUMAN=$(jq -r '.summary.needs_human' "$REPORT_DIR/verdict.json")
+            BLOCKING=$(jq -r '.blocking_issues_count' "$REPORT_DIR/verdict.json")
+
+            if [ "$VERDICT" = "PASS" ]; then
+              echo "## ✅ Verdict: PASS" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "## ❌ Verdict: FAIL" >> $GITHUB_STEP_SUMMARY
+            fi
+
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| ✅ Passed | $PASSED |" >> $GITHUB_STEP_SUMMARY
+            echo "| ❌ Failed | $FAILED |" >> $GITHUB_STEP_SUMMARY
+            echo "| ⚠️ Needs Human | $NEEDS_HUMAN |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🚫 Blocking Issues | $BLOCKING |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ⚠️ Report not generated" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Check the logs for errors." >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "### Configuration" >> $GITHUB_STEP_SUMMARY
+          echo "- Sprint: ${{ inputs.sprint }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Strict Mode: ${{ inputs.strict }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Skip Validations: ${{ inputs.skip-validations }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "See the uploaded artifacts for full report." >> $GITHUB_STEP_SUMMARY
+
+      - name: Comment on PR (if applicable)
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const reportDir = 'artifacts/reports/sprint-audit/sprint-${{ inputs.sprint }}-latest';
+
+            let verdict = 'UNKNOWN';
+            let summary = '';
+
+            try {
+              const verdictJson = JSON.parse(fs.readFileSync(`${reportDir}/verdict.json`, 'utf8'));
+              verdict = verdictJson.verdict;
+              summary = `
+              | Metric | Count |
+              |--------|-------|
+              | ✅ Passed | ${verdictJson.summary.passed} |
+              | ❌ Failed | ${verdictJson.summary.failed} |
+              | ⚠️ Needs Human | ${verdictJson.summary.needs_human} |
+              `;
+            } catch (e) {
+              summary = 'Report not available';
+            }
+
+            const emoji = verdict === 'PASS' ? '✅' : '❌';
+            const body = `
+            ## ${emoji} Sprint ${{ inputs.sprint }} Audit: ${verdict}
+
+            ${summary}
+
+            See [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body.trim()
+            });

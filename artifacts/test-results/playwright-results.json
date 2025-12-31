@@ -1,0 +1,171 @@
+{
+  "config": {
+    "configFile": "C:\\taly\\intelliFlow-CRM\\playwright.config.ts",
+    "rootDir": "C:/taly/intelliFlow-CRM/tests/e2e",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": "C:\\taly\\intelliFlow-CRM\\tests\\e2e\\global-setup.ts",
+    "globalTeardown": "C:\\taly\\intelliFlow-CRM\\tests\\e2e\\global-teardown.ts",
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {},
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "html",
+        {
+          "outputFolder": "artifacts/playwright-report"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "artifacts/test-results/playwright-results.json"
+        }
+      ],
+      [
+        "junit",
+        {
+          "outputFile": "artifacts/test-results/playwright-junit.xml"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "C:/taly/intelliFlow-CRM/artifacts/playwright-output",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/taly/intelliFlow-CRM/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/taly/intelliFlow-CRM/artifacts/playwright-output",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "C:/taly/intelliFlow-CRM/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/taly/intelliFlow-CRM/artifacts/playwright-output",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "C:/taly/intelliFlow-CRM/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/taly/intelliFlow-CRM/artifacts/playwright-output",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "mobile-chrome",
+        "name": "mobile-chrome",
+        "testDir": "C:/taly/intelliFlow-CRM/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/taly/intelliFlow-CRM/artifacts/playwright-output",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "mobile-safari",
+        "name": "mobile-safari",
+        "testDir": "C:/taly/intelliFlow-CRM/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/taly/intelliFlow-CRM/artifacts/playwright-output",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "tablet",
+        "name": "tablet",
+        "testDir": "C:/taly/intelliFlow-CRM/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.57.0",
+    "workers": 4,
+    "webServer": {
+      "command": "pnpm run dev",
+      "url": "http://localhost:3000",
+      "reuseExistingServer": true,
+      "timeout": 120000,
+      "stdout": "pipe",
+      "stderr": "pipe",
+      "env": {
+        "NODE_ENV": "test",
+        "DATABASE_URL": "postgresql://user:pass@localhost/db",
+        "NEXT_PUBLIC_API_URL": "http://localhost:3000"
+      }
+    }
+  },
+  "suites": [],
+  "errors": [
+    {
+      "message": "TypeError: Cannot read properties of undefined (reading 'baseURL')",
+      "stack": "TypeError: Cannot read properties of undefined (reading 'baseURL')\n    at globalSetup (C:\\taly\\intelliFlow-CRM\\tests\\e2e\\global-setup.ts:29:30)",
+      "location": {
+        "file": "C:\\taly\\intelliFlow-CRM\\tests\\e2e\\global-setup.ts",
+        "column": 30,
+        "line": 29
+      },
+      "snippet": "\u001b[90m   at \u001b[39mglobal-setup.ts:29\n\n\u001b[0m \u001b[90m 27 |\u001b[39m   \u001b[90m// Optional: Pre-authenticate and save auth state\u001b[39m\n \u001b[90m 28 |\u001b[39m   \u001b[90m// This speeds up tests by avoiding repeated login\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 29 |\u001b[39m   \u001b[36mconst\u001b[39m baseURL \u001b[33m=\u001b[39m config\u001b[33m.\u001b[39muse\u001b[33m.\u001b[39mbaseURL \u001b[33m||\u001b[39m \u001b[32m'http://localhost:3000'\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 30 |\u001b[39m   \u001b[36mconst\u001b[39m browser \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m chromium\u001b[33m.\u001b[39mlaunch()\u001b[33m;\u001b[39m\n \u001b[90m 31 |\u001b[39m   \u001b[36mconst\u001b[39m context \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m browser\u001b[33m.\u001b[39mnewContext()\u001b[33m;\u001b[39m\n \u001b[90m 32 |\u001b[39m   \u001b[36mconst\u001b[39m page \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m context\u001b[33m.\u001b[39mnewPage()\u001b[33m;\u001b[39m\u001b[0m"
+    }
+  ],
+  "stats": {
+    "startTime": "2025-12-29T22:39:53.601Z",
+    "duration": 1288.4740000000002,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "task_id": "IFC-153",
+  "run_id": "20251231-044800-IFC-153-ing1",
+  "files_read": [
+    {
+      "path": "packages/domain/src/legal/cases/case-document.ts",
+      "sha256": "computed_during_implementation",
+      "lines": 626,
+      "purpose": "Domain model for CaseDocument with versioning, ACL, classification, and lifecycle"
+    },
+    {
+      "path": "docs/planning/adr/ADR-007-data-governance.md",
+      "sha256": "computed_during_implementation",
+      "lines": 551,
+      "purpose": "Data governance framework with classification tiers and retention policies"
+    },
+    {
+      "path": "artifacts/sprint0/codex-run/Framework.md",
+      "sha256": "58d6d8ba1603cf0825e5496203e1006af75be84a5bbfc24c04587749bb75a872",
+      "purpose": "STOA governance and evidence requirements"
+    },
+    {
+      "path": "audit-matrix.yml",
+      "sha256": "872fb4c829ddae17fab1147d1bdf6254880734269ad142eb6b68d6f07ab98182",
+      "purpose": "Quality gates and validation tool matrix"
+    }
+  ],
+  "invariants_acknowledged": [
+    "Antivirus Scan Mandatory - No file may enter primary storage without passing AV scan",
+    "Content Hash Verification - All files must have SHA-256 hash calculated and verified",
+    "Classification Required - Every document must have classification before storage",
+    "Tenant Isolation - Documents strictly isolated by tenant ID with no cross-tenant access",
+    "Audit Trail - All ingestion events logged with user ID, timestamp, and action",
+    "Idempotency - Re-uploading same file (same hash) should not create duplicates",
+    "Failure Resilience - Failed ingestion jobs retry (3 attempts) before DLQ",
+    "MIME Type Validation - Only allowed file types may be uploaded, block executables",
+    "Size Limits - Maximum 50MB for web uploads, 25MB for email attachments",
+    "Event Emission - All successful ingestions emit DocumentCreatedEvent for consumers"
+  ],
+  "created_at": "2025-12-31T04:48:00.000Z",
+  "dependencies_verified": [
+    "IFC-152 (DONE) - Case Document Domain Model",
+    "IFC-144 (DONE) - Document Repository Port",
+    "IFC-151 (DONE) - Storage infrastructure configured",
+    "IFC-106 (DONE) - Hexagonal architecture boundaries"
+  ],
+  "environment_requirements": [
+    "Object storage configured (Supabase Storage)",
+    "Email inbound baseline (SendGrid/SES webhook)",
+    "Event consumers available (BullMQ workers)",
+    "ClamAV antivirus service",
+    "Redis for event queue"
+  ]
+}

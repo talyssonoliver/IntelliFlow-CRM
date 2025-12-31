@@ -155,7 +155,7 @@ Execution Mode: SWARM
 - FILE:docs/design/page-registry.md
 - FILE:docs/design/sitemap.md
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:shadcn/ui setup
 - ENV:Tailwind configured
 - FILE:docs/planning/adr/ADR-001-modern-stack.md
@@ -196,7 +196,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:Redis configured
 - ENV:BullMQ installed
 - FILE:apps/api/src/modules/lead/lead.router.ts
@@ -226,7 +226,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - POLICY:Complexity metrics for tRPC/LangChain defined
 
 #### Tasks
@@ -254,7 +254,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - POLICY:DDD models documented
 - ENV:glossary created
 - FILE:docs/architecture/hex-boundaries.md
@@ -284,7 +284,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:Forecast algorithms
 - ENV:KPIs: win rate
 - ENV:total pipeline value
@@ -316,12 +316,12 @@ Execution Mode: SWARM
 - IMPLEMENTS:FLOW-011
 - IMPLEMENTS:FLOW-013
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:Ticket entity
 - ENV:SLA badge colors
 - ENV:notifications
 - FILE:packages/db/prisma/schema.prisma
-- FILE:apps/web/components/lead-form.tsx
+- FILE:apps/web/src/app/leads/(list)/new/page.tsx
 
 #### Tasks
 1. Tickets visible, SLA breach alerts in <1m
@@ -347,7 +347,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - POLICY:API endpoints defined
 - FILE:docs/security/zero-trust-design.md
 - FILE:docs/security/owasp-checklist.md
@@ -378,7 +378,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - POLICY:Ports and adapters established
 - FILE:docs/architecture/hex-boundaries.md
 - FILE:docs/operations/quality-gates.md
@@ -413,7 +413,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:SBOM generation in place
 - registry access configured
 - FILE:docs/security/zero-trust-design.md
@@ -453,7 +453,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:Container build pipeline exists
 - FILE:docs/security/zero-trust-design.md
 - FILE:docs/security/owasp-checklist.md
@@ -491,7 +491,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:tRPC subscriptions
 - ENV:Supabase realtime
 - FILE:artifacts/reports/web-vitals-report.json
@@ -527,7 +527,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:Vitest configured
 - ENV:coverage tools ready
 - FILE:docs/tdd-guidelines.md

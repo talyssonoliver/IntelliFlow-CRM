@@ -124,11 +124,11 @@ Execution Mode: SWARM
 - IMPLEMENTS:FLOW-014
 - IMPLEMENTS:FLOW-010
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:DDD model extended with ContactAggregate
 - ENV:UI for CRUD
 - FILE:packages/db/prisma/schema.prisma
-- FILE:apps/web/components/lead-form.tsx
+- FILE:apps/web/src/app/leads/(list)/new/page.tsx
 
 #### Tasks
 1. Contacts CRUD working, search <200ms
@@ -153,7 +153,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:Role/attribute-based permissions
 - ENV:audit logs for all actions
 - FILE:docs/planning/adr/ADR-008-audit-logging.md
@@ -186,7 +186,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - POLICY:CI/CD pipeline established
 - FILE:docs/operations/quality-gates.md
 - FILE:.github/workflows/ci.yml
@@ -216,7 +216,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:Production environment configured
 - FILE:docs/operations/release-rollback.md
 - FILE:.github/workflows/ci.yml
@@ -245,7 +245,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:OAuth credentials obtained
 - appointment domain stable
 - FILE:docs/shared/review-checklist.md
@@ -286,7 +286,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:Case and appointment APIs
 - UI design ready
 - FILE:docs/planning/adr/ADR-005-workflow-engine.md
@@ -331,7 +331,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - POLICY:CI/CD pipeline exists
 - environments defined
 - FILE:docs/security/zero-trust-design.md

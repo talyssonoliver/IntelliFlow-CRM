@@ -25,7 +25,7 @@
       "purpose": "Understand existing data models and extend with Ticket SLA models"
     },
     {
-      "path": "apps/web/src/components/lead-form.tsx",
+      "path": "apps/web/src/app/leads/(list)/new/page.tsx",
       "read_at": "2025-12-28T12:00:00Z",
       "purpose": "Reference for form patterns and component structure"
     },

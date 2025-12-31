@@ -1,0 +1,457 @@
+{
+  "$schema": "https://intelliflow.io/schemas/oncall-schedule.schema.json",
+  "metadata": {
+    "document_id": "IFC-142-ONCALL",
+    "version": "1.0.0",
+    "created_at": "2025-12-29T00:00:00Z",
+    "last_updated": "2025-12-29T00:00:00Z",
+    "owner": "STOA-Automation",
+    "description": "On-call rotation schedule for IntelliFlow CRM operations"
+  },
+  "timezone": "UTC",
+  "rotation_settings": {
+    "rotation_type": "weekly",
+    "handoff_time": "09:00",
+    "handoff_day": "Monday",
+    "overlap_period_minutes": 30,
+    "min_rest_period_hours": 8,
+    "max_consecutive_shifts": 2
+  },
+  "teams": [
+    {
+      "id": "platform",
+      "name": "Platform Team",
+      "description": "Infrastructure, DevOps, and platform reliability",
+      "slack_channel": "#platform-oncall",
+      "escalation_timeout_minutes": 15,
+      "members": [
+        {
+          "id": "eng-001",
+          "name": "Platform Engineer 1",
+          "email": "platform1@intelliflow.io",
+          "phone": "+1-555-0101",
+          "slack_handle": "@platform1",
+          "timezone": "America/New_York",
+          "skills": ["kubernetes", "terraform", "aws"],
+          "availability_preferences": {
+            "preferred_days": ["Monday", "Tuesday", "Wednesday"],
+            "blackout_dates": []
+          }
+        },
+        {
+          "id": "eng-002",
+          "name": "Platform Engineer 2",
+          "email": "platform2@intelliflow.io",
+          "phone": "+1-555-0102",
+          "slack_handle": "@platform2",
+          "timezone": "America/Los_Angeles",
+          "skills": ["kubernetes", "docker", "gcp"],
+          "availability_preferences": {
+            "preferred_days": ["Thursday", "Friday"],
+            "blackout_dates": []
+          }
+        },
+        {
+          "id": "eng-003",
+          "name": "Platform Engineer 3",
+          "email": "platform3@intelliflow.io",
+          "phone": "+44-20-5550103",
+          "slack_handle": "@platform3",
+          "timezone": "Europe/London",
+          "skills": ["terraform", "monitoring", "security"],
+          "availability_preferences": {
+            "preferred_days": ["Monday", "Tuesday"],
+            "blackout_dates": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "backend",
+      "name": "Backend Team",
+      "description": "API, services, and business logic",
+      "slack_channel": "#backend-oncall",
+      "escalation_timeout_minutes": 15,
+      "members": [
+        {
+          "id": "eng-004",
+          "name": "Backend Engineer 1",
+          "email": "backend1@intelliflow.io",
+          "phone": "+1-555-0104",
+          "slack_handle": "@backend1",
+          "timezone": "America/New_York",
+          "skills": ["nodejs", "typescript", "postgresql"],
+          "availability_preferences": {
+            "preferred_days": ["Monday", "Tuesday", "Wednesday"],
+            "blackout_dates": []
+          }
+        },
+        {
+          "id": "eng-005",
+          "name": "Backend Engineer 2",
+          "email": "backend2@intelliflow.io",
+          "phone": "+1-555-0105",
+          "slack_handle": "@backend2",
+          "timezone": "America/Chicago",
+          "skills": ["nodejs", "trpc", "prisma"],
+          "availability_preferences": {
+            "preferred_days": ["Wednesday", "Thursday", "Friday"],
+            "blackout_dates": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "ai",
+      "name": "AI/ML Team",
+      "description": "AI services, ML models, and inference",
+      "slack_channel": "#ai-oncall",
+      "escalation_timeout_minutes": 20,
+      "members": [
+        {
+          "id": "eng-006",
+          "name": "AI Engineer 1",
+          "email": "ai1@intelliflow.io",
+          "phone": "+1-555-0106",
+          "slack_handle": "@ai1",
+          "timezone": "America/New_York",
+          "skills": ["python", "langchain", "openai"],
+          "availability_preferences": {
+            "preferred_days": ["Monday", "Tuesday"],
+            "blackout_dates": []
+          }
+        },
+        {
+          "id": "eng-007",
+          "name": "AI Engineer 2",
+          "email": "ai2@intelliflow.io",
+          "phone": "+1-555-0107",
+          "slack_handle": "@ai2",
+          "timezone": "America/Los_Angeles",
+          "skills": ["python", "crewai", "ollama"],
+          "availability_preferences": {
+            "preferred_days": ["Thursday", "Friday"],
+            "blackout_dates": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "database",
+      "name": "Database Team",
+      "description": "PostgreSQL, Supabase, and data infrastructure",
+      "slack_channel": "#database-oncall",
+      "escalation_timeout_minutes": 10,
+      "members": [
+        {
+          "id": "eng-008",
+          "name": "DBA 1",
+          "email": "dba1@intelliflow.io",
+          "phone": "+1-555-0108",
+          "slack_handle": "@dba1",
+          "timezone": "America/New_York",
+          "skills": ["postgresql", "supabase", "replication"],
+          "availability_preferences": {
+            "preferred_days": ["Monday", "Tuesday", "Wednesday"],
+            "blackout_dates": []
+          }
+        }
+      ]
+    }
+  ],
+  "escalation_policies": [
+    {
+      "id": "default",
+      "name": "Default Escalation",
+      "description": "Standard escalation for most incidents",
+      "levels": [
+        {
+          "level": 1,
+          "timeout_minutes": 15,
+          "targets": ["oncall_primary"],
+          "notification_methods": ["slack", "phone", "sms"]
+        },
+        {
+          "level": 2,
+          "timeout_minutes": 15,
+          "targets": ["oncall_secondary", "team_lead"],
+          "notification_methods": ["slack", "phone", "sms"]
+        },
+        {
+          "level": 3,
+          "timeout_minutes": 30,
+          "targets": ["engineering_manager", "oncall_all"],
+          "notification_methods": ["slack", "phone", "sms", "email"]
+        },
+        {
+          "level": 4,
+          "timeout_minutes": 60,
+          "targets": ["cto", "vp_engineering"],
+          "notification_methods": ["phone", "sms", "email"]
+        }
+      ]
+    },
+    {
+      "id": "critical",
+      "name": "Critical Escalation",
+      "description": "Accelerated escalation for P1 incidents",
+      "levels": [
+        {
+          "level": 1,
+          "timeout_minutes": 5,
+          "targets": ["oncall_primary", "oncall_secondary"],
+          "notification_methods": ["slack", "phone", "sms"]
+        },
+        {
+          "level": 2,
+          "timeout_minutes": 10,
+          "targets": ["team_lead", "engineering_manager"],
+          "notification_methods": ["slack", "phone", "sms"]
+        },
+        {
+          "level": 3,
+          "timeout_minutes": 15,
+          "targets": ["cto", "vp_engineering", "oncall_all"],
+          "notification_methods": ["phone", "sms", "email"]
+        }
+      ]
+    },
+    {
+      "id": "business_hours",
+      "name": "Business Hours Escalation",
+      "description": "Escalation during business hours (9am-6pm local)",
+      "active_hours": {
+        "start": "09:00",
+        "end": "18:00",
+        "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+      },
+      "levels": [
+        {
+          "level": 1,
+          "timeout_minutes": 10,
+          "targets": ["oncall_primary"],
+          "notification_methods": ["slack"]
+        },
+        {
+          "level": 2,
+          "timeout_minutes": 15,
+          "targets": ["team_channel"],
+          "notification_methods": ["slack"]
+        },
+        {
+          "level": 3,
+          "timeout_minutes": 30,
+          "targets": ["team_lead"],
+          "notification_methods": ["slack", "phone"]
+        }
+      ]
+    }
+  ],
+  "schedules": [
+    {
+      "id": "platform-primary",
+      "team_id": "platform",
+      "name": "Platform Primary On-Call",
+      "rotation": [
+        {
+          "week_start": "2025-01-06",
+          "primary": "eng-001",
+          "secondary": "eng-002"
+        },
+        {
+          "week_start": "2025-01-13",
+          "primary": "eng-002",
+          "secondary": "eng-003"
+        },
+        {
+          "week_start": "2025-01-20",
+          "primary": "eng-003",
+          "secondary": "eng-001"
+        },
+        {
+          "week_start": "2025-01-27",
+          "primary": "eng-001",
+          "secondary": "eng-002"
+        }
+      ]
+    },
+    {
+      "id": "backend-primary",
+      "team_id": "backend",
+      "name": "Backend Primary On-Call",
+      "rotation": [
+        {
+          "week_start": "2025-01-06",
+          "primary": "eng-004",
+          "secondary": "eng-005"
+        },
+        {
+          "week_start": "2025-01-13",
+          "primary": "eng-005",
+          "secondary": "eng-004"
+        },
+        {
+          "week_start": "2025-01-20",
+          "primary": "eng-004",
+          "secondary": "eng-005"
+        },
+        {
+          "week_start": "2025-01-27",
+          "primary": "eng-005",
+          "secondary": "eng-004"
+        }
+      ]
+    },
+    {
+      "id": "ai-primary",
+      "team_id": "ai",
+      "name": "AI Primary On-Call",
+      "rotation": [
+        {
+          "week_start": "2025-01-06",
+          "primary": "eng-006",
+          "secondary": "eng-007"
+        },
+        {
+          "week_start": "2025-01-13",
+          "primary": "eng-007",
+          "secondary": "eng-006"
+        }
+      ]
+    },
+    {
+      "id": "database-primary",
+      "team_id": "database",
+      "name": "Database Primary On-Call",
+      "rotation": [
+        {
+          "week_start": "2025-01-06",
+          "primary": "eng-008",
+          "secondary": null
+        }
+      ]
+    }
+  ],
+  "override_policies": {
+    "minimum_notice_hours": 24,
+    "auto_approve_swaps": true,
+    "require_coverage": true,
+    "approval_required_for": ["vacation", "sick_leave"]
+  },
+  "overrides": [],
+  "compensation": {
+    "weekday_rate_multiplier": 1.0,
+    "weekend_rate_multiplier": 1.5,
+    "holiday_rate_multiplier": 2.0,
+    "incident_bonus": {
+      "P1": 100,
+      "P2": 50,
+      "P3": 25
+    },
+    "currency": "USD"
+  },
+  "holidays": [
+    {
+      "date": "2025-01-01",
+      "name": "New Year's Day",
+      "regions": ["US", "UK", "EU"]
+    },
+    {
+      "date": "2025-01-20",
+      "name": "Martin Luther King Jr. Day",
+      "regions": ["US"]
+    },
+    {
+      "date": "2025-02-17",
+      "name": "Presidents' Day",
+      "regions": ["US"]
+    },
+    {
+      "date": "2025-05-26",
+      "name": "Memorial Day",
+      "regions": ["US"]
+    },
+    {
+      "date": "2025-07-04",
+      "name": "Independence Day",
+      "regions": ["US"]
+    },
+    {
+      "date": "2025-09-01",
+      "name": "Labor Day",
+      "regions": ["US"]
+    },
+    {
+      "date": "2025-11-27",
+      "name": "Thanksgiving",
+      "regions": ["US"]
+    },
+    {
+      "date": "2025-12-25",
+      "name": "Christmas Day",
+      "regions": ["US", "UK", "EU"]
+    }
+  ],
+  "sla_response_targets": {
+    "P1_critical": {
+      "acknowledge_within_minutes": 5,
+      "response_within_minutes": 15,
+      "resolution_target_hours": 1
+    },
+    "P2_high": {
+      "acknowledge_within_minutes": 15,
+      "response_within_minutes": 30,
+      "resolution_target_hours": 4
+    },
+    "P3_warning": {
+      "acknowledge_within_minutes": 60,
+      "response_within_minutes": 240,
+      "resolution_target_hours": 24
+    },
+    "P4_info": {
+      "acknowledge_within_minutes": 480,
+      "response_within_minutes": 1440,
+      "resolution_target_hours": 168
+    }
+  },
+  "integrations": {
+    "pagerduty": {
+      "enabled": true,
+      "service_key": "${PAGERDUTY_SERVICE_KEY}",
+      "sync_schedule": true
+    },
+    "slack": {
+      "enabled": true,
+      "bot_token": "${SLACK_BOT_TOKEN}",
+      "oncall_channel": "#oncall",
+      "incident_channel": "#incidents"
+    },
+    "calendar": {
+      "enabled": true,
+      "provider": "google",
+      "calendar_id": "${GOOGLE_CALENDAR_ID}"
+    }
+  },
+  "reporting": {
+    "weekly_report": {
+      "enabled": true,
+      "send_day": "Monday",
+      "send_time": "09:00",
+      "recipients": ["engineering@intelliflow.io"]
+    },
+    "monthly_report": {
+      "enabled": true,
+      "send_day": 1,
+      "send_time": "09:00",
+      "recipients": ["leadership@intelliflow.io"]
+    },
+    "metrics_tracked": [
+      "acknowledge_time",
+      "response_time",
+      "resolution_time",
+      "escalation_count",
+      "incident_count_by_severity",
+      "toil_hours"
+    ]
+  }
+}

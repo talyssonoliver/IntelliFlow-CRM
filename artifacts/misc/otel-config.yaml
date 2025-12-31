@@ -254,3 +254,22 @@ service:
 # Adjust these based on your load and infrastructure
 # For production, increase batch sizes and memory limits
 # For development, keep defaults or reduce for faster feedback
+
+# Environment-specific overrides
+# Override these via environment variables:
+# - OTEL_LOG_LEVEL: Log level for collector (info, debug, warn)
+# - ENVIRONMENT: Deployment environment (development, staging, production)
+# - SERVICE_VERSION: Service version to tag all telemetry
+# - JAEGER_ENDPOINT: Jaeger backend endpoint (optional)
+# - TEMPO_ENDPOINT: Tempo backend endpoint (optional)
+# - LOKI_ENDPOINT: Loki backend endpoint (optional)
+# - PROMETHEUS_REMOTE_WRITE_ENDPOINT: Prometheus remote write endpoint (optional)
+
+# Expected environment setup:
+# - Jaeger OTLP receiver: localhost:6831 or configured via JAEGER_ENDPOINT
+# - Prometheus scrape target: localhost:8889/metrics
+# - Loki HTTP API: http://localhost:3100/loki/api/v1/push
+# - Tempo gRPC endpoint: localhost:4317
+
+# All sensitive data (auth headers, cookies, API keys) is automatically removed
+# by the attributes processor before export. Safe for use in all environments.

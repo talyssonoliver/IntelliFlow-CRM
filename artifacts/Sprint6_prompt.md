@@ -192,7 +192,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:Node.js 20
 - ENV:pnpm installed
 - FILE:docs/planning/adr/ADR-001-modern-stack.md
@@ -241,7 +241,7 @@ Before implementing this task, you **MUST** resolve the navigation inconsistency
 - IMPLEMENTS:FLOW-016 (Envio de Email com Tracking)
 - IMPLEMENTS:FLOW-020 (Feed de Atividade Unificado)
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:Header with contact photo+name+company+metrics
 - ENV:tabs (Overview,Activity Timeline,Deals,Tickets,Documents,AI Insights)
 - ENV:Right sidebar with Tasks+AI Insights+Notes
@@ -290,7 +290,7 @@ This is a NEW page. Ensure it follows the shared layout pattern:
 - IMPLEMENTS:FLOW-008 (Criação e Atualização de Deal)
 - IMPLEMENTS:FLOW-009 (Fechamento de Deal Won/Lost)
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:Pipeline stages (Qualification,Needs Analysis,Proposal,Negotiation,Closed)
 - ENV:Drag-and-drop Kanban
 - ENV:Deals by Stage pie chart
@@ -301,7 +301,7 @@ This is a NEW page. Ensure it follows the shared layout pattern:
 
 #### Tasks
 1. Kanban board working matching design mockup, stage changes persist <300ms
-2. artifacts: deals.router.ts, drag-drop-test.e2e.ts, context_ack.json
+2. artifacts: deals.router.ts, context_ack.json
 
 #### Validation
 ```bash
@@ -312,7 +312,7 @@ This is a NEW page. Ensure it follows the shared layout pattern:
 - Kanban board working, stage changes persist <300ms
 
 #### Artifacts
-- ARTIFACT:apps/api/src/modules/crm/deals.router.ts;ARTIFACT:apps/web/lib/deals/drag-drop-test.e2e.ts;EVIDENCE:artifacts/attestations/IFC-091/context_ack.json
+- ARTIFACT:apps/api/src/modules/crm/deals.router.ts;EVIDENCE:artifacts/attestations/IFC-091/context_ack.json
 
 ### IFC-129: Write UI and contract tests for core pages and tRPC endpoints
 
@@ -323,7 +323,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:Core pages built
 - FILE:docs/planning/adr/ADR-001-modern-stack.md
 - FILE:docs/tdd-guidelines.md
@@ -358,7 +358,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - POLICY:CI pipeline available
 - container build defined
 - FILE:docs/security/zero-trust-design.md
@@ -394,7 +394,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:Agent infrastructure ready
 - tRPC endpoints stable
 - FILE:docs/planning/adr/ADR-006-agent-tools.md
@@ -454,7 +454,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:Turborepo ready
 - ENV:TypeScript configured
 - FILE:docs/planning/adr/ADR-001-modern-stack.md
@@ -488,7 +488,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:Agent tools implemented
 - case timeline UI built
 - FILE:docs/planning/adr/ADR-006-agent-tools.md
@@ -536,7 +536,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - POLICY:Prisma schema defined
 - ENV:migrations ready
 - FILE:docs/planning/adr/ADR-001-modern-stack.md

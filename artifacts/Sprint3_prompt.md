@@ -123,7 +123,7 @@ Execution Mode: SWARM
 
 ### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:Supabase project created
 - ENV:auth configured
 - FILE:docs/planning/adr/ADR-001-modern-stack.md
@@ -158,13 +158,13 @@ Execution Mode: SWARM
 
 ### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:k6/Vitest setup
 - POLICY:metrics defined
 - FILE:docs/planning/adr/ADR-001-modern-stack.md
 - FILE:docs/tdd-guidelines.md
 - FILE:docs/shared/review-checklist.md
-- FILE:apps/web/components/lead-form.tsx
+- FILE:apps/web/src/app/leads/(list)/new/page.tsx
 - FILE:apps/ai-worker/src/chains/scoring.chain.ts
 
 ### Tasks
@@ -196,7 +196,7 @@ Execution Mode: SWARM
 
 ### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:Supabase account
 - ENV:usage limits understood
 - FILE:docs/planning/adr/ADR-001-modern-stack.md
@@ -227,7 +227,7 @@ Execution Mode: SWARM
 
 ### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:Domain models implemented
 - FILE:packages/adapters/src/repositories/PrismaLeadRepository.ts
 - FILE:packages/adapters/src/repositories/PrismaContactRepository.ts
@@ -265,7 +265,7 @@ Execution Mode: SWARM
 
 ### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:AI generation features integrated
 - FILE:docs/shared/review-checklist.md
 - FILE:docs/operations/pr-checklist.md
@@ -300,7 +300,7 @@ Execution Mode: SWARM
 
 ### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:DDD model finalized
 - tRPC API foundation ready
 - FILE:docs/planning/DDD-context-map.puml

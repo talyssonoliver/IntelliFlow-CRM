@@ -1,0 +1,96 @@
+{
+  "$schema": "https://intelliflow-crm.com/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-151",
+  "run_id": "sprint9-audit-20251229T151529-7opfa2",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2025-12-29T15:33:37.115Z",
+  "verdict": "INCOMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 1,
+    "validations_passed": 0,
+    "validations_failed": 1,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/operations/runbooks/dlq-triage.md": "82ddbacc6df924547a752a2ae1c9bb43d041b85f8369631ac794c017f34fe655"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-151",
+      "command": "pnpm test",
+      "exit_code": 124,
+      "passed": false,
+      "timestamp": "2025-12-29T15:27:19.105Z",
+      "duration_ms": 378007,
+      "stdout_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "ENV-008-AI"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Consumer SDK supports retries/backoff",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "DLQ storage/triage workflow",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "idempotent handlers",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "poison-message handling",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "metrics and alerts",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "chaos tests",
+      "met": false,
+      "evidence": "Failed validations: 1"
+    },
+    {
+      "criterion": "artifacts: dlq-triage.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "context_ack.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: >=95%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": ">=90%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "<30 min",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/IFC-151/context_ack.json; Validation(s) failed: pnpm test; 11 DoD criteria unverified"
+}

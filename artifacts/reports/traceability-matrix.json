@@ -21,7 +21,7 @@
         "apps/api/src/modules/lead/lead.router.ts"
       ],
       "ui_components": [
-        "apps/web/src/components/lead-form.tsx",
+        "apps/web/src/app/leads/(list)/new/page.tsx",
         "apps/web/src/app/leads/page.tsx"
       ],
       "tests": [

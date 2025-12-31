@@ -4,10 +4,10 @@
 
 ### Pre-requisites Verified
 - artifacts/sprint0/codex-run/Framework.md - MATOP protocol
-- tools/audit/audit-matrix.yml - Audit requirements
+- audit-matrix.yml - Audit requirements
 - docs/planning/adr/ADR-001-modern-stack.md - Technology decisions
 - docs/tdd-guidelines.md - Testing standards
-- apps/web/components/lead-form.tsx - Lead form component
+- apps/web/src/app/leads/(list)/new/page.tsx - Lead form component
 - apps/ai-worker/src/chains/scoring.chain.ts - AI scoring chain
 
 ### Dependencies

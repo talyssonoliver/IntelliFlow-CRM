@@ -293,7 +293,7 @@
       "task_id": "IFC-004",
       "description": "Next.js 16.0.10 Lead Capture UI",
       "artifacts_verified": [
-        "apps/web/src/components/lead-form.tsx",
+        "apps/web/src/app/leads/(list)/new/page.tsx",
         "artifacts/lighthouse/lighthouse-report.json",
         "artifacts/attestations/IFC-004/context_ack.json"
       ]

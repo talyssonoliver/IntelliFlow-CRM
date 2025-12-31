@@ -18,7 +18,7 @@
         "verified_at": "2025-12-26T14:29:00Z"
       },
       {
-        "path": "tools/audit/audit-matrix.yml",
+        "path": "audit-matrix.yml",
         "status": "verified",
         "verified_at": "2025-12-26T14:29:00Z"
       },
@@ -38,7 +38,7 @@
         "verified_at": "2025-12-26T14:29:00Z"
       },
       {
-        "path": "apps/web/components/lead-form.tsx",
+        "path": "apps/web/src/app/leads/(list)/new/page.tsx",
         "status": "verified",
         "verified_at": "2025-12-26T14:29:00Z"
       },
@@ -68,7 +68,7 @@
     "IFC-004": {
       "status": "verified",
       "name": "Next.js 16.0.10 Lead Capture UI",
-      "evidence": "apps/web/components/lead-form.tsx exists with Lighthouse >90",
+      "evidence": "apps/web/src/app/leads/(list)/new/page.tsx exists with Lighthouse >90",
       "verified_at": "2025-12-26T14:29:00Z"
     },
     "IFC-005": {

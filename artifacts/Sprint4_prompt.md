@@ -110,7 +110,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:Skills matrix for tRPC/Next.js/LangChain
 - FILE:docs/planning/adr/ADR-001-modern-stack.md
 - FILE:docs/tdd-guidelines.md
@@ -144,7 +144,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:Domain models and repositories implemented
 - FILE:docs/architecture/hex-boundaries.md
 - FILE:docs/planning/DDD-context-map.puml
@@ -178,7 +178,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:Domain models implemented
 - FILE:docs/architecture/hex-boundaries.md
 - FILE:docs/planning/DDD-context-map.puml
@@ -217,7 +217,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - POLICY:Ports/adapters defined
 - repo structure established
 - FILE:docs/planning/adr/ADR-001-modern-stack.md
@@ -256,7 +256,7 @@ Execution Mode: SWARM
 
 #### Pre-requisites
 - FILE:artifacts/sprint0/codex-run/Framework.md
-- FILE:tools/audit/audit-matrix.yml
+- FILE:audit-matrix.yml
 - ENV:Calendar provider research
 - case domain implemented
 - FILE:docs/planning/DDD-context-map.puml

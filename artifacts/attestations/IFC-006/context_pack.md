@@ -4,7 +4,7 @@
 
 ### Pre-requisites Verified
 - artifacts/sprint0/codex-run/Framework.md - MATOP protocol and validation rules
-- tools/audit/audit-matrix.yml - Audit requirements
+- audit-matrix.yml - Audit requirements
 - packages/db/prisma/schema.prisma - Database schema definitions
 - packages/db/__tests__/supabase.integration.test.ts - Integration tests
 

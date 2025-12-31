@@ -1,0 +1,151 @@
+{
+  "task_id": "IFC-158",
+  "run_id": "20251229-234400-IFC-158-a7b3c9f2",
+  "files_read": [
+    {
+      "path": "artifacts/sprint0/codex-run/Framework.md",
+      "purpose": "STOA framework and governance model for evidence-based completion",
+      "key_sections": ["STOA Roles", "Evidence Integrity", "Context Pack Requirements"]
+    },
+    {
+      "path": "audit-matrix.yml",
+      "purpose": "Quality gates and validation requirements",
+      "key_sections": ["Tier 1 blockers", "Coverage thresholds"]
+    },
+    {
+      "path": "docs/architecture/hex-boundaries.md",
+      "purpose": "Hexagonal architecture boundaries and layer dependencies",
+      "key_sections": ["Domain Layer", "Application Layer (Ports)", "Adapters Layer"]
+    },
+    {
+      "path": "packages/adapters/src/calendar/google/client.ts",
+      "purpose": "Google Calendar integration reference for calendar sync patterns",
+      "key_sections": ["OAuth flow", "Event CRUD", "Idempotency handling", "Retry logic"]
+    },
+    {
+      "path": "packages/domain/src/legal/appointments/Appointment.ts",
+      "purpose": "Appointment aggregate root with domain logic",
+      "key_sections": ["Reschedule method", "Cancel method", "Domain events", "External calendar ID"]
+    },
+    {
+      "path": "docs/company/brand/style-guide.md",
+      "purpose": "UI component patterns and styling guidelines",
+      "key_sections": ["Component mapping to flows"]
+    },
+    {
+      "path": "docs/design/page-registry.md",
+      "purpose": "Page registry with KPIs and route conventions",
+      "key_sections": ["Path conventions", "Route groups"]
+    },
+    {
+      "path": "apps/project-tracker/docs/metrics/_global/flows/flow-index.md",
+      "purpose": "User flow index and categorization",
+      "key_sections": ["Comunicação category", "FLOW-019 reference"]
+    },
+    {
+      "path": "apps/project-tracker/docs/metrics/_global/flows/FLOW-019.md",
+      "purpose": "Meeting scheduling flow specification",
+      "key_sections": ["Invitation delivery", "Calendar sync", "Reminder setup", "Reschedule handling"]
+    }
+  ],
+  "invariants_acknowledged": [
+    "Domain layer (packages/domain) MUST NOT import from application or adapters layers",
+    "Application layer defines ports (interfaces), adapters implement them",
+    "All calendar operations MUST include idempotency keys to prevent duplicate events",
+    "ICS files MUST conform to RFC 5545 (iCalendar) specification",
+    "Reschedule operations MUST increment SEQUENCE field in ICS to signal updates to calendar clients",
+    "Cancel operations MUST set STATUS:CANCELLED and METHOD:CANCEL in ICS",
+    "Reminders MUST integrate with notification service (dependency: IFC-137 DONE)",
+    "All scheduling operations MUST create audit trail entries",
+    "Calendar sync MUST handle timezone conversions correctly (UTC storage, local display)",
+    "Integration tests MUST verify E2E flow: create → reschedule → cancel with ICS validation",
+    "Test coverage MUST be >=95% for domain layer, >=90% overall (enforced by CI)",
+    "ICS generation MUST support both initial invites (METHOD:REQUEST) and updates (METHOD:REQUEST with SEQUENCE>0)",
+    "Appointment domain events (AppointmentRescheduledEvent, AppointmentCancelledEvent) MUST trigger ICS regeneration",
+    "Google Calendar adapter idempotency pattern MUST be followed for consistency"
+  ],
+  "implementation_approach": {
+    "step_1_ics_generation": {
+      "description": "Create ICS generation service in application layer",
+      "location": "packages/application/src/services/IcsGenerationService.ts",
+      "pattern": "Port interface in application, implementation in adapters if needed",
+      "artifacts": ["ICS files conforming to RFC 5545", "Unit tests with >95% coverage"]
+    },
+    "step_2_reschedule_cancel_semantics": {
+      "description": "Implement proper ICS handling for reschedule and cancel operations",
+      "sequence_handling": "Increment SEQUENCE on each update to signal changes",
+      "cancel_handling": "Set STATUS:CANCELLED and METHOD:CANCEL for cancellations",
+      "domain_events": "Subscribe to AppointmentRescheduledEvent and AppointmentCancelledEvent"
+    },
+    "step_3_reminder_scheduling": {
+      "description": "Integrate with notification service for reminders",
+      "dependency": "IFC-137 (Notification service MVP) - DONE",
+      "reminder_triggers": ["15 minutes before", "1 hour before", "1 day before (configurable)"],
+      "delivery_channels": ["Email", "SMS", "Push notification"]
+    },
+    "step_4_audit_trail": {
+      "description": "Log all scheduling operations for compliance and debugging",
+      "audit_events": ["ICS generated", "ICS delivered", "Reschedule requested", "Cancellation processed", "Reminder sent"],
+      "storage": "Audit log table with timestamp, user, operation, payload"
+    },
+    "step_5_integration_tests": {
+      "description": "E2E tests for scheduling flows",
+      "test_scenarios": ["Create appointment → Generate ICS → Verify RFC 5545 compliance", "Reschedule → Regenerate ICS with SEQUENCE incremented", "Cancel → Generate cancel ICS with STATUS:CANCELLED", "Reminder delivery → Verify notification service integration"],
+      "validation_method": "VALIDATE:pnpm test:e2e"
+    }
+  },
+  "dependencies": {
+    "IFC-138": {
+      "status": "DONE",
+      "description": "Google Calendar integration with bidirectional sync",
+      "used_for": "Calendar adapter pattern and idempotency handling"
+    },
+    "IFC-157": {
+      "status": "BACKLOG",
+      "description": "Unknown - needs clarification",
+      "concern": "Listed as dependency but in BACKLOG status. May need to proceed without or clarify requirements."
+    },
+    "IFC-137": {
+      "status": "DONE",
+      "description": "Notification service MVP available",
+      "used_for": "Reminder delivery integration"
+    }
+  },
+  "risks_and_mitigations": {
+    "ifc_157_backlog": {
+      "risk": "Dependency IFC-157 is in BACKLOG but listed as prerequisite",
+      "mitigation": "Proceed with implementation based on available context. If IFC-157 is truly required, mark IFC-158 as blocked until clarified.",
+      "decision": "Proceed - IFC-157 may be calendar sync which is already available via IFC-138"
+    },
+    "rfc_5545_complexity": {
+      "risk": "iCalendar RFC 5545 specification is complex with many optional fields",
+      "mitigation": "Focus on core required fields for MVP: VCALENDAR, VEVENT, DTSTART, DTEND, SUMMARY, UID, SEQUENCE, STATUS, METHOD",
+      "library_option": "Consider using 'ics' npm package for RFC 5545 compliance"
+    }
+  },
+  "success_criteria": {
+    "functional": [
+      "ICS files generated for new appointments",
+      "ICS files regenerated on reschedule with SEQUENCE incremented",
+      "ICS cancel files generated on cancellation",
+      "Reminders scheduled and delivered via notification service",
+      "Audit trail captures all operations"
+    ],
+    "non_functional": [
+      "Test coverage >=95% domain, >=90% overall",
+      "All tests pass (pnpm test:e2e)",
+      "TypeScript strict mode passes",
+      "Linting passes with max-warnings=0",
+      "Build succeeds"
+    ],
+    "evidence_required": [
+      "context_ack.json (this file)",
+      "Unit test files with coverage >90%",
+      "Integration test files validating E2E flows",
+      "ICS sample output validating RFC 5545 compliance"
+    ]
+  },
+  "created_at": "2025-12-29T23:44:00Z",
+  "created_by": "Claude Sonnet 4.5",
+  "framework_version": "v4.3 FINAL"
+}

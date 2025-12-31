@@ -1,0 +1,74 @@
+{
+  "$schema": "https://intelliflow-crm.com/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-137",
+  "run_id": "sprint4-audit-20251229T150743-c4kyrq",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2025-12-29T15:07:57.400Z",
+  "verdict": "INCOMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "packages/domain/src/legal/appointments/Appointment.ts": "e95efd189763b8e25e7e54ac181b1b4a9523482c98c8019be930be9c90b49ca1",
+    "packages/application/src/usecases/scheduling/index.ts": "a44a4f83719d34a0a4ba7859196faf74901269d2b4c5a5531c9c92f89dec89c1",
+    "apps/api/src/modules/legal/appointments.router.ts": "fcc568dc2127b1dee8193c7a22f75ee7fad1a9b2188c96a1f9e721a010195b2e"
+  },
+  "validation_results": [],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-136",
+    "IFC-003"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Appointment aggregate",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "services and repositories implemented",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "conflict detection logic with unit tests",
+      "met": true,
+      "evidence": "All 0 validations passed"
+    },
+    {
+      "criterion": "recurrence rules",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "APIs via tRPC",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "scheduling integrated with case management",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: >=95%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": ">=90%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/IFC-137/context_ack.json; 7 DoD criteria unverified"
+}
