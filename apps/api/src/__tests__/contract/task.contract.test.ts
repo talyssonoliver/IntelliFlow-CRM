@@ -1,3 +1,4 @@
+import { TEST_UUIDS } from '../../test/setup';
 /**
  * Task Router Contract Tests (IFC-129)
  *
@@ -5,6 +6,8 @@
  * - Input/output type validation
  * - Status and priority contracts
  * - Completion flow contracts
+ *
+ * Following hexagonal architecture - mocks services for business logic procedures.
  *
  * @see Sprint 6 - IFC-129: UI and Contract Tests
  */
@@ -20,8 +23,32 @@ import {
   mockLead,
   mockContact,
   mockOpportunity,
-  TEST_UUIDS,
 } from '../../test/setup';
+
+/**
+ * Create a mock domain task for service responses
+ */
+const createMockDomainTask = (overrides: Record<string, unknown> = {}) => ({
+  id: { value: TEST_UUIDS.task1 },
+  title: 'Follow up call',
+  description: 'Call the lead to discuss requirements',
+  status: 'PENDING',
+  priority: 'HIGH',
+  dueDate: new Date('2025-01-25'),
+  completedAt: null,
+  leadId: null,
+  contactId: null,
+  opportunityId: null,
+  ownerId: TEST_UUIDS.user1,
+  isCompleted: false,
+  isCancelled: false,
+  isOverdue: false,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  getDomainEvents: () => [],
+  clearDomainEvents: () => {},
+  ...overrides,
+});
 
 /**
  * Task status contract
@@ -56,7 +83,8 @@ const taskStatsResponseSchema = z.object({
 });
 
 describe('Task Router Contract Tests', () => {
-  const caller = taskRouter.createCaller(createTestContext());
+  const ctx = createTestContext();
+  const caller = taskRouter.createCaller(ctx);
 
   describe('create - Input Contract', () => {
     it('should require title, dueDate, and priority', async () => {
@@ -66,9 +94,12 @@ describe('Task Router Contract Tests', () => {
         priority: 'HIGH' as const,
       };
 
-      prismaMock.task.create.mockResolvedValue({
-        ...mockTask,
-        ...validInput,
+      const mockDomainTask = createMockDomainTask(validInput);
+
+      ctx.services!.task!.createTask = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainTask,
       });
 
       const result = await caller.create(validInput);
@@ -85,9 +116,11 @@ describe('Task Router Contract Tests', () => {
           priority,
         };
 
-        prismaMock.task.create.mockResolvedValue({
-          ...mockTask,
-          ...input,
+        const mockDomainTask = createMockDomainTask(input);
+        ctx.services!.task!.createTask = vi.fn().mockResolvedValue({
+          isSuccess: true,
+          isFailure: false,
+          value: mockDomainTask,
         });
 
         const result = await caller.create(input);
@@ -103,9 +136,11 @@ describe('Task Router Contract Tests', () => {
         description: 'This is a detailed description',
       };
 
-      prismaMock.task.create.mockResolvedValue({
-        ...mockTask,
-        ...input,
+      const mockDomainTask = createMockDomainTask(input);
+      ctx.services!.task!.createTask = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainTask,
       });
 
       const result = await caller.create(input);
@@ -121,9 +156,11 @@ describe('Task Router Contract Tests', () => {
           status,
         };
 
-        prismaMock.task.create.mockResolvedValue({
-          ...mockTask,
-          ...input,
+        const mockDomainTask = createMockDomainTask(input);
+        ctx.services!.task!.createTask = vi.fn().mockResolvedValue({
+          isSuccess: true,
+          isFailure: false,
+          value: mockDomainTask,
         });
 
         const result = await caller.create(input);
@@ -132,7 +169,11 @@ describe('Task Router Contract Tests', () => {
     });
 
     it('should validate leadId if provided', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue(null);
+      ctx.services!.task!.createTask = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: `Lead not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       try {
         await caller.create({
@@ -141,7 +182,7 @@ describe('Task Router Contract Tests', () => {
           priority: 'HIGH',
           leadId: TEST_UUIDS.nonExistent,
         });
-        fail('Should have thrown');
+        expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.code).toBe('NOT_FOUND');
         expect(error.message).toContain('Lead');
@@ -149,7 +190,11 @@ describe('Task Router Contract Tests', () => {
     });
 
     it('should validate contactId if provided', async () => {
-      prismaMock.contact.findUnique.mockResolvedValue(null);
+      ctx.services!.task!.createTask = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: `Contact not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       try {
         await caller.create({
@@ -158,7 +203,7 @@ describe('Task Router Contract Tests', () => {
           priority: 'HIGH',
           contactId: TEST_UUIDS.nonExistent,
         });
-        fail('Should have thrown');
+        expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.code).toBe('NOT_FOUND');
         expect(error.message).toContain('Contact');
@@ -166,7 +211,11 @@ describe('Task Router Contract Tests', () => {
     });
 
     it('should validate opportunityId if provided', async () => {
-      prismaMock.opportunity.findUnique.mockResolvedValue(null);
+      ctx.services!.task!.createTask = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: `Opportunity not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       try {
         await caller.create({
@@ -175,7 +224,7 @@ describe('Task Router Contract Tests', () => {
           priority: 'HIGH',
           opportunityId: TEST_UUIDS.nonExistent,
         });
-        fail('Should have thrown');
+        expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.code).toBe('NOT_FOUND');
         expect(error.message).toContain('Opportunity');
@@ -185,7 +234,12 @@ describe('Task Router Contract Tests', () => {
 
   describe('create - Output Contract', () => {
     it('should return task with all required fields', async () => {
-      prismaMock.task.create.mockResolvedValue(mockTask);
+      const mockDomainTask = createMockDomainTask();
+      ctx.services!.task!.createTask = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainTask,
+      });
 
       const result = await caller.create({
         title: 'New Task',
@@ -202,9 +256,11 @@ describe('Task Router Contract Tests', () => {
     });
 
     it('should default to PENDING status', async () => {
-      prismaMock.task.create.mockResolvedValue({
-        ...mockTask,
-        status: 'PENDING' as const,
+      const mockDomainTask = createMockDomainTask({ status: 'PENDING' });
+      ctx.services!.task!.createTask = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainTask,
       });
 
       const result = await caller.create({
@@ -217,9 +273,11 @@ describe('Task Router Contract Tests', () => {
     });
 
     it('should have null completedAt initially', async () => {
-      prismaMock.task.create.mockResolvedValue({
-        ...mockTask,
-        completedAt: null,
+      const mockDomainTask = createMockDomainTask({ completedAt: null });
+      ctx.services!.task!.createTask = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainTask,
       });
 
       const result = await caller.create({
@@ -237,31 +295,32 @@ describe('Task Router Contract Tests', () => {
       await expect(caller.getById({ id: 'invalid' })).rejects.toThrow();
     });
 
-    it('should return task with relations', async () => {
-      const taskWithRelations = {
-        ...mockTask,
-        owner: mockUser,
-        lead: mockLead,
-        contact: mockContact,
-        opportunity: mockOpportunity,
-      };
-
-      prismaMock.task.findUnique.mockResolvedValue(taskWithRelations);
+    it('should return task with fields', async () => {
+      const mockDomainTask = createMockDomainTask();
+      ctx.services!.task!.getTaskById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainTask,
+      });
 
       const result = await caller.getById({ id: TEST_UUIDS.task1 });
 
-      expect(result).toHaveProperty('owner');
-      expect(result).toHaveProperty('lead');
-      expect(result).toHaveProperty('contact');
-      expect(result).toHaveProperty('opportunity');
+      expect(result).toHaveProperty('id');
+      expect(result).toHaveProperty('title');
+      expect(result).toHaveProperty('status');
+      expect(result).toHaveProperty('priority');
     });
 
     it('should throw NOT_FOUND for non-existent task', async () => {
-      prismaMock.task.findUnique.mockResolvedValue(null);
+      ctx.services!.task!.getTaskById = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: `Task not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       try {
         await caller.getById({ id: TEST_UUIDS.nonExistent });
-        fail('Should have thrown');
+        expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.code).toBe('NOT_FOUND');
       }
@@ -394,11 +453,17 @@ describe('Task Router Contract Tests', () => {
       await expect(caller.update({ title: 'Updated' })).rejects.toThrow();
     });
 
-    it('should accept partial updates', async () => {
-      prismaMock.task.findUnique.mockResolvedValue(mockTask);
-      prismaMock.task.update.mockResolvedValue({
-        ...mockTask,
-        title: 'Updated Title',
+    it('should accept partial updates (title/description via service)', async () => {
+      const mockDomainTask = createMockDomainTask({ title: 'Updated Title' });
+      ctx.services!.task!.getTaskById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainTask(),
+      });
+      ctx.services!.task!.updateTaskInfo = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainTask,
       });
 
       const result = await caller.update({
@@ -409,9 +474,14 @@ describe('Task Router Contract Tests', () => {
       expect(result.title).toBe('Updated Title');
     });
 
-    it('should allow status updates', async () => {
+    it('should allow status updates (complex update via Prisma)', async () => {
       for (const status of taskStatuses) {
-        prismaMock.task.findUnique.mockResolvedValue(mockTask);
+        // Complex updates (status, priority, etc.) go through Prisma with service validation
+        ctx.services!.task!.getTaskById = vi.fn().mockResolvedValue({
+          isSuccess: true,
+          isFailure: false,
+          value: createMockDomainTask(),
+        });
         prismaMock.task.update.mockResolvedValue({
           ...mockTask,
           status,
@@ -427,7 +497,11 @@ describe('Task Router Contract Tests', () => {
     });
 
     it('should validate leadId on update', async () => {
-      prismaMock.task.findUnique.mockResolvedValue(mockTask);
+      ctx.services!.task!.getTaskById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainTask(),
+      });
       prismaMock.lead.findUnique.mockResolvedValue(null);
 
       try {
@@ -435,14 +509,18 @@ describe('Task Router Contract Tests', () => {
           id: TEST_UUIDS.task1,
           leadId: TEST_UUIDS.nonExistent,
         });
-        fail('Should have thrown');
+        expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.code).toBe('NOT_FOUND');
       }
     });
 
     it('should validate contactId on update', async () => {
-      prismaMock.task.findUnique.mockResolvedValue(mockTask);
+      ctx.services!.task!.getTaskById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainTask(),
+      });
       prismaMock.contact.findUnique.mockResolvedValue(null);
 
       try {
@@ -450,14 +528,18 @@ describe('Task Router Contract Tests', () => {
           id: TEST_UUIDS.task1,
           contactId: TEST_UUIDS.nonExistent,
         });
-        fail('Should have thrown');
+        expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.code).toBe('NOT_FOUND');
       }
     });
 
     it('should validate opportunityId on update', async () => {
-      prismaMock.task.findUnique.mockResolvedValue(mockTask);
+      ctx.services!.task!.getTaskById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainTask(),
+      });
       prismaMock.opportunity.findUnique.mockResolvedValue(null);
 
       try {
@@ -465,7 +547,25 @@ describe('Task Router Contract Tests', () => {
           id: TEST_UUIDS.task1,
           opportunityId: TEST_UUIDS.nonExistent,
         });
-        fail('Should have thrown');
+        expect.fail('Should have thrown');
+      } catch (error: any) {
+        expect(error.code).toBe('NOT_FOUND');
+      }
+    });
+
+    it('should throw NOT_FOUND for non-existent task', async () => {
+      ctx.services!.task!.getTaskById = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: `Task not found: ${TEST_UUIDS.nonExistent}` },
+      });
+
+      try {
+        await caller.update({
+          id: TEST_UUIDS.nonExistent,
+          title: 'Updated',
+        });
+        expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.code).toBe('NOT_FOUND');
       }
@@ -474,8 +574,11 @@ describe('Task Router Contract Tests', () => {
 
   describe('delete - Contract', () => {
     it('should return success response', async () => {
-      prismaMock.task.findUnique.mockResolvedValue(mockTask);
-      prismaMock.task.delete.mockResolvedValue(mockTask);
+      ctx.services!.task!.deleteTask = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: undefined,
+      });
 
       const result = await caller.delete({ id: TEST_UUIDS.task1 });
 
@@ -486,11 +589,15 @@ describe('Task Router Contract Tests', () => {
     });
 
     it('should throw NOT_FOUND for non-existent task', async () => {
-      prismaMock.task.findUnique.mockResolvedValue(null);
+      ctx.services!.task!.deleteTask = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: `Task not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       try {
         await caller.delete({ id: TEST_UUIDS.nonExistent });
-        fail('Should have thrown');
+        expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.code).toBe('NOT_FOUND');
       }
@@ -504,14 +611,16 @@ describe('Task Router Contract Tests', () => {
     });
 
     it('should return completed task with completedAt', async () => {
-      prismaMock.task.findUnique.mockResolvedValue({
-        ...mockTask,
-        status: 'IN_PROGRESS' as const,
+      const completedAt = new Date();
+      const mockDomainTask = createMockDomainTask({
+        status: 'COMPLETED',
+        completedAt,
+        isCompleted: true,
       });
-      prismaMock.task.update.mockResolvedValue({
-        ...mockTask,
-        status: 'COMPLETED' as const,
-        completedAt: new Date(),
+      ctx.services!.task!.completeTask = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainTask,
       });
 
       const result = await caller.complete({ taskId: TEST_UUIDS.task1 });
@@ -522,14 +631,15 @@ describe('Task Router Contract Tests', () => {
     });
 
     it('should throw BAD_REQUEST if already completed', async () => {
-      prismaMock.task.findUnique.mockResolvedValue({
-        ...mockTask,
-        status: 'COMPLETED' as const,
+      ctx.services!.task!.completeTask = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: 'Task is already completed' },
       });
 
       try {
         await caller.complete({ taskId: TEST_UUIDS.task1 });
-        fail('Should have thrown');
+        expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.code).toBe('BAD_REQUEST');
         expect(error.message).toContain('already completed');
@@ -537,11 +647,15 @@ describe('Task Router Contract Tests', () => {
     });
 
     it('should throw NOT_FOUND for non-existent task', async () => {
-      prismaMock.task.findUnique.mockResolvedValue(null);
+      ctx.services!.task!.completeTask = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: `Task not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       try {
         await caller.complete({ taskId: TEST_UUIDS.nonExistent });
-        fail('Should have thrown');
+        expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.code).toBe('NOT_FOUND');
       }
@@ -551,14 +665,14 @@ describe('Task Router Contract Tests', () => {
   describe('stats - Contract', () => {
     it('should return stats matching contract', async () => {
       prismaMock.task.count.mockResolvedValueOnce(100);
-      prismaMock.task.groupBy.mockResolvedValueOnce([
+      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
         { status: 'PENDING', _count: 40 },
         { status: 'IN_PROGRESS', _count: 30 },
-      ] as any);
-      prismaMock.task.groupBy.mockResolvedValueOnce([
+      ]);
+      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
         { priority: 'HIGH', _count: 30 },
         { priority: 'URGENT', _count: 10 },
-      ] as any);
+      ]);
       prismaMock.task.count.mockResolvedValueOnce(10); // overdue
       prismaMock.task.count.mockResolvedValueOnce(5); // dueToday
 
@@ -570,11 +684,11 @@ describe('Task Router Contract Tests', () => {
 
     it('should return byStatus correctly', async () => {
       prismaMock.task.count.mockResolvedValueOnce(100);
-      prismaMock.task.groupBy.mockResolvedValueOnce([
+      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
         { status: 'PENDING', _count: 40 },
         { status: 'COMPLETED', _count: 25 },
-      ] as any);
-      prismaMock.task.groupBy.mockResolvedValueOnce([]);
+      ]);
+      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
       prismaMock.task.count.mockResolvedValueOnce(0);
       prismaMock.task.count.mockResolvedValueOnce(0);
 
@@ -588,11 +702,11 @@ describe('Task Router Contract Tests', () => {
 
     it('should return byPriority correctly', async () => {
       prismaMock.task.count.mockResolvedValueOnce(100);
-      prismaMock.task.groupBy.mockResolvedValueOnce([]);
-      prismaMock.task.groupBy.mockResolvedValueOnce([
+      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
+      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
         { priority: 'HIGH', _count: 30 },
         { priority: 'LOW', _count: 20 },
-      ] as any);
+      ]);
       prismaMock.task.count.mockResolvedValueOnce(0);
       prismaMock.task.count.mockResolvedValueOnce(0);
 
@@ -606,7 +720,7 @@ describe('Task Router Contract Tests', () => {
 
     it('should count overdue tasks', async () => {
       prismaMock.task.count.mockResolvedValueOnce(100);
-      prismaMock.task.groupBy.mockResolvedValue([]);
+      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
       prismaMock.task.count.mockResolvedValueOnce(15); // overdue
       prismaMock.task.count.mockResolvedValueOnce(5); // dueToday
 
@@ -617,7 +731,7 @@ describe('Task Router Contract Tests', () => {
 
     it('should count tasks due today', async () => {
       prismaMock.task.count.mockResolvedValueOnce(100);
-      prismaMock.task.groupBy.mockResolvedValue([]);
+      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
       prismaMock.task.count.mockResolvedValueOnce(10); // overdue
       prismaMock.task.count.mockResolvedValueOnce(8); // dueToday
 
@@ -628,7 +742,7 @@ describe('Task Router Contract Tests', () => {
 
     it('should handle empty stats', async () => {
       prismaMock.task.count.mockResolvedValueOnce(0);
-      prismaMock.task.groupBy.mockResolvedValue([]);
+      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
       prismaMock.task.count.mockResolvedValueOnce(0);
       prismaMock.task.count.mockResolvedValueOnce(0);
 

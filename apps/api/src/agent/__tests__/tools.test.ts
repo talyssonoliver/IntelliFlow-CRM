@@ -147,7 +147,7 @@ describe('Agent Tools', () => {
 
       it('should generate preview', async () => {
         const context = createTestContext();
-        const input = { query: 'test query', status: ['NEW', 'CONTACTED'] as const, limit: 20, offset: 0 };
+        const input = { query: 'test query', status: ['NEW', 'CONTACTED'] as ('NEW' | 'CONTACTED')[], limit: 20, offset: 0 };
 
         const preview = await searchLeadsTool.generatePreview(input, context);
 
@@ -160,7 +160,7 @@ describe('Agent Tools', () => {
       it('should search multiple entity types', async () => {
         const context = createTestContext();
         const input = {
-          entityTypes: ['LEAD', 'CONTACT', 'OPPORTUNITY'] as const,
+          entityTypes: ['LEAD', 'CONTACT', 'OPPORTUNITY'] as ('LEAD' | 'CONTACT' | 'OPPORTUNITY')[],
           query: 'test',
           limit: 20,
         };

@@ -5,94 +5,96 @@
  * - CRUD operations (create, read, update, delete)
  * - List with filtering and pagination
  * - Account statistics and insights
+ *
+ * Following hexagonal architecture - uses AccountService for business logic.
  */
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, protectedProcedure } from '../../trpc';
+import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import {
   createAccountSchema,
   updateAccountSchema,
   accountQuerySchema,
   idSchema,
 } from '@intelliflow/validators/account';
+import { mapAccountToResponse } from '../../shared/mappers';
+import { type Context } from '../../context';
+import {
+  getTenantContext,
+  createTenantWhereClause,
+  type TenantAwareContext
+} from '../../security/tenant-context';
+
+/**
+ * Helper to get account service from context
+ */
+function getAccountService(ctx: Context) {
+  if (!ctx.services?.account) {
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Account service not available',
+    });
+  }
+  return ctx.services.account;
+}
 
 export const accountRouter = createTRPCRouter({
   /**
    * Create a new account
    */
-  create: protectedProcedure.input(createAccountSchema).mutation(async ({ ctx, input }) => {
-    const account = await ctx.prisma.account.create({
-      data: {
-        ...input,
-        ownerId: ctx.user.userId,
-      },
+  create: tenantProcedure.input(createAccountSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const accountService = getAccountService(ctx);
+
+    const result = await accountService.createAccount({
+      ...input,
+      ownerId: typedCtx.tenant.userId,
+      tenantId: typedCtx.tenant.tenantId,
     });
 
-    return account;
+    if (result.isFailure) {
+      const errorCode = result.error.code;
+      if (errorCode === 'VALIDATION_ERROR') {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: result.error.message,
+        });
+      }
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: result.error.message,
+      });
+    }
+
+    return mapAccountToResponse(result.value);
   }),
 
   /**
    * Get a single account by ID
    */
-  getById: protectedProcedure.input(z.object({ id: idSchema })).query(async ({ ctx, input }) => {
-    const account = await ctx.prisma.account.findUnique({
-      where: { id: input.id },
-      include: {
-        owner: {
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            avatarUrl: true,
-          },
-        },
-        contacts: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-            title: true,
-          },
-          orderBy: { createdAt: 'desc' },
-          take: 10,
-        },
-        opportunities: {
-          select: {
-            id: true,
-            name: true,
-            value: true,
-            stage: true,
-            probability: true,
-            expectedCloseDate: true,
-          },
-          orderBy: { createdAt: 'desc' },
-          take: 10,
-        },
-        _count: {
-          select: {
-            contacts: true,
-            opportunities: true,
-          },
-        },
-      },
-    });
+  getById: tenantProcedure.input(z.object({ id: idSchema })).query(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const accountService = getAccountService(ctx);
 
-    if (!account) {
+    const result = await accountService.getAccountById(input.id);
+
+    if (result.isFailure) {
       throw new TRPCError({
         code: 'NOT_FOUND',
-        message: `Account with ID ${input.id} not found`,
+        message: result.error.message,
       });
     }
 
-    return account;
+    return mapAccountToResponse(result.value);
   }),
 
   /**
    * List accounts with filtering and pagination
+   * Uses Prisma for complex queries with joins for performance
    */
-  list: protectedProcedure.input(accountQuerySchema).query(async ({ ctx, input }) => {
+  list: tenantProcedure.input(accountQuerySchema).query(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
     const {
       page = 1,
       limit = 20,
@@ -109,11 +111,11 @@ export const accountRouter = createTRPCRouter({
 
     const skip = (page - 1) * limit;
 
-    // Build where clause
-    const where: any = {};
+    // Build where clause with tenant isolation
+    const baseWhere: Record<string, unknown> = {};
 
     if (search) {
-      where.OR = [
+      baseWhere.OR = [
         { name: { contains: search, mode: 'insensitive' } },
         { website: { contains: search, mode: 'insensitive' } },
         { industry: { contains: search, mode: 'insensitive' } },
@@ -122,28 +124,31 @@ export const accountRouter = createTRPCRouter({
     }
 
     if (industry) {
-      where.industry = { contains: industry, mode: 'insensitive' };
+      baseWhere.industry = { contains: industry, mode: 'insensitive' };
     }
 
     if (ownerId) {
-      where.ownerId = ownerId;
+      baseWhere.ownerId = ownerId;
     }
 
     if (minRevenue !== undefined || maxRevenue !== undefined) {
-      where.revenue = {};
-      if (minRevenue !== undefined) where.revenue.gte = minRevenue;
-      if (maxRevenue !== undefined) where.revenue.lte = maxRevenue;
+      baseWhere.revenue = {};
+      if (minRevenue !== undefined) (baseWhere.revenue as Record<string, number>).gte = minRevenue;
+      if (maxRevenue !== undefined) (baseWhere.revenue as Record<string, number>).lte = maxRevenue;
     }
 
     if (minEmployees !== undefined || maxEmployees !== undefined) {
-      where.employees = {};
-      if (minEmployees !== undefined) where.employees.gte = minEmployees;
-      if (maxEmployees !== undefined) where.employees.lte = maxEmployees;
+      baseWhere.employees = {};
+      if (minEmployees !== undefined) (baseWhere.employees as Record<string, number>).gte = minEmployees;
+      if (maxEmployees !== undefined) (baseWhere.employees as Record<string, number>).lte = maxEmployees;
     }
+
+    // Apply tenant filtering
+    const where = createTenantWhereClause(typedCtx.tenant, baseWhere);
 
     // Execute queries in parallel
     const [accounts, total] = await Promise.all([
-      ctx.prisma.account.findMany({
+      typedCtx.prismaWithTenant.account.findMany({
         where,
         skip,
         take: limit,
@@ -164,7 +169,7 @@ export const accountRouter = createTRPCRouter({
           },
         },
       }),
-      ctx.prisma.account.count({ where }),
+      typedCtx.prismaWithTenant.account.count({ where }),
     ]);
 
     return {
@@ -179,91 +184,101 @@ export const accountRouter = createTRPCRouter({
   /**
    * Update an account
    */
-  update: protectedProcedure.input(updateAccountSchema).mutation(async ({ ctx, input }) => {
+  update: tenantProcedure.input(updateAccountSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const accountService = getAccountService(ctx);
+
     const { id, ...data } = input;
 
-    // Check if account exists
-    const existingAccount = await ctx.prisma.account.findUnique({
-      where: { id },
-    });
+    // Convert WebsiteUrl Value Object to string for service
+    const updateData: {
+      name?: string;
+      website?: string;
+      description?: string;
+    } = {
+      ...data,
+      website: data.website?.toValue?.() ?? (data.website as string | undefined),
+    };
 
-    if (!existingAccount) {
+    const result = await accountService.updateAccountInfo(
+      id,
+      updateData,
+      typedCtx.tenant.userId
+    );
+
+    if (result.isFailure) {
+      const errorCode = result.error.code;
+      if (errorCode === 'NOT_FOUND_ERROR') {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: result.error.message,
+        });
+      }
+      if (errorCode === 'VALIDATION_ERROR') {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: result.error.message,
+        });
+      }
       throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: `Account with ID ${id} not found`,
+        code: 'INTERNAL_SERVER_ERROR',
+        message: result.error.message,
       });
     }
 
-    // Update the account
-    const account = await ctx.prisma.account.update({
-      where: { id },
-      data,
-    });
-
-    return account;
+    return mapAccountToResponse(result.value);
   }),
 
   /**
    * Delete an account
    */
-  delete: protectedProcedure.input(z.object({ id: idSchema })).mutation(async ({ ctx, input }) => {
-    // Check if account exists
-    const existingAccount = await ctx.prisma.account.findUnique({
-      where: { id: input.id },
-      include: {
-        _count: {
-          select: {
-            contacts: true,
-            opportunities: true,
-          },
-        },
-      },
-    });
+  delete: tenantProcedure.input(z.object({ id: idSchema })).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const accountService = getAccountService(ctx);
 
-    if (!existingAccount) {
+    const result = await accountService.deleteAccount(input.id);
+
+    if (result.isFailure) {
+      const errorCode = result.error.code;
+      if (errorCode === 'NOT_FOUND_ERROR' || errorCode === 'VALIDATION_ERROR') {
+        const isNotFound = result.error.message.includes('not found');
+        throw new TRPCError({
+          code: isNotFound ? 'NOT_FOUND' : 'PRECONDITION_FAILED',
+          message: result.error.message,
+        });
+      }
       throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: `Account with ID ${input.id} not found`,
+        code: 'INTERNAL_SERVER_ERROR',
+        message: result.error.message,
       });
     }
-
-    // Warn if account has related records
-    if (existingAccount._count.contacts > 0 || existingAccount._count.opportunities > 0) {
-      throw new TRPCError({
-        code: 'PRECONDITION_FAILED',
-        message: `Account has ${existingAccount._count.contacts} contacts and ${existingAccount._count.opportunities} opportunities. Please reassign or delete them first.`,
-      });
-    }
-
-    // Delete the account
-    await ctx.prisma.account.delete({
-      where: { id: input.id },
-    });
 
     return { success: true, id: input.id };
   }),
 
   /**
    * Get account statistics
+   * Uses Prisma for aggregations (read-side CQRS pattern)
    */
-  stats: protectedProcedure.query(async ({ ctx }) => {
+  stats: tenantProcedure.query(async ({ ctx }) => {
+   const typedCtx = getTenantContext(ctx);
     const [total, byIndustry, withContacts, totalRevenue] = await Promise.all([
-      ctx.prisma.account.count(),
-      ctx.prisma.account.groupBy({
+      typedCtx.prismaWithTenant.account.count(),
+      typedCtx.prismaWithTenant.account.groupBy({
         by: ['industry'],
         _count: true,
         where: {
           industry: { not: null },
         },
       }),
-      ctx.prisma.account.count({
+      typedCtx.prismaWithTenant.account.count({
         where: {
           contacts: {
             some: {},
           },
         },
       }),
-      ctx.prisma.account.aggregate({
+      typedCtx.prismaWithTenant.account.aggregate({
         _sum: { revenue: true },
       }),
     ]);

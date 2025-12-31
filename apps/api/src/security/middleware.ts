@@ -142,6 +142,7 @@ export function requirePermission(options: PermissionCheckOptions | string) {
           resourceType,
           opts.getResourceId?.(input) ?? 'unknown',
           opts.permission,
+          ctx.user.tenantId,
           {
             actorId: ctx.user.userId,
             actorEmail: ctx.user.email,
@@ -216,17 +217,23 @@ export function auditLog(options: AuditLogOptions) {
         ? options.getResourceId(result, input)
         : ((input as { id?: string })?.id ?? 'unknown');
 
-      await ctx.auditLogger.logAction(options.action, options.resourceType, resourceId, {
-        actorId: ctx.user?.userId,
-        actorEmail: ctx.user?.email,
-        actorRole: ctx.user?.role,
-        resourceName: options.getResourceName?.(result, input),
-        beforeState,
-        afterState: result as Record<string, unknown> | undefined,
-        actionReason: error?.message,
-        requestContext: ctx.requestContext,
-        metadata: error ? { error: error.message } : undefined,
-      });
+      await ctx.auditLogger.logAction(
+        options.action,
+        options.resourceType,
+        resourceId,
+        ctx.user?.tenantId ?? 'unknown',
+        {
+          actorId: ctx.user?.userId,
+          actorEmail: ctx.user?.email,
+          actorRole: ctx.user?.role,
+          resourceName: options.getResourceName?.(result, input),
+          beforeState,
+          afterState: result as Record<string, unknown> | undefined,
+          actionReason: error?.message,
+          requestContext: ctx.requestContext,
+          metadata: error ? { error: error.message } : undefined,
+        }
+      );
     } catch (logError) {
       // Don't fail the request if logging fails
       console.error('[AUDIT] Failed to log action:', logError);

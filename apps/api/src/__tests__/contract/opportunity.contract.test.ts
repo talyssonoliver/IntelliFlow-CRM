@@ -70,31 +70,56 @@ const forecastResponseSchema = z.object({
   weightedValue: z.string(),
 });
 
+/**
+ * Create a mock domain opportunity for service responses
+ */
+const createMockDomainOpportunity = (overrides: Record<string, unknown> = {}) => ({
+  id: { value: TEST_UUIDS.opportunity1 },
+  name: 'Enterprise Deal',
+  value: 50000,
+  probability: 60,
+  stage: 'PROPOSAL' as const,
+  expectedCloseDate: new Date('2025-12-31'),
+  accountId: TEST_UUIDS.account1,
+  contactId: null,
+  ownerId: TEST_UUIDS.user1,
+  weightedValue: 30000,
+  isClosed: false,
+  isWon: false,
+  isLost: false,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  getDomainEvents: () => [],
+  clearDomainEvents: () => {},
+  ...overrides,
+});
+
 describe('Opportunity Router Contract Tests', () => {
-  const caller = opportunityRouter.createCaller(createTestContext());
+  const ctx = createTestContext();
+  const caller = opportunityRouter.createCaller(ctx);
 
   describe('create - Input Contract', () => {
     it('should require name, value, stage, probability, expectedCloseDate, and accountId', async () => {
       const validInput = {
         name: 'Enterprise Deal',
-        value: 50000,
+        value: { amount: 50000 },
         stage: 'PROPOSAL' as const,
         probability: 60,
         expectedCloseDate: new Date('2025-12-31'),
         accountId: TEST_UUIDS.account1,
       };
 
-      prismaMock.account.findUnique.mockResolvedValue(mockAccount);
-      prismaMock.opportunity.create.mockResolvedValue({
-        ...mockOpportunity,
-        ...validInput,
-        value: new Prisma.Decimal(validInput.value),
+      const mockDomainOpportunity = createMockDomainOpportunity(validInput);
+      ctx.services!.opportunity!.createOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainOpportunity,
       });
 
       const result = await caller.create(validInput);
 
       expect(result.name).toBe(validInput.name);
-      expect(Number(result.value)).toBe(validInput.value);
+      expect(result.value).toBe(validInput.value);
       expect(result.stage).toBe(validInput.stage);
     });
 
@@ -102,18 +127,28 @@ describe('Opportunity Router Contract Tests', () => {
       for (const stage of opportunityStages) {
         const input = {
           name: `Deal for ${stage}`,
-          value: 10000,
+          value: { amount: 10000 },
           stage,
           probability: 50,
           expectedCloseDate: new Date('2025-12-31'),
           accountId: TEST_UUIDS.account1,
         };
 
-        prismaMock.account.findUnique.mockResolvedValue(mockAccount);
+        const mockDomainOpportunity = createMockDomainOpportunity({
+          ...input,
+          id: { value: TEST_UUIDS.opportunity1 },
+        });
+        ctx.services!.opportunity!.createOpportunity = vi.fn().mockResolvedValue({
+          isSuccess: true,
+          isFailure: false,
+          value: mockDomainOpportunity,
+        });
+
+        // Keep the rest for compatibility but it won't be used
         prismaMock.opportunity.create.mockResolvedValue({
           ...mockOpportunity,
           ...input,
-          value: new Prisma.Decimal(input.value),
+          value: new Prisma.Decimal(input.value.amount),
         });
 
         const result = await caller.create(input);
@@ -124,7 +159,7 @@ describe('Opportunity Router Contract Tests', () => {
     it('should enforce probability range 0-100', async () => {
       const inputWithInvalidProbability = {
         name: 'Deal',
-        value: 10000,
+        value: { amount: 10000 },
         stage: 'PROPOSAL' as const,
         probability: 150, // Invalid
         expectedCloseDate: new Date('2025-12-31'),
@@ -148,18 +183,22 @@ describe('Opportunity Router Contract Tests', () => {
     });
 
     it('should validate accountId exists', async () => {
-      prismaMock.account.findUnique.mockResolvedValue(null);
+      ctx.services!.opportunity!.createOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: `Account not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       try {
         await caller.create({
           name: 'Deal',
-          value: 10000,
+          value: { amount: 10000 },
           stage: 'PROPOSAL',
           probability: 50,
           expectedCloseDate: new Date('2025-12-31'),
           accountId: TEST_UUIDS.nonExistent,
         });
-        fail('Should have thrown');
+        expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.code).toBe('NOT_FOUND');
         expect(error.message).toContain('Account');
@@ -167,20 +206,23 @@ describe('Opportunity Router Contract Tests', () => {
     });
 
     it('should validate contactId if provided', async () => {
-      prismaMock.account.findUnique.mockResolvedValue(mockAccount);
-      prismaMock.contact.findUnique.mockResolvedValue(null);
+      ctx.services!.opportunity!.createOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: `Contact not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       try {
         await caller.create({
           name: 'Deal',
-          value: 10000,
+          value: { amount: 10000 },
           stage: 'PROPOSAL',
           probability: 50,
           expectedCloseDate: new Date('2025-12-31'),
           accountId: TEST_UUIDS.account1,
           contactId: TEST_UUIDS.nonExistent,
         });
-        fail('Should have thrown');
+        expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.code).toBe('NOT_FOUND');
         expect(error.message).toContain('Contact');
@@ -190,12 +232,16 @@ describe('Opportunity Router Contract Tests', () => {
 
   describe('create - Output Contract', () => {
     it('should return opportunity with all required fields', async () => {
-      prismaMock.account.findUnique.mockResolvedValue(mockAccount);
-      prismaMock.opportunity.create.mockResolvedValue(mockOpportunity);
+      const mockDomainOpportunity = createMockDomainOpportunity();
+      ctx.services!.opportunity!.createOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainOpportunity,
+      });
 
       const result = await caller.create({
         name: 'New Deal',
-        value: 50000,
+        value: { amount: 50000 },
         stage: 'PROPOSAL',
         probability: 60,
         expectedCloseDate: new Date('2025-12-31'),
@@ -212,13 +258,17 @@ describe('Opportunity Router Contract Tests', () => {
       expect(result).toHaveProperty('ownerId');
     });
 
-    it('should return value as Decimal', async () => {
-      prismaMock.account.findUnique.mockResolvedValue(mockAccount);
-      prismaMock.opportunity.create.mockResolvedValue(mockOpportunity);
+    it('should return value as number', async () => {
+      const mockDomainOpportunity = createMockDomainOpportunity({ value: 50000 });
+      ctx.services!.opportunity!.createOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainOpportunity,
+      });
 
       const result = await caller.create({
         name: 'Deal',
-        value: 50000,
+        value: { amount: 50000 },
         stage: 'PROPOSAL',
         probability: 60,
         expectedCloseDate: new Date('2025-12-31'),
@@ -235,31 +285,32 @@ describe('Opportunity Router Contract Tests', () => {
       await expect(caller.getById({ id: 'invalid' })).rejects.toThrow();
     });
 
-    it('should return opportunity with relations', async () => {
-      const opportunityWithRelations = {
-        ...mockOpportunity,
-        owner: mockUser,
-        account: mockAccount,
-        contact: mockContact,
-        tasks: [mockTask],
-      };
-
-      prismaMock.opportunity.findUnique.mockResolvedValue(opportunityWithRelations);
+    it('should return opportunity via OpportunityService', async () => {
+      const mockDomainOpportunity = createMockDomainOpportunity();
+      ctx.services!.opportunity!.getOpportunityById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainOpportunity,
+      });
 
       const result = await caller.getById({ id: TEST_UUIDS.opportunity1 });
 
-      expect(result).toHaveProperty('owner');
-      expect(result).toHaveProperty('account');
-      expect(result).toHaveProperty('contact');
-      expect(result).toHaveProperty('tasks');
+      expect(result).toHaveProperty('id');
+      expect(result).toHaveProperty('name');
+      expect(result).toHaveProperty('value');
+      expect(result).toHaveProperty('stage');
     });
 
     it('should throw NOT_FOUND for non-existent opportunity', async () => {
-      prismaMock.opportunity.findUnique.mockResolvedValue(null);
+      ctx.services!.opportunity!.getOpportunityById = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: `Opportunity not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       try {
         await caller.getById({ id: TEST_UUIDS.nonExistent });
-        fail('Should have thrown');
+        expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.code).toBe('NOT_FOUND');
       }
@@ -343,10 +394,11 @@ describe('Opportunity Router Contract Tests', () => {
     });
 
     it('should accept partial updates', async () => {
-      prismaMock.opportunity.findUnique.mockResolvedValue(mockOpportunity);
-      prismaMock.opportunity.update.mockResolvedValue({
-        ...mockOpportunity,
-        stage: 'NEGOTIATION' as const,
+      const mockDomainOpportunity = createMockDomainOpportunity({ stage: 'NEGOTIATION' });
+      ctx.services!.opportunity!.updateOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainOpportunity,
       });
 
       const result = await caller.update({
@@ -358,12 +410,12 @@ describe('Opportunity Router Contract Tests', () => {
     });
 
     it('should allow stage progression', async () => {
-      prismaMock.opportunity.findUnique.mockResolvedValue(mockOpportunity);
-
       for (const stage of opportunityStages) {
-        prismaMock.opportunity.update.mockResolvedValue({
-          ...mockOpportunity,
-          stage,
+        const mockDomainOpportunity = createMockDomainOpportunity({ stage });
+        ctx.services!.opportunity!.updateOpportunity = vi.fn().mockResolvedValue({
+          isSuccess: true,
+          isFailure: false,
+          value: mockDomainOpportunity,
         });
 
         const result = await caller.update({
@@ -376,15 +428,18 @@ describe('Opportunity Router Contract Tests', () => {
     });
 
     it('should validate accountId on update', async () => {
-      prismaMock.opportunity.findUnique.mockResolvedValue(mockOpportunity);
-      prismaMock.account.findUnique.mockResolvedValue(null);
+      ctx.services!.opportunity!.updateOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: `Account not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       try {
         await caller.update({
           id: TEST_UUIDS.opportunity1,
           accountId: TEST_UUIDS.nonExistent,
         });
-        fail('Should have thrown');
+        expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.code).toBe('NOT_FOUND');
         expect(error.message).toContain('Account');
@@ -392,15 +447,18 @@ describe('Opportunity Router Contract Tests', () => {
     });
 
     it('should validate contactId on update', async () => {
-      prismaMock.opportunity.findUnique.mockResolvedValue(mockOpportunity);
-      prismaMock.contact.findUnique.mockResolvedValue(null);
+      ctx.services!.opportunity!.updateOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: `Contact not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       try {
         await caller.update({
           id: TEST_UUIDS.opportunity1,
           contactId: TEST_UUIDS.nonExistent,
         });
-        fail('Should have thrown');
+        expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.code).toBe('NOT_FOUND');
         expect(error.message).toContain('Contact');
@@ -410,8 +468,11 @@ describe('Opportunity Router Contract Tests', () => {
 
   describe('delete - Contract', () => {
     it('should return success response', async () => {
-      prismaMock.opportunity.findUnique.mockResolvedValue(mockOpportunity);
-      prismaMock.opportunity.delete.mockResolvedValue(mockOpportunity);
+      ctx.services!.opportunity!.deleteOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: undefined,
+      });
 
       const result = await caller.delete({ id: TEST_UUIDS.opportunity1 });
 
@@ -422,11 +483,15 @@ describe('Opportunity Router Contract Tests', () => {
     });
 
     it('should throw NOT_FOUND for non-existent opportunity', async () => {
-      prismaMock.opportunity.findUnique.mockResolvedValue(null);
+      ctx.services!.opportunity!.deleteOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: `Opportunity not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       try {
         await caller.delete({ id: TEST_UUIDS.nonExistent });
-        fail('Should have thrown');
+        expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.code).toBe('NOT_FOUND');
       }

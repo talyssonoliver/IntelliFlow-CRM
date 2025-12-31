@@ -8,7 +8,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "build": "tsup",
     "start": "node dist/index.js",
     "clean": "rm -rf dist .turbo",
     "typecheck": "tsc --noEmit",
@@ -17,7 +17,11 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@intelliflow/adapters": "workspace:*",
+    "@intelliflow/application": "workspace:*",
     "@intelliflow/db": "workspace:*",
+    "@intelliflow/domain": "workspace:*",
+    "@intelliflow/platform": "workspace:*",
     "@intelliflow/validators": "workspace:*",
     "@opentelemetry/api": "1.9.0",
     "@opentelemetry/auto-instrumentations-node": "0.56.0",

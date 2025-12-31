@@ -38,6 +38,7 @@ function demonstratePrismaTypes() {
     status: 'NEW',
     score: 75,
     ownerId: 'user_123',
+    tenantId: 'tenant_123',
     createdAt: new Date(),
     updatedAt: new Date(),
   };

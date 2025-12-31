@@ -18,6 +18,7 @@ import {
   resetSessionActionCount,
 } from '../authorization';
 import { searchLeadsTool } from '../tools/search';
+import type { EntityType, AgentActionType } from '../types';
 import { createCaseTool } from '../tools/create';
 import { updateCaseTool } from '../tools/update';
 import { draftMessageTool } from '../tools/draft-message';
@@ -75,8 +76,8 @@ describe('Agent Authorization', () => {
       const user = {
         userId: 'user-4',
         role: 'USER',
-        customEntityTypes: ['LEAD'] as const,
-        customActionTypes: ['SEARCH'] as const,
+        customEntityTypes: ['LEAD'] as EntityType[],
+        customActionTypes: ['SEARCH'] as AgentActionType[],
         customMaxActions: 50,
       };
       const context = buildAuthContext(user, testSessionId);
@@ -139,8 +140,8 @@ describe('Agent Authorization', () => {
       const user = {
         userId: 'user-4',
         role: 'USER',
-        customEntityTypes: ['LEAD'] as const, // No CASE access
-        customActionTypes: ['CREATE'] as const,
+        customEntityTypes: ['LEAD'] as EntityType[], // No CASE access
+        customActionTypes: ['CREATE'] as AgentActionType[],
       };
       const context = buildAuthContext(user, testSessionId);
       const input = {

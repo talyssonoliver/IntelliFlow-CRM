@@ -1,3 +1,4 @@
+import { TEST_UUIDS } from '../../../test/setup';
 /**
  * Task Router Tests
  *
@@ -9,6 +10,8 @@
  * - delete: Delete a task
  * - complete: Mark a task as completed
  * - stats: Get task statistics
+ *
+ * Following hexagonal architecture - mocks services for business logic procedures.
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -17,7 +20,6 @@ import { taskRouter } from '../task.router';
 import {
   prismaMock,
   createTestContext,
-  TEST_UUIDS,
   mockTask,
   mockUser,
   mockLead,
@@ -25,11 +27,36 @@ import {
   mockOpportunity,
 } from '../../../test/setup';
 
+/**
+ * Create a mock domain task for service responses
+ */
+const createMockDomainTask = (overrides: Record<string, unknown> = {}) => ({
+  id: { value: TEST_UUIDS.task1 },
+  title: 'Follow up call',
+  description: 'Call the lead to discuss requirements',
+  status: 'PENDING',
+  priority: 'HIGH',
+  dueDate: new Date('2025-01-25'),
+  leadId: null,
+  contactId: null,
+  opportunityId: null,
+  ownerId: TEST_UUIDS.user1,
+  isCompleted: false,
+  isCancelled: false,
+  isOverdue: false,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  getDomainEvents: () => [],
+  clearDomainEvents: () => {},
+  ...overrides,
+});
+
 describe('Task Router', () => {
-  const caller = taskRouter.createCaller(createTestContext());
+  const ctx = createTestContext();
+  const caller = taskRouter.createCaller(ctx);
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    // Reset is handled by setup.ts
   });
 
   // Mock task with relations
@@ -43,7 +70,13 @@ describe('Task Router', () => {
 
   describe('create', () => {
     it('should create a new task successfully', async () => {
-      prismaMock.task.create.mockResolvedValue(mockTask);
+      const mockDomainTask = createMockDomainTask();
+
+      ctx.services!.task!.createTask = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainTask,
+      });
 
       const result = await caller.create({
         title: 'Follow up call',
@@ -53,19 +86,19 @@ describe('Task Router', () => {
         status: 'PENDING',
       });
 
-      expect(result.id).toBe(mockTask.id);
-      expect(result.title).toBe(mockTask.title);
-      expect(prismaMock.task.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          title: 'Follow up call',
-          ownerId: TEST_UUIDS.user1,
-        }),
-      });
+      expect(result.id).toBe(TEST_UUIDS.task1);
+      expect(result.title).toBe('Follow up call');
+      expect(ctx.services!.task!.createTask).toHaveBeenCalled();
     });
 
-    it('should validate leadId if provided', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue(mockLead);
-      prismaMock.task.create.mockResolvedValue({ ...mockTask, leadId: TEST_UUIDS.lead1 });
+    it('should create task with leadId', async () => {
+      const mockDomainTask = createMockDomainTask({ leadId: TEST_UUIDS.lead1 });
+
+      ctx.services!.task!.createTask = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainTask,
+      });
 
       const result = await caller.create({
         title: 'Follow up call',
@@ -75,13 +108,14 @@ describe('Task Router', () => {
       });
 
       expect(result.leadId).toBe(TEST_UUIDS.lead1);
-      expect(prismaMock.lead.findUnique).toHaveBeenCalledWith({
-        where: { id: TEST_UUIDS.lead1 },
-      });
     });
 
     it('should throw NOT_FOUND if leadId is invalid', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue(null);
+      ctx.services!.task!.createTask = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: `Lead not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       await expect(
         caller.create({
@@ -90,12 +124,21 @@ describe('Task Router', () => {
           priority: 'HIGH',
           leadId: TEST_UUIDS.nonExistent,
         })
-      ).rejects.toThrow(TRPCError);
+      ).rejects.toThrow(
+        expect.objectContaining({
+          code: 'NOT_FOUND',
+        })
+      );
     });
 
-    it('should validate contactId if provided', async () => {
-      prismaMock.contact.findUnique.mockResolvedValue(mockContact);
-      prismaMock.task.create.mockResolvedValue({ ...mockTask, contactId: TEST_UUIDS.contact1 });
+    it('should create task with contactId', async () => {
+      const mockDomainTask = createMockDomainTask({ contactId: TEST_UUIDS.contact1 });
+
+      ctx.services!.task!.createTask = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainTask,
+      });
 
       const result = await caller.create({
         title: 'Meeting',
@@ -108,7 +151,11 @@ describe('Task Router', () => {
     });
 
     it('should throw NOT_FOUND if contactId is invalid', async () => {
-      prismaMock.contact.findUnique.mockResolvedValue(null);
+      ctx.services!.task!.createTask = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: `Contact not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       await expect(
         caller.create({
@@ -117,14 +164,20 @@ describe('Task Router', () => {
           priority: 'MEDIUM',
           contactId: TEST_UUIDS.nonExistent,
         })
-      ).rejects.toThrow(TRPCError);
+      ).rejects.toThrow(
+        expect.objectContaining({
+          code: 'NOT_FOUND',
+        })
+      );
     });
 
-    it('should validate opportunityId if provided', async () => {
-      prismaMock.opportunity.findUnique.mockResolvedValue(mockOpportunity);
-      prismaMock.task.create.mockResolvedValue({
-        ...mockTask,
-        opportunityId: TEST_UUIDS.opportunity1,
+    it('should create task with opportunityId', async () => {
+      const mockDomainTask = createMockDomainTask({ opportunityId: TEST_UUIDS.opportunity1 });
+
+      ctx.services!.task!.createTask = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainTask,
       });
 
       const result = await caller.create({
@@ -138,7 +191,11 @@ describe('Task Router', () => {
     });
 
     it('should throw NOT_FOUND if opportunityId is invalid', async () => {
-      prismaMock.opportunity.findUnique.mockResolvedValue(null);
+      ctx.services!.task!.createTask = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: `Opportunity not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       await expect(
         caller.create({
@@ -147,39 +204,43 @@ describe('Task Router', () => {
           priority: 'HIGH',
           opportunityId: TEST_UUIDS.nonExistent,
         })
-      ).rejects.toThrow(TRPCError);
+      ).rejects.toThrow(
+        expect.objectContaining({
+          code: 'NOT_FOUND',
+        })
+      );
     });
   });
 
   describe('getById', () => {
-    it('should return task with relations', async () => {
-      prismaMock.task.findUnique.mockResolvedValue(mockTaskWithRelations);
+    it('should return task by ID', async () => {
+      const mockDomainTask = createMockDomainTask();
+
+      ctx.services!.task!.getTaskById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainTask,
+      });
 
       const result = await caller.getById({ id: TEST_UUIDS.task1 });
 
-      expect(result.id).toBe(mockTask.id);
-      expect(result.owner).toBeDefined();
-      expect(prismaMock.task.findUnique).toHaveBeenCalledWith({
-        where: { id: TEST_UUIDS.task1 },
-        include: expect.objectContaining({
-          owner: expect.any(Object),
-          lead: expect.any(Object),
-          contact: expect.any(Object),
-          opportunity: expect.any(Object),
-        }),
-      });
+      expect(result.id).toBe(TEST_UUIDS.task1);
+      expect(result.title).toBe('Follow up call');
+      expect(ctx.services!.task!.getTaskById).toHaveBeenCalledWith(TEST_UUIDS.task1);
     });
 
     it('should throw NOT_FOUND for non-existent task', async () => {
-      prismaMock.task.findUnique.mockResolvedValue(null);
+      ctx.services!.task!.getTaskById = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: `Task not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
-      await expect(caller.getById({ id: TEST_UUIDS.nonExistent })).rejects.toThrow(TRPCError);
-
-      try {
-        await caller.getById({ id: TEST_UUIDS.nonExistent });
-      } catch (error) {
-        expect((error as TRPCError).code).toBe('NOT_FOUND');
-      }
+      await expect(caller.getById({ id: TEST_UUIDS.nonExistent })).rejects.toThrow(
+        expect.objectContaining({
+          code: 'NOT_FOUND',
+        })
+      );
     });
   });
 
@@ -342,9 +403,20 @@ describe('Task Router', () => {
   });
 
   describe('update', () => {
-    it('should update task successfully', async () => {
-      prismaMock.task.findUnique.mockResolvedValue(mockTask);
-      prismaMock.task.update.mockResolvedValue({ ...mockTask, title: 'Updated title' });
+    it('should update task title via service', async () => {
+      const mockDomainTask = createMockDomainTask({ title: 'Updated title' });
+
+      ctx.services!.task!.getTaskById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainTask(),
+      });
+
+      ctx.services!.task!.updateTaskInfo = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainTask,
+      });
 
       const result = await caller.update({
         id: TEST_UUIDS.task1,
@@ -352,27 +424,35 @@ describe('Task Router', () => {
       });
 
       expect(result.title).toBe('Updated title');
-      expect(prismaMock.task.update).toHaveBeenCalledWith({
-        where: { id: TEST_UUIDS.task1 },
-        data: expect.objectContaining({
-          title: 'Updated title',
-        }),
-      });
+      expect(ctx.services!.task!.updateTaskInfo).toHaveBeenCalled();
     });
 
     it('should throw NOT_FOUND for non-existent task', async () => {
-      prismaMock.task.findUnique.mockResolvedValue(null);
+      ctx.services!.task!.getTaskById = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: `Task not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       await expect(
         caller.update({
           id: TEST_UUIDS.nonExistent,
           title: 'Updated title',
         })
-      ).rejects.toThrow(TRPCError);
+      ).rejects.toThrow(
+        expect.objectContaining({
+          code: 'NOT_FOUND',
+        })
+      );
     });
 
     it('should validate leadId on update', async () => {
-      prismaMock.task.findUnique.mockResolvedValue(mockTask);
+      // For complex updates, service checks existence then Prisma validates
+      ctx.services!.task!.getTaskById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainTask(),
+      });
       prismaMock.lead.findUnique.mockResolvedValue(null);
 
       await expect(
@@ -380,11 +460,19 @@ describe('Task Router', () => {
           id: TEST_UUIDS.task1,
           leadId: TEST_UUIDS.nonExistent,
         })
-      ).rejects.toThrow(TRPCError);
+      ).rejects.toThrow(
+        expect.objectContaining({
+          code: 'NOT_FOUND',
+        })
+      );
     });
 
     it('should validate contactId on update', async () => {
-      prismaMock.task.findUnique.mockResolvedValue(mockTask);
+      ctx.services!.task!.getTaskById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainTask(),
+      });
       prismaMock.contact.findUnique.mockResolvedValue(null);
 
       await expect(
@@ -392,11 +480,19 @@ describe('Task Router', () => {
           id: TEST_UUIDS.task1,
           contactId: TEST_UUIDS.nonExistent,
         })
-      ).rejects.toThrow(TRPCError);
+      ).rejects.toThrow(
+        expect.objectContaining({
+          code: 'NOT_FOUND',
+        })
+      );
     });
 
     it('should validate opportunityId on update', async () => {
-      prismaMock.task.findUnique.mockResolvedValue(mockTask);
+      ctx.services!.task!.getTaskById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainTask(),
+      });
       prismaMock.opportunity.findUnique.mockResolvedValue(null);
 
       await expect(
@@ -404,11 +500,19 @@ describe('Task Router', () => {
           id: TEST_UUIDS.task1,
           opportunityId: TEST_UUIDS.nonExistent,
         })
-      ).rejects.toThrow(TRPCError);
+      ).rejects.toThrow(
+        expect.objectContaining({
+          code: 'NOT_FOUND',
+        })
+      );
     });
 
     it('should allow setting leadId to valid lead', async () => {
-      prismaMock.task.findUnique.mockResolvedValue(mockTask);
+      ctx.services!.task!.getTaskById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainTask(),
+      });
       prismaMock.lead.findUnique.mockResolvedValue(mockLead);
       prismaMock.task.update.mockResolvedValue({ ...mockTask, leadId: TEST_UUIDS.lead1 });
 
@@ -423,76 +527,95 @@ describe('Task Router', () => {
 
   describe('delete', () => {
     it('should delete task successfully', async () => {
-      prismaMock.task.findUnique.mockResolvedValue(mockTask);
-      prismaMock.task.delete.mockResolvedValue(mockTask);
+      ctx.services!.task!.deleteTask = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: undefined,
+      });
 
       const result = await caller.delete({ id: TEST_UUIDS.task1 });
 
       expect(result.success).toBe(true);
       expect(result.id).toBe(TEST_UUIDS.task1);
-      expect(prismaMock.task.delete).toHaveBeenCalledWith({
-        where: { id: TEST_UUIDS.task1 },
-      });
+      expect(ctx.services!.task!.deleteTask).toHaveBeenCalledWith(TEST_UUIDS.task1);
     });
 
     it('should throw NOT_FOUND for non-existent task', async () => {
-      prismaMock.task.findUnique.mockResolvedValue(null);
+      ctx.services!.task!.deleteTask = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: `Task not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
-      await expect(caller.delete({ id: TEST_UUIDS.nonExistent })).rejects.toThrow(TRPCError);
+      await expect(caller.delete({ id: TEST_UUIDS.nonExistent })).rejects.toThrow(
+        expect.objectContaining({
+          code: 'NOT_FOUND',
+        })
+      );
+    });
 
-      try {
-        await caller.delete({ id: TEST_UUIDS.nonExistent });
-      } catch (error) {
-        expect((error as TRPCError).code).toBe('NOT_FOUND');
-      }
+    it('should throw PRECONDITION_FAILED for completed task', async () => {
+      ctx.services!.task!.deleteTask = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: 'Cannot delete completed tasks. They are kept for audit purposes.' },
+      });
+
+      await expect(caller.delete({ id: TEST_UUIDS.task1 })).rejects.toThrow(
+        expect.objectContaining({
+          code: 'PRECONDITION_FAILED',
+        })
+      );
     });
   });
 
   describe('complete', () => {
     it('should complete task successfully', async () => {
-      prismaMock.task.findUnique.mockResolvedValue({ ...mockTask, status: 'IN_PROGRESS' });
-      prismaMock.task.update.mockResolvedValue({
-        ...mockTask,
+      const mockDomainTask = createMockDomainTask({
         status: 'COMPLETED',
-        completedAt: new Date(),
+        isCompleted: true,
+      });
+
+      ctx.services!.task!.completeTask = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainTask,
       });
 
       const result = await caller.complete({ taskId: TEST_UUIDS.task1 });
 
       expect(result.status).toBe('COMPLETED');
-      expect(result.completedAt).toBeDefined();
-      expect(prismaMock.task.update).toHaveBeenCalledWith({
-        where: { id: TEST_UUIDS.task1 },
-        data: {
-          status: 'COMPLETED',
-          completedAt: expect.any(Date),
-        },
-      });
+      expect(result.isCompleted).toBe(true);
+      expect(ctx.services!.task!.completeTask).toHaveBeenCalledWith(TEST_UUIDS.task1, TEST_UUIDS.user1);
     });
 
     it('should throw NOT_FOUND for non-existent task', async () => {
-      prismaMock.task.findUnique.mockResolvedValue(null);
+      ctx.services!.task!.completeTask = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: `Task not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
-      await expect(caller.complete({ taskId: TEST_UUIDS.nonExistent })).rejects.toThrow(TRPCError);
-
-      try {
-        await caller.complete({ taskId: TEST_UUIDS.nonExistent });
-      } catch (error) {
-        expect((error as TRPCError).code).toBe('NOT_FOUND');
-      }
+      await expect(caller.complete({ taskId: TEST_UUIDS.nonExistent })).rejects.toThrow(
+        expect.objectContaining({
+          code: 'NOT_FOUND',
+        })
+      );
     });
 
     it('should throw BAD_REQUEST if task is already completed', async () => {
-      prismaMock.task.findUnique.mockResolvedValue({ ...mockTask, status: 'COMPLETED' });
+      ctx.services!.task!.completeTask = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: 'Task is already completed' },
+      });
 
-      await expect(caller.complete({ taskId: TEST_UUIDS.task1 })).rejects.toThrow(TRPCError);
-
-      try {
-        await caller.complete({ taskId: TEST_UUIDS.task1 });
-      } catch (error) {
-        expect((error as TRPCError).code).toBe('BAD_REQUEST');
-        expect((error as TRPCError).message).toBe('Task is already completed');
-      }
+      await expect(caller.complete({ taskId: TEST_UUIDS.task1 })).rejects.toThrow(
+        expect.objectContaining({
+          code: 'BAD_REQUEST',
+          message: 'Task is already completed',
+        })
+      );
     });
   });
 
@@ -515,8 +638,8 @@ describe('Task Router', () => {
 
     it('should return task statistics', async () => {
       prismaMock.task.count.mockResolvedValueOnce(mockStats.total); // total
-      prismaMock.task.groupBy.mockResolvedValueOnce(mockStats.byStatus as never); // byStatus
-      prismaMock.task.groupBy.mockResolvedValueOnce(mockStats.byPriority as never); // byPriority
+      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockStats.byStatus); // byStatus
+      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockStats.byPriority); // byPriority
       prismaMock.task.count.mockResolvedValueOnce(10); // overdue
       prismaMock.task.count.mockResolvedValueOnce(5); // dueToday
 
@@ -541,7 +664,7 @@ describe('Task Router', () => {
 
     it('should count overdue tasks correctly', async () => {
       prismaMock.task.count.mockResolvedValueOnce(100);
-      prismaMock.task.groupBy.mockResolvedValue([] as never);
+      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
       prismaMock.task.count.mockResolvedValueOnce(15); // overdue
       prismaMock.task.count.mockResolvedValueOnce(3); // dueToday
 
@@ -558,7 +681,7 @@ describe('Task Router', () => {
 
     it('should count due today tasks correctly', async () => {
       prismaMock.task.count.mockResolvedValueOnce(100);
-      prismaMock.task.groupBy.mockResolvedValue([] as never);
+      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
       prismaMock.task.count.mockResolvedValueOnce(10); // overdue
       prismaMock.task.count.mockResolvedValueOnce(8); // dueToday
 
@@ -578,7 +701,7 @@ describe('Task Router', () => {
 
     it('should handle empty statistics', async () => {
       prismaMock.task.count.mockResolvedValueOnce(0); // total
-      prismaMock.task.groupBy.mockResolvedValue([] as never);
+      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
       prismaMock.task.count.mockResolvedValueOnce(0); // overdue
       prismaMock.task.count.mockResolvedValueOnce(0); // dueToday
 

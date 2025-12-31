@@ -12,18 +12,12 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 
+// Import domain constants - single source of truth
+import type { OpportunityStage } from '@intelliflow/domain';
+
 // ============================================
 // TYPE DEFINITIONS
 // ============================================
-
-export type OpportunityStage =
-  | 'PROSPECTING'
-  | 'QUALIFICATION'
-  | 'NEEDS_ANALYSIS'
-  | 'PROPOSAL'
-  | 'NEGOTIATION'
-  | 'CLOSED_WON'
-  | 'CLOSED_LOST';
 
 export interface Opportunity {
   id: string;

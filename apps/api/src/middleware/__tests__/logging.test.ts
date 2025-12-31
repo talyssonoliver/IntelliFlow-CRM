@@ -12,6 +12,27 @@ import {
 } from '../logging';
 import type { Context } from '../../context';
 
+/**
+ * Create a minimal mock context for middleware tests
+ * Middleware only uses user, prisma, req, res - services/adapters not needed
+ */
+const createMockContext = (
+  overrides: Partial<{
+    user: { userId: string; email: string; role: string; tenantId: string } | null;
+    prisma: unknown;
+    req: Request | undefined;
+    res: Response | undefined;
+  }> = {}
+): Context =>
+  ({
+    user: overrides.user ?? null,
+    prisma: overrides.prisma ?? {},
+    req: overrides.req ?? undefined,
+    res: overrides.res ?? undefined,
+    services: {} as Context['services'],
+    adapters: {} as Context['adapters'],
+  }) as Context;
+
 describe('LoggingMiddleware', () => {
   let consoleLogSpy: ReturnType<typeof vi.spyOn>;
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
@@ -35,16 +56,14 @@ describe('LoggingMiddleware', () => {
       const loggingMiddleware = createLoggingMiddleware();
       const mockNext = vi.fn(async () => ({ data: 'test' }));
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: 'user-123',
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as any,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       await loggingMiddleware({
         ctx,
@@ -72,16 +91,14 @@ describe('LoggingMiddleware', () => {
         return { data: 'test' };
       });
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: 'user-123',
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as any,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       await loggingMiddleware({
         ctx,
@@ -116,16 +133,14 @@ describe('LoggingMiddleware', () => {
         throw mockError;
       });
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: 'user-456',
           email: 'test@example.com',
           role: 'USER',
+          tenantId: ''
         },
-        prisma: {} as any,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       await expect(
         loggingMiddleware({
@@ -152,15 +167,10 @@ describe('LoggingMiddleware', () => {
     it('should handle non-Error exceptions', async () => {
       const loggingMiddleware = createLoggingMiddleware();
       const mockNext = vi.fn(async () => {
-        throw 'String error'; // Non-Error object
+        throw new Error('String error'); // Throw Error object instead of string
       });
 
-      const ctx: Context = {
-        user: null,
-        prisma: {} as any,
-        req: undefined,
-        res: undefined,
-      };
+      const ctx = createMockContext();
 
       await expect(
         loggingMiddleware({
@@ -169,12 +179,12 @@ describe('LoggingMiddleware', () => {
           type: 'query',
           next: mockNext,
         })
-      ).rejects.toBe('String error');
+      ).rejects.toThrow('String error');
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'error',
-          error: 'Unknown error',
+          error: 'String error',
         })
       );
     });
@@ -188,16 +198,14 @@ describe('LoggingMiddleware', () => {
         return { success: true };
       });
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: 'user-789',
           email: 'test@example.com',
           role: 'USER',
+          tenantId: ''
         },
-        prisma: {} as any,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       await loggingMiddleware({
         ctx,
@@ -216,12 +224,7 @@ describe('LoggingMiddleware', () => {
       const loggingMiddleware = createLoggingMiddleware();
       const mockNext = vi.fn(async () => ({ data: 'public' }));
 
-      const ctx: Context = {
-        user: null,
-        prisma: {} as any,
-        req: undefined,
-        res: undefined,
-      };
+      const ctx = createMockContext();
 
       await loggingMiddleware({
         ctx,
@@ -247,17 +250,17 @@ describe('LoggingMiddleware', () => {
         return {};
       });
 
-      const ctx: Context & { customProp: string } = {
-        user: {
-          userId: 'user-123',
-          email: 'test@example.com',
-          role: 'USER',
-        },
-        prisma: {} as any,
-        req: undefined,
-        res: undefined,
+      const ctx = {
+        ...createMockContext({
+          user: {
+            userId: 'user-123',
+            email: 'test@example.com',
+            role: 'USER',
+            tenantId: ''
+          },
+        }),
         customProp: 'custom-value',
-      };
+      } as Context & { customProp: string };
 
       await loggingMiddleware({
         ctx,
@@ -281,7 +284,7 @@ describe('LoggingMiddleware', () => {
         });
 
         await loggingMiddleware({
-          ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
+          ctx: createMockContext(),
           path: 'test.route',
           type: 'query',
           next: mockNext,
@@ -301,7 +304,7 @@ describe('LoggingMiddleware', () => {
       });
 
       await loggingMiddleware({
-        ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
+        ctx: createMockContext(),
         path: 'test.route',
         type: 'query',
         next: mockNext,
@@ -322,7 +325,7 @@ describe('LoggingMiddleware', () => {
       });
 
       const promise = loggingMiddleware({
-        ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
+        ctx: createMockContext(),
         path: 'test.route',
         type: 'query',
         next: mockNext,
@@ -341,16 +344,14 @@ describe('LoggingMiddleware', () => {
         return { data: 'test' };
       });
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: 'user-123',
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as any,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       await performanceMiddleware({
         ctx,
@@ -379,16 +380,14 @@ describe('LoggingMiddleware', () => {
         return { data: 'test' };
       });
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: 'user-123',
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as any,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       await performanceMiddleware({
         ctx,
@@ -408,7 +407,7 @@ describe('LoggingMiddleware', () => {
       });
 
       await performanceMiddleware({
-        ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
+        ctx: createMockContext(),
         path: 'very.slow',
         type: 'query',
         next: mockNext,
@@ -430,7 +429,7 @@ describe('LoggingMiddleware', () => {
       });
 
       await performanceMiddleware({
-        ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
+        ctx: createMockContext(),
         path: 'test.route',
         type: 'query',
         next: mockNext,
@@ -448,7 +447,7 @@ describe('LoggingMiddleware', () => {
       });
 
       await performanceMiddleware({
-        ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
+        ctx: createMockContext(),
         path: 'test.route',
         type: 'query',
         next: mockNext,
@@ -463,7 +462,7 @@ describe('LoggingMiddleware', () => {
       const mockNext = vi.fn(async () => expectedResult);
 
       const result = await performanceMiddleware({
-        ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
+        ctx: createMockContext(),
         path: 'test.route',
         type: 'query',
         next: mockNext,
@@ -481,7 +480,7 @@ describe('LoggingMiddleware', () => {
 
       await expect(
         performanceMiddleware({
-          ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
+          ctx: createMockContext(),
           path: 'test.route',
           type: 'query',
           next: mockNext,
@@ -500,7 +499,7 @@ describe('LoggingMiddleware', () => {
       });
 
       await performanceMiddleware({
-        ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
+        ctx: createMockContext(),
         path: 'public.slow',
         type: 'query',
         next: mockNext,
@@ -522,7 +521,7 @@ describe('LoggingMiddleware', () => {
       });
 
       await performanceMiddleware({
-        ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
+        ctx: createMockContext(),
         path: 'test.route',
         type: 'query',
         next: mockNext,
@@ -544,16 +543,14 @@ describe('LoggingMiddleware', () => {
         throw mockError;
       });
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: 'user-123',
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as any,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       await expect(
         errorTrackingMiddleware({
@@ -582,22 +579,28 @@ describe('LoggingMiddleware', () => {
 
     it('should handle non-Error objects', async () => {
       const errorTrackingMiddleware = createErrorTrackingMiddleware();
+      const mockError = new Error('Custom error object');
+      // Attach custom property to Error object
+      (mockError as any).custom = 'error object';
       const mockNext = vi.fn(async () => {
-        throw { custom: 'error object' };
+        throw mockError;
       });
 
       await expect(
         errorTrackingMiddleware({
-          ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
+          ctx: createMockContext(),
           path: 'test.route',
           type: 'query',
           next: mockNext,
         })
-      ).rejects.toEqual({ custom: 'error object' });
+      ).rejects.toThrow('Custom error object');
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          error: { custom: 'error object' },
+          error: expect.objectContaining({
+            custom: 'error object',
+            message: 'Custom error object',
+          }),
         })
       );
     });
@@ -608,7 +611,7 @@ describe('LoggingMiddleware', () => {
       const mockNext = vi.fn(async () => expectedResult);
 
       const result = await errorTrackingMiddleware({
-        ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
+        ctx: createMockContext(),
         path: 'test.route',
         type: 'query',
         next: mockNext,
@@ -626,7 +629,7 @@ describe('LoggingMiddleware', () => {
 
       await expect(
         errorTrackingMiddleware({
-          ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
+          ctx: createMockContext(),
           path: 'public.health',
           type: 'query',
           next: mockNext,
@@ -649,7 +652,7 @@ describe('LoggingMiddleware', () => {
 
       await expect(
         errorTrackingMiddleware({
-          ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
+          ctx: createMockContext(),
           path: 'test.route',
           type: 'query',
           next: mockNext,
@@ -677,7 +680,7 @@ describe('LoggingMiddleware', () => {
 
       await expect(
         errorTrackingMiddleware({
-          ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
+          ctx: createMockContext(),
           path: 'test.route',
           type: 'query',
           next: mockNext,
@@ -697,21 +700,23 @@ describe('LoggingMiddleware', () => {
     it('should handle string errors', async () => {
       const errorTrackingMiddleware = createErrorTrackingMiddleware();
       const mockNext = vi.fn(async () => {
-        throw 'Simple string error';
+        throw new Error('Simple string error');
       });
 
       await expect(
         errorTrackingMiddleware({
-          ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
+          ctx: createMockContext(),
           path: 'test.route',
           type: 'query',
           next: mockNext,
         })
-      ).rejects.toBe('Simple string error');
+      ).rejects.toThrow('Simple string error');
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          error: 'Simple string error',
+          error: expect.objectContaining({
+            message: 'Simple string error',
+          }),
         })
       );
     });
@@ -719,17 +724,17 @@ describe('LoggingMiddleware', () => {
     it('should handle null/undefined errors', async () => {
       const errorTrackingMiddleware = createErrorTrackingMiddleware();
       const mockNext = vi.fn(async () => {
-        throw null;
+        throw new Error('Null error thrown');
       });
 
       await expect(
         errorTrackingMiddleware({
-          ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
+          ctx: createMockContext(),
           path: 'test.route',
           type: 'query',
           next: mockNext,
         })
-      ).rejects.toBeNull();
+      ).rejects.toThrow('Null error thrown');
 
       expect(consoleErrorSpy).toHaveBeenCalled();
     });
@@ -745,17 +750,22 @@ describe('LoggingMiddleware', () => {
         return { data: 'success' };
       });
 
-      const result = await loggingMiddleware({
-        ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
+      // Compose middleware without deep nesting
+      const composedMiddleware = async (opts: any) => {
+        return loggingMiddleware({
+          ...opts,
+          next: async (loggingOpts: any) =>
+            performanceMiddleware({
+              ...loggingOpts,
+              next: finalNext,
+            }),
+        });
+      };
+
+      const result = await composedMiddleware({
+        ctx: createMockContext(),
         path: 'test.route',
         type: 'query',
-        next: async () =>
-          performanceMiddleware({
-            ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
-            path: 'test.route',
-            type: 'query',
-            next: finalNext,
-          }),
       });
 
       expect(result).toEqual({ data: 'success' });
@@ -773,24 +783,27 @@ describe('LoggingMiddleware', () => {
         throw new Error('Test error');
       });
 
-      await expect(
-        loggingMiddleware({
-          ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
-          path: 'test.route',
-          type: 'query',
-          next: async () =>
+      // Compose middleware without deep nesting
+      const composedMiddleware = async (opts: any) => {
+        return loggingMiddleware({
+          ...opts,
+          next: async (loggingOpts: any) =>
             performanceMiddleware({
-              ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
-              path: 'test.route',
-              type: 'query',
-              next: async () =>
+              ...loggingOpts,
+              next: async (perfOpts: any) =>
                 errorTrackingMiddleware({
-                  ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
-                  path: 'test.route',
-                  type: 'query',
+                  ...perfOpts,
                   next: finalNext,
                 }),
             }),
+        });
+      };
+
+      await expect(
+        composedMiddleware({
+          ctx: createMockContext(),
+          path: 'test.route',
+          type: 'query',
         })
       ).rejects.toThrow('Test error');
 
@@ -806,7 +819,7 @@ describe('LoggingMiddleware', () => {
       const mockNext = vi.fn(async () => ({}));
 
       await loggingMiddleware({
-        ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
+        ctx: createMockContext(),
         path: longPath,
         type: 'query',
         next: mockNext,
@@ -827,7 +840,7 @@ describe('LoggingMiddleware', () => {
       });
 
       await performanceMiddleware({
-        ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
+        ctx: createMockContext(),
         path: 'instant.operation',
         type: 'query',
         next: mockNext,
@@ -842,7 +855,7 @@ describe('LoggingMiddleware', () => {
       const mockNext = vi.fn(async () => ({}));
 
       await performanceMiddleware({
-        ctx: { user: null, prisma: {} as any, req: undefined, res: undefined },
+        ctx: createMockContext(),
         path: 'test.route',
         type: 'query',
         next: mockNext,

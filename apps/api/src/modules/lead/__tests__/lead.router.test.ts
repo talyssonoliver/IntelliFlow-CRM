@@ -39,26 +39,38 @@ describe('Lead Router', () => {
         source: 'WEBSITE' as const,
       };
 
-      const expected = {
-        ...mockLead,
-        ...input,
+      // Mock Lead domain entity response
+      const mockDomainLead = {
+        id: { value: TEST_UUIDS.lead1 },
+        email: { value: input.email },
+        firstName: input.firstName,
+        lastName: input.lastName,
+        company: input.company,
+        title: null,
+        phone: input.phone,
+        source: input.source,
         status: 'NEW' as const,
-        score: 0,
+        score: { value: 0, confidence: 0, tier: 'cold' as const },
+        ownerId: TEST_UUIDS.user1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
-      prismaMock.lead.create.mockResolvedValue(expected);
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
 
-      const result = await caller.create(input);
-
-      expect(result).toMatchObject(expected);
-      expect(prismaMock.lead.create).toHaveBeenCalledWith({
-        data: {
-          ...input,
-          ownerId: TEST_UUIDS.user1,
-          status: 'NEW',
-          score: 0,
-        },
+      // Mock LeadService.createLead
+      ctx.services!.lead!.createLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainLead,
       });
+
+      const result = await callerWithService.create(input);
+
+      expect(result.email).toBe(input.email);
+      expect(result.firstName).toBe(input.firstName);
+      expect(ctx.services!.lead!.createLead).toHaveBeenCalled();
     });
 
     it('should throw for invalid email', async () => {
@@ -73,35 +85,52 @@ describe('Lead Router', () => {
   });
 
   describe('getById', () => {
-    it('should return lead with related data', async () => {
-      const leadWithRelations = {
-        ...mockLead,
-        owner: mockUser,
-        contact: mockContact,
-        aiScores: [mockAIScore],
-        tasks: [mockTask],
+    it('should return lead via LeadService', async () => {
+      const mockDomainLead = {
+        id: { value: TEST_UUIDS.lead1 },
+        email: { value: mockLead.email },
+        firstName: mockLead.firstName,
+        lastName: mockLead.lastName,
+        company: mockLead.company,
+        title: null,
+        phone: mockLead.phone,
+        source: mockLead.source,
+        status: mockLead.status,
+        score: { value: 75, confidence: 0.8, tier: 'warm' as const },
+        ownerId: mockLead.ownerId,
+        createdAt: mockLead.createdAt,
+        updatedAt: mockLead.updatedAt,
+        getDomainEvents: () => [],
+        clearDomainEvents: () => {},
       };
 
-      prismaMock.lead.findUnique.mockResolvedValue(leadWithRelations);
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
 
-      const result = await caller.getById({ id: TEST_UUIDS.lead1 });
-
-      expect(result).toMatchObject(leadWithRelations);
-      expect(prismaMock.lead.findUnique).toHaveBeenCalledWith({
-        where: { id: TEST_UUIDS.lead1 },
-        include: {
-          owner: { select: { id: true, email: true, name: true, avatarUrl: true } },
-          contact: true,
-          aiScores: { orderBy: { createdAt: 'desc' }, take: 5 },
-          tasks: { where: { status: { not: 'COMPLETED' } }, orderBy: { dueDate: 'asc' } },
-        },
+      ctx.services!.lead!.getLeadById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainLead,
       });
+
+      const result = await callerWithService.getById({ id: TEST_UUIDS.lead1 });
+
+      expect(result.id).toBe(TEST_UUIDS.lead1);
+      expect(result.email).toBe(mockLead.email);
+      expect(ctx.services!.lead!.getLeadById).toHaveBeenCalledWith(TEST_UUIDS.lead1);
     });
 
     it('should throw NOT_FOUND for non-existent lead', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue(null);
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
 
-      await expect(caller.getById({ id: TEST_UUIDS.nonExistent })).rejects.toThrow(
+      ctx.services!.lead!.getLeadById = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: `Lead not found: ${TEST_UUIDS.nonExistent}` },
+      });
+
+      await expect(callerWithService.getById({ id: TEST_UUIDS.nonExistent })).rejects.toThrow(
         expect.objectContaining({
           code: 'NOT_FOUND',
           message: expect.stringContaining('not found'),
@@ -184,26 +213,54 @@ describe('Lead Router', () => {
 
   describe('update', () => {
     it('should update lead with valid data', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue(mockLead);
+      // Mock Lead domain entity for update response
+      const mockDomainLead = {
+        id: { value: TEST_UUIDS.lead1 },
+        email: { value: 'lead@example.com' },
+        firstName: 'Updated',
+        lastName: 'Doe',
+        company: 'ACME Corp',
+        title: null,
+        phone: null,
+        source: 'WEBSITE' as const,
+        status: 'NEW' as const,
+        score: { value: 75, confidence: 0.8, tier: 'warm' as const },
+        ownerId: TEST_UUIDS.user1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-      const updated = { ...mockLead, firstName: 'Updated', status: 'CONTACTED' as const };
-      prismaMock.lead.update.mockResolvedValue(updated);
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
 
-      const result = await caller.update({
+      // Mock LeadService.updateLeadContactInfo for contact info updates
+      ctx.services!.lead!.updateLeadContactInfo = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainLead,
+      });
+
+      const result = await callerWithService.update({
         id: TEST_UUIDS.lead1,
         firstName: 'Updated',
-        status: 'CONTACTED',
       });
 
       expect(result.firstName).toBe('Updated');
-      expect(result.status).toBe('CONTACTED');
     });
 
     it('should throw NOT_FOUND when updating non-existent lead', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue(null);
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      // Mock LeadService.updateLeadContactInfo returning not found error
+      ctx.services!.lead!.updateLeadContactInfo = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { message: 'Lead not found' },
+      });
 
       await expect(
-        caller.update({ id: TEST_UUIDS.nonExistent, firstName: 'Test' })
+        callerWithService.update({ id: TEST_UUIDS.nonExistent, firstName: 'Test' })
       ).rejects.toThrow(
         expect.objectContaining({
           code: 'NOT_FOUND',
@@ -213,23 +270,54 @@ describe('Lead Router', () => {
   });
 
   describe('delete', () => {
-    it('should delete an existing lead', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue(mockLead);
-      prismaMock.lead.delete.mockResolvedValue(mockLead);
+    it('should delete an existing lead via LeadService', async () => {
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
 
-      const result = await caller.delete({ id: TEST_UUIDS.lead1 });
+      ctx.services!.lead!.deleteLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: undefined,
+      });
+
+      const result = await callerWithService.delete({ id: TEST_UUIDS.lead1 });
 
       expect(result.success).toBe(true);
       expect(result.id).toBe(TEST_UUIDS.lead1);
-      expect(prismaMock.lead.delete).toHaveBeenCalledWith({ where: { id: TEST_UUIDS.lead1 } });
+      expect(ctx.services!.lead!.deleteLead).toHaveBeenCalledWith(TEST_UUIDS.lead1);
     });
 
     it('should throw NOT_FOUND when deleting non-existent lead', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue(null);
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
 
-      await expect(caller.delete({ id: TEST_UUIDS.nonExistent })).rejects.toThrow(
+      ctx.services!.lead!.deleteLead = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: `Lead not found: ${TEST_UUIDS.nonExistent}` },
+      });
+
+      await expect(callerWithService.delete({ id: TEST_UUIDS.nonExistent })).rejects.toThrow(
         expect.objectContaining({
           code: 'NOT_FOUND',
+        })
+      );
+    });
+
+    it('should throw PRECONDITION_FAILED when deleting converted lead', async () => {
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      ctx.services!.lead!.deleteLead = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: 'Cannot delete a converted lead' },
+      });
+
+      await expect(callerWithService.delete({ id: TEST_UUIDS.lead1 })).rejects.toThrow(
+        expect.objectContaining({
+          code: 'PRECONDITION_FAILED',
+          message: expect.stringContaining('converted'),
         })
       );
     });
@@ -237,30 +325,52 @@ describe('Lead Router', () => {
 
   describe('qualify', () => {
     it('should qualify a lead and create follow-up task', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue(mockLead);
+      const mockDomainLead = {
+        id: { value: TEST_UUIDS.lead1 },
+        email: { value: 'lead@example.com' },
+        firstName: 'John',
+        lastName: 'Doe',
+        company: 'ACME Corp',
+        title: null,
+        phone: null,
+        source: 'WEBSITE' as const,
+        status: 'QUALIFIED' as const,
+        score: { value: 75, confidence: 0.8, tier: 'warm' as const },
+        ownerId: TEST_UUIDS.user1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-      const qualified = { ...mockLead, status: 'QUALIFIED' as const };
-      prismaMock.lead.update.mockResolvedValue(qualified);
-      prismaMock.task.create.mockResolvedValue(mockTask);
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
 
-      const result = await caller.qualify({
+      ctx.services!.lead!.qualifyLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainLead,
+      });
+
+      const result = await callerWithService.qualify({
         leadId: TEST_UUIDS.lead1,
         reason: 'Strong fit for enterprise package, budget confirmed',
       });
 
       expect(result.status).toBe('QUALIFIED');
-      expect(prismaMock.lead.update).toHaveBeenCalledWith({
-        where: { id: TEST_UUIDS.lead1 },
-        data: { status: 'QUALIFIED' },
-      });
-      expect(prismaMock.task.create).toHaveBeenCalled();
+      expect(ctx.services!.lead!.qualifyLead).toHaveBeenCalled();
     });
 
     it('should throw NOT_FOUND for non-existent lead', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue(null);
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      ctx.services!.lead!.qualifyLead = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { message: 'Lead not found' },
+      });
 
       await expect(
-        caller.qualify({ leadId: TEST_UUIDS.nonExistent, reason: 'Good fit for our product' })
+        callerWithService.qualify({ leadId: TEST_UUIDS.nonExistent, reason: 'Good fit for our product' })
       ).rejects.toThrow(
         expect.objectContaining({
           code: 'NOT_FOUND',
@@ -269,11 +379,17 @@ describe('Lead Router', () => {
     });
 
     it('should throw BAD_REQUEST if lead already qualified', async () => {
-      const qualifiedLead = { ...mockLead, status: 'QUALIFIED' as const };
-      prismaMock.lead.findUnique.mockResolvedValue(qualifiedLead);
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      ctx.services!.lead!.qualifyLead = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { message: 'Lead already qualified' },
+      });
 
       await expect(
-        caller.qualify({ leadId: TEST_UUIDS.lead1, reason: 'Already qualified' })
+        callerWithService.qualify({ leadId: TEST_UUIDS.lead1, reason: 'Already qualified' })
       ).rejects.toThrow(
         expect.objectContaining({
           code: 'BAD_REQUEST',
@@ -285,63 +401,75 @@ describe('Lead Router', () => {
 
   describe('convert', () => {
     it('should convert lead to contact and create account', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue(mockLead);
+      const mockConversionResult = {
+        leadId: TEST_UUIDS.lead1,
+        contactId: TEST_UUIDS.contact1,
+        accountId: TEST_UUIDS.account1,
+        convertedBy: TEST_UUIDS.user1,
+        convertedAt: new Date(),
+      };
 
-      prismaMock.$transaction.mockImplementation(async (callback) => {
-        return callback({
-          account: {
-            create: async () => mockAccount,
-          },
-          contact: {
-            create: async () => mockContact,
-          },
-          lead: {
-            update: async () => ({ ...mockLead, status: 'CONVERTED' as const }),
-          },
-        } as any);
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      // Mock the LeadService.convertLead method
+      ctx.services!.lead!.convertLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockConversionResult,
       });
 
-      const result = await caller.convert({
+      const result = await callerWithService.convert({
         leadId: TEST_UUIDS.lead1,
         createAccount: true,
         accountName: 'ACME Corp',
       });
 
-      expect(result.lead.status).toBe('CONVERTED');
-      expect(result.contact).toBeDefined();
-      expect(result.accountId).toBeDefined();
+      expect(result.leadId).toBe(TEST_UUIDS.lead1);
+      expect(result.contactId).toBe(TEST_UUIDS.contact1);
+      expect(result.accountId).toBe(TEST_UUIDS.account1);
     });
 
     it('should convert lead without creating account', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue(mockLead);
+      const mockConversionResult = {
+        leadId: TEST_UUIDS.lead1,
+        contactId: TEST_UUIDS.contact1,
+        accountId: null,
+        convertedBy: TEST_UUIDS.user1,
+        convertedAt: new Date(),
+      };
 
-      prismaMock.$transaction.mockImplementation(async (callback) => {
-        return callback({
-          contact: {
-            create: async () => mockContact,
-          },
-          lead: {
-            update: async () => ({ ...mockLead, status: 'CONVERTED' as const }),
-          },
-        } as any);
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      ctx.services!.lead!.convertLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockConversionResult,
       });
 
-      const result = await caller.convert({
+      const result = await callerWithService.convert({
         leadId: TEST_UUIDS.lead1,
         createAccount: false,
       });
 
-      expect(result.lead.status).toBe('CONVERTED');
-      expect(result.contact).toBeDefined();
-      expect(result.accountId).toBeUndefined();
+      expect(result.leadId).toBe(TEST_UUIDS.lead1);
+      expect(result.contactId).toBeDefined();
+      expect(result.accountId).toBeNull();
     });
 
     it('should throw BAD_REQUEST if lead already converted', async () => {
-      const convertedLead = { ...mockLead, status: 'CONVERTED' as const };
-      prismaMock.lead.findUnique.mockResolvedValue(convertedLead);
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      ctx.services!.lead!.convertLead = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { message: 'Lead already converted' },
+      });
 
       await expect(
-        caller.convert({ leadId: TEST_UUIDS.lead1, createAccount: true })
+        callerWithService.convert({ leadId: TEST_UUIDS.lead1, createAccount: true })
       ).rejects.toThrow(
         expect.objectContaining({
           code: 'BAD_REQUEST',
@@ -353,25 +481,44 @@ describe('Lead Router', () => {
 
   describe('scoreWithAI', () => {
     it('should generate AI score for lead', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue(mockLead);
-      prismaMock.aIScore.create.mockResolvedValue(mockAIScore);
-      prismaMock.lead.update.mockResolvedValue({ ...mockLead, score: 80 });
+      const mockScoreResult = {
+        leadId: TEST_UUIDS.lead1,
+        previousScore: 50,
+        newScore: 80,
+        confidence: 0.85,
+        tier: 'hot' as const,
+        autoQualified: false,
+        autoDisqualified: false,
+      };
 
-      const result = await caller.scoreWithAI({ leadId: TEST_UUIDS.lead1 });
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      ctx.services!.lead!.scoreLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockScoreResult,
+      });
+
+      const result = await callerWithService.scoreWithAI({ leadId: TEST_UUIDS.lead1 });
 
       expect(result.leadId).toBe(TEST_UUIDS.lead1);
-      expect(result.score).toBeGreaterThanOrEqual(0);
-      expect(result.score).toBeLessThanOrEqual(100);
-      expect(result.confidence).toBeGreaterThanOrEqual(0);
-      expect(result.confidence).toBeLessThanOrEqual(1);
-      expect(prismaMock.aIScore.create).toHaveBeenCalled();
-      expect(prismaMock.lead.update).toHaveBeenCalled();
+      expect(result.score).toBe(80);
+      expect(result.confidence).toBe(0.85);
+      expect(ctx.services!.lead!.scoreLead).toHaveBeenCalledWith(TEST_UUIDS.lead1);
     });
 
     it('should throw NOT_FOUND for non-existent lead', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue(null);
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
 
-      await expect(caller.scoreWithAI({ leadId: TEST_UUIDS.nonExistent })).rejects.toThrow(
+      ctx.services!.lead!.scoreLead = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { message: 'Lead not found' },
+      });
+
+      await expect(callerWithService.scoreWithAI({ leadId: TEST_UUIDS.nonExistent })).rejects.toThrow(
         expect.objectContaining({
           code: 'NOT_FOUND',
         })
@@ -381,17 +528,25 @@ describe('Lead Router', () => {
 
   describe('stats', () => {
     it('should return lead statistics', async () => {
-      prismaMock.lead.count.mockResolvedValue(100);
-      vi.mocked(prismaMock.lead.groupBy).mockResolvedValue([
-        { status: 'NEW', _count: 30 },
-        { status: 'QUALIFIED', _count: 25 },
-        { status: 'CONVERTED', _count: 20 },
-      ] as unknown as Awaited<ReturnType<typeof prismaMock.lead.groupBy>>);
-      prismaMock.lead.aggregate.mockResolvedValue({
-        _avg: { score: 72.5 },
-      } as Awaited<ReturnType<typeof prismaMock.lead.aggregate>>);
+      const mockStats = {
+        total: 100,
+        byStatus: {
+          NEW: 30,
+          QUALIFIED: 25,
+          CONVERTED: 20,
+        },
+        averageScore: 72.5,
+        hotLeads: 15,
+        warmLeads: 35,
+        coldLeads: 50,
+      };
 
-      const result = await caller.stats();
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      ctx.services!.lead!.getLeadStatistics = vi.fn().mockResolvedValue(mockStats);
+
+      const result = await callerWithService.stats();
 
       expect(result.total).toBe(100);
       expect(result.byStatus).toEqual({
@@ -403,13 +558,21 @@ describe('Lead Router', () => {
     });
 
     it('should handle zero average score', async () => {
-      prismaMock.lead.count.mockResolvedValue(0);
-      vi.mocked(prismaMock.lead.groupBy).mockResolvedValue([]);
-      prismaMock.lead.aggregate.mockResolvedValue({
-        _avg: { score: null },
-      } as Awaited<ReturnType<typeof prismaMock.lead.aggregate>>);
+      const mockStats = {
+        total: 0,
+        byStatus: {},
+        averageScore: 0,
+        hotLeads: 0,
+        warmLeads: 0,
+        coldLeads: 0,
+      };
 
-      const result = await caller.stats();
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      ctx.services!.lead!.getLeadStatistics = vi.fn().mockResolvedValue(mockStats);
+
+      const result = await callerWithService.stats();
 
       expect(result.total).toBe(0);
       expect(result.averageScore).toBe(0);

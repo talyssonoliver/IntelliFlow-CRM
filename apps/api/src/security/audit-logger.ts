@@ -18,7 +18,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 import {
   AuditLogInput,
   SecurityEventInput,
@@ -66,9 +66,9 @@ interface AuditLoggerConfig {
  * ```
  */
 export class AuditLogger {
-  private prisma: PrismaClient;
-  private config: Required<AuditLoggerConfig>;
-  private buffer: AuditLogInput[] = [];
+  private readonly prisma: PrismaClient;
+  private readonly config: Required<AuditLoggerConfig>;
+  private readonly buffer: AuditLogInput[] = [];
   private flushTimer: NodeJS.Timeout | null = null;
 
   constructor(prisma: PrismaClient, config: AuditLoggerConfig = {}) {
@@ -119,6 +119,7 @@ export class AuditLogger {
     action: AuditAction,
     resourceType: ResourceType,
     resourceId: string,
+    tenantId: string,
     options: {
       actorId?: string;
       actorEmail?: string;
@@ -141,6 +142,7 @@ export class AuditLogger {
     const changedFields = this.calculateChangedFields(options.beforeState, options.afterState);
 
     return this.log({
+      tenantId,
       eventType: `${resourceType.charAt(0).toUpperCase() + resourceType.slice(1)}${action.charAt(0) + action.slice(1).toLowerCase()}d`,
       action,
       resourceType,
@@ -170,6 +172,7 @@ export class AuditLogger {
     resourceType: ResourceType,
     resourceId: string,
     requiredPermission: string,
+    tenantId: string,
     options: {
       actorId?: string;
       actorEmail?: string;
@@ -180,6 +183,7 @@ export class AuditLogger {
     } = {}
   ): Promise<string> {
     return this.log({
+      tenantId,
       eventType: 'PermissionDenied',
       action: 'PERMISSION_DENIED',
       actionResult: 'DENIED',
@@ -227,62 +231,71 @@ export class AuditLogger {
   /**
    * Log a login attempt
    */
-  async logLogin(
-    success: boolean,
+  async logLoginSuccess(
+    tenantId: string,
     options: {
       userId?: string;
       email: string;
       ipAddress?: string;
       userAgent?: string;
       mfaUsed?: boolean;
+    }
+  ): Promise<void> {
+    await this.log({
+      tenantId,
+      eventType: 'UserLogin',
+      action: 'LOGIN',
+      actionResult: 'SUCCESS',
+      resourceType: 'user',
+      resourceId: options.userId || 'unknown',
+      actorId: options.userId,
+      actorEmail: options.email,
+      ipAddress: options.ipAddress,
+      userAgent: options.userAgent,
+      metadata: { mfaUsed: options.mfaUsed },
+    });
+
+    await this.logSecurityEvent({
+      eventType: 'LOGIN_SUCCESS',
+      severity: 'INFO',
+      actorId: options.userId,
+      actorEmail: options.email,
+      actorIp: options.ipAddress,
+      description: `Successful login for ${options.email}`,
+      details: { mfaUsed: options.mfaUsed },
+    });
+  }
+
+  async logLoginFailure(
+    tenantId: string,
+    options: {
+      email: string;
+      ipAddress?: string;
+      userAgent?: string;
       failureReason?: string;
     }
   ): Promise<void> {
-    if (success) {
-      await this.log({
-        eventType: 'UserLogin',
-        action: 'LOGIN',
-        actionResult: 'SUCCESS',
-        resourceType: 'user',
-        resourceId: options.userId || 'unknown',
-        actorId: options.userId,
-        actorEmail: options.email,
-        ipAddress: options.ipAddress,
-        userAgent: options.userAgent,
-        metadata: { mfaUsed: options.mfaUsed },
-      });
+    await this.log({
+      tenantId,
+      eventType: 'UserLoginFailed',
+      action: 'LOGIN_FAILED',
+      actionResult: 'FAILURE',
+      resourceType: 'user',
+      resourceId: 'unknown',
+      actorEmail: options.email,
+      ipAddress: options.ipAddress,
+      userAgent: options.userAgent,
+      actionReason: options.failureReason,
+    });
 
-      await this.logSecurityEvent({
-        eventType: 'LOGIN_SUCCESS',
-        severity: 'INFO',
-        actorId: options.userId,
-        actorEmail: options.email,
-        actorIp: options.ipAddress,
-        description: `Successful login for ${options.email}`,
-        details: { mfaUsed: options.mfaUsed },
-      });
-    } else {
-      await this.log({
-        eventType: 'UserLoginFailed',
-        action: 'LOGIN_FAILED',
-        actionResult: 'FAILURE',
-        resourceType: 'user',
-        resourceId: 'unknown',
-        actorEmail: options.email,
-        ipAddress: options.ipAddress,
-        userAgent: options.userAgent,
-        actionReason: options.failureReason,
-      });
-
-      await this.logSecurityEvent({
-        eventType: 'LOGIN_FAILURE',
-        severity: 'MEDIUM',
-        actorEmail: options.email,
-        actorIp: options.ipAddress,
-        description: `Failed login attempt for ${options.email}`,
-        details: { reason: options.failureReason },
-      });
-    }
+    await this.logSecurityEvent({
+      eventType: 'LOGIN_FAILURE',
+      severity: 'MEDIUM',
+      actorEmail: options.email,
+      actorIp: options.ipAddress,
+      description: `Failed login attempt for ${options.email}`,
+      details: { reason: options.failureReason },
+    });
   }
 
   /**
@@ -292,6 +305,7 @@ export class AuditLogger {
     action: 'BULK_UPDATE' | 'BULK_DELETE' | 'IMPORT' | 'EXPORT',
     resourceType: ResourceType,
     resourceIds: string[],
+    tenantId: string,
     options: {
       actorId?: string;
       actorEmail?: string;
@@ -301,6 +315,7 @@ export class AuditLogger {
     } = {}
   ): Promise<string> {
     return this.log({
+      tenantId,
       eventType: `Bulk${action.replace('BULK_', '')}`,
       action,
       actionResult: options.failureCount ? 'PARTIAL' : 'SUCCESS',
@@ -318,7 +333,89 @@ export class AuditLogger {
   }
 
   /**
-   * Query audit logs
+   * Build the where clause for comprehensive queries
+   */
+  private buildWhereClause(filters: {
+    resourceType?: ResourceType;
+    resourceId?: string;
+    actorId?: string;
+    actorType?: ActorType;
+    action?: AuditAction;
+    actionResult?: ActionResult;
+    eventType?: string;
+    dataClassification?: DataClassification;
+    traceId?: string;
+    startDate?: Date;
+    endDate?: Date;
+  }): Record<string, unknown> {
+    const where: Record<string, unknown> = {};
+
+    if (filters.resourceType) where.resourceType = filters.resourceType;
+    if (filters.resourceId) where.resourceId = filters.resourceId;
+    if (filters.actorId) where.actorId = filters.actorId;
+    if (filters.actorType) where.actorType = filters.actorType;
+    if (filters.action) where.action = filters.action;
+    if (filters.actionResult) where.actionResult = filters.actionResult;
+    if (filters.eventType) where.eventType = filters.eventType;
+    if (filters.dataClassification) where.dataClassification = filters.dataClassification;
+    if (filters.traceId) where.traceId = filters.traceId;
+
+    if (filters.startDate || filters.endDate) {
+      where.timestamp = {};
+      if (filters.startDate) (where.timestamp as Record<string, Date>).gte = filters.startDate;
+      if (filters.endDate) (where.timestamp as Record<string, Date>).lte = filters.endDate;
+    }
+
+    return where;
+  }
+
+  /**
+   * Query audit logs from the comprehensive AuditLogEntry table
+   *
+   * Provides rich filtering options for compliance and investigation queries.
+   */
+  async queryComprehensive(filters: {
+    resourceType?: ResourceType;
+    resourceId?: string;
+    actorId?: string;
+    actorType?: ActorType;
+    action?: AuditAction;
+    actionResult?: ActionResult;
+    eventType?: string;
+    dataClassification?: DataClassification;
+    traceId?: string;
+    startDate?: Date;
+    endDate?: Date;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ entries: unknown[]; total: number }> {
+    try {
+      if (!this.prisma.auditLogEntry) {
+        // Fall back to basic query
+        return this.query(filters);
+      }
+
+      const where = this.buildWhereClause(filters);
+
+      const [entries, total] = await Promise.all([
+        this.prisma.auditLogEntry.findMany({
+          where,
+          orderBy: { timestamp: 'desc' },
+          take: filters.limit ?? 100,
+          skip: filters.offset ?? 0,
+        }),
+        this.prisma.auditLogEntry.count({ where }),
+      ]);
+
+      return { entries, total };
+    } catch (error) {
+      console.debug('[AUDIT] Comprehensive query failed, falling back to basic:', error);
+      return this.query(filters);
+    }
+  }
+
+  /**
+   * Query audit logs (basic AuditLog table for backward compatibility)
    */
   async query(filters: {
     resourceType?: ResourceType;
@@ -332,15 +429,15 @@ export class AuditLogger {
   }): Promise<{ entries: unknown[]; total: number }> {
     const where: Record<string, unknown> = {};
 
-    if (filters.resourceType) where.resourceType = filters.resourceType;
-    if (filters.resourceId) where.resourceId = filters.resourceId;
-    if (filters.actorId) where.actorId = filters.actorId;
+    if (filters.resourceType) where.entityType = filters.resourceType;
+    if (filters.resourceId) where.entityId = filters.resourceId;
+    if (filters.actorId) where.userId = filters.actorId;
     if (filters.action) where.action = filters.action;
 
     if (filters.startDate || filters.endDate) {
-      where.timestamp = {};
-      if (filters.startDate) (where.timestamp as Record<string, Date>).gte = filters.startDate;
-      if (filters.endDate) (where.timestamp as Record<string, Date>).lte = filters.endDate;
+      where.createdAt = {};
+      if (filters.startDate) (where.createdAt as Record<string, Date>).gte = filters.startDate;
+      if (filters.endDate) (where.createdAt as Record<string, Date>).lte = filters.endDate;
     }
 
     const [entries, total] = await Promise.all([
@@ -354,6 +451,102 @@ export class AuditLogger {
     ]);
 
     return { entries, total };
+  }
+
+  /**
+   * Get audit trail for a specific resource
+   *
+   * Returns the complete history of changes for a resource,
+   * useful for compliance investigations.
+   */
+  async getResourceAuditTrail(
+    resourceType: ResourceType,
+    resourceId: string,
+    options: { limit?: number; offset?: number } = {}
+  ): Promise<{ entries: unknown[]; total: number }> {
+    return this.queryComprehensive({
+      resourceType,
+      resourceId,
+      limit: options.limit,
+      offset: options.offset,
+    });
+  }
+
+  /**
+   * Get audit trail for a specific user/actor
+   *
+   * Returns all actions performed by a user, useful for
+   * security investigations and compliance audits.
+   */
+  async getActorAuditTrail(
+    actorId: string,
+    options: {
+      startDate?: Date;
+      endDate?: Date;
+      limit?: number;
+      offset?: number;
+    } = {}
+  ): Promise<{ entries: unknown[]; total: number }> {
+    return this.queryComprehensive({
+      actorId,
+      startDate: options.startDate,
+      endDate: options.endDate,
+      limit: options.limit,
+      offset: options.offset,
+    });
+  }
+
+  /**
+   * Get permission-related audit entries
+   *
+   * Returns entries where permission was denied or checked,
+   * useful for RBAC/ABAC compliance audits.
+   */
+  async getPermissionAuditTrail(
+    options: {
+      actorId?: string;
+      resourceType?: ResourceType;
+      permissionDeniedOnly?: boolean;
+      startDate?: Date;
+      endDate?: Date;
+      limit?: number;
+      offset?: number;
+    } = {}
+  ): Promise<{ entries: unknown[]; total: number }> {
+    try {
+      if (!this.prisma.auditLogEntry) {
+        return { entries: [], total: 0 };
+      }
+
+      const where: Record<string, unknown> = {
+        requiredPermission: { not: null },
+      };
+
+      if (options.actorId) where.actorId = options.actorId;
+      if (options.resourceType) where.resourceType = options.resourceType;
+      if (options.permissionDeniedOnly) where.permissionGranted = false;
+
+      if (options.startDate || options.endDate) {
+        where.timestamp = {};
+        if (options.startDate) (where.timestamp as Record<string, Date>).gte = options.startDate;
+        if (options.endDate) (where.timestamp as Record<string, Date>).lte = options.endDate;
+      }
+
+      const [entries, total] = await Promise.all([
+        this.prisma.auditLogEntry.findMany({
+          where,
+          orderBy: { timestamp: 'desc' },
+          take: options.limit ?? 100,
+          skip: options.offset ?? 0,
+        }),
+        this.prisma.auditLogEntry.count({ where }),
+      ]);
+
+      return { entries, total };
+    } catch (error) {
+      console.debug('[AUDIT] Permission audit trail query failed:', error);
+      return { entries: [], total: 0 };
+    }
   }
 
   /**
@@ -405,9 +598,19 @@ export class AuditLogger {
 
   /**
    * Write an audit log entry to the database
+   *
+   * Writes to both the comprehensive AuditLogEntry table (if available)
+   * and the basic AuditLog table for backward compatibility.
    */
   private async writeEntry(entry: AuditLogInput): Promise<string> {
     try {
+      // Try to write to the comprehensive AuditLogEntry table first
+      const entryId = await this.writeComprehensiveEntry(entry);
+      if (entryId) {
+        return entryId;
+      }
+
+      // Fall back to basic AuditLog table
       const auditLog = await this.prisma.auditLog.create({
         data: {
           action: entry.action,
@@ -418,6 +621,7 @@ export class AuditLogger {
           ipAddress: entry.ipAddress,
           userAgent: entry.userAgent,
           userId: entry.actorId || 'system',
+          tenantId: entry.tenantId,
         },
       });
 
@@ -425,6 +629,82 @@ export class AuditLogger {
     } catch (error) {
       console.error('[AUDIT] Failed to write audit log:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Write to the comprehensive AuditLogEntry table
+   *
+   * This table provides full audit context for compliance requirements:
+   * - Actor tracking (user, system, AI agent, etc.)
+   * - Data classification for compliance
+   * - Permission context for RBAC/ABAC audit
+   * - Request correlation with OpenTelemetry
+   */
+  private async writeComprehensiveEntry(entry: AuditLogInput): Promise<string | null> {
+    try {
+      // Check if the AuditLogEntry table exists
+      if (!this.prisma.auditLogEntry) {
+        return null;
+      }
+
+      const auditLogEntry = await this.prisma.auditLogEntry.create({
+        data: {
+          // Multi-tenancy
+          tenantId: entry.tenantId,
+
+          // Event metadata
+          eventType: entry.eventType,
+          eventVersion: entry.eventVersion ?? 'v1',
+          eventId: entry.eventId || randomUUID(),
+
+          // Actor information
+          actorType: entry.actorType ?? 'USER',
+          actorId: entry.actorId,
+          actorEmail: entry.actorEmail,
+          actorRole: entry.actorRole,
+
+          // Resource information
+          resourceType: entry.resourceType,
+          resourceId: entry.resourceId,
+          resourceName: entry.resourceName,
+
+          // Action details
+          action: entry.action,
+          actionResult: entry.actionResult ?? 'SUCCESS',
+          actionReason: entry.actionReason,
+
+          // Data changes
+          beforeState: entry.beforeState as object | undefined,
+          afterState: entry.afterState as object | undefined,
+          changedFields: entry.changedFields ?? [],
+
+          // Request context
+          ipAddress: entry.ipAddress,
+          userAgent: entry.userAgent,
+          requestId: entry.requestId,
+          traceId: entry.traceId,
+          sessionId: entry.sessionId,
+
+          // Compliance
+          dataClassification: entry.dataClassification ?? this.config.defaultClassification,
+          retentionExpiresAt: entry.retentionExpiresAt,
+
+          // Permission context
+          requiredPermission: entry.requiredPermission,
+          permissionGranted: entry.permissionGranted ?? true,
+          permissionDeniedReason: entry.permissionDeniedReason,
+
+          // Additional metadata
+          metadata: entry.metadata as object | undefined,
+        },
+      });
+
+      return auditLogEntry.id;
+    } catch (error) {
+      // If table doesn't exist or other error, return null to fall back to basic table
+      console.debug('[AUDIT] Comprehensive entry failed, falling back to basic:', error);
+      return null;
     }
   }
 
@@ -493,10 +773,8 @@ export class AuditLogger {
 let auditLoggerInstance: AuditLogger | null = null;
 
 export function getAuditLogger(prisma: PrismaClient, config?: AuditLoggerConfig): AuditLogger {
-  if (!auditLoggerInstance) {
-    auditLoggerInstance = new AuditLogger(prisma, config);
-  }
-  return auditLoggerInstance;
+    auditLoggerInstance ??= new AuditLogger(prisma, config);
+    return auditLoggerInstance;
 }
 
 /**

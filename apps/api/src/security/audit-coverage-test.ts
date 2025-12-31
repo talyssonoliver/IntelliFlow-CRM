@@ -21,7 +21,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AuditLogger, resetAuditLogger } from './audit-logger';
 import { RBACService, resetRBACService, Permissions } from './rbac';
-import { RoleName, AuditAction, ResourceType } from './types';
+import { AuditAction, ResourceType } from './types';
+
+// Test constants
+const TEST_TENANT_ID = 'test-tenant-123';
 
 // Mock Prisma client
 const mockPrisma = {
@@ -50,7 +53,7 @@ describe('Audit Logger', () => {
 
   describe('CRUD Operation Logging', () => {
     it('should log CREATE action', async () => {
-      const id = await auditLogger.logAction('CREATE', 'lead', 'lead-123', {
+      const id = await auditLogger.logAction('CREATE', 'lead', 'lead-123', TEST_TENANT_ID, {
         actorId: 'user-1',
         afterState: { email: 'test@example.com', firstName: 'Test' },
       });
@@ -68,7 +71,7 @@ describe('Audit Logger', () => {
     });
 
     it('should log READ action', async () => {
-      const id = await auditLogger.logAction('READ', 'contact', 'contact-456', {
+      const id = await auditLogger.logAction('READ', 'contact', 'contact-456', TEST_TENANT_ID, {
         actorId: 'user-1',
       });
 
@@ -80,7 +83,7 @@ describe('Audit Logger', () => {
       const beforeState = { status: 'NEW', score: 0 };
       const afterState = { status: 'QUALIFIED', score: 85 };
 
-      const id = await auditLogger.logAction('UPDATE', 'lead', 'lead-123', {
+      const id = await auditLogger.logAction('UPDATE', 'lead', 'lead-123', TEST_TENANT_ID, {
         actorId: 'user-1',
         beforeState,
         afterState,
@@ -99,7 +102,7 @@ describe('Audit Logger', () => {
     });
 
     it('should log DELETE action', async () => {
-      const id = await auditLogger.logAction('DELETE', 'task', 'task-789', {
+      const id = await auditLogger.logAction('DELETE', 'task', 'task-789', TEST_TENANT_ID, {
         actorId: 'user-1',
         beforeState: { title: 'Deleted Task' },
       });
@@ -111,7 +114,7 @@ describe('Audit Logger', () => {
 
   describe('CRM-Specific Actions', () => {
     it('should log QUALIFY action', async () => {
-      const id = await auditLogger.logAction('QUALIFY', 'lead', 'lead-123', {
+      const id = await auditLogger.logAction('QUALIFY', 'lead', 'lead-123', TEST_TENANT_ID, {
         actorId: 'user-1',
         actionReason: 'Met qualification criteria',
       });
@@ -121,7 +124,7 @@ describe('Audit Logger', () => {
     });
 
     it('should log CONVERT action', async () => {
-      const id = await auditLogger.logAction('CONVERT', 'lead', 'lead-123', {
+      const id = await auditLogger.logAction('CONVERT', 'lead', 'lead-123', TEST_TENANT_ID, {
         actorId: 'user-1',
         afterState: { contactId: 'contact-new', accountId: 'account-new' },
       });
@@ -131,7 +134,7 @@ describe('Audit Logger', () => {
     });
 
     it('should log AI_SCORE action', async () => {
-      const id = await auditLogger.logAction('AI_SCORE', 'lead', 'lead-123', {
+      const id = await auditLogger.logAction('AI_SCORE', 'lead', 'lead-123', TEST_TENANT_ID, {
         actorType: 'AI_AGENT',
         afterState: { score: 85, confidence: 0.92 },
       });
@@ -143,7 +146,7 @@ describe('Audit Logger', () => {
 
   describe('Permission Denial Logging', () => {
     it('should log permission denied events', async () => {
-      const id = await auditLogger.logPermissionDenied('lead', 'lead-123', 'lead:delete', {
+      const id = await auditLogger.logPermissionDenied('lead', 'lead-123', 'lead:delete', TEST_TENANT_ID, {
         actorId: 'user-1',
         actorRole: 'VIEWER',
         reason: 'Viewers cannot delete leads',
@@ -156,7 +159,7 @@ describe('Audit Logger', () => {
 
   describe('Authentication Logging', () => {
     it('should log successful login', async () => {
-      await auditLogger.logLogin(true, {
+      await auditLogger.logLoginSuccess(TEST_TENANT_ID, {
         userId: 'user-1',
         email: 'test@example.com',
         ipAddress: '192.168.1.1',
@@ -175,7 +178,7 @@ describe('Audit Logger', () => {
     });
 
     it('should log failed login', async () => {
-      await auditLogger.logLogin(false, {
+      await auditLogger.logLoginFailure(TEST_TENANT_ID, {
         email: 'test@example.com',
         ipAddress: '192.168.1.1',
         failureReason: 'Invalid password',
@@ -199,6 +202,7 @@ describe('Audit Logger', () => {
         'BULK_UPDATE',
         'lead',
         ['lead-1', 'lead-2', 'lead-3'],
+        TEST_TENANT_ID,
         {
           actorId: 'user-1',
           successCount: 3,
@@ -215,6 +219,7 @@ describe('Audit Logger', () => {
         'EXPORT',
         'contact',
         ['c-1', 'c-2', 'c-3', 'c-4', 'c-5'],
+        TEST_TENANT_ID,
         {
           actorId: 'user-1',
           successCount: 4,
@@ -228,7 +233,7 @@ describe('Audit Logger', () => {
 
   describe('Request Context', () => {
     it('should include IP address and user agent', async () => {
-      const id = await auditLogger.logAction('CREATE', 'lead', 'lead-123', {
+      const id = await auditLogger.logAction('CREATE', 'lead', 'lead-123', TEST_TENANT_ID, {
         actorId: 'user-1',
         requestContext: {
           ipAddress: '192.168.1.100',
@@ -507,7 +512,7 @@ describe('Audit Coverage Validation', () => {
 
     for (const resource of allCRMResources) {
       for (const action of allCRUDActions) {
-        const id = await logger.logAction(action, resource, 'test-id', {
+        const id = await logger.logAction(action, resource, 'test-id', 'test-tenant-123', {
           actorId: 'test-user',
         });
         expect(id).toBeDefined();

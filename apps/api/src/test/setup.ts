@@ -8,12 +8,12 @@
  * - Mock data generators
  */
 
-import { beforeEach, vi } from 'vitest';
+import { beforeEach } from 'vitest';
 import type { PrismaClient } from '@prisma/client';
 import { Prisma } from '@prisma/client';
 import type { DeepMockProxy } from 'vitest-mock-extended';
 import { mockDeep, mockReset } from 'vitest-mock-extended';
-import type { Context } from '../context';
+import type { BaseContext } from '../context';
 
 /**
  * Mock Prisma client
@@ -29,15 +29,70 @@ beforeEach(() => {
 });
 
 /**
+ * Mock services for testing
+ * These mocks can be overridden in individual tests
+ */
+export const mockServices = {
+  lead: mockDeep<any>(),
+  contact: mockDeep<any>(),
+  account: mockDeep<any>(),
+  opportunity: mockDeep<any>(),
+  task: mockDeep<any>(),
+  ticket: mockDeep<any>(),
+  analytics: mockDeep<any>(),
+};
+
+/**
+ * Mock security services for testing
+ * IFC-098, IFC-113, IFC-127
+ */
+export const mockSecurityServices = {
+  auditLogger: mockDeep<any>(),
+  rbacService: mockDeep<any>(),
+  encryptionService: mockDeep<any>(),
+  keyRotationService: mockDeep<any>(),
+  auditEventHandler: mockDeep<any>(),
+};
+
+/**
+ * Mock adapters for testing
+ */
+export const mockAdapters = {
+  leadRepository: mockDeep<any>(),
+  contactRepository: mockDeep<any>(),
+  accountRepository: mockDeep<any>(),
+  opportunityRepository: mockDeep<any>(),
+  taskRepository: mockDeep<any>(),
+  eventBus: mockDeep<any>(),
+  aiService: mockDeep<any>(),
+  cache: mockDeep<any>(),
+};
+
+/**
+ * Default context properties for spreading into test contexts
+ * Use this when creating inline context objects in tests
+ */
+export const defaultContextProps = {
+  services: mockServices,
+  security: mockSecurityServices,
+  adapters: mockAdapters,
+};
+
+/**
  * Create a test context with optional overrides
  */
-export function createTestContext(overrides?: Partial<Context>): Context {
-  const defaultContext: Context = {
+export function createTestContext(overrides?: Partial<BaseContext>): BaseContext {
+  const defaultContext: BaseContext = {
     prisma: prismaMock as unknown as PrismaClient,
+    container: mockDeep<any>(), // Mock container for testing
+    services: mockServices,
+    security: mockSecurityServices,
+    adapters: mockAdapters,
     user: {
       userId: TEST_UUIDS.user1,
       email: 'test@example.com',
       role: 'USER',
+      tenantId: 'test-tenant-id',
     },
     req: undefined,
     res: undefined,
@@ -49,12 +104,13 @@ export function createTestContext(overrides?: Partial<Context>): Context {
 /**
  * Create admin context for testing admin-only procedures
  */
-export function createAdminContext(overrides?: Partial<Context>): Context {
+export function createAdminContext(overrides?: Partial<BaseContext>): BaseContext {
   return createTestContext({
     user: {
       userId: TEST_UUIDS.admin1,
       email: 'admin@example.com',
       role: 'ADMIN',
+      tenantId: 'test-tenant-id',
     },
     ...overrides,
   });
@@ -63,7 +119,7 @@ export function createAdminContext(overrides?: Partial<Context>): Context {
 /**
  * Create unauthenticated context for testing public procedures
  */
-export function createPublicContext(overrides?: Partial<Context>): Context {
+export function createPublicContext(overrides?: Partial<BaseContext>): BaseContext {
   return createTestContext({
     user: undefined,
     ...overrides,
@@ -88,6 +144,7 @@ export function generateTestUUID(name: string): string {
  * Common test UUIDs - use these for consistent test data
  */
 export const TEST_UUIDS = {
+  tenant: generateTestUUID('tenant'),
   lead1: generateTestUUID('lead-1'),
   lead2: generateTestUUID('lead-2'),
   contact1: generateTestUUID('contact-1'),
@@ -110,6 +167,7 @@ export const TEST_UUIDS = {
 
 export const mockLead = {
   id: TEST_UUIDS.lead1,
+  tenantId: TEST_UUIDS.tenant,
   email: 'lead@example.com',
   firstName: 'John',
   lastName: 'Doe',
@@ -126,6 +184,7 @@ export const mockLead = {
 
 export const mockContact = {
   id: TEST_UUIDS.contact1,
+  tenantId: TEST_UUIDS.tenant,
   email: 'contact@example.com',
   firstName: 'Jane',
   lastName: 'Smith',
@@ -141,6 +200,7 @@ export const mockContact = {
 
 export const mockAccount = {
   id: TEST_UUIDS.account1,
+  tenantId: TEST_UUIDS.tenant,
   name: 'TechCorp Inc',
   website: 'https://techcorp.example.com',
   industry: 'Technology',
@@ -154,6 +214,7 @@ export const mockAccount = {
 
 export const mockOpportunity = {
   id: TEST_UUIDS.opportunity1,
+  tenantId: TEST_UUIDS.tenant,
   name: 'Enterprise Deal',
   value: new Prisma.Decimal(50000),
   stage: 'PROPOSAL' as const,
@@ -170,6 +231,7 @@ export const mockOpportunity = {
 
 export const mockTask = {
   id: TEST_UUIDS.task1,
+  tenantId: TEST_UUIDS.tenant,
   title: 'Follow up call',
   description: 'Call the lead to discuss requirements',
   status: 'PENDING' as const,

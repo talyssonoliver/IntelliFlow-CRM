@@ -430,7 +430,7 @@ export const combinedSearchTool: AgentToolDefinition<
       // Search each requested entity type
       if (input.entityTypes.includes('LEAD') && context.allowedEntityTypes.includes('LEAD')) {
         const leadResult = await searchLeadsTool.execute(
-          { query: input.query, limit: input.limit },
+          { query: input.query, limit: input.limit, offset: 0 },
           context
         );
         if (leadResult.success && leadResult.data) {
@@ -440,7 +440,7 @@ export const combinedSearchTool: AgentToolDefinition<
 
       if (input.entityTypes.includes('CONTACT') && context.allowedEntityTypes.includes('CONTACT')) {
         const contactResult = await searchContactsTool.execute(
-          { query: input.query, limit: input.limit },
+          { query: input.query, limit: input.limit, offset: 0 },
           context
         );
         if (contactResult.success && contactResult.data) {
@@ -450,7 +450,7 @@ export const combinedSearchTool: AgentToolDefinition<
 
       if (input.entityTypes.includes('OPPORTUNITY') && context.allowedEntityTypes.includes('OPPORTUNITY')) {
         const oppResult = await searchOpportunitiesTool.execute(
-          { query: input.query, limit: input.limit },
+          { query: input.query, limit: input.limit, offset: 0 },
           context
         );
         if (oppResult.success && oppResult.data) {

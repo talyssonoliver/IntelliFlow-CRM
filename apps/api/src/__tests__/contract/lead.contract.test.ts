@@ -78,12 +78,32 @@ describe('Lead Router Contract Tests', () => {
         source: 'WEBSITE' as const,
       };
 
-      prismaMock.lead.create.mockResolvedValue({
-        ...mockLead,
-        ...validInput,
+      const mockDomainLead = {
+        id: { value: TEST_UUIDS.lead1 },
+        email: { value: validInput.email },
+        firstName: validInput.firstName,
+        lastName: validInput.lastName,
+        company: validInput.company,
+        title: null,
+        phone: validInput.phone,
+        source: validInput.source,
+        status: 'NEW' as const,
+        score: { value: 0, confidence: 0, tier: 'cold' as const },
+        ownerId: TEST_UUIDS.user1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      ctx.services!.lead!.createLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainLead,
       });
 
-      const result = await caller.create(validInput);
+      const result = await callerWithService.create(validInput);
 
       // Verify response matches contract
       expect(result.email).toBe(validInput.email);
@@ -107,13 +127,32 @@ describe('Lead Router Contract Tests', () => {
       for (const source of sources) {
         const input = { email: `test-${source.toLowerCase()}@example.com`, source };
 
-        prismaMock.lead.create.mockResolvedValue({
-          ...mockLead,
-          email: input.email,
+        const mockDomainLead = {
+          id: { value: TEST_UUIDS.lead1 },
+          email: { value: input.email },
+          firstName: null,
+          lastName: null,
+          company: null,
+          title: null,
+          phone: null,
           source,
+          status: 'NEW' as const,
+          score: { value: 0, confidence: 0, tier: 'cold' as const },
+          ownerId: TEST_UUIDS.user1,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        const ctx = createTestContext();
+        const callerWithService = leadRouter.createCaller(ctx);
+
+        ctx.services!.lead!.createLead = vi.fn().mockResolvedValue({
+          isSuccess: true,
+          isFailure: false,
+          value: mockDomainLead,
         });
 
-        const result = await caller.create(input);
+        const result = await callerWithService.create(input);
         expect(result.source).toBe(source);
       }
     });
@@ -121,9 +160,32 @@ describe('Lead Router Contract Tests', () => {
 
   describe('create - Output Contract', () => {
     it('should return lead with all required fields', async () => {
-      prismaMock.lead.create.mockResolvedValue(mockLead);
+      const mockDomainLead = {
+        id: { value: TEST_UUIDS.lead1 },
+        email: { value: 'test@example.com' },
+        firstName: null,
+        lastName: null,
+        company: null,
+        title: null,
+        phone: null,
+        source: 'WEBSITE' as const,
+        status: 'NEW' as const,
+        score: { value: 0, confidence: 0, tier: 'cold' as const },
+        ownerId: TEST_UUIDS.user1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-      const result = await caller.create({
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      ctx.services!.lead!.createLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainLead,
+      });
+
+      const result = await callerWithService.create({
         email: 'test@example.com',
         source: 'WEBSITE',
       });
@@ -138,12 +200,32 @@ describe('Lead Router Contract Tests', () => {
     });
 
     it('should return status as NEW for new leads', async () => {
-      prismaMock.lead.create.mockResolvedValue({
-        ...mockLead,
+      const mockDomainLead = {
+        id: { value: TEST_UUIDS.lead1 },
+        email: { value: 'new@example.com' },
+        firstName: null,
+        lastName: null,
+        company: null,
+        title: null,
+        phone: null,
+        source: 'WEBSITE' as const,
         status: 'NEW' as const,
+        score: { value: 0, confidence: 0, tier: 'cold' as const },
+        ownerId: TEST_UUIDS.user1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      ctx.services!.lead!.createLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainLead,
       });
 
-      const result = await caller.create({
+      const result = await callerWithService.create({
         email: 'new@example.com',
         source: 'WEBSITE',
       });
@@ -152,12 +234,32 @@ describe('Lead Router Contract Tests', () => {
     });
 
     it('should return initial score as 0', async () => {
-      prismaMock.lead.create.mockResolvedValue({
-        ...mockLead,
-        score: 0,
+      const mockDomainLead = {
+        id: { value: TEST_UUIDS.lead1 },
+        email: { value: 'new@example.com' },
+        firstName: null,
+        lastName: null,
+        company: null,
+        title: null,
+        phone: null,
+        source: 'WEBSITE' as const,
+        status: 'NEW' as const,
+        score: { value: 0, confidence: 0, tier: 'cold' as const },
+        ownerId: TEST_UUIDS.user1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      ctx.services!.lead!.createLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainLead,
       });
 
-      const result = await caller.create({
+      const result = await callerWithService.create({
         email: 'new@example.com',
         source: 'WEBSITE',
       });
@@ -171,32 +273,56 @@ describe('Lead Router Contract Tests', () => {
       await expect(caller.getById({ id: 'not-a-uuid' })).rejects.toThrow();
     });
 
-    it('should return lead with relations when found', async () => {
-      const leadWithRelations = {
-        ...mockLead,
-        owner: mockUser,
-        contact: mockContact,
-        aiScores: [mockAIScore],
-        tasks: [mockTask],
+    it('should return lead via LeadService', async () => {
+      const mockDomainLead = {
+        id: { value: TEST_UUIDS.lead1 },
+        email: { value: mockLead.email },
+        firstName: mockLead.firstName,
+        lastName: mockLead.lastName,
+        company: mockLead.company,
+        title: null,
+        phone: mockLead.phone,
+        source: mockLead.source,
+        status: mockLead.status,
+        score: { value: 75, confidence: 0.8, tier: 'warm' as const },
+        ownerId: mockLead.ownerId,
+        createdAt: mockLead.createdAt,
+        updatedAt: mockLead.updatedAt,
+        getDomainEvents: () => [],
+        clearDomainEvents: () => {},
       };
 
-      prismaMock.lead.findUnique.mockResolvedValue(leadWithRelations);
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
 
-      const result = await caller.getById({ id: TEST_UUIDS.lead1 });
+      ctx.services!.lead!.getLeadById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainLead,
+      });
 
-      // Verify response includes relations
-      expect(result).toHaveProperty('owner');
-      expect(result).toHaveProperty('contact');
-      expect(result).toHaveProperty('aiScores');
-      expect(result).toHaveProperty('tasks');
+      const result = await callerWithService.getById({ id: TEST_UUIDS.lead1 });
+
+      // Verify response includes expected fields
+      expect(result).toHaveProperty('id');
+      expect(result).toHaveProperty('email');
+      expect(result).toHaveProperty('status');
+      expect(result).toHaveProperty('score');
     });
 
     it('should throw NOT_FOUND error with correct code', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue(null);
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      ctx.services!.lead!.getLeadById = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: `Lead not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       try {
-        await caller.getById({ id: TEST_UUIDS.nonExistent });
-        fail('Should have thrown');
+        await callerWithService.getById({ id: TEST_UUIDS.nonExistent });
+        expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.code).toBe('NOT_FOUND');
         expect(error.message).toContain('not found');
@@ -272,13 +398,32 @@ describe('Lead Router Contract Tests', () => {
     });
 
     it('should accept partial updates', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue(mockLead);
-      prismaMock.lead.update.mockResolvedValue({
-        ...mockLead,
+      const mockDomainLead = {
+        id: { value: TEST_UUIDS.lead1 },
+        email: { value: 'lead@example.com' },
         firstName: 'Updated',
+        lastName: 'Doe',
+        company: 'ACME Corp',
+        title: null,
+        phone: null,
+        source: 'WEBSITE' as const,
+        status: 'NEW' as const,
+        score: { value: 75, confidence: 0.8, tier: 'warm' as const },
+        ownerId: TEST_UUIDS.user1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      ctx.services!.lead!.updateLeadContactInfo = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainLead,
       });
 
-      const result = await caller.update({
+      const result = await callerWithService.update({
         id: TEST_UUIDS.lead1,
         firstName: 'Updated',
       });
@@ -287,6 +432,7 @@ describe('Lead Router Contract Tests', () => {
     });
 
     it('should validate status transitions', async () => {
+      // Status transitions don't use LeadService, still use Prisma directly
       prismaMock.lead.findUnique.mockResolvedValue(mockLead);
       prismaMock.lead.update.mockResolvedValue({
         ...mockLead,
@@ -304,10 +450,16 @@ describe('Lead Router Contract Tests', () => {
 
   describe('delete - Contract', () => {
     it('should return success structure on delete', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue(mockLead);
-      prismaMock.lead.delete.mockResolvedValue(mockLead);
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
 
-      const result = await caller.delete({ id: TEST_UUIDS.lead1 });
+      ctx.services!.lead!.deleteLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: undefined,
+      });
+
+      const result = await callerWithService.delete({ id: TEST_UUIDS.lead1 });
 
       expect(result).toHaveProperty('success');
       expect(result).toHaveProperty('id');
@@ -316,13 +468,38 @@ describe('Lead Router Contract Tests', () => {
     });
 
     it('should throw NOT_FOUND for non-existent lead', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue(null);
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      ctx.services!.lead!.deleteLead = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: `Lead not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       try {
-        await caller.delete({ id: TEST_UUIDS.nonExistent });
-        fail('Should have thrown');
+        await callerWithService.delete({ id: TEST_UUIDS.nonExistent });
+        expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.code).toBe('NOT_FOUND');
+      }
+    });
+
+    it('should throw PRECONDITION_FAILED for converted lead', async () => {
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      ctx.services!.lead!.deleteLead = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: 'Cannot delete a converted lead' },
+      });
+
+      try {
+        await callerWithService.delete({ id: TEST_UUIDS.lead1 });
+        expect.fail('Should have thrown');
+      } catch (error: any) {
+        expect(error.code).toBe('PRECONDITION_FAILED');
       }
     });
   });
@@ -334,18 +511,32 @@ describe('Lead Router Contract Tests', () => {
     });
 
     it('should return qualified lead', async () => {
-      // Lead must have status other than QUALIFIED
-      prismaMock.lead.findUnique.mockResolvedValue({
-        ...mockLead,
-        status: 'NEW' as const,
-      });
-      prismaMock.lead.update.mockResolvedValue({
-        ...mockLead,
+      const mockDomainLead = {
+        id: { value: TEST_UUIDS.lead1 },
+        email: { value: 'lead@example.com' },
+        firstName: 'John',
+        lastName: 'Doe',
+        company: 'ACME Corp',
+        title: null,
+        phone: null,
+        source: 'WEBSITE' as const,
         status: 'QUALIFIED' as const,
-      });
-      prismaMock.task.create.mockResolvedValue(mockTask);
+        score: { value: 75, confidence: 0.8, tier: 'warm' as const },
+        ownerId: TEST_UUIDS.user1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-      const result = await caller.qualify({
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      ctx.services!.lead!.qualifyLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainLead,
+      });
+
+      const result = await callerWithService.qualify({
         leadId: TEST_UUIDS.lead1,
         reason: 'Good fit for our product',
       });
@@ -354,14 +545,18 @@ describe('Lead Router Contract Tests', () => {
     });
 
     it('should throw BAD_REQUEST if already qualified', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue({
-        ...mockLead,
-        status: 'QUALIFIED' as const,
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      ctx.services!.lead!.qualifyLead = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { message: 'Lead already qualified' },
       });
 
       try {
-        await caller.qualify({ leadId: TEST_UUIDS.lead1, reason: 'Test' });
-        fail('Should have thrown');
+        await callerWithService.qualify({ leadId: TEST_UUIDS.lead1, reason: 'Test' });
+        expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.code).toBe('BAD_REQUEST');
       }
@@ -369,36 +564,60 @@ describe('Lead Router Contract Tests', () => {
   });
 
   describe('convert - Contract', () => {
-    it('should return lead, contact, and optional accountId', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue(mockLead);
+    it('should return leadId, contactId, and optional accountId', async () => {
+      const mockConversionResult = {
+        leadId: TEST_UUIDS.lead1,
+        contactId: TEST_UUIDS.contact1,
+        accountId: TEST_UUIDS.account1,
+        convertedBy: TEST_UUIDS.user1,
+        convertedAt: new Date(),
+      };
 
-      prismaMock.$transaction.mockImplementation(async (callback) => {
-        return callback({
-          account: { create: async () => mockAccount },
-          contact: { create: async () => mockContact },
-          lead: { update: async () => ({ ...mockLead, status: 'CONVERTED' as const }) },
-        } as any);
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      // Mock the LeadService.convertLead method
+      ctx.services!.lead!.convertLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockConversionResult,
       });
 
-      const result = await caller.convert({
+      const result = await callerWithService.convert({
         leadId: TEST_UUIDS.lead1,
         createAccount: true,
         accountName: 'Test Corp',
       });
 
-      expect(result).toHaveProperty('lead');
-      expect(result).toHaveProperty('contact');
-      expect(result.lead.status).toBe('CONVERTED');
+      expect(result).toHaveProperty('leadId');
+      expect(result).toHaveProperty('contactId');
+      expect(result).toHaveProperty('accountId');
+      expect(result.leadId).toBe(TEST_UUIDS.lead1);
     });
   });
 
   describe('scoreWithAI - Contract', () => {
     it('should return score response with required fields', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue(mockLead);
-      prismaMock.aIScore.create.mockResolvedValue(mockAIScore);
-      prismaMock.lead.update.mockResolvedValue({ ...mockLead, score: 80 });
+      const mockScoreResult = {
+        leadId: TEST_UUIDS.lead1,
+        previousScore: 50,
+        newScore: 80,
+        confidence: 0.85,
+        tier: 'hot' as const,
+        autoQualified: false,
+        autoDisqualified: false,
+      };
 
-      const result = await caller.scoreWithAI({ leadId: TEST_UUIDS.lead1 });
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      ctx.services!.lead!.scoreLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockScoreResult,
+      });
+
+      const result = await callerWithService.scoreWithAI({ leadId: TEST_UUIDS.lead1 });
 
       expect(result).toHaveProperty('leadId');
       expect(result).toHaveProperty('score');
@@ -414,16 +633,24 @@ describe('Lead Router Contract Tests', () => {
 
   describe('stats - Contract', () => {
     it('should return stats response matching contract', async () => {
-      prismaMock.lead.count.mockResolvedValue(100);
-      vi.mocked(prismaMock.lead.groupBy).mockResolvedValue([
-        { status: 'NEW', _count: 50 },
-        { status: 'QUALIFIED', _count: 30 },
-      ] as any);
-      prismaMock.lead.aggregate.mockResolvedValue({
-        _avg: { score: 75 },
-      } as any);
+      const mockStats = {
+        total: 100,
+        byStatus: {
+          NEW: 50,
+          QUALIFIED: 30,
+        },
+        averageScore: 75,
+        hotLeads: 20,
+        warmLeads: 40,
+        coldLeads: 40,
+      };
 
-      const result = await caller.stats();
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      ctx.services!.lead!.getLeadStatistics = vi.fn().mockResolvedValue(mockStats);
+
+      const result = await callerWithService.stats();
 
       const parseResult = leadStatsResponseSchema.safeParse(result);
       expect(parseResult.success).toBe(true);

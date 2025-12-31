@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import type { PrismaClient } from '@prisma/client';
 import { AuditLogger, getAuditLogger, resetAuditLogger } from '../audit-logger';
 
+const TEST_TENANT_ID = 'test-tenant-123';
+
 describe('AuditLogger', () => {
   let logger: AuditLogger;
   let mockPrisma: PrismaClient;
@@ -61,6 +63,7 @@ describe('AuditLogger', () => {
   describe('log', () => {
     it('should write audit log entry', async () => {
       const logId = await logger.log({
+        tenantId: TEST_TENANT_ID,
         eventType: 'LeadCreated',
         action: 'CREATE',
         resourceType: 'lead',
@@ -74,6 +77,7 @@ describe('AuditLogger', () => {
 
     it('should include before and after state', async () => {
       await logger.log({
+        tenantId: TEST_TENANT_ID,
         eventType: 'LeadUpdated',
         action: 'UPDATE',
         resourceType: 'lead',
@@ -96,6 +100,7 @@ describe('AuditLogger', () => {
       const consoleLogger = new AuditLogger(mockPrisma, { consoleLog: true });
 
       await consoleLogger.log({
+        tenantId: TEST_TENANT_ID,
         eventType: 'LeadCreated',
         action: 'CREATE',
         resourceType: 'lead',
@@ -112,6 +117,7 @@ describe('AuditLogger', () => {
       const asyncLogger = new AuditLogger(mockPrisma, { async: true, consoleLog: false });
 
       const logId = await asyncLogger.log({
+        tenantId: TEST_TENANT_ID,
         eventType: 'LeadCreated',
         action: 'CREATE',
         resourceType: 'lead',
@@ -125,6 +131,7 @@ describe('AuditLogger', () => {
 
     it('should include IP address and user agent', async () => {
       await logger.log({
+        tenantId: TEST_TENANT_ID,
         eventType: 'LeadCreated',
         action: 'CREATE',
         resourceType: 'lead',
@@ -146,7 +153,7 @@ describe('AuditLogger', () => {
 
   describe('logAction', () => {
     it('should log CRUD action with calculated changed fields', async () => {
-      await logger.logAction('UPDATE', 'lead', 'lead-123', {
+      await logger.logAction('UPDATE', 'lead', 'lead-123', TEST_TENANT_ID, {
         actorId: 'user-123',
         beforeState: { status: 'NEW', name: 'Test Lead' },
         afterState: { status: 'QUALIFIED', name: 'Test Lead' },
@@ -156,7 +163,7 @@ describe('AuditLogger', () => {
     });
 
     it('should include request context', async () => {
-      await logger.logAction('CREATE', 'lead', 'lead-123', {
+      await logger.logAction('CREATE', 'lead', 'lead-123', TEST_TENANT_ID, {
         actorId: 'user-123',
         requestContext: {
           requestId: 'req-123',
@@ -178,7 +185,7 @@ describe('AuditLogger', () => {
     });
 
     it('should handle DELETE action', async () => {
-      await logger.logAction('DELETE', 'lead', 'lead-123', {
+      await logger.logAction('DELETE', 'lead', 'lead-123', TEST_TENANT_ID, {
         actorId: 'user-123',
         beforeState: { id: 'lead-123', name: 'Deleted Lead' },
       });
@@ -187,7 +194,7 @@ describe('AuditLogger', () => {
     });
 
     it('should default actorType to USER', async () => {
-      await logger.logAction('CREATE', 'lead', 'lead-123', {
+      await logger.logAction('CREATE', 'lead', 'lead-123', TEST_TENANT_ID, {
         actorId: 'user-123',
       });
 
@@ -197,7 +204,7 @@ describe('AuditLogger', () => {
 
   describe('logPermissionDenied', () => {
     it('should log permission denied event', async () => {
-      await logger.logPermissionDenied('lead', 'lead-123', 'lead:delete', {
+      await logger.logPermissionDenied('lead', 'lead-123', 'lead:delete', TEST_TENANT_ID, {
         actorId: 'user-123',
         actorEmail: 'user@example.com',
         actorRole: 'USER',
@@ -208,7 +215,7 @@ describe('AuditLogger', () => {
     });
 
     it('should include default reason if not provided', async () => {
-      await logger.logPermissionDenied('lead', 'lead-123', 'lead:admin', {
+      await logger.logPermissionDenied('lead', 'lead-123', 'lead:admin', TEST_TENANT_ID, {
         actorId: 'user-123',
       });
 
@@ -263,7 +270,7 @@ describe('AuditLogger', () => {
 
   describe('logLogin', () => {
     it('should log successful login', async () => {
-      await logger.logLogin(true, {
+      await logger.logLoginSuccess(TEST_TENANT_ID, {
         userId: 'user-123',
         email: 'user@example.com',
         ipAddress: '192.168.1.1',
@@ -276,7 +283,7 @@ describe('AuditLogger', () => {
     });
 
     it('should log failed login', async () => {
-      await logger.logLogin(false, {
+      await logger.logLoginFailure(TEST_TENANT_ID, {
         email: 'user@example.com',
         ipAddress: '192.168.1.1',
         failureReason: 'Invalid password',
@@ -287,7 +294,7 @@ describe('AuditLogger', () => {
     });
 
     it('should include MFA flag in metadata', async () => {
-      await logger.logLogin(true, {
+      await logger.logLoginSuccess(TEST_TENANT_ID, {
         userId: 'user-123',
         email: 'user@example.com',
         mfaUsed: true,
@@ -299,7 +306,7 @@ describe('AuditLogger', () => {
 
   describe('logBulkOperation', () => {
     it('should log bulk update operation', async () => {
-      await logger.logBulkOperation('BULK_UPDATE', 'lead', ['lead-1', 'lead-2', 'lead-3'], {
+      await logger.logBulkOperation('BULK_UPDATE', 'lead', ['lead-1', 'lead-2', 'lead-3'], TEST_TENANT_ID, {
         actorId: 'user-123',
         successCount: 3,
       });
@@ -308,7 +315,7 @@ describe('AuditLogger', () => {
     });
 
     it('should log bulk delete operation', async () => {
-      await logger.logBulkOperation('BULK_DELETE', 'contact', ['contact-1', 'contact-2'], {
+      await logger.logBulkOperation('BULK_DELETE', 'contact', ['contact-1', 'contact-2'], TEST_TENANT_ID, {
         actorId: 'user-123',
         successCount: 2,
       });
@@ -317,7 +324,7 @@ describe('AuditLogger', () => {
     });
 
     it('should log partial success when there are failures', async () => {
-      await logger.logBulkOperation('IMPORT', 'lead', ['lead-1', 'lead-2', 'lead-3', 'lead-4'], {
+      await logger.logBulkOperation('IMPORT', 'lead', ['lead-1', 'lead-2', 'lead-3', 'lead-4'], TEST_TENANT_ID, {
         actorId: 'user-123',
         successCount: 3,
         failureCount: 1,
@@ -327,7 +334,7 @@ describe('AuditLogger', () => {
     });
 
     it('should log export operation', async () => {
-      await logger.logBulkOperation('EXPORT', 'lead', ['lead-1', 'lead-2'], {
+      await logger.logBulkOperation('EXPORT', 'lead', ['lead-1', 'lead-2'], TEST_TENANT_ID, {
         actorEmail: 'user@example.com',
         metadata: { format: 'csv' },
       });
@@ -364,7 +371,7 @@ describe('AuditLogger', () => {
       expect(mockPrisma.auditLog.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            timestamp: expect.objectContaining({
+            createdAt: expect.objectContaining({
               gte: new Date(2025, 0, 1),
               lte: new Date(2025, 0, 31),
             }),
@@ -409,12 +416,14 @@ describe('AuditLogger', () => {
 
       // Add entries to buffer
       await asyncLogger.log({
+        tenantId: TEST_TENANT_ID,
         eventType: 'Test1',
         action: 'CREATE',
         resourceType: 'lead',
         resourceId: 'lead-1',
       });
       await asyncLogger.log({
+        tenantId: TEST_TENANT_ID,
         eventType: 'Test2',
         action: 'CREATE',
         resourceType: 'lead',
@@ -443,6 +452,7 @@ describe('AuditLogger', () => {
       (mockPrisma.auditLog.create as any).mockRejectedValueOnce(new Error('DB Error'));
 
       await asyncLogger.log({
+        tenantId: TEST_TENANT_ID,
         eventType: 'Test',
         action: 'CREATE',
         resourceType: 'lead',
@@ -467,6 +477,7 @@ describe('AuditLogger', () => {
       });
 
       await asyncLogger.log({
+        tenantId: TEST_TENANT_ID,
         eventType: 'Test',
         action: 'CREATE',
         resourceType: 'lead',
@@ -481,7 +492,7 @@ describe('AuditLogger', () => {
 
   describe('calculateChangedFields', () => {
     it('should detect added fields', async () => {
-      await logger.logAction('UPDATE', 'lead', 'lead-123', {
+      await logger.logAction('UPDATE', 'lead', 'lead-123', TEST_TENANT_ID, {
         beforeState: { name: 'Test' },
         afterState: { name: 'Test', status: 'QUALIFIED' },
       });
@@ -490,7 +501,7 @@ describe('AuditLogger', () => {
     });
 
     it('should detect removed fields', async () => {
-      await logger.logAction('UPDATE', 'lead', 'lead-123', {
+      await logger.logAction('UPDATE', 'lead', 'lead-123', TEST_TENANT_ID, {
         beforeState: { name: 'Test', notes: 'Some notes' },
         afterState: { name: 'Test' },
       });
@@ -499,7 +510,7 @@ describe('AuditLogger', () => {
     });
 
     it('should detect modified fields', async () => {
-      await logger.logAction('UPDATE', 'lead', 'lead-123', {
+      await logger.logAction('UPDATE', 'lead', 'lead-123', TEST_TENANT_ID, {
         beforeState: { name: 'Old Name', score: 50 },
         afterState: { name: 'New Name', score: 75 },
       });
@@ -508,7 +519,7 @@ describe('AuditLogger', () => {
     });
 
     it('should handle deeply nested objects', async () => {
-      await logger.logAction('UPDATE', 'lead', 'lead-123', {
+      await logger.logAction('UPDATE', 'lead', 'lead-123', TEST_TENANT_ID, {
         beforeState: { contact: { name: 'John', phone: '123' } },
         afterState: { contact: { name: 'John', phone: '456' } },
       });
@@ -539,6 +550,7 @@ describe('AuditLogger', () => {
 
       await expect(
         logger.log({
+          tenantId: TEST_TENANT_ID,
           eventType: 'Test',
           action: 'CREATE',
           resourceType: 'lead',

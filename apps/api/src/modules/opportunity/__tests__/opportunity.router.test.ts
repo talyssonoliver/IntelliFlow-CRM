@@ -4,6 +4,8 @@ import { TEST_UUIDS } from '../../../test/setup';
  *
  * Comprehensive tests for all opportunity router procedures:
  * - create, getById, list, update, delete, stats, forecast
+ *
+ * Following hexagonal architecture - mocks services for business logic procedures.
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -20,8 +22,33 @@ import {
   mockTask,
 } from '../../../test/setup';
 
+/**
+ * Create a mock domain opportunity for service responses
+ */
+const createMockDomainOpportunity = (overrides: Record<string, unknown> = {}) => ({
+  id: { value: TEST_UUIDS.opportunity1 },
+  name: 'Big Deal',
+  value: 50000,
+  probability: 60,
+  stage: 'PROPOSAL',
+  expectedCloseDate: new Date('2025-06-30'),
+  accountId: TEST_UUIDS.account1,
+  contactId: TEST_UUIDS.contact1,
+  ownerId: TEST_UUIDS.user1,
+  weightedValue: 30000,
+  isClosed: false,
+  isWon: false,
+  isLost: false,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  getDomainEvents: () => [],
+  clearDomainEvents: () => {},
+  ...overrides,
+});
+
 describe('Opportunity Router', () => {
-  const caller = opportunityRouter.createCaller(createTestContext());
+  const ctx = createTestContext();
+  const caller = opportunityRouter.createCaller(ctx);
 
   beforeEach(() => {
     // Reset is handled by setup.ts
@@ -31,7 +58,7 @@ describe('Opportunity Router', () => {
     it('should create a new opportunity with valid input', async () => {
       const input = {
         name: 'New Deal',
-        value: 75000,
+        value: { amount: 75000 },
         stage: 'PROPOSAL' as const,
         probability: 50,
         expectedCloseDate: new Date('2025-06-30'),
@@ -39,37 +66,45 @@ describe('Opportunity Router', () => {
         contactId: TEST_UUIDS.contact1,
       };
 
-      prismaMock.account.findUnique.mockResolvedValue(mockAccount);
-      prismaMock.contact.findUnique.mockResolvedValue(mockContact);
-      prismaMock.opportunity.create.mockResolvedValue({
-        ...mockOpportunity,
-        ...input,
-        value: new Prisma.Decimal(input.value),
+      const mockDomainOpp = createMockDomainOpportunity({
+        name: input.name,
+        value: input.value.amount,
+        probability: input.probability,
+        stage: input.stage,
+        expectedCloseDate: input.expectedCloseDate,
+        contactId: input.contactId,
+        weightedValue: input.value.amount * (input.probability / 100),
+      });
+
+      ctx.services!.opportunity!.createOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainOpp,
       });
 
       const result = await caller.create(input);
 
       expect(result.name).toBe(input.name);
-      expect(Number(result.value)).toBe(input.value);
-      expect(prismaMock.opportunity.create).toHaveBeenCalledWith({
-        data: {
-          ...input,
-          ownerId: TEST_UUIDS.user1,
-        },
-      });
+      expect(result.value).toBe(input.value);
+      expect(result.stage).toBe(input.stage);
+      expect(ctx.services!.opportunity!.createOpportunity).toHaveBeenCalled();
     });
 
     it('should throw NOT_FOUND if account does not exist', async () => {
       const input = {
         name: 'Deal',
-        value: 50000,
+        value: { amount: 50000 },
         stage: 'PROPOSAL' as const,
         probability: 60,
         expectedCloseDate: new Date('2025-06-30'),
         accountId: TEST_UUIDS.nonExistent,
       };
 
-      prismaMock.account.findUnique.mockResolvedValue(null);
+      ctx.services!.opportunity!.createOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: `Account not found: ${input.accountId}` },
+      });
 
       await expect(caller.create(input)).rejects.toThrow(
         expect.objectContaining({
@@ -82,7 +117,7 @@ describe('Opportunity Router', () => {
     it('should throw NOT_FOUND if contact does not exist', async () => {
       const input = {
         name: 'Deal',
-        value: 50000,
+        value: { amount: 50000 },
         stage: 'PROPOSAL' as const,
         probability: 60,
         expectedCloseDate: new Date('2025-06-30'),
@@ -90,8 +125,11 @@ describe('Opportunity Router', () => {
         contactId: TEST_UUIDS.nonExistent,
       };
 
-      prismaMock.account.findUnique.mockResolvedValue(mockAccount);
-      prismaMock.contact.findUnique.mockResolvedValue(null);
+      ctx.services!.opportunity!.createOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: `Contact not found: ${input.contactId}` },
+      });
 
       await expect(caller.create(input)).rejects.toThrow(
         expect.objectContaining({
@@ -104,32 +142,27 @@ describe('Opportunity Router', () => {
 
   describe('getById', () => {
     it('should return opportunity with related data', async () => {
-      const opportunityWithRelations = {
-        ...mockOpportunity,
-        owner: mockUser,
-        account: mockAccount,
-        contact: mockContact,
-        tasks: [mockTask],
-      };
+      const mockDomainOpp = createMockDomainOpportunity();
 
-      prismaMock.opportunity.findUnique.mockResolvedValue(opportunityWithRelations);
+      ctx.services!.opportunity!.getOpportunityById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainOpp,
+      });
 
       const result = await caller.getById({ id: TEST_UUIDS.opportunity1 });
 
-      expect(result).toMatchObject(opportunityWithRelations);
-      expect(prismaMock.opportunity.findUnique).toHaveBeenCalledWith({
-        where: { id: TEST_UUIDS.opportunity1 },
-        include: expect.objectContaining({
-          owner: expect.any(Object),
-          account: expect.any(Object),
-          contact: expect.any(Object),
-          tasks: expect.any(Object),
-        }),
-      });
+      expect(result.id).toBe(TEST_UUIDS.opportunity1);
+      expect(result.name).toBe('Big Deal');
+      expect(ctx.services!.opportunity!.getOpportunityById).toHaveBeenCalledWith(TEST_UUIDS.opportunity1);
     });
 
     it('should throw NOT_FOUND for non-existent opportunity', async () => {
-      prismaMock.opportunity.findUnique.mockResolvedValue(null);
+      ctx.services!.opportunity!.getOpportunityById = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: `Opportunity not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       await expect(caller.getById({ id: TEST_UUIDS.nonExistent })).rejects.toThrow(
         expect.objectContaining({
@@ -140,6 +173,7 @@ describe('Opportunity Router', () => {
   });
 
   describe('list', () => {
+    // list still uses Prisma for complex queries with joins
     it('should list opportunities with pagination', async () => {
       const opportunities = [mockOpportunity, { ...mockOpportunity, id: 'opp-2', name: 'Deal 2' }];
       const opportunitiesWithRelations = opportunities.map((opp) => ({
@@ -225,10 +259,16 @@ describe('Opportunity Router', () => {
 
   describe('update', () => {
     it('should update opportunity with valid data', async () => {
-      prismaMock.opportunity.findUnique.mockResolvedValue(mockOpportunity as any);
+      const mockDomainOpp = createMockDomainOpportunity({
+        stage: 'NEGOTIATION',
+        probability: 70,
+      });
 
-      const updated = { ...mockOpportunity, stage: 'NEGOTIATION' as const, probability: 70 };
-      prismaMock.opportunity.update.mockResolvedValue(updated as any);
+      ctx.services!.opportunity!.updateOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainOpp,
+      });
 
       const result = await caller.update({
         id: TEST_UUIDS.opportunity1,
@@ -238,10 +278,15 @@ describe('Opportunity Router', () => {
 
       expect(result.stage).toBe('NEGOTIATION');
       expect(result.probability).toBe(70);
+      expect(ctx.services!.opportunity!.updateOpportunity).toHaveBeenCalled();
     });
 
     it('should throw NOT_FOUND when updating non-existent opportunity', async () => {
-      prismaMock.opportunity.findUnique.mockResolvedValue(null);
+      ctx.services!.opportunity!.updateOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: `Opportunity not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       await expect(
         caller.update({ id: TEST_UUIDS.nonExistent, stage: 'CLOSED_WON' })
@@ -253,8 +298,11 @@ describe('Opportunity Router', () => {
     });
 
     it('should validate account exists when updating accountId', async () => {
-      prismaMock.opportunity.findUnique.mockResolvedValue(mockOpportunity);
-      prismaMock.account.findUnique.mockResolvedValue(null);
+      ctx.services!.opportunity!.updateOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: `Account not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       await expect(
         caller.update({ id: TEST_UUIDS.opportunity1, accountId: TEST_UUIDS.nonExistent })
@@ -265,21 +313,45 @@ describe('Opportunity Router', () => {
         })
       );
     });
+
+    it('should throw BAD_REQUEST for invalid stage transition', async () => {
+      ctx.services!.opportunity!.updateOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid stage transition from PROPOSAL to CLOSED_WON' },
+      });
+
+      await expect(
+        caller.update({ id: TEST_UUIDS.opportunity1, stage: 'CLOSED_WON' })
+      ).rejects.toThrow(
+        expect.objectContaining({
+          code: 'BAD_REQUEST',
+        })
+      );
+    });
   });
 
   describe('delete', () => {
     it('should delete an existing opportunity', async () => {
-      prismaMock.opportunity.findUnique.mockResolvedValue(mockOpportunity);
-      prismaMock.opportunity.delete.mockResolvedValue(mockOpportunity);
+      ctx.services!.opportunity!.deleteOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: undefined,
+      });
 
       const result = await caller.delete({ id: TEST_UUIDS.opportunity1 });
 
       expect(result.success).toBe(true);
       expect(result.id).toBe(TEST_UUIDS.opportunity1);
+      expect(ctx.services!.opportunity!.deleteOpportunity).toHaveBeenCalledWith(TEST_UUIDS.opportunity1);
     });
 
     it('should throw NOT_FOUND for non-existent opportunity', async () => {
-      prismaMock.opportunity.findUnique.mockResolvedValue(null);
+      ctx.services!.opportunity!.deleteOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: `Opportunity not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       await expect(caller.delete({ id: TEST_UUIDS.nonExistent })).rejects.toThrow(
         expect.objectContaining({
@@ -287,9 +359,24 @@ describe('Opportunity Router', () => {
         })
       );
     });
+
+    it('should throw PRECONDITION_FAILED for won opportunities', async () => {
+      ctx.services!.opportunity!.deleteOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: 'Cannot delete won opportunities. Archive them instead.' },
+      });
+
+      await expect(caller.delete({ id: TEST_UUIDS.opportunity1 })).rejects.toThrow(
+        expect.objectContaining({
+          code: 'PRECONDITION_FAILED',
+        })
+      );
+    });
   });
 
   describe('stats', () => {
+    // stats still uses Prisma for aggregations
     it('should return opportunity statistics', async () => {
       prismaMock.opportunity.count.mockResolvedValue(50);
       vi.mocked(prismaMock.opportunity.groupBy).mockResolvedValue([
@@ -335,6 +422,7 @@ describe('Opportunity Router', () => {
   });
 
   describe('forecast', () => {
+    // forecast still uses Prisma for complex queries
     it('should calculate weighted pipeline value', async () => {
       // Create forecast data with just the fields needed for calculation
       const forecastData = [

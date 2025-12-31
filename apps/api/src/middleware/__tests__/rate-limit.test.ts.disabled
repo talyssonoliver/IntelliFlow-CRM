@@ -10,6 +10,27 @@ import { TRPCError } from '@trpc/server';
 import type { PrismaClient } from '@prisma/client';
 import type { Context } from '../../context';
 
+/**
+ * Create a minimal mock context for middleware tests
+ * Middleware only uses user, prisma, req, res - services/adapters not needed
+ */
+const createMockContext = (
+  overrides: Partial<{
+    user: { userId: string; email: string; role: string; tenantId: string } | null | undefined;
+    prisma: PrismaClient;
+    req: Request | undefined;
+    res: Response | undefined;
+  }> = {}
+): Context =>
+  ({
+    user: overrides.user ?? null,
+    prisma: overrides.prisma ?? ({} as PrismaClient),
+    req: overrides.req ?? undefined,
+    res: overrides.res ?? undefined,
+    services: {} as Context['services'],
+    adapters: {} as Context['adapters'],
+  }) as Context;
+
 // Counter for unique user IDs to avoid state collision
 let userIdCounter = 0;
 
@@ -34,16 +55,14 @@ describe('RateLimitMiddleware', () => {
       const rateLimitMiddleware = createRateLimitMiddleware(5, 60000); // 5 per minute
       const mockNext = vi.fn(async () => ({ success: true }));
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       // Make 5 requests (within limit)
       for (let i = 0; i < 5; i++) {
@@ -62,16 +81,14 @@ describe('RateLimitMiddleware', () => {
       const rateLimitMiddleware = createRateLimitMiddleware(3, 60000); // 3 per minute
       const mockNext = vi.fn(async () => ({ success: true }));
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       // Make 3 successful requests
       for (let i = 0; i < 3; i++) {
@@ -104,16 +121,14 @@ describe('RateLimitMiddleware', () => {
       const rateLimitMiddleware = createRateLimitMiddleware(2, 60000); // 2 per minute
       const mockNext = vi.fn(async () => ({ success: true }));
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       // Make 2 requests (hit limit)
       await rateLimitMiddleware({ ctx, next: mockNext });
@@ -143,6 +158,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'user1@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
         prisma: {} as PrismaClient,
         req: undefined,
@@ -154,6 +170,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'user2@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
         prisma: {} as PrismaClient,
         req: undefined,
@@ -181,12 +198,7 @@ describe('RateLimitMiddleware', () => {
       const rateLimitMiddleware = createRateLimitMiddleware(2, 60000);
       const mockNext = vi.fn(async () => ({ success: true }));
 
-      const ctx: Context = {
-        user: null,
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      const ctx = createMockContext();
 
       // Make 2 anonymous requests
       await rateLimitMiddleware({ ctx, next: mockNext });
@@ -205,19 +217,9 @@ describe('RateLimitMiddleware', () => {
       const rateLimitMiddleware = createRateLimitMiddleware(3, 60000);
       const mockNext = vi.fn(async () => ({ success: true }));
 
-      const ctx1: Context = {
-        user: null,
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      const ctx1 = createMockContext();
 
-      const ctx2: Context = {
-        user: undefined,
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      const ctx2 = createMockContext({ user: undefined });
 
       // Make requests from different anonymous contexts
       await rateLimitMiddleware({ ctx: ctx1, next: mockNext });
@@ -237,16 +239,14 @@ describe('RateLimitMiddleware', () => {
       const rateLimitMiddleware = createRateLimitMiddleware(1, 60000);
       const mockNext = vi.fn(async () => ({}));
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       // First request succeeds
       await rateLimitMiddleware({ ctx, next: mockNext });
@@ -266,16 +266,14 @@ describe('RateLimitMiddleware', () => {
       const rateLimitMiddleware = createRateLimitMiddleware(); // Default params
       const mockNext = vi.fn(async () => ({}));
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       // Should allow 100 requests
       for (let i = 0; i < 100; i++) {
@@ -295,16 +293,14 @@ describe('RateLimitMiddleware', () => {
       const rateLimitMiddleware = createRateLimitMiddleware(3, 30000); // 3 per 30 seconds
       const mockNext = vi.fn(async () => ({}));
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       // Hit limit
       await rateLimitMiddleware({ ctx, next: mockNext });
@@ -329,16 +325,14 @@ describe('RateLimitMiddleware', () => {
       const rateLimitMiddleware = createRateLimitMiddleware(2, 60000);
       const mockNext = vi.fn(async () => ({}));
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       // Make 2 requests
       await rateLimitMiddleware({ ctx, next: mockNext });
@@ -360,16 +354,14 @@ describe('RateLimitMiddleware', () => {
         throw new Error('Database error');
       });
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       await expect(rateLimitMiddleware({ ctx, next: mockNext })).rejects.toThrow('Database error');
     });
@@ -386,16 +378,14 @@ describe('RateLimitMiddleware', () => {
         return { success: true };
       });
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       // Request 1: success
       await rateLimitMiddleware({ ctx, next: mockNext });
@@ -419,16 +409,14 @@ describe('RateLimitMiddleware', () => {
       const rateLimitMiddleware = createRateLimitMiddleware(1, 60000);
       const mockNext = vi.fn(async () => ({}));
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       // First request succeeds
       await rateLimitMiddleware({ ctx, next: mockNext });
@@ -446,16 +434,14 @@ describe('RateLimitMiddleware', () => {
       const rateLimitMiddleware = createRateLimitMiddleware(10000, 60000);
       const mockNext = vi.fn(async () => ({}));
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       // Should handle large number of requests
       for (let i = 0; i < 100; i++) {
@@ -472,16 +458,14 @@ describe('RateLimitMiddleware', () => {
       const strictMiddleware = createStrictRateLimitMiddleware();
       const mockNext = vi.fn(async () => ({ success: true }));
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       // Make 10 requests (within limit)
       for (let i = 0; i < 10; i++) {
@@ -508,16 +492,14 @@ describe('RateLimitMiddleware', () => {
       const strictMiddleware = createStrictRateLimitMiddleware();
       const mockNext = vi.fn(async () => ({ token: 'sensitive-data' }));
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: getUniqueUserId(),
           email: 'attacker@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       // Attempt 11 rapid requests
       for (let i = 0; i < 10; i++) {
@@ -535,16 +517,14 @@ describe('RateLimitMiddleware', () => {
       const strictMiddleware = createStrictRateLimitMiddleware();
       const mockNext = vi.fn(async () => ({}));
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       // Hit limit
       for (let i = 0; i < 10; i++) {
@@ -571,16 +551,14 @@ describe('RateLimitMiddleware', () => {
       const lenientMiddleware = createLenientRateLimitMiddleware();
       const mockNext = vi.fn(async () => ({ success: true }));
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       // Make 1000 requests (within limit)
       for (let i = 0; i < 1000; i++) {
@@ -606,16 +584,14 @@ describe('RateLimitMiddleware', () => {
       const lenientMiddleware = createLenientRateLimitMiddleware();
       const mockNext = vi.fn(async () => ({ data: 'public-data' }));
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       // Should handle many reads
       for (let i = 0; i < 100; i++) {
@@ -630,16 +606,14 @@ describe('RateLimitMiddleware', () => {
       const lenientMiddleware = createLenientRateLimitMiddleware();
       const mockNext = vi.fn(async () => ({}));
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       // Hit limit
       for (let i = 0; i < 1000; i++) {
@@ -728,16 +702,14 @@ describe('RateLimitMiddleware', () => {
 
       const finalNext = vi.fn(async () => ({ result: 'success' }));
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       // First request
       await rateLimitMiddleware({
@@ -790,6 +762,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
         prisma: {} as PrismaClient,
         req: undefined,
@@ -813,6 +786,7 @@ describe('RateLimitMiddleware', () => {
           userId: getUniqueUserId(),
           email: 'other@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
         prisma: {} as PrismaClient,
         req: undefined,
@@ -830,16 +804,14 @@ describe('RateLimitMiddleware', () => {
       const rateLimitMiddleware = createRateLimitMiddleware(0, 60000);
       const mockNext = vi.fn(async () => ({}));
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       // With limit of 0, the first request sets count to 1, which exceeds 0
       // However, the checkLimit logic increments THEN checks, so first request succeeds
@@ -860,16 +832,14 @@ describe('RateLimitMiddleware', () => {
       const rateLimitMiddleware = createRateLimitMiddleware(2, 100); // 100ms window
       const mockNext = vi.fn(async () => ({}));
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       // Make 2 requests
       await rateLimitMiddleware({ ctx, next: mockNext });
@@ -896,16 +866,14 @@ describe('RateLimitMiddleware', () => {
         return {};
       });
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       // Fire 6 requests concurrently
       const promises = Array.from({ length: 6 }, () =>
@@ -927,16 +895,14 @@ describe('RateLimitMiddleware', () => {
       const rateLimitMiddleware = createRateLimitMiddleware(2, 60000);
       const mockNext = vi.fn(async () => ({}));
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: '',
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       // Should use empty string as key
       await rateLimitMiddleware({ ctx, next: mockNext });
@@ -954,16 +920,14 @@ describe('RateLimitMiddleware', () => {
       const rateLimitMiddleware = createRateLimitMiddleware(2, 60000);
       const mockNext = vi.fn(async () => ({}));
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       // First window
       await rateLimitMiddleware({ ctx, next: mockNext });
@@ -1025,12 +989,7 @@ describe('RateLimitMiddleware', () => {
       const publicMiddleware = createPublicRateLimitMiddleware();
       const mockNext = vi.fn(async () => ({ success: true }));
 
-      const ctx: Context = {
-        user: null,
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      const ctx = createMockContext();
 
       // Make requests up to the public limit
       for (let i = 0; i < RATE_LIMIT_TIERS.PUBLIC.limit; i++) {
@@ -1049,16 +1008,14 @@ describe('RateLimitMiddleware', () => {
       const aiMiddleware = createAIRateLimitMiddleware();
       const mockNext = vi.fn(async () => ({ success: true }));
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       // Make requests up to the AI limit (10)
       for (let i = 0; i < RATE_LIMIT_TIERS.AI.limit; i++) {
@@ -1079,12 +1036,7 @@ describe('RateLimitMiddleware', () => {
       const authMiddleware = createAuthEndpointRateLimitMiddleware();
       const mockNext = vi.fn(async () => ({ success: true }));
 
-      const ctx: Context = {
-        user: null,
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      const ctx = createMockContext();
 
       // Make requests up to the auth limit (5)
       for (let i = 0; i < RATE_LIMIT_TIERS.AUTH.limit; i++) {
@@ -1173,16 +1125,14 @@ describe('RateLimitMiddleware', () => {
       const publicMiddleware = createTieredRateLimitMiddleware(RATE_LIMIT_TIERS.PUBLIC);
       const mockNext = vi.fn(async () => ({}));
 
-      const ctx: Context = {
+      const ctx = createMockContext({
         user: {
           userId: getUniqueUserId(),
           email: 'test@example.com',
           role: 'USER',
+          tenantId: 'test-tenant-id',
         },
-        prisma: {} as PrismaClient,
-        req: undefined,
-        res: undefined,
-      };
+      });
 
       // Hit the limit
       for (let i = 0; i < RATE_LIMIT_TIERS.PUBLIC.limit; i++) {

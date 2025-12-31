@@ -325,14 +325,314 @@ export class RBACService {
 
   /**
    * Get user permission override from database
+   *
+   * Queries the UserPermission table to check for user-specific permission overrides.
+   * Returns null if no override exists, otherwise returns the granted status.
    */
   private async getUserPermissionOverride(
     userId: string,
     permissionId: string
   ): Promise<boolean | null> {
-    // This would query the UserPermission table in a full implementation
-    // For now, return null (no override)
-    return null;
+    try {
+      // First, find the permission by name (e.g., 'lead:read')
+      const permission = await this.prisma.permission.findUnique({
+        where: { name: permissionId },
+      });
+
+      if (!permission) {
+        return null; // Permission not in database, use default behavior
+      }
+
+      // Check for user-specific override
+      const userPermission = await this.prisma.userPermission.findUnique({
+        where: {
+          userId_permissionId: {
+            userId,
+            permissionId: permission.id,
+          },
+        },
+      });
+
+      if (!userPermission) {
+        return null; // No override exists
+      }
+
+      // Check if override has expired
+      if (userPermission.expiresAt && userPermission.expiresAt < new Date()) {
+        return null; // Override has expired
+      }
+
+      return userPermission.granted;
+    } catch (error) {
+      // If tables don't exist yet, return null (use defaults)
+      console.debug('[RBAC] Permission override check failed, using defaults:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get user's RBAC roles from database
+   *
+   * Queries the UserRoleAssignment table to get all active roles for a user.
+   * Falls back to the user's simple role if no assignments found.
+   */
+  async getUserRBACRoles(userId: string): Promise<RoleName[]> {
+    try {
+      const roleAssignments = await this.prisma.userRoleAssignment.findMany({
+        where: {
+          userId,
+          OR: [
+            { expiresAt: null },
+            { expiresAt: { gt: new Date() } },
+          ],
+        },
+        include: {
+          role: true,
+        },
+      });
+
+      if (roleAssignments.length === 0) {
+        return []; // No database roles, will use simple role from User model
+      }
+
+      return roleAssignments
+        .map((ra) => ra.role.name as RoleName)
+        .filter((name): name is RoleName =>
+          ['ADMIN', 'MANAGER', 'SALES_REP', 'USER', 'VIEWER'].includes(name)
+        );
+    } catch (error) {
+      // If table doesn't exist yet, return empty array
+      console.debug('[RBAC] Role assignment check failed:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get permissions from database for a role
+   *
+   * Queries the RolePermission table to get all permissions for an RBAC role.
+   */
+  async getRolePermissionsFromDB(roleName: string): Promise<string[]> {
+    try {
+      const role = await this.prisma.rBACRole.findUnique({
+        where: { name: roleName },
+        include: {
+          permissions: {
+            where: { granted: true },
+            include: { permission: true },
+          },
+        },
+      });
+
+      if (!role) {
+        return [];
+      }
+
+      return role.permissions.map((rp) => rp.permission.name);
+    } catch (error) {
+      // If tables don't exist yet, return empty array
+      console.debug('[RBAC] Database role permissions check failed:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get all permissions for a user, combining database and default permissions
+   *
+   * Priority order:
+   * 1. User-specific overrides (highest)
+   * 2. Database RBAC roles
+   * 3. Default role permissions (fallback)
+   */
+  async getPermissionsWithDB(userId: string, userRole: RoleName): Promise<string[]> {
+    const cacheKey = `db:${userId}:${userRole}`;
+    const cached = this.permissionCache.get(cacheKey);
+
+    if (cached && Date.now() - cached.timestamp < this.cacheMaxAge) {
+      return cached.permissions;
+    }
+
+    const permissions = new Set<string>();
+
+    // 1. Start with default role permissions
+    const defaultPerms = DEFAULT_PERMISSIONS[userRole];
+    if (defaultPerms) {
+      for (const [resource, actions] of Object.entries(defaultPerms)) {
+        for (const action of actions) {
+          permissions.add(`${resource}:${action}`);
+        }
+      }
+    }
+
+    // 2. Add database RBAC roles permissions
+    const dbRoles = await this.getUserRBACRoles(userId);
+    for (const role of dbRoles) {
+      const rolePerms = await this.getRolePermissionsFromDB(role);
+      rolePerms.forEach((p) => permissions.add(p));
+    }
+
+    // 3. Apply user-specific overrides
+    try {
+      const userOverrides = await this.prisma.userPermission.findMany({
+        where: {
+          userId,
+          OR: [
+            { expiresAt: null },
+            { expiresAt: { gt: new Date() } },
+          ],
+        },
+        include: { permission: true },
+      });
+
+      for (const override of userOverrides) {
+        if (override.granted) {
+          permissions.add(override.permission.name);
+        } else {
+          permissions.delete(override.permission.name);
+        }
+      }
+    } catch (error) {
+      // If table doesn't exist, skip overrides
+      console.debug('[RBAC] User overrides check failed:', error);
+    }
+
+    const result = Array.from(permissions);
+
+    // Cache the result
+    this.permissionCache.set(cacheKey, {
+      permissions: result,
+      timestamp: Date.now(),
+    });
+
+    return result;
+  }
+
+  /**
+   * Assign an RBAC role to a user
+   */
+  async assignRole(
+    userId: string,
+    roleName: string,
+    assignedBy?: string,
+    expiresAt?: Date
+  ): Promise<void> {
+    const role = await this.prisma.rBACRole.findUnique({
+      where: { name: roleName },
+    });
+
+    if (!role) {
+      throw new Error(`Role ${roleName} not found`);
+    }
+
+    await this.prisma.userRoleAssignment.upsert({
+      where: {
+        userId_roleId: { userId, roleId: role.id },
+      },
+      create: {
+        userId,
+        roleId: role.id,
+        assignedBy,
+        expiresAt,
+      },
+      update: {
+        assignedBy,
+        expiresAt,
+        assignedAt: new Date(),
+      },
+    });
+
+    // Clear cache for this user
+    this.clearCache(userId);
+  }
+
+  /**
+   * Remove an RBAC role from a user
+   */
+  async removeRole(userId: string, roleName: string): Promise<void> {
+    const role = await this.prisma.rBACRole.findUnique({
+      where: { name: roleName },
+    });
+
+    if (!role) {
+      return; // Role doesn't exist, nothing to remove
+    }
+
+    await this.prisma.userRoleAssignment.deleteMany({
+      where: {
+        userId,
+        roleId: role.id,
+      },
+    });
+
+    // Clear cache for this user
+    this.clearCache(userId);
+  }
+
+  /**
+   * Grant or deny a specific permission to a user
+   */
+  async setUserPermission(
+    userId: string,
+    permissionName: string,
+    granted: boolean,
+    grantedBy?: string,
+    reason?: string,
+    expiresAt?: Date
+  ): Promise<void> {
+    const permission = await this.prisma.permission.findUnique({
+      where: { name: permissionName },
+    });
+
+    if (!permission) {
+      throw new Error(`Permission ${permissionName} not found`);
+    }
+
+    await this.prisma.userPermission.upsert({
+      where: {
+        userId_permissionId: { userId, permissionId: permission.id },
+      },
+      create: {
+        userId,
+        permissionId: permission.id,
+        granted,
+        grantedBy,
+        reason,
+        expiresAt,
+      },
+      update: {
+        granted,
+        grantedBy,
+        reason,
+        expiresAt,
+        grantedAt: new Date(),
+      },
+    });
+
+    // Clear cache for this user
+    this.clearCache(userId);
+  }
+
+  /**
+   * Remove a user-specific permission override
+   */
+  async removeUserPermission(userId: string, permissionName: string): Promise<void> {
+    const permission = await this.prisma.permission.findUnique({
+      where: { name: permissionName },
+    });
+
+    if (!permission) {
+      return; // Permission doesn't exist
+    }
+
+    await this.prisma.userPermission.deleteMany({
+      where: {
+        userId,
+        permissionId: permission.id,
+      },
+    });
+
+    // Clear cache for this user
+    this.clearCache(userId);
   }
 
   /**

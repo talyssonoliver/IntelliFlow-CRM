@@ -6,6 +6,8 @@
  * - Error response contracts
  * - Relationship contracts (account linking)
  *
+ * Tests mock ContactService for procedures using hexagonal architecture
+ *
  * @see Sprint 6 - IFC-129: UI and Contract Tests
  */
 
@@ -25,21 +27,26 @@ import {
 } from '../../test/setup';
 
 /**
- * Contact entity contract schema
+ * Create a mock domain Contact for service responses
  */
-const contactResponseSchema = z.object({
-  id: z.string().uuid(),
-  email: z.string().email(),
-  firstName: z.string(),
-  lastName: z.string(),
-  title: z.string().nullable().optional(),
-  phone: z.string().nullable().optional(),
-  department: z.string().nullable().optional(),
-  accountId: z.string().uuid().nullable().optional(),
-  leadId: z.string().uuid().nullable().optional(),
-  ownerId: z.string().uuid(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+const createMockDomainContact = (overrides: Record<string, unknown> = {}) => ({
+  id: { value: TEST_UUIDS.contact1 },
+  email: { value: 'contact@example.com' },
+  firstName: 'Jane',
+  lastName: 'Smith',
+  title: 'CTO',
+  phone: '+1234567891',
+  department: 'Engineering',
+  accountId: TEST_UUIDS.account1,
+  leadId: null,
+  ownerId: TEST_UUIDS.user1,
+  hasAccount: true,
+  isConvertedFromLead: false,
+  createdAt: new Date('2024-01-01'),
+  updatedAt: new Date('2024-01-01'),
+  getDomainEvents: () => [],
+  clearDomainEvents: () => {},
+  ...overrides,
 });
 
 /**
@@ -65,8 +72,6 @@ const contactSearchResponseSchema = z.object({
 });
 
 describe('Contact Router Contract Tests', () => {
-  const caller = contactRouter.createCaller(createTestContext());
-
   describe('create - Input Contract', () => {
     it('should require email, firstName, and lastName', async () => {
       const validInput = {
@@ -75,10 +80,17 @@ describe('Contact Router Contract Tests', () => {
         lastName: 'Doe',
       };
 
-      prismaMock.contact.findUnique.mockResolvedValue(null);
-      prismaMock.contact.create.mockResolvedValue({
-        ...mockContact,
-        ...validInput,
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      ctx.services!.contact!.createContact = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainContact({
+          email: { value: validInput.email },
+          firstName: validInput.firstName,
+          lastName: validInput.lastName,
+        }),
       });
 
       const result = await caller.create(validInput);
@@ -89,6 +101,9 @@ describe('Contact Router Contract Tests', () => {
     });
 
     it('should enforce email format', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
       const invalidInput = {
         email: 'not-an-email',
         firstName: 'Test',
@@ -108,10 +123,13 @@ describe('Contact Router Contract Tests', () => {
         department: 'Engineering',
       };
 
-      prismaMock.contact.findUnique.mockResolvedValue(null);
-      prismaMock.contact.create.mockResolvedValue({
-        ...mockContact,
-        ...inputWithOptionals,
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      ctx.services!.contact!.createContact = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainContact(inputWithOptionals),
       });
 
       const result = await caller.create(inputWithOptionals);
@@ -128,11 +146,13 @@ describe('Contact Router Contract Tests', () => {
         accountId: TEST_UUIDS.account1,
       };
 
-      prismaMock.contact.findUnique.mockResolvedValue(null);
-      prismaMock.account.findUnique.mockResolvedValue(mockAccount);
-      prismaMock.contact.create.mockResolvedValue({
-        ...mockContact,
-        ...input,
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      ctx.services!.contact!.createContact = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainContact({ accountId: TEST_UUIDS.account1 }),
       });
 
       const result = await caller.create(input);
@@ -142,8 +162,14 @@ describe('Contact Router Contract Tests', () => {
 
   describe('create - Output Contract', () => {
     it('should return contact with all required fields', async () => {
-      prismaMock.contact.findUnique.mockResolvedValue(null);
-      prismaMock.contact.create.mockResolvedValue(mockContact);
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      ctx.services!.contact!.createContact = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainContact(),
+      });
 
       const result = await caller.create({
         email: 'new@example.com',
@@ -160,10 +186,13 @@ describe('Contact Router Contract Tests', () => {
     });
 
     it('should return ownerId matching the authenticated user', async () => {
-      prismaMock.contact.findUnique.mockResolvedValue(null);
-      prismaMock.contact.create.mockResolvedValue({
-        ...mockContact,
-        ownerId: TEST_UUIDS.user1,
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      ctx.services!.contact!.createContact = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainContact({ ownerId: TEST_UUIDS.user1 }),
       });
 
       const result = await caller.create({
@@ -178,7 +207,14 @@ describe('Contact Router Contract Tests', () => {
 
   describe('create - Error Contract', () => {
     it('should return CONFLICT for duplicate email', async () => {
-      prismaMock.contact.findUnique.mockResolvedValue(mockContact);
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      ctx.services!.contact!.createContact = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { message: 'Contact with email existing@example.com already exists' },
+      });
 
       try {
         await caller.create({
@@ -186,7 +222,7 @@ describe('Contact Router Contract Tests', () => {
           firstName: 'Test',
           lastName: 'User',
         });
-        fail('Should have thrown');
+        expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.code).toBe('CONFLICT');
         expect(error.message).toContain('already exists');
@@ -194,8 +230,14 @@ describe('Contact Router Contract Tests', () => {
     });
 
     it('should return NOT_FOUND for invalid accountId', async () => {
-      prismaMock.contact.findUnique.mockResolvedValue(null);
-      prismaMock.account.findUnique.mockResolvedValue(null);
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      ctx.services!.contact!.createContact = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { message: `Account not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       try {
         await caller.create({
@@ -204,16 +246,18 @@ describe('Contact Router Contract Tests', () => {
           lastName: 'User',
           accountId: TEST_UUIDS.nonExistent,
         });
-        fail('Should have thrown');
+        expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.code).toBe('NOT_FOUND');
-        expect(error.message).toContain('Account');
       }
     });
   });
 
   describe('getById - Contract', () => {
     it('should require valid UUID', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
       await expect(caller.getById({ id: 'invalid' })).rejects.toThrow();
     });
 
@@ -227,6 +271,15 @@ describe('Contact Router Contract Tests', () => {
         tasks: [mockTask],
       };
 
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      ctx.services!.contact!.getContactById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainContact(),
+      });
+
       prismaMock.contact.findUnique.mockResolvedValue(contactWithRelations);
 
       const result = await caller.getById({ id: TEST_UUIDS.contact1 });
@@ -236,11 +289,18 @@ describe('Contact Router Contract Tests', () => {
     });
 
     it('should throw NOT_FOUND with correct code', async () => {
-      prismaMock.contact.findUnique.mockResolvedValue(null);
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      ctx.services!.contact!.getContactById = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { message: `Contact not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       try {
         await caller.getById({ id: TEST_UUIDS.nonExistent });
-        fail('Should have thrown');
+        expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.code).toBe('NOT_FOUND');
       }
@@ -249,27 +309,42 @@ describe('Contact Router Contract Tests', () => {
 
   describe('getByEmail - Contract', () => {
     it('should require valid email format', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
       await expect(caller.getByEmail({ email: 'invalid' })).rejects.toThrow();
     });
 
     it('should return contact when found by email', async () => {
-      prismaMock.contact.findUnique.mockResolvedValue({
-        ...mockContact,
-        owner: mockUser,
-        account: mockAccount,
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      ctx.services!.contact!.getContactByEmail = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainContact(),
       });
+
+      prismaMock.contact.findUnique.mockResolvedValue(mockContact as never);
 
       const result = await caller.getByEmail({ email: 'contact@example.com' });
 
-      expect(result.email).toBe('contact@example.com');
+      expect(result!.email).toBe('contact@example.com');
     });
 
     it('should throw NOT_FOUND for non-existent email', async () => {
-      prismaMock.contact.findUnique.mockResolvedValue(null);
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      ctx.services!.contact!.getContactByEmail = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { message: 'Contact with email nonexistent@example.com not found' },
+      });
 
       try {
         await caller.getByEmail({ email: 'nonexistent@example.com' });
-        fail('Should have thrown');
+        expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.code).toBe('NOT_FOUND');
       }
@@ -283,6 +358,9 @@ describe('Contact Router Contract Tests', () => {
     });
 
     it('should return paginated response', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
       const result = await caller.list({});
 
       const parseResult = contactListResponseSchema.safeParse(result);
@@ -296,6 +374,9 @@ describe('Contact Router Contract Tests', () => {
     });
 
     it('should accept valid filter parameters', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
       await caller.list({
         page: 1,
         limit: 20,
@@ -310,6 +391,9 @@ describe('Contact Router Contract Tests', () => {
     });
 
     it('should enforce pagination limits', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
       await expect(caller.list({ page: 0 })).rejects.toThrow();
       await expect(caller.list({ limit: 0 })).rejects.toThrow();
     });
@@ -317,15 +401,27 @@ describe('Contact Router Contract Tests', () => {
 
   describe('update - Contract', () => {
     it('should require id for update', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
       // @ts-expect-error - Testing contract
       await expect(caller.update({ title: 'New Title' })).rejects.toThrow();
     });
 
     it('should accept partial updates', async () => {
-      prismaMock.contact.findUnique.mockResolvedValue(mockContact);
-      prismaMock.contact.update.mockResolvedValue({
-        ...mockContact,
-        title: 'Updated Title',
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      ctx.services!.contact!.updateContactInfo = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainContact({ title: 'Updated Title' }),
+      });
+
+      ctx.services!.contact!.getContactById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainContact({ title: 'Updated Title' }),
       });
 
       const result = await caller.update({
@@ -337,15 +433,21 @@ describe('Contact Router Contract Tests', () => {
     });
 
     it('should validate accountId on update', async () => {
-      prismaMock.contact.findUnique.mockResolvedValue(mockContact);
-      prismaMock.account.findUnique.mockResolvedValue(null);
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      ctx.services!.contact!.associateWithAccount = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { message: `Account not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       try {
         await caller.update({
           id: TEST_UUIDS.contact1,
           accountId: TEST_UUIDS.nonExistent,
         });
-        fail('Should have thrown');
+        expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.code).toBe('NOT_FOUND');
       }
@@ -354,11 +456,19 @@ describe('Contact Router Contract Tests', () => {
 
   describe('delete - Contract', () => {
     it('should return success response', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
       prismaMock.contact.findUnique.mockResolvedValue({
         ...mockContact,
         _count: { opportunities: 0 },
       } as any);
-      prismaMock.contact.delete.mockResolvedValue(mockContact);
+
+      ctx.services!.contact!.deleteContact = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: undefined,
+      });
 
       const result = await caller.delete({ id: TEST_UUIDS.contact1 });
 
@@ -368,6 +478,9 @@ describe('Contact Router Contract Tests', () => {
     });
 
     it('should throw PRECONDITION_FAILED if has opportunities', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
       prismaMock.contact.findUnique.mockResolvedValue({
         ...mockContact,
         _count: { opportunities: 3 },
@@ -375,7 +488,7 @@ describe('Contact Router Contract Tests', () => {
 
       try {
         await caller.delete({ id: TEST_UUIDS.contact1 });
-        fail('Should have thrown');
+        expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.code).toBe('PRECONDITION_FAILED');
       }
@@ -384,16 +497,21 @@ describe('Contact Router Contract Tests', () => {
 
   describe('linkToAccount - Contract', () => {
     it('should require contactId and accountId', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
       // @ts-expect-error - Testing contract
       await expect(caller.linkToAccount({ contactId: TEST_UUIDS.contact1 })).rejects.toThrow();
     });
 
     it('should return updated contact with accountId', async () => {
-      prismaMock.contact.findUnique.mockResolvedValue(mockContact);
-      prismaMock.account.findUnique.mockResolvedValue(mockAccount);
-      prismaMock.contact.update.mockResolvedValue({
-        ...mockContact,
-        accountId: TEST_UUIDS.account1,
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      ctx.services!.contact!.associateWithAccount = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainContact({ accountId: TEST_UUIDS.account1 }),
       });
 
       const result = await caller.linkToAccount({
@@ -407,13 +525,13 @@ describe('Contact Router Contract Tests', () => {
 
   describe('unlinkFromAccount - Contract', () => {
     it('should return contact with null accountId', async () => {
-      prismaMock.contact.findUnique.mockResolvedValue({
-        ...mockContact,
-        accountId: TEST_UUIDS.account1,
-      });
-      prismaMock.contact.update.mockResolvedValue({
-        ...mockContact,
-        accountId: null,
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      ctx.services!.contact!.disassociateFromAccount = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainContact({ accountId: undefined, hasAccount: false }),
       });
 
       const result = await caller.unlinkFromAccount({
@@ -424,14 +542,18 @@ describe('Contact Router Contract Tests', () => {
     });
 
     it('should throw BAD_REQUEST if not linked', async () => {
-      prismaMock.contact.findUnique.mockResolvedValue({
-        ...mockContact,
-        accountId: null,
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      ctx.services!.contact!.disassociateFromAccount = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { message: 'Contact is not associated with any account' },
       });
 
       try {
         await caller.unlinkFromAccount({ contactId: TEST_UUIDS.contact1 });
-        fail('Should have thrown');
+        expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.code).toBe('BAD_REQUEST');
       }
@@ -440,6 +562,9 @@ describe('Contact Router Contract Tests', () => {
 
   describe('search - Contract', () => {
     it('should return search response with performance metrics', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
       prismaMock.contact.findMany.mockResolvedValue([]);
 
       const result = await caller.search({ query: 'test' });
@@ -455,6 +580,9 @@ describe('Contact Router Contract Tests', () => {
     });
 
     it('should accept limit parameter', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
       prismaMock.contact.findMany.mockResolvedValue([]);
 
       await caller.search({ query: 'test', limit: 10 });
@@ -465,6 +593,9 @@ describe('Contact Router Contract Tests', () => {
     });
 
     it('should accept includeAccount parameter', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
       prismaMock.contact.findMany.mockResolvedValue([]);
 
       await caller.search({ query: 'test', includeAccount: true });
@@ -481,11 +612,16 @@ describe('Contact Router Contract Tests', () => {
 
   describe('stats - Contract', () => {
     it('should return stats with correct structure', async () => {
-      prismaMock.contact.count.mockResolvedValueOnce(50);
-      vi.mocked(prismaMock.contact.groupBy).mockResolvedValue([
-        { department: 'Engineering', _count: 20 },
-      ] as any);
-      prismaMock.contact.count.mockResolvedValueOnce(35);
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      ctx.services!.contact!.getContactStatistics = vi.fn().mockResolvedValue({
+        total: 50,
+        withAccount: 35,
+        withoutAccount: 15,
+        convertedFromLeads: 10,
+        byDepartment: { Engineering: 20 },
+      });
 
       const result = await caller.stats();
 

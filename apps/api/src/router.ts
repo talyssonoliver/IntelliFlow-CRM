@@ -11,11 +11,16 @@ import { contactRouter } from './modules/contact/contact.router';
 import { accountRouter } from './modules/account/account.router';
 import { opportunityRouter } from './modules/opportunity/opportunity.router';
 import { taskRouter } from './modules/task/task.router';
+import { ticketRouter } from './modules/ticket/ticket.router';
+import { analyticsRouter } from './modules/analytics/analytics.router';
 import { healthRouter } from './modules/misc/health.router';
 import { systemRouter } from './modules/misc/system.router';
 import { timelineRouter } from './modules/misc/timeline.router';
 import subscriptionRouter from './shared/subscription-demo';
 import { appointmentsRouter } from './modules/legal/appointments.router';
+import { documentsRouter } from './modules/legal/documents.router';
+import { agentRouter } from './modules/agent/agent.router';
+import { auditRouter } from './modules/security/audit.router';
 
 /**
  * Main application router
@@ -36,9 +41,17 @@ import { appointmentsRouter } from './modules/legal/appointments.router';
  * Real-Time Features:
  * - subscriptions.* - WebSocket subscriptions for real-time updates
  *
+ * AI & Automation:
+ * - agent.*        - AI agent tools and approval workflow (IFC-139)
+ *
+ * Security & Compliance:
+ * - audit.*        - Audit logs and security events (IFC-098)
+ *
+ * Analytics & Reporting:
+ * - analytics.*    - Dashboard analytics and metrics
+ * - ticket.*       - Support ticket management
+ *
  * Future routers to add:
- * - ai.*           - AI/intelligence endpoints
- * - analytics.*    - Analytics and reporting
  * - workflow.*     - Workflow automation
  * - email.*        - Email integration
  */
@@ -49,9 +62,20 @@ export const appRouter = createTRPCRouter({
   account: accountRouter,
   opportunity: opportunityRouter,
   task: taskRouter,
+  ticket: ticketRouter,
+
+  // Analytics & Reporting
+  analytics: analyticsRouter,
 
   // Legal domain
   appointments: appointmentsRouter,
+  documents: documentsRouter,
+
+  // AI & Automation
+  agent: agentRouter,
+
+  // Security & Compliance
+  audit: auditRouter,
 
   // System utilities
   health: healthRouter,
@@ -60,12 +84,6 @@ export const appRouter = createTRPCRouter({
 
   // Real-time subscriptions
   subscriptions: subscriptionRouter,
-
-  // Future routers will be added here:
-  // ai: aiRouter,
-  // analytics: analyticsRouter,
-  // workflow: workflowRouter,
-  // email: emailRouter,
 });
 
 /**

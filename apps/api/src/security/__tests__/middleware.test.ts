@@ -53,8 +53,9 @@ vi.mock('../audit-logger', async () => {
 describe('Security Middleware', () => {
   let mockContext: Context;
   let mockPrisma: PrismaClient;
+  const TEST_TENANT_ID = 'test-tenant-123';
 
-  function createMockContext(user?: { userId: string; email: string; role: string }): Context {
+  function createMockContext(user?: { userId: string; email: string; role: string; tenantId: string }): Context {
     return {
       prisma: mockPrisma,
       user,
@@ -67,6 +68,9 @@ describe('Security Middleware', () => {
           }),
         },
       } as unknown as Request,
+      res: undefined,
+      services: {} as Context['services'],
+      adapters: {} as Context['adapters'],
     };
   }
 
@@ -76,6 +80,7 @@ describe('Security Middleware', () => {
       userId: 'user-123',
       email: 'user@example.com',
       role: 'ADMIN',
+      tenantId: 'test-tenant-123',
     });
     vi.clearAllMocks();
   });
@@ -412,6 +417,7 @@ describe('Security Middleware', () => {
         userId: 'user-123',
         email: 'user@example.com',
         role: 'USER',
+        tenantId: 'test-tenant-123',
       });
 
       await expect(
@@ -459,6 +465,7 @@ describe('Security Middleware', () => {
         userId: 'user-123',
         email: 'manager@example.com',
         role: 'MANAGER',
+        tenantId: TEST_TENANT_ID,
       });
 
       const result = await middleware({
@@ -477,6 +484,7 @@ describe('Security Middleware', () => {
         userId: 'user-123',
         email: 'sales@example.com',
         role: 'SALES_REP',
+        tenantId: TEST_TENANT_ID,
       });
 
       await expect(
@@ -498,6 +506,7 @@ describe('Security Middleware', () => {
           userId: 'user-123',
           email: 'manager@example.com',
           role: 'MANAGER',
+          tenantId: TEST_TENANT_ID,
         }),
         prisma: mockPrisma,
       };
@@ -519,6 +528,7 @@ describe('Security Middleware', () => {
           userId: 'user-123',
           email: 'user@example.com',
           role: 'USER',
+          tenantId: TEST_TENANT_ID,
         }),
         prisma: mockPrisma,
       };
@@ -560,6 +570,7 @@ describe('Security Middleware', () => {
         userId: 'user-123',
         email: 'user@example.com',
         role: 'USER',
+        tenantId: 'test-tenant-123',
       });
 
       const result = await middleware({
@@ -581,6 +592,7 @@ describe('Security Middleware', () => {
         userId: 'user-123',
         email: 'user@example.com',
         role: 'USER',
+        tenantId: 'test-tenant-123',
       });
 
       await expect(
@@ -618,6 +630,7 @@ describe('Security Middleware', () => {
         userId: 'manager-123',
         email: 'manager@example.com',
         role: 'MANAGER',
+        tenantId: 'test-tenant-123',
       });
 
       const result = await middleware({
@@ -640,6 +653,7 @@ describe('Security Middleware', () => {
         userId: 'manager-123',
         email: 'manager@example.com',
         role: 'MANAGER',
+        tenantId: 'test-tenant-123',
       });
 
       await expect(

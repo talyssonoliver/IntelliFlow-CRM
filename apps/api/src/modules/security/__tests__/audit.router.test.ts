@@ -18,16 +18,17 @@ import {
   createAdminContext,
   TEST_UUIDS,
 } from '../../../test/setup';
-import type { Context } from '../../../context';
+import type { BaseContext } from '../../../context';
 
 describe('Audit Router', () => {
   // Create a manager context
-  function createManagerContext(overrides?: Partial<Context>): Context {
+  function createManagerContext(overrides?: Partial<BaseContext>): BaseContext {
     return createTestContext({
       user: {
         userId: TEST_UUIDS.user1,
         email: 'manager@example.com',
         role: 'MANAGER',
+        tenantId: TEST_UUIDS.tenant,
       },
       ...overrides,
     });
@@ -37,6 +38,7 @@ describe('Audit Router', () => {
   const mockAuditLog = {
     id: 'audit-log-1',
     userId: TEST_UUIDS.user1,
+    tenantId: TEST_UUIDS.tenant,
     action: 'CREATE',
     entityType: 'lead',
     entityId: TEST_UUIDS.lead1,
@@ -510,9 +512,9 @@ describe('Audit Router', () => {
       const caller = auditRouter.createCaller(createAdminContext());
 
       prismaMock.auditLog.count.mockResolvedValue(mockStats.total);
-      prismaMock.auditLog.groupBy.mockResolvedValueOnce(mockStats.byAction as never);
-      prismaMock.auditLog.groupBy.mockResolvedValueOnce(mockStats.byResource as never);
-      prismaMock.auditLog.groupBy.mockResolvedValueOnce(mockStats.byUser as never);
+      (prismaMock.auditLog.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockStats.byAction);
+      (prismaMock.auditLog.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockStats.byResource);
+      (prismaMock.auditLog.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockStats.byUser);
 
       const result = await caller.getStats({});
 
@@ -548,7 +550,7 @@ describe('Audit Router', () => {
       const endDate = new Date('2025-01-31');
 
       prismaMock.auditLog.count.mockResolvedValue(50);
-      prismaMock.auditLog.groupBy.mockResolvedValue([] as never);
+      (prismaMock.auditLog.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
 
       await caller.getStats({ startDate, endDate });
 
@@ -566,7 +568,7 @@ describe('Audit Router', () => {
       const caller = auditRouter.createCaller(createAdminContext());
 
       prismaMock.auditLog.count.mockResolvedValue(mockStats.total);
-      prismaMock.auditLog.groupBy.mockResolvedValue([] as never);
+      (prismaMock.auditLog.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
 
       await caller.getStats({});
 

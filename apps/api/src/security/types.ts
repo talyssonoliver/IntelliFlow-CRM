@@ -130,30 +130,52 @@ export const ROLE_LEVELS: Record<RoleName, number> = {
  * Audit log entry for creating new audit records
  */
 export interface AuditLogInput {
+  // Multi-tenancy
+  tenantId: string;
+
+  // Event metadata
   eventType: string;
+  eventVersion?: string;
   eventId?: string;
+
+  // Actor information
   actorType?: ActorType;
   actorId?: string;
   actorEmail?: string;
   actorRole?: string;
+
+  // Resource information
   resourceType: ResourceType;
   resourceId: string;
   resourceName?: string;
+
+  // Action details
   action: AuditAction;
   actionResult?: ActionResult;
   actionReason?: string;
+
+  // Data changes
   beforeState?: Record<string, unknown>;
   afterState?: Record<string, unknown>;
   changedFields?: string[];
+
+  // Request context
   ipAddress?: string;
   userAgent?: string;
   requestId?: string;
   traceId?: string;
   sessionId?: string;
+
+  // Compliance
   dataClassification?: DataClassification;
+  retentionExpiresAt?: Date;
+
+  // Permission context
   requiredPermission?: string;
   permissionGranted?: boolean;
   permissionDeniedReason?: string;
+
+  // Additional metadata
   metadata?: Record<string, unknown>;
 }
 

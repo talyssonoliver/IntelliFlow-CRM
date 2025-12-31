@@ -8,13 +8,21 @@
  * - Domain events
  * - Agent actions (AI-initiated actions pending approval)
  *
+ * INTEGRATION: Uses DeadlineDomainService for deadline-related operations:
+ * - Business day calculations via DeadlineEngine
+ * - Holiday exclusions (UK bank holidays)
+ * - Calendar vs business day counting
+ * - Deadline rule validation
+ *
  * Task: IFC-159 - Timeline Enrichment with Documents, Communications, Agent Actions
+ * Task: IFC-147 - Deadline Aggregate with business day calculations
  * KPIs: Response <1s, unified chronological ordering, permissions enforced
  */
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure } from '../../trpc';
+import { DeadlineDomainService, deadlineDomainService } from '../../services';
 
 // =============================================================================
 // Timeline Event Types
@@ -614,7 +622,106 @@ export const timelineRouter = createTRPCRouter({
     }
 
     // =========================================================================
-    // 5. Sort all events chronologically
+    // 5. Fetch Document Events
+    // =========================================================================
+    if (shouldIncludeType('document') || shouldIncludeType('document_version')) {
+      const documentWhere: any = {
+        deleted_at: null,
+      };
+
+      if (effectiveOpportunityId) {
+        documentWhere.related_case_id = effectiveOpportunityId;
+      }
+
+      if (Object.keys(dateFilter).length > 0) {
+        documentWhere.created_at = dateFilter;
+      }
+
+      const documents = await ctx.prisma.caseDocument.findMany({
+        where: documentWhere,
+        orderBy: { created_at: sortOrder },
+        take: 50, // Limit to prevent performance issues
+      });
+
+      for (const doc of documents) {
+        // Add document creation event
+        if (shouldIncludeType('document')) {
+          events.push({
+            id: `document-${doc.id}`,
+            type: 'document',
+            title: doc.title,
+            description: doc.description,
+            timestamp: doc.created_at,
+            priority: null,
+            entityType: 'document',
+            entityId: doc.id,
+            document: {
+              documentId: doc.id,
+              filename: doc.title,
+              version: doc.version_major,
+              mimeType: doc.mime_type,
+            },
+            actor: {
+              id: doc.created_by,
+              name: null,
+              email: null,
+              avatarUrl: null,
+              isAgent: false,
+            },
+            isOverdue: false,
+            agentAction: null,
+            communication: null,
+            appointment: null,
+            task: null,
+            metadata: {
+              classification: doc.classification,
+              documentType: doc.document_type,
+              status: doc.status,
+              version: `${doc.version_major}.${doc.version_minor}.${doc.version_patch}`,
+            },
+          });
+        }
+
+        // Add version event for documents with parent
+        if (shouldIncludeType('document_version') && doc.parent_version_id) {
+          events.push({
+            id: `document-version-${doc.id}`,
+            type: 'document_version',
+            title: `${doc.title} - Version ${doc.version_major}.${doc.version_minor}.${doc.version_patch}`,
+            description: 'New version created',
+            timestamp: doc.updated_at,
+            priority: null,
+            entityType: 'document',
+            entityId: doc.id,
+            document: {
+              documentId: doc.id,
+              filename: doc.title,
+              version: doc.version_major,
+              mimeType: doc.mime_type,
+            },
+            actor: {
+              id: doc.updated_by,
+              name: null,
+              email: null,
+              avatarUrl: null,
+              isAgent: false,
+            },
+            isOverdue: false,
+            agentAction: null,
+            communication: null,
+            appointment: null,
+            task: null,
+            metadata: {
+              parentVersionId: doc.parent_version_id,
+              versionNumber: `${doc.version_major}.${doc.version_minor}.${doc.version_patch}`,
+            },
+          });
+        }
+      }
+    }
+
+    // =========================================================================
+    // 6. Sort all events chronologically
     // =========================================================================
     events.sort((a, b) => {
       const timeA = a.timestamp.getTime();
@@ -623,7 +730,7 @@ export const timelineRouter = createTRPCRouter({
     });
 
     // =========================================================================
-    // 6. Apply pagination
+    // 7. Apply pagination
     // =========================================================================
     const skip = (page - 1) * limit;
     const paginatedEvents = events.slice(skip, skip + limit);
@@ -681,6 +788,7 @@ export const timelineRouter = createTRPCRouter({
         overdueTasks,
         upcomingAppointments,
         pendingAgentActions,
+        totalDocuments,
       ] = await Promise.all([
         ctx.prisma.task.count({ where: taskWhere }),
         ctx.prisma.task.count({
@@ -709,6 +817,15 @@ export const timelineRouter = createTRPCRouter({
             status: 'PENDING',
           },
         }),
+        effectiveOpportunityId
+          ? ctx.prisma.caseDocument.count({
+              where: {
+                related_case_id: effectiveOpportunityId,
+                deleted_at: null,
+                is_latest_version: true,
+              },
+            })
+          : Promise.resolve(0),
       ]);
 
       const duration = performance.now() - startTime;
@@ -725,6 +842,9 @@ export const timelineRouter = createTRPCRouter({
         },
         agentActions: {
           pendingApproval: pendingAgentActions,
+        },
+        documents: {
+          total: totalDocuments,
         },
         queryDurationMs: duration,
       };
@@ -835,6 +955,148 @@ export const timelineRouter = createTRPCRouter({
         deadlines: deadlines.slice(0, input.limit),
         total: deadlines.length,
         queryDurationMs: duration,
+      };
+    }),
+
+  /**
+   * Compute a deadline using domain DeadlineEngine
+   *
+   * Uses DeadlineDomainService for:
+   * - Business day calculations
+   * - Holiday exclusions (UK bank holidays by default)
+   * - Calendar vs business day counting
+   *
+   * Task: IFC-147 - Deadline Aggregate with business day calculations
+   */
+  computeDeadline: protectedProcedure
+    .input(
+      z.object({
+        triggerDate: z.coerce.date(),
+        daysCount: z.number().min(1),
+        dayCountType: z.enum(['CALENDAR', 'BUSINESS']),
+        excludeHolidays: z.boolean().optional().default(true),
+        includeEndDay: z.boolean().optional().default(false),
+      })
+    )
+    .query(async ({ input }) => {
+      const startTime = performance.now();
+
+      // Use domain service for deadline computation
+      const computed = deadlineDomainService.computeDeadline({
+        triggerDate: input.triggerDate,
+        daysCount: input.daysCount,
+        dayCountType: input.dayCountType,
+        excludeHolidays: input.excludeHolidays,
+        includeEndDay: input.includeEndDay,
+      });
+
+      const duration = performance.now() - startTime;
+
+      if (!computed) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to compute deadline',
+        });
+      }
+
+      return {
+        dueDate: computed.dueDate,
+        triggerDate: computed.triggerDate,
+        calendarDaysCount: computed.calendarDaysCount,
+        businessDaysCount: computed.businessDaysCount,
+        holidaysExcluded: computed.holidaysExcluded,
+        weekendsExcluded: computed.weekendsExcluded,
+        computeDurationMs: duration,
+      };
+    }),
+
+  /**
+   * Check if a date is a business day
+   *
+   * Uses domain DeadlineEngine for business day validation
+   * considering weekends and UK bank holidays
+   */
+  isBusinessDay: protectedProcedure
+    .input(z.object({ date: z.coerce.date() }))
+    .query(async ({ input }) => {
+      const isBusinessDay = deadlineDomainService.isBusinessDay(input.date);
+      const isHoliday = deadlineDomainService.isHoliday(input.date);
+
+      return {
+        date: input.date,
+        isBusinessDay,
+        isHoliday,
+        isWeekend: input.date.getDay() === 0 || input.date.getDay() === 6,
+      };
+    }),
+
+  /**
+   * Get next business day from a given date
+   *
+   * Uses domain DeadlineEngine for proper business day calculation
+   */
+  getNextBusinessDay: protectedProcedure
+    .input(z.object({ date: z.coerce.date() }))
+    .query(async ({ input }) => {
+      const nextBusinessDay = deadlineDomainService.getNextBusinessDay(input.date);
+
+      return {
+        inputDate: input.date,
+        nextBusinessDay,
+        daysSkipped: Math.ceil(
+          (nextBusinessDay.getTime() - input.date.getTime()) / (1000 * 60 * 60 * 24)
+        ),
+      };
+    }),
+
+  /**
+   * Validate a deadline rule
+   *
+   * Uses domain DeadlineEngine to validate rule configuration
+   * and compute the resulting due date
+   */
+  validateDeadlineRule: protectedProcedure
+    .input(
+      z.object({
+        name: z.string().min(1),
+        daysCount: z.number().min(1),
+        dayCountType: z.enum(['CALENDAR', 'BUSINESS']),
+        trigger: z.enum([
+          'CASE_OPENED',
+          'CASE_FILED',
+          'DOCUMENT_RECEIVED',
+          'HEARING_SCHEDULED',
+          'MOTION_FILED',
+          'DISCOVERY_SERVED',
+          'CUSTOM',
+        ]),
+        excludeHolidays: z.boolean().optional().default(true),
+        includeEndDay: z.boolean().optional().default(false),
+        triggerDate: z.coerce.date().optional(),
+      })
+    )
+    .query(async ({ input }) => {
+      const startTime = performance.now();
+
+      const validation = deadlineDomainService.validateRule(
+        {
+          name: input.name,
+          daysCount: input.daysCount,
+          dayCountType: input.dayCountType,
+          trigger: input.trigger,
+          excludeHolidays: input.excludeHolidays,
+          includeEndDay: input.includeEndDay,
+        },
+        input.triggerDate
+      );
+
+      const duration = performance.now() - startTime;
+
+      return {
+        isValid: validation.isValid,
+        errors: validation.errors,
+        computedDueDate: validation.computedDueDate,
+        validationDurationMs: duration,
       };
     }),
 

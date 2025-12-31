@@ -8,6 +8,7 @@
  */
 
 import { z } from 'zod';
+import { leadStatusSchema, leadSourceSchema } from '@intelliflow/validators';
 
 /**
  * Tool action types for categorization and authorization
@@ -183,7 +184,8 @@ export interface AgentToolDefinition<TInput = unknown, TOutput = unknown> {
   actionType: AgentActionType;
   entityTypes: EntityType[];
   requiresApproval: boolean;
-  inputSchema: z.ZodType<TInput>;
+  // Allow Zod schemas with defaults (input type may differ from output type)
+  inputSchema: z.ZodType<TInput, z.ZodTypeDef, unknown>;
   execute: (
     input: TInput,
     context: AgentAuthContext
@@ -201,8 +203,8 @@ export interface AgentToolDefinition<TInput = unknown, TOutput = unknown> {
  */
 export const LeadSearchInputSchema = z.object({
   query: z.string().optional(),
-  status: z.array(z.enum(['NEW', 'CONTACTED', 'QUALIFIED', 'UNQUALIFIED', 'CONVERTED', 'LOST'])).optional(),
-  source: z.array(z.enum(['WEBSITE', 'REFERRAL', 'SOCIAL', 'EMAIL', 'COLD_CALL', 'EVENT', 'OTHER'])).optional(),
+  status: z.array(leadStatusSchema).optional(),
+  source: z.array(leadSourceSchema).optional(),
   minScore: z.number().min(0).max(100).optional(),
   maxScore: z.number().min(0).max(100).optional(),
   ownerId: z.string().optional(),

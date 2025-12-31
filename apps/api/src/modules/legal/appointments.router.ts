@@ -10,11 +10,17 @@
  *
  * Task: IFC-137 - Appointment Aggregate with conflict detection
  * KPIs: Conflict detection accuracy >95%, scheduling latency <=100ms
+ *
+ * INTEGRATION: Uses AppointmentDomainService for domain logic
+ * - ConflictDetector for sophisticated conflict detection
+ * - Buffer time handling
+ * - Recurrence pattern generation
  */
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure } from '../../trpc';
+import { AppointmentDomainService } from '../../services';
 
 // Zod schemas for appointment operations
 const appointmentTypeSchema = z.enum([
@@ -131,16 +137,37 @@ const listAppointmentsSchema = z.object({
 export const appointmentsRouter = createTRPCRouter({
   /**
    * Create a new appointment
-   * Includes conflict detection
+   * Includes domain-based validation and conflict detection
+   *
+   * Uses AppointmentDomainService for:
+   * - Input validation (time range, duration, buffer limits, title)
+   * - Recurrence validation
+   * - Sophisticated conflict detection via ConflictDetector
    */
   create: protectedProcedure.input(createAppointmentSchema).mutation(async ({ ctx, input }) => {
     const startTime = performance.now();
 
-    // Validate time range
-    if (input.startTime >= input.endTime) {
+    // Use domain service for input validation
+    const validation = AppointmentDomainService.validateInput({
+      title: input.title,
+      description: input.description,
+      startTime: input.startTime,
+      endTime: input.endTime,
+      appointmentType: input.appointmentType as any,
+      location: input.location,
+      organizerId: ctx.user.userId,
+      attendeeIds: input.attendeeIds,
+      linkedCaseIds: input.linkedCaseIds,
+      bufferMinutesBefore: input.bufferMinutesBefore,
+      bufferMinutesAfter: input.bufferMinutesAfter,
+      recurrence: input.recurrence as any,
+      reminderMinutes: input.reminderMinutes,
+    });
+
+    if (!validation.valid) {
       throw new TRPCError({
         code: 'BAD_REQUEST',
-        message: 'Start time must be before end time',
+        message: validation.errors.join('; '),
       });
     }
 
@@ -148,13 +175,8 @@ export const appointmentsRouter = createTRPCRouter({
     if (!input.forceOverrideConflicts) {
       const allAttendees = [ctx.user.userId, ...input.attendeeIds];
 
-      // Calculate effective time with buffers
-      const effectiveStart = new Date(
-        input.startTime.getTime() - input.bufferMinutesBefore * 60 * 1000
-      );
-      const effectiveEnd = new Date(input.endTime.getTime() + input.bufferMinutesAfter * 60 * 1000);
-
-      const conflicts = await ctx.prisma.appointment.findMany({
+      // Fetch existing appointments for conflict detection
+      const dbAppointments = await ctx.prisma.appointment.findMany({
         where: {
           AND: [
             {
@@ -163,30 +185,51 @@ export const appointmentsRouter = createTRPCRouter({
                 { attendees: { some: { userId: { in: allAttendees } } } },
               ],
             },
-            { startTime: { lt: effectiveEnd } },
-            { endTime: { gt: effectiveStart } },
             { status: { notIn: ['CANCELLED', 'NO_SHOW'] } },
           ],
         },
-        select: {
-          id: true,
-          title: true,
-          startTime: true,
-          endTime: true,
+        include: {
+          attendees: { select: { userId: true } },
         },
       });
 
-      if (conflicts.length > 0) {
+      // Convert to domain Appointments
+      const domainAppointments = AppointmentDomainService.toDomainAppointments(dbAppointments);
+
+      // Use domain service for sophisticated conflict detection
+      const conflictResult = AppointmentDomainService.checkConflicts(
+        {
+          startTime: input.startTime,
+          endTime: input.endTime,
+          attendeeIds: allAttendees,
+          bufferMinutesBefore: input.bufferMinutesBefore,
+          bufferMinutesAfter: input.bufferMinutesAfter,
+        },
+        domainAppointments
+      );
+
+      if (conflictResult.hasConflicts) {
+        // Get conflict details from database
+        const conflictDetails = await ctx.prisma.appointment.findMany({
+          where: { id: { in: conflictResult.conflicts.map((c) => c.appointmentId) } },
+          select: { id: true, title: true, startTime: true, endTime: true },
+        });
+
         throw new TRPCError({
           code: 'CONFLICT',
-          message: `Scheduling conflict detected with ${conflicts.length} appointment(s)`,
+          message: `Scheduling conflict detected with ${conflictResult.conflicts.length} appointment(s)`,
           cause: {
-            conflicts: conflicts.map((c) => ({
-              id: c.id,
-              title: c.title,
-              startTime: c.startTime,
-              endTime: c.endTime,
-            })),
+            conflicts: conflictResult.conflicts.map((c) => {
+              const details = conflictDetails.find((d) => d.id === c.appointmentId);
+              return {
+                id: c.appointmentId,
+                title: details?.title ?? 'Unknown',
+                startTime: details?.startTime ?? c.conflictStart,
+                endTime: details?.endTime ?? c.conflictEnd,
+                overlapMinutes: c.overlapMinutes,
+                conflictType: c.conflictType,
+              };
+            }),
           },
         });
       }
@@ -220,7 +263,7 @@ export const appointmentsRouter = createTRPCRouter({
     });
 
     const duration = performance.now() - startTime;
-    console.log(`[appointments.create] Scheduled in ${duration.toFixed(2)}ms`);
+    console.log(`[appointments.create] Domain-validated and scheduled in ${duration.toFixed(2)}ms`);
 
     return appointment;
   }),
@@ -347,6 +390,9 @@ export const appointmentsRouter = createTRPCRouter({
 
   /**
    * Reschedule an appointment
+   *
+   * Uses domain ConflictDetector for sophisticated conflict detection
+   * when checking the new time slot
    */
   reschedule: protectedProcedure.input(rescheduleSchema).mutation(async ({ ctx, input }) => {
     const startTime = performance.now();
@@ -379,51 +425,74 @@ export const appointmentsRouter = createTRPCRouter({
       });
     }
 
+    // Validate new time range
+    if (input.newStartTime >= input.newEndTime) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'New start time must be before new end time',
+      });
+    }
+
     // Check for conflicts if not overriding
     if (!input.forceOverrideConflicts) {
       const allAttendees = [existing.organizerId, ...existing.attendees.map((a) => a.userId)];
 
-      const effectiveStart = new Date(
-        input.newStartTime.getTime() - existing.bufferMinutesBefore * 60 * 1000
-      );
-      const effectiveEnd = new Date(
-        input.newEndTime.getTime() + existing.bufferMinutesAfter * 60 * 1000
-      );
-
-      const conflicts = await ctx.prisma.appointment.findMany({
+      // Fetch existing appointments for conflict detection
+      const dbAppointments = await ctx.prisma.appointment.findMany({
         where: {
           AND: [
-            { id: { not: input.id } },
             {
               OR: [
                 { organizerId: { in: allAttendees } },
                 { attendees: { some: { userId: { in: allAttendees } } } },
               ],
             },
-            { startTime: { lt: effectiveEnd } },
-            { endTime: { gt: effectiveStart } },
             { status: { notIn: ['CANCELLED', 'NO_SHOW'] } },
           ],
         },
-        select: {
-          id: true,
-          title: true,
-          startTime: true,
-          endTime: true,
+        include: {
+          attendees: { select: { userId: true } },
         },
       });
 
-      if (conflicts.length > 0) {
+      // Convert to domain Appointments
+      const domainAppointments = AppointmentDomainService.toDomainAppointments(dbAppointments);
+
+      // Use domain service for conflict detection, excluding the current appointment
+      const conflictResult = AppointmentDomainService.checkConflicts(
+        {
+          startTime: input.newStartTime,
+          endTime: input.newEndTime,
+          attendeeIds: allAttendees,
+          bufferMinutesBefore: existing.bufferMinutesBefore,
+          bufferMinutesAfter: existing.bufferMinutesAfter,
+          excludeAppointmentId: input.id,
+        },
+        domainAppointments
+      );
+
+      if (conflictResult.hasConflicts) {
+        // Get conflict details from database
+        const conflictDetails = await ctx.prisma.appointment.findMany({
+          where: { id: { in: conflictResult.conflicts.map((c) => c.appointmentId) } },
+          select: { id: true, title: true, startTime: true, endTime: true },
+        });
+
         throw new TRPCError({
           code: 'CONFLICT',
-          message: `Rescheduling conflict detected with ${conflicts.length} appointment(s)`,
+          message: `Rescheduling conflict detected with ${conflictResult.conflicts.length} appointment(s)`,
           cause: {
-            conflicts: conflicts.map((c) => ({
-              id: c.id,
-              title: c.title,
-              startTime: c.startTime,
-              endTime: c.endTime,
-            })),
+            conflicts: conflictResult.conflicts.map((c) => {
+              const details = conflictDetails.find((d) => d.id === c.appointmentId);
+              return {
+                id: c.appointmentId,
+                title: details?.title ?? 'Unknown',
+                startTime: details?.startTime ?? c.conflictStart,
+                endTime: details?.endTime ?? c.conflictEnd,
+                overlapMinutes: c.overlapMinutes,
+                conflictType: c.conflictType,
+              };
+            }),
           },
         });
       }
@@ -442,7 +511,7 @@ export const appointmentsRouter = createTRPCRouter({
     });
 
     const duration = performance.now() - startTime;
-    console.log(`[appointments.reschedule] Rescheduled in ${duration.toFixed(2)}ms`);
+    console.log(`[appointments.reschedule] Domain-validated reschedule in ${duration.toFixed(2)}ms`);
 
     return {
       appointment,
@@ -646,67 +715,78 @@ export const appointmentsRouter = createTRPCRouter({
   /**
    * Check for scheduling conflicts
    * Returns detailed conflict information
+   *
+   * Uses domain ConflictDetector for sophisticated conflict detection:
+   * - O(n) algorithm for performance
+   * - Proper buffer time handling
+   * - Conflict type classification (EXACT, PARTIAL, BUFFER)
    */
   checkConflicts: protectedProcedure.input(checkConflictsSchema).query(async ({ ctx, input }) => {
     const startTime = performance.now();
 
-    const effectiveStart = new Date(
-      input.startTime.getTime() - input.bufferMinutesBefore * 60 * 1000
+    // Fetch existing appointments for the attendees
+    const dbAppointments = await ctx.prisma.appointment.findMany({
+      where: {
+        AND: [
+          {
+            OR: [
+              { organizerId: { in: input.attendeeIds } },
+              { attendees: { some: { userId: { in: input.attendeeIds } } } },
+            ],
+          },
+          { status: { notIn: ['CANCELLED', 'NO_SHOW'] } },
+        ],
+      },
+      include: {
+        attendees: { select: { userId: true } },
+      },
+    });
+
+    // Convert to domain Appointments for ConflictDetector
+    const domainAppointments = AppointmentDomainService.toDomainAppointments(dbAppointments);
+
+    // Use domain service for conflict detection
+    const result = AppointmentDomainService.checkConflicts(
+      {
+        startTime: input.startTime,
+        endTime: input.endTime,
+        attendeeIds: input.attendeeIds,
+        bufferMinutesBefore: input.bufferMinutesBefore,
+        bufferMinutesAfter: input.bufferMinutesAfter,
+        excludeAppointmentId: input.excludeAppointmentId,
+      },
+      domainAppointments
     );
-    const effectiveEnd = new Date(input.endTime.getTime() + input.bufferMinutesAfter * 60 * 1000);
 
-    const where: any = {
-      AND: [
-        {
-          OR: [
-            { organizerId: { in: input.attendeeIds } },
-            { attendees: { some: { userId: { in: input.attendeeIds } } } },
-          ],
-        },
-        { startTime: { lt: effectiveEnd } },
-        { endTime: { gt: effectiveStart } },
-        { status: { notIn: ['CANCELLED', 'NO_SHOW'] } },
-      ],
-    };
-
-    if (input.excludeAppointmentId) {
-      where.AND.push({ id: { not: input.excludeAppointmentId } });
-    }
-
-    const conflicts = await ctx.prisma.appointment.findMany({
-      where,
+    // Map conflict IDs to appointment details
+    const conflictDetails = await ctx.prisma.appointment.findMany({
+      where: { id: { in: result.conflicts.map((c) => c.appointmentId) } },
       select: {
         id: true,
         title: true,
         startTime: true,
         endTime: true,
         appointmentType: true,
-        organizerId: true,
-        bufferMinutesBefore: true,
-        bufferMinutesAfter: true,
       },
     });
 
+    const conflictMap = new Map(conflictDetails.map((c) => [c.id, c]));
+
     const duration = performance.now() - startTime;
-    console.log(`[appointments.checkConflicts] Checked in ${duration.toFixed(2)}ms`);
+    console.log(`[appointments.checkConflicts] Domain-based check in ${duration.toFixed(2)}ms`);
 
     return {
-      hasConflicts: conflicts.length > 0,
-      conflicts: conflicts.map((c) => {
-        // Calculate overlap
-        const cEffectiveStart = new Date(c.startTime.getTime() - c.bufferMinutesBefore * 60 * 1000);
-        const cEffectiveEnd = new Date(c.endTime.getTime() + c.bufferMinutesAfter * 60 * 1000);
-        const overlapStart = Math.max(effectiveStart.getTime(), cEffectiveStart.getTime());
-        const overlapEnd = Math.min(effectiveEnd.getTime(), cEffectiveEnd.getTime());
-        const overlapMinutes = Math.round((overlapEnd - overlapStart) / (1000 * 60));
-
+      hasConflicts: result.hasConflicts,
+      conflicts: result.conflicts.map((c) => {
+        const details = conflictMap.get(c.appointmentId);
         return {
-          id: c.id,
-          title: c.title,
-          startTime: c.startTime,
-          endTime: c.endTime,
-          appointmentType: c.appointmentType,
-          overlapMinutes,
+          id: c.appointmentId,
+          title: details?.title ?? 'Unknown',
+          startTime: details?.startTime ?? c.conflictStart,
+          endTime: details?.endTime ?? c.conflictEnd,
+          appointmentType: details?.appointmentType ?? 'OTHER',
+          overlapMinutes: c.overlapMinutes,
+          conflictType: c.conflictType,
         };
       }),
       checkDurationMs: duration,
@@ -716,6 +796,8 @@ export const appointmentsRouter = createTRPCRouter({
   /**
    * Check availability for an attendee
    * Returns available time slots
+   *
+   * Uses domain ConflictDetector.checkAvailability for sophisticated slot finding
    */
   checkAvailability: protectedProcedure
     .input(checkAvailabilitySchema)
@@ -723,7 +805,7 @@ export const appointmentsRouter = createTRPCRouter({
       const startTime = performance.now();
 
       // Get all appointments for the attendee in the time range
-      const appointments = await ctx.prisma.appointment.findMany({
+      const dbAppointments = await ctx.prisma.appointment.findMany({
         where: {
           AND: [
             {
@@ -737,69 +819,25 @@ export const appointmentsRouter = createTRPCRouter({
             { status: { notIn: ['CANCELLED', 'NO_SHOW'] } },
           ],
         },
-        orderBy: { startTime: 'asc' },
-        select: {
-          startTime: true,
-          endTime: true,
-          bufferMinutesBefore: true,
-          bufferMinutesAfter: true,
+        include: {
+          attendees: { select: { userId: true } },
         },
       });
 
-      // Calculate available slots
-      const availableSlots: Array<{
-        startTime: Date;
-        endTime: Date;
-        durationMinutes: number;
-      }> = [];
+      // Convert to domain Appointments
+      const domainAppointments = AppointmentDomainService.toDomainAppointments(dbAppointments);
 
-      let currentStart = input.startTime;
-
-      for (const apt of appointments) {
-        const aptEffectiveStart = new Date(
-          apt.startTime.getTime() - apt.bufferMinutesBefore * 60 * 1000
-        );
-        const aptEffectiveEnd = new Date(
-          apt.endTime.getTime() + apt.bufferMinutesAfter * 60 * 1000
-        );
-
-        // Skip if outside our range
-        if (aptEffectiveEnd <= input.startTime || aptEffectiveStart >= input.endTime) {
-          continue;
-        }
-
-        // Check for gap before this appointment
-        if (currentStart < aptEffectiveStart) {
-          const slotEnd = new Date(Math.min(aptEffectiveStart.getTime(), input.endTime.getTime()));
-          const duration = Math.round((slotEnd.getTime() - currentStart.getTime()) / (1000 * 60));
-
-          if (duration >= input.minimumSlotMinutes) {
-            availableSlots.push({
-              startTime: new Date(currentStart),
-              endTime: slotEnd,
-              durationMinutes: duration,
-            });
-          }
-        }
-
-        // Move current start to after this appointment
-        currentStart = new Date(Math.max(currentStart.getTime(), aptEffectiveEnd.getTime()));
-      }
-
-      // Check for remaining time at the end
-      if (currentStart < input.endTime) {
-        const duration = Math.round(
-          (input.endTime.getTime() - currentStart.getTime()) / (1000 * 60)
-        );
-
-        if (duration >= input.minimumSlotMinutes) {
-          availableSlots.push({
-            startTime: new Date(currentStart),
-            endTime: new Date(input.endTime),
-            durationMinutes: duration,
-          });
-        }
-      }
+      // Use domain service for availability check
+      const availableSlots = AppointmentDomainService.checkAvailability(
+        {
+          attendeeId: input.attendeeId,
+          startTime: input.startTime,
+          endTime: input.endTime,
+          minimumSlotMinutes: input.minimumSlotMinutes,
+          includeBuffer: true,
+        },
+        domainAppointments
+      );
 
       const totalAvailableMinutes = availableSlots.reduce(
         (sum, slot) => sum + slot.durationMinutes,
@@ -807,7 +845,7 @@ export const appointmentsRouter = createTRPCRouter({
       );
 
       const duration = performance.now() - startTime;
-      console.log(`[appointments.checkAvailability] Checked in ${duration.toFixed(2)}ms`);
+      console.log(`[appointments.checkAvailability] Domain-based check in ${duration.toFixed(2)}ms`);
 
       return {
         availableSlots,
@@ -818,6 +856,11 @@ export const appointmentsRouter = createTRPCRouter({
 
   /**
    * Find next available slot
+   *
+   * Uses domain ConflictDetector.findNextAvailableSlot for sophisticated slot finding:
+   * - Working hours awareness (9 AM - 5 PM, weekdays)
+   * - Buffer time handling
+   * - Weekend exclusion
    */
   findNextSlot: protectedProcedure.input(findNextSlotSchema).query(async ({ ctx, input }) => {
     const startTime = performance.now();
@@ -826,7 +869,7 @@ export const appointmentsRouter = createTRPCRouter({
     searchEndDate.setDate(searchEndDate.getDate() + input.maxDaysAhead);
 
     // Get all appointments for the attendee in the search range
-    const appointments = await ctx.prisma.appointment.findMany({
+    const dbAppointments = await ctx.prisma.appointment.findMany({
       where: {
         AND: [
           {
@@ -840,92 +883,44 @@ export const appointmentsRouter = createTRPCRouter({
           { status: { notIn: ['CANCELLED', 'NO_SHOW'] } },
         ],
       },
-      orderBy: { startTime: 'asc' },
-      select: {
-        startTime: true,
-        endTime: true,
-        bufferMinutesBefore: true,
-        bufferMinutesAfter: true,
+      include: {
+        attendees: { select: { userId: true } },
       },
     });
 
-    const totalDuration =
-      input.durationMinutes + input.bufferMinutesBefore + input.bufferMinutesAfter;
-    let currentDate = new Date(input.startFrom);
+    // Convert to domain Appointments
+    const domainAppointments = AppointmentDomainService.toDomainAppointments(dbAppointments);
 
-    // Find next available slot during working hours (9 AM - 5 PM, weekdays)
-    const workStart = 9;
-    const workEnd = 17;
-
-    while (currentDate < searchEndDate) {
-      const hour = currentDate.getHours();
-      const dayOfWeek = currentDate.getDay();
-
-      // Skip weekends
-      if (dayOfWeek === 0 || dayOfWeek === 6) {
-        currentDate.setDate(currentDate.getDate() + 1);
-        currentDate.setHours(workStart, 0, 0, 0);
-        continue;
-      }
-
-      // Set to working hours
-      if (hour < workStart) {
-        currentDate.setHours(workStart, 0, 0, 0);
-      } else if (hour >= workEnd) {
-        currentDate.setDate(currentDate.getDate() + 1);
-        currentDate.setHours(workStart, 0, 0, 0);
-        continue;
-      }
-
-      // Calculate end of proposed slot
-      const proposedEnd = new Date(currentDate.getTime() + totalDuration * 60 * 1000);
-
-      // Check if it's within working hours
-      if (
-        proposedEnd.getHours() > workEnd ||
-        (proposedEnd.getHours() === workEnd && proposedEnd.getMinutes() > 0)
-      ) {
-        currentDate.setDate(currentDate.getDate() + 1);
-        currentDate.setHours(workStart, 0, 0, 0);
-        continue;
-      }
-
-      // Check for conflicts
-      let hasConflict = false;
-      for (const apt of appointments) {
-        const aptEffectiveStart = new Date(
-          apt.startTime.getTime() - apt.bufferMinutesBefore * 60 * 1000
-        );
-        const aptEffectiveEnd = new Date(
-          apt.endTime.getTime() + apt.bufferMinutesAfter * 60 * 1000
-        );
-
-        if (currentDate < aptEffectiveEnd && proposedEnd > aptEffectiveStart) {
-          hasConflict = true;
-          // Move past this appointment
-          currentDate = new Date(aptEffectiveEnd);
-          break;
-        }
-      }
-
-      if (!hasConflict) {
-        const duration = performance.now() - startTime;
-        console.log(`[appointments.findNextSlot] Found in ${duration.toFixed(2)}ms`);
-
-        return {
-          slot: {
-            startTime: new Date(currentDate),
-            endTime: proposedEnd,
-            durationMinutes: totalDuration,
-          },
-          searchDurationMs: duration,
-        };
-      }
-    }
+    // Use domain service to find next available slot
+    const slot = AppointmentDomainService.findNextAvailableSlot(
+      {
+        attendeeId: input.attendeeId,
+        startFrom: input.startFrom,
+        durationMinutes: input.durationMinutes,
+        maxDaysAhead: input.maxDaysAhead,
+        bufferMinutesBefore: input.bufferMinutesBefore,
+        bufferMinutesAfter: input.bufferMinutesAfter,
+        workingHoursStart: 9,
+        workingHoursEnd: 17,
+      },
+      domainAppointments
+    );
 
     const duration = performance.now() - startTime;
-    console.log(`[appointments.findNextSlot] No slot found in ${duration.toFixed(2)}ms`);
 
+    if (slot) {
+      console.log(`[appointments.findNextSlot] Domain-based found in ${duration.toFixed(2)}ms`);
+      return {
+        slot: {
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          durationMinutes: slot.durationMinutes,
+        },
+        searchDurationMs: duration,
+      };
+    }
+
+    console.log(`[appointments.findNextSlot] No slot found in ${duration.toFixed(2)}ms`);
     return {
       slot: null,
       searchDurationMs: duration,

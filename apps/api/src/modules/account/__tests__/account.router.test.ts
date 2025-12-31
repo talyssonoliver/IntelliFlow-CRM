@@ -4,6 +4,8 @@ import { TEST_UUIDS } from '../../../test/setup';
  *
  * Comprehensive tests for all account router procedures:
  * - create, getById, list, update, delete, stats
+ *
+ * Following hexagonal architecture - mocks services for business logic procedures.
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -19,8 +21,28 @@ import {
   mockOpportunity,
 } from '../../../test/setup';
 
+/**
+ * Create a mock domain account for service responses
+ */
+const createMockDomainAccount = (overrides: Record<string, unknown> = {}) => ({
+  id: { value: TEST_UUIDS.account1 },
+  name: 'TechCorp Inc',
+  website: 'https://techcorp.example.com',
+  industry: 'Technology',
+  employees: 200,
+  revenue: 5000000,
+  description: 'A technology company',
+  ownerId: TEST_UUIDS.user1,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  getDomainEvents: () => [],
+  clearDomainEvents: () => {},
+  ...overrides,
+});
+
 describe('Account Router', () => {
-  const caller = accountRouter.createCaller(createTestContext());
+  const ctx = createTestContext();
+  const caller = accountRouter.createCaller(ctx);
 
   beforeEach(() => {
     // Reset is handled by setup.ts
@@ -36,21 +58,24 @@ describe('Account Router', () => {
         employees: 100,
       };
 
-      prismaMock.account.create.mockResolvedValue({
-        ...mockAccount,
-        ...input,
-        revenue: new Prisma.Decimal(input.revenue),
+      const mockDomainAccount = createMockDomainAccount({
+        name: input.name,
+        website: input.website,
+        industry: input.industry,
+        revenue: input.revenue,
+        employees: input.employees,
+      });
+
+      ctx.services!.account!.createAccount = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainAccount,
       });
 
       const result = await caller.create(input);
 
       expect(result.name).toBe(input.name);
-      expect(prismaMock.account.create).toHaveBeenCalledWith({
-        data: {
-          ...input,
-          ownerId: TEST_UUIDS.user1,
-        },
-      });
+      expect(ctx.services!.account!.createAccount).toHaveBeenCalled();
     });
 
     it('should create account with minimal data', async () => {
@@ -58,48 +83,67 @@ describe('Account Router', () => {
         name: 'Minimal Corp',
       };
 
-      prismaMock.account.create.mockResolvedValue({
-        ...mockAccount,
-        ...input,
+      const mockDomainAccount = createMockDomainAccount({
+        name: input.name,
+        website: null,
+        industry: null,
+        employees: null,
+        revenue: null,
+      });
+
+      ctx.services!.account!.createAccount = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainAccount,
       });
 
       const result = await caller.create(input);
 
       expect(result.name).toBe(input.name);
     });
+
+    it('should throw CONFLICT for duplicate account name', async () => {
+      const input = {
+        name: 'Existing Corp',
+      };
+
+      ctx.services!.account!.createAccount = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: `Account with name "${input.name}" already exists` },
+      });
+
+      await expect(caller.create(input)).rejects.toThrow(
+        expect.objectContaining({
+          code: 'CONFLICT',
+        })
+      );
+    });
   });
 
   describe('getById', () => {
     it('should return account with related data', async () => {
-      const accountWithRelations = {
-        ...mockAccount,
-        owner: mockUser,
-        contacts: [mockContact],
-        opportunities: [mockOpportunity],
-        _count: {
-          contacts: 5,
-          opportunities: 3,
-        },
-      };
+      const mockDomainAccount = createMockDomainAccount();
 
-      prismaMock.account.findUnique.mockResolvedValue(accountWithRelations);
+      ctx.services!.account!.getAccountById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainAccount,
+      });
 
       const result = await caller.getById({ id: TEST_UUIDS.account1 });
 
-      expect(result).toMatchObject(accountWithRelations);
-      expect(prismaMock.account.findUnique).toHaveBeenCalledWith({
-        where: { id: TEST_UUIDS.account1 },
-        include: expect.objectContaining({
-          owner: expect.any(Object),
-          contacts: expect.any(Object),
-          opportunities: expect.any(Object),
-          _count: expect.any(Object),
-        }),
-      });
+      expect(result.id).toBe(TEST_UUIDS.account1);
+      expect(result.name).toBe('TechCorp Inc');
+      expect(ctx.services!.account!.getAccountById).toHaveBeenCalledWith(TEST_UUIDS.account1);
     });
 
     it('should throw NOT_FOUND for non-existent account', async () => {
-      prismaMock.account.findUnique.mockResolvedValue(null);
+      ctx.services!.account!.getAccountById = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: `Account not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       await expect(caller.getById({ id: TEST_UUIDS.nonExistent })).rejects.toThrow(
         expect.objectContaining({
@@ -110,6 +154,7 @@ describe('Account Router', () => {
   });
 
   describe('list', () => {
+    // list still uses Prisma for complex queries with joins
     it('should list accounts with pagination', async () => {
       const accounts = [mockAccount, { ...mockAccount, id: 'account-2', name: 'Corp 2' }];
       const accountsWithRelations = accounts.map((account) => ({
@@ -197,27 +242,32 @@ describe('Account Router', () => {
 
   describe('update', () => {
     it('should update account with valid data', async () => {
-      prismaMock.account.findUnique.mockResolvedValue(mockAccount);
-
-      const updated = {
-        ...mockAccount,
-        name: 'Updated Corp',
-        revenue: new Prisma.Decimal(2000000),
-      };
-      prismaMock.account.update.mockResolvedValue(updated);
-
-      const result = await caller.update({
-        id: TEST_UUIDS.account1,
+      const mockDomainAccount = createMockDomainAccount({
         name: 'Updated Corp',
         revenue: 2000000,
       });
 
+      ctx.services!.account!.updateAccountInfo = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainAccount,
+      });
+
+      const result = await caller.update({
+        id: TEST_UUIDS.account1,
+        name: 'Updated Corp',
+      });
+
       expect(result.name).toBe('Updated Corp');
-      expect(Number(result.revenue)).toBe(2000000);
+      expect(ctx.services!.account!.updateAccountInfo).toHaveBeenCalled();
     });
 
     it('should throw NOT_FOUND when updating non-existent account', async () => {
-      prismaMock.account.findUnique.mockResolvedValue(null);
+      ctx.services!.account!.updateAccountInfo = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: `Account not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       await expect(caller.update({ id: TEST_UUIDS.nonExistent, name: 'Test' })).rejects.toThrow(
         expect.objectContaining({
@@ -225,52 +275,73 @@ describe('Account Router', () => {
         })
       );
     });
+
+    it('should throw CONFLICT when updating to duplicate name', async () => {
+      ctx.services!.account!.updateAccountInfo = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: 'Account with name "Existing Corp" already exists' },
+      });
+
+      await expect(caller.update({ id: TEST_UUIDS.account1, name: 'Existing Corp' })).rejects.toThrow(
+        expect.objectContaining({
+          code: 'CONFLICT',
+        })
+      );
+    });
   });
 
   describe('delete', () => {
     it('should delete account without related records', async () => {
-      prismaMock.account.findUnique.mockResolvedValue({
-        ...mockAccount,
-        _count: { contacts: 0, opportunities: 0 },
-      } as any);
-      prismaMock.account.delete.mockResolvedValue(mockAccount);
+      ctx.services!.account!.deleteAccount = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: undefined,
+      });
 
       const result = await caller.delete({ id: TEST_UUIDS.account1 });
 
       expect(result.success).toBe(true);
       expect(result.id).toBe(TEST_UUIDS.account1);
+      expect(ctx.services!.account!.deleteAccount).toHaveBeenCalledWith(TEST_UUIDS.account1);
     });
 
     it('should throw PRECONDITION_FAILED if account has contacts', async () => {
-      prismaMock.account.findUnique.mockResolvedValue({
-        ...mockAccount,
-        _count: { contacts: 5, opportunities: 0 },
-      } as any);
+      ctx.services!.account!.deleteAccount = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: 'Cannot delete account with 5 associated contacts. Reassign or delete contacts first.' },
+      });
 
       await expect(caller.delete({ id: TEST_UUIDS.account1 })).rejects.toThrow(
         expect.objectContaining({
           code: 'PRECONDITION_FAILED',
-          message: expect.stringContaining('5 contacts'),
+          message: expect.stringContaining('contacts'),
         })
       );
     });
 
-    it('should throw PRECONDITION_FAILED if account has opportunities', async () => {
-      prismaMock.account.findUnique.mockResolvedValue({
-        ...mockAccount,
-        _count: { contacts: 0, opportunities: 2 },
-      } as any);
+    it('should throw PRECONDITION_FAILED if account has active opportunities', async () => {
+      ctx.services!.account!.deleteAccount = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: 'Cannot delete account with 2 active opportunities. Close or reassign them first.' },
+      });
 
       await expect(caller.delete({ id: TEST_UUIDS.account1 })).rejects.toThrow(
         expect.objectContaining({
           code: 'PRECONDITION_FAILED',
-          message: expect.stringContaining('2 opportunities'),
+          message: expect.stringContaining('opportunities'),
         })
       );
     });
 
     it('should throw NOT_FOUND for non-existent account', async () => {
-      prismaMock.account.findUnique.mockResolvedValue(null);
+      ctx.services!.account!.deleteAccount = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: `Account not found: ${TEST_UUIDS.nonExistent}` },
+      });
 
       await expect(caller.delete({ id: TEST_UUIDS.nonExistent })).rejects.toThrow(
         expect.objectContaining({
@@ -281,6 +352,7 @@ describe('Account Router', () => {
   });
 
   describe('stats', () => {
+    // stats still uses Prisma for aggregations
     it('should return account statistics', async () => {
       prismaMock.account.count.mockResolvedValueOnce(100); // total
       vi.mocked(prismaMock.account.groupBy).mockResolvedValue([
