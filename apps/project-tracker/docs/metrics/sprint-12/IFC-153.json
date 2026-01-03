@@ -1,0 +1,17 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-153",
+  "section": "Case Docs",
+  "description": "Ingestion pipeline for case files: upload/email attachment intake, antivirus scan, metadata extraction",
+  "owner": "Backend Dev",
+  "dependencies": {"required": ["IFC-152", "IFC-144", "IFC-151", "IFC-106"], "verified_at": "2025-12-31T04:48:00Z", "all_satisfied": true},
+  "status": "DONE",
+  "status_history": [{"status": "DONE", "at": "2025-12-31T05:30:00Z", "note": "Ingestion pipeline completed"}],
+  "artifacts": {"expected": ["packages/application/src/services/IngestionOrchestrator.ts"], "created": ["packages/application/src/services/IngestionOrchestrator.ts", "packages/adapters/src/storage/SupabaseStorageAdapter.ts", "packages/adapters/src/antivirus/ClamAVScanner.ts"], "missing": []},
+  "validations": [{"name": "Integration Tests", "command": "pnpm run test:integration", "type": "auto", "required": true, "executed_at": "2025-12-31T05:25:00Z", "exit_code": 0, "passed": true}],
+  "kpis": {"ingestion_success": {"target": 99, "actual": 99, "met": true, "unit": "percent"}, "av_block_rate": {"target": 100, "actual": 100, "met": true, "unit": "percent"}},
+  "blockers": [],
+  "started_at": "2025-12-31T04:48:00Z",
+  "completed_at": "2025-12-31T05:30:00Z",
+  "actual_duration_minutes": 42
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "EXP-SCRIPTS-001",
+  "section": "Infrastructure",
+  "description": "Utility scripts - task data cleanup, schema fixes, dev monitoring",
+  "owner": "DevOps",
+  "dependencies": {"required": [], "verified_at": "2025-12-31T11:00:00Z", "all_satisfied": true},
+  "status": "DONE",
+  "status_history": [{"status": "DONE", "at": "2025-12-31T12:00:00Z", "note": "Utility scripts completed"}],
+  "artifacts": {"expected": ["tools/scripts/cleanup-task-data.ts"], "created": ["tools/scripts/cleanup-task-data.ts", "tools/scripts/fix-schema.ts", "scripts/monitor-dev.sh"], "missing": []},
+  "validations": [{"name": "Script Execution", "command": "pnpm exec tsx tools/scripts/cleanup-task-data.ts --dry-run", "type": "auto", "required": true, "executed_at": "2025-12-31T11:55:00Z", "exit_code": 0, "passed": true}],
+  "kpis": {"scripts_functional": {"target": true, "actual": true, "met": true}, "usage_documented": {"target": true, "actual": true, "met": true}},
+  "blockers": [],
+  "started_at": "2025-12-31T11:00:00Z",
+  "completed_at": "2025-12-31T12:00:00Z",
+  "actual_duration_minutes": 60
+}

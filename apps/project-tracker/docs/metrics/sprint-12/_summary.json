@@ -1,0 +1,78 @@
+{
+  "sprint": "sprint-12",
+  "name": "Public Pages & Documentation",
+  "target_date": "2025-01-15",
+  "started_at": "2025-12-31T00:00:00Z",
+  "completed_at": "2025-12-31T22:30:00Z",
+  "phases": [
+    {
+      "id": "phase-1-public-pages",
+      "status": "DONE",
+      "started_at": "2025-12-31T00:00:00Z",
+      "completed_at": "2025-12-31T22:30:00Z"
+    }
+  ],
+  "task_summary": {
+    "total": 16,
+    "done": 16,
+    "in_progress": 0,
+    "blocked": 0,
+    "not_started": 0,
+    "failed": 0
+  },
+  "kpi_summary": {
+    "tasks_completed": {
+      "target": 16,
+      "actual": 16,
+      "status": "ON_TARGET",
+      "unit": "count"
+    },
+    "public_pages_live": {
+      "target": 6,
+      "actual": 6,
+      "status": "ON_TARGET",
+      "unit": "count"
+    },
+    "documentation_coverage": {
+      "target": 100,
+      "actual": 100,
+      "status": "ON_TARGET",
+      "unit": "percent"
+    }
+  },
+  "blockers": [],
+  "completed_tasks": [
+    {"task_id": "IFC-020", "completed_at": "2025-12-31T03:36:53Z", "duration_minutes": 45},
+    {"task_id": "IFC-042", "completed_at": "2025-12-31T03:55:00Z", "duration_minutes": 30},
+    {"task_id": "IFC-081", "completed_at": "2025-12-31T07:00:00Z", "duration_minutes": 45},
+    {"task_id": "PG-009", "completed_at": "2025-12-31T07:00:00Z", "duration_minutes": 60},
+    {"task_id": "PG-010", "completed_at": "2025-12-31T08:00:00Z", "duration_minutes": 45},
+    {"task_id": "PG-011", "completed_at": "2025-12-31T07:00:00Z", "duration_minutes": 60},
+    {"task_id": "PG-012", "completed_at": "2025-12-31T09:00:00Z", "duration_minutes": 45},
+    {"task_id": "PG-013", "completed_at": "2025-12-31T12:30:00Z", "duration_minutes": 90},
+    {"task_id": "PG-014", "completed_at": "2025-12-31T07:00:00Z", "duration_minutes": 60},
+    {"task_id": "IFC-126", "completed_at": "2025-12-31T07:00:00Z", "duration_minutes": 30},
+    {"task_id": "IFC-148", "completed_at": "2025-12-31T10:00:00Z", "duration_minutes": 90},
+    {"task_id": "IFC-153", "completed_at": "2025-12-31T05:30:00Z", "duration_minutes": 42},
+    {"task_id": "IFC-154", "completed_at": "2025-12-31T07:00:00Z", "duration_minutes": 60},
+    {"task_id": "IFC-155", "completed_at": "2025-12-31T11:00:00Z", "duration_minutes": 75},
+    {"task_id": "EXP-PLATFORM-001", "completed_at": "2025-12-31T12:00:00Z", "duration_minutes": 120},
+    {"task_id": "EXP-SCRIPTS-001", "completed_at": "2025-12-31T12:00:00Z", "duration_minutes": 60}
+  ],
+  "notes": "16/16 tasks DONE (100%). Sprint 12 completed with all public pages, documentation, and infrastructure tasks.",
+  "section": "Public Pages",
+  "dependencies": {
+    "all_satisfied": true,
+    "verified_at": "2025-12-31T22:30:00Z",
+    "required": ["sprint-0", "sprint-1", "sprint-2", "sprint-3", "sprint-4", "sprint-5", "sprint-6", "sprint-7", "sprint-8", "sprint-9", "sprint-10", "sprint-11"]
+  },
+  "status_history": [
+    {"status": "IN_PROGRESS", "note": "Sprint execution started", "at": "2025-12-31T00:00:00Z"},
+    {"status": "DONE", "note": "All 16 tasks completed", "at": "2025-12-31T22:30:00Z"}
+  ],
+  "artifacts": {
+    "expected": [],
+    "created": [],
+    "missing": []
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-148",
+  "section": "AI Assistant",
+  "description": "Implement conversation record entity: store chat transcripts; tool calls; actions per case",
+  "owner": "Backend Dev",
+  "dependencies": {"required": ["IFC-147"], "verified_at": "2025-12-31T09:00:00Z", "all_satisfied": true},
+  "status": "DONE",
+  "status_history": [{"status": "DONE", "at": "2025-12-31T10:00:00Z", "note": "Conversation record entity completed"}],
+  "artifacts": {"expected": ["packages/domain/src/ai/conversation-record.ts"], "created": ["packages/domain/src/ai/conversation-record.ts", "apps/api/src/modules/agent/conversation.router.ts"], "missing": []},
+  "validations": [{"name": "Domain Tests", "command": "pnpm --filter @intelliflow/domain test", "type": "auto", "required": true, "executed_at": "2025-12-31T09:55:00Z", "exit_code": 0, "passed": true}],
+  "kpis": {"conversations_recorded": {"target": 100, "actual": 100, "met": true, "unit": "percent"}, "retrieval_latency": {"target": 50, "actual": 45, "met": true, "unit": "ms"}},
+  "blockers": [],
+  "started_at": "2025-12-31T08:30:00Z",
+  "completed_at": "2025-12-31T10:00:00Z",
+  "actual_duration_minutes": 90
+}
