@@ -15,8 +15,12 @@ playwright-report/
 # Keep Sprint artifact outputs under artifacts/
 !artifacts/coverage/
 !artifacts/test-results/
-!artifacts/test-results/**
 artifacts/coverage/.tmp/
+
+# Playwright auto-generated outputs (ephemeral - not tracked in Sprint Plan)
+# These are regenerated on each test run and should not pollute git history
+artifacts/test-results/playwright-results.json
+artifacts/test-results/playwright-junit.xml
 
 # Coverage: keep only data files, ignore generated HTML reports
 artifacts/coverage/**/*.html
@@ -160,6 +164,11 @@ artifacts/reports/sprint-runs/
 # Security scan reports (contain git author emails)
 artifacts/reports/security/gitleaks-report.json
 
+# Code analysis reports (generated, do not commit)
+artifacts/reports/code-analysis/knip-report.json
+artifacts/reports/code-analysis/latest.json
+artifacts/reports/code-analysis/depcheck-report.json
+
 # Temporary and backup files
 **/*.tmp
 **/*.bak
@@ -229,3 +238,12 @@ packages/*/coverage/
 
 # Vitest cache files
 packages/*/node_modules/.vite/
+apps/api/.env
+
+# ============================================
+# Runtime Artifacts - Added 2026-01-03
+# ============================================
+
+# Ignore artifacts/logs/ and artifacts/attestations/ to reduce git status noise
+artifacts/logs/
+artifacts/attestations/
