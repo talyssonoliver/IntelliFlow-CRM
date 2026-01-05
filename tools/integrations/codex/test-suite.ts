@@ -54,6 +54,12 @@ interface ReviewResult {
     security_score: boolean;
     ddd_compliance: boolean;
   };
+  metadata?: {
+    model: string;
+    tokens_used: number;
+    cost_estimate: number;
+    timestamp: string;
+  };
 }
 
 // Mock Codex CLI Client
@@ -89,6 +95,12 @@ class CodexClient {
         complexity_score: 8,
         security_score: true,
         ddd_compliance: true,
+      },
+      metadata: {
+        model: 'gpt-4',
+        tokens_used: 150,
+        cost_estimate: 0.0045,
+        timestamp: new Date().toISOString(),
       },
     };
   }
@@ -459,7 +471,7 @@ function processData(data: any) {
     it('should track token usage', async () => {
       const code = 'const x = 1';
 
-      const result = (await client.reviewCode(code)) as any;
+      const result = await client.reviewCode(code);
 
       expect(result.metadata?.tokens_used).toBeGreaterThan(0);
     });
@@ -467,7 +479,7 @@ function processData(data: any) {
     it('should estimate costs', async () => {
       const code = 'const x = 1';
 
-      const result = (await client.reviewCode(code)) as any;
+      const result = await client.reviewCode(code);
 
       expect(result.metadata?.cost_estimate).toBeGreaterThan(0);
     });
