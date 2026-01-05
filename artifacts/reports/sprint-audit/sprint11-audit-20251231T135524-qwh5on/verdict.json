@@ -1,0 +1,15 @@
+{
+  "run_id": "sprint11-audit-20251231T135524-qwh5on",
+  "sprint": 11,
+  "verdict": "FAIL",
+  "passed": false,
+  "generated_at": "2025-12-31T13:55:28.055Z",
+  "summary": {
+    "total": 15,
+    "audited": 15,
+    "passed": 0,
+    "failed": 15,
+    "needs_human": 0
+  },
+  "blocking_issues_count": 32
+}

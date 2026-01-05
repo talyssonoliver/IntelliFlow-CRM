@@ -1,0 +1,48 @@
+{
+  "$schema": "../schemas/sprint-audit-report.schema.json",
+  "schema_version": "1.0.0",
+  "run_id": "sprint11-audit-20251231T165719-snukz9",
+  "sprint": 11,
+  "generated_at": "2025-12-31T16:57:24.269Z",
+  "attestor": "sprint-completion-auditor",
+  "verdict": "PASS",
+  "config": {
+    "strictMode": false,
+    "skipValidations": false
+  },
+  "summary": {
+    "totalTasks": 15,
+    "completedTasks": 0,
+    "auditedTasks": 0,
+    "passedTasks": 0,
+    "failedTasks": 0,
+    "needsHumanTasks": 0
+  },
+  "attestation_summary": {
+    "by_verdict": {
+      "complete": 0,
+      "incomplete": 0,
+      "partial": 0,
+      "blocked": 0,
+      "needs_human": 0,
+      "missing": 0
+    },
+    "debt_items_created": 0,
+    "review_queue_items": 0
+  },
+  "evidence_summary": {
+    "artifactsVerified": 0,
+    "artifactsMissing": 0,
+    "artifactsEmpty": 0,
+    "validationsPassed": 0,
+    "validationsFailed": 0,
+    "kpisMet": 0,
+    "kpisMissed": 0,
+    "placeholdersFound": 0,
+    "totalCodebasePlaceholders": 495
+  },
+  "artifact_hashes": {},
+  "task_results": [],
+  "blocking_issues": [],
+  "duration_seconds": 4.923
+}

@@ -1,0 +1,2613 @@
+{
+  "$schema": "../schemas/sprint-audit-report.schema.json",
+  "schema_version": "1.0.0",
+  "run_id": "sprint11-audit-20251231T135524-qwh5on",
+  "sprint": 11,
+  "generated_at": "2025-12-31T13:55:28.055Z",
+  "attestor": "sprint-completion-auditor",
+  "verdict": "FAIL",
+  "config": {
+    "strictMode": false,
+    "skipValidations": true
+  },
+  "summary": {
+    "totalTasks": 15,
+    "completedTasks": 15,
+    "auditedTasks": 15,
+    "passedTasks": 0,
+    "failedTasks": 15,
+    "needsHumanTasks": 0
+  },
+  "attestation_summary": {
+    "by_verdict": {
+      "complete": 0,
+      "incomplete": 15,
+      "partial": 0,
+      "blocked": 0,
+      "needs_human": 0,
+      "missing": 0
+    },
+    "debt_items_created": 15,
+    "review_queue_items": 0
+  },
+  "evidence_summary": {
+    "artifactsVerified": 36,
+    "artifactsMissing": 32,
+    "artifactsEmpty": 0,
+    "validationsPassed": 0,
+    "validationsFailed": 0,
+    "kpisMet": 0,
+    "kpisMissed": 0,
+    "placeholdersFound": 20,
+    "totalCodebasePlaceholders": 485
+  },
+  "artifact_hashes": {
+    "artifacts/misc/audit-trail-test.json": "678ab3deacff1d07beb334aa8d8f5b0d79df3ef8b6fdf4f095e2cd44824614a5",
+    "apps/web/src/app/(public)/page.tsx": "8fe72804ce9c22170552532cb7660fd3646eed4fb27e810156a39fabc51bcfc1",
+    "apps/web/src/app/(public)/loading.tsx": "1524a4e7052feb9d9604ef0b75c84c65e83a528b17fc585603ef028d5690b9aa",
+    "apps/web/src/app/(public)/error.tsx": "859dc8842cd8081b08f858fdc3b2076b6c890b50403a0c419de7ae20917924d7",
+    "artifacts/misc/seo-meta.json": "56f7f61c44b5e61e79dcf55cf88e7e9e4838f450d89b5566de57e5f1ac628e95",
+    "apps/web/src/app/(public)/features/page.tsx": "f150d5c76d046f5db0c40f3265415a457ef35724c8ac8053bab8fecc02bf23df",
+    "artifacts/misc/features-content.json": "ee92db807515dd57b0550d3a28a0eab83ca4a3413d4e0513f40f2c061c340145",
+    "artifacts/misc/conversion-tracking.js": "81729c698323ba05ca6fda5f318f8275b0e022a86f0548b61a3f070f7566aebe",
+    "apps/web/src/app/(public)/pricing/page.tsx": "fe5c4cdf733367ed2fa7fbd8d39bd143606f1fa9cd68b217927c0e26f57a88bb",
+    "apps/web/src/components/pricing/pricing-calculator.tsx": "8316b8b0e771e73c223fdf0cb23c6cb8ec1b02b7943f20b450d1367b2e331d87",
+    "apps/web/src/lib/pricing/stripe-integration.ts": "a9cf8a59752b119cd60f29589282f4b4a966be54d45deb4cbbc23b244b7e5a78",
+    "apps/web/src/app/(public)/about/page.tsx": "47bc8e24a41b26c32a5c52f779509cee223bba0f44ddf519d4d2d6682c993f73",
+    "artifacts/misc/team-data.json": "f8f2fbcad0735a8329642e8fc12ffbc0e55d7b6eb7b454bc7d9ca6ccab1cadb3",
+    "docs/about/about-content.md": "b297b9c179e27068026fdc2eaf5847f40d068c4fd15e9c873113476046366c9d",
+    "apps/web/src/app/(public)/contact/page.tsx": "af78e8b50d6b11e9dbc66a95ab3e040f49534da9479d6c8eeef50d1e747739be",
+    "apps/web/src/components/shared/contact-form.tsx": "93ecfb6a978623d526a6be5f347392e8a09ccdcdbeae67cea62ae2b8e5579e2f",
+    "apps/web/src/lib/shared/email-handler.ts": "390ca43e2af967f75420195a6ecf203544b7c1818a89e8320ce4dd5836874ded",
+    "apps/web/src/app/(public)/partners/page.tsx": "bf488671ec4b70b7233ab5a30caa43e3399d5a2d9678e3f3a2c8a45e992206c9",
+    "artifacts/misc/partner-benefits.json": "49cf830d8ad9bdf4d5a8641dbfe73efc19282823b3b760608aef144bbe717f6e",
+    "apps/web/src/app/(public)/press/page.tsx": "380608ede2c52c2ffd1b7c9c08ec54f7b257037b56dbf2242c3c87b14be8b045",
+    "apps/web/src/data/press-releases.json": "aa36f56f09f3adece32c6b18b3fcf4d91d7c635dedba16931d901f871e9006b0",
+    "apps/web/src/app/(public)/security/page.tsx": "c7895ff07c1b65be027d1fc9f7327f28cd6f95bbbf8156cc517d53d3840fdf10",
+    "apps/web/src/data/security-features.json": "94c323d24f6d8470089ee6f0102b4d72f641e0a5e336807b5a6329bdc1cb3b70",
+    "apps/api/src/shared/prompt-sanitizer.ts": "626e2139f20d1ec5c5ed5d424e54192c62f14908b6bae6bb794dd38bbe21c62f",
+    "artifacts/metrics/bias-metrics.csv": "7caed5c950a0e6ee0e1110873911050362fa54d5b05b929a945664870cc9e1d1",
+    "docs/shared/ai-guardrails-report.md": "e72441bd06e6242153279d075780c6b48c50d1c8820396eee9e5ad6f503dd1ba",
+    "docs/data-governance/dsar-process.md": "b7472a8152bd29dbe2c172f0b073fcb5f296c9d0422eca9e6cd89d6b1102c7a8",
+    "docs/data-governance/retention-policy.md": "b96e7cf8edc72b6763ba77c6e4e02a97bf7aa0cfaf2a17a2629848355c2a928f",
+    "artifacts/misc/kms-key-config.json": "3b8922b851e56b1472b2891f1367bab1bd17a574398dce2c659ebe992eff11a4",
+    "apps/api/src/workflow/dsar-workflow.ts": "8c4a088ded5e73ec7f81122daf718758fbf22ad1e3d0c7a8e42c33fa5586b627",
+    "docs/security/threat-model.puml": "15aec47c362c3d0376d463f5374973367f8f8109a9ae2c55fdc7c411d815903c",
+    "docs/security/abuse-cases.md": "6461dd73ba82f22f0ddf31b8a473940ee3720693e0ef32aa6d7b99221d9956fc",
+    "artifacts/reports/pen-test-scope.md": "d602da117024efe5152b7c3272e52d9abba5e3e1b8bdfa42ec80cf383890126b",
+    "artifacts/logs/mitigation-backlog.csv": "77d9829981765c6383c1db3869b3ebc49126569298d932ad2a30b6ec3f342f75",
+    "artifacts/misc/cookie-consent-component.tsx": "837d104fe7f1700714cf0b114983603323a8b214a2e20553cb2c0d7107f8b1aa",
+    "packages/domain/src/legal/cases/case-document.ts": "37988bfd15e229e85fd3ed0c09bb922b88d1322c449ac56cac9ab6f1f94765f9"
+  },
+  "task_results": [
+    {
+      "taskId": "IFC-058",
+      "description": "GDPR baseline controls: Supabase RLS policies, data minimisation, retention hooks",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "artifacts/reports/gdpr-compliance-checklist.xlsx",
+          "expectedBy": "IFC-058",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: artifacts/reports/gdpr-compliance-checklist.xlsx"
+          ]
+        },
+        {
+          "path": "artifacts/misc/audit-trail-test.json",
+          "expectedBy": "IFC-058",
+          "status": "found",
+          "size": 9540,
+          "sha256": "678ab3deacff1d07beb334aa8d8f5b0d79df3ef8b6fdf4f095e2cd44824614a5",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:artifacts/attestations/IFC-058/context_ack.json",
+          "expectedBy": "IFC-058",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/IFC-058/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "0 compliance gaps",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "audit trail complete",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-058",
+        "dependencies": [
+          "IFC-017",
+          "IFC-127",
+          "IFC-008"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-017",
+          "IFC-127",
+          "IFC-008"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Row Level Security implemented",
+          "privacy by design",
+          "artifacts: gdpr-compliance-checklist.xlsx",
+          "audit-trail-test.json",
+          "context_ack.json"
+        ],
+        "verified": 1,
+        "unverified": 4,
+        "details": [
+          {
+            "criterion": "Row Level Security implemented",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "privacy by design",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: gdpr-compliance-checklist.xlsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "audit-trail-test.json",
+            "verified": true,
+            "evidence": "All 0 validations passed"
+          },
+          {
+            "criterion": "context_ack.json",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: artifacts/reports/gdpr-compliance-checklist.xlsx, EVIDENCE:artifacts/attestations/IFC-058/context_ack.json",
+        "4 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete"
+      ]
+    },
+    {
+      "taskId": "PG-001",
+      "description": "Home Page",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "SPEC:.specify/specifications/PG-001.md",
+          "expectedBy": "PG-001",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: SPEC:.specify/specifications/PG-001.md"
+          ]
+        },
+        {
+          "path": "PLAN:.specify/planning/PG-001.md",
+          "expectedBy": "PG-001",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: PLAN:.specify/planning/PG-001.md"
+          ]
+        },
+        {
+          "path": "EVIDENCE:artifacts/attestations/PG-001/context_pack.md",
+          "expectedBy": "PG-001",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/PG-001/context_pack.md"
+          ]
+        },
+        {
+          "path": "EVIDENCE:artifacts/attestations/PG-001/context_ack.json",
+          "expectedBy": "PG-001",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/PG-001/context_ack.json"
+          ]
+        },
+        {
+          "path": "apps/web/src/app/(public)/page.tsx",
+          "expectedBy": "PG-001",
+          "status": "found",
+          "size": 18289,
+          "sha256": "8fe72804ce9c22170552532cb7660fd3646eed4fb27e810156a39fabc51bcfc1",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/app/(public)/loading.tsx",
+          "expectedBy": "PG-001",
+          "status": "found",
+          "size": 6308,
+          "sha256": "1524a4e7052feb9d9604ef0b75c84c65e83a528b17fc585603ef028d5690b9aa",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/app/(public)/error.tsx",
+          "expectedBy": "PG-001",
+          "status": "found",
+          "size": 2796,
+          "sha256": "859dc8842cd8081b08f858fdc3b2076b6c890b50403a0c419de7ae20917924d7",
+          "issues": []
+        },
+        {
+          "path": "artifacts/misc/seo-meta.json",
+          "expectedBy": "PG-001",
+          "status": "found",
+          "size": 2447,
+          "sha256": "56f7f61c44b5e61e79dcf55cf88e7e9e4838f450d89b5566de57e5f1ac628e95",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Page live",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "performance met",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "SEO indexed",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-001",
+        "dependencies": [
+          "IFC-076",
+          "GTM-002",
+          "BRAND-001"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-076",
+          "GTM-002",
+          "BRAND-001"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Response <200ms",
+          "Lighthouse ≥90",
+          "SEO optimized",
+          "artifacts: page.tsx",
+          "loading.tsx",
+          "error.tsx",
+          "gates: lighthouse-gte-90"
+        ],
+        "verified": 0,
+        "unverified": 7,
+        "details": [
+          {
+            "criterion": "Response <200ms",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Lighthouse ≥90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "SEO optimized",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: page.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "loading.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "error.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "gates: lighthouse-gte-90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: SPEC:.specify/specifications/PG-001.md, PLAN:.specify/planning/PG-001.md, EVIDENCE:artifacts/attestations/PG-001/context_pack.md, EVIDENCE:artifacts/attestations/PG-001/context_ack.json",
+        "7 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete"
+      ]
+    },
+    {
+      "taskId": "PG-002",
+      "description": "Features Page",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/(public)/features/page.tsx",
+          "expectedBy": "PG-002",
+          "status": "found",
+          "size": 6615,
+          "sha256": "f150d5c76d046f5db0c40f3265415a457ef35724c8ac8053bab8fecc02bf23df",
+          "issues": []
+        },
+        {
+          "path": "artifacts/misc/features-content.json",
+          "expectedBy": "PG-002",
+          "status": "found",
+          "size": 6398,
+          "sha256": "ee92db807515dd57b0550d3a28a0eab83ca4a3413d4e0513f40f2c061c340145",
+          "issues": []
+        },
+        {
+          "path": "artifacts/misc/conversion-tracking.js",
+          "expectedBy": "PG-002",
+          "status": "found",
+          "size": 3825,
+          "sha256": "81729c698323ba05ca6fda5f318f8275b0e022a86f0548b61a3f070f7566aebe",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:artifacts/attestations/PG-002/context_ack.json",
+          "expectedBy": "PG-002",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/PG-002/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Page live",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "features showcased",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "CTA working",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-002",
+        "dependencies": [
+          "PG-001",
+          "GTM-002",
+          "BRAND-001"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "GTM-002",
+          "BRAND-001"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Response <200ms",
+          "Lighthouse ≥90",
+          "conversion optimized",
+          "artifacts: page.tsx",
+          "features-content.json",
+          "conversion-tracking.js"
+        ],
+        "verified": 0,
+        "unverified": 6,
+        "details": [
+          {
+            "criterion": "Response <200ms",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Lighthouse ≥90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "conversion optimized",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: page.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "features-content.json",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "conversion-tracking.js",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/PG-002/context_ack.json",
+        "6 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete"
+      ]
+    },
+    {
+      "taskId": "PG-003",
+      "description": "Pricing Page",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/(public)/pricing/page.tsx",
+          "expectedBy": "PG-003",
+          "status": "found",
+          "size": 13584,
+          "sha256": "fe5c4cdf733367ed2fa7fbd8d39bd143606f1fa9cd68b217927c0e26f57a88bb",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/pricing/pricing-calculator.tsx",
+          "expectedBy": "PG-003",
+          "status": "found",
+          "size": 4743,
+          "sha256": "8316b8b0e771e73c223fdf0cb23c6cb8ec1b02b7943f20b450d1367b2e331d87",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/lib/pricing/stripe-integration.ts",
+          "expectedBy": "PG-003",
+          "status": "found",
+          "size": 3089,
+          "sha256": "a9cf8a59752b119cd60f29589282f4b4a966be54d45deb4cbbc23b244b7e5a78",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:artifacts/attestations/PG-003/context_ack.json",
+          "expectedBy": "PG-003",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/PG-003/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [
+        {
+          "file": "apps\\web\\src\\lib\\pricing\\stripe-integration.ts",
+          "line": 7,
+          "column": 14,
+          "pattern": "STUB",
+          "content": "* This is a stub implementation for Sprint 11. Full Stripe integration",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\lib\\pricing\\stripe-integration.ts",
+          "line": 35,
+          "column": 6,
+          "pattern": "TODO",
+          "content": "// TODO: Implement actual Stripe checkout session creation",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\lib\\pricing\\stripe-integration.ts",
+          "line": 58,
+          "column": 6,
+          "pattern": "TODO",
+          "content": "// TODO: Implement actual Stripe subscription retrieval",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\lib\\pricing\\stripe-integration.ts",
+          "line": 75,
+          "column": 6,
+          "pattern": "TODO",
+          "content": "// TODO: Implement actual Stripe subscription cancellation",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\lib\\pricing\\stripe-integration.ts",
+          "line": 92,
+          "column": 6,
+          "pattern": "TODO",
+          "content": "// TODO: Implement actual Stripe subscription update",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\lib\\pricing\\stripe-integration.ts",
+          "line": 113,
+          "column": 6,
+          "pattern": "TODO",
+          "content": "// TODO: Implement actual webhook signature validation",
+          "linkedTaskId": null
+        }
+      ],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Pricing clear",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "calculator working",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "Stripe ready",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-003",
+        "dependencies": [
+          "PG-001",
+          "GTM-002",
+          "BRAND-001"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "GTM-002",
+          "BRAND-001"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Response <200ms",
+          "Lighthouse ≥90",
+          "calculator functional",
+          "artifacts: page.tsx",
+          "pricing-calculator.tsx",
+          "stripe-integration.ts"
+        ],
+        "verified": 0,
+        "unverified": 6,
+        "details": [
+          {
+            "criterion": "Response <200ms",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Lighthouse ≥90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "calculator functional",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: page.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "pricing-calculator.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "stripe-integration.ts",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/PG-003/context_ack.json",
+        "Found 6 placeholder(s) in task artifacts",
+        "6 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete",
+        "Remove TODO, FIXME, STUB, and empty function placeholders"
+      ]
+    },
+    {
+      "taskId": "PG-004",
+      "description": "About Page",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/(public)/about/page.tsx",
+          "expectedBy": "PG-004",
+          "status": "found",
+          "size": 11893,
+          "sha256": "47bc8e24a41b26c32a5c52f779509cee223bba0f44ddf519d4d2d6682c993f73",
+          "issues": []
+        },
+        {
+          "path": "artifacts/misc/team-data.json",
+          "expectedBy": "PG-004",
+          "status": "found",
+          "size": 2034,
+          "sha256": "f8f2fbcad0735a8329642e8fc12ffbc0e55d7b6eb7b454bc7d9ca6ccab1cadb3",
+          "issues": []
+        },
+        {
+          "path": "docs/about/about-content.md",
+          "expectedBy": "PG-004",
+          "status": "found",
+          "size": 1637,
+          "sha256": "b297b9c179e27068026fdc2eaf5847f40d068c4fd15e9c873113476046366c9d",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:artifacts/attestations/PG-004/context_ack.json",
+          "expectedBy": "PG-004",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/PG-004/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Story told",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "team showcased",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "culture visible",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-004",
+        "dependencies": [
+          "PG-001",
+          "GTM-002",
+          "BRAND-001"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "GTM-002",
+          "BRAND-001"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Response <200ms",
+          "Lighthouse ≥90",
+          "team displayed",
+          "artifacts: page.tsx",
+          "team-data.json",
+          "about-content.md"
+        ],
+        "verified": 0,
+        "unverified": 6,
+        "details": [
+          {
+            "criterion": "Response <200ms",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Lighthouse ≥90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "team displayed",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: page.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "team-data.json",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "about-content.md",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/PG-004/context_ack.json",
+        "6 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete"
+      ]
+    },
+    {
+      "taskId": "PG-005",
+      "description": "Contact Page",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/(public)/contact/page.tsx",
+          "expectedBy": "PG-005",
+          "status": "found",
+          "size": 12116,
+          "sha256": "af78e8b50d6b11e9dbc66a95ab3e040f49534da9479d6c8eeef50d1e747739be",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/shared/contact-form.tsx",
+          "expectedBy": "PG-005",
+          "status": "found",
+          "size": 14284,
+          "sha256": "93ecfb6a978623d526a6be5f347392e8a09ccdcdbeae67cea62ae2b8e5579e2f",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/lib/shared/email-handler.ts",
+          "expectedBy": "PG-005",
+          "status": "found",
+          "size": 6725,
+          "sha256": "390ca43e2af967f75420195a6ecf203544b7c1818a89e8320ce4dd5836874ded",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:artifacts/attestations/PG-005/context_ack.json",
+          "expectedBy": "PG-005",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/PG-005/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [
+        {
+          "file": "apps\\web\\src\\lib\\shared\\email-handler.ts",
+          "line": 201,
+          "column": 11,
+          "pattern": "TODO",
+          "content": "// 3. TODO: Rate limiting check",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\lib\\shared\\email-handler.ts",
+          "line": 218,
+          "column": 11,
+          "pattern": "TODO",
+          "content": "// 4. TODO: Send email via email service (Resend, SendGrid, etc.)",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+          "line": 157,
+          "column": 46,
+          "pattern": "PLACEHOLDER",
+          "content": "text-slate-900 dark:text-white placeholder-slate-400",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+          "line": 161,
+          "column": 13,
+          "pattern": "PLACEHOLDER",
+          "content": "placeholder=\"John Doe\"",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+          "line": 196,
+          "column": 46,
+          "pattern": "PLACEHOLDER",
+          "content": "text-slate-900 dark:text-white placeholder-slate-400",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+          "line": 200,
+          "column": 13,
+          "pattern": "PLACEHOLDER",
+          "content": "placeholder=\"you@example.com\"",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+          "line": 229,
+          "column": 46,
+          "pattern": "PLACEHOLDER",
+          "content": "text-slate-900 dark:text-white placeholder-slate-400",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+          "line": 233,
+          "column": 13,
+          "pattern": "PLACEHOLDER",
+          "content": "placeholder=\"+1 (555) 123-4567\"",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+          "line": 261,
+          "column": 46,
+          "pattern": "PLACEHOLDER",
+          "content": "text-slate-900 dark:text-white placeholder-slate-400",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+          "line": 265,
+          "column": 13,
+          "pattern": "PLACEHOLDER",
+          "content": "placeholder=\"Acme Corporation\"",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+          "line": 285,
+          "column": 44,
+          "pattern": "PLACEHOLDER",
+          "content": "text-slate-900 dark:text-white placeholder-slate-400",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+          "line": 289,
+          "column": 11,
+          "pattern": "PLACEHOLDER",
+          "content": "placeholder=\"Interested in IntelliFlow CRM\"",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+          "line": 315,
+          "column": 44,
+          "pattern": "PLACEHOLDER",
+          "content": "text-slate-900 dark:text-white placeholder-slate-400",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+          "line": 319,
+          "column": 11,
+          "pattern": "PLACEHOLDER",
+          "content": "placeholder=\"Tell us about your needs...\"",
+          "linkedTaskId": null
+        }
+      ],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Form submitting",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "validation working",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "emails sent",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-005",
+        "dependencies": [
+          "PG-001",
+          "GTM-002",
+          "BRAND-001"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "GTM-002",
+          "BRAND-001"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Response <200ms",
+          "Lighthouse ≥90",
+          "form working",
+          "artifacts: page.tsx",
+          "contact-form.tsx",
+          "email-handler.ts"
+        ],
+        "verified": 0,
+        "unverified": 6,
+        "details": [
+          {
+            "criterion": "Response <200ms",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Lighthouse ≥90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "form working",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: page.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "contact-form.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "email-handler.ts",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/PG-005/context_ack.json",
+        "Found 14 placeholder(s) in task artifacts",
+        "6 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete",
+        "Remove TODO, FIXME, STUB, and empty function placeholders"
+      ]
+    },
+    {
+      "taskId": "PG-006",
+      "description": "Partners Page",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/(public)/partners/page.tsx",
+          "expectedBy": "PG-006",
+          "status": "found",
+          "size": 17213,
+          "sha256": "bf488671ec4b70b7233ab5a30caa43e3399d5a2d9678e3f3a2c8a45e992206c9",
+          "issues": []
+        },
+        {
+          "path": "artifacts/misc/partner-benefits.json",
+          "expectedBy": "PG-006",
+          "status": "found",
+          "size": 10139,
+          "sha256": "49cf830d8ad9bdf4d5a8641dbfe73efc19282823b3b760608aef144bbe717f6e",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:artifacts/attestations/PG-006/context_ack.json",
+          "expectedBy": "PG-006",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/PG-006/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Partners showcased",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "benefits clear",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "CTAs working",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-006",
+        "dependencies": [
+          "PG-001",
+          "GTM-002",
+          "BRAND-001"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "GTM-002",
+          "BRAND-001"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Response <200ms",
+          "Lighthouse ≥90",
+          "logos displayed",
+          "artifacts: page.tsx",
+          "partner-benefits.json",
+          "context_ack.json"
+        ],
+        "verified": 0,
+        "unverified": 6,
+        "details": [
+          {
+            "criterion": "Response <200ms",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Lighthouse ≥90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "logos displayed",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: page.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "partner-benefits.json",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "context_ack.json",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/PG-006/context_ack.json",
+        "6 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete"
+      ]
+    },
+    {
+      "taskId": "PG-007",
+      "description": "Press Page",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/(public)/press/page.tsx",
+          "expectedBy": "PG-007",
+          "status": "found",
+          "size": 14595,
+          "sha256": "380608ede2c52c2ffd1b7c9c08ec54f7b257037b56dbf2242c3c87b14be8b045",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/data/press-releases.json",
+          "expectedBy": "PG-007",
+          "status": "found",
+          "size": 2396,
+          "sha256": "aa36f56f09f3adece32c6b18b3fcf4d91d7c635dedba16931d901f871e9006b0",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:artifacts/attestations/PG-007/attestation.json",
+          "expectedBy": "PG-007",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/PG-007/attestation.json"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Press releases live",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "media kit downloadable",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-007",
+        "dependencies": [
+          "PG-001",
+          "GTM-002",
+          "BRAND-001"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "GTM-002",
+          "BRAND-001"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Response <200ms",
+          "Lighthouse ≥90",
+          "downloads working",
+          "artifacts: page.tsx",
+          "media-kit.zip",
+          "context_ack.json"
+        ],
+        "verified": 0,
+        "unverified": 6,
+        "details": [
+          {
+            "criterion": "Response <200ms",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Lighthouse ≥90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "downloads working",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: page.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "media-kit.zip",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "context_ack.json",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/PG-007/attestation.json",
+        "6 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete"
+      ]
+    },
+    {
+      "taskId": "PG-008",
+      "description": "Security Page",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/(public)/security/page.tsx",
+          "expectedBy": "PG-008",
+          "status": "found",
+          "size": 15310,
+          "sha256": "c7895ff07c1b65be027d1fc9f7327f28cd6f95bbbf8156cc517d53d3840fdf10",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/data/security-features.json",
+          "expectedBy": "PG-008",
+          "status": "found",
+          "size": 6676,
+          "sha256": "94c323d24f6d8470089ee6f0102b4d72f641e0a5e336807b5a6329bdc1cb3b70",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:artifacts/attestations/PG-008/attestation.json",
+          "expectedBy": "PG-008",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/PG-008/attestation.json"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Security explained",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "badges displayed",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "trust built",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-008",
+        "dependencies": [
+          "PG-001",
+          "GTM-002",
+          "BRAND-001"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "GTM-002",
+          "BRAND-001"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Response <200ms",
+          "Lighthouse ≥90",
+          "trust signals",
+          "artifacts: page.tsx",
+          "security-features.json",
+          "context_ack.json"
+        ],
+        "verified": 0,
+        "unverified": 6,
+        "details": [
+          {
+            "criterion": "Response <200ms",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Lighthouse ≥90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "trust signals",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: page.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "security-features.json",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "context_ack.json",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/PG-008/attestation.json",
+        "6 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete"
+      ]
+    },
+    {
+      "taskId": "IFC-125",
+      "description": "Implement guardrails for prompt injection, data leakage, and monitor AI bias",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "SPEC:.specify/specifications/IFC-125.md",
+          "expectedBy": "IFC-125",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: SPEC:.specify/specifications/IFC-125.md"
+          ]
+        },
+        {
+          "path": "PLAN:.specify/planning/IFC-125.md",
+          "expectedBy": "IFC-125",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: PLAN:.specify/planning/IFC-125.md"
+          ]
+        },
+        {
+          "path": "EVIDENCE:artifacts/attestations/IFC-125/context_pack.md",
+          "expectedBy": "IFC-125",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/IFC-125/context_pack.md"
+          ]
+        },
+        {
+          "path": "EVIDENCE:artifacts/attestations/IFC-125/context_ack.json",
+          "expectedBy": "IFC-125",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/IFC-125/context_ack.json"
+          ]
+        },
+        {
+          "path": "apps/api/src/shared/prompt-sanitizer.ts",
+          "expectedBy": "IFC-125",
+          "status": "found",
+          "size": 9690,
+          "sha256": "626e2139f20d1ec5c5ed5d424e54192c62f14908b6bae6bb794dd38bbe21c62f",
+          "issues": []
+        },
+        {
+          "path": "artifacts/metrics/bias-metrics.csv",
+          "expectedBy": "IFC-125",
+          "status": "found",
+          "size": 829,
+          "sha256": "7caed5c950a0e6ee0e1110873911050362fa54d5b05b929a945664870cc9e1d1",
+          "issues": []
+        },
+        {
+          "path": "docs/shared/ai-guardrails-report.md",
+          "expectedBy": "IFC-125",
+          "status": "found",
+          "size": 9798,
+          "sha256": "e72441bd06e6242153279d075780c6b48c50d1c8820396eee9e5ad6f503dd1ba",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Zero prompt injection incidents",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "bias score below threshold",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-125",
+        "dependencies": [
+          "IFC-005",
+          "IFC-008"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-005",
+          "IFC-008"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Prompt sanitization",
+          "output redaction",
+          "bias detection metrics",
+          "incidents logged",
+          "artifacts: prompt-sanitizer.ts",
+          "bias-metrics.csv",
+          "ai-guardrails-report.md",
+          "targets: zero errors",
+          "verified by: pnpm test"
+        ],
+        "verified": 1,
+        "unverified": 8,
+        "details": [
+          {
+            "criterion": "Prompt sanitization",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "output redaction",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "bias detection metrics",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "incidents logged",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: prompt-sanitizer.ts",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "bias-metrics.csv",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "ai-guardrails-report.md",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "targets: zero errors",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "verified by: pnpm test",
+            "verified": true,
+            "evidence": "All 0 validations passed"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: SPEC:.specify/specifications/IFC-125.md, PLAN:.specify/planning/IFC-125.md, EVIDENCE:artifacts/attestations/IFC-125/context_pack.md, EVIDENCE:artifacts/attestations/IFC-125/context_ack.json",
+        "8 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete"
+      ]
+    },
+    {
+      "taskId": "IFC-140",
+      "description": "Implement data governance workflows: DSAR requests; retention & legal hold policies; tenant-specific encryption key management; data residency compliance",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "docs/data-governance/dsar-process.md",
+          "expectedBy": "IFC-140",
+          "status": "found",
+          "size": 9825,
+          "sha256": "b7472a8152bd29dbe2c172f0b073fcb5f296c9d0422eca9e6cd89d6b1102c7a8",
+          "issues": []
+        },
+        {
+          "path": "docs/data-governance/retention-policy.md",
+          "expectedBy": "IFC-140",
+          "status": "found",
+          "size": 11064,
+          "sha256": "b96e7cf8edc72b6763ba77c6e4e02a97bf7aa0cfaf2a17a2629848355c2a928f",
+          "issues": []
+        },
+        {
+          "path": "artifacts/misc/kms-key-config.json",
+          "expectedBy": "IFC-140",
+          "status": "found",
+          "size": 10588,
+          "sha256": "3b8922b851e56b1472b2891f1367bab1bd17a574398dce2c659ebe992eff11a4",
+          "issues": []
+        },
+        {
+          "path": "apps/api/src/workflow/dsar-workflow.ts",
+          "expectedBy": "IFC-140",
+          "status": "found",
+          "size": 17306,
+          "sha256": "8c4a088ded5e73ec7f81122daf718758fbf22ad1e3d0c7a8e42c33fa5586b627",
+          "issues": []
+        },
+        {
+          "path": "artifacts/misc/compliance-tests/data-governance.spec.ts",
+          "expectedBy": "IFC-140",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: artifacts/misc/compliance-tests/data-governance.spec.ts"
+          ]
+        },
+        {
+          "path": "EVIDENCE:artifacts/attestations/IFC-140/context_ack.json",
+          "expectedBy": "IFC-140",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/IFC-140/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "DSAR turnaround <7 days",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "encryption coverage 100%",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "retention and legal hold compliance audited",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-140",
+        "dependencies": [
+          "IFC-098",
+          "IFC-127"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-098",
+          "IFC-127"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "DSAR workflow implemented with identity verification",
+          "retention schedules enforced per entity",
+          "legal hold exceptions",
+          "per-tenant key management with rotation",
+          "residency controls and subprocessor registry",
+          "documentation and tests",
+          "targets: >=100%"
+        ],
+        "verified": 1,
+        "unverified": 6,
+        "details": [
+          {
+            "criterion": "DSAR workflow implemented with identity verification",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "retention schedules enforced per entity",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "legal hold exceptions",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "per-tenant key management with rotation",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "residency controls and subprocessor registry",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "documentation and tests",
+            "verified": true,
+            "evidence": "All 0 validations passed"
+          },
+          {
+            "criterion": "targets: >=100%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: artifacts/misc/compliance-tests/data-governance.spec.ts, EVIDENCE:artifacts/attestations/IFC-140/context_ack.json",
+        "6 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete"
+      ]
+    },
+    {
+      "taskId": "IFC-143",
+      "description": "Perform threat modeling and abuse-case analysis for multi-tenancy and agent tool-calling; design mitigations; schedule penetration test; implement cookie consent mechanism",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "SPEC:.specify/specifications/IFC-143.md",
+          "expectedBy": "IFC-143",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: SPEC:.specify/specifications/IFC-143.md"
+          ]
+        },
+        {
+          "path": "PLAN:.specify/planning/IFC-143.md",
+          "expectedBy": "IFC-143",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: PLAN:.specify/planning/IFC-143.md"
+          ]
+        },
+        {
+          "path": "EVIDENCE:artifacts/attestations/IFC-143/context_pack.md",
+          "expectedBy": "IFC-143",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/IFC-143/context_pack.md"
+          ]
+        },
+        {
+          "path": "EVIDENCE:artifacts/attestations/IFC-143/context_ack.json",
+          "expectedBy": "IFC-143",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/IFC-143/context_ack.json"
+          ]
+        },
+        {
+          "path": "docs/security/threat-model.puml",
+          "expectedBy": "IFC-143",
+          "status": "found",
+          "size": 4951,
+          "sha256": "15aec47c362c3d0376d463f5374973367f8f8109a9ae2c55fdc7c411d815903c",
+          "issues": []
+        },
+        {
+          "path": "docs/security/abuse-cases.md",
+          "expectedBy": "IFC-143",
+          "status": "found",
+          "size": 15043,
+          "sha256": "6461dd73ba82f22f0ddf31b8a473940ee3720693e0ef32aa6d7b99221d9956fc",
+          "issues": []
+        },
+        {
+          "path": "artifacts/reports/pen-test-scope.md",
+          "expectedBy": "IFC-143",
+          "status": "found",
+          "size": 8402,
+          "sha256": "d602da117024efe5152b7c3272e52d9abba5e3e1b8bdfa42ec80cf383890126b",
+          "issues": []
+        },
+        {
+          "path": "artifacts/logs/mitigation-backlog.csv",
+          "expectedBy": "IFC-143",
+          "status": "found",
+          "size": 3632,
+          "sha256": "77d9829981765c6383c1db3869b3ebc49126569298d932ad2a30b6ec3f342f75",
+          "issues": []
+        },
+        {
+          "path": "artifacts/misc/cookie-consent-component.tsx",
+          "expectedBy": "IFC-143",
+          "status": "found",
+          "size": 23760,
+          "sha256": "837d104fe7f1700714cf0b114983603323a8b214a2e20553cb2c0d7107f8b1aa",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "All critical threats mitigated",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "pen test high severity issues <5",
+          "target": "< 5",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "cookie compliance tests pass",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-143",
+        "dependencies": [
+          "IFC-125",
+          "IFC-136",
+          "IFC-139"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-125",
+          "IFC-136",
+          "IFC-139"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Threat model documented",
+          "abuse cases enumerated",
+          "mitigation tasks created",
+          "penetration test executed and findings triaged",
+          "cookie consent banner implemented",
+          "compliance checks passed"
+        ],
+        "verified": 2,
+        "unverified": 4,
+        "details": [
+          {
+            "criterion": "Threat model documented",
+            "verified": false,
+            "evidence": "No documentation artifacts verified"
+          },
+          {
+            "criterion": "abuse cases enumerated",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "mitigation tasks created",
+            "verified": false,
+            "evidence": "Missing artifacts: 4"
+          },
+          {
+            "criterion": "penetration test executed and findings triaged",
+            "verified": true,
+            "evidence": "All 0 validations passed"
+          },
+          {
+            "criterion": "cookie consent banner implemented",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "compliance checks passed",
+            "verified": true,
+            "evidence": "All 0 validations passed"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: SPEC:.specify/specifications/IFC-143.md, PLAN:.specify/planning/IFC-143.md, EVIDENCE:artifacts/attestations/IFC-143/context_pack.md, EVIDENCE:artifacts/attestations/IFC-143/context_ack.json",
+        "4 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete"
+      ]
+    },
+    {
+      "taskId": "IFC-152",
+      "description": "Case document model: storage metadata, versioning, ACL mapping (tenant + case + role), and audit hooks",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "packages/domain/src/legal/cases/case-document.ts",
+          "expectedBy": "IFC-152",
+          "status": "found",
+          "size": 16978,
+          "sha256": "37988bfd15e229e85fd3ed0c09bb922b88d1322c449ac56cac9ab6f1f94765f9",
+          "issues": []
+        },
+        {
+          "path": "packages/db/prisma/case-document.sql",
+          "expectedBy": "IFC-152",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: packages/db/prisma/case-document.sql"
+          ]
+        },
+        {
+          "path": "apps/api/src/modules/crm/documents.router.ts",
+          "expectedBy": "IFC-152",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: apps/api/src/modules/crm/documents.router.ts"
+          ]
+        },
+        {
+          "path": "EVIDENCE:artifacts/attestations/IFC-152/context_ack.json",
+          "expectedBy": "IFC-152",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/IFC-152/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Access control test pass 100%",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "audit log coverage 100%",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "CRUD latency p95 <50ms",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-152",
+        "dependencies": [
+          "IFC-136",
+          "IFC-127",
+          "IFC-094"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-136",
+          "IFC-127"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "CaseDocument aggregate and repository implemented",
+          "ACL mapping rules defined",
+          "versioning semantics",
+          "audit events on read/write",
+          "tests",
+          "targets: >=100%",
+          ">=100%",
+          "<50ms"
+        ],
+        "verified": 1,
+        "unverified": 7,
+        "details": [
+          {
+            "criterion": "CaseDocument aggregate and repository implemented",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "ACL mapping rules defined",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "versioning semantics",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "audit events on read/write",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "tests",
+            "verified": true,
+            "evidence": "All 0 validations passed"
+          },
+          {
+            "criterion": "targets: >=100%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": ">=100%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "<50ms",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: packages/db/prisma/case-document.sql, apps/api/src/modules/crm/documents.router.ts, EVIDENCE:artifacts/attestations/IFC-152/context_ack.json",
+        "7 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete"
+      ]
+    },
+    {
+      "taskId": "IFC-157",
+      "description": "Notification service MVP: unified delivery (in-app + email) with preference model (backend), templates, and audit logging",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "SPEC:.specify/specifications/IFC-157.md",
+          "expectedBy": "IFC-157",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: SPEC:.specify/specifications/IFC-157.md"
+          ]
+        },
+        {
+          "path": "PLAN:.specify/planning/IFC-157.md",
+          "expectedBy": "IFC-157",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: PLAN:.specify/planning/IFC-157.md"
+          ]
+        },
+        {
+          "path": "EVIDENCE:artifacts/attestations/IFC-157/context_pack.md",
+          "expectedBy": "IFC-157",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/IFC-157/context_pack.md"
+          ]
+        },
+        {
+          "path": "EVIDENCE:artifacts/attestations/IFC-157/context_ack.json",
+          "expectedBy": "IFC-157",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/IFC-157/context_ack.json"
+          ]
+        },
+        {
+          "path": "docs/operations/runbooks/notifications.md",
+          "expectedBy": "IFC-157",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: docs/operations/runbooks/notifications.md"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Delivery success >=99%",
+          "target": ">= 99%",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "template rendering errors 0 in CI",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "audit coverage 100%",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-157",
+        "dependencies": [
+          "IFC-144",
+          "IFC-098",
+          "IFC-151"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-144",
+          "IFC-098",
+          "IFC-151"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Notification domain + templates implemented",
+          "delivery adapters",
+          "preference defaults stored",
+          "audit entries",
+          "retries/DLQ",
+          "tests",
+          "targets: >=99%",
+          ">=100%"
+        ],
+        "verified": 1,
+        "unverified": 7,
+        "details": [
+          {
+            "criterion": "Notification domain + templates implemented",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "delivery adapters",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "preference defaults stored",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "audit entries",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "retries/DLQ",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "tests",
+            "verified": true,
+            "evidence": "All 0 validations passed"
+          },
+          {
+            "criterion": "targets: >=99%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": ">=100%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: SPEC:.specify/specifications/IFC-157.md, PLAN:.specify/planning/IFC-157.md, EVIDENCE:artifacts/attestations/IFC-157/context_pack.md, EVIDENCE:artifacts/attestations/IFC-157/context_ack.json, docs/operations/runbooks/notifications.md",
+        "7 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete"
+      ]
+    },
+    {
+      "taskId": "IFC-158",
+      "description": "Scheduling communications: ICS invites, reschedule/cancel flows, reminders; integrated with notification service and calendar sync",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "EVIDENCE:artifacts/attestations/IFC-158/context_ack.json",
+          "expectedBy": "IFC-158",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/IFC-158/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Invite delivery >=95%",
+          "target": ">= 95%",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "reminder delivery >=99%",
+          "target": ">= 99%",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "zero duplicate invites on retries",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-158",
+        "dependencies": [
+          "IFC-138",
+          "IFC-157",
+          "IFC-137"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-138",
+          "IFC-157",
+          "IFC-137"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "ICS generation and delivery implemented",
+          "reschedule/cancel semantics correct",
+          "reminders scheduled",
+          "audit trail",
+          "integration tests",
+          "artifacts: context_ack.json",
+          "targets: >=95%",
+          ">=99%",
+          "zero errors"
+        ],
+        "verified": 1,
+        "unverified": 8,
+        "details": [
+          {
+            "criterion": "ICS generation and delivery implemented",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "reschedule/cancel semantics correct",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "reminders scheduled",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "audit trail",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "integration tests",
+            "verified": true,
+            "evidence": "All 0 validations passed"
+          },
+          {
+            "criterion": "artifacts: context_ack.json",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "targets: >=95%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": ">=99%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "zero errors",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/IFC-158/context_ack.json",
+        "8 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete"
+      ]
+    }
+  ],
+  "blocking_issues": [
+    {
+      "taskId": "IFC-058",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: artifacts/reports/gdpr-compliance-checklist.xlsx, EVIDENCE:artifacts/attestations/IFC-058/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-058",
+      "severity": "high",
+      "issue": "4 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-001",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: SPEC:.specify/specifications/PG-001.md, PLAN:.specify/planning/PG-001.md, EVIDENCE:artifacts/attestations/PG-001/context_pack.md, EVIDENCE:artifacts/attestations/PG-001/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-001",
+      "severity": "high",
+      "issue": "7 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-002",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/PG-002/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-002",
+      "severity": "high",
+      "issue": "6 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-003",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/PG-003/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-003",
+      "severity": "high",
+      "issue": "Found 6 placeholder(s) in task artifacts",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-003",
+      "severity": "high",
+      "issue": "6 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-004",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/PG-004/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-004",
+      "severity": "high",
+      "issue": "6 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-005",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/PG-005/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-005",
+      "severity": "high",
+      "issue": "Found 14 placeholder(s) in task artifacts",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-005",
+      "severity": "high",
+      "issue": "6 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-006",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/PG-006/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-006",
+      "severity": "high",
+      "issue": "6 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-007",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/PG-007/attestation.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-007",
+      "severity": "high",
+      "issue": "6 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-008",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/PG-008/attestation.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-008",
+      "severity": "high",
+      "issue": "6 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-125",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: SPEC:.specify/specifications/IFC-125.md, PLAN:.specify/planning/IFC-125.md, EVIDENCE:artifacts/attestations/IFC-125/context_pack.md, EVIDENCE:artifacts/attestations/IFC-125/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-125",
+      "severity": "high",
+      "issue": "8 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-140",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: artifacts/misc/compliance-tests/data-governance.spec.ts, EVIDENCE:artifacts/attestations/IFC-140/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-140",
+      "severity": "high",
+      "issue": "6 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-143",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: SPEC:.specify/specifications/IFC-143.md, PLAN:.specify/planning/IFC-143.md, EVIDENCE:artifacts/attestations/IFC-143/context_pack.md, EVIDENCE:artifacts/attestations/IFC-143/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-143",
+      "severity": "high",
+      "issue": "4 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-152",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: packages/db/prisma/case-document.sql, apps/api/src/modules/crm/documents.router.ts, EVIDENCE:artifacts/attestations/IFC-152/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-152",
+      "severity": "high",
+      "issue": "7 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-157",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: SPEC:.specify/specifications/IFC-157.md, PLAN:.specify/planning/IFC-157.md, EVIDENCE:artifacts/attestations/IFC-157/context_pack.md, EVIDENCE:artifacts/attestations/IFC-157/context_ack.json, docs/operations/runbooks/notifications.md",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-157",
+      "severity": "high",
+      "issue": "7 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-158",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/IFC-158/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-158",
+      "severity": "high",
+      "issue": "8 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    }
+  ],
+  "duration_seconds": 3.129
+}

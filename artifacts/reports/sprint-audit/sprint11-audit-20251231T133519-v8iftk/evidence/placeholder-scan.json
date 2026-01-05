@@ -1,0 +1,16 @@
+{
+  "generated_at": "2025-12-31T13:40:58.436Z",
+  "run_id": "sprint11-audit-20251231T133519-v8iftk",
+  "total_placeholders": 1,
+  "findings": [
+    {
+      "taskId": "IFC-140",
+      "file": "apps\\api\\src\\workflow\\dsar-workflow.ts",
+      "line": 518,
+      "column": 26,
+      "pattern": "PLACEHOLDER",
+      "content": "// For now, return a placeholder URL",
+      "linkedTaskId": null
+    }
+  ]
+}
