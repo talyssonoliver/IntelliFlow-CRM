@@ -270,6 +270,34 @@ const ENV_DEFINITIONS: EnvVarDefinition[] = [
   },
 ];
 
+/**
+ * Load environment variables from .env file
+ */
+function loadEnvFile(envPath: string): Record<string, string> {
+  const env: Record<string, string> = {};
+
+  if (!fs.existsSync(envPath)) {
+    console.warn(`${colors.yellow}Warning: .env file not found at ${envPath}${colors.reset}`);
+    return env;
+  }
+
+  const content = fs.readFileSync(envPath, 'utf-8');
+  const lines = content.split('\n');
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+
+    const match = trimmed.match(/^([^=]+)=(.*)$/);
+    if (match) {
+      const [, key, value] = match;
+      env[key.trim()] = value.trim();
+    }
+  }
+
+  return env;
+}
+
 class EnvValidator {
   private errors: ValidationError[] = [];
   private warnings: ValidationWarning[] = [];
@@ -277,34 +305,6 @@ class EnvValidator {
 
   constructor(environment: string = 'development') {
     this.environment = environment;
-  }
-
-  /**
-   * Load environment variables from .env file
-   */
-  private loadEnvFile(envPath: string): Record<string, string> {
-    const env: Record<string, string> = {};
-
-    if (!fs.existsSync(envPath)) {
-      console.warn(`${colors.yellow}Warning: .env file not found at ${envPath}${colors.reset}`);
-      return env;
-    }
-
-    const content = fs.readFileSync(envPath, 'utf-8');
-    const lines = content.split('\n');
-
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith('#')) continue;
-
-      const match = trimmed.match(/^([^=]+)=(.*)$/);
-      if (match) {
-        const [, key, value] = match;
-        env[key.trim()] = value.trim();
-      }
-    }
-
-    return env;
   }
 
   /**
@@ -534,8 +534,7 @@ async function main() {
 
   for (const envFile of envFiles) {
     const envPath = path.resolve(process.cwd(), envFile);
-    const validator = new EnvValidator(environment);
-    const fileVars = (validator as any).loadEnvFile(envPath);
+    const fileVars = loadEnvFile(envPath);
     envVars = { ...envVars, ...fileVars };
   }
 

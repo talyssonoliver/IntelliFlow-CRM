@@ -43,6 +43,14 @@ function log(message: string): void {
   console.log(`${isDryRun ? '[DRY-RUN] ' : ''}${message}`);
 }
 
+/** Raw CSV row from Papa parse */
+interface RawCSVRow {
+  'Task ID'?: string;
+  'Target Sprint'?: string;
+  Status?: string;
+  [key: string]: string | undefined;
+}
+
 interface SprintInfo {
   sprintNumber: number;
   taskCount: number;
@@ -60,7 +68,7 @@ function loadSprintInfo(): Map<number, SprintInfo> {
   const csvContent = readFileSync(CSV_PATH, 'utf-8');
   const { data } = Papa.parse(csvContent, { header: true, skipEmptyLines: true });
 
-  for (const row of data as any[]) {
+  for (const row of data as RawCSVRow[]) {
     const taskId = row['Task ID'];
     const sprintRaw = row['Target Sprint'];
     if (!taskId || !sprintRaw) continue;
