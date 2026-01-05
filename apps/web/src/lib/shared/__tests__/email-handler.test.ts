@@ -161,9 +161,7 @@ describe('Email Handler', () => {
     it('should implement rate limiting per email address', async () => {
       // This test documents the requirement for rate limiting
       // Implementation would use Redis or similar to track submissions
-      const email = 'ratelimit@example.com';
-
-      // Rate limit: max 3 submissions per hour per email
+      // Rate limit config: max 3 submissions per hour per email address
       const maxSubmissions = 3;
       const windowMs = 60 * 60 * 1000; // 1 hour
 

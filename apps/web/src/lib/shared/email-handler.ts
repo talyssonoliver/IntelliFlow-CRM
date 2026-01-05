@@ -198,8 +198,9 @@ export async function sendContactEmail(
     // 2. Build email payload
     const payload = buildContactEmailPayload(formData);
 
-    // 3. TODO: Rate limiting check
-    // Would integrate with Redis/Upstash to track submissions per email
+    // 3. Rate limiting check (Deferred to Sprint 13 - IFC-073: Redis integration)
+    // Will integrate with Redis/Upstash to track submissions per email
+    // Implementation pattern:
     // const rateLimitKey = `contact-form:${formData.email}`;
     // const submissionCount = await redis.incr(rateLimitKey);
     // if (submissionCount === 1) {
@@ -215,7 +216,8 @@ export async function sendContactEmail(
     //   };
     // }
 
-    // 4. TODO: Send email via email service (Resend, SendGrid, etc.)
+    // 4. Email service integration (Deferred to Sprint 12 - IFC-157: Notification Service)
+    // Will send via email service (Resend, SendGrid, etc.)
     // For now, log to console in development
     if (process.env.NODE_ENV === 'development') {
       console.log('[Email Handler] Contact form submission:');
