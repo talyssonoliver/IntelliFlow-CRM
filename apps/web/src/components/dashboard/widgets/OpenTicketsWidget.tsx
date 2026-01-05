@@ -44,17 +44,17 @@ export function OpenTicketsWidget(_props: Readonly<WidgetProps>) {
   return (
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-start justify-between">
-        <div className="w-12 h-12 rounded-lg bg-ds-primary/10 flex items-center justify-center">
-          <span className="material-symbols-outlined text-2xl text-ds-primary">confirmation_number</span>
+        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+          <span className="material-symbols-outlined text-2xl text-primary">confirmation_number</span>
         </div>
-        <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+        <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-destructive-muted text-destructive">
           {metrics.urgent} Urgent
         </span>
       </div>
-      <p className="text-sm text-slate-500 dark:text-slate-400 mt-4">Open Tickets</p>
-      <p className="text-3xl font-bold text-slate-900 dark:text-white mt-1">{metrics.total}</p>
+      <p className="text-sm text-muted-foreground mt-4">Open Tickets</p>
+      <p className="text-3xl font-bold text-foreground mt-1">{metrics.total}</p>
       {metrics.breached > 0 && (
-        <p className="text-xs text-red-600 dark:text-red-400 mt-2">
+        <p className="text-xs text-destructive mt-2">
           {metrics.breached} SLA breach{metrics.breached !== 1 ? 'es' : ''}
         </p>
       )}

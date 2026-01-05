@@ -8,16 +8,16 @@ import {
   type ActivityRecord,
 } from '../../../../hooks/use-subscription';
 
-// Activity type icons and colors
+// Activity type icons and colors using design system
 const activityTypeConfig: Record<string, { icon: string; color: string }> = {
-  EMAIL: { icon: '📧', color: 'text-blue-600' },
-  CALL: { icon: '📞', color: 'text-green-600' },
-  MEETING: { icon: '📅', color: 'text-purple-600' },
-  NOTE: { icon: '📝', color: 'text-yellow-600' },
-  TASK: { icon: '✓', color: 'text-orange-600' },
-  STAGE_CHANGE: { icon: '🔄', color: 'text-indigo-600' },
-  AGENT_ACTION: { icon: '🤖', color: 'text-pink-600' },
-  SYSTEM: { icon: '⚙️', color: 'text-gray-600' },
+  EMAIL: { icon: '📧', color: 'text-info' },
+  CALL: { icon: '📞', color: 'text-success' },
+  MEETING: { icon: '📅', color: 'text-chart-3' },
+  NOTE: { icon: '📝', color: 'text-warning' },
+  TASK: { icon: '✓', color: 'text-chart-6' },
+  STAGE_CHANGE: { icon: '🔄', color: 'text-chart-2' },
+  AGENT_ACTION: { icon: '🤖', color: 'text-chart-4' },
+  SYSTEM: { icon: '⚙️', color: 'text-muted-foreground' },
 };
 
 // Format timestamp to relative time
@@ -39,20 +39,20 @@ function formatRelativeTime(timestamp: string): string {
 // Connection status indicator
 function ConnectionStatus({ status, latency }: { status: string; latency: number | null }) {
   const statusConfig = {
-    connected: { color: 'bg-green-500', label: 'Live' },
-    connecting: { color: 'bg-yellow-500 animate-pulse', label: 'Connecting...' },
-    disconnected: { color: 'bg-gray-400', label: 'Offline' },
-    error: { color: 'bg-red-500', label: 'Error' },
+    connected: { color: 'bg-success', label: 'Live' },
+    connecting: { color: 'bg-warning animate-pulse', label: 'Connecting...' },
+    disconnected: { color: 'bg-muted-foreground', label: 'Offline' },
+    error: { color: 'bg-destructive', label: 'Error' },
   };
 
   const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.disconnected;
 
   return (
-    <div className="flex items-center gap-2 text-xs text-slate-500">
+    <div className="flex items-center gap-2 text-xs text-muted-foreground">
       <span className={`w-2 h-2 rounded-full ${config.color}`} />
       <span>{config.label}</span>
       {status === 'connected' && latency !== null && (
-        <span className="text-slate-400">({latency}ms)</span>
+        <span className="text-muted-foreground">({latency}ms)</span>
       )}
     </div>
   );
@@ -129,7 +129,7 @@ export function RecentActivityWidget(_props: WidgetProps) {
   return (
     <div className="p-5 h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-bold text-slate-900 dark:text-white">Recent Activity</h3>
+        <h3 className="font-bold text-foreground">Recent Activity</h3>
         <ConnectionStatus
           status={isHealthy ? displayStatus : 'disconnected'}
           latency={metrics.averageLatency || latency}
@@ -143,25 +143,25 @@ export function RecentActivityWidget(_props: WidgetProps) {
           return (
             <div key={activity.id} className="flex items-start gap-3">
               <div
-                className={`flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 ${typeConfig.color}`}
+                className={`flex items-center justify-center w-8 h-8 rounded-full bg-muted ${typeConfig.color}`}
               >
                 <span className="text-sm">{typeConfig.icon}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-slate-800 dark:text-slate-200">
+                <p className="text-sm text-foreground">
                   <span className="font-semibold">{activity.title}</span>
                   {activity.description && (
-                    <span className="text-slate-600 dark:text-slate-400">
+                    <span className="text-muted-foreground">
                       {' '}- {activity.description}
                     </span>
                   )}
                 </p>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-muted-foreground">
                     {activity.dateLabel || formatRelativeTime(activity.timestamp)}
                   </p>
                   {activity.agentName && (
-                    <span className="text-xs text-pink-600 dark:text-pink-400">
+                    <span className="text-xs text-chart-4">
                       by {activity.agentName}
                     </span>
                   )}
@@ -174,14 +174,14 @@ export function RecentActivityWidget(_props: WidgetProps) {
 
       {/* Show hint when using fallback data */}
       {isUsingFallback && status === 'connected' && (
-        <p className="text-xs text-slate-400 mt-3 text-center">
+        <p className="text-xs text-muted-foreground mt-3 text-center">
           Waiting for new activities...
         </p>
       )}
 
       {/* Show metrics in dev mode */}
       {process.env.NODE_ENV === 'development' && metrics.messagesReceived > 0 && (
-        <div className="text-xs text-slate-400 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
+        <div className="text-xs text-muted-foreground mt-3 pt-3 border-t border-border">
           <span>Messages: {metrics.messagesReceived}</span>
           <span className="mx-2">|</span>
           <span>Avg latency: {metrics.averageLatency}ms</span>

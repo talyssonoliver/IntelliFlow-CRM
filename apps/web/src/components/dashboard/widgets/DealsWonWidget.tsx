@@ -16,13 +16,13 @@ export function DealsWonWidget(_props: WidgetProps) {
     return (
       <div className="p-6 h-full flex flex-col animate-pulse">
         <div className="flex items-center justify-between mb-6">
-          <div className="h-7 w-48 rounded bg-slate-200 dark:bg-slate-700" />
-          <div className="h-8 w-32 rounded bg-slate-200 dark:bg-slate-700" />
+          <div className="h-7 w-48 rounded bg-muted" />
+          <div className="h-8 w-32 rounded bg-muted" />
         </div>
         <div className="flex items-end justify-between h-48 gap-4 px-4 flex-1">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div key={i} className="flex-1">
-              <div className="w-full h-40 rounded-t bg-slate-200 dark:bg-slate-700" />
+              <div className="w-full h-40 rounded-t bg-muted" />
             </div>
           ))}
         </div>
@@ -39,10 +39,10 @@ export function DealsWonWidget(_props: WidgetProps) {
   return (
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+        <h3 className="text-lg font-semibold text-foreground">
           Deals Won (Last 6 Months)
         </h3>
-        <select className="px-2 py-1 text-sm border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+        <select className="px-2 py-1 text-sm border border-border rounded bg-card text-foreground">
           <option>Last 6 Months</option>
           <option>Last 12 Months</option>
         </select>
@@ -59,13 +59,13 @@ export function DealsWonWidget(_props: WidgetProps) {
               <div className="w-full h-40 flex items-end">
                 <div
                   className={`w-full rounded-t transition-all ${
-                    isLast ? 'bg-ds-primary' : 'bg-ds-primary/60'
+                    isLast ? 'bg-primary' : 'bg-primary/60'
                   }`}
                   style={{ height: `${height}%` }}
                   title={`${item.value} deals won`}
                 />
               </div>
-              <span className="text-xs text-slate-500 dark:text-slate-400">{item.month}</span>
+              <span className="text-xs text-muted-foreground">{item.month}</span>
             </div>
           );
         })}

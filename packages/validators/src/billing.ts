@@ -256,3 +256,71 @@ export const planSchema = z.object({
 
 export type Plan = z.infer<typeof planSchema>;
 export type PlanFeature = z.infer<typeof planFeatureSchema>;
+
+// ============================================
+// Checkout Schemas (PG-026)
+// ============================================
+
+export const BILLING_CYCLES = ['monthly', 'annual'] as const;
+export const billingCycleSchema = z.enum(BILLING_CYCLES);
+export type BillingCycle = z.infer<typeof billingCycleSchema>;
+
+/**
+ * Create checkout subscription input
+ * Used when user submits checkout form with card details
+ */
+export const createCheckoutInputSchema = z.object({
+  planId: z.string().min(1, 'Plan ID is required'),
+  billingCycle: billingCycleSchema,
+  paymentMethodId: z.string().min(1, 'Payment method ID is required'),
+});
+
+export type CreateCheckoutInput = z.infer<typeof createCheckoutInputSchema>;
+
+/**
+ * Checkout response with subscription details
+ * Includes clientSecret for 3D Secure handling
+ */
+export const checkoutResponseSchema = z.object({
+  subscriptionId: z.string(),
+  status: subscriptionStatusSchema,
+  clientSecret: z.string().nullable().optional(),
+  currentPeriodEnd: z.coerce.date(),
+});
+
+export type CheckoutResponse = z.infer<typeof checkoutResponseSchema>;
+
+/**
+ * Payment error codes for checkout form
+ */
+export const PAYMENT_ERROR_CODES = [
+  'CARD_DECLINED',
+  'EXPIRED_CARD',
+  'INSUFFICIENT_FUNDS',
+  'PROCESSING_ERROR',
+  'VALIDATION_ERROR',
+  'INVALID_CVC',
+  'INVALID_EXPIRY',
+  'INVALID_NUMBER',
+  'RATE_LIMIT',
+] as const;
+
+export const paymentErrorCodeSchema = z.enum(PAYMENT_ERROR_CODES);
+export type PaymentErrorCode = z.infer<typeof paymentErrorCodeSchema>;
+
+/**
+ * Card brand detection for UI display
+ */
+export const CARD_BRANDS = [
+  'visa',
+  'mastercard',
+  'amex',
+  'discover',
+  'diners',
+  'jcb',
+  'unionpay',
+  'unknown',
+] as const;
+
+export const cardBrandSchema = z.enum(CARD_BRANDS);
+export type CardBrand = z.infer<typeof cardBrandSchema>;

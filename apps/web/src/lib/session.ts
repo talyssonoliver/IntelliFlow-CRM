@@ -155,4 +155,6 @@ export const PUBLIC_ROUTES = [
   '/forgot-password',
   '/reset-password',
   '/verify-email',
+  '/auth/verify-email',
+  '/auth/mfa/verify',
 ];
