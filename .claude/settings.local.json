@@ -28,15 +28,13 @@
       "Bash(pnpm --filter @intelliflow/adapters run typecheck)",
       "Bash(pnpm --filter @intelliflow/adapters run build:*)",
       "Bash(tee:*)",
-      "Bash(Select-String \"Found.*error\")",
       "Bash(Select-Object -Last 1)",
       "Bash(pnpm turbo typecheck:*:*)",
-      "Bash(powershell -Command \"pnpm turbo typecheck:* 2>&1 | Select-String ''Found.*error'' | Select-Object -Last 1\")",
-      "Bash(Select-String \"integration-setup\" -Context 0,2)",
       "Bash(pnpm prisma generate:*)",
       "Bash(npx tsc --noEmit)",
       "Bash(npx tsx:*)",
-      "Bash(dir \"C:\\\\taly\\\\intelliFlow-CRM\\\\infra\\\\supabase\\\\migrations\" /B)"
+      "Bash(dir \"C:\\\\taly\\\\intelliFlow-CRM\\\\infra\\\\supabase\\\\migrations\" /B)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []
