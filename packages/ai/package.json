@@ -1,0 +1,24 @@
+{
+  "name": "@intelliflow/ai",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@intelliflow/db": "workspace:*",
+    "@langchain/core": "^1.1.8",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@intelliflow/typescript-config": "workspace:*",
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3",
+    "vitest": "^4.0.16"
+  }
+}

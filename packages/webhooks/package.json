@@ -1,0 +1,45 @@
+{
+  "name": "@intelliflow/webhooks",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Webhook framework for IntelliFlow CRM - Signature verification, idempotency, retries, and DLQ",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "clean": "rm -rf dist .turbo",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint \"src/**/*.ts\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "keywords": [
+    "webhook",
+    "signature-verification",
+    "idempotency",
+    "retry",
+    "dead-letter-queue",
+    "stripe",
+    "github",
+    "sendgrid"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "@intelliflow/typescript-config": "workspace:*",
+    "@types/node": "^20.11.0",
+    "@vitest/coverage-v8": "^4.0.16",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^4.0.16"
+  }
+}

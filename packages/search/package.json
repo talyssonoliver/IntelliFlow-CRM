@@ -1,0 +1,55 @@
+{
+  "name": "@intelliflow/search",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Search and indexing services for IntelliFlow CRM (FTS, semantic, hybrid search)",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./retrieval": {
+      "types": "./dist/retrieval.d.ts",
+      "import": "./dist/retrieval.mjs",
+      "require": "./dist/retrieval.js"
+    },
+    "./indexer": {
+      "types": "./dist/indexer.d.ts",
+      "import": "./dist/indexer.mjs",
+      "require": "./dist/indexer.js"
+    },
+    "./worker": {
+      "types": "./dist/worker.d.ts",
+      "import": "./dist/worker.mjs",
+      "require": "./dist/worker.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts src/retrieval.ts src/indexer.ts src/worker.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts src/retrieval.ts src/indexer.ts src/worker.ts --format cjs,esm --dts --watch",
+    "clean": "rm -rf dist .turbo",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint \"src/**/*.ts\"",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@intelliflow/db": "workspace:*",
+    "bullmq": "^5.66.4",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@intelliflow/typescript-config": "workspace:*",
+    "@types/node": "^20.11.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^4.0.16"
+  },
+  "peerDependencies": {
+    "@intelliflow/db": "workspace:*"
+  }
+}
