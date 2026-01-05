@@ -2,6 +2,8 @@
 # Historical commits with non-compliant messages that cannot be rewritten.
 # Format: SHA [optional reason]
 # Lines starting with # are comments.
-
+# Owner: Tech Lead
+# Reviewed: 2025-12-29
+# Status: Permanent waiver for historical commit; cannot be fixed without rewriting history.
 # Multi-line subject in historical commit (cannot rebase due to remote push)
 e21e13409194 chore(hygiene): prevent runtime artifact drift - multi-line subject
