@@ -164,7 +164,7 @@ export function LandingHero({ section, pageSlug }: { section: HeroSection; pageS
       <div className="absolute -left-40 top-10 h-80 w-80 rounded-full bg-[#137fec]/20 blur-3xl opacity-50" />
       <div className="absolute right-0 bottom-0 h-96 w-96 rounded-full bg-indigo-500/20 blur-3xl opacity-40" />
 
-      <div className="container relative z-10 px-4 lg:px-6 mx-auto max-w-6xl">
+      <div className="container relative z-10 px-4 lg:px-6 mx-auto max-w-auto">
         <div className="max-w-3xl mx-auto text-center">
           {section.badge && (
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-[#7cc4ff] font-medium backdrop-blur mb-6">
@@ -219,7 +219,7 @@ export function LandingFeatures({ section }: { section: FeaturesSection }) {
 
   return (
     <section className="py-16 lg:py-20 bg-white dark:bg-slate-800">
-      <div className="container px-4 lg:px-6 mx-auto max-w-6xl">
+      <div className="container px-4 lg:px-6 mx-auto max-w-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">{section.title}</h2>
           {section.subtitle && (
@@ -253,7 +253,7 @@ export function LandingFeatures({ section }: { section: FeaturesSection }) {
 export function LandingTestimonials({ section }: { section: TestimonialsSection }) {
   return (
     <section className="py-16 lg:py-20 bg-slate-50 dark:bg-slate-900">
-      <div className="container px-4 lg:px-6 mx-auto max-w-6xl">
+      <div className="container px-4 lg:px-6 mx-auto max-w-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">{section.title}</h2>
           {section.subtitle && (
@@ -302,7 +302,7 @@ export function LandingStats({ section }: { section: StatsSection }) {
 
   return (
     <section className={`py-12 lg:py-16 ${bgClass}`}>
-      <div className="container px-4 lg:px-6 mx-auto max-w-6xl">
+      <div className="container px-4 lg:px-6 mx-auto max-w-auto">
         {section.title && (
           <h2 className={`text-2xl font-bold text-center mb-8 ${textClass}`}>{section.title}</h2>
         )}
@@ -326,7 +326,7 @@ export function LandingStats({ section }: { section: StatsSection }) {
 export function LandingPricing({ section }: { section: PricingSection }) {
   return (
     <section className="py-16 lg:py-20 bg-white dark:bg-slate-800">
-      <div className="container px-4 lg:px-6 mx-auto max-w-6xl">
+      <div className="container px-4 lg:px-6 mx-auto max-w-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">{section.title}</h2>
           {section.subtitle && (
@@ -334,7 +334,7 @@ export function LandingPricing({ section }: { section: PricingSection }) {
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mx-auto">
           {section.tiers.map((tier, index) => (
             <Card
               key={index}
@@ -451,7 +451,7 @@ export function LandingCta({ section, pageSlug }: { section: CtaSection; pageSlu
 export function LandingLogoCloud({ section }: { section: LogoCloudSection }) {
   return (
     <section className="py-12 lg:py-16 bg-slate-50 dark:bg-slate-900">
-      <div className="container px-4 lg:px-6 mx-auto max-w-6xl">
+      <div className="container px-4 lg:px-6 mx-auto max-w-auto">
         {section.title && (
           <p className="text-center text-sm text-slate-500 dark:text-slate-400 mb-8">{section.title}</p>
         )}

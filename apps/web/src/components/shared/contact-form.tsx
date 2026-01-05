@@ -37,15 +37,15 @@ export function ContactForm() {
 
     const formData = new FormData(event.currentTarget);
 
-    // Build form input object
-    const input: ContactFormInput = {
+    // Build form input object (raw input before Zod transformation)
+    const input = {
       name: formData.get('name') as string,
       email: formData.get('email') as string,
-      phone: formData.get('phone') as string || undefined,
+      phone: (formData.get('phone') as string) || undefined,
       company: (formData.get('company') as string) || null,
       subject: (formData.get('subject') as string) || null,
       message: formData.get('message') as string,
-      website: formData.get('website') as string || '',
+      website: (formData.get('website') as string) || '',
     };
 
     // Validate with Zod

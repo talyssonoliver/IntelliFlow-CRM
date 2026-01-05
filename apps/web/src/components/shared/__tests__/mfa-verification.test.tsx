@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * MFA Verification Component Tests
  *
