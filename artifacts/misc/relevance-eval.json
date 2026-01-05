@@ -1,0 +1,108 @@
+{
+  "$schema": "../../docs/schemas/relevance-config.schema.json",
+  "version": "1.0.0",
+  "taskId": "IFC-155",
+  "description": "Relevance evaluation configuration for permissioned case document and note search",
+  "createdAt": "2026-01-04T00:00:00.000Z",
+  "updatedAt": "2026-01-04T00:00:00.000Z",
+  "evaluationConfig": {
+    "fullTextWeight": 0.4,
+    "semanticWeight": 0.6,
+    "recencyBoost": 0.1,
+    "recencyDecayDays": 30,
+    "minScoreThreshold": 0.3,
+    "diversityPenalty": 0.05,
+    "rrfConstant": 60,
+    "notes": "RRF (Reciprocal Rank Fusion) combines FTS and semantic results. K=60 is standard."
+  },
+  "searchModes": {
+    "fulltext": {
+      "enabled": true,
+      "indexType": "GIN",
+      "language": "english",
+      "rankFunction": "ts_rank",
+      "description": "PostgreSQL tsvector full-text search with GIN index"
+    },
+    "semantic": {
+      "enabled": true,
+      "embeddingModel": "text-embedding-3-small",
+      "dimensions": 1536,
+      "indexType": "HNSW",
+      "similarityMetric": "cosine",
+      "defaultThreshold": 0.7,
+      "description": "pgvector semantic search with cosine similarity"
+    },
+    "hybrid": {
+      "enabled": true,
+      "fusionMethod": "RRF",
+      "defaultMode": true,
+      "description": "Combines FTS and semantic using Reciprocal Rank Fusion"
+    }
+  },
+  "metrics": {
+    "targetLatencyP95Ms": 200,
+    "targetLatencyP99Ms": 500,
+    "minCoveragePercent": 80,
+    "maxResultsPerQuery": 100,
+    "batchIndexingTargetMs": 200,
+    "batchSize": 10
+  },
+  "aclFilters": {
+    "tenantIsolation": {
+      "enabled": true,
+      "method": "RLS",
+      "description": "Row-level security ensures tenant data isolation"
+    },
+    "caseScoping": {
+      "enabled": true,
+      "parameter": "caseId",
+      "description": "Filter documents by associated case ID"
+    },
+    "documentClassification": {
+      "enabled": true,
+      "parameter": "classification",
+      "levels": ["public", "internal", "confidential", "restricted"],
+      "description": "Filter by document classification level"
+    }
+  },
+  "gdprCompliance": {
+    "dsarPurgeEnabled": true,
+    "redactionMarker": "[REDACTED - GDPR]",
+    "purgedFields": {
+      "caseDocuments": ["embedding", "search_vector", "extracted_text"],
+      "contactNotes": ["embedding", "search_vector", "content"]
+    },
+    "legalHoldCheck": true,
+    "auditLogging": true
+  },
+  "indexedEntities": {
+    "caseDocuments": {
+      "table": "case_documents",
+      "embeddingColumn": "embedding",
+      "ftsColumn": "search_vector",
+      "textSources": ["title", "description", "extracted_text", "tags"],
+      "aclColumns": ["tenant_id", "case_id", "classification"]
+    },
+    "contactNotes": {
+      "table": "contact_notes",
+      "embeddingColumn": "embedding",
+      "ftsColumn": "search_vector",
+      "textSources": ["content"],
+      "aclColumns": ["tenantId"]
+    }
+  },
+  "backgroundJobs": {
+    "reindexQueue": "intelliflow:document-reindex",
+    "concurrency": 1,
+    "rateLimitPerMinute": 1,
+    "retryAttempts": 3,
+    "backoffType": "exponential",
+    "backoffDelayMs": 5000
+  },
+  "testCoverage": {
+    "targetPercent": 80,
+    "latencyGateEnabled": true,
+    "aclTestsRequired": true,
+    "dsarTestsRequired": true
+  }
+}

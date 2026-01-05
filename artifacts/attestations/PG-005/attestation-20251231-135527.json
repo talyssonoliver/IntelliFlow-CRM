@@ -1,0 +1,64 @@
+{
+  "$schema": "https://intelliflow-crm.com/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-005",
+  "run_id": "sprint11-audit-20251231T135524-qwh5on",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2025-12-31T13:55:27.778Z",
+  "verdict": "INCOMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 14
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/(public)/contact/page.tsx": "af78e8b50d6b11e9dbc66a95ab3e040f49534da9479d6c8eeef50d1e747739be",
+    "apps/web/src/components/shared/contact-form.tsx": "93ecfb6a978623d526a6be5f347392e8a09ccdcdbeae67cea62ae2b8e5579e2f",
+    "apps/web/src/lib/shared/email-handler.ts": "390ca43e2af967f75420195a6ecf203544b7c1818a89e8320ce4dd5836874ded"
+  },
+  "validation_results": [],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "GTM-002",
+    "BRAND-001"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Response <200ms",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "Lighthouse ≥90",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "form working",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: page.tsx",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "contact-form.tsx",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "email-handler.ts",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/PG-005/context_ack.json; Found 14 placeholder(s) in task artifacts; 6 DoD criteria unverified"
+}

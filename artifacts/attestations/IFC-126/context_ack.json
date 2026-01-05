@@ -1,0 +1,53 @@
+{
+  "task_id": "IFC-126",
+  "title": "ADR Registry and Developer Guide Updates",
+  "sprint": 12,
+  "section": "Documentation",
+  "status": "completed",
+  "completed_at": "2025-12-31T07:00:00.000Z",
+  "artifacts_created": [
+    {
+      "path": "docs/dev-guide.md",
+      "type": "documentation",
+      "description": "Comprehensive developer guide covering setup, architecture, testing, and deployment"
+    },
+    {
+      "path": "artifacts/misc/adr-index.csv",
+      "type": "registry",
+      "description": "Updated ADR registry with all accepted decisions"
+    }
+  ],
+  "validation": {
+    "method": "code-review",
+    "passed": true,
+    "notes": "All significant design decisions captured in ADRs"
+  },
+  "dependencies_verified": {
+    "IFC-100": {
+      "status": "DONE",
+      "verified_at": "2025-12-31T06:45:00.000Z"
+    },
+    "GOV-001": {
+      "status": "DONE",
+      "verified_at": "2025-12-31T06:45:00.000Z"
+    }
+  },
+  "evidence": {
+    "adrs_documented": 12,
+    "dev_guide_sections": 10,
+    "categories_covered": [
+      "Technology",
+      "Architecture",
+      "API",
+      "Security",
+      "Workflow",
+      "AI",
+      "Governance",
+      "Domain"
+    ]
+  },
+  "kpis": {
+    "adr_coverage_target": "100%",
+    "dev_guide_coverage_target": "80%"
+  }
+}

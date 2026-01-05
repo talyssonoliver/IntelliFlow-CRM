@@ -1,0 +1,68 @@
+{
+  "$schema": "https://intelliflow-crm.com/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-001",
+  "run_id": "sprint11-audit-20251231T133519-v8iftk",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2025-12-31T13:35:28.145Z",
+  "verdict": "INCOMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 1,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "artifacts/misc/seo-meta.json": "56f7f61c44b5e61e79dcf55cf88e7e9e4838f450d89b5566de57e5f1ac628e95"
+  },
+  "validation_results": [],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-076",
+    "GTM-002",
+    "BRAND-001"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Response <200ms",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "Lighthouse ≥90",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "SEO optimized",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: page.tsx",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "loading.tsx",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "error.tsx",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "gates: lighthouse-gte-90",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "Missing or invalid artifacts: SPEC:.specify/specifications/PG-001.md, PLAN:.specify/planning/PG-001.md, EVIDENCE:artifacts/attestations/PG-001/context_pack.md, EVIDENCE:artifacts/attestations/PG-001/context_ack.json, apps/web/app/(public)/page.tsx, apps/web/app/(public)/loading.tsx, apps/web/app/(public)/error.tsx; 7 DoD criteria unverified"
+}

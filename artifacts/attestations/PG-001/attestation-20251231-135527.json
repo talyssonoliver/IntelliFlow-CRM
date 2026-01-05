@@ -1,0 +1,71 @@
+{
+  "$schema": "https://intelliflow-crm.com/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-001",
+  "run_id": "sprint11-audit-20251231T135524-qwh5on",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2025-12-31T13:55:27.654Z",
+  "verdict": "INCOMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/(public)/page.tsx": "8fe72804ce9c22170552532cb7660fd3646eed4fb27e810156a39fabc51bcfc1",
+    "apps/web/src/app/(public)/loading.tsx": "1524a4e7052feb9d9604ef0b75c84c65e83a528b17fc585603ef028d5690b9aa",
+    "apps/web/src/app/(public)/error.tsx": "859dc8842cd8081b08f858fdc3b2076b6c890b50403a0c419de7ae20917924d7",
+    "artifacts/misc/seo-meta.json": "56f7f61c44b5e61e79dcf55cf88e7e9e4838f450d89b5566de57e5f1ac628e95"
+  },
+  "validation_results": [],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-076",
+    "GTM-002",
+    "BRAND-001"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Response <200ms",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "Lighthouse ≥90",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "SEO optimized",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: page.tsx",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "loading.tsx",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "error.tsx",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "gates: lighthouse-gte-90",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "Missing or invalid artifacts: SPEC:.specify/specifications/PG-001.md, PLAN:.specify/planning/PG-001.md, EVIDENCE:artifacts/attestations/PG-001/context_pack.md, EVIDENCE:artifacts/attestations/PG-001/context_ack.json; 7 DoD criteria unverified"
+}

@@ -1,0 +1,193 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "lastUpdated": "2026-01-05T10:00:00Z",
+    "owner": "Security Team",
+    "description": "Risk register for compliance dashboard heat map visualization"
+  },
+  "risks": [
+    {
+      "id": "RISK-001",
+      "title": "Data Breach via API Endpoints",
+      "probability": "medium",
+      "impact": "high",
+      "status": "mitigated",
+      "category": "Security",
+      "owner": "Security Team",
+      "mitigationPlan": "Implemented rate limiting, input validation, and JWT authentication",
+      "dueDate": "2026-01-15"
+    },
+    {
+      "id": "RISK-002",
+      "title": "AI Model Bias in Lead Scoring",
+      "probability": "high",
+      "impact": "medium",
+      "status": "requires_action",
+      "category": "AI Ethics",
+      "owner": "AI Team",
+      "mitigationPlan": "Implement bias detection metrics and fairness constraints",
+      "dueDate": "2026-02-01"
+    },
+    {
+      "id": "RISK-003",
+      "title": "GDPR Non-Compliance in Data Retention",
+      "probability": "low",
+      "impact": "high",
+      "status": "mitigated",
+      "category": "Compliance",
+      "owner": "Legal Team",
+      "mitigationPlan": "Automated data retention policies and consent management implemented"
+    },
+    {
+      "id": "RISK-004",
+      "title": "Third-Party Dependency Vulnerabilities",
+      "probability": "medium",
+      "impact": "medium",
+      "status": "mitigated",
+      "category": "Security",
+      "owner": "DevOps Team",
+      "mitigationPlan": "Dependabot alerts and weekly security scans configured"
+    },
+    {
+      "id": "RISK-005",
+      "title": "Insufficient Disaster Recovery",
+      "probability": "low",
+      "impact": "high",
+      "status": "requires_action",
+      "category": "Operations",
+      "owner": "Infrastructure Team",
+      "mitigationPlan": "Implement multi-region backup strategy",
+      "dueDate": "2026-03-01"
+    },
+    {
+      "id": "RISK-006",
+      "title": "Inadequate Access Controls",
+      "probability": "low",
+      "impact": "medium",
+      "status": "accepted",
+      "category": "Security",
+      "owner": "Security Team",
+      "mitigationPlan": "Current RBAC implementation meets requirements for MVP"
+    },
+    {
+      "id": "RISK-007",
+      "title": "Performance Degradation Under Load",
+      "probability": "medium",
+      "impact": "low",
+      "status": "accepted",
+      "category": "Performance",
+      "owner": "Engineering Team",
+      "mitigationPlan": "Acceptable risk for current user base; monitor and scale as needed"
+    },
+    {
+      "id": "RISK-008",
+      "title": "Incomplete Audit Logging",
+      "probability": "low",
+      "impact": "medium",
+      "status": "mitigated",
+      "category": "Compliance",
+      "owner": "Engineering Team",
+      "mitigationPlan": "Comprehensive audit logging implemented for all sensitive operations"
+    },
+    {
+      "id": "RISK-009",
+      "title": "API Rate Limiting Bypass",
+      "probability": "low",
+      "impact": "low",
+      "status": "accepted",
+      "category": "Security",
+      "owner": "Security Team",
+      "mitigationPlan": "Multi-layer rate limiting in place; residual risk accepted"
+    },
+    {
+      "id": "RISK-010",
+      "title": "Insecure Configuration Management",
+      "probability": "low",
+      "impact": "low",
+      "status": "accepted",
+      "category": "Security",
+      "owner": "DevOps Team",
+      "mitigationPlan": "Vault integration and environment variable best practices followed"
+    },
+    {
+      "id": "RISK-011",
+      "title": "Supply Chain Attack via npm",
+      "probability": "low",
+      "impact": "medium",
+      "status": "mitigated",
+      "category": "Security",
+      "owner": "Engineering Team",
+      "mitigationPlan": "Package lock files, integrity checks, and limited dependency scope"
+    },
+    {
+      "id": "RISK-012",
+      "title": "Unencrypted Data at Rest",
+      "probability": "low",
+      "impact": "low",
+      "status": "accepted",
+      "category": "Security",
+      "owner": "Infrastructure Team",
+      "mitigationPlan": "Database-level encryption enabled; acceptable for current threat model"
+    },
+    {
+      "id": "RISK-013",
+      "title": "Insufficient Input Validation",
+      "probability": "medium",
+      "impact": "medium",
+      "status": "mitigated",
+      "category": "Security",
+      "owner": "Engineering Team",
+      "mitigationPlan": "Zod schemas validate all inputs at API boundaries"
+    },
+    {
+      "id": "RISK-014",
+      "title": "Session Hijacking",
+      "probability": "low",
+      "impact": "medium",
+      "status": "mitigated",
+      "category": "Security",
+      "owner": "Security Team",
+      "mitigationPlan": "HttpOnly cookies, secure flags, and session rotation implemented"
+    },
+    {
+      "id": "RISK-015",
+      "title": "Unpatched Production Systems",
+      "probability": "medium",
+      "impact": "low",
+      "status": "accepted",
+      "category": "Operations",
+      "owner": "DevOps Team",
+      "mitigationPlan": "Monthly patching cycle established; critical patches applied within 48h"
+    },
+    {
+      "id": "RISK-016",
+      "title": "Lack of Business Continuity Plan",
+      "probability": "high",
+      "impact": "low",
+      "status": "mitigated",
+      "category": "Operations",
+      "owner": "Management",
+      "mitigationPlan": "BCP documented and tested; recovery procedures defined"
+    },
+    {
+      "id": "RISK-017",
+      "title": "Insufficient Logging for Forensics",
+      "probability": "low",
+      "impact": "low",
+      "status": "accepted",
+      "category": "Security",
+      "owner": "Security Team",
+      "mitigationPlan": "Current logging sufficient for compliance; enhanced forensics planned for Phase 2"
+    },
+    {
+      "id": "RISK-018",
+      "title": "Cross-Site Scripting (XSS)",
+      "probability": "low",
+      "impact": "low",
+      "status": "mitigated",
+      "category": "Security",
+      "owner": "Engineering Team",
+      "mitigationPlan": "React auto-escapes output; CSP headers configured"
+    }
+  ]
+}

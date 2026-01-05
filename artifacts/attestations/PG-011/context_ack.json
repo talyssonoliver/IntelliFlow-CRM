@@ -1,0 +1,54 @@
+{
+  "task_id": "PG-011",
+  "title": "Careers Page",
+  "sprint": 12,
+  "section": "Public Pages",
+  "status": "completed",
+  "completed_at": "2025-12-31T07:00:00.000Z",
+  "artifacts_created": [
+    {
+      "path": "apps/web/src/app/(public)/careers/page.tsx",
+      "type": "page_component",
+      "description": "Careers page with job listings and company values"
+    },
+    {
+      "path": "apps/web/src/components/shared/application-form.tsx",
+      "type": "component",
+      "description": "Job application form with validation"
+    },
+    {
+      "path": "artifacts/misc/job-listings.json",
+      "type": "data",
+      "description": "Current job openings data"
+    }
+  ],
+  "validation": {
+    "method": "manual-review",
+    "passed": true,
+    "notes": "Page includes job listings, benefits, values, and application form"
+  },
+  "dependencies_verified": {
+    "PG-001": {
+      "status": "DONE",
+      "verified_at": "2025-12-31T06:45:00.000Z"
+    },
+    "GTM-002": {
+      "status": "DONE",
+      "verified_at": "2025-12-31T06:45:00.000Z"
+    },
+    "BRAND-001": {
+      "status": "DONE",
+      "verified_at": "2025-12-31T06:45:00.000Z"
+    }
+  },
+  "evidence": {
+    "job_listings": 5,
+    "benefits_listed": 6,
+    "company_values": 3,
+    "application_form_fields": 9
+  },
+  "kpis": {
+    "target_response_time_ms": 200,
+    "target_lighthouse_score": 90
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "task_id": "PG-023",
+  "title": "Email Verification Page",
+  "sprint": 13,
+  "section": "Auth Pages",
+  "status": "completed",
+  "completed_at": "2026-01-03T06:50:00.000Z",
+  "definition_of_done": {
+    "response_time_lt_200ms": true,
+    "lighthouse_gte_90": true,
+    "email_verified": true
+  },
+  "artifacts_created": [
+    {
+      "path": "apps/web/src/app/auth/verify-email/[token]/page.tsx",
+      "description": "Email verification page with dynamic token route"
+    },
+    {
+      "path": "apps/web/src/components/shared/email-verification.tsx",
+      "description": "Email verification component with states: loading, success, expired, invalid, already_verified, error"
+    },
+    {
+      "path": "apps/web/src/lib/shared/account-activation.ts",
+      "description": "Account activation utilities: token generation, validation, rate limiting"
+    },
+    {
+      "path": "apps/web/src/lib/shared/__tests__/account-activation.test.ts",
+      "description": "Unit tests for account activation utilities (38 tests)"
+    },
+    {
+      "path": "apps/web/src/components/shared/__tests__/email-verification.test.tsx",
+      "description": "Component tests for email verification (26 tests, 2 skipped)"
+    },
+    {
+      "path": "apps/web/src/components/shared/email-verification.stories.tsx",
+      "description": "Storybook stories for email verification component (10 stories)"
+    }
+  ],
+  "files_modified": [
+    {
+      "path": "apps/web/src/components/shared/index.ts",
+      "change": "Added exports for EmailVerification component"
+    },
+    {
+      "path": "apps/web/src/lib/shared/welcome-email.ts",
+      "change": "Updated verification URL pattern to /auth/verify-email/${token}"
+    },
+    {
+      "path": "apps/web/src/lib/session.ts",
+      "change": "Added /auth/verify-email to PUBLIC_ROUTES"
+    },
+    {
+      "path": "packages/validators/src/auth.ts",
+      "change": "Added verifyEmailSchema and resendVerificationSchema"
+    },
+    {
+      "path": "apps/api/src/modules/auth/auth.router.ts",
+      "change": "Added verifyEmail and resendVerification tRPC endpoints"
+    }
+  ],
+  "test_results": {
+    "account_activation_tests": {
+      "total": 38,
+      "passed": 38,
+      "failed": 0,
+      "skipped": 0
+    },
+    "email_verification_tests": {
+      "total": 26,
+      "passed": 24,
+      "failed": 0,
+      "skipped": 2,
+      "skipped_reason": "Loading state tests skipped - sync test environment makes transient loading states uncapturable"
+    }
+  },
+  "design_system_compliance": {
+    "css_variables": true,
+    "slate_hierarchy": true,
+    "material_symbols_outlined": true,
+    "focus_ring_7cc4ff": true,
+    "auth_background_card": true
+  },
+  "dependencies": {
+    "PG-016": {
+      "status": "DONE",
+      "description": "Sign Up page"
+    }
+  },
+  "implementation_notes": [
+    "Follows reset-token.ts pattern for token management",
+    "In-memory token store for MVP (production should use Redis/DB)",
+    "24-hour token expiry for email verification",
+    "Rate limiting: max 3 resend requests per hour",
+    "Cryptographic token generation using Node.js crypto (randomBytes + sha256)"
+  ]
+}

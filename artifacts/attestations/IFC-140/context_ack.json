@@ -1,0 +1,63 @@
+{
+  "task_id": "IFC-140",
+  "sprint": 11,
+  "files_read": [
+    {
+      "path": "artifacts/sprint0/codex-run/Framework.md",
+      "sha256": "58d6d8ba1603cf0825e5496203e1006af75be84a5bbfc24c04587749bb75a872"
+    },
+    {
+      "path": "audit-matrix.yml",
+      "sha256": "872fb4c829ddae17fab1147d1bdf6254880734269ad142eb6b68d6f07ab98182"
+    },
+    {
+      "path": "docs/planning/adr/ADR-004-multi-tenancy.md",
+      "sha256": "0b15251ae07322c5716988cb07dcce5e967f38704dcbf07f38ddae4df1526ce9"
+    },
+    {
+      "path": "docs/planning/adr/ADR-005-workflow-engine.md",
+      "sha256": "9b3e7b5c26623bf2cfb45c115c7aa36d7dc09ca26d105c8356446c6cb3afe783"
+    },
+    {
+      "path": "docs/planning/adr/ADR-007-data-governance.md",
+      "sha256": "42f7274805f6e8a7e14486ea7e18847db1a86b72cc1a6a76296ec55440c22c8f"
+    },
+    {
+      "path": "docs/planning/adr/ADR-008-audit-logging.md",
+      "sha256": "a3bea933e137687a5a4dbebb69fb17ea9118a4c1ca7ab2e70a614222d7059a06"
+    },
+    {
+      "path": "docs/operations/quality-gates.md",
+      "sha256": "73cecc439293415a5fbb9fb7c49762ca00ca1b1a791be9ec207393f3654cadf9"
+    },
+    {
+      "path": "docs/architecture/decision-workflow.md",
+      "sha256": "db32ecb94bb65fa041bb38b12be1eb3e6c54bdc523709ef04efaf7ccaf363ef1"
+    },
+    {
+      "path": "packages/db/prisma/schema-audit.prisma",
+      "sha256": "FILE_NOT_FOUND"
+    },
+    {
+      "path": "infra/supabase/rls-policies.sql",
+      "sha256": "FILE_NOT_FOUND"
+    }
+  ],
+  "invariants_acknowledged": [
+    "Hexagonal architecture boundaries enforced",
+    "Type safety: TypeScript strict mode compliance",
+    "Test coverage: Overall ≥90%, Domain ≥95%",
+    "Performance: API p95 <200ms, Frontend Lighthouse ≥90",
+    "Security: OWASP Top 10 compliance, no secrets in code",
+    "Governance: 7 completion criteria required",
+    "Evidence: SHA256 hashes + ISO timestamps required"
+  ],
+  "dependencies_verified": [
+    "IFC-098",
+    "IFC-127"
+  ],
+  "acknowledged_at": "2025-12-31T16:09:33.233Z",
+  "acknowledged_by": "STOA-Security",
+  "remediation_phase": "Phase 2 - Governance Process Repair",
+  "version": "1.0"
+}

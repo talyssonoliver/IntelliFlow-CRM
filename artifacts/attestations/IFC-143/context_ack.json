@@ -1,0 +1,72 @@
+{
+  "task_id": "IFC-143",
+  "sprint": 11,
+  "files_read": [
+    {
+      "path": "artifacts/sprint0/codex-run/Framework.md",
+      "sha256": "58d6d8ba1603cf0825e5496203e1006af75be84a5bbfc24c04587749bb75a872"
+    },
+    {
+      "path": "audit-matrix.yml",
+      "sha256": "872fb4c829ddae17fab1147d1bdf6254880734269ad142eb6b68d6f07ab98182"
+    },
+    {
+      "path": "docs/planning/adr/ADR-006-agent-tools.md",
+      "sha256": "eef733beb5d1cd95362276fddda6d18809af141375da3b463e831cf42dddf4dd"
+    },
+    {
+      "path": "packages/db/prisma/schema.prisma",
+      "sha256": "c46d314b895d276307b3aab1a580194bf1615e6c2da73acb5cab112cfd9c1419"
+    },
+    {
+      "path": "docs/security/zero-trust-design.md",
+      "sha256": "bbc0f7f929eac6474cb371ac92c26776186d0b30ae6f3640c2ebf0921f68fb62"
+    },
+    {
+      "path": "docs/security/owasp-checklist.md",
+      "sha256": "90a2528e48b332e369263ba6b4997955acabf0cd1b344a6a9d38d2e21f9a7453"
+    },
+    {
+      "path": "docs/tdd-guidelines.md",
+      "sha256": "4387ed3cf456f17a7510a44ad10ba933d15cbba90f2292e481779b4c1af41473"
+    },
+    {
+      "path": "docs/design-system/token-mapping.md",
+      "sha256": "bd91c15f82d67336279d36852c80b481585d4188b84f51910e4c70a7e8c4d06e"
+    },
+    {
+      "path": "docs/company/brand/visual-identity.md",
+      "sha256": "a97cfeddf7d1fea5bc2eeb310a25e1533c371d9dab5a90ca7d67ed3d0a538b14"
+    },
+    {
+      "path": "apps/api/src/shared/prompt-sanitizer.ts",
+      "sha256": "626e2139f20d1ec5c5ed5d424e54192c62f14908b6bae6bb794dd38bbe21c62f"
+    },
+    {
+      "path": "packages/domain/src/legal/cases/Case.ts",
+      "sha256": "d7021cba023d2b631539162389751ba5830ebf33680d0dbb5ac34f91cfc99a9a"
+    },
+    {
+      "path": "artifacts/misc/logs/agent-actions.log",
+      "sha256": "fabe05977723bd3ff1612f1f415f492f717802f538d5204840c7d552d466b323"
+    }
+  ],
+  "invariants_acknowledged": [
+    "Hexagonal architecture boundaries enforced",
+    "Type safety: TypeScript strict mode compliance",
+    "Test coverage: Overall ≥90%, Domain ≥95%",
+    "Performance: API p95 <200ms, Frontend Lighthouse ≥90",
+    "Security: OWASP Top 10 compliance, no secrets in code",
+    "Governance: 7 completion criteria required",
+    "Evidence: SHA256 hashes + ISO timestamps required"
+  ],
+  "dependencies_verified": [
+    "IFC-125",
+    "IFC-136",
+    "IFC-139"
+  ],
+  "acknowledged_at": "2025-12-31T16:09:33.304Z",
+  "acknowledged_by": "STOA-Security",
+  "remediation_phase": "Phase 2 - Governance Process Repair",
+  "version": "1.0"
+}

@@ -1,0 +1,184 @@
+{
+  "task_id": "IFC-025",
+  "task_name": "A/B Testing Framework",
+  "section": "Intelligence",
+  "sprint": 14,
+  "completed_at": "2026-01-03T00:00:00.000Z",
+  "executor": "Claude Opus 4.5",
+  "dependencies": {
+    "IFC-022": {
+      "status": "DONE",
+      "verified_at": "2026-01-03T00:00:00.000Z"
+    }
+  },
+  "files_read": [
+    {
+      "path": "packages/domain/src/ai/AIConstants.ts",
+      "purpose": "Domain constants for experiment types and statuses"
+    },
+    {
+      "path": "packages/db/prisma/schema.prisma",
+      "purpose": "Database schema for adding experiment models"
+    },
+    {
+      "path": "packages/application/src/services/FeedbackService.ts",
+      "purpose": "Reference for service pattern structure"
+    },
+    {
+      "path": "apps/api/src/modules/feedback/feedback.router.ts",
+      "purpose": "Reference for tRPC router pattern"
+    },
+    {
+      "path": "packages/validators/src/index.ts",
+      "purpose": "Export structure for validators"
+    },
+    {
+      "path": "apps/ai-worker/src/analytics/index.ts",
+      "purpose": "Analytics module exports"
+    },
+    {
+      "path": "packages/ui/src/components/index.ts",
+      "purpose": "UI component exports"
+    },
+    {
+      "path": "apps/api/src/router.ts",
+      "purpose": "Main router for registering experiment router"
+    },
+    {
+      "path": "artifacts/attestations/IFC-024/context_pack.md",
+      "purpose": "Reference for attestation structure"
+    }
+  ],
+  "files_created": [
+    {
+      "path": "packages/validators/src/experiment.ts",
+      "purpose": "Zod validation schemas for experiment inputs/outputs"
+    },
+    {
+      "path": "apps/ai-worker/src/analytics/statistical-analysis.ts",
+      "purpose": "Statistical analysis utilities (t-test, chi-square, effect size)"
+    },
+    {
+      "path": "packages/application/src/services/ExperimentService.ts",
+      "purpose": "Application service for experiment business logic"
+    },
+    {
+      "path": "apps/api/src/modules/experiment/experiment.router.ts",
+      "purpose": "tRPC router for experiment API endpoints"
+    },
+    {
+      "path": "apps/api/src/modules/experiment/index.ts",
+      "purpose": "Experiment module exports"
+    },
+    {
+      "path": "packages/ui/src/components/experiment/ExperimentDashboard.tsx",
+      "purpose": "Dashboard UI component for experiment management"
+    },
+    {
+      "path": "packages/ui/src/components/experiment/index.ts",
+      "purpose": "Experiment UI component exports"
+    },
+    {
+      "path": "artifacts/misc/ab-test-config.json",
+      "purpose": "A/B testing configuration artifact"
+    },
+    {
+      "path": "artifacts/misc/statistical-analysis-report.json",
+      "purpose": "Statistical analysis report artifact"
+    },
+    {
+      "path": "packages/validators/__tests__/experiment.test.ts",
+      "purpose": "Test suite for experiment validators"
+    },
+    {
+      "path": "apps/ai-worker/src/analytics/__tests__/statistical-analysis.test.ts",
+      "purpose": "Test suite for statistical analysis utilities"
+    },
+    {
+      "path": "artifacts/attestations/IFC-025/context_pack.md",
+      "purpose": "Implementation documentation"
+    }
+  ],
+  "files_modified": [
+    {
+      "path": "packages/domain/src/ai/AIConstants.ts",
+      "changes": "Added EXPERIMENT_STATUSES, EXPERIMENT_TYPES, EXPERIMENT_VARIANTS, SIGNIFICANCE_LEVELS, EXPERIMENT_DEFAULTS, EFFECT_SIZE_THRESHOLDS"
+    },
+    {
+      "path": "packages/db/prisma/schema.prisma",
+      "changes": "Added ABExperiment, ExperimentAssignment, ExperimentResult models and ExperimentStatus, ExperimentType enums"
+    },
+    {
+      "path": "packages/validators/src/index.ts",
+      "changes": "Exported experiment schemas"
+    },
+    {
+      "path": "apps/ai-worker/src/analytics/index.ts",
+      "changes": "Exported statistical analysis utilities"
+    },
+    {
+      "path": "packages/application/src/services/index.ts",
+      "changes": "Exported ExperimentService"
+    },
+    {
+      "path": "apps/api/src/router.ts",
+      "changes": "Registered experiment router"
+    },
+    {
+      "path": "packages/ui/src/components/index.ts",
+      "changes": "Exported experiment components"
+    }
+  ],
+  "kpis": {
+    "ai_vs_manual_comparison": {
+      "target": "Variant assignment and score comparison functionality",
+      "actual": "ExperimentService with deterministic variant assignment, score recording, and statistical comparison",
+      "met": true
+    },
+    "statistical_analysis": {
+      "target": "Significance testing with p < 0.05 threshold",
+      "actual": "Welch's t-test with configurable alpha, chi-square for conversions, Cohen's d effect size",
+      "met": true
+    },
+    "artifacts_generated": {
+      "target": "ab-test-config.json, statistical-analysis report",
+      "actual": "artifacts/misc/ab-test-config.json, artifacts/misc/statistical-analysis-report.json",
+      "met": true
+    }
+  },
+  "architecture_alignment": {
+    "hexagonal": "Domain constants in domain layer, service in application layer, router in API layer, UI components in packages/ui",
+    "type_safety": "Zod schemas for all inputs/outputs, Prisma for persistence types",
+    "statistical_rigor": "Welch's t-test for unequal variances, chi-square for categorical, Cohen's d for effect size, power analysis",
+    "dry_principle": "Domain constants (EXPERIMENT_STATUSES, EXPERIMENT_TYPES) as single source of truth"
+  },
+  "implementation_summary": {
+    "database": "ABExperiment, ExperimentAssignment, ExperimentResult Prisma models",
+    "api": "14 tRPC endpoints covering full experiment lifecycle and analysis",
+    "ui": "ExperimentDashboard with cards, status badges, progress bars, results panel",
+    "statistics": "Welch's t-test, chi-square test, Cohen's d effect size, power analysis, distribution approximations"
+  },
+  "statistical_methods": {
+    "welch_t_test": {
+      "formula": "t = (x̄₁ - x̄₂) / √(s₁²/n₁ + s₂²/n₂)",
+      "purpose": "Compare mean scores between variants with unequal variances"
+    },
+    "chi_square": {
+      "formula": "χ² = Σ((O - E)² / E)",
+      "purpose": "Compare conversion rates between variants"
+    },
+    "cohens_d": {
+      "formula": "d = (x̄₁ - x̄₂) / s_pooled",
+      "purpose": "Measure standardized effect size"
+    },
+    "power_analysis": {
+      "formula": "n = 2 * ((z_α + z_β) / d)²",
+      "purpose": "Calculate required sample size"
+    }
+  },
+  "definition_of_done": {
+    "ai_vs_manual_comparison": true,
+    "statistical_analysis": true,
+    "artifacts_generated": true
+  }
+}

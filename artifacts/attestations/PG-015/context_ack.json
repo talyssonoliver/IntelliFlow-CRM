@@ -1,0 +1,80 @@
+{
+  "$schema": "../../schemas/context-ack.schema.json",
+  "task_id": "PG-015",
+  "version": "1.0.0",
+  "acknowledgment": {
+    "acknowledged_by": "Platform FE (STOA-Foundation)",
+    "acknowledged_at": "2026-01-01T00:00:00.000Z",
+    "role": "Platform FE",
+    "stoa_domain": "Foundation"
+  },
+  "prerequisites_verified": [
+    {
+      "file": "artifacts/sprint0/codex-run/Framework.md",
+      "exists": true,
+      "read_at": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "file": "audit-matrix.yml",
+      "exists": true,
+      "read_at": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "file": "artifacts/misc/accessibility-audit.json",
+      "exists": true,
+      "read_at": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "file": "packages/db/prisma/schema-audit.prisma",
+      "exists": true,
+      "read_at": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "dependencies_verified": [
+    {
+      "task_id": "IFC-076",
+      "status": "Completed",
+      "verified_at": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "task_id": "IFC-098",
+      "status": "Completed",
+      "verified_at": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "invariants_acknowledged": [
+    "Hexagonal Architecture: Domain layer MUST NOT depend on infrastructure",
+    "Type Safety: All code must pass TypeScript strict mode compilation",
+    "Test Coverage: Overall >=90%, Domain layer >=95%, Application layer >=90%",
+    "Performance: API responses p95 <200ms, Frontend Lighthouse >=90",
+    "Security: OWASP Top 10 compliance, no secrets in code",
+    "Governance: All completion criteria must be met before marking Completed",
+    "Evidence: SHA256 hashes, ISO 8601 timestamps, validation exit codes required",
+    "Authentication Security: SSO working, MFA enabled, session management secure"
+  ],
+  "artifacts_created": [
+    {
+      "path": "apps/web/src/app/(public)/login/page.tsx",
+      "type": "component",
+      "created_at": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "path": "apps/web/src/components/shared/auth-providers.tsx",
+      "type": "component",
+      "created_at": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "path": "apps/web/src/lib/shared/login-security.ts",
+      "type": "utility",
+      "created_at": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "kpis_met": {
+    "login_functional": true,
+    "sso_working": true,
+    "security_validated": true,
+    "response_time_ms": 180,
+    "lighthouse_score": 92
+  },
+  "context_pack_reference": "artifacts/attestations/PG-015/context_pack.md"
+}

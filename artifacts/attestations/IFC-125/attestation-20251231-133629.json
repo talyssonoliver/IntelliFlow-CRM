@@ -1,0 +1,89 @@
+{
+  "$schema": "https://intelliflow-crm.com/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-125",
+  "run_id": "sprint11-audit-20251231T133519-v8iftk",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2025-12-31T13:36:29.272Z",
+  "verdict": "INCOMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 0,
+    "validations_failed": 1,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/api/src/shared/prompt-sanitizer.ts": "626e2139f20d1ec5c5ed5d424e54192c62f14908b6bae6bb794dd38bbe21c62f",
+    "artifacts/metrics/bias-metrics.csv": "7caed5c950a0e6ee0e1110873911050362fa54d5b05b929a945664870cc9e1d1",
+    "docs/shared/ai-guardrails-report.md": "e72441bd06e6242153279d075780c6b48c50d1c8820396eee9e5ad6f503dd1ba"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-125",
+      "command": "pnpm test",
+      "exit_code": 124,
+      "passed": false,
+      "timestamp": "2025-12-31T13:35:28.441Z",
+      "duration_ms": 60827,
+      "stdout_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-005",
+    "IFC-008"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Prompt sanitization",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "output redaction",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "bias detection metrics",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "incidents logged",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: prompt-sanitizer.ts",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "bias-metrics.csv",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "ai-guardrails-report.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: zero errors",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: pnpm test",
+      "met": false,
+      "evidence": "Failed validations: 1"
+    }
+  ],
+  "notes": "Missing or invalid artifacts: SPEC:.specify/specifications/IFC-125.md, PLAN:.specify/planning/IFC-125.md, EVIDENCE:artifacts/attestations/IFC-125/context_pack.md, EVIDENCE:artifacts/attestations/IFC-125/context_ack.json; Validation(s) failed: pnpm test; 9 DoD criteria unverified"
+}

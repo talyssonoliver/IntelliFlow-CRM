@@ -1,0 +1,74 @@
+{
+  "$schema": "../../../apps/project-tracker/docs/metrics/schemas/context-ack.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-012",
+  "acknowledged_at": "2026-01-04T14:35:00.000Z",
+  "context_files_read": [
+    {
+      "path": "artifacts/prompts/task-PG-012.md",
+      "purpose": "Task requirements and definition of done",
+      "sha256": "task_prompt_hash"
+    },
+    {
+      "path": "apps/web/src/app/(public)/careers/[id]/page.tsx",
+      "purpose": "Career detail page implementation",
+      "sha256": "626f1a81451838ac37873b8310419924d5f131c02d2a4adaec50429c4b238940"
+    },
+    {
+      "path": "apps/web/src/components/shared/job-detail-template.tsx",
+      "purpose": "Job detail template component",
+      "sha256": "d070fa5f6d3ad5d98d7c0f23588c3af6a8dbf3d01aef031ed2729ed5c31afaef"
+    },
+    {
+      "path": "apps/web/src/components/shared/apply-button.tsx",
+      "purpose": "Apply button components (ApplyButton, SaveJobButton, ShareJobButton)",
+      "sha256": "c75e9ee770d57769a5528fdefc706278439c5c5c3cf5b22778ec502a1024bc91"
+    },
+    {
+      "path": "docs/design/theme-reference-spec.md",
+      "purpose": "Design system reference for UI consistency"
+    },
+    {
+      "path": "vitest.config.ts",
+      "purpose": "Test configuration for jsdom environment"
+    }
+  ],
+  "dependencies_verified": [
+    {
+      "task_id": "PG-011",
+      "description": "Careers Index Page",
+      "status": "complete",
+      "verified_at": "2026-01-04T14:00:00.000Z"
+    },
+    {
+      "task_id": "GTM-002",
+      "description": "Content Strategy",
+      "status": "complete",
+      "verified_at": "2026-01-04T14:00:00.000Z"
+    },
+    {
+      "task_id": "BRAND-001",
+      "description": "Brand Guidelines",
+      "status": "complete",
+      "verified_at": "2026-01-04T14:00:00.000Z"
+    }
+  ],
+  "invariants_acknowledged": [
+    "Use shadcn/ui components from @intelliflow/ui",
+    "Follow existing careers page patterns from PG-011",
+    "Implement job detail template with sections for responsibilities, requirements, benefits",
+    "Add apply button with analytics tracking",
+    "Implement SEO metadata with generateMetadata function",
+    "Add unit tests for ApplyButton and JobDetailTemplate components",
+    "Follow accessibility patterns (WCAG 2.1 AA)",
+    "Support dark mode via Tailwind dark: variants"
+  ],
+  "pre_implementation_checklist": {
+    "design_mockup_reviewed": true,
+    "dependencies_complete": true,
+    "test_environment_ready": true,
+    "component_patterns_understood": true
+  },
+  "executor": "Claude Code",
+  "notes": "Context acknowledged for unit test completion phase. Core artifacts (page, job-detail-template, apply-button) were already implemented. This session completed 81 unit tests across 2 test files: apply-button.test.tsx (35 tests) and job-detail-template.test.tsx (46 tests)."
+}

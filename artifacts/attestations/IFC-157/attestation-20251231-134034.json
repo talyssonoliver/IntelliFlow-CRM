@@ -1,0 +1,81 @@
+{
+  "$schema": "https://intelliflow-crm.com/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-157",
+  "run_id": "sprint11-audit-20251231T133519-v8iftk",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2025-12-31T13:40:34.759Z",
+  "verdict": "INCOMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 0,
+    "validations_passed": 0,
+    "validations_failed": 1,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {},
+  "validation_results": [
+    {
+      "name": "IFC-157",
+      "command": "pnpm test",
+      "exit_code": 124,
+      "passed": false,
+      "timestamp": "2025-12-31T13:39:33.640Z",
+      "duration_ms": 61116,
+      "stdout_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-144",
+    "IFC-098",
+    "IFC-151"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Notification domain + templates implemented",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "delivery adapters",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "preference defaults stored",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "audit entries",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "retries/DLQ",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "tests",
+      "met": false,
+      "evidence": "Failed validations: 1"
+    },
+    {
+      "criterion": "targets: >=99%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": ">=100%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "Missing or invalid artifacts: SPEC:.specify/specifications/IFC-157.md, PLAN:.specify/planning/IFC-157.md, EVIDENCE:artifacts/attestations/IFC-157/context_pack.md, EVIDENCE:artifacts/attestations/IFC-157/context_ack.json, docs/operations/runbooks/notifications.md; Validation(s) failed: pnpm test; 8 DoD criteria unverified"
+}

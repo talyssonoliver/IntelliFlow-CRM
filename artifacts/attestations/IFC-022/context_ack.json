@@ -1,0 +1,109 @@
+{
+  "task_id": "IFC-022",
+  "title": "Structured AI Output Implementation",
+  "status": "completed",
+  "completed_at": "2026-01-01T06:35:00.000Z",
+  "executor": "Claude Opus 4.5",
+  "sprint": 13,
+  "section": "Intelligence",
+  "dependency": "IFC-021",
+
+  "files_read": [
+    {
+      "path": "packages/validators/src/lead.ts",
+      "purpose": "leadScoreSchema pattern - confidence, factors, modelVersion"
+    },
+    {
+      "path": "apps/api/src/shared/scoring-output-schema.zod.ts",
+      "purpose": "scoringResponseSchema, batchScoringResponseSchema patterns"
+    },
+    {
+      "path": "apps/ai-worker/src/agents/base.agent.ts",
+      "purpose": "AgentResult interface with confidence scoring"
+    },
+    {
+      "path": "apps/ai-worker/src/agents/qualification.agent.ts",
+      "purpose": "qualificationOutputSchema and confidence calculation"
+    },
+    {
+      "path": "apps/ai-worker/src/chains/scoring.chain.ts",
+      "purpose": "validateScoringResult() method and error fallback"
+    },
+    {
+      "path": "artifacts/misc/crew-config.yaml",
+      "purpose": "humanReview.confidenceThreshold baseline (0.5)"
+    },
+    {
+      "path": "apps/api/src/test/setup.ts",
+      "purpose": "Test utilities and mock data patterns"
+    }
+  ],
+
+  "artifacts_created": [
+    {
+      "path": "apps/api/src/shared/output-validation-test.ts",
+      "purpose": "Comprehensive AI output validation test suite"
+    },
+    {
+      "path": "artifacts/misc/confidence-calibration.json",
+      "purpose": "Confidence thresholds and calibration configuration"
+    },
+    {
+      "path": "artifacts/attestations/IFC-022/context_ack.json",
+      "purpose": "Task attestation"
+    }
+  ],
+
+  "invariants_acknowledged": [
+    "100% of AI outputs MUST be validated against Zod schemas before use",
+    "All AI responses MUST include confidence scores in range [0.0, 1.0]",
+    "Confidence < 0.5 triggers human review (from crew-config.yaml)",
+    "Fallback outputs on error MUST have confidence = 0.0 or 0.1",
+    "Validation failures MUST NOT crash the system - graceful degradation",
+    "High-risk actions require confidence >= 0.70 (from ADR-006)",
+    "Hallucination rate must remain < 5% (KPI target)",
+    "All schemas use Zod for type-safe runtime validation"
+  ],
+
+  "test_coverage": {
+    "schema_validation": {
+      "leadScoreSchema": "17 test cases",
+      "qualificationOutputSchema": "10 test cases",
+      "scoringResponseSchema": "7 test cases",
+      "batchScoringResponseSchema": "3 test cases",
+      "scoreOverrideSchema": "4 test cases"
+    },
+    "confidence_validation": {
+      "range_validation": "5 test cases",
+      "human_review_threshold": "2 test cases",
+      "error_fallback": "2 test cases"
+    },
+    "edge_cases": {
+      "malformed_output": "6 test cases",
+      "partial_output": "3 test cases",
+      "type_coercion": "3 test cases",
+      "special_characters": "3 test cases"
+    }
+  },
+
+  "validation": {
+    "tests_command": "pnpm --filter @intelliflow/api test src/shared/output-validation-test.ts",
+    "typecheck_command": "pnpm --filter @intelliflow/api typecheck",
+    "lint_command": "pnpm --filter @intelliflow/api lint"
+  },
+
+  "kpis": {
+    "ai_outputs_validated": {
+      "target": "100%",
+      "description": "All AI outputs validated against schemas"
+    },
+    "confidence_scores_included": {
+      "target": "100%",
+      "description": "All outputs include confidence in [0.0, 1.0]"
+    },
+    "human_review_threshold": {
+      "target": "0.5",
+      "description": "Outputs below this trigger human review"
+    }
+  }
+}

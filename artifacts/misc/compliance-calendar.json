@@ -1,0 +1,145 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "lastUpdated": "2026-01-05T10:00:00Z",
+    "owner": "Compliance Team",
+    "description": "Compliance events calendar for timeline visualization"
+  },
+  "events": [
+    {
+      "id": "EVT-001",
+      "title": "GDPR Annual Review",
+      "date": "2026-01-15",
+      "type": "review",
+      "standard": "GDPR",
+      "status": "scheduled",
+      "description": "Annual review of GDPR compliance controls and data processing activities"
+    },
+    {
+      "id": "EVT-002",
+      "title": "Quarterly Security Review",
+      "date": "2026-01-20",
+      "type": "review",
+      "standard": "ISO 27001",
+      "status": "scheduled",
+      "description": "Q1 2026 security controls review and risk assessment update"
+    },
+    {
+      "id": "EVT-003",
+      "title": "ISO 42001 Initial Assessment",
+      "date": "2026-02-01",
+      "type": "assessment",
+      "standard": "ISO 42001",
+      "status": "scheduled",
+      "description": "Initial assessment for AI Management System certification"
+    },
+    {
+      "id": "EVT-004",
+      "title": "SOC 2 Type II Audit",
+      "date": "2026-02-15",
+      "type": "audit",
+      "standard": "SOC 2",
+      "status": "scheduled",
+      "description": "Annual SOC 2 Type II audit for security and availability trust principles"
+    },
+    {
+      "id": "EVT-005",
+      "title": "ISO 27001 Recertification",
+      "date": "2026-03-01",
+      "type": "certification",
+      "standard": "ISO 27001",
+      "status": "scheduled",
+      "description": "Three-year recertification audit for Information Security Management System"
+    },
+    {
+      "id": "EVT-006",
+      "title": "Annual Penetration Test",
+      "date": "2026-03-15",
+      "type": "assessment",
+      "standard": "OWASP",
+      "status": "scheduled",
+      "description": "Annual penetration testing engagement covering web application and API security"
+    },
+    {
+      "id": "EVT-007",
+      "title": "OWASP Security Audit",
+      "date": "2026-03-20",
+      "type": "audit",
+      "standard": "OWASP",
+      "status": "scheduled",
+      "description": "Review of OWASP Top 10 controls and vulnerability remediation status"
+    },
+    {
+      "id": "EVT-008",
+      "title": "ISO 14001 Environmental Review",
+      "date": "2026-04-01",
+      "type": "review",
+      "standard": "ISO 14001",
+      "status": "scheduled",
+      "description": "Annual environmental management system review and sustainability metrics"
+    },
+    {
+      "id": "EVT-009",
+      "title": "Q2 Security Review",
+      "date": "2026-04-15",
+      "type": "review",
+      "standard": "ISO 27001",
+      "status": "scheduled",
+      "description": "Q2 2026 security controls review"
+    },
+    {
+      "id": "EVT-010",
+      "title": "GDPR DPIA Update",
+      "date": "2026-05-01",
+      "type": "review",
+      "standard": "GDPR",
+      "status": "scheduled",
+      "description": "Data Protection Impact Assessment update for new AI features"
+    },
+    {
+      "id": "EVT-011",
+      "title": "ISO 27001 Surveillance Audit",
+      "date": "2025-12-15",
+      "type": "audit",
+      "standard": "ISO 27001",
+      "status": "completed",
+      "description": "Annual surveillance audit - passed with zero non-conformities"
+    },
+    {
+      "id": "EVT-012",
+      "title": "GDPR Compliance Check",
+      "date": "2025-12-01",
+      "type": "review",
+      "standard": "GDPR",
+      "status": "completed",
+      "description": "Quarterly GDPR compliance verification - all controls met"
+    },
+    {
+      "id": "EVT-013",
+      "title": "SOC 2 Readiness Assessment",
+      "date": "2025-11-15",
+      "type": "assessment",
+      "standard": "SOC 2",
+      "status": "completed",
+      "description": "Pre-audit readiness assessment completed successfully"
+    },
+    {
+      "id": "EVT-014",
+      "title": "Vulnerability Assessment",
+      "date": "2025-11-01",
+      "type": "assessment",
+      "standard": "OWASP",
+      "status": "completed",
+      "description": "Monthly vulnerability scan - 3 medium findings remediated"
+    },
+    {
+      "id": "EVT-015",
+      "title": "ISO 14001 Certification Renewal",
+      "date": "2025-10-15",
+      "type": "certification",
+      "standard": "ISO 14001",
+      "status": "completed",
+      "description": "Environmental management system certification renewed for 3 years"
+    }
+  ]
+}

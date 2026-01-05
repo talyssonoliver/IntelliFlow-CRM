@@ -1,0 +1,88 @@
+{
+  "task_id": "PG-026",
+  "title": "Checkout",
+  "sprint": 14,
+  "section": "Billing Pages",
+  "status": "completed",
+  "completed_at": "2026-01-03T18:25:00.000Z",
+  "definition_of_done": {
+    "response_time_lt_200ms": true,
+    "lighthouse_gte_90": true,
+    "payments_processing": true
+  },
+  "artifacts_created": [
+    {
+      "path": "apps/web/src/app/billing/checkout/page.tsx",
+      "description": "Checkout page with plan selection and payment form"
+    },
+    {
+      "path": "apps/web/src/components/billing/checkout-form.tsx",
+      "description": "Checkout form component with card validation and tRPC integration"
+    },
+    {
+      "path": "apps/web/src/lib/billing/payment-processor.ts",
+      "description": "Payment utilities: card validation, formatting, brand detection"
+    },
+    {
+      "path": "apps/web/src/lib/billing/__tests__/payment-processor.test.ts",
+      "description": "Unit tests for payment processor utilities (82 tests)"
+    },
+    {
+      "path": "apps/web/src/components/billing/checkout-form.stories.tsx",
+      "description": "Storybook stories for checkout form component"
+    }
+  ],
+  "files_modified": [
+    {
+      "path": "packages/validators/src/billing.ts",
+      "change": "Added createCheckoutInputSchema, checkoutResponseSchema, BILLING_CYCLES, PAYMENT_ERROR_CODES, CARD_BRANDS"
+    },
+    {
+      "path": "apps/api/src/modules/billing/billing.router.ts",
+      "change": "Added createCheckoutSubscription mutation with Stripe integration"
+    }
+  ],
+  "test_results": {
+    "payment_processor_tests": {
+      "total": 82,
+      "passed": 82,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "design_system_compliance": {
+    "css_variables": true,
+    "material_symbols_outlined": true,
+    "focus_ring_styles": true,
+    "semantic_colors": true,
+    "accessible_labels": true
+  },
+  "dependencies": {
+    "PG-025": {
+      "status": "DONE",
+      "description": "Billing Portal"
+    }
+  },
+  "implementation_notes": [
+    "Created payment-processor.ts with Luhn algorithm validation for card numbers",
+    "Implemented card brand detection for Visa, Mastercard, Amex, Discover, Diners, JCB, UnionPay",
+    "Card number formatting with 4-4-4-4 pattern (4-6-5 for Amex)",
+    "Expiry date validation with future date check",
+    "CVC validation with brand-specific length (3 for standard, 4 for Amex)",
+    "Created CheckoutForm component with real-time validation",
+    "Added createCheckoutSubscription tRPC endpoint with Stripe integration",
+    "Checkout page reads plan and billing cycle from URL params",
+    "Uses existing PLANS config from stripe-portal.ts"
+  ],
+  "checkout_flow": {
+    "url_pattern": "/billing/checkout?plan={planId}&cycle={monthly|annual}",
+    "steps": [
+      "User selects plan from pricing page",
+      "Redirected to checkout with plan params",
+      "Enters card details in checkout form",
+      "Client-side validation of card, expiry, CVC, name",
+      "Submit calls createCheckoutSubscription tRPC endpoint",
+      "Success redirects to /billing with confirmation"
+    ]
+  }
+}

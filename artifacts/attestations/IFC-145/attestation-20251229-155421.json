@@ -1,0 +1,64 @@
+{
+  "$schema": "https://intelliflow-crm.com/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-145",
+  "run_id": "sprint9-audit-20251229T155419-m1a4zl",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2025-12-29T15:54:21.401Z",
+  "verdict": "INCOMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "scripts/migration/rehearsal-report.md": "9c430572e59a0b2228e5a737c77c9d70be6d2cc47e585fc27f59ab69d272c923",
+    "scripts/migration/cutover-plan.md": "d4b8f0dadd5d0996250f0ec3980c00305dcf3ec665db086fadf490752007e720",
+    "artifacts/misc/reconciliation-results.csv": "044703797fbebf3caf46c21a45124f6f6cef5904691c16954cdcdb458c019c7c"
+  },
+  "validation_results": [],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-002",
+    "IFC-136"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Data mapping documents created",
+      "met": false,
+      "evidence": "Missing artifacts: 2"
+    },
+    {
+      "criterion": "migration scripts developed and tested",
+      "met": true,
+      "evidence": "All 0 validations passed"
+    },
+    {
+      "criterion": "rehearsal migration executed with reconciliation reports",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "cutover plan created with rollback procedure",
+      "met": false,
+      "evidence": "Missing artifacts: 2"
+    },
+    {
+      "criterion": "final migration executed with acceptance of accuracy and completeness",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: >=99%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "Missing or invalid artifacts: scripts/migration/mapping.csv, EVIDENCE:artifacts/attestations/IFC-145/context_ack.json; 5 DoD criteria unverified"
+}

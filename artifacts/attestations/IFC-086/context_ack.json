@@ -1,0 +1,139 @@
+{
+  "$schema": "../../schemas/context-ack.schema.json",
+  "taskId": "IFC-086",
+  "taskTitle": "Model Versioning with Zep",
+  "sprint": 14,
+  "section": "AI/ML",
+  "owner": "AI Specialist + Backend Dev (STOA-Intelligence)",
+  "acknowledgedAt": "2026-01-03T00:00:00.000Z",
+  "acknowledgedBy": "claude-opus-4.5",
+  "contextPackPath": "./context_pack.md",
+  "dependencies": {
+    "required": [
+      {
+        "taskId": "IFC-020",
+        "status": "DONE",
+        "verifiedAt": "2026-01-03T00:00:00.000Z"
+      }
+    ],
+    "optional": [
+      {
+        "taskId": "IFC-025",
+        "status": "DONE",
+        "description": "A/B Testing Framework - integrated for experiment support"
+      }
+    ]
+  },
+  "definitionOfDone": {
+    "criteria": [
+      "All prompts and chains versioned",
+      "A/B testable via experiments",
+      "Rollback capabilities implemented",
+      "Zep Cloud integration working"
+    ],
+    "artifacts": {
+      "required": [
+        "artifacts/misc/prompt-versions/prompt-versions-latest.json",
+        "artifacts/logs/rollback-test/rollback-test-latest.json",
+        "artifacts/misc/ab-test-config.yaml"
+      ],
+      "generators": [
+        "tools/scripts/generate-chain-version-manifest.ts",
+        "tools/scripts/generate-rollback-test-log.ts"
+      ],
+      "created": [
+        "packages/domain/src/ai/ChainVersionConstants.ts",
+        "packages/validators/src/chain-version.ts",
+        "packages/adapters/src/memory/zep/zep-client.ts",
+        "packages/adapters/src/memory/zep/index.ts",
+        "packages/application/src/services/ChainVersionService.ts",
+        "apps/ai-worker/src/versioning/version-loader.ts",
+        "apps/ai-worker/src/versioning/index.ts",
+        "apps/api/src/modules/chain-version/chain-version.router.ts",
+        "apps/api/src/modules/chain-version/index.ts",
+        "artifacts/misc/prompt-versions.json",
+        "artifacts/logs/rollback-test.log",
+        "artifacts/misc/ab-test-config.yaml"
+      ]
+    },
+    "kpis": {
+      "chainsCovered": {
+        "target": 4,
+        "actual": 4,
+        "met": true
+      },
+      "rollbackCapability": {
+        "target": true,
+        "actual": true,
+        "met": true
+      },
+      "abTestIntegration": {
+        "target": true,
+        "actual": true,
+        "met": true
+      }
+    }
+  },
+  "implementation": {
+    "approach": "Hexagonal architecture with domain-driven design",
+    "keyDecisions": [
+      "Full Zep Cloud SDK integration with episode budget management",
+      "Full chain config versioning (prompt + model + temperature + params)",
+      "In-memory fallback when approaching Zep episode limit",
+      "Converted ab-test-config.json to YAML format"
+    ],
+    "filesModified": [
+      "packages/domain/src/ai/AIConstants.ts",
+      "packages/domain/src/index.ts",
+      "packages/validators/src/index.ts",
+      "packages/db/prisma/schema.prisma",
+      "packages/adapters/src/index.ts",
+      "packages/application/src/services/index.ts",
+      "apps/ai-worker/src/agents/base.agent.ts",
+      "apps/ai-worker/src/chains/scoring.chain.ts",
+      "apps/api/src/router.ts"
+    ],
+    "testsCreated": [
+      "packages/validators/__tests__/chain-version.test.ts",
+      "apps/ai-worker/src/versioning/__tests__/version-loader.test.ts",
+      "packages/adapters/src/memory/zep/__tests__/zep-client.test.ts"
+    ]
+  },
+  "validation": {
+    "typecheck": {
+      "command": "pnpm --filter @intelliflow/domain run typecheck && pnpm --filter @intelliflow/validators run typecheck && pnpm --filter @intelliflow/adapters run typecheck",
+      "status": "passed",
+      "executedAt": "2026-01-03T14:50:00.000Z"
+    },
+    "tests": {
+      "validatorTests": {
+        "command": "npx vitest run packages/validators/__tests__/chain-version.test.ts",
+        "status": "passed",
+        "result": "30/30 tests passed",
+        "executedAt": "2026-01-03T14:41:00.000Z"
+      },
+      "versionLoaderTests": {
+        "command": "npx vitest run apps/ai-worker/src/versioning/__tests__/version-loader.test.ts",
+        "status": "passed",
+        "result": "13/13 tests passed",
+        "executedAt": "2026-01-03T14:51:00.000Z"
+      }
+    },
+    "eslint": {
+      "command": "npx eslint packages/validators/src/chain-version.ts packages/domain/src/ai/ChainVersionConstants.ts apps/ai-worker/src/versioning/version-loader.ts apps/ai-worker/src/chains/scoring.chain.ts",
+      "status": "passed",
+      "executedAt": "2026-01-03T14:50:00.000Z"
+    },
+    "prisma": {
+      "command": "npx prisma generate",
+      "status": "passed",
+      "notes": "Migration pending DATABASE_URL - schema changes complete"
+    }
+  },
+  "notes": [
+    "Zep free tier provides 1000 episodes - budget management implemented",
+    "Warning at 80% usage, hard limit at 95%",
+    "Fallback to in-memory storage when limit approached",
+    "Environment variables needed: ZEP_API_KEY, ZEP_PROJECT_ID"
+  ]
+}

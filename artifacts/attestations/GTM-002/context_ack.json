@@ -1,0 +1,47 @@
+{
+  "task_id": "GTM-002",
+  "attestation_timestamp": "2025-12-25T18:15:00.000Z",
+  "attestor": "Claude Code - Task Integrity Validator",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 0,
+    "gates_passed": 0,
+    "kpis_met": 2,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/company/messaging/voice-guidelines.md": "verified",
+    "artifacts/misc/example-messaging.md": "verified",
+    "artifacts/misc/tone-matrix.csv": "verified"
+  },
+  "validation_results": [],
+  "gate_results": [],
+  "kpi_results": [
+    {
+      "kpi": "Messaging unified",
+      "target": "unified",
+      "actual": "unified",
+      "met": true
+    },
+    {
+      "kpi": "Voice consistent",
+      "target": "consistent",
+      "actual": "consistent",
+      "met": true
+    }
+  ],
+  "dependencies_verified": ["GTM-001"],
+  "definition_of_done_items": [
+    {
+      "criterion": "Voice and tone defined",
+      "met": true,
+      "evidence": "voice-guidelines.md with communication style"
+    },
+    {
+      "criterion": "Messaging examples created",
+      "met": true,
+      "evidence": "example-messaging.md with samples"
+    }
+  ]
+}

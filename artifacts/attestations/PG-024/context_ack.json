@@ -1,0 +1,87 @@
+{
+  "task_id": "PG-024",
+  "title": "SSO Callback",
+  "sprint": 13,
+  "section": "Auth Pages",
+  "status": "completed",
+  "completed_at": "2026-01-03T14:45:00.000Z",
+  "definition_of_done": {
+    "response_time_lt_200ms": true,
+    "lighthouse_gte_90": true,
+    "sso_complete": true
+  },
+  "artifacts_created": [
+    {
+      "path": "apps/web/src/app/auth/callback/page.tsx",
+      "description": "Refactored OAuth callback page using OAuthCallback component"
+    },
+    {
+      "path": "apps/web/src/components/shared/oauth-callback.tsx",
+      "description": "OAuth callback component with states: loading, exchanging, success, error"
+    },
+    {
+      "path": "apps/web/src/lib/shared/token-exchange.ts",
+      "description": "Token exchange utilities: extractOAuthParams, validateOAuthParams, storeSessionTokens"
+    },
+    {
+      "path": "apps/web/src/lib/shared/__tests__/token-exchange.test.ts",
+      "description": "Unit tests for token exchange utilities (41 tests)"
+    },
+    {
+      "path": "apps/web/src/components/shared/__tests__/oauth-callback.test.tsx",
+      "description": "Component tests for OAuth callback (28 tests)"
+    },
+    {
+      "path": "apps/web/src/components/shared/oauth-callback.stories.tsx",
+      "description": "Storybook stories for OAuth callback component (10 stories)"
+    }
+  ],
+  "files_modified": [
+    {
+      "path": "apps/web/src/components/shared/index.ts",
+      "change": "Added exports for OAuthCallback component"
+    }
+  ],
+  "test_results": {
+    "token_exchange_tests": {
+      "total": 41,
+      "passed": 41,
+      "failed": 0,
+      "skipped": 0
+    },
+    "oauth_callback_tests": {
+      "total": 28,
+      "passed": 28,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "design_system_compliance": {
+    "css_variables": true,
+    "slate_hierarchy": true,
+    "material_symbols_outlined": true,
+    "focus_ring_7cc4ff": true,
+    "auth_background_gradients": true
+  },
+  "dependencies": {
+    "PG-015": {
+      "status": "DONE",
+      "description": "Sign In page"
+    }
+  },
+  "implementation_notes": [
+    "Extracted OAuth logic from existing callback page into reusable utilities",
+    "Created OAuthCallback component for handling all SSO callback states",
+    "Supports Google and Azure OAuth providers via Supabase",
+    "Stores session tokens in localStorage after successful authentication",
+    "Stores device fingerprint for session verification",
+    "Follows Result pattern (ok/error) for type-safe error handling",
+    "Uses existing tRPC oauthCallback mutation from auth.router",
+    "Auto-redirects to /dashboard after successful authentication"
+  ],
+  "oauth_flow": {
+    "providers": ["google", "azure"],
+    "states": ["loading", "exchanging", "success", "error"],
+    "error_codes": ["MISSING_CODE", "PROVIDER_ERROR", "EXCHANGE_FAILED", "SESSION_FAILED", "NETWORK_ERROR"]
+  }
+}

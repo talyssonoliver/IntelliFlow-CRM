@@ -1,0 +1,68 @@
+{
+  "task_id": "IFC-058",
+  "sprint": 11,
+  "files_read": [
+    {
+      "path": "artifacts/sprint0/codex-run/Framework.md",
+      "sha256": "58d6d8ba1603cf0825e5496203e1006af75be84a5bbfc24c04587749bb75a872"
+    },
+    {
+      "path": "audit-matrix.yml",
+      "sha256": "872fb4c829ddae17fab1147d1bdf6254880734269ad142eb6b68d6f07ab98182"
+    },
+    {
+      "path": "docs/planning/adr/ADR-001-modern-stack.md",
+      "sha256": "cbb24ca6a62cb24abe04929e465f04a68256280313a89a0b33264481db205978"
+    },
+    {
+      "path": "docs/planning/adr/ADR-007-data-governance.md",
+      "sha256": "42f7274805f6e8a7e14486ea7e18847db1a86b72cc1a6a76296ec55440c22c8f"
+    },
+    {
+      "path": "docs/security/zero-trust-design.md",
+      "sha256": "bbc0f7f929eac6474cb371ac92c26776186d0b30ae6f3640c2ebf0921f68fb62"
+    },
+    {
+      "path": "docs/shared/review-checklist.md",
+      "sha256": "7f42ba091d6782d0fb518a02830b69aa6f8137225bd3933feb8a021ca7594920"
+    },
+    {
+      "path": "docs/operations/quality-gates.md",
+      "sha256": "73cecc439293415a5fbb9fb7c49762ca00ca1b1a791be9ec207393f3654cadf9"
+    },
+    {
+      "path": "docs/operations/pr-checklist.md",
+      "sha256": "e5e18266dde3928091aca310b9b16b3c2b4196279ec105e094ba1254b2b460b1"
+    },
+    {
+      "path": "packages/db/src/client.ts",
+      "sha256": "f7866864ea9f66a069e328d600fbdc8008c0cca71beeeee27041858bfd391f89"
+    },
+    {
+      "path": "infra/supabase/rls-policies.sql",
+      "sha256": "FILE_NOT_FOUND"
+    },
+    {
+      "path": "artifacts/reports/compliance-report.md",
+      "sha256": "eb37487db359a2f756e50309c09c45a1e5f3960299bb4b16e761527dcc436d43"
+    }
+  ],
+  "invariants_acknowledged": [
+    "Hexagonal architecture boundaries enforced",
+    "Type safety: TypeScript strict mode compliance",
+    "Test coverage: Overall ≥90%, Domain ≥95%",
+    "Performance: API p95 <200ms, Frontend Lighthouse ≥90",
+    "Security: OWASP Top 10 compliance, no secrets in code",
+    "Governance: 7 completion criteria required",
+    "Evidence: SHA256 hashes + ISO timestamps required"
+  ],
+  "dependencies_verified": [
+    "IFC-017",
+    "IFC-127",
+    "IFC-008"
+  ],
+  "acknowledged_at": "2025-12-31T16:09:33.121Z",
+  "acknowledged_by": "STOA-Foundation",
+  "remediation_phase": "Phase 2 - Governance Process Repair",
+  "version": "1.0"
+}

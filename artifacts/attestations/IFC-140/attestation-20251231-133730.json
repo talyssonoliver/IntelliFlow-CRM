@@ -1,0 +1,80 @@
+{
+  "$schema": "https://intelliflow-crm.com/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-140",
+  "run_id": "sprint11-audit-20251231T133519-v8iftk",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2025-12-31T13:37:30.473Z",
+  "verdict": "INCOMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "validations_passed": 0,
+    "validations_failed": 1,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 1
+  },
+  "artifact_hashes": {
+    "docs/data-governance/dsar-process.md": "b7472a8152bd29dbe2c172f0b073fcb5f296c9d0422eca9e6cd89d6b1102c7a8",
+    "docs/data-governance/retention-policy.md": "b96e7cf8edc72b6763ba77c6e4e02a97bf7aa0cfaf2a17a2629848355c2a928f",
+    "artifacts/misc/kms-key-config.json": "3b8922b851e56b1472b2891f1367bab1bd17a574398dce2c659ebe992eff11a4",
+    "apps/api/src/workflow/dsar-workflow.ts": "de95a68f4ee5d048ef2656aaff82f4a1348b1e68ab3025ba6466fc19cc9b7a1b"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-140",
+      "command": "pnpm test",
+      "exit_code": 124,
+      "passed": false,
+      "timestamp": "2025-12-31T13:36:29.452Z",
+      "duration_ms": 61018,
+      "stdout_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-098",
+    "IFC-127"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "DSAR workflow implemented with identity verification",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "retention schedules enforced per entity",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "legal hold exceptions",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "per-tenant key management with rotation",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "residency controls and subprocessor registry",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "documentation and tests",
+      "met": false,
+      "evidence": "Failed validations: 1"
+    },
+    {
+      "criterion": "targets: >=100%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "Missing or invalid artifacts: artifacts/misc/compliance-tests/data-governance.spec.ts, EVIDENCE:artifacts/attestations/IFC-140/context_ack.json; Found 1 placeholder(s) in task artifacts; Validation(s) failed: pnpm test; 7 DoD criteria unverified"
+}

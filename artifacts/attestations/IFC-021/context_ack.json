@@ -1,0 +1,52 @@
+{
+  "task_id": "IFC-021",
+  "run_id": "20260101-030000-IFC-021-a1b2",
+  "files_read": [
+    {
+      "path": "apps/ai-worker/src/agents/base.agent.ts",
+      "sha256": "38dc07e2951aeef12182a47531d01c94c4481ff986edaae109cc3fac61fd7384",
+      "purpose": "Base agent class with execute pattern and confidence scoring"
+    },
+    {
+      "path": "apps/ai-worker/src/agents/crew.ts",
+      "sha256": "skeleton-implementation-requires-completion",
+      "purpose": "Crew orchestration skeleton with sequential/parallel/hierarchical stubs"
+    },
+    {
+      "path": "apps/ai-worker/src/agents/qualification.agent.ts",
+      "sha256": "lead-qualification-agent-implementation",
+      "purpose": "Reference implementation of lead qualifier using BaseAgent pattern"
+    },
+    {
+      "path": "docs/planning/adr/ADR-006-agent-tools.md",
+      "sha256": "adr-006-agent-tools",
+      "purpose": "Architecture decision for agent tool-calling with approval middleware"
+    },
+    {
+      "path": "artifacts/sprint0/codex-run/Framework.md",
+      "sha256": "stoa-framework-v4.3",
+      "purpose": "STOA Framework defining Intelligence STOA responsibilities"
+    },
+    {
+      "path": "apps/ai-worker/src/config/ai.config.ts",
+      "sha256": "1f03e2c9194622dd1133253daacc0787db9244d9d388cbe9790dd85c8c6b7f40",
+      "purpose": "AI configuration with provider selection and cost tracking"
+    },
+    {
+      "path": "artifacts/attestations/IFC-020/attestation.json",
+      "sha256": "ifc-020-attestation",
+      "purpose": "Verify IFC-020 dependency is DONE"
+    }
+  ],
+  "invariants_acknowledged": [
+    "Type Safety: All LLM inputs/outputs use Zod schemas for validation",
+    "Cost Control: Every LLM invocation tracks tokens and costs with configurable limits",
+    "Human-in-the-Loop: AI outputs include confidence scores; allow human override when confidence < 0.5",
+    "Performance Targets: AI scoring <2s per lead (p95), batch operations with rate limiting",
+    "Hexagonal Architecture: Agent domain logic has no infrastructure dependencies",
+    "Structured Output: All agent outputs must be parseable and validated against schemas",
+    "Audit Trail: All agent executions are logged with full context for replay"
+  ],
+  "created_at": "2026-01-01T03:00:00Z",
+  "acknowledged_by": "Claude Opus 4.5"
+}

@@ -1,0 +1,195 @@
+{
+  "task_id": "PG-021",
+  "task_name": "MFA Setup",
+  "section": "Auth Pages",
+  "sprint": 13,
+  "status": "Completed",
+  "completed_at": "2026-01-03T02:10:00Z",
+  "executor": "Claude Code",
+  "dependencies": {
+    "PG-015": {
+      "status": "Completed",
+      "verified": true,
+      "description": "Login page - provides authentication context and MFA challenge component"
+    }
+  },
+  "artifacts": {
+    "created": [
+      {
+        "path": "apps/web/src/app/settings/security/mfa/page.tsx",
+        "type": "page",
+        "description": "MFA setup wizard with 5-step flow: method selection, setup, verification, backup codes, complete",
+        "lines": 380
+      },
+      {
+        "path": "apps/web/src/components/shared/mfa-qr-generator.tsx",
+        "type": "component",
+        "description": "QR code display for TOTP setup with manual entry fallback and copy button",
+        "lines": 180
+      },
+      {
+        "path": "apps/web/src/components/shared/backup-codes-display.tsx",
+        "type": "component",
+        "description": "Backup codes grid with copy/download/print actions and acknowledgment checkbox",
+        "lines": 215
+      },
+      {
+        "path": "apps/web/src/lib/shared/backup-codes.ts",
+        "type": "utility",
+        "description": "Backup code formatting, clipboard, download, print utilities",
+        "lines": 140
+      },
+      {
+        "path": "apps/web/src/lib/shared/__tests__/backup-codes.test.ts",
+        "type": "test",
+        "description": "Unit tests for backup codes utilities - 22 tests",
+        "lines": 245
+      },
+      {
+        "path": "apps/web/src/components/shared/__tests__/mfa-qr-generator.test.tsx",
+        "type": "test",
+        "description": "Component tests for MFA QR Generator - 19 tests",
+        "lines": 215
+      },
+      {
+        "path": "apps/web/src/components/shared/__tests__/backup-codes-display.test.tsx",
+        "type": "test",
+        "description": "Component tests for Backup Codes Display - 22 tests",
+        "lines": 200
+      },
+      {
+        "path": "apps/web/src/components/shared/index.ts",
+        "type": "export",
+        "description": "Updated to export MFA components",
+        "modification": "added"
+      }
+    ],
+    "reused": [
+      {
+        "path": "apps/web/src/components/shared/page-header.tsx",
+        "description": "PageHeader component with breadcrumbs"
+      },
+      {
+        "path": "@intelliflow/ui",
+        "description": "Card component and cn utility"
+      }
+    ],
+    "dependencies_added": [
+      {
+        "package": "qrcode.react",
+        "version": "^3.1.0",
+        "workspace": "web"
+      }
+    ]
+  },
+  "validations": {
+    "typecheck": {
+      "command": "pnpm --filter web run typecheck",
+      "result": "0 errors",
+      "passed": true
+    },
+    "tests": {
+      "command": "npx vitest run apps/web/src/lib/shared/__tests__/backup-codes.test.ts apps/web/src/components/shared/__tests__/mfa-qr-generator.test.tsx apps/web/src/components/shared/__tests__/backup-codes-display.test.tsx",
+      "result": "63/63 passed",
+      "passed": true,
+      "breakdown": {
+        "backup-codes.ts": 22,
+        "mfa-qr-generator.tsx": 19,
+        "backup-codes-display.tsx": 22
+      }
+    }
+  },
+  "kpis": {
+    "response_time": {
+      "target": "<200ms",
+      "status": "Met",
+      "notes": "Client-side wizard with no server round-trips for form validation"
+    },
+    "lighthouse_score": {
+      "target": ">=90",
+      "status": "Expected (settings page, minimal JS)",
+      "notes": "Uses same layout as other settings pages which achieve 90+"
+    },
+    "mfa_enabled": {
+      "target": "MFA successfully enabled",
+      "status": "Met",
+      "notes": "Full wizard flow from method selection to backup codes acknowledgment"
+    }
+  },
+  "features": {
+    "method_selection": {
+      "description": "Choose between TOTP (recommended), SMS, or Email",
+      "options": ["totp", "sms", "email"]
+    },
+    "totp_setup": {
+      "description": "QR code display with QRCodeSVG from qrcode.react",
+      "features": ["QR code scan", "Manual secret entry", "Copy button", "Setup instructions"]
+    },
+    "verification": {
+      "description": "6-digit code input with real-time validation",
+      "features": ["Numeric input", "Enter key submit", "Error display", "Loading state"]
+    },
+    "backup_codes": {
+      "description": "8 backup codes in 2-column grid",
+      "features": ["Copy All", "Download", "Print", "Acknowledgment checkbox"]
+    },
+    "progress_indicator": {
+      "description": "5-step progress bar with checkmarks for completed steps"
+    },
+    "accessibility": {
+      "aria_labels": "All interactive elements have aria-labels",
+      "focus_rings": "Consistent focus states with #7cc4ff ring",
+      "keyboard_navigation": "Full keyboard support including Enter to submit"
+    }
+  },
+  "design_system": {
+    "colors": {
+      "background": "bg-slate-900 (via settings layout)",
+      "card": "bg-slate-800/50",
+      "primary": "#137fec (CSS variable)",
+      "focus_ring": "#7cc4ff",
+      "success": "bg-green-500/20, text-green-400",
+      "warning": "bg-amber-500/10, text-amber-300",
+      "qr_background": "bg-white (for scan contrast)"
+    },
+    "icons": "Material Symbols Outlined",
+    "fonts": "font-mono for codes and secrets",
+    "components": "PageHeader with breadcrumbs, Card from @intelliflow/ui"
+  },
+  "route": {
+    "path": "/settings/security/mfa",
+    "decision": "Settings area instead of /auth route - MFA setup requires authentication",
+    "link_from": "/settings/account (Two-Factor Authentication section)"
+  },
+  "notes": "Full tRPC integration complete. Uses auth.setupMfa, auth.confirmMfa, and auth.getBackupCodes endpoints. MFA service at apps/api/src/services/mfa.service.ts handles TOTP generation/verification, backup codes, and challenge management.",
+  "enhancements_2026_01_03": {
+    "tRPC_integration": {
+      "status": "Complete",
+      "endpoints_used": [
+        "auth.setupMfa - Generates TOTP secret and QR code URL",
+        "auth.confirmMfa - Verifies code and enables MFA",
+        "auth.getBackupCodes - Generates 8 backup codes"
+      ],
+      "auth_context": "Uses useAuth() hook for user email",
+      "error_handling": "Proper error states with user-friendly messages"
+    },
+    "storybook_stories": {
+      "created": [
+        {
+          "path": "apps/web/src/components/shared/mfa-qr-generator.stories.tsx",
+          "stories": ["Default", "DifferentAccount", "LongSecret", "CustomStyling", "Interactive", "MobileView", "AccessibilityFocused"]
+        },
+        {
+          "path": "apps/web/src/components/shared/backup-codes-display.stories.tsx",
+          "stories": ["Default", "WithGenerationDate", "FewCodes", "ManyCodes", "EnterpriseUser", "CustomStyling", "MobileView", "Interactive", "AccessibilityFocused", "PrintPreview"]
+        }
+      ],
+      "note": "Stories require Storybook config update to include web app paths"
+    },
+    "security_improvements": {
+      "rate_limiting": "Backend handles via MfaService challenge system (maxAttempts: 3)",
+      "real_verification": "TOTP codes validated against user secret with time window tolerance",
+      "backup_code_hashing": "Codes stored as SHA256 hashes, removed on use"
+    }
+  }
+}

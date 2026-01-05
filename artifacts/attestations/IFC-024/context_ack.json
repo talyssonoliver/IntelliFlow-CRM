@@ -1,0 +1,167 @@
+{
+  "task_id": "IFC-024",
+  "task_name": "Human-in-the-Loop Feedback",
+  "section": "Intelligence",
+  "sprint": 14,
+  "completed_at": "2026-01-03T00:00:00.000Z",
+  "executor": "Claude Opus 4.5",
+  "dependencies": {
+    "IFC-023": {
+      "status": "DONE",
+      "verified_at": "2026-01-03T00:00:00.000Z"
+    }
+  },
+  "files_read": [
+    {
+      "path": "docs/planning/Framework.md",
+      "purpose": "Project framework and architecture principles"
+    },
+    {
+      "path": "docs/planning/audit-matrix.yml",
+      "purpose": "Audit matrix for compliance requirements"
+    },
+    {
+      "path": "packages/db/prisma/schema.prisma",
+      "purpose": "Database schema for adding AIScoreFeedback model"
+    },
+    {
+      "path": "packages/domain/src/ai/AIConstants.ts",
+      "purpose": "Domain constants for feedback types and categories"
+    },
+    {
+      "path": "packages/ui/src/components/score/ScoreCard.tsx",
+      "purpose": "Existing score card component to enhance with correction support"
+    },
+    {
+      "path": "apps/ai-worker/src/monitoring/drift-detector.ts",
+      "purpose": "Drift detector for monitoring integration"
+    },
+    {
+      "path": "apps/ai-worker/src/monitoring/roi-tracker.ts",
+      "purpose": "ROI tracker for feedback value tracking"
+    }
+  ],
+  "files_created": [
+    {
+      "path": "packages/validators/src/feedback.ts",
+      "purpose": "Zod validation schemas for feedback inputs/outputs"
+    },
+    {
+      "path": "packages/domain/src/ai/FeedbackEvents.ts",
+      "purpose": "Domain events for feedback submission and retraining"
+    },
+    {
+      "path": "packages/application/src/services/FeedbackService.ts",
+      "purpose": "Application service for feedback business logic"
+    },
+    {
+      "path": "apps/api/src/modules/feedback/feedback.router.ts",
+      "purpose": "tRPC router for feedback API endpoints"
+    },
+    {
+      "path": "packages/ui/src/components/score/ScoreCorrectionModal.tsx",
+      "purpose": "Modal component for score correction input"
+    },
+    {
+      "path": "apps/ai-worker/src/analytics/feedback-analytics-generator.ts",
+      "purpose": "Analytics generator for feedback data aggregation"
+    },
+    {
+      "path": "artifacts/misc/feedback-analytics.json",
+      "purpose": "Generated feedback analytics artifact"
+    },
+    {
+      "path": "packages/validators/__tests__/feedback.test.ts",
+      "purpose": "Test suite for feedback validators"
+    },
+    {
+      "path": "packages/ui/__tests__/score-correction-modal.test.tsx",
+      "purpose": "Test suite for ScoreCorrectionModal component"
+    }
+  ],
+  "files_modified": [
+    {
+      "path": "packages/db/prisma/schema.prisma",
+      "changes": "Added AIScoreFeedback model, FeedbackType and FeedbackCategory enums"
+    },
+    {
+      "path": "packages/domain/src/ai/AIConstants.ts",
+      "changes": "Added FEEDBACK_TYPES, FEEDBACK_CATEGORIES, RETRAINING_THRESHOLDS, CORRECTION_MAGNITUDE_BUCKETS"
+    },
+    {
+      "path": "packages/domain/src/ai/index.ts",
+      "changes": "Exported feedback constants and events"
+    },
+    {
+      "path": "packages/validators/src/index.ts",
+      "changes": "Exported feedback validators"
+    },
+    {
+      "path": "apps/api/src/router.ts",
+      "changes": "Registered feedback router"
+    },
+    {
+      "path": "packages/ui/src/components/score/ScoreCard.tsx",
+      "changes": "Added allowCorrection, onScoreCorrection, isCorrectionSubmitting props"
+    },
+    {
+      "path": "packages/ui/src/components/score/index.ts",
+      "changes": "Exported ScoreCorrectionModal component"
+    },
+    {
+      "path": "apps/ai-worker/src/monitoring/drift-detector.ts",
+      "changes": "Added FeedbackDriftSignal interface and recordFeedbackAsSignal method"
+    },
+    {
+      "path": "apps/ai-worker/src/monitoring/roi-tracker.ts",
+      "changes": "Added feedback_positive, feedback_negative, feedback_correction value types"
+    }
+  ],
+  "validation_results": {
+    "typecheck": {
+      "command": "pnpm --filter @intelliflow/validators run typecheck",
+      "status": "passed",
+      "exit_code": 0
+    },
+    "ui_typecheck": {
+      "command": "pnpm --filter @intelliflow/ui run typecheck",
+      "status": "passed",
+      "exit_code": 0
+    }
+  },
+  "kpis": {
+    "score_adjustments_tracked": {
+      "target": "Database model for storing feedback with all required fields",
+      "actual": "AIScoreFeedback model with feedbackType, correctedScore, correctionMagnitude, reason, correctionCategory",
+      "met": true
+    },
+    "model_improvement_loop": {
+      "target": "Retraining recommendations based on feedback thresholds",
+      "actual": "FeedbackService.checkRetrainingNeeded() with MIN_FEEDBACK_COUNT=100, MAX_NEGATIVE_RATIO=30%, MAX_AVG_CORRECTION=20 thresholds",
+      "met": true
+    },
+    "artifacts_generated": {
+      "target": "artifacts/misc/feedback-analytics.json, artifacts/attestations/IFC-024/context_ack.json",
+      "actual": "Both artifacts created with proper structure",
+      "met": true
+    }
+  },
+  "architecture_alignment": {
+    "hexagonal": "Domain constants in domain layer, service in application layer, router in API layer, UI components in packages/ui",
+    "type_safety": "Zod schemas for all inputs/outputs, Prisma for persistence types",
+    "domain_events": "ScoreFeedbackSubmittedEvent, RetrainingRecommendedEvent, TrainingDataExportedEvent, FeedbackAnalyticsGeneratedEvent",
+    "dry_principle": "Domain constants (FEEDBACK_TYPES, FEEDBACK_CATEGORIES) as single source of truth, validators derive from domain"
+  },
+  "implementation_summary": {
+    "database": "AIScoreFeedback Prisma model with relations to Lead, AIScore, User, Tenant",
+    "api": "6 tRPC endpoints: submitSimple, submitCorrection, getForLead, getAnalytics, checkRetraining, exportTrainingData",
+    "ui": "ScoreCorrectionModal with slider, category dropdown, reason textarea; ScoreCard enhanced with 'Suggest Correction' button",
+    "monitoring": "Drift detector tracks user_satisfaction and user_correction_error; ROI tracker values feedback at $0.10 (positive), -$0.20 (negative), $0.50 (correction)",
+    "analytics": "FeedbackAnalyticsGenerator produces comprehensive analytics with summary, distribution, trends, and retraining recommendations"
+  },
+  "definition_of_done": {
+    "score_adjustments_tracked": true,
+    "model_improvement_loop": true,
+    "artifacts_generated": true
+  }
+}
