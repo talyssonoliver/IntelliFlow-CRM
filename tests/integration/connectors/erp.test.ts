@@ -17,7 +17,7 @@ import {
 
 // Mock fetch globally
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
+globalThis.fetch = mockFetch;
 
 describe('SAP ERP Adapter', () => {
   let adapter: SAPAdapter;

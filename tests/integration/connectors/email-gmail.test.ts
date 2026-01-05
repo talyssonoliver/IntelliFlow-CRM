@@ -9,7 +9,7 @@ import { GmailAdapter, GmailConfig, GmailOAuthTokens } from '../../../packages/a
 
 // Mock global fetch
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
+globalThis.fetch = mockFetch;
 
 describe('GmailAdapter', () => {
   let adapter: GmailAdapter;

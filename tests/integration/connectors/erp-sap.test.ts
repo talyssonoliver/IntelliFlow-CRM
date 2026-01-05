@@ -9,7 +9,7 @@ import { SAPAdapter, SAPConfig } from '../../../packages/adapters/src/erp/sap/cl
 
 // Mock global fetch
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
+globalThis.fetch = mockFetch;
 
 describe('SAPAdapter', () => {
   let adapter: SAPAdapter;

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import teamData from '../../../apps/web/src/data/team-data.json';
+import teamData from '../../apps/web/src/data/team-data.json';
 
 /**
  * Data Validation Tests for Team Data

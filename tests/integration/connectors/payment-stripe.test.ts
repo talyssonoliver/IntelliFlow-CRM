@@ -9,7 +9,7 @@ import { StripeAdapter, StripeConfig } from '../../../packages/adapters/src/paym
 
 // Mock global fetch
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
+globalThis.fetch = mockFetch;
 
 describe('StripeAdapter', () => {
   let adapter: StripeAdapter;

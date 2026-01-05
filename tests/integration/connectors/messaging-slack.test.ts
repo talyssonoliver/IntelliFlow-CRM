@@ -9,7 +9,7 @@ import { SlackAdapter, SlackConfig } from '../../../packages/adapters/src/messag
 
 // Mock global fetch
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
+globalThis.fetch = mockFetch;
 
 describe('SlackAdapter', () => {
   let adapter: SlackAdapter;
