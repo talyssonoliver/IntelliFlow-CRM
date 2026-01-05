@@ -1,0 +1,595 @@
+{
+  "dashboard": {
+    "title": "IntelliFlow CRM - AI Model Monitoring",
+    "description": "Comprehensive monitoring for AI model drift, hallucination, latency, and ROI (IFC-117)",
+    "tags": ["intelliflow", "ai", "monitoring", "drift", "hallucination", "roi", "latency"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+        "type": "stat",
+        "title": "Drift Detected",
+        "description": "Whether drift is currently detected in any AI model",
+        "targets": [
+          {
+            "expr": "intelliflow_ai_drift_detected",
+            "legendFormat": "Drift Status"
+          }
+        ],
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "value",
+          "graphMode": "area"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              { "type": "value", "options": { "0": { "text": "OK", "color": "green" } } },
+              { "type": "value", "options": { "1": { "text": "DRIFT", "color": "red" } } }
+            ]
+          }
+        }
+      },
+      {
+        "id": 2,
+        "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+        "type": "stat",
+        "title": "Hallucination Rate",
+        "description": "Current hallucination rate (target: <5%)",
+        "targets": [
+          {
+            "expr": "intelliflow_ai_hallucination_rate * 100",
+            "legendFormat": "Rate %"
+          }
+        ],
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "green" },
+                { "value": 3, "color": "yellow" },
+                { "value": 5, "color": "red" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+        "type": "stat",
+        "title": "Current ROI",
+        "description": "Return on investment for AI operations",
+        "targets": [
+          {
+            "expr": "intelliflow_ai_roi_current",
+            "legendFormat": "ROI %"
+          }
+        ],
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": -100, "color": "red" },
+                { "value": 0, "color": "yellow" },
+                { "value": 100, "color": "light-green" },
+                { "value": 200, "color": "green" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+        "type": "stat",
+        "title": "P95 Latency",
+        "description": "95th percentile AI operation latency (target: <2000ms)",
+        "targets": [
+          {
+            "expr": "intelliflow_ai_latency_p95_ms",
+            "legendFormat": "P95 ms"
+          }
+        ],
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "green" },
+                { "value": 1500, "color": "yellow" },
+                { "value": 2000, "color": "orange" },
+                { "value": 3000, "color": "red" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "gridPos": { "h": 4, "w": 8, "x": 0, "y": 4 },
+        "type": "stat",
+        "title": "SLO Compliance",
+        "description": "Overall SLO compliance status",
+        "targets": [
+          {
+            "expr": "intelliflow_ai_slo_compliant{slo=\"p95\"}",
+            "legendFormat": "P95 SLO"
+          },
+          {
+            "expr": "intelliflow_ai_slo_compliant{slo=\"p99\"}",
+            "legendFormat": "P99 SLO"
+          }
+        ],
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              { "type": "value", "options": { "0": { "text": "VIOLATION", "color": "red" } } },
+              { "type": "value", "options": { "1": { "text": "COMPLIANT", "color": "green" } } }
+            ]
+          }
+        }
+      },
+      {
+        "id": 6,
+        "gridPos": { "h": 4, "w": 8, "x": 8, "y": 4 },
+        "type": "stat",
+        "title": "AI Success Rate",
+        "description": "Percentage of successful AI operations",
+        "targets": [
+          {
+            "expr": "intelliflow_ai_success_rate * 100",
+            "legendFormat": "Success %"
+          }
+        ],
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "red" },
+                { "value": 90, "color": "yellow" },
+                { "value": 95, "color": "light-green" },
+                { "value": 99, "color": "green" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 7,
+        "gridPos": { "h": 4, "w": 8, "x": 16, "y": 4 },
+        "type": "stat",
+        "title": "Hallucination KPI",
+        "description": "Whether hallucination rate is below 5% target",
+        "targets": [
+          {
+            "expr": "intelliflow_ai_hallucination_kpi_compliant",
+            "legendFormat": "KPI Status"
+          }
+        ],
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              { "type": "value", "options": { "0": { "text": "ABOVE TARGET", "color": "red" } } },
+              { "type": "value", "options": { "1": { "text": "ON TARGET", "color": "green" } } }
+            ]
+          }
+        }
+      },
+      {
+        "id": 8,
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+        "type": "timeseries",
+        "title": "Drift Score Over Time",
+        "description": "Model drift scores by metric type",
+        "targets": [
+          {
+            "expr": "intelliflow_ai_drift_score",
+            "legendFormat": "{{metric}} ({{severity}})"
+          }
+        ],
+        "options": {
+          "legend": { "displayMode": "table", "placement": "right" }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": { "lineWidth": 2, "fillOpacity": 10 },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "green" },
+                { "value": 0.25, "color": "yellow" },
+                { "value": 0.5, "color": "orange" },
+                { "value": 0.75, "color": "red" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 9,
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+        "type": "timeseries",
+        "title": "AI Latency Distribution",
+        "description": "Latency percentiles over time",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(intelliflow_ai_latency_seconds_bucket[5m])) * 1000",
+            "legendFormat": "P50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(intelliflow_ai_latency_seconds_bucket[5m])) * 1000",
+            "legendFormat": "P95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(intelliflow_ai_latency_seconds_bucket[5m])) * 1000",
+            "legendFormat": "P99"
+          }
+        ],
+        "options": {
+          "legend": { "displayMode": "list", "placement": "bottom" }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "custom": { "lineWidth": 2, "fillOpacity": 5 }
+          }
+        }
+      },
+      {
+        "id": 10,
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+        "type": "timeseries",
+        "title": "Hallucination Rate Over Time",
+        "description": "Hallucination detection rate with 5% target threshold",
+        "targets": [
+          {
+            "expr": "intelliflow_ai_hallucination_rate * 100",
+            "legendFormat": "Hallucination Rate"
+          }
+        ],
+        "options": {
+          "legend": { "displayMode": "list", "placement": "bottom" }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 20,
+              "thresholdsStyle": { "mode": "line" }
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 5, "color": "red" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 11,
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+        "type": "timeseries",
+        "title": "ROI Trend",
+        "description": "AI ROI percentage over time",
+        "targets": [
+          {
+            "expr": "intelliflow_ai_roi_current",
+            "legendFormat": "ROI %"
+          }
+        ],
+        "options": {
+          "legend": { "displayMode": "list", "placement": "bottom" }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 20,
+              "gradientMode": "scheme",
+              "thresholdsStyle": { "mode": "area" }
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": -100, "color": "red" },
+                { "value": 0, "color": "yellow" },
+                { "value": 200, "color": "green" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 12,
+        "gridPos": { "h": 8, "w": 8, "x": 0, "y": 24 },
+        "type": "piechart",
+        "title": "Hallucinations by Type",
+        "description": "Distribution of hallucination types detected",
+        "targets": [
+          {
+            "expr": "intelliflow_ai_hallucination_by_type",
+            "legendFormat": "{{type}}"
+          }
+        ],
+        "options": {
+          "legend": { "displayMode": "table", "placement": "right" },
+          "pieType": "donut"
+        }
+      },
+      {
+        "id": 13,
+        "gridPos": { "h": 8, "w": 8, "x": 8, "y": 24 },
+        "type": "piechart",
+        "title": "AI Costs by Model",
+        "description": "Cost distribution across AI models",
+        "targets": [
+          {
+            "expr": "intelliflow_ai_cost_by_model",
+            "legendFormat": "{{model}}"
+          }
+        ],
+        "options": {
+          "legend": { "displayMode": "table", "placement": "right" },
+          "pieType": "donut"
+        }
+      },
+      {
+        "id": 14,
+        "gridPos": { "h": 8, "w": 8, "x": 16, "y": 24 },
+        "type": "piechart",
+        "title": "AI Value by Type",
+        "description": "Value generated by AI operation type",
+        "targets": [
+          {
+            "expr": "intelliflow_ai_value_by_type",
+            "legendFormat": "{{type}}"
+          }
+        ],
+        "options": {
+          "legend": { "displayMode": "table", "placement": "right" },
+          "pieType": "donut"
+        }
+      },
+      {
+        "id": 15,
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
+        "type": "timeseries",
+        "title": "Latency by Model",
+        "description": "P95 latency breakdown by AI model",
+        "targets": [
+          {
+            "expr": "intelliflow_ai_latency_by_model_p95_ms",
+            "legendFormat": "{{model}}"
+          }
+        ],
+        "options": {
+          "legend": { "displayMode": "table", "placement": "right" }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "custom": { "lineWidth": 2, "fillOpacity": 10 }
+          }
+        }
+      },
+      {
+        "id": 16,
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
+        "type": "timeseries",
+        "title": "AI Operations Volume",
+        "description": "Number of AI operations over time",
+        "targets": [
+          {
+            "expr": "rate(intelliflow_ai_operations_total{type=\"cost\"}[5m]) * 300",
+            "legendFormat": "Cost Events"
+          },
+          {
+            "expr": "rate(intelliflow_ai_operations_total{type=\"value\"}[5m]) * 300",
+            "legendFormat": "Value Events"
+          }
+        ],
+        "options": {
+          "legend": { "displayMode": "list", "placement": "bottom" }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "custom": { "lineWidth": 2, "fillOpacity": 20, "stacking": { "mode": "none" } }
+          }
+        }
+      },
+      {
+        "id": 17,
+        "gridPos": { "h": 8, "w": 24, "x": 0, "y": 40 },
+        "type": "table",
+        "title": "Drift Detection Status",
+        "description": "Current drift status for all tracked metrics",
+        "targets": [
+          {
+            "expr": "intelliflow_ai_drift_score",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "renameByName": {
+                "metric": "Metric",
+                "severity": "Severity",
+                "Value": "Drift Score"
+              },
+              "indexByName": {
+                "metric": 0,
+                "severity": 1,
+                "Value": 2
+              }
+            }
+          }
+        ],
+        "fieldConfig": {
+          "overrides": [
+            {
+              "matcher": { "id": "byName", "options": "Severity" },
+              "properties": [
+                {
+                  "id": "custom.cellOptions",
+                  "value": {
+                    "type": "color-text"
+                  }
+                },
+                {
+                  "id": "mappings",
+                  "value": [
+                    { "type": "value", "options": { "none": { "text": "None", "color": "green" } } },
+                    { "type": "value", "options": { "low": { "text": "Low", "color": "yellow" } } },
+                    { "type": "value", "options": { "medium": { "text": "Medium", "color": "orange" } } },
+                    { "type": "value", "options": { "high": { "text": "High", "color": "red" } } },
+                    { "type": "value", "options": { "critical": { "text": "Critical", "color": "dark-red" } } }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 18,
+        "gridPos": { "h": 6, "w": 12, "x": 0, "y": 48 },
+        "type": "stat",
+        "title": "Total AI Cost (USD)",
+        "description": "Total AI operation costs in the current period",
+        "targets": [
+          {
+            "expr": "intelliflow_ai_total_cost",
+            "legendFormat": "Cost"
+          }
+        ],
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD",
+            "decimals": 4
+          }
+        }
+      },
+      {
+        "id": 19,
+        "gridPos": { "h": 6, "w": 12, "x": 12, "y": 48 },
+        "type": "stat",
+        "title": "Total AI Value (USD)",
+        "description": "Total value generated by AI operations",
+        "targets": [
+          {
+            "expr": "intelliflow_ai_total_value",
+            "legendFormat": "Value"
+          }
+        ],
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD",
+            "decimals": 2
+          }
+        }
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "name": "Drift Alerts",
+          "datasource": "Prometheus",
+          "enable": true,
+          "expr": "changes(intelliflow_ai_drift_detected[1m]) > 0",
+          "iconColor": "orange",
+          "tagKeys": "metric"
+        },
+        {
+          "name": "SLO Violations",
+          "datasource": "Prometheus",
+          "enable": true,
+          "expr": "intelliflow_ai_slo_compliant == 0",
+          "iconColor": "red",
+          "tagKeys": "slo"
+        }
+      ]
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "model",
+          "type": "query",
+          "datasource": "Prometheus",
+          "query": "label_values(intelliflow_ai_latency_by_model_p95_ms, model)",
+          "includeAll": true,
+          "current": { "value": "all", "text": "All" },
+          "refresh": 2
+        },
+        {
+          "name": "environment",
+          "type": "query",
+          "datasource": "Prometheus",
+          "query": "label_values(intelliflow_ai_operations_total, environment)",
+          "current": { "value": "production", "text": "production" },
+          "refresh": 1
+        }
+      ]
+    }
+  },
+  "overwrite": true,
+  "folderUid": "intelliflow-ai",
+  "message": "IFC-117: AI Model Monitoring Dashboard - Drift, Hallucination, Latency, ROI"
+}

@@ -1,0 +1,287 @@
+# IntelliFlow CRM - AI Model Monitoring Alert Rules
+# Task: IFC-117
+#
+# These Prometheus alerting rules monitor AI model health including:
+# - Drift detection (target: detect within 1 day)
+# - Hallucination rate (target: <5%)
+# - ROI tracking
+# - Latency SLO compliance
+#
+# Format: Prometheus alerting rules file
+
+groups:
+  - name: intelliflow.ai.drift
+    interval: 30s
+    rules:
+      - alert: AIModelDriftDetected
+        expr: intelliflow_ai_drift_detected == 1
+        for: 5m
+        labels:
+          severity: warning
+          component: ai-model
+          category: drift
+        annotations:
+          summary: 'AI Model Drift Detected'
+          description: 'Drift has been detected in AI model outputs. Investigate model performance and data distribution changes.'
+          runbook_url: 'https://docs.intelliflow.ai/runbooks/ai-drift'
+
+      - alert: AIModelDriftHighSeverity
+        expr: intelliflow_ai_drift_high_severity_count > 0
+        for: 2m
+        labels:
+          severity: critical
+          component: ai-model
+          category: drift
+        annotations:
+          summary: 'High Severity AI Model Drift'
+          description: '{{ $value }} high-severity drift detection(s) in the last 24 hours. Immediate investigation required.'
+          runbook_url: 'https://docs.intelliflow.ai/runbooks/ai-drift-critical'
+
+      - alert: AIModelDriftScoreCritical
+        expr: intelliflow_ai_drift_score{severity="critical"} > 0.75
+        for: 1m
+        labels:
+          severity: critical
+          component: ai-model
+          category: drift
+        annotations:
+          summary: 'Critical Drift Score for {{ $labels.metric }}'
+          description: 'Drift score of {{ $value }} for metric {{ $labels.metric }} exceeds critical threshold (0.75).'
+          runbook_url: 'https://docs.intelliflow.ai/runbooks/ai-drift-critical'
+
+  - name: intelliflow.ai.hallucination
+    interval: 30s
+    rules:
+      - alert: AIHallucinationRateHigh
+        expr: intelliflow_ai_hallucination_rate > 0.05
+        for: 10m
+        labels:
+          severity: warning
+          component: ai-model
+          category: hallucination
+        annotations:
+          summary: 'AI Hallucination Rate Above Target'
+          description: 'Hallucination rate is {{ $value | humanizePercentage }} which exceeds the 5% KPI target. Review AI outputs and ground truth sources.'
+          runbook_url: 'https://docs.intelliflow.ai/runbooks/ai-hallucination'
+
+      - alert: AIHallucinationKPIViolation
+        expr: intelliflow_ai_hallucination_kpi_compliant == 0
+        for: 5m
+        labels:
+          severity: high
+          component: ai-model
+          category: hallucination
+        annotations:
+          summary: 'AI Hallucination KPI Violation'
+          description: 'Hallucination rate has exceeded the 5% KPI threshold. This is a governance violation requiring immediate attention.'
+          runbook_url: 'https://docs.intelliflow.ai/runbooks/ai-hallucination-kpi'
+
+      - alert: AIHallucinationRateCritical
+        expr: intelliflow_ai_hallucination_rate > 0.10
+        for: 5m
+        labels:
+          severity: critical
+          component: ai-model
+          category: hallucination
+        annotations:
+          summary: 'Critical AI Hallucination Rate'
+          description: 'Hallucination rate is {{ $value | humanizePercentage }} which is more than double the 5% target. Consider disabling AI features.'
+          runbook_url: 'https://docs.intelliflow.ai/runbooks/ai-hallucination-critical'
+
+      - alert: AIHallucinationByTypeSpike
+        expr: increase(intelliflow_ai_hallucination_by_type[1h]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: ai-model
+          category: hallucination
+        annotations:
+          summary: 'Spike in {{ $labels.type }} Hallucinations'
+          description: 'More than 10 {{ $labels.type }} hallucinations detected in the last hour.'
+          runbook_url: 'https://docs.intelliflow.ai/runbooks/ai-hallucination-type'
+
+  - name: intelliflow.ai.latency
+    interval: 30s
+    rules:
+      - alert: AILatencyP95Exceeded
+        expr: intelliflow_ai_latency_p95_ms > 2000
+        for: 5m
+        labels:
+          severity: warning
+          component: ai-model
+          category: latency
+        annotations:
+          summary: 'AI P95 Latency Exceeded'
+          description: 'P95 latency is {{ $value }}ms which exceeds the 2000ms SLO target. Check model performance and infrastructure.'
+          runbook_url: 'https://docs.intelliflow.ai/runbooks/ai-latency'
+
+      - alert: AILatencyP99Exceeded
+        expr: intelliflow_ai_latency_p99_ms > 5000
+        for: 5m
+        labels:
+          severity: high
+          component: ai-model
+          category: latency
+        annotations:
+          summary: 'AI P99 Latency Exceeded'
+          description: 'P99 latency is {{ $value }}ms which exceeds the 5000ms SLO target. Some users experiencing degraded performance.'
+          runbook_url: 'https://docs.intelliflow.ai/runbooks/ai-latency-p99'
+
+      - alert: AISLOViolation
+        expr: intelliflow_ai_slo_compliant{slo="p95"} == 0
+        for: 2m
+        labels:
+          severity: high
+          component: ai-model
+          category: latency
+        annotations:
+          summary: 'AI P95 SLO Violation'
+          description: 'P95 latency SLO is being violated. This impacts the Sprint_plan.csv KPI: "AI scoring <2s".'
+          runbook_url: 'https://docs.intelliflow.ai/runbooks/ai-slo-violation'
+
+      - alert: AILatencyByModelHigh
+        expr: intelliflow_ai_latency_by_model_p95_ms > 3000
+        for: 5m
+        labels:
+          severity: warning
+          component: ai-model
+          category: latency
+        annotations:
+          summary: 'High Latency for Model {{ $labels.model }}'
+          description: 'Model {{ $labels.model }} has P95 latency of {{ $value }}ms. Consider model optimization or switching to faster model.'
+          runbook_url: 'https://docs.intelliflow.ai/runbooks/ai-model-latency'
+
+      - alert: AISuccessRateLow
+        expr: intelliflow_ai_success_rate < 0.95
+        for: 10m
+        labels:
+          severity: warning
+          component: ai-model
+          category: reliability
+        annotations:
+          summary: 'AI Success Rate Below 95%'
+          description: 'AI operation success rate is {{ $value | humanizePercentage }}. Check for API errors and model failures.'
+          runbook_url: 'https://docs.intelliflow.ai/runbooks/ai-success-rate'
+
+      - alert: AISuccessRateCritical
+        expr: intelliflow_ai_success_rate < 0.90
+        for: 5m
+        labels:
+          severity: critical
+          component: ai-model
+          category: reliability
+        annotations:
+          summary: 'Critical AI Success Rate Drop'
+          description: 'AI operation success rate is {{ $value | humanizePercentage }} which is critically low. Immediate investigation required.'
+          runbook_url: 'https://docs.intelliflow.ai/runbooks/ai-success-critical'
+
+  - name: intelliflow.ai.roi
+    interval: 60s
+    rules:
+      - alert: AIROINegative
+        expr: intelliflow_ai_roi_current < 0
+        for: 30m
+        labels:
+          severity: warning
+          component: ai-model
+          category: roi
+        annotations:
+          summary: 'Negative AI ROI'
+          description: 'AI ROI is {{ $value }}% which means AI operations are costing more than the value generated.'
+          runbook_url: 'https://docs.intelliflow.ai/runbooks/ai-roi-negative'
+
+      - alert: AIROIBelowTarget
+        expr: intelliflow_ai_roi_current < 200
+        for: 1h
+        labels:
+          severity: info
+          component: ai-model
+          category: roi
+        annotations:
+          summary: 'AI ROI Below 200% Target'
+          description: 'AI ROI is {{ $value }}% which is below the 200% target. Review cost optimization opportunities.'
+          runbook_url: 'https://docs.intelliflow.ai/runbooks/ai-roi-optimization'
+
+      - alert: AICostSpike
+        expr: increase(intelliflow_ai_total_cost[1h]) > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          component: ai-model
+          category: cost
+        annotations:
+          summary: 'AI Cost Spike Detected'
+          description: 'AI costs increased by more than $1.00 in the last hour. Check for unusual activity or model cost changes.'
+          runbook_url: 'https://docs.intelliflow.ai/runbooks/ai-cost-spike'
+
+      - alert: AICostBudgetWarning
+        expr: intelliflow_ai_total_cost > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: ai-model
+          category: cost
+        annotations:
+          summary: 'AI Cost Budget Warning'
+          description: 'Total AI costs have exceeded $10 in the tracking period. Review budget allocation.'
+          runbook_url: 'https://docs.intelliflow.ai/runbooks/ai-cost-budget'
+
+  - name: intelliflow.ai.operations
+    interval: 30s
+    rules:
+      - alert: AIOperationsLow
+        expr: rate(intelliflow_ai_operations_total{type="cost"}[5m]) == 0
+        for: 30m
+        labels:
+          severity: info
+          component: ai-model
+          category: operations
+        annotations:
+          summary: 'No AI Operations in Last 30 Minutes'
+          description: 'No AI operations have been recorded in the last 30 minutes. This might indicate a system issue or expected quiet period.'
+          runbook_url: 'https://docs.intelliflow.ai/runbooks/ai-operations-low'
+
+      - alert: AIValueNotRecorded
+        expr: rate(intelliflow_ai_operations_total{type="value"}[1h]) == 0 and rate(intelliflow_ai_operations_total{type="cost"}[1h]) > 0
+        for: 1h
+        labels:
+          severity: warning
+          component: ai-model
+          category: operations
+        annotations:
+          summary: 'AI Value Not Being Recorded'
+          description: 'AI costs are being recorded but no value is being tracked. Ensure value recording is properly implemented.'
+          runbook_url: 'https://docs.intelliflow.ai/runbooks/ai-value-tracking'
+
+  - name: intelliflow.ai.model-health
+    interval: 60s
+    rules:
+      - alert: AIModelHealthDegraded
+        expr: |
+          (intelliflow_ai_drift_detected == 1)
+          or (intelliflow_ai_hallucination_rate > 0.05)
+          or (intelliflow_ai_slo_compliant{slo="p95"} == 0)
+        for: 10m
+        labels:
+          severity: high
+          component: ai-model
+          category: health
+        annotations:
+          summary: 'AI Model Health Degraded'
+          description: 'One or more AI health indicators are outside acceptable ranges. Review drift, hallucination, and latency metrics.'
+          runbook_url: 'https://docs.intelliflow.ai/runbooks/ai-health-degraded'
+
+      - alert: AIModelHealthCritical
+        expr: |
+          (intelliflow_ai_drift_score{severity="critical"} > 0)
+          or (intelliflow_ai_hallucination_rate > 0.10)
+          or (intelliflow_ai_success_rate < 0.90)
+        for: 5m
+        labels:
+          severity: critical
+          component: ai-model
+          category: health
+        annotations:
+          summary: 'Critical AI Model Health Issues'
+          description: 'Critical AI health issues detected. Consider rolling back model changes or temporarily disabling AI features.'
+          runbook_url: 'https://docs.intelliflow.ai/runbooks/ai-health-critical'

@@ -1,0 +1,622 @@
+{
+  "dashboard": {
+    "title": "IntelliFlow CRM - Workers Dashboard",
+    "description": "Monitoring dashboard for events, ingestion, and notifications workers",
+    "tags": ["intelliflow", "workers", "bullmq", "queues"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "10s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m"]
+    },
+    "annotations": {
+      "list": [
+        {
+          "name": "Deployments",
+          "datasource": "prometheus",
+          "enable": true,
+          "iconColor": "blue",
+          "expr": "changes(intelliflow_worker_version[1m]) > 0"
+        },
+        {
+          "name": "Circuit Breaker Open",
+          "datasource": "prometheus",
+          "enable": true,
+          "iconColor": "red",
+          "expr": "intelliflow_circuit_breaker_state == 2"
+        }
+      ]
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "worker",
+          "type": "query",
+          "datasource": "prometheus",
+          "query": "label_values(intelliflow_worker_jobs_processed_total, worker)",
+          "refresh": 1,
+          "includeAll": true,
+          "current": { "text": "All", "value": "$__all" }
+        },
+        {
+          "name": "queue",
+          "type": "query",
+          "datasource": "prometheus",
+          "query": "label_values(intelliflow_queue_depth, queue)",
+          "refresh": 1,
+          "includeAll": true,
+          "current": { "text": "All", "value": "$__all" }
+        }
+      ]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Worker Overview",
+        "type": "row",
+        "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+        "collapsed": false
+      },
+      {
+        "id": 2,
+        "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+        "type": "stat",
+        "title": "Active Workers",
+        "targets": [
+          {
+            "expr": "sum(up{job=~\".*worker.*\"})",
+            "legendFormat": "Workers"
+          }
+        ],
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "value",
+          "graphMode": "none"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "red", "value": null },
+                { "color": "yellow", "value": 1 },
+                { "color": "green", "value": 3 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "gridPos": { "h": 4, "w": 5, "x": 4, "y": 1 },
+        "type": "stat",
+        "title": "Jobs Processed (24h)",
+        "targets": [
+          {
+            "expr": "sum(increase(intelliflow_worker_jobs_processed_total{worker=~\"$worker\"}[24h]))",
+            "legendFormat": "Jobs"
+          }
+        ],
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 4,
+        "gridPos": { "h": 4, "w": 5, "x": 9, "y": 1 },
+        "type": "stat",
+        "title": "Error Rate",
+        "targets": [
+          {
+            "expr": "sum(rate(intelliflow_worker_jobs_failed_total{worker=~\"$worker\"}[5m])) / sum(rate(intelliflow_worker_jobs_processed_total{worker=~\"$worker\"}[5m])) * 100",
+            "legendFormat": "Error %"
+          }
+        ],
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "yellow", "value": 1 },
+                { "color": "red", "value": 5 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "gridPos": { "h": 4, "w": 5, "x": 14, "y": 1 },
+        "type": "stat",
+        "title": "Avg Processing Time (p95)",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(intelliflow_worker_job_duration_seconds_bucket{worker=~\"$worker\"}[5m])) by (le))",
+            "legendFormat": "p95"
+          }
+        ],
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "yellow", "value": 10 },
+                { "color": "red", "value": 30 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "gridPos": { "h": 4, "w": 5, "x": 19, "y": 1 },
+        "type": "stat",
+        "title": "DLQ Depth",
+        "targets": [
+          {
+            "expr": "sum(intelliflow_queue_dlq_depth{queue=~\"$queue\"})",
+            "legendFormat": "DLQ"
+          }
+        ],
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "yellow", "value": 10 },
+                { "color": "red", "value": 100 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 7,
+        "title": "Job Throughput",
+        "type": "row",
+        "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+        "collapsed": false
+      },
+      {
+        "id": 8,
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+        "type": "timeseries",
+        "title": "Jobs Processed per Second",
+        "targets": [
+          {
+            "expr": "sum(rate(intelliflow_worker_jobs_processed_total{worker=~\"$worker\"}[1m])) by (worker)",
+            "legendFormat": "{{worker}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "custom": {
+              "drawStyle": "line",
+              "lineWidth": 2,
+              "fillOpacity": 10
+            }
+          }
+        }
+      },
+      {
+        "id": 9,
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+        "type": "timeseries",
+        "title": "Failed Jobs per Second",
+        "targets": [
+          {
+            "expr": "sum(rate(intelliflow_worker_jobs_failed_total{worker=~\"$worker\"}[1m])) by (worker)",
+            "legendFormat": "{{worker}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "custom": {
+              "drawStyle": "line",
+              "lineWidth": 2,
+              "fillOpacity": 10
+            },
+            "color": { "mode": "palette-classic" }
+          }
+        }
+      },
+      {
+        "id": 10,
+        "title": "Queue Depths",
+        "type": "row",
+        "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+        "collapsed": false
+      },
+      {
+        "id": 11,
+        "gridPos": { "h": 8, "w": 8, "x": 0, "y": 15 },
+        "type": "timeseries",
+        "title": "Events Queue",
+        "targets": [
+          {
+            "expr": "intelliflow_queue_depth{queue=\"intelliflow:events\"}",
+            "legendFormat": "Waiting"
+          },
+          {
+            "expr": "intelliflow_queue_active{queue=\"intelliflow:events\"}",
+            "legendFormat": "Active"
+          },
+          {
+            "expr": "intelliflow_queue_delayed{queue=\"intelliflow:events\"}",
+            "legendFormat": "Delayed"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineWidth": 2,
+              "fillOpacity": 20,
+              "stacking": { "mode": "normal" }
+            }
+          }
+        }
+      },
+      {
+        "id": 12,
+        "gridPos": { "h": 8, "w": 8, "x": 8, "y": 15 },
+        "type": "timeseries",
+        "title": "Ingestion Queue",
+        "targets": [
+          {
+            "expr": "intelliflow_queue_depth{queue=\"intelliflow:text-extraction\"}",
+            "legendFormat": "Text Extraction"
+          },
+          {
+            "expr": "intelliflow_queue_depth{queue=\"intelliflow:ocr-processing\"}",
+            "legendFormat": "OCR"
+          },
+          {
+            "expr": "intelliflow_queue_depth{queue=\"intelliflow:embedding-generation\"}",
+            "legendFormat": "Embeddings"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineWidth": 2,
+              "fillOpacity": 20
+            }
+          }
+        }
+      },
+      {
+        "id": 13,
+        "gridPos": { "h": 8, "w": 8, "x": 16, "y": 15 },
+        "type": "timeseries",
+        "title": "Notifications Queue",
+        "targets": [
+          {
+            "expr": "intelliflow_queue_depth{queue=\"intelliflow:notifications:email\"}",
+            "legendFormat": "Email"
+          },
+          {
+            "expr": "intelliflow_queue_depth{queue=\"intelliflow:notifications:sms\"}",
+            "legendFormat": "SMS"
+          },
+          {
+            "expr": "intelliflow_queue_depth{queue=\"intelliflow:notifications:webhook\"}",
+            "legendFormat": "Webhook"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineWidth": 2,
+              "fillOpacity": 20
+            }
+          }
+        }
+      },
+      {
+        "id": 14,
+        "title": "Processing Latency",
+        "type": "row",
+        "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
+        "collapsed": false
+      },
+      {
+        "id": 15,
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+        "type": "timeseries",
+        "title": "Job Processing Duration (p50, p95, p99)",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(intelliflow_worker_job_duration_seconds_bucket{worker=~\"$worker\"}[5m])) by (le, worker))",
+            "legendFormat": "{{worker}} p50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(intelliflow_worker_job_duration_seconds_bucket{worker=~\"$worker\"}[5m])) by (le, worker))",
+            "legendFormat": "{{worker}} p95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(intelliflow_worker_job_duration_seconds_bucket{worker=~\"$worker\"}[5m])) by (le, worker))",
+            "legendFormat": "{{worker}} p99"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "custom": {
+              "drawStyle": "line",
+              "lineWidth": 2
+            }
+          }
+        }
+      },
+      {
+        "id": 16,
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+        "type": "heatmap",
+        "title": "Job Duration Distribution",
+        "targets": [
+          {
+            "expr": "sum(increase(intelliflow_worker_job_duration_seconds_bucket{worker=~\"$worker\"}[1m])) by (le)",
+            "format": "heatmap"
+          }
+        ],
+        "options": {
+          "calculate": false,
+          "color": { "mode": "scheme", "scheme": "Spectral" }
+        }
+      },
+      {
+        "id": 17,
+        "title": "Circuit Breaker & Resilience",
+        "type": "row",
+        "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 },
+        "collapsed": false
+      },
+      {
+        "id": 18,
+        "gridPos": { "h": 6, "w": 8, "x": 0, "y": 33 },
+        "type": "state-timeline",
+        "title": "Circuit Breaker States",
+        "targets": [
+          {
+            "expr": "intelliflow_circuit_breaker_state{worker=~\"$worker\"}",
+            "legendFormat": "{{worker}}"
+          }
+        ],
+        "options": {
+          "showValue": "auto",
+          "alignValue": "center"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              { "type": "value", "options": { "0": { "text": "CLOSED", "color": "green" } } },
+              { "type": "value", "options": { "1": { "text": "HALF_OPEN", "color": "yellow" } } },
+              { "type": "value", "options": { "2": { "text": "OPEN", "color": "red" } } }
+            ]
+          }
+        }
+      },
+      {
+        "id": 19,
+        "gridPos": { "h": 6, "w": 8, "x": 8, "y": 33 },
+        "type": "timeseries",
+        "title": "Retry Attempts",
+        "targets": [
+          {
+            "expr": "sum(rate(intelliflow_worker_retries_total{worker=~\"$worker\"}[5m])) by (worker, attempt)",
+            "legendFormat": "{{worker}} - attempt {{attempt}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "custom": {
+              "drawStyle": "bars",
+              "fillOpacity": 80
+            }
+          }
+        }
+      },
+      {
+        "id": 20,
+        "gridPos": { "h": 6, "w": 8, "x": 16, "y": 33 },
+        "type": "timeseries",
+        "title": "DLQ Messages Over Time",
+        "targets": [
+          {
+            "expr": "sum(intelliflow_queue_dlq_depth{queue=~\"$queue\"}) by (queue)",
+            "legendFormat": "{{queue}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineWidth": 2,
+              "fillOpacity": 30
+            }
+          }
+        }
+      },
+      {
+        "id": 21,
+        "title": "Worker Health",
+        "type": "row",
+        "gridPos": { "h": 1, "w": 24, "x": 0, "y": 39 },
+        "collapsed": false
+      },
+      {
+        "id": 22,
+        "gridPos": { "h": 6, "w": 8, "x": 0, "y": 40 },
+        "type": "gauge",
+        "title": "Events Worker Health",
+        "targets": [
+          {
+            "expr": "up{job=\"events-worker\"}",
+            "legendFormat": "Health"
+          }
+        ],
+        "options": {
+          "orientation": "horizontal"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 1,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "red", "value": null },
+                { "color": "green", "value": 1 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 23,
+        "gridPos": { "h": 6, "w": 8, "x": 8, "y": 40 },
+        "type": "gauge",
+        "title": "Ingestion Worker Health",
+        "targets": [
+          {
+            "expr": "up{job=\"ingestion-worker\"}",
+            "legendFormat": "Health"
+          }
+        ],
+        "options": {
+          "orientation": "horizontal"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 1,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "red", "value": null },
+                { "color": "green", "value": 1 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 24,
+        "gridPos": { "h": 6, "w": 8, "x": 16, "y": 40 },
+        "type": "gauge",
+        "title": "Notifications Worker Health",
+        "targets": [
+          {
+            "expr": "up{job=\"notifications-worker\"}",
+            "legendFormat": "Health"
+          }
+        ],
+        "options": {
+          "orientation": "horizontal"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 1,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "red", "value": null },
+                { "color": "green", "value": 1 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 25,
+        "title": "Outbox Polling (Events Worker)",
+        "type": "row",
+        "gridPos": { "h": 1, "w": 24, "x": 0, "y": 46 },
+        "collapsed": false
+      },
+      {
+        "id": 26,
+        "gridPos": { "h": 6, "w": 12, "x": 0, "y": 47 },
+        "type": "timeseries",
+        "title": "Outbox Events Published",
+        "targets": [
+          {
+            "expr": "sum(rate(intelliflow_outbox_events_published_total[1m]))",
+            "legendFormat": "Published"
+          },
+          {
+            "expr": "sum(rate(intelliflow_outbox_events_failed_total[1m]))",
+            "legendFormat": "Failed"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "custom": {
+              "drawStyle": "line",
+              "lineWidth": 2,
+              "fillOpacity": 10
+            }
+          }
+        }
+      },
+      {
+        "id": 27,
+        "gridPos": { "h": 6, "w": 12, "x": 12, "y": 47 },
+        "type": "timeseries",
+        "title": "Outbox Batch Size",
+        "targets": [
+          {
+            "expr": "intelliflow_outbox_batch_size",
+            "legendFormat": "Events per batch"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineWidth": 2,
+              "fillOpacity": 30
+            }
+          }
+        }
+      }
+    ]
+  },
+  "overwrite": true
+}
