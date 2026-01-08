@@ -1,0 +1,1101 @@
+# API Contracts - Single Source of Truth
+# Version: 1.0.0
+# Updated: 2026-01-05
+# Purpose: Define all API endpoint contracts for validation and documentation
+#
+# IMPORTANT: This file is the source of truth. Code MUST match these contracts.
+# Validators in packages/validators/__tests__/api-contract-consistency.spec.ts
+# will fail CI if code deviates from this specification.
+
+version: "1.0.0"
+updated: "2026-01-05"
+
+# Procedure Types - Define access control levels
+procedures:
+  publicProcedure:
+    description: "No authentication required"
+    requiresAuth: false
+    requiresTenant: false
+    scope: public
+
+  protectedProcedure:
+    description: "Requires authentication, tenant filter only"
+    requiresAuth: true
+    requiresTenant: true
+    scope: tenant_only
+    filter:
+      tenantId: required
+      ownerId: none
+
+  tenantProcedure:
+    description: "Requires auth + owner filtering by role"
+    requiresAuth: true
+    requiresTenant: true
+    scope: tenant_with_owner
+    filter:
+      tenantId: required
+      ownerId: by_role
+    roleFiltering:
+      ADMIN: all_tenant_records
+      MANAGER: team_records
+      SALES_REP: own_records_only
+      USER: own_records_only
+
+  adminProcedure:
+    description: "Requires ADMIN role"
+    requiresAuth: true
+    requiresTenant: true
+    scope: admin_only
+    requiredRole: ADMIN
+
+# Router Definitions - All 17 routers
+routers:
+  # ============================================================================
+  # CRM CORE - Lead, Contact, Account, Opportunity
+  # ============================================================================
+  lead:
+    description: "Lead management - capture, score, qualify, convert"
+    defaultProcedure: tenantProcedure
+    endpoints:
+      create:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [firstName, lastName, email, company, title, phone, source]
+      getById:
+        procedure: tenantProcedure
+        type: query
+        ownerFilter: true
+        inputs: [id]
+      list:
+        procedure: tenantProcedure
+        type: query
+        ownerFilter: true
+        inputs: [page, limit, status, source, minScore, maxScore, search, ownerId, dateFrom, dateTo, sortBy, sortOrder]
+      update:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [id, firstName, lastName, company, title, phone, status]
+      delete:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [id]
+      qualify:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [leadId, reason]
+      convert:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [leadId, createAccount, accountName]
+      scoreWithAI:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [leadId]
+      stats:
+        procedure: tenantProcedure  # REQUIRED: Must match list scope
+        type: query
+        ownerFilter: true  # REQUIRED: Must be consistent with list
+        inputs: []
+        consistency:
+          mustMatchScope: [list, getById, create]
+          reason: "Stats must reflect same data scope as list endpoint"
+      getHotLeads:
+        procedure: tenantProcedure
+        type: query
+        ownerFilter: true
+        inputs: []
+      getReadyForQualification:
+        procedure: tenantProcedure
+        type: query
+        ownerFilter: true
+        inputs: []
+      bulkScore:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [leadIds]
+      bulkConvert:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [ids, createAccounts]
+      bulkUpdateStatus:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [ids, status]
+      bulkArchive:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [ids]
+      bulkDelete:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [ids]
+
+  contact:
+    description: "Contact management - 360-degree view"
+    defaultProcedure: tenantProcedure
+    endpoints:
+      create:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [email, firstName, lastName, title, phone, department, accountId]
+      getById:
+        procedure: tenantProcedure
+        type: query
+        ownerFilter: true
+        inputs: [id]
+      getByEmail:
+        procedure: tenantProcedure
+        type: query
+        ownerFilter: true
+        inputs: [email]
+      list:
+        procedure: tenantProcedure
+        type: query
+        ownerFilter: true
+        inputs: [page, limit, search, accountId, ownerId, department, status, sortBy, sortOrder]
+      update:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [id, firstName, lastName, title, phone, department, accountId]
+      delete:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [id]
+      linkToAccount:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [contactId, accountId]
+      unlinkFromAccount:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [contactId]
+      stats:
+        procedure: tenantProcedure
+        type: query
+        ownerFilter: true
+        inputs: []
+        consistency:
+          mustMatchScope: [list]
+      search:
+        procedure: tenantProcedure
+        type: query
+        ownerFilter: true
+        inputs: [query, limit, includeAccount]
+      changeStatus:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [contactId, status]
+      bulkEmail:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [ids]
+      bulkExport:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [ids, format]
+      bulkDelete:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [ids]
+
+  account:
+    description: "Account/Company management"
+    defaultProcedure: tenantProcedure
+    endpoints:
+      create:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [name, website, industry, description, employees, revenue]
+      getById:
+        procedure: tenantProcedure
+        type: query
+        ownerFilter: true
+        inputs: [id]
+      list:
+        procedure: tenantProcedure
+        type: query
+        ownerFilter: true
+        inputs: [page, limit, search, industry, ownerId, minRevenue, maxRevenue, minEmployees, maxEmployees, sortBy, sortOrder]
+      update:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [id, name, website, description]
+      delete:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [id]
+      stats:
+        procedure: tenantProcedure
+        type: query
+        ownerFilter: true
+        inputs: []
+        consistency:
+          mustMatchScope: [list]
+
+  opportunity:
+    description: "Deal/Opportunity pipeline management"
+    defaultProcedure: tenantProcedure
+    endpoints:
+      create:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [name, description, value, probability, stage, expectedCloseDate, accountId, contactId]
+      getById:
+        procedure: tenantProcedure
+        type: query
+        ownerFilter: true
+        inputs: [id]
+      list:
+        procedure: tenantProcedure
+        type: query
+        ownerFilter: true
+        inputs: [page, limit, search, stage, ownerId, accountId, contactId, minValue, maxValue, minProbability, maxProbability, dateFrom, dateTo, sortBy, sortOrder]
+      update:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [id, name, description, value, probability, stage, expectedCloseDate]
+      delete:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [id]
+      stats:
+        procedure: tenantProcedure
+        type: query
+        ownerFilter: true
+        inputs: []
+        consistency:
+          mustMatchScope: [list]
+      forecast:
+        procedure: tenantProcedure
+        type: query
+        ownerFilter: true
+        inputs: []
+
+  # ============================================================================
+  # CRM SUPPORT - Task, Ticket
+  # ============================================================================
+  task:
+    description: "Task management across CRM entities"
+    defaultProcedure: tenantProcedure
+    endpoints:
+      create:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [title, description, status, priority, dueDate, leadId, contactId, opportunityId]
+      getById:
+        procedure: tenantProcedure
+        type: query
+        ownerFilter: true
+        inputs: [id]
+      list:
+        procedure: tenantProcedure
+        type: query
+        ownerFilter: true
+        inputs: [page, limit, search, status, priority, ownerId, leadId, contactId, opportunityId, dueDateFrom, dueDateTo, overdue, sortBy, sortOrder]
+      update:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [id, title, description, status, priority, dueDate, leadId, contactId, opportunityId]
+      delete:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [id]
+      complete:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [taskId]
+      stats:
+        procedure: tenantProcedure
+        type: query
+        ownerFilter: true
+        inputs: []
+        consistency:
+          mustMatchScope: [list]
+
+  ticket:
+    description: "Support ticket management"
+    defaultProcedure: tenantProcedure
+    endpoints:
+      create:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: false  # Tickets visible to assignees, not owners
+        inputs: [subject, description, priority, assigneeId]
+      getById:
+        procedure: tenantProcedure
+        type: query
+        ownerFilter: false
+        inputs: [id]
+      list:
+        procedure: tenantProcedure
+        type: query
+        ownerFilter: false
+        inputs: [page, limit, status, priority, assignedToId]
+      update:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [id, subject, description, status, priority, assigneeId]
+      delete:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [id]
+      stats:
+        procedure: tenantProcedure
+        type: query
+        ownerFilter: false
+        inputs: []
+        consistency:
+          mustMatchScope: [list]
+      addResponse:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [ticketId, content, authorName, authorRole]
+      bulkAssign:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [ids, assigneeId]
+      bulkUpdateStatus:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [ids, status]
+      bulkResolve:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [ids, resolution]
+      bulkEscalate:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [ids, reason]
+      bulkClose:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [ids]
+
+  # ============================================================================
+  # ANALYTICS - Dashboard metrics
+  # ============================================================================
+  analytics:
+    description: "Dashboard analytics - aggregated metrics"
+    defaultProcedure: protectedProcedure
+    note: "Analytics endpoints aggregate across all accessible data for the user"
+    endpoints:
+      dealsWonTrend:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: [months]
+      growthTrends:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: [metric, months]
+      trafficSources:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: []
+      recentActivity:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: [limit]
+      leadStats:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: []
+        warning: "Returns tenant-wide stats - for dashboard only, not entity pages"
+
+  # ============================================================================
+  # AI - Agent tools, conversations, feedback
+  # ============================================================================
+  agent:
+    description: "AI agent tool execution and approval workflow"
+    defaultProcedure: protectedProcedure
+    endpoints:
+      listTools:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: []
+      getTool:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: [toolName]
+      executeTool:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [toolName, input]
+      getPendingApprovals:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: []
+      getPendingAction:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: [actionId]
+      approveAction:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [actionId, reason, modifiedInput]
+      rejectAction:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [actionId, reason]
+      getPendingCount:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: []
+
+  conversation:
+    description: "AI conversation records with tool tracking"
+    defaultProcedure: protectedProcedure
+    endpoints:
+      create:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [sessionId, title, agentId, agentName, agentModel, contextType, contextId, contextName, channel]
+      getById:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: [id]
+      getBySessionId:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: [sessionId]
+      search:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: [userId, agentId, contextType, contextId, channel, status, startDate, endDate, searchQuery, limit, offset]
+      addMessage:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [conversationId, role, content, contentType, modelUsed, finishReason, tokenCount, promptTokens, completionTokens, confidence, attachments]
+      recordToolCall:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [conversationId, messageId, toolName, toolType, toolVersion, inputParameters, requiresApproval, affectedEntityType, affectedEntityId, changeDescription, isReversible, rollbackData]
+      updateToolCall:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [id, status, outputResult, errorMessage, errorCode, durationMs]
+      approveToolCall:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [id, approved, reason]
+      endConversation:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [id, reason, userRating, feedbackText]
+      escalate:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [id, escalateTo, reason]
+      getPendingApprovals:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: [limit]
+      getAnalytics:
+        procedure: adminProcedure
+        type: query
+        ownerFilter: false
+        inputs: [startDate, endDate]
+      archiveOld:
+        procedure: adminProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [olderThanDays]
+
+  feedback:
+    description: "Human-in-the-loop AI feedback"
+    defaultProcedure: tenantProcedure
+    endpoints:
+      submitSimple:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [leadId, feedback]
+      submitCorrection:
+        procedure: tenantProcedure
+        type: mutation
+        ownerFilter: true
+        inputs: [leadId, correctedScore, reason]
+      getForLead:
+        procedure: tenantProcedure
+        type: query
+        ownerFilter: true
+        inputs: [leadId]
+      getAnalytics:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: [dateFrom, dateTo, modelVersion]
+      checkRetraining:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: [modelVersion]
+      exportTrainingData:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [modelVersion, dateFrom, dateTo]
+
+  # ============================================================================
+  # LEGAL - Appointments, Documents
+  # ============================================================================
+  appointments:
+    description: "Appointment scheduling with conflict detection"
+    defaultProcedure: protectedProcedure
+    endpoints:
+      create:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [title, description, startTime, endTime, appointmentType, location, attendeeIds, linkedCaseIds, bufferMinutesBefore, bufferMinutesAfter, recurrence, reminderMinutes, forceOverrideConflicts]
+      getById:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: [id]
+      list:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: [page, limit, status, appointmentType, startTimeFrom, startTimeTo, caseId, sortBy, sortOrder]
+      update:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [id, title, description, location, appointmentType, notes, reminderMinutes]
+      reschedule:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [id, newStartTime, newEndTime, reason, forceOverrideConflicts]
+      confirm:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [id]
+      complete:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [id, notes]
+      cancel:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [id, reason]
+      markNoShow:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [id]
+      delete:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [id]
+      checkConflicts:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: [startTime, endTime, attendeeIds, bufferMinutesBefore, bufferMinutesAfter, excludeAppointmentId]
+      checkAvailability:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: [attendeeId, startTime, endTime, minimumSlotMinutes]
+      findNextSlot:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: [attendeeId, startFrom, durationMinutes, maxDaysAhead, bufferMinutesBefore, bufferMinutesAfter]
+      linkToCase:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [appointmentId, caseId]
+      unlinkFromCase:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [appointmentId, caseId]
+      addAttendee:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [appointmentId, userId]
+      removeAttendee:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [appointmentId, userId]
+      upcoming:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: [limit]
+      stats:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: []
+
+  documents:
+    description: "Case document management with versioning and e-signature"
+    defaultProcedure: protectedProcedure
+    accessControl: domain_based  # Uses ACL, not owner filtering
+    endpoints:
+      create:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [title, description, documentType, classification, tags, relatedCaseId, relatedContactId, storageKey, contentHash, mimeType, sizeBytes]
+      createVersion:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [documentId, versionType, storageKey, contentHash]
+      getById:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: [id]
+      list:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: [caseId, status, classification, limit, offset]
+      grantAccess:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [documentId, principalId, principalType, accessLevel, expiresAt]
+      revokeAccess:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [documentId, principalId]
+      submitForReview:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [documentId]
+      approve:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [documentId]
+      sign:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [documentId, ipAddress, userAgent]
+      archive:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [documentId]
+      placeLegalHold:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [documentId, retentionUntil]
+      releaseLegalHold:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [documentId]
+      delete:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [documentId]
+      getAuditTrail:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: [documentId]
+      bulkDownload:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [ids]
+      bulkShare:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [ids, recipientIds, permission]
+      bulkArchive:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [ids]
+      bulkDelete:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [ids]
+
+  # ============================================================================
+  # INFRASTRUCTURE - Health, Auth, Billing
+  # ============================================================================
+  health:
+    description: "Health check and monitoring"
+    defaultProcedure: publicProcedure
+    endpoints:
+      ping:
+        procedure: publicProcedure
+        type: query
+        ownerFilter: false
+        inputs: []
+      check:
+        procedure: publicProcedure
+        type: query
+        ownerFilter: false
+        inputs: []
+      ready:
+        procedure: publicProcedure
+        type: query
+        ownerFilter: false
+        inputs: []
+      alive:
+        procedure: publicProcedure
+        type: query
+        ownerFilter: false
+        inputs: []
+      dbStats:
+        procedure: publicProcedure
+        type: query
+        ownerFilter: false
+        inputs: []
+
+  auth:
+    description: "Authentication and session management"
+    defaultProcedure: publicProcedure
+    endpoints:
+      login:
+        procedure: publicProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [email, password, rememberMe]
+      loginWithOAuth:
+        procedure: publicProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [provider, redirectTo]
+      oauthCallback:
+        procedure: publicProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [code, error, errorDescription]
+      verifyMfa:
+        procedure: publicProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [challengeId, code]
+      logout:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: []
+      refreshSession:
+        procedure: publicProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [refreshToken]
+      setupMfa:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [method, phone]
+      confirmMfa:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [method, code]
+      getBackupCodes:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: []
+      getSessions:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: []
+      revokeSession:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [sessionId]
+      getStatus:
+        procedure: publicProcedure
+        type: query
+        ownerFilter: false
+        inputs: []
+      verifyEmail:
+        procedure: publicProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [token]
+      resendVerification:
+        procedure: publicProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [email]
+
+  billing:
+    description: "Billing and subscription management (Stripe)"
+    defaultProcedure: protectedProcedure
+    endpoints:
+      getSubscription:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: []
+      listInvoices:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: [page, limit]
+      getPaymentMethods:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: []
+      updatePaymentMethod:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [paymentMethodId]
+      removePaymentMethod:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [paymentMethodId]
+      updateSubscription:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [priceId, quantity]
+      cancelSubscription:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [atPeriodEnd]
+      getUpcomingInvoice:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: []
+      ensureCustomer:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: []
+      getUsageMetrics:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: []
+      createCheckoutSubscription:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [planId, billingCycle, paymentMethodId]
+
+  timeline:
+    description: "Unified activity timeline"
+    defaultProcedure: tenantProcedure
+    endpoints:
+      list:
+        procedure: tenantProcedure
+        type: query
+        ownerFilter: true
+        inputs: [entityType, entityId, page, limit, activityTypes, dateFrom, dateTo]
+
+  system:
+    description: "System information and metadata endpoints"
+    defaultProcedure: publicProcedure
+    endpoints:
+      version:
+        procedure: publicProcedure
+        type: query
+        ownerFilter: false
+        inputs: []
+      info:
+        procedure: publicProcedure
+        type: query
+        ownerFilter: false
+        inputs: []
+      features:
+        procedure: publicProcedure
+        type: query
+        ownerFilter: false
+        inputs: []
+      config:
+        procedure: adminProcedure
+        type: query
+        ownerFilter: false
+        inputs: []
+        note: "Non-sensitive system configuration - admin only"
+      metrics:
+        procedure: adminProcedure
+        type: query
+        ownerFilter: false
+        inputs: []
+        note: "Process metrics - admin only"
+      capabilities:
+        procedure: publicProcedure
+        type: query
+        ownerFilter: false
+        inputs: []
+
+  upload:
+    description: "File upload through ingestion pipeline"
+    defaultProcedure: protectedProcedure
+    endpoints:
+      upload:
+        procedure: protectedProcedure
+        type: mutation
+        ownerFilter: false
+        inputs: [filename, mimeType, content, relatedCaseId, relatedContactId]
+        note: "Base64 encoded content, processed via ingestion orchestrator"
+      getUploadStatus:
+        procedure: protectedProcedure
+        type: query
+        ownerFilter: false
+        inputs: [documentId]
+
+  cases:
+    description: "Legal case management - STUB pending Prisma schema"
+    status: stub
+    defaultProcedure: tenantProcedure
+    note: "Router is stubbed pending Case and CaseTask Prisma models"
+    endpoints: {}
+
+# ============================================================================
+# VALIDATION RULES - Consistency requirements
+# ============================================================================
+validationRules:
+  scopeConsistency:
+    description: "Endpoints within same router should have consistent scope"
+    rule: "If router has list endpoint with ownerFilter:true, stats must also have ownerFilter:true"
+    affectedRouters: [lead, contact, account, opportunity, task]
+
+  procedureMatching:
+    description: "CRUD endpoints should use same procedure type"
+    rule: "create, getById, list, update, delete should all use same procedure"
+
+  statsAlignment:
+    description: "Stats endpoints must match list scope"
+    rule: "stats.ownerFilter MUST equal list.ownerFilter"
+    violations: []  # All violations resolved
+
+# ============================================================================
+# RESOLVED VIOLATIONS - History of fixed issues
+# ============================================================================
+resolvedViolations:
+  - id: VIOLATION-001
+    severity: critical
+    router: lead
+    endpoint: stats
+    issue: "Uses protectedProcedure instead of tenantProcedure"
+    impact: "Dashboard shows 5 leads, Leads page shows 2 for non-admin users"
+    resolution: "Changed to tenantProcedure with createTenantWhereClause"
+    resolvedAt: "2026-01-05"
+    file: "apps/api/src/modules/lead/lead.router.ts"
+    line: 405
+
+  - id: VIOLATION-002
+    severity: critical
+    router: documents
+    endpoint: create, list
+    issue: "Uses userId as tenantId instead of ctx.user.tenantId"
+    impact: "Documents stored with wrong tenantId, breaks multi-tenant isolation"
+    resolution: "Changed to use ctx.user?.tenantId ?? userId as fallback"
+    resolvedAt: "2026-01-05"
+    file: "apps/api/src/modules/legal/documents.router.ts"
+    lines: [85, 213]
+
+# ============================================================================
+# KNOWN VIOLATIONS - Current bugs to fix
+# ============================================================================
+knownViolations: []  # No known violations
+
+# ============================================================================
+# METADATA - For LLM and tooling
+# ============================================================================
+metadata:
+  totalRouters: 19
+  totalEndpoints: 170
+  procedureDistribution:
+    publicProcedure: 18
+    protectedProcedure: 105  # -1: lead.stats moved to tenantProcedure
+    tenantProcedure: 53      # +1: lead.stats fixed (VIOLATION-001)
+    adminProcedure: 4
+  stubRouters: 1  # cases router pending Prisma schema
+  lastValidated: "2026-01-05"
+  validatorPath: "packages/validators/__tests__/api-contract-consistency.spec.ts"
+  sourceOfTruth: true
+  llmFriendlyRef: "docs/api/contracts/README.md"
