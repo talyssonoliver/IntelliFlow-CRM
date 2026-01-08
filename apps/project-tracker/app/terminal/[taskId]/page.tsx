@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, use } from 'react';
-import { Send, RefreshCw, Terminal as TerminalIcon, AlertCircle } from 'lucide-react';
+import { Icon } from '@/lib/icons';
 
 export default function TerminalPage({
   params,
@@ -80,7 +80,7 @@ export default function TerminalPage({
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <TerminalIcon className="w-8 h-8 text-green-400" />
+            <Icon name="terminal" size="2xl" className="text-green-400" />
             <div>
               <h1 className="text-2xl font-bold text-white">Interactive Terminal</h1>
               <p className="text-sm text-gray-400">Task: {taskId}</p>
@@ -88,7 +88,7 @@ export default function TerminalPage({
           </div>
           {isWaitingForInput && (
             <div className="flex items-center gap-2 px-4 py-2 bg-yellow-900/30 border border-yellow-600 rounded-lg">
-              <AlertCircle className="w-5 h-5 text-yellow-400 animate-pulse" />
+              <Icon name="error" size="lg" className="text-yellow-400 animate-pulse" />
               <span className="text-yellow-200 font-semibold">Waiting for input</span>
             </div>
           )}
@@ -185,12 +185,12 @@ export default function TerminalPage({
             >
               {isSending ? (
                 <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <Icon name="refresh" size="sm" className="animate-spin" />
                   Sending...
                 </>
               ) : (
                 <>
-                  <Send className="w-4 h-4" />
+                  <Icon name="send" size="sm" />
                   Send
                 </>
               )}

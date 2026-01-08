@@ -116,21 +116,21 @@ describe('ScoreCorrectionModal', () => {
 
   describe('Reason Input', () => {
     it('should allow entering reason text', async () => {
-      const user = userEvent.setup();
       render(<ScoreCorrectionModal {...defaultProps} />);
 
       const textarea = screen.getByPlaceholderText(/provide more context/i);
-      await user.type(textarea, 'Lead was already a customer');
+      // Use fireEvent for faster input instead of userEvent.type which is slow
+      fireEvent.change(textarea, { target: { value: 'Lead was already a customer' } });
 
       expect(textarea).toHaveValue('Lead was already a customer');
     });
 
     it('should show character count', async () => {
-      const user = userEvent.setup();
       render(<ScoreCorrectionModal {...defaultProps} />);
 
       const textarea = screen.getByPlaceholderText(/provide more context/i);
-      await user.type(textarea, 'Test reason');
+      // Use fireEvent for faster input
+      fireEvent.change(textarea, { target: { value: 'Test reason' } });
 
       expect(screen.getByText(/11\/1000/)).toBeInTheDocument();
     });

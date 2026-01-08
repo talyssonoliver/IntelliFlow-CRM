@@ -2,20 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
-import {
-  Upload,
-  BarChart3,
-  Kanban,
-  Settings,
-  FileText,
-  RefreshCw,
-  Activity,
-  Server,
-  Shield,
-  Terminal,
-  Zap,
-  FolderOpen,
-} from 'lucide-react';
+import { Icon } from '@/lib/icons';
 import { parseCSV, type ParsedCSVData } from '@/lib/csv-parser';
 import { useTaskData } from '@/lib/TaskDataContext';
 import type { SprintNumber } from '@/lib/types';
@@ -114,7 +101,7 @@ export default function Home() {
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
-                <FileText className="w-6 h-6" />
+                <Icon name="description" size="xl" />
                 IntelliFlow CRM Tracker
               </h1>
               {lastUpdated && (
@@ -148,14 +135,14 @@ export default function Home() {
                 className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-4 py-2 rounded-lg transition-colors"
                 title="Refresh data"
               >
-                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                <Icon name="refresh" size="sm" className={isLoading ? 'animate-spin' : ''} />
                 <span className="font-medium">Refresh</span>
               </button>
 
               {/* Upload Button */}
               <label className="relative cursor-pointer">
                 <div className="flex items-center gap-2 bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg transition-colors">
-                  <Upload className="w-4 h-4" />
+                  <Icon name="upload" size="sm" />
                   <span className="font-medium">Upload CSV</span>
                 </div>
                 <input type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
@@ -173,7 +160,7 @@ export default function Home() {
                   : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
               }`}
             >
-              <BarChart3 className="w-4 h-4" />
+              <Icon name="bar_chart" size="sm" />
               Dashboard
             </button>
             <button
@@ -184,7 +171,7 @@ export default function Home() {
                   : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
               }`}
             >
-              <Kanban className="w-4 h-4" />
+              <Icon name="view_kanban" size="sm" />
               Kanban
             </button>
             <button
@@ -195,7 +182,7 @@ export default function Home() {
                   : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
               }`}
             >
-              <BarChart3 className="w-4 h-4" />
+              <Icon name="bar_chart" size="sm" />
               Analytics
             </button>
             <button
@@ -206,7 +193,7 @@ export default function Home() {
                   : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
               }`}
             >
-              <Activity className="w-4 h-4" />
+              <Icon name="monitoring" size="sm" />
               Metrics
             </button>
             <button
@@ -217,7 +204,7 @@ export default function Home() {
                   : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
               }`}
             >
-              <FolderOpen className="w-4 h-4" />
+              <Icon name="folder_open" size="sm" />
               Artifacts
             </button>
             <button
@@ -228,7 +215,7 @@ export default function Home() {
                   : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
               }`}
             >
-              <Zap className="w-4 h-4" />
+              <Icon name="bolt" size="sm" />
               Execution
             </button>
             <button
@@ -239,7 +226,7 @@ export default function Home() {
                   : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
               }`}
             >
-              <Shield className="w-4 h-4" />
+              <Icon name="shield" size="sm" />
               Governance
             </button>
             <button
@@ -250,7 +237,7 @@ export default function Home() {
                   : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
               }`}
             >
-              <FileText className="w-4 h-4" />
+              <Icon name="description" size="sm" />
               Contracts
             </button>
             <button
@@ -261,7 +248,7 @@ export default function Home() {
                   : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
               }`}
             >
-              <Terminal className="w-4 h-4" />
+              <Icon name="terminal" size="sm" />
               Audit
             </button>
             <button
@@ -272,14 +259,14 @@ export default function Home() {
                   : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
               }`}
             >
-              <Settings className="w-4 h-4" />
+              <Icon name="settings" size="sm" />
               Settings
             </button>
             <Link
               href="/swarm"
               className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold shadow-lg"
             >
-              <Server className="w-4 h-4" />
+              <Icon name="dns" size="sm" />
               Swarm Control
             </Link>
           </nav>
@@ -296,7 +283,7 @@ export default function Home() {
 
         {!isLoading && allTasks.length === 0 && (
           <div className="text-center py-12">
-            <Upload className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+            <Icon name="upload" size="2xl" className="mx-auto text-gray-400 mb-4 text-6xl" />
             <h2 className="text-2xl font-semibold text-gray-700 mb-2">No Data Loaded</h2>
             <p className="text-gray-500 mb-6">Upload your Sprint_plan.csv to get started</p>
             <label className="inline-block cursor-pointer">

@@ -90,7 +90,8 @@ import { ExportReportButton } from '../ExportReportButton';
 describe('ExportReportButton', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockFetch.mockImplementation((url: string) => {
+    mockFetch.mockImplementation((input: string | Request) => {
+      const url = typeof input === 'string' ? input : input.url;
       if (url.includes('/risks')) {
         return Promise.resolve({ json: () => Promise.resolve(mockRisksResponse) });
       }
@@ -147,14 +148,36 @@ describe('ExportReportButton', () => {
     });
 
     it('should show progress icon during export', async () => {
+      // Add delay to mock fetch so we can observe the loading state
+      mockFetch.mockImplementation((input: string | Request) => {
+        const url = typeof input === 'string' ? input : input.url;
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            if (url.includes('/risks')) {
+              resolve({ json: () => Promise.resolve(mockRisksResponse) });
+            } else if (url.includes('/timeline')) {
+              resolve({ json: () => Promise.resolve(mockTimelineResponse) });
+            } else {
+              resolve({ json: () => Promise.resolve({}) });
+            }
+          }, 100);
+        });
+      });
+
       const user = userEvent.setup();
       const { container } = render(<ExportReportButton />);
 
       const button = screen.getByRole('button', { name: /export report/i });
       await user.click(button);
 
+      // Check for progress icon immediately after click (before fetch resolves)
       const icon = container.querySelector('.material-symbols-outlined');
       expect(icon?.textContent).toBe('progress_activity');
+
+      // Wait for export to complete
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /export report/i })).not.toBeDisabled();
+      });
     });
 
     it('should fetch risks data', async () => {

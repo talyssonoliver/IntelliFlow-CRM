@@ -94,6 +94,9 @@ __pycache__/
 *.swo
 *~
 
+# Claude AI
+.claude/commands/
+
 # OS
 .DS_Store
 Thumbs.db
