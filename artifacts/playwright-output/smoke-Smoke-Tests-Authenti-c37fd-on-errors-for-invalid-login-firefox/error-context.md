@@ -1,0 +1,44 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - link "grid_view IntelliFlow CRM" [ref=e6] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e8]: grid_view
+          - generic [ref=e9]: IntelliFlow CRM
+        - navigation [ref=e10]:
+          - link "Dashboard" [ref=e11] [cursor=pointer]:
+            - /url: /dashboard
+          - link "Leads" [ref=e12] [cursor=pointer]:
+            - /url: /leads
+          - link "Contacts" [ref=e13] [cursor=pointer]:
+            - /url: /contacts
+          - link "Deals" [ref=e14] [cursor=pointer]:
+            - /url: /deals
+          - link "Tickets" [ref=e15] [cursor=pointer]:
+            - /url: /tickets
+          - link "Documents" [ref=e16] [cursor=pointer]:
+            - /url: /documents
+          - link "Agent Actions" [ref=e17] [cursor=pointer]:
+            - /url: /agent-approvals/preview
+          - link "Reports" [ref=e18] [cursor=pointer]:
+            - /url: /analytics
+        - generic [ref=e20]:
+          - generic [ref=e21]: search
+          - searchbox "Search..." [ref=e22]
+        - button "Notifications" [ref=e24] [cursor=pointer]:
+          - generic [ref=e25]: notifications
+        - button "A Alex expand_more" [ref=e27] [cursor=pointer]:
+          - generic [ref=e29]: A
+          - generic [ref=e30]: Alex
+          - generic [ref=e31]: expand_more
+    - main [ref=e32]:
+      - generic [ref=e34]:
+        - heading "404" [level=1] [ref=e35]
+        - heading "This page could not be found." [level=2] [ref=e37]
+  - button "Open Next.js Dev Tools" [ref=e43] [cursor=pointer]:
+    - img [ref=e44]
+```
