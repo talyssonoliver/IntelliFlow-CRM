@@ -3,10 +3,8 @@ import * as React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { axe, toHaveNoViolations } from 'vitest-axe';
-import { ScoreCorrectionModal } from '../src/components/score/ScoreCorrectionModal';
-
-expect.extend(toHaveNoViolations);
+import { axe } from 'vitest-axe';
+import { ScoreCorrectionModal } from '../src/components/score';
 
 describe('ScoreCorrectionModal', () => {
   const defaultProps = {
