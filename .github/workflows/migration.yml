@@ -1,0 +1,277 @@
+name: Migration ETL Validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/migration/**'
+      - 'packages/db/prisma/schema.prisma'
+  pull_request:
+    paths:
+      - 'scripts/migration/**'
+      - 'packages/db/prisma/schema.prisma'
+  workflow_dispatch:
+    inputs:
+      run_full_validation:
+        description: 'Run full validation suite'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8.15.0'
+
+jobs:
+  migration-validation:
+    name: Validate Migration Scripts
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: intelliflow_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @intelliflow/db prisma generate
+
+      - name: Setup test database
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/intelliflow_test
+        run: |
+          pnpm --filter @intelliflow/db prisma migrate deploy
+          pnpm --filter @intelliflow/db prisma db seed || echo "Seeding skipped or failed"
+
+      - name: Validate delta-sync script
+        run: |
+          echo "Validating delta-sync.ts transformation rules..."
+          pnpm exec tsx scripts/migration/delta-sync.ts --validate
+
+      - name: Run delta-sync dry run
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/intelliflow_test
+        run: |
+          echo "Running delta-sync in dry-run mode..."
+          pnpm exec tsx scripts/migration/delta-sync.ts \
+            --target $DATABASE_URL \
+            --since "2020-01-01T00:00:00Z" \
+            --dry-run
+
+      - name: Run reconciliation
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/intelliflow_test
+        run: |
+          echo "Running reconciliation to generate data-validation-report.csv..."
+          mkdir -p artifacts/reports
+          pnpm exec tsx scripts/migration/reconciliation.ts \
+            --target $DATABASE_URL \
+            --output artifacts/reports/data-validation-report.csv
+
+      - name: Run target validation
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/intelliflow_test
+        run: |
+          echo "Running target validation to generate migration-log.txt..."
+          mkdir -p artifacts/misc
+          pnpm exec tsx scripts/migration/validate-target.ts \
+            --database $DATABASE_URL \
+            --output artifacts/misc/migration-log.txt
+
+      - name: Verify artifacts generated
+        run: |
+          echo "Checking generated artifacts..."
+          ls -la artifacts/reports/ || true
+          ls -la artifacts/misc/ || true
+
+          if [ -f artifacts/reports/data-validation-report.csv ]; then
+            echo "✓ data-validation-report.csv generated"
+            head -20 artifacts/reports/data-validation-report.csv
+          else
+            echo "✗ data-validation-report.csv not found"
+            exit 1
+          fi
+
+          if [ -f artifacts/misc/migration-log.txt ]; then
+            echo "✓ migration-log.txt generated"
+            head -50 artifacts/misc/migration-log.txt
+          else
+            echo "✗ migration-log.txt not found"
+            exit 1
+          fi
+
+      - name: Upload migration artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: migration-validation-${{ github.sha }}
+          path: |
+            artifacts/reports/data-validation-report.csv
+            artifacts/misc/migration-log.txt
+          retention-days: 30
+
+  schema-validation:
+    name: Validate Prisma Schema
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Format and validate schema
+        run: |
+          cd packages/db
+          npx prisma format
+          echo "Schema validation passed"
+
+      - name: Check for governance columns (ADR-007)
+        run: |
+          echo "Checking for governance columns in schema..."
+          SCHEMA="packages/db/prisma/schema.prisma"
+
+          # Check Lead model
+          if grep -A 50 "model Lead {" "$SCHEMA" | grep -q "dataClassification"; then
+            echo "✓ Lead has dataClassification"
+          else
+            echo "✗ Lead missing dataClassification"
+            exit 1
+          fi
+
+          # Check Contact model
+          if grep -A 50 "model Contact {" "$SCHEMA" | grep -q "dataClassification"; then
+            echo "✓ Contact has dataClassification"
+          else
+            echo "✗ Contact missing dataClassification"
+            exit 1
+          fi
+
+          # Check Account model
+          if grep -A 50 "model Account {" "$SCHEMA" | grep -q "dataClassification"; then
+            echo "✓ Account has dataClassification"
+          else
+            echo "✗ Account missing dataClassification"
+            exit 1
+          fi
+
+          # Check Opportunity model
+          if grep -A 50 "model Opportunity {" "$SCHEMA" | grep -q "dataClassification"; then
+            echo "✓ Opportunity has dataClassification"
+          else
+            echo "✗ Opportunity missing dataClassification"
+            exit 1
+          fi
+
+          # Check for governance tables
+          if grep -q "model DataGovernancePolicy {" "$SCHEMA"; then
+            echo "✓ DataGovernancePolicy table exists"
+          else
+            echo "✗ DataGovernancePolicy table missing"
+            exit 1
+          fi
+
+          if grep -q "model LegalHold {" "$SCHEMA"; then
+            echo "✓ LegalHold table exists"
+          else
+            echo "✗ LegalHold table missing"
+            exit 1
+          fi
+
+          if grep -q "model DSARRequest {" "$SCHEMA"; then
+            echo "✓ DSARRequest table exists"
+          else
+            echo "✗ DSARRequest table missing"
+            exit 1
+          fi
+
+          echo ""
+          echo "All governance requirements met (ADR-007)"
+
+  etl-scripts-check:
+    name: Check ETL Scripts Exist
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify ETL scripts exist
+        run: |
+          echo "Checking for required ETL scripts..."
+
+          if [ -f scripts/migration/delta-sync.ts ]; then
+            echo "✓ delta-sync.ts exists"
+          else
+            echo "✗ delta-sync.ts not found"
+            exit 1
+          fi
+
+          if [ -f scripts/migration/reconciliation.ts ]; then
+            echo "✓ reconciliation.ts exists"
+          else
+            echo "✗ reconciliation.ts not found"
+            exit 1
+          fi
+
+          if [ -f scripts/migration/validate-target.ts ]; then
+            echo "✓ validate-target.ts exists"
+          else
+            echo "✗ validate-target.ts not found"
+            exit 1
+          fi
+
+          echo ""
+          echo "All ETL scripts present"
+
+      - name: Check scripts are executable TypeScript
+        run: |
+          echo "Verifying scripts have correct shebang..."
+
+          for script in scripts/migration/*.ts; do
+            if head -1 "$script" | grep -q "#!/usr/bin/env tsx"; then
+              echo "✓ $script has correct shebang"
+            else
+              echo "⚠ $script missing tsx shebang (may still work)"
+            fi
+          done
