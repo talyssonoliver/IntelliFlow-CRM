@@ -49,6 +49,26 @@
   "blockers": [],
   "completed_tasks": [
     {
+      "task_id": "IFC-008",
+      "completed_at": "2025-12-21T12:00:00Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-101",
+      "completed_at": "2025-12-22T16:00:00Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-102",
+      "completed_at": "2025-12-22T17:30:00Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-103",
+      "completed_at": "2025-12-22T18:30:00Z",
+      "duration_minutes": 15
+    },
+    {
       "task_id": "IFC-004",
       "completed_at": "2025-12-22T20:28:00Z",
       "duration_minutes": 15
@@ -87,29 +107,9 @@
       "task_id": "IFC-073",
       "completed_at": "2025-12-27T11:33:39.467Z",
       "duration_minutes": 15
-    },
-    {
-      "task_id": "IFC-008",
-      "completed_at": "2025-12-31T06:44:28.696Z",
-      "duration_minutes": 15
-    },
-    {
-      "task_id": "IFC-101",
-      "completed_at": "2025-12-31T06:44:28.696Z",
-      "duration_minutes": 15
-    },
-    {
-      "task_id": "IFC-102",
-      "completed_at": "2025-12-31T06:44:28.696Z",
-      "duration_minutes": 15
-    },
-    {
-      "task_id": "IFC-103",
-      "completed_at": "2025-12-31T06:44:28.696Z",
-      "duration_minutes": 15
     }
   ],
-  "notes": "12/12 tasks DONE (100%). Last synced: 2025-12-31T06:44:28.696Z",
+  "notes": "12/12 tasks DONE (100%). Last synced: 2026-01-08T23:28:12.629Z",
   "section": "Core Domain & Documentation",
   "dependencies": {
     "all_satisfied": true,

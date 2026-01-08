@@ -1,0 +1,791 @@
+Excellent clarity, Talysson! Your answers reveal a **sophisticated, context-aware orchestration system** that eliminates guesswork entirely. Let me synthesize this into a comprehensive architecture.
+
+---
+
+## 🎯 The Core Insight: No Suppositions
+
+Your critical point changes everything:
+
+> *"dynamically insert the content for each task on the prompt because the task name and description has no total content the agents need"*
+
+This means we need a **Context Hydration Layer** before any agent discussion begins. The task metadata from the CSV is just a *pointer* — the real content must be extracted from:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        CONTEXT HYDRATION SOURCES                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  1. TASK METADATA (from Sprint_plan.csv)                                    │
+│     └── Task ID, Owner Role, Dependencies, DoD, KPIs, Target Sprint         │
+│                                                                             │
+│  2. DEPENDENCY ARTIFACTS (from completed predecessor tasks)                 │
+│     └── {DEP_ID}-spec.md, {DEP_ID}-plan.md, {DEP_ID}-delivery.md           │
+│     └── Code files created by dependencies                                  │
+│     └── Test files and validation results                                   │
+│                                                                             │
+│  3. CODEBASE ANALYSIS (live scan)                                           │
+│     └── Relevant existing patterns (grep for domain keywords)               │
+│     └── Package structure and exports                                       │
+│     └── Type definitions and schemas                                        │
+│     └── Similar implementations (for consistency)                           │
+│                                                                             │
+│  4. PROJECT KNOWLEDGE (static)                                              │
+│     └── CLAUDE.md (project philosophy)                                      │
+│     └── Architecture docs                                                   │
+│     └── Domain model definitions                                            │
+│     └── API contracts and schemas                                           │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🏗️ Refined Architecture: The Daily Orchestrator
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    INTELLIFLOW DAILY ORCHESTRATOR v2                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌───────────────────────────────────────────────────────────────────────┐  │
+│  │                     PHASE 0: CONTEXT HYDRATION                        │  │
+│  │                     (Automated - No Human Input)                      │  │
+│  ├───────────────────────────────────────────────────────────────────────┤  │
+│  │                                                                       │  │
+│  │   ┌─────────────┐    ┌─────────────┐    ┌─────────────────────────┐   │  │
+│  │   │ Parse Task  │ →  │ Resolve     │ →  │ Scan Codebase for       │   │  │
+│  │   │ from CSV    │    │ Dependencies│    │ Relevant Patterns       │   │  │
+│  │   └─────────────┘    └─────────────┘    └─────────────────────────┘   │  │
+│  │          │                  │                       │                 │  │
+│  │          ▼                  ▼                       ▼                 │  │
+│  │   ┌─────────────────────────────────────────────────────────────────┐ │  │
+│  │   │              HYDRATED CONTEXT DOCUMENT                          │ │  │
+│  │   │  • Task metadata + full dependency chain artifacts              │ │  │
+│  │   │  • Relevant code snippets from codebase                         │ │  │
+│  │   │  • Type definitions and schemas                                 │ │  │
+│  │   │  • Integration points identified                                │ │  │
+│  │   └─────────────────────────────────────────────────────────────────┘ │  │
+│  └───────────────────────────────────────────────────────────────────────┘  │
+│                                      │                                      │
+│                                      ▼                                      │
+│  ┌───────────────────────────────────────────────────────────────────────┐  │
+│  │                     PHASE 0.5: AGENT SELECTION                        │  │
+│  │                     (Dynamic based on task domain)                    │  │
+│  ├───────────────────────────────────────────────────────────────────────┤  │
+│  │                                                                       │  │
+│  │   Task Domain Analysis → Select Optimal Agent Composition             │  │
+│  │                                                                       │  │
+│  │   BACKEND task?     → [Architect, Backend-Lead, Test-Engineer]        │  │
+│  │   FRONTEND task?    → [Architect, UI-Lead, A11y-Expert, Test-Eng]     │  │
+│  │   AI/ML task?       → [AI-Specialist, Data-Engineer, Architect]       │  │
+│  │   SECURITY task?    → [Security-Lead, Architect, Compliance]          │  │
+│  │   INFRA task?       → [DevOps-Lead, Architect, SRE]                   │  │
+│  │   CROSS-CUTTING?    → [All domain leads relevant to task]             │  │
+│  │                                                                       │  │
+│  │   + Always: Domain-Expert (CRM business logic)                        │  │
+│  │   + If high-risk: Security-Lead (even for non-security tasks)         │  │
+│  │                                                                       │  │
+│  └───────────────────────────────────────────────────────────────────────┘  │
+│                                      │                                      │
+│                                      ▼                                      │
+│  ┌───────────────────────────────────────────────────────────────────────┐  │
+│  │                     PHASE 1: SPEC SESSION                             │  │
+│  │                     (Round-Based + Topic Integration)                 │  │
+│  ├───────────────────────────────────────────────────────────────────────┤  │
+│  │                                                                       │  │
+│  │   ROUND 1: ANALYSIS (Topic: Understanding the Task)                   │  │
+│  │   ────────────────────────────────────────────────────────────────    │  │
+│  │   Each agent analyzes the hydrated context and provides:              │  │
+│  │   • Their domain-specific interpretation                              │  │
+│  │   • Questions that need answers                                       │  │
+│  │   • Initial concerns or risks                                         │  │
+│  │                                                                       │  │
+│  │   ROUND 2: PROPOSAL (Topic: Technical Approach)                       │  │
+│  │   ────────────────────────────────────────────────────────────────    │  │
+│  │   Each agent proposes their domain's contribution:                    │  │
+│  │   • Concrete implementation approach                                  │  │
+│  │   • Integration requirements                                          │  │
+│  │   • Dependencies on other agents' work                                │  │
+│  │                                                                       │  │
+│  │   ROUND 3: CHALLENGE (Topic: Risk & Edge Cases)                       │  │
+│  │   ────────────────────────────────────────────────────────────────    │  │
+│  │   Agents challenge each other's proposals:                            │  │
+│  │   • "What happens if X fails?"                                        │  │
+│  │   • "How does this integrate with Y?"                                 │  │
+│  │   • "What about edge case Z?"                                         │  │
+│  │                                                                       │  │
+│  │   ROUND 4: CONSENSUS (Topic: Unified Specification)                   │  │
+│  │   ────────────────────────────────────────────────────────────────    │  │
+│  │   Agents synthesize into unified spec:                                │  │
+│  │   • Agreed approach                                                   │  │
+│  │   • Clear acceptance criteria                                         │  │
+│  │   • Integration contract                                              │  │
+│  │                                                                       │  │
+│  │   ROUND N: ITERATE until 100% consensus                               │  │
+│  │                                                                       │  │
+│  │   OUTPUT: {TASK_ID}-spec.md (saved to task folder)                    │  │
+│  │                                                                       │  │
+│  └───────────────────────────────────────────────────────────────────────┘  │
+│                                      │                                      │
+│                                      ▼                                      │
+│  ┌───────────────────────────────────────────────────────────────────────┐  │
+│  │                     PHASE 2: PLAN SESSION                             │  │
+│  │                     (Owner Creates Execution Plan)                    │  │
+│  ├───────────────────────────────────────────────────────────────────────┤  │
+│  │                                                                       │  │
+│  │   INPUT: Spec document + Hydrated context                             │  │
+│  │                                                                       │  │
+│  │   Task Owner decomposes spec into:                                    │  │
+│  │   • Ordered implementation steps                                      │  │
+│  │   • File-by-file creation plan                                        │  │
+│  │   • Test-first requirements (TDD red-green-refactor)                  │  │
+│  │   • Integration checkpoints                                           │  │
+│  │   • Validation criteria per step                                      │  │
+│  │                                                                       │  │
+│  │   OUTPUT: {TASK_ID}-plan.md (saved to task folder)                    │  │
+│  │                                                                       │  │
+│  └───────────────────────────────────────────────────────────────────────┘  │
+│                                      │                                      │
+│                                      ▼                                      │
+│  ┌───────────────────────────────────────────────────────────────────────┐  │
+│  │                     PHASE 3: EXEC SESSION                             │  │
+│  │                     (Code Delivery & Validation)                      │  │
+│  ├───────────────────────────────────────────────────────────────────────┤  │
+│  │                                                                       │  │
+│  │   INPUT: Spec + Plan + Hydrated context                               │  │
+│  │                                                                       │  │
+│  │   Executor follows plan step-by-step:                                 │  │
+│  │   • Write failing test (RED)                                          │  │
+│  │   • Implement minimal code (GREEN)                                    │  │
+│  │   • Refactor for quality (REFACTOR)                                   │  │
+│  │   • Validate against spec criteria                                    │  │
+│  │   • Update integration points                                         │  │
+│  │                                                                       │  │
+│  │   VALIDATION GATE:                                                    │  │
+│  │   • All tests pass                                                    │  │
+│  │   • Spec acceptance criteria met                                      │  │
+│  │   • Integration points verified                                       │  │
+│  │   • DoD from CSV satisfied                                            │  │
+│  │                                                                       │  │
+│  │   OUTPUT: Code files + {TASK_ID}-delivery.md                          │  │
+│  │                                                                       │  │
+│  └───────────────────────────────────────────────────────────────────────┘  │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🔧 The Context Hydration Engine
+
+This is the **critical innovation** — a prompt section that dynamically builds complete context:
+
+```markdown
+## CONTEXT HYDRATION PROTOCOL
+
+Before any agent discussion begins, execute this discovery:
+
+### Step 1: Task Metadata Extraction
+```
+FROM: Sprint_plan.csv
+EXTRACT:
+  - Task ID: {TASK_ID}
+  - Description: {DESCRIPTION}
+  - Owner Role: {OWNER}
+  - Dependencies: {CLEAN_DEPENDENCIES}
+  - Definition of Done: {DOD}
+  - KPIs: {KPIS}
+  - Target Sprint: {SPRINT}
+  - Complexity: {COMPLEXITY}
+```
+
+### Step 2: Dependency Chain Resolution
+```
+FOR EACH dependency in {CLEAN_DEPENDENCIES}:
+  LOCATE: /artifacts/tasks/{DEP_ID}/
+  LOAD:
+    - {DEP_ID}-spec.md    → Understand what was specified
+    - {DEP_ID}-plan.md    → Understand how it was planned
+    - {DEP_ID}-delivery.md → Understand what was delivered
+    - Code files created  → Understand actual implementation
+  
+  EXTRACT:
+    - Interfaces exposed
+    - Types/schemas defined
+    - Integration points created
+    - Patterns established
+```
+
+### Step 3: Codebase Pattern Discovery
+```
+SCAN codebase for:
+  - Similar implementations (by keyword matching task description)
+  - Existing patterns in target domain
+  - Type definitions relevant to task
+  - Test patterns to follow
+  
+LOCATIONS to check:
+  - /packages/{domain}/src/
+  - /apps/{app}/src/
+  - /packages/domain/src/
+  - /packages/validators/src/
+```
+
+### Step 4: Project Knowledge Loading
+```
+LOAD:
+  - /CLAUDE.md → Project philosophy
+  - /docs/architecture/*.md → Architecture decisions
+  - /packages/domain/src/models/*.ts → Domain models
+  - /packages/validators/src/schemas/*.ts → Validation schemas
+```
+
+### Step 5: Build Hydrated Context Document
+```
+OUTPUT: Complete context including:
+  - Full task requirements (not just CSV description)
+  - All dependency artifacts and their outputs
+  - Relevant existing code patterns
+  - Integration points to connect to
+  - Constraints from project standards
+```
+```
+
+---
+
+## 🤖 Dynamic Agent Selection Algorithm
+
+```typescript
+interface AgentProfile {
+  role: string;
+  expertise: string[];
+  whenToInclude: (task: Task, context: HydratedContext) => boolean;
+}
+
+const AGENT_POOL: AgentProfile[] = [
+  {
+    role: "Backend-Architect",
+    expertise: ["system design", "API design", "database", "tRPC"],
+    whenToInclude: (task) => 
+      task.domain.includes("backend") || 
+      task.description.match(/API|router|endpoint|database|prisma/i)
+  },
+  {
+    role: "Frontend-Lead",
+    expertise: ["React", "Next.js", "UI/UX", "components"],
+    whenToInclude: (task) => 
+      task.domain.includes("frontend") ||
+      task.description.match(/component|page|UI|form|dashboard/i)
+  },
+  {
+    role: "AI-Specialist",
+    expertise: ["LangChain", "embeddings", "prompts", "ML"],
+    whenToInclude: (task) => 
+      task.domain.includes("ai") ||
+      task.description.match(/AI|ML|embedding|vector|langchain|model/i)
+  },
+  {
+    role: "Security-Lead",
+    expertise: ["auth", "validation", "OWASP", "encryption"],
+    whenToInclude: (task) => 
+      task.domain.includes("security") ||
+      task.isHighRisk ||
+      task.description.match(/auth|permission|role|encrypt|sanitize/i)
+  },
+  {
+    role: "Domain-Expert",
+    expertise: ["CRM", "leads", "contacts", "sales", "business logic"],
+    whenToInclude: () => true // Always included for CRM context
+  },
+  {
+    role: "Test-Engineer",
+    expertise: ["TDD", "Vitest", "Playwright", "coverage"],
+    whenToInclude: () => true // Always included for quality
+  },
+  {
+    role: "DevOps-Lead",
+    expertise: ["Docker", "CI/CD", "infrastructure", "deployment"],
+    whenToInclude: (task) => 
+      task.domain.includes("infra") ||
+      task.description.match(/docker|deploy|CI|pipeline|config/i)
+  },
+  {
+    role: "Data-Engineer",
+    expertise: ["Prisma", "migrations", "queries", "pgvector"],
+    whenToInclude: (task) =>
+      task.description.match(/schema|migration|query|database|model/i)
+  }
+];
+
+function selectAgents(task: Task, context: HydratedContext): AgentProfile[] {
+  const selected = AGENT_POOL.filter(agent => 
+    agent.whenToInclude(task, context)
+  );
+  
+  // Ensure minimum of 3 agents for healthy discussion
+  if (selected.length < 3) {
+    // Add Architect if not present
+    if (!selected.find(a => a.role === "Backend-Architect")) {
+      selected.push(AGENT_POOL.find(a => a.role === "Backend-Architect")!);
+    }
+  }
+  
+  // Cap at 5 agents to avoid chaos
+  return selected.slice(0, 5);
+}
+```
+
+---
+
+## 📋 Prompt Templates
+
+### Phase 1: Spec Session Prompt Template
+
+```markdown
+# SPECIFICATION SESSION: {TASK_ID}
+
+## SESSION METADATA
+- Task: {TASK_ID} - {TASK_DESCRIPTION}
+- Owner Role: {OWNER_ROLE}
+- Target Sprint: {SPRINT}
+- Complexity: {COMPLEXITY}
+- Session Started: {TIMESTAMP}
+
+---
+
+## HYDRATED CONTEXT
+
+### Task Requirements
+{TASK_METADATA_FROM_CSV}
+
+### Definition of Done (Contract)
+{DOD_FROM_CSV}
+
+### KPIs (Measurable Success)
+{KPIS_FROM_CSV}
+
+### Dependency Artifacts
+
+#### From {DEP_1_ID}:
+```
+{DEP_1_SPEC_SUMMARY}
+{DEP_1_DELIVERED_INTERFACES}
+{DEP_1_CODE_PATTERNS}
+```
+
+#### From {DEP_2_ID}:
+```
+{DEP_2_SPEC_SUMMARY}
+{DEP_2_DELIVERED_INTERFACES}
+{DEP_2_CODE_PATTERNS}
+```
+
+### Relevant Existing Code
+
+#### Existing Patterns:
+```typescript
+{RELEVANT_CODE_SNIPPETS}
+```
+
+#### Type Definitions:
+```typescript
+{RELEVANT_TYPES}
+```
+
+#### Integration Points:
+```typescript
+{EXISTING_INTEGRATION_POINTS}
+```
+
+### Project Standards
+{CLAUDE_MD_RELEVANT_SECTIONS}
+{ARCHITECTURE_CONSTRAINTS}
+
+---
+
+## PARTICIPATING AGENTS
+
+{DYNAMICALLY_SELECTED_AGENTS_WITH_ROLES}
+
+---
+
+## DISCUSSION PROTOCOL
+
+### ROUND 1: ANALYSIS
+Topic: Understanding the Task Completely
+
+Each agent must analyze the hydrated context and provide:
+1. **Interpretation**: How you understand this task from your domain perspective
+2. **Questions**: What's unclear or needs clarification?
+3. **Concerns**: Initial risks or challenges you foresee
+4. **Dependencies**: What do you need from other agents?
+
+Format your response as:
+```
+@{AGENT_ROLE}:
+
+**My Interpretation:**
+[Your domain-specific understanding]
+
+**Questions Requiring Answers:**
+- [Question 1]
+- [Question 2]
+
+**Concerns:**
+- [Risk/Challenge 1]
+
+**I Need From Other Agents:**
+- From @{OTHER_AGENT}: [What you need]
+```
+
+### ROUND 2: PROPOSAL
+Topic: Technical Approach
+
+Each agent proposes their contribution:
+1. **Approach**: Concrete implementation strategy
+2. **Files**: What files will be created/modified
+3. **Interfaces**: What contracts you'll expose
+4. **Integration**: How you connect to other agents' work
+
+### ROUND 3: CHALLENGE
+Topic: Stress Testing the Proposals
+
+Agents cross-examine each other:
+- Challenge assumptions
+- Identify edge cases
+- Question integration points
+- Probe for security/performance issues
+
+### ROUND 4+: CONSENSUS
+Topic: Unified Specification
+
+Iterate until all agents agree on:
+- ✅ Complete technical approach
+- ✅ Clear acceptance criteria
+- ✅ Integration contracts defined
+- ✅ All questions answered
+- ✅ All risks addressed
+
+---
+
+## OUTPUT REQUIREMENTS
+
+Generate a specification document with this structure:
+
+```markdown
+# Specification: {TASK_ID}
+
+## Overview
+[One paragraph summary]
+
+## Technical Approach
+[Agreed implementation strategy]
+
+## Components to Create
+| Component | Type | Location | Purpose |
+|-----------|------|----------|---------|
+| ... | ... | ... | ... |
+
+## Interfaces & Contracts
+```typescript
+// Types this task will expose
+```
+
+## Integration Points
+| Integrates With | How | Contract |
+|-----------------|-----|----------|
+| ... | ... | ... |
+
+## Acceptance Criteria
+- [ ] Criterion 1 (maps to DoD item 1)
+- [ ] Criterion 2 (maps to DoD item 2)
+
+## Test Requirements
+- Unit tests for: [list]
+- Integration tests for: [list]
+- Edge cases to cover: [list]
+
+## Risks & Mitigations
+| Risk | Mitigation |
+|------|------------|
+| ... | ... |
+
+## Agent Sign-off
+- [ ] @Backend-Architect: Approved
+- [ ] @Domain-Expert: Approved
+- [ ] @Test-Engineer: Approved
+```
+
+---
+
+## BEGIN ROUND 1
+
+Agents, analyze the hydrated context above and provide your Round 1 responses.
+```
+
+---
+
+### Phase 2: Plan Session Prompt Template
+
+```markdown
+# PLANNING SESSION: {TASK_ID}
+
+## SESSION METADATA
+- Task: {TASK_ID}
+- Spec Document: {TASK_ID}-spec.md
+- Owner: {OWNER_ROLE}
+- Session Started: {TIMESTAMP}
+
+---
+
+## INPUTS
+
+### Specification (from Phase 1)
+{FULL_SPEC_DOCUMENT}
+
+### Hydrated Context (carried forward)
+{HYDRATED_CONTEXT_SUMMARY}
+
+### TDD Requirements
+All implementation must follow Red-Green-Refactor:
+1. Write failing test first
+2. Implement minimal code to pass
+3. Refactor for quality
+
+---
+
+## PLANNING REQUIREMENTS
+
+Create an execution plan that:
+
+1. **Decomposes** the spec into ordered steps
+2. **Sequences** steps to support TDD workflow
+3. **Identifies** checkpoints for validation
+4. **Specifies** exact file paths and contents outline
+5. **Maps** each step to spec acceptance criteria
+
+---
+
+## OUTPUT: EXECUTION PLAN
+
+```markdown
+# Execution Plan: {TASK_ID}
+
+## Pre-flight Checks
+- [ ] Dependencies verified: {DEP_IDS}
+- [ ] Target directories exist
+- [ ] Required packages installed
+
+## Implementation Steps
+
+### Step 1: {STEP_NAME}
+**Type**: Test | Implementation | Integration | Validation
+**Files**:
+  - CREATE: `path/to/file.ts`
+  - MODIFY: `path/to/existing.ts`
+**TDD Phase**: RED | GREEN | REFACTOR
+**Acceptance Criteria Addressed**: [AC-1, AC-2]
+**Validation**:
+  - [ ] Test runs and fails (RED)
+  - [ ] Test passes after implementation (GREEN)
+
+### Step 2: {STEP_NAME}
+...
+
+## Integration Checkpoints
+| After Step | Verify | How |
+|------------|--------|-----|
+| Step 3 | Types compile | `pnpm type-check` |
+| Step 5 | Tests pass | `pnpm test:unit` |
+| Step 7 | Integration works | `pnpm test:integration` |
+
+## Final Validation
+- [ ] All acceptance criteria met
+- [ ] All tests passing
+- [ ] DoD from CSV satisfied
+- [ ] Integration points verified
+
+## Estimated Effort
+| Phase | Time |
+|-------|------|
+| Tests | Xh |
+| Implementation | Xh |
+| Integration | Xh |
+| Total | Xh |
+```
+```
+
+---
+
+### Phase 3: Exec Session Prompt Template
+
+```markdown
+# EXECUTION SESSION: {TASK_ID}
+
+## SESSION METADATA
+- Task: {TASK_ID}
+- Spec: {TASK_ID}-spec.md
+- Plan: {TASK_ID}-plan.md
+- Session Started: {TIMESTAMP}
+
+---
+
+## INPUTS
+
+### Specification
+{FULL_SPEC_DOCUMENT}
+
+### Execution Plan
+{FULL_PLAN_DOCUMENT}
+
+### Hydrated Context
+{HYDRATED_CONTEXT}
+
+---
+
+## EXECUTION PROTOCOL
+
+Follow the plan step-by-step. For each step:
+
+1. **Announce** which step you're executing
+2. **Write** the code as specified
+3. **Validate** against step criteria
+4. **Report** completion status
+
+### Constraints
+- Write ONLY files specified in the plan
+- Follow existing patterns from hydrated context
+- Maintain type safety throughout
+- Include comprehensive error handling
+- Add JSDoc comments for public APIs
+
+### Quality Gates
+Before marking step complete:
+- [ ] Code compiles without errors
+- [ ] Tests pass (if applicable)
+- [ ] Follows project conventions
+- [ ] Integrates with existing code
+
+---
+
+## OUTPUT REQUIREMENTS
+
+After all steps complete, generate:
+
+```markdown
+# Delivery Report: {TASK_ID}
+
+## Files Created
+| File | Lines | Purpose |
+|------|-------|---------|
+| ... | ... | ... |
+
+## Files Modified
+| File | Changes | Reason |
+|------|---------|--------|
+| ... | ... | ... |
+
+## Test Results
+```
+{TEST_OUTPUT}
+```
+
+## Acceptance Criteria Validation
+| Criterion | Status | Evidence |
+|-----------|--------|----------|
+| AC-1 | ✅ PASS | Test xyz passes |
+| AC-2 | ✅ PASS | Integration verified |
+
+## DoD Validation
+| DoD Item | Status | Evidence |
+|----------|--------|----------|
+| ... | ✅ PASS | ... |
+
+## Integration Verification
+| Integration Point | Status | Notes |
+|-------------------|--------|-------|
+| ... | ✅ WORKING | ... |
+
+## Task Status
+**COMPLETED** ✅
+
+Ready for: Next dependent task
+```
+```
+
+---
+
+## 📁 Task Folder Structure
+
+For each task, artifacts live in:
+
+```
+/artifacts/tasks/{TASK_ID}/
+├── context/
+│   ├── hydrated-context.md      # Built by Phase 0
+│   └── agent-selection.json     # Which agents were selected
+├── spec/
+│   ├── {TASK_ID}-spec.md        # Output of Phase 1
+│   └── discussion-log.md        # Full agent dialogue
+├── plan/
+│   └── {TASK_ID}-plan.md        # Output of Phase 2
+├── delivery/
+│   ├── {TASK_ID}-delivery.md    # Output of Phase 3
+│   └── code/                    # Actual code files (or symlinks)
+└── validation/
+    ├── test-results.json
+    └── integration-report.md
+```
+
+---
+
+## 🔄 Daily Workflow Summary
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         DAILY WORKFLOW EXECUTION                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  MORNING: Task Selection                                                    │
+│  ───────────────────────                                                    │
+│  1. Load Sprint_plan.csv                                                    │
+│  2. Filter tasks where:                                                     │
+│     - Status = "Ready" or "In Progress"                                     │
+│     - All dependencies have status = "Completed"                            │
+│     - All dependency validations passed                                     │
+│  3. Present ready tasks for the day                                         │
+│                                                                             │
+│  FOR EACH READY TASK:                                                       │
+│  ────────────────────                                                       │
+│                                                                             │
+│  SESSION 1: Spec (separate Claude conversation)                             │
+│  ├── Hydrate context automatically                                          │
+│  ├── Select agents dynamically                                              │
+│  ├── Run multi-round discussion                                             │
+│  ├── Generate spec document                                                 │
+│  └── Save to /artifacts/tasks/{TASK_ID}/spec/                               │
+│                                                                             │
+│  SESSION 2: Plan (separate Claude conversation)                             │
+│  ├── Load spec from previous session                                        │
+│  ├── Owner creates execution plan                                           │
+│  ├── Generate plan document                                                 │
+│  └── Save to /artifacts/tasks/{TASK_ID}/plan/                               │
+│                                                                             │
+│  SESSION 3: Exec (separate Claude conversation)                             │
+│  ├── Load spec + plan                                                       │
+│  ├── Execute step-by-step                                                   │
+│  ├── Validate against criteria                                              │
+│  ├── Generate delivery report                                               │
+│  └── Save to /artifacts/tasks/{TASK_ID}/delivery/                           │
+│                                                                             │
+│  END OF DAY: Status Update                                                  │
+│  ─────────────────────────                                                  │
+│  1. Update Sprint_plan.csv with task statuses                               │
+│  2. Re-calculate which tasks are now ready                                  │
+│  3. Generate daily summary report                                           │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+

@@ -4,14 +4,54 @@
   "section": "Documentation",
   "description": "API Documentation (tRPC + OpenAPI)",
   "owner": "Backend Dev",
-  "dependencies": {"required": ["IFC-013"], "verified_at": "2025-12-31T06:45:00Z", "all_satisfied": true},
+  "dependencies": {
+    "required": [
+      "IFC-013"
+    ],
+    "verified_at": "2026-01-08T23:28:13.073Z",
+    "all_satisfied": true
+  },
   "status": "DONE",
-  "status_history": [{"status": "DONE", "at": "2025-12-31T07:00:00Z", "note": "API documentation completed"}],
-  "artifacts": {"expected": ["apps/api/openapi.json"], "created": ["apps/api/openapi.json", "artifacts/misc/postman-collection.json"], "missing": []},
-  "validations": [{"name": "API Typecheck", "command": "pnpm --filter api typecheck", "type": "auto", "required": true, "executed_at": "2025-12-31T06:55:00Z", "exit_code": 0, "passed": true}],
-  "kpis": {"endpoints_documented": {"target": 20, "actual": 25, "met": true, "unit": "count"}},
+  "status_history": [
+    {
+      "status": "DONE",
+      "at": "2025-12-31T07:00:00Z",
+      "note": "API documentation completed"
+    }
+  ],
+  "artifacts": {
+    "expected": [
+      "apps/api/openapi.json"
+    ],
+    "created": [
+      "apps/api/openapi.json"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "API Typecheck",
+      "command": "pnpm --filter api typecheck",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-31T06:55:00Z",
+      "exit_code": 0,
+      "passed": true
+    }
+  ],
+  "kpis": {
+    "endpoints_documented": {
+      "target": 20,
+      "actual": 25,
+      "met": true,
+      "unit": "count"
+    }
+  },
   "blockers": [],
   "started_at": "2025-12-31T06:15:00Z",
   "completed_at": "2025-12-31T07:00:00Z",
-  "actual_duration_minutes": 45
+  "actual_duration_minutes": 45,
+  "dependencies_resolved": [
+    "IFC-013"
+  ]
 }

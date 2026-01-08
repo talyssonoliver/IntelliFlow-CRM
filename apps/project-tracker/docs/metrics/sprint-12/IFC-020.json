@@ -4,14 +4,51 @@
   "section": "Intelligence",
   "description": "PHASE-011: LangChain Pipeline Design",
   "owner": "AI/ML Eng",
-  "dependencies": {"required": ["AI-SETUP-001", "AI-SETUP-002", "AI-SETUP-003"], "verified_at": "2025-12-31T03:36:53Z", "all_satisfied": true},
+  "dependencies": {
+    "required": [
+      "IFC-019"
+    ],
+    "verified_at": "2026-01-08T23:28:13.000Z",
+    "all_satisfied": true
+  },
   "status": "DONE",
-  "status_history": [{"status": "DONE", "at": "2025-12-31T03:36:53Z", "note": "Pipeline design completed"}],
-  "artifacts": {"expected": [], "created": ["apps/ai-worker/src/chains/scoring.chain.ts"], "missing": []},
-  "validations": [{"name": "Build", "command": "pnpm --filter ai-worker build", "type": "auto", "required": true, "executed_at": "2025-12-31T22:25:00Z", "exit_code": 0, "passed": true}],
-  "kpis": {"pipeline_extensible": {"target": true, "actual": true, "met": true}},
+  "status_history": [
+    {
+      "status": "DONE",
+      "at": "2025-12-31T03:36:53Z",
+      "note": "Pipeline design completed"
+    }
+  ],
+  "artifacts": {
+    "expected": [],
+    "created": [
+      "apps/ai-worker/src/chains/scoring.chain.ts"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "Build",
+      "command": "pnpm --filter ai-worker build",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-31T22:25:00Z",
+      "exit_code": 0,
+      "passed": true
+    }
+  ],
+  "kpis": {
+    "pipeline_extensible": {
+      "target": true,
+      "actual": true,
+      "met": true
+    }
+  },
   "blockers": [],
   "started_at": "2025-12-31T02:50:00Z",
   "completed_at": "2025-12-31T03:36:53Z",
-  "actual_duration_minutes": 45
+  "actual_duration_minutes": 45,
+  "dependencies_resolved": [
+    "IFC-019"
+  ]
 }

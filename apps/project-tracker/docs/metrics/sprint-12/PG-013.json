@@ -4,14 +4,57 @@
   "section": "Marketing Pages",
   "description": "Landing Page Template",
   "owner": "Frontend Dev",
-  "dependencies": {"required": ["PG-001", "BRAND-001"], "verified_at": "2025-12-31T11:00:00Z", "all_satisfied": true},
+  "dependencies": {
+    "required": [
+      "PG-001",
+      "GTM-002",
+      "BRAND-001"
+    ],
+    "verified_at": "2026-01-08T23:28:13.288Z",
+    "all_satisfied": true
+  },
   "status": "DONE",
-  "status_history": [{"status": "DONE", "at": "2025-12-31T12:30:00Z", "note": "Landing page template completed"}],
-  "artifacts": {"expected": ["apps/web/src/app/(public)/lp/[slug]/page.tsx"], "created": ["apps/web/src/app/(public)/lp/[slug]/page.tsx", "apps/web/src/components/shared/landing-builder.tsx", "apps/web/src/lib/shared/ab-test-framework.ts"], "missing": []},
-  "validations": [{"name": "Web Build", "command": "pnpm --filter web build", "type": "auto", "required": true, "executed_at": "2025-12-31T12:25:00Z", "exit_code": 0, "passed": true}],
-  "kpis": {"ab_tests_running": {"target": true, "actual": true, "met": true}},
+  "status_history": [
+    {
+      "status": "DONE",
+      "at": "2025-12-31T12:30:00Z",
+      "note": "Landing page template completed"
+    }
+  ],
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/(public)/lp/[slug]/page.tsx"
+    ],
+    "created": [
+      "apps/web/src/app/(public)/lp/[slug]/page.tsx"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "Web Build",
+      "command": "pnpm --filter web build",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-31T12:25:00Z",
+      "exit_code": 0,
+      "passed": true
+    }
+  ],
+  "kpis": {
+    "ab_tests_running": {
+      "target": true,
+      "actual": true,
+      "met": true
+    }
+  },
   "blockers": [],
   "started_at": "2025-12-31T11:00:00Z",
   "completed_at": "2025-12-31T12:30:00Z",
-  "actual_duration_minutes": 90
+  "actual_duration_minutes": 90,
+  "dependencies_resolved": [
+    "PG-001",
+    "GTM-002",
+    "BRAND-001"
+  ]
 }

@@ -4,14 +4,58 @@
   "section": "Public Pages",
   "description": "Status Page",
   "owner": "Frontend Dev",
-  "dependencies": {"required": ["PG-001", "GTM-002", "BRAND-001"], "verified_at": "2025-12-31T06:45:00Z", "all_satisfied": true},
+  "dependencies": {
+    "required": [
+      "PG-001",
+      "GTM-002",
+      "BRAND-001"
+    ],
+    "verified_at": "2026-01-08T23:28:13.326Z",
+    "all_satisfied": true
+  },
   "status": "DONE",
-  "status_history": [{"status": "DONE", "at": "2025-12-31T07:00:00Z", "note": "Status page completed"}],
-  "artifacts": {"expected": ["apps/web/src/app/(public)/status/page.tsx"], "created": ["apps/web/src/app/(public)/status/page.tsx", "apps/web/src/components/status/status-monitor.tsx", "apps/web/lib/status/incident-tracker.ts"], "missing": []},
-  "validations": [{"name": "Web Build", "command": "pnpm --filter web build", "type": "auto", "required": true, "executed_at": "2025-12-31T06:55:00Z", "exit_code": 0, "passed": true}],
-  "kpis": {"real_time_updates": {"target": 30, "actual": 30, "met": true, "unit": "seconds"}},
+  "status_history": [
+    {
+      "status": "DONE",
+      "at": "2025-12-31T07:00:00Z",
+      "note": "Status page completed"
+    }
+  ],
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/(public)/status/page.tsx"
+    ],
+    "created": [
+      "apps/web/src/app/(public)/status/page.tsx"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "Web Build",
+      "command": "pnpm --filter web build",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-31T06:55:00Z",
+      "exit_code": 0,
+      "passed": true
+    }
+  ],
+  "kpis": {
+    "real_time_updates": {
+      "target": 30,
+      "actual": 30,
+      "met": true,
+      "unit": "seconds"
+    }
+  },
   "blockers": [],
   "started_at": "2025-12-31T06:00:00Z",
   "completed_at": "2025-12-31T07:00:00Z",
-  "actual_duration_minutes": 60
+  "actual_duration_minutes": 60,
+  "dependencies_resolved": [
+    "PG-001",
+    "GTM-002",
+    "BRAND-001"
+  ]
 }

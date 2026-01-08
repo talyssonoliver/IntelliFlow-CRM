@@ -2,16 +2,61 @@
   "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-154",
   "section": "Case Docs",
-  "description": "OCR + text extraction worker for scanned PDFs/images",
+  "description": "OCR + text extraction worker for scanned PDFs/images; normalized text artifacts stored for search and RAG",
   "owner": "AI/ML Eng",
-  "dependencies": {"required": ["IFC-153"], "verified_at": "2025-12-31T06:45:00Z", "all_satisfied": true},
+  "dependencies": {
+    "required": [
+      "IFC-153"
+    ],
+    "verified_at": "2026-01-08T23:28:13.443Z",
+    "all_satisfied": true
+  },
   "status": "DONE",
-  "status_history": [{"status": "DONE", "at": "2025-12-31T07:00:00Z", "note": "OCR worker completed"}],
-  "artifacts": {"expected": ["apps/ai-worker/src/workers/ocr-worker.ts"], "created": ["apps/ai-worker/src/workers/ocr-worker.ts", "artifacts/benchmarks/ocr-quality-benchmarks.csv", "artifacts/misc/extracted-text-schema.json"], "missing": []},
-  "validations": [{"name": "AI Worker Tests", "command": "pnpm --filter ai-worker test", "type": "auto", "required": true, "executed_at": "2025-12-31T06:55:00Z", "exit_code": 0, "passed": true}],
-  "kpis": {"ocr_throughput": {"target": "baseline", "actual": "benchmarked", "met": true}, "engines_integrated": {"target": 2, "actual": 4, "met": true, "unit": "count"}},
+  "status_history": [
+    {
+      "status": "DONE",
+      "at": "2025-12-31T07:00:00Z",
+      "note": "OCR worker completed"
+    }
+  ],
+  "artifacts": {
+    "expected": [
+      "apps/ai-worker/src/workers/ocr-worker.ts"
+    ],
+    "created": [
+      "apps/ai-worker/src/workers/ocr-worker.ts"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "AI Worker Tests",
+      "command": "pnpm --filter ai-worker test",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-31T06:55:00Z",
+      "exit_code": 0,
+      "passed": true
+    }
+  ],
+  "kpis": {
+    "ocr_throughput": {
+      "target": "baseline",
+      "actual": "benchmarked",
+      "met": true
+    },
+    "engines_integrated": {
+      "target": 2,
+      "actual": 4,
+      "met": true,
+      "unit": "count"
+    }
+  },
   "blockers": [],
   "started_at": "2025-12-31T06:00:00Z",
   "completed_at": "2025-12-31T07:00:00Z",
-  "actual_duration_minutes": 60
+  "actual_duration_minutes": 60,
+  "dependencies_resolved": [
+    "IFC-153"
+  ]
 }

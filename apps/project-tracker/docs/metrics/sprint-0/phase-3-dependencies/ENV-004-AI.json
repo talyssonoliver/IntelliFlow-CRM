@@ -8,7 +8,7 @@
     "required": [
       "ENV-003-AI"
     ],
-    "verified_at": "2025-12-31T06:44:25.593Z",
+    "verified_at": "2026-01-08T23:28:07.792Z",
     "all_satisfied": true,
     "notes": "ENV-003-AI completed - Docker containers healthy, proceeding with schema setup"
   },
@@ -42,12 +42,11 @@
       "infra/supabase/config.toml"
     ],
     "created": [
+      "supabase/config.toml",
+      "supabase/.gitignore",
       "infra/supabase/config.toml"
     ],
-    "missing": [
-      "supabase/config.toml",
-      "supabase/.gitignore"
-    ]
+    "missing": []
   },
   "validations": [
     {
