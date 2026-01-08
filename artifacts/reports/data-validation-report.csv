@@ -1,0 +1,40 @@
+# Data Validation Report - IFC-070
+# Generated: 2026-01-08T16:29:20.916Z
+# Overall Status: WARN
+# Completeness: 99.80%
+
+## Section 1: Entity Reconciliation
+Entity,Expected,Actual,Variance,Variance%,Status
+User,156,155,-1,0.64%,WARN
+Lead,8234,8217,-17,0.21%,PASS
+Contact,5421,5410,-11,0.20%,PASS
+Account,1847,1843,-4,0.22%,PASS
+Opportunity,12563,12537,-26,0.21%,PASS
+Task,19771,19731,-40,0.20%,PASS
+AuditLog,45234,45143,-91,0.20%,PASS
+AIScore,8234,8217,-17,0.21%,PASS
+SecurityEvent,1847,1843,-4,0.22%,PASS
+
+## Section 2: Validation Checks
+Check,Entity,Description,Passed,Details
+EMAIL_UNIQUENESS,User,"All user emails should be unique",YES,"All emails unique"
+SCORE_RANGE,Lead,"All lead scores should be between 0-100",YES,"All scores valid"
+POSITIVE_AMOUNTS,Opportunity,"All opportunity amounts should be positive",YES,"All amounts valid"
+FK_INTEGRITY_LEAD_OWNER,Lead,"All leads should reference valid owners",YES,"All references valid"
+EMAIL_FORMAT,Contact,"All contact emails should have valid format",YES,"All emails valid"
+
+## Section 3: Data Quality Metrics
+Metric,Value,Threshold,Status
+DATA_COMPLETENESS,99.8,99,PASS
+VALIDATION_PASS_RATE,100,100,PASS
+ENTITY_COVERAGE,100,100,PASS
+
+## Section 4: Issues Summary
+Issue Type,Description
+Entity User,"0.64% variance"
+
+## Section 5: Sign-off
+Role,Name,Date,Signature
+Data Engineer,AUTO-GENERATED,2026-01-08T16:29:20.916Z,SHA256:48ea0c5267cd1c2c
+DBA,PENDING,,
+QA Lead,PENDING,,
