@@ -144,6 +144,32 @@ export const backupCodesResponseSchema = z.object({
 
 export type BackupCodesResponse = z.infer<typeof backupCodesResponseSchema>;
 
+/**
+ * Resend MFA code schema
+ * Used when user requests to resend MFA verification code (SMS/Email)
+ */
+export const resendMfaCodeSchema = z.object({
+  method: mfaMethodSchema,
+  email: emailSchema.optional(),
+  phone: z
+    .string()
+    .regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number format (E.164)')
+    .optional(),
+  challengeId: z.string().uuid().optional(),
+});
+
+export type ResendMfaCodeInput = z.infer<typeof resendMfaCodeSchema>;
+
+/**
+ * Resend MFA code response schema
+ */
+export const resendMfaCodeResponseSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+});
+
+export type ResendMfaCodeResponse = z.infer<typeof resendMfaCodeResponseSchema>;
+
 // ============================================
 // OAUTH SCHEMAS
 // ============================================

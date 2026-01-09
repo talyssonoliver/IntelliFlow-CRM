@@ -84,5 +84,20 @@ export * from './support/TicketConstants';
 // Notifications Domain
 export * from './notifications';
 
+// AI Domain - Constants
+export * from './ai/AIConstants';
+
+// AI Domain - Feedback Events
+export * from './ai/FeedbackEvents';
+
+// Auth Domain - Constants
+export * from './auth/AuthConstants';
+
+// Config Domain - Constants
+export * from './config/ConfigConstants';
+
+// Timeline Domain - Constants
+export * from './timeline/TimelineConstants';
+
 // Future exports (to be implemented)
 // export * from './intelligence/scoring/ScoringService';

@@ -87,3 +87,78 @@ export const opportunityListResponseSchema = z.object({
 });
 
 export type OpportunityListResponse = z.infer<typeof opportunityListResponseSchema>;
+
+// ============================================
+// Pipeline Stage Configuration
+// ============================================
+
+/**
+ * Default display names for opportunity stages
+ */
+export const DEFAULT_STAGE_NAMES: Record<string, string> = {
+  PROSPECTING: 'Prospecting',
+  QUALIFICATION: 'Qualification',
+  NEEDS_ANALYSIS: 'Needs Analysis',
+  VALUE_PROPOSITION: 'Value Proposition',
+  ID_DECISION_MAKERS: 'Decision Makers',
+  PERCEPTION_ANALYSIS: 'Perception Analysis',
+  PROPOSAL: 'Proposal',
+  NEGOTIATION: 'Negotiation',
+  CLOSED_WON: 'Closed Won',
+  CLOSED_LOST: 'Closed Lost',
+};
+
+/**
+ * Default colors for opportunity stages (hex values)
+ */
+export const DEFAULT_STAGE_COLORS: Record<string, string> = {
+  PROSPECTING: '#94a3b8',
+  QUALIFICATION: '#60a5fa',
+  NEEDS_ANALYSIS: '#38bdf8',
+  VALUE_PROPOSITION: '#2dd4bf',
+  ID_DECISION_MAKERS: '#a78bfa',
+  PERCEPTION_ANALYSIS: '#f472b6',
+  PROPOSAL: '#fb923c',
+  NEGOTIATION: '#facc15',
+  CLOSED_WON: '#22c55e',
+  CLOSED_LOST: '#ef4444',
+};
+
+/**
+ * Default probabilities for opportunity stages (0-100)
+ */
+export const DEFAULT_STAGE_PROBABILITIES: Record<string, number> = {
+  PROSPECTING: 10,
+  QUALIFICATION: 20,
+  NEEDS_ANALYSIS: 30,
+  VALUE_PROPOSITION: 40,
+  ID_DECISION_MAKERS: 50,
+  PERCEPTION_ANALYSIS: 60,
+  PROPOSAL: 70,
+  NEGOTIATION: 80,
+  CLOSED_WON: 100,
+  CLOSED_LOST: 0,
+};
+
+/**
+ * Schema for updating a single pipeline stage configuration
+ */
+export const updatePipelineStageConfigSchema = z.object({
+  stage: opportunityStageSchema,
+  displayName: z.string().min(1).max(50).optional(),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Must be a valid hex color').optional(),
+  probability: z.number().int().min(0).max(100).optional(),
+  isActive: z.boolean().optional(),
+  sortOrder: z.number().int().min(0).optional(),
+});
+
+export type UpdatePipelineStageConfigInput = z.infer<typeof updatePipelineStageConfigSchema>;
+
+/**
+ * Schema for batch updating pipeline configuration
+ */
+export const updatePipelineConfigSchema = z.object({
+  stages: z.array(updatePipelineStageConfigSchema),
+});
+
+export type UpdatePipelineConfigInput = z.infer<typeof updatePipelineConfigSchema>;

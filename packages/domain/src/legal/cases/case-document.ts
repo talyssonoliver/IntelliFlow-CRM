@@ -8,6 +8,26 @@
 import { z } from 'zod';
 
 // ============================================================================
+// Constants - Single Source of Truth (DRY enum pattern)
+// ============================================================================
+
+/**
+ * Document types for case documents
+ */
+export const DOCUMENT_TYPES = [
+  'CONTRACT',
+  'AGREEMENT',
+  'EVIDENCE',
+  'CORRESPONDENCE',
+  'COURT_FILING',
+  'MEMO',
+  'REPORT',
+  'OTHER',
+] as const;
+
+export type DocumentType = (typeof DOCUMENT_TYPES)[number];
+
+// ============================================================================
 // Value Objects
 // ============================================================================
 
@@ -128,16 +148,7 @@ export const accessControlEntrySchema = z.object({
 export const caseDocumentMetadataSchema = z.object({
   title: z.string().min(1).max(255),
   description: z.string().max(2000).optional(),
-  documentType: z.enum([
-    'CONTRACT',
-    'AGREEMENT',
-    'EVIDENCE',
-    'CORRESPONDENCE',
-    'COURT_FILING',
-    'MEMO',
-    'REPORT',
-    'OTHER',
-  ]),
+  documentType: z.enum(DOCUMENT_TYPES),
   classification: z.nativeEnum(DocumentClassification),
   tags: z.array(z.string().max(50)).max(20).default([]),
   relatedCaseId: z.string().uuid().optional(),

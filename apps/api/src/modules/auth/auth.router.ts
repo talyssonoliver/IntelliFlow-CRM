@@ -32,6 +32,7 @@ import {
   refreshTokenSchema,
   verifyEmailSchema,
   resendVerificationSchema,
+  resendMfaCodeSchema,
   type LoginResponse,
   type VerifyEmailResponse,
 } from '@intelliflow/validators';
@@ -352,6 +353,55 @@ export const authRouter = createTRPCRouter({
         expiresAt: new Date(session.expires_at! * 1000),
       },
     };
+  }),
+
+  /**
+   * Resend MFA verification code
+   *
+   * Resends the MFA code via SMS or email for the current challenge.
+   */
+  resendMfaCode: publicProcedure.input(resendMfaCodeSchema).mutation(async ({ ctx, input }) => {
+    const mfaService = getMfaService(ctx.prisma);
+
+    try {
+      if (input.method === 'sms' && input.phone) {
+        // Get user ID from challenge if available
+        const challengeInfo = input.challengeId
+          ? mfaService.getChallengeInfo(input.challengeId)
+          : { exists: false, userId: undefined };
+
+        const result = await mfaService.sendSmsOtp(input.phone, challengeInfo.userId || 'unknown');
+
+        return {
+          success: result.success,
+          message: result.success ? 'SMS code sent successfully' : (result.error || 'Failed to send SMS'),
+        };
+      }
+
+      if (input.method === 'email' && input.email) {
+        const challengeInfo = input.challengeId
+          ? mfaService.getChallengeInfo(input.challengeId)
+          : { exists: false, userId: undefined };
+
+        const result = await mfaService.sendEmailOtp(input.email, challengeInfo.userId || 'unknown');
+
+        return {
+          success: result.success,
+          message: result.success ? 'Email code sent successfully' : (result.error || 'Failed to send email'),
+        };
+      }
+
+      return {
+        success: false,
+        message: 'Invalid MFA method or missing contact information',
+      };
+    } catch (error) {
+      console.error('[Auth] Resend MFA code error:', error);
+      return {
+        success: false,
+        message: 'Failed to resend MFA code. Please try again.',
+      };
+    }
   }),
 
   /**
