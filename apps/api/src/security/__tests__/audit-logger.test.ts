@@ -561,6 +561,615 @@ describe('AuditLogger', () => {
   });
 });
 
+describe('queryComprehensive', () => {
+  let logger: AuditLogger;
+  let mockPrisma: PrismaClient;
+
+  beforeEach(() => {
+    mockPrisma = {
+      auditLog: {
+        create: vi.fn().mockResolvedValue({ id: 'audit-log-123' }),
+        findMany: vi.fn().mockResolvedValue([]),
+        count: vi.fn().mockResolvedValue(0),
+      },
+      auditLogEntry: {
+        create: vi.fn().mockResolvedValue({ id: 'audit-entry-123' }),
+        findMany: vi.fn().mockResolvedValue([
+          { id: 'entry-1', action: 'CREATE' },
+          { id: 'entry-2', action: 'UPDATE' },
+        ]),
+        count: vi.fn().mockResolvedValue(2),
+      },
+      securityEvent: {
+        create: vi.fn().mockResolvedValue({ id: 'security-event-123' }),
+      },
+    } as unknown as PrismaClient;
+    logger = new AuditLogger(mockPrisma, { consoleLog: false });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    resetAuditLogger();
+  });
+
+  it('should query comprehensive audit log entries', async () => {
+    const result = await logger.queryComprehensive({
+      resourceType: 'lead',
+      actorId: 'user-123',
+      limit: 10,
+    });
+
+    expect(result.entries).toHaveLength(2);
+    expect(result.total).toBe(2);
+    expect(mockPrisma.auditLogEntry.findMany).toHaveBeenCalled();
+  });
+
+  it('should filter by all available criteria', async () => {
+    await logger.queryComprehensive({
+      resourceType: 'lead',
+      resourceId: 'lead-123',
+      actorId: 'user-123',
+      actorType: 'USER',
+      action: 'CREATE',
+      actionResult: 'SUCCESS',
+      eventType: 'LeadCreated',
+      dataClassification: 'INTERNAL',
+      traceId: 'trace-123',
+      startDate: new Date(2025, 0, 1),
+      endDate: new Date(2025, 0, 31),
+    });
+
+    expect(mockPrisma.auditLogEntry.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          resourceType: 'lead',
+          resourceId: 'lead-123',
+          actorId: 'user-123',
+        }),
+      })
+    );
+  });
+
+  it('should fall back to basic query when auditLogEntry table is undefined', async () => {
+    const prismaWithoutEntry = {
+      ...mockPrisma,
+      auditLogEntry: undefined,
+    } as unknown as PrismaClient;
+
+    const safeLogger = new AuditLogger(prismaWithoutEntry, { consoleLog: false });
+
+    const result = await safeLogger.queryComprehensive({
+      resourceType: 'lead',
+    });
+
+    expect(result).toBeDefined();
+    expect(mockPrisma.auditLog.findMany).toHaveBeenCalled();
+  });
+
+  it('should fall back to basic query on error', async () => {
+    (mockPrisma.auditLogEntry.findMany as any).mockRejectedValueOnce(new Error('DB Error'));
+
+    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+
+    const result = await logger.queryComprehensive({
+      resourceType: 'lead',
+    });
+
+    expect(result).toBeDefined();
+    expect(debugSpy).toHaveBeenCalledWith(
+      '[AUDIT] Comprehensive query failed, falling back to basic:',
+      expect.any(Error)
+    );
+
+    debugSpy.mockRestore();
+  });
+});
+
+describe('getResourceAuditTrail', () => {
+  let logger: AuditLogger;
+  let mockPrisma: PrismaClient;
+
+  beforeEach(() => {
+    mockPrisma = {
+      auditLog: {
+        create: vi.fn().mockResolvedValue({ id: 'audit-log-123' }),
+        findMany: vi.fn().mockResolvedValue([]),
+        count: vi.fn().mockResolvedValue(0),
+      },
+      auditLogEntry: {
+        findMany: vi.fn().mockResolvedValue([
+          { id: 'entry-1', resourceId: 'lead-123' },
+        ]),
+        count: vi.fn().mockResolvedValue(1),
+      },
+    } as unknown as PrismaClient;
+    logger = new AuditLogger(mockPrisma, { consoleLog: false });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    resetAuditLogger();
+  });
+
+  it('should get audit trail for a specific resource', async () => {
+    const result = await logger.getResourceAuditTrail('lead', 'lead-123');
+
+    expect(result.entries).toHaveLength(1);
+    expect(mockPrisma.auditLogEntry.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          resourceType: 'lead',
+          resourceId: 'lead-123',
+        }),
+      })
+    );
+  });
+
+  it('should support pagination options', async () => {
+    await logger.getResourceAuditTrail('lead', 'lead-123', {
+      limit: 50,
+      offset: 10,
+    });
+
+    expect(mockPrisma.auditLogEntry.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        take: 50,
+        skip: 10,
+      })
+    );
+  });
+});
+
+describe('getActorAuditTrail', () => {
+  let logger: AuditLogger;
+  let mockPrisma: PrismaClient;
+
+  beforeEach(() => {
+    mockPrisma = {
+      auditLog: {
+        create: vi.fn().mockResolvedValue({ id: 'audit-log-123' }),
+        findMany: vi.fn().mockResolvedValue([]),
+        count: vi.fn().mockResolvedValue(0),
+      },
+      auditLogEntry: {
+        findMany: vi.fn().mockResolvedValue([
+          { id: 'entry-1', actorId: 'user-123' },
+          { id: 'entry-2', actorId: 'user-123' },
+        ]),
+        count: vi.fn().mockResolvedValue(2),
+      },
+    } as unknown as PrismaClient;
+    logger = new AuditLogger(mockPrisma, { consoleLog: false });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    resetAuditLogger();
+  });
+
+  it('should get audit trail for a specific actor', async () => {
+    const result = await logger.getActorAuditTrail('user-123');
+
+    expect(result.entries).toHaveLength(2);
+    expect(mockPrisma.auditLogEntry.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          actorId: 'user-123',
+        }),
+      })
+    );
+  });
+
+  it('should filter by date range', async () => {
+    const startDate = new Date(2025, 0, 1);
+    const endDate = new Date(2025, 0, 31);
+
+    await logger.getActorAuditTrail('user-123', {
+      startDate,
+      endDate,
+    });
+
+    expect(mockPrisma.auditLogEntry.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          actorId: 'user-123',
+          timestamp: {
+            gte: startDate,
+            lte: endDate,
+          },
+        }),
+      })
+    );
+  });
+});
+
+describe('getPermissionAuditTrail', () => {
+  let logger: AuditLogger;
+  let mockPrisma: PrismaClient;
+
+  beforeEach(() => {
+    mockPrisma = {
+      auditLog: {
+        create: vi.fn().mockResolvedValue({ id: 'audit-log-123' }),
+        findMany: vi.fn().mockResolvedValue([]),
+        count: vi.fn().mockResolvedValue(0),
+      },
+      auditLogEntry: {
+        findMany: vi.fn().mockResolvedValue([
+          { id: 'entry-1', permissionGranted: false },
+        ]),
+        count: vi.fn().mockResolvedValue(1),
+      },
+    } as unknown as PrismaClient;
+    logger = new AuditLogger(mockPrisma, { consoleLog: false });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    resetAuditLogger();
+  });
+
+  it('should get permission audit trail', async () => {
+    const result = await logger.getPermissionAuditTrail();
+
+    expect(result.entries).toHaveLength(1);
+    expect(mockPrisma.auditLogEntry.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          requiredPermission: { not: null },
+        }),
+      })
+    );
+  });
+
+  it('should filter by actor and resource type', async () => {
+    await logger.getPermissionAuditTrail({
+      actorId: 'user-123',
+      resourceType: 'lead',
+    });
+
+    expect(mockPrisma.auditLogEntry.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          actorId: 'user-123',
+          resourceType: 'lead',
+        }),
+      })
+    );
+  });
+
+  it('should filter permission denied only', async () => {
+    await logger.getPermissionAuditTrail({
+      permissionDeniedOnly: true,
+    });
+
+    expect(mockPrisma.auditLogEntry.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          permissionGranted: false,
+        }),
+      })
+    );
+  });
+
+  it('should filter by date range', async () => {
+    const startDate = new Date(2025, 0, 1);
+    const endDate = new Date(2025, 0, 31);
+
+    await logger.getPermissionAuditTrail({
+      startDate,
+      endDate,
+    });
+
+    expect(mockPrisma.auditLogEntry.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          timestamp: {
+            gte: startDate,
+            lte: endDate,
+          },
+        }),
+      })
+    );
+  });
+
+  it('should return empty when auditLogEntry table is undefined', async () => {
+    const prismaWithoutEntry = {
+      ...mockPrisma,
+      auditLogEntry: undefined,
+    } as unknown as PrismaClient;
+
+    const safeLogger = new AuditLogger(prismaWithoutEntry, { consoleLog: false });
+
+    const result = await safeLogger.getPermissionAuditTrail();
+
+    expect(result.entries).toEqual([]);
+    expect(result.total).toBe(0);
+  });
+
+  it('should handle errors gracefully', async () => {
+    (mockPrisma.auditLogEntry.findMany as any).mockRejectedValueOnce(new Error('DB Error'));
+
+    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+
+    const result = await logger.getPermissionAuditTrail();
+
+    expect(result.entries).toEqual([]);
+    expect(result.total).toBe(0);
+    expect(debugSpy).toHaveBeenCalledWith(
+      '[AUDIT] Permission audit trail query failed:',
+      expect.any(Error)
+    );
+
+    debugSpy.mockRestore();
+  });
+});
+
+describe('comprehensive entry writing', () => {
+  let logger: AuditLogger;
+  let mockPrisma: PrismaClient;
+
+  beforeEach(() => {
+    mockPrisma = {
+      auditLog: {
+        create: vi.fn().mockResolvedValue({ id: 'audit-log-123' }),
+      },
+      auditLogEntry: {
+        create: vi.fn().mockResolvedValue({ id: 'audit-entry-123' }),
+      },
+      securityEvent: {
+        create: vi.fn().mockResolvedValue({ id: 'security-event-123' }),
+      },
+    } as unknown as PrismaClient;
+    logger = new AuditLogger(mockPrisma, { consoleLog: false });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    resetAuditLogger();
+  });
+
+  it('should write to comprehensive AuditLogEntry table when available', async () => {
+    const logId = await logger.log({
+      tenantId: 'tenant-123',
+      eventType: 'LeadCreated',
+      action: 'CREATE',
+      resourceType: 'lead',
+      resourceId: 'lead-123',
+      actorId: 'user-123',
+      actorEmail: 'user@example.com',
+      actorRole: 'ADMIN',
+      resourceName: 'Test Lead',
+      traceId: 'trace-123',
+      requestId: 'req-123',
+      sessionId: 'session-123',
+    });
+
+    expect(logId).toBe('audit-entry-123');
+    expect(mockPrisma.auditLogEntry.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          tenantId: 'tenant-123',
+          eventType: 'LeadCreated',
+          action: 'CREATE',
+          resourceType: 'lead',
+          resourceId: 'lead-123',
+          actorId: 'user-123',
+        }),
+      })
+    );
+  });
+
+  it('should fall back to basic AuditLog when comprehensive write fails', async () => {
+    (mockPrisma.auditLogEntry.create as any).mockRejectedValueOnce(new Error('Comprehensive table error'));
+
+    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+
+    const logId = await logger.log({
+      tenantId: 'tenant-123',
+      eventType: 'LeadCreated',
+      action: 'CREATE',
+      resourceType: 'lead',
+      resourceId: 'lead-123',
+    });
+
+    expect(logId).toBe('audit-log-123');
+    expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+    expect(debugSpy).toHaveBeenCalledWith(
+      '[AUDIT] Comprehensive entry failed, falling back to basic:',
+      expect.any(Error)
+    );
+
+    debugSpy.mockRestore();
+  });
+});
+
+describe('getSeverityEmoji - all levels', () => {
+  let logger: AuditLogger;
+  let mockPrisma: PrismaClient;
+  let consoleLogSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    mockPrisma = {
+      securityEvent: {
+        create: vi.fn().mockResolvedValue({ id: 'security-event-123' }),
+      },
+    } as unknown as PrismaClient;
+    logger = new AuditLogger(mockPrisma, { consoleLog: true });
+    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    resetAuditLogger();
+  });
+
+  it('should return !!! for CRITICAL severity', async () => {
+    await logger.logSecurityEvent({
+      eventType: 'TEST',
+      severity: 'CRITICAL',
+      description: 'Critical event',
+    });
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('!!!')
+    );
+  });
+
+  it('should return !! for HIGH severity', async () => {
+    await logger.logSecurityEvent({
+      eventType: 'TEST',
+      severity: 'HIGH',
+      description: 'High event',
+    });
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('!!')
+    );
+  });
+
+  it('should return ! for MEDIUM severity', async () => {
+    await logger.logSecurityEvent({
+      eventType: 'TEST',
+      severity: 'MEDIUM',
+      description: 'Medium event',
+    });
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('!')
+    );
+  });
+
+  it('should return - for LOW severity', async () => {
+    await logger.logSecurityEvent({
+      eventType: 'TEST',
+      severity: 'LOW',
+      description: 'Low event',
+    });
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('-')
+    );
+  });
+
+  it('should return * for INFO severity', async () => {
+    await logger.logSecurityEvent({
+      eventType: 'TEST',
+      severity: 'INFO',
+      description: 'Info event',
+    });
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('*')
+    );
+  });
+});
+
+describe('scheduleFlush - batch size trigger', () => {
+  let logger: AuditLogger;
+  let mockPrisma: PrismaClient;
+
+  beforeEach(() => {
+    mockPrisma = {
+      auditLog: {
+        create: vi.fn().mockResolvedValue({ id: 'audit-log-123' }),
+      },
+      auditLogEntry: undefined,
+    } as unknown as PrismaClient;
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    resetAuditLogger();
+  });
+
+  it('should buffer entries when async mode is enabled until flush', async () => {
+    logger = new AuditLogger(mockPrisma, {
+      async: true,
+      batchSize: 10,
+      consoleLog: false,
+    });
+
+    // Add entries to buffer
+    await logger.log({
+      tenantId: 'tenant-123',
+      eventType: 'Test1',
+      action: 'CREATE',
+      resourceType: 'lead',
+      resourceId: 'lead-1',
+    });
+    await logger.log({
+      tenantId: 'tenant-123',
+      eventType: 'Test2',
+      action: 'CREATE',
+      resourceType: 'lead',
+      resourceId: 'lead-2',
+    });
+    await logger.log({
+      tenantId: 'tenant-123',
+      eventType: 'Test3',
+      action: 'CREATE',
+      resourceType: 'lead',
+      resourceId: 'lead-3',
+    });
+
+    // Not flushed yet
+    expect(mockPrisma.auditLog.create).not.toHaveBeenCalled();
+
+    // Manual flush should write all entries
+    await logger.flush();
+
+    expect(mockPrisma.auditLog.create).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe('calculateChangedFields - edge cases', () => {
+  let logger: AuditLogger;
+  let mockPrisma: PrismaClient;
+
+  beforeEach(() => {
+    mockPrisma = {
+      auditLog: {
+        create: vi.fn().mockResolvedValue({ id: 'audit-log-123' }),
+      },
+      auditLogEntry: undefined,
+    } as unknown as PrismaClient;
+    logger = new AuditLogger(mockPrisma, { consoleLog: false });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    resetAuditLogger();
+  });
+
+  it('should return empty array when both before and after are undefined', async () => {
+    await logger.logAction('CREATE', 'lead', 'lead-123', 'tenant-123', {
+      beforeState: undefined,
+      afterState: undefined,
+    });
+
+    expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+  });
+
+  it('should return all after keys when only after state exists', async () => {
+    await logger.logAction('CREATE', 'lead', 'lead-123', 'tenant-123', {
+      beforeState: undefined,
+      afterState: { name: 'Test', status: 'NEW' },
+    });
+
+    expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+  });
+
+  it('should return all before keys when only before state exists', async () => {
+    await logger.logAction('DELETE', 'lead', 'lead-123', 'tenant-123', {
+      beforeState: { name: 'Test', status: 'NEW' },
+      afterState: undefined,
+    });
+
+    expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+  });
+});
+
 describe('getAuditLogger', () => {
   let mockPrisma: PrismaClient;
 

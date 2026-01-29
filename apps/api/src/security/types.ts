@@ -97,6 +97,7 @@ export type ResourceType =
   | 'user'
   | 'ai_score'
   | 'appointment'
+  | 'session'
   | 'system';
 
 /**

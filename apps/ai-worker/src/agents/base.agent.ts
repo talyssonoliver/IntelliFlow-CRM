@@ -85,11 +85,19 @@ export abstract class BaseAgent<TInput = unknown, TOutput = unknown> {
         timeout: aiConfig.openai.timeout,
         openAIApiKey: aiConfig.openai.apiKey,
       });
-    } else {
+    } else if (aiConfig.provider === 'mock') {
+      // Mock provider for testing - no real API calls
+      this.model = {
+        invoke: async () => ({ content: 'Mock response' }),
+        call: async () => ({ content: 'Mock response' }),
+      };
+    } else if (aiConfig.provider === 'ollama') {
       // Ollama support - would use dynamic import at runtime:
       // const { ChatOllama } = await import('@langchain/community/chat_models/ollama');
       // this.model = new ChatOllama({ baseUrl, model, temperature });
       throw new Error('Ollama support requires dynamic import - not yet implemented');
+    } else {
+      throw new Error(`Unknown AI provider: ${aiConfig.provider}`);
     }
 
     logger.info(

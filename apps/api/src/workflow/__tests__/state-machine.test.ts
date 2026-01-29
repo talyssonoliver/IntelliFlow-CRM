@@ -360,6 +360,70 @@ describe('WorkflowStateMachine', () => {
       expect(result.success).toBe(true);
       expect(result.state.data.status).toBe('disqualified');
     });
+
+    it('should process modify decision with modifications', async () => {
+      const state = await machine.createWorkflow<LeadQualificationState>(
+        'lead-qualification',
+        { leadId: 'lead-123' }
+      );
+
+      // Override to trigger human review
+      const scoreNode = testDefinition.nodes.get('score_lead')!;
+      scoreNode.handler = async (s) => ({
+        score: 50,
+        notes: [...s.data.notes, 'Lead scored: 50/100'],
+      });
+
+      await machine.transition(state.workflowId, 'next');
+      await machine.transition(state.workflowId, 'next');
+      await machine.transition(state.workflowId, 'next');
+
+      const decision: HumanDecision = {
+        workflowId: state.workflowId,
+        userId: 'user-456',
+        decision: 'modify',
+        comment: 'Adjusting score',
+        modifications: { score: 75, status: 'qualified' as const },
+      };
+
+      const result = await machine.processHumanDecision<LeadQualificationState>(decision);
+
+      expect(result.success).toBe(true);
+      expect(result.state.data.score).toBe(75);
+      expect(result.state.data.status).toBe('qualified');
+    });
+
+    it('should return error when processing decision for non-existent workflow', async () => {
+      const decision: HumanDecision = {
+        workflowId: 'non-existent-id',
+        userId: 'user-456',
+        decision: 'approve',
+      };
+
+      const result = await machine.processHumanDecision<LeadQualificationState>(decision);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('not found');
+    });
+
+    it('should return error when processing decision at non-human node', async () => {
+      const state = await machine.createWorkflow<LeadQualificationState>(
+        'lead-qualification',
+        { leadId: 'lead-123' }
+      );
+
+      // Workflow is at 'start' node, not a human node
+      const decision: HumanDecision = {
+        workflowId: state.workflowId,
+        userId: 'user-456',
+        decision: 'approve',
+      };
+
+      const result = await machine.processHumanDecision<LeadQualificationState>(decision);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('not at a human review node');
+    });
   });
 
   describe('State Persistence', () => {
@@ -544,6 +608,62 @@ describe('WorkflowStateMachine', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('paused');
+    });
+
+    it('should return error for transition on non-existent workflow', async () => {
+      const result = await machine.transition<LeadQualificationState>(
+        'non-existent-id',
+        'next'
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('not found');
+    });
+
+    it('should throw when pausing non-existent workflow', async () => {
+      await expect(machine.pauseWorkflow('non-existent-id')).rejects.toThrow(
+        'Workflow non-existent-id not found'
+      );
+    });
+
+    it('should throw when resuming non-existent workflow', async () => {
+      await expect(machine.resumeWorkflow('non-existent-id')).rejects.toThrow(
+        'Workflow non-existent-id not found'
+      );
+    });
+
+    it('should throw when cancelling non-existent workflow', async () => {
+      await expect(machine.cancelWorkflow('non-existent-id')).rejects.toThrow(
+        'Workflow non-existent-id not found'
+      );
+    });
+  });
+
+  describe('Query Filters', () => {
+    it('should filter workflows by currentNode', async () => {
+      const state1 = await machine.createWorkflow<LeadQualificationState>(
+        'lead-qualification',
+        { leadId: 'lead-1' }
+      );
+      await machine.createWorkflow<LeadQualificationState>(
+        'lead-qualification',
+        { leadId: 'lead-2' }
+      );
+
+      // Move first workflow to score_lead
+      await machine.transition(state1.workflowId, 'next');
+
+      const atScoreLead = await machine.listWorkflows<LeadQualificationState>({
+        currentNode: 'score_lead',
+      });
+      const atStart = await machine.listWorkflows<LeadQualificationState>({
+        currentNode: 'start',
+      });
+
+      expect(atScoreLead.length).toBe(1);
+      expect(atScoreLead[0].data.leadId).toBe('lead-1');
+      expect(atStart.length).toBe(1);
+      expect(atStart[0].data.leadId).toBe('lead-2');
     });
   });
 });

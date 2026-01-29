@@ -648,7 +648,6 @@ function betaCF(x: number, a: number, b: number): number {
   const maxIterations = 100;
   const epsilon = 1e-10;
 
-  let m = 1;
   let c = 1;
   let d = 1 - ((a + b) * x) / (a + 1);
   if (Math.abs(d) < epsilon) d = epsilon;
@@ -689,7 +688,7 @@ function betaCF(x: number, a: number, b: number): number {
 function gammaLn(x: number): number {
   const coefficients = [
     76.18009172947146,
-    -86.50532032941677,
+    -86.5053203294168,
     24.01409824083091,
     -1.231739572450155,
     0.1208650973866179e-2,
@@ -705,7 +704,7 @@ function gammaLn(x: number): number {
     ser += coefficients[j] / ++y;
   }
 
-  return -tmp + Math.log((2.5066282746310005 * ser) / x);
+  return -tmp + Math.log((2.5066282746310002 * ser) / x);
 }
 
 /**

@@ -77,6 +77,7 @@ const mockMessage = {
   role: 'USER' as const,
   content: 'Hello, I need help',
   contentType: 'text',
+  metadata: null,
   modelUsed: null,
   finishReason: null,
   tokenCount: 10,
@@ -102,13 +103,17 @@ const mockToolCall = {
   toolName: 'searchLeads',
   toolType: 'SEARCH' as const,
   toolVersion: '1.0',
+  toolInput: { query: 'test' },
+  toolOutput: null,
   inputParameters: { query: 'test' },
   outputResult: null,
   status: 'PENDING' as const,
+  duration: null,
+  durationMs: null,
   errorMessage: null,
   errorCode: null,
-  durationMs: null,
   requiresApproval: true,
+  isReversible: false,
   approvalStatus: 'PENDING' as const,
   approvedBy: null,
   approvedAt: null,
@@ -117,7 +122,6 @@ const mockToolCall = {
   affectedEntityType: null,
   affectedEntityId: null,
   changeDescription: null,
-  isReversible: false,
   rollbackData: null,
   wasRolledBack: false,
   rolledBackAt: null,
@@ -241,7 +245,7 @@ describe('Conversation Router', () => {
     });
 
     it('should enforce tenant isolation', async () => {
-      prismaMock.conversationRecord.findFirst.mockResolvedValue(null);
+      prismaMock.conversationRecord.findFirst.mockResolvedValue(mockConversation);
 
       await caller.getById({ id: TEST_CONVERSATION_ID });
 
@@ -255,7 +259,7 @@ describe('Conversation Router', () => {
     });
 
     it('should exclude deleted conversations', async () => {
-      prismaMock.conversationRecord.findFirst.mockResolvedValue(null);
+      prismaMock.conversationRecord.findFirst.mockResolvedValue(mockConversation);
 
       await caller.getById({ id: TEST_CONVERSATION_ID });
 
@@ -861,7 +865,7 @@ describe('Conversation Router', () => {
   // ============================================
   describe('Data Retention', () => {
     it('should exclude deleted conversations from getById', async () => {
-      prismaMock.conversationRecord.findFirst.mockResolvedValue(null);
+      prismaMock.conversationRecord.findFirst.mockResolvedValue(mockConversation);
 
       await caller.getById({ id: TEST_CONVERSATION_ID });
 

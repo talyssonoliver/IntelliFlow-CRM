@@ -1,6 +1,7 @@
 /**
  * Supabase Client Library for IntelliFlow CRM
  * Task: IFC-006 - Supabase Integration Test
+ * Task: IFC-169 - Fix Supabase auth (remove mock key fallback)
  *
  * This module provides initialized Supabase clients for:
  * - Authentication (auth)
@@ -8,18 +9,107 @@
  * - Database operations (from)
  * - Storage (storage)
  * - pgvector operations (rpc)
+ *
+ * Configuration:
+ * - Production: Requires SUPABASE_URL, SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY
+ * - Development: Falls back to local Supabase (127.0.0.1:54321) with warning
+ * - Test (NODE_ENV=test or VITEST): Allows mock keys for unit testing
  */
 
 import { createClient, SupabaseClient, User, Session } from '@supabase/supabase-js';
 
-// Environment configuration
-const SUPABASE_URL = process.env.SUPABASE_URL || 'http://127.0.0.1:54321';
-// Provide a test key for unit testing when no environment variable is set
-// This allows the client to initialize without throwing, but will fail on actual API calls
+// ============================================
+// ENVIRONMENT CONFIGURATION
+// ============================================
+
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const IS_TEST = NODE_ENV === 'test' || process.env.VITEST === 'true';
+const IS_PRODUCTION = NODE_ENV === 'production';
+
+// Mock key for test environment ONLY
 const TEST_MOCK_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || TEST_MOCK_KEY;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || TEST_MOCK_KEY;
+
+/**
+ * Validate and get Supabase configuration
+ * Fails fast in production if not properly configured
+ */
+function getSupabaseConfig(): {
+  url: string;
+  anonKey: string;
+  serviceRoleKey: string;
+  usingMockKeys: boolean;
+} {
+  const envUrl = process.env.SUPABASE_URL;
+  const envAnonKey = process.env.SUPABASE_ANON_KEY;
+  const envServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  // Production: MUST have all environment variables
+  if (IS_PRODUCTION) {
+    const missing: string[] = [];
+    if (!envUrl) missing.push('SUPABASE_URL');
+    if (!envAnonKey) missing.push('SUPABASE_ANON_KEY');
+    if (!envServiceRoleKey) missing.push('SUPABASE_SERVICE_ROLE_KEY');
+
+    if (missing.length > 0 || !envUrl || !envAnonKey || !envServiceRoleKey) {
+      throw new Error(
+        `[CRITICAL] Supabase configuration error in production: Missing required environment variables: ${missing.join(', ')}. ` +
+          'Authentication will not work. Set these variables before deploying.'
+      );
+    }
+
+    // TypeScript now knows these are defined after the throw
+    return {
+      url: envUrl,
+      anonKey: envAnonKey,
+      serviceRoleKey: envServiceRoleKey,
+      usingMockKeys: false,
+    };
+  }
+
+  // Test environment: Allow mock keys silently
+  if (IS_TEST) {
+    return {
+      url: envUrl || 'http://127.0.0.1:54321',
+      anonKey: envAnonKey || TEST_MOCK_KEY,
+      serviceRoleKey: envServiceRoleKey || TEST_MOCK_KEY,
+      usingMockKeys: !envAnonKey || !envServiceRoleKey,
+    };
+  }
+
+  // Development: Allow fallback but warn clearly
+  const usingDefaultUrl = !envUrl;
+  const usingMockAnonKey = !envAnonKey;
+  const usingMockServiceKey = !envServiceRoleKey;
+
+  if (usingDefaultUrl || usingMockAnonKey || usingMockServiceKey) {
+    const warnings: string[] = [];
+    if (usingDefaultUrl) warnings.push('SUPABASE_URL (using local 127.0.0.1:54321)');
+    if (usingMockAnonKey) warnings.push('SUPABASE_ANON_KEY (using mock key - AUTH WILL NOT WORK)');
+    if (usingMockServiceKey)
+      warnings.push('SUPABASE_SERVICE_ROLE_KEY (using mock key - ADMIN OPS WILL NOT WORK)');
+
+    console.warn(
+      `\n⚠️  [Supabase] Development mode - missing environment variables:\n` +
+        warnings.map((w) => `   - ${w}`).join('\n') +
+        '\n   Run local Supabase: npx supabase start\n' +
+        '   Or set environment variables in .env.local\n'
+    );
+  }
+
+  return {
+    url: envUrl || 'http://127.0.0.1:54321',
+    anonKey: envAnonKey || TEST_MOCK_KEY,
+    serviceRoleKey: envServiceRoleKey || TEST_MOCK_KEY,
+    usingMockKeys: usingMockAnonKey || usingMockServiceKey,
+  };
+}
+
+// Get validated configuration
+const config = getSupabaseConfig();
+const SUPABASE_URL = config.url;
+const SUPABASE_ANON_KEY = config.anonKey;
+const SUPABASE_SERVICE_ROLE_KEY = config.serviceRoleKey;
 
 /**
  * Database types for type-safe Supabase operations
@@ -410,6 +500,80 @@ export async function updateContactEmbedding(
 }
 
 // ============================================
+// OAUTH HELPERS
+// ============================================
+
+/**
+ * OAuth provider types supported by Supabase
+ */
+export type OAuthProvider =
+  | 'google'
+  | 'github'
+  | 'facebook'
+  | 'twitter'
+  | 'azure'
+  | 'linkedin'
+  | 'gitlab'
+  | 'bitbucket'
+  | 'discord'
+  | 'slack'
+  | 'spotify'
+  | 'twitch'
+  | 'notion'
+  | 'apple';
+
+export interface OAuthSignInResult {
+  url: string | null;
+  error: Error | null;
+}
+
+export interface OAuthSessionResult {
+  session: Session | null;
+  user: User | null;
+  error: Error | null;
+}
+
+/**
+ * Initiate OAuth sign-in with a provider
+ * Returns a URL to redirect the user to
+ */
+export async function signInWithOAuth(
+  provider: OAuthProvider,
+  options?: {
+    redirectTo?: string;
+    scopes?: string;
+    queryParams?: Record<string, string>;
+  }
+): Promise<OAuthSignInResult> {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: options?.redirectTo,
+      scopes: options?.scopes,
+      queryParams: options?.queryParams,
+    },
+  });
+
+  return {
+    url: data.url,
+    error: error,
+  };
+}
+
+/**
+ * Exchange an OAuth authorization code for a session
+ */
+export async function exchangeCodeForSession(code: string): Promise<OAuthSessionResult> {
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+  return {
+    session: data.session,
+    user: data.user,
+    error: error,
+  };
+}
+
+// ============================================
 // STORAGE HELPERS
 // ============================================
 
@@ -457,20 +621,36 @@ export async function deleteFile(
 // ============================================
 
 /**
- * Check if Supabase is properly configured
+ * Check if Supabase is properly configured (not using mock keys)
  */
 export function isConfigured(): boolean {
-  return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+  return !config.usingMockKeys;
+}
+
+/**
+ * Check if Supabase auth is fully functional
+ * Returns false if using mock keys (auth will fail)
+ */
+export function isAuthFunctional(): boolean {
+  return Boolean(process.env.SUPABASE_ANON_KEY && process.env.SUPABASE_SERVICE_ROLE_KEY);
 }
 
 /**
  * Get Supabase configuration (for debugging)
  */
-export function getConfig(): { url: string; hasAnonKey: boolean; hasServiceKey: boolean } {
+export function getConfig(): {
+  url: string;
+  hasAnonKey: boolean;
+  hasServiceKey: boolean;
+  usingMockKeys: boolean;
+  environment: string;
+} {
   return {
     url: SUPABASE_URL,
-    hasAnonKey: Boolean(SUPABASE_ANON_KEY),
-    hasServiceKey: Boolean(SUPABASE_SERVICE_ROLE_KEY),
+    hasAnonKey: Boolean(process.env.SUPABASE_ANON_KEY),
+    hasServiceKey: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+    usingMockKeys: config.usingMockKeys,
+    environment: NODE_ENV,
   };
 }
 

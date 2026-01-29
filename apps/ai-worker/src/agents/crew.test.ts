@@ -1,4 +1,46 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+
+// Mock the aiConfig to use mock provider before importing agents
+vi.mock('../config/ai.config', () => ({
+  aiConfig: {
+    provider: 'mock',
+    openai: {
+      model: 'gpt-4-turbo-preview',
+      temperature: 0.7,
+      maxTokens: 2000,
+      timeout: 30000,
+      apiKey: 'test-key',
+    },
+    ollama: {
+      baseUrl: 'http://localhost:11434',
+      model: 'mistral',
+      temperature: 0.7,
+      timeout: 60000,
+    },
+    costTracking: {
+      enabled: false,
+      warningThreshold: 10,
+    },
+    performance: {
+      cacheEnabled: false,
+      cacheTTL: 3600,
+      rateLimitPerMinute: 60,
+      retryAttempts: 3,
+      retryDelay: 1000,
+    },
+    features: {
+      enableChainLogging: false,
+      enableConfidenceScores: true,
+      enableStructuredOutputs: true,
+      enableMultiAgentWorkflows: false,
+    },
+  },
+  loadAIConfig: () => ({}),
+  AIProviderSchema: { parse: (v: unknown) => v },
+  MODEL_PRICING: {},
+  calculateCost: () => 0,
+}));
+
 import { Crew, CrewConfig, CrewTask, createLeadProcessingCrew, createResearchCrew } from './crew';
 import { BaseAgent, AgentTask, BaseAgentConfig } from './base.agent';
 

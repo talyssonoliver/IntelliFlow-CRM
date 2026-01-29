@@ -15,8 +15,10 @@ import { resetAuditLogger } from '../audit-logger';
 import type { Context } from '../../context';
 
 // Mock RBAC service - function must be defined outside to persist across clearAllMocks
+const mockCan = vi.fn();
+
 const mockRBACService = {
-  can: vi.fn().mockResolvedValue({ granted: true, roleLevel: 100 }),
+  can: mockCan,
   getRoleLevel: (role: string) => {
     const levels: Record<string, number> = {
       ADMIN: 100,
@@ -28,6 +30,16 @@ const mockRBACService = {
     return levels[role] ?? 0;
   },
 };
+
+// Mock audit logger methods
+const mockLogPermissionDenied = vi.fn();
+const mockLogAction = vi.fn();
+const mockAuditLogger = {
+  logPermissionDenied: mockLogPermissionDenied,
+  logAction: mockLogAction,
+};
+
+const mockGetAuditLogger = vi.fn();
 
 vi.mock('../rbac', async () => {
   const actual = await vi.importActual('../rbac');
@@ -42,13 +54,19 @@ vi.mock('../audit-logger', async () => {
   const actual = await vi.importActual('../audit-logger');
   return {
     ...actual,
-    getAuditLogger: vi.fn().mockReturnValue({
-      logPermissionDenied: vi.fn().mockResolvedValue('log-123'),
-      logAction: vi.fn().mockResolvedValue('log-123'),
-    }),
+    getAuditLogger: (...args: unknown[]) => mockGetAuditLogger(...args),
     resetAuditLogger: vi.fn(),
   };
 });
+
+// Helper to setup default mock implementations
+function setupDefaultMocks() {
+  vi.clearAllMocks();
+  mockCan.mockResolvedValue({ granted: true, roleLevel: 100 });
+  mockLogPermissionDenied.mockResolvedValue('log-123');
+  mockLogAction.mockResolvedValue('log-123');
+  mockGetAuditLogger.mockReturnValue(mockAuditLogger);
+}
 
 describe('Security Middleware', () => {
   let mockContext: Context;
@@ -75,6 +93,7 @@ describe('Security Middleware', () => {
   }
 
   beforeEach(() => {
+    setupDefaultMocks();
     mockPrisma = {} as PrismaClient;
     mockContext = createMockContext({
       userId: 'user-123',
@@ -82,11 +101,10 @@ describe('Security Middleware', () => {
       role: 'ADMIN',
       tenantId: 'test-tenant-123',
     });
-    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    // Only clear mocks, don't restore - module-level mocks should persist
+    // Only clear mocks at end of test
     vi.clearAllMocks();
   });
 
@@ -143,6 +161,85 @@ describe('Security Middleware', () => {
       });
 
       expect(capturedCtx.requestContext.userAgent).toBe('Test Agent');
+    });
+
+    it('should extract IP from x-real-ip when x-forwarded-for is missing', async () => {
+      const middleware = createSecurityContextMiddleware();
+      let capturedCtx: any;
+
+      const ctxWithRealIp = {
+        ...mockContext,
+        req: {
+          headers: {
+            get: vi.fn((name: string) => {
+              if (name === 'x-forwarded-for') return null;
+              if (name === 'x-real-ip') return '10.0.0.1';
+              if (name === 'user-agent') return 'Test Agent';
+              return null;
+            }),
+          },
+        } as unknown as Request,
+      };
+
+      await middleware({
+        ctx: ctxWithRealIp,
+        path: 'test.procedure',
+        type: 'query',
+        next: async (opts) => {
+          capturedCtx = opts?.ctx;
+          return {};
+        },
+      });
+
+      expect(capturedCtx.requestContext.ipAddress).toBe('10.0.0.1');
+    });
+
+    it('should handle undefined request', async () => {
+      const middleware = createSecurityContextMiddleware();
+      let capturedCtx: any;
+
+      const ctxWithoutReq = {
+        ...mockContext,
+        req: undefined,
+      };
+
+      await middleware({
+        ctx: ctxWithoutReq,
+        path: 'test.procedure',
+        type: 'query',
+        next: async (opts) => {
+          capturedCtx = opts?.ctx;
+          return {};
+        },
+      });
+
+      expect(capturedCtx.requestContext.ipAddress).toBeUndefined();
+      expect(capturedCtx.requestContext.userAgent).toBeUndefined();
+    });
+
+    it('should handle missing headers.get method', async () => {
+      const middleware = createSecurityContextMiddleware();
+      let capturedCtx: any;
+
+      const ctxWithoutGet = {
+        ...mockContext,
+        req: {
+          headers: {},
+        } as unknown as Request,
+      };
+
+      await middleware({
+        ctx: ctxWithoutGet,
+        path: 'test.procedure',
+        type: 'query',
+        next: async (opts) => {
+          capturedCtx = opts?.ctx;
+          return {};
+        },
+      });
+
+      expect(capturedCtx.requestContext.ipAddress).toBeUndefined();
+      expect(capturedCtx.requestContext.userAgent).toBeUndefined();
     });
   });
 
@@ -252,6 +349,91 @@ describe('Security Middleware', () => {
       expect(middleware1).toBeDefined();
       expect(middleware2).toBeDefined();
     });
+
+    it('should call getOwnerId when provided', async () => {
+      const getOwnerId = vi.fn().mockResolvedValue('owner-123');
+      mockRBACService.can.mockResolvedValue({ granted: true });
+
+      const middleware = requirePermission({
+        permission: 'lead:read',
+        getOwnerId,
+      });
+      const securityCtx = {
+        ...mockContext,
+        auditLogger: { logPermissionDenied: vi.fn() },
+        rbac: mockRBACService,
+        requestContext: { requestId: 'test' },
+      };
+
+      await middleware({
+        ctx: securityCtx as any,
+        input: { id: 'lead-123' },
+        path: 'test',
+        type: 'query',
+        next: async () => ({ success: true }),
+      });
+
+      expect(getOwnerId).toHaveBeenCalledWith(securityCtx, { id: 'lead-123' });
+    });
+
+    it('should call getResourceId when provided', async () => {
+      const getResourceId = vi.fn().mockReturnValue('resource-456');
+      mockRBACService.can.mockResolvedValue({ granted: true });
+
+      const middleware = requirePermission({
+        permission: 'lead:read',
+        getResourceId,
+      });
+      const securityCtx = {
+        ...mockContext,
+        auditLogger: { logPermissionDenied: vi.fn() },
+        rbac: mockRBACService,
+        requestContext: { requestId: 'test' },
+      };
+
+      await middleware({
+        ctx: securityCtx as any,
+        input: { customId: 'custom-123' },
+        path: 'test',
+        type: 'query',
+        next: async () => ({ success: true }),
+      });
+
+      expect(getResourceId).toHaveBeenCalledWith({ customId: 'custom-123' });
+    });
+
+    it('should skip logging when logDenied is false', async () => {
+      const logPermissionDenied = vi.fn();
+      const middleware = requirePermission({
+        permission: 'lead:admin',
+        logDenied: false,
+      });
+      const securityCtx = {
+        ...mockContext,
+        auditLogger: { logPermissionDenied },
+        rbac: {
+          can: vi.fn().mockResolvedValue({
+            granted: false,
+            reason: 'No permission',
+          }),
+        },
+        requestContext: { requestId: 'test' },
+      };
+
+      try {
+        await middleware({
+          ctx: securityCtx as any,
+          input: {},
+          path: 'test',
+          type: 'mutation',
+          next: async () => ({}),
+        });
+      } catch {
+        // Expected
+      }
+
+      expect(logPermissionDenied).not.toHaveBeenCalled();
+    });
   });
 
   describe('auditLog', () => {
@@ -279,6 +461,7 @@ describe('Security Middleware', () => {
         'CREATE',
         'lead',
         'lead-123',
+        expect.any(String), // tenantId
         expect.any(Object)
       );
     });
@@ -361,6 +544,7 @@ describe('Security Middleware', () => {
         'UPDATE',
         'lead',
         'lead-123',
+        expect.any(String), // tenantId
         expect.objectContaining({
           beforeState: { status: 'NEW' },
         })
@@ -392,7 +576,135 @@ describe('Security Middleware', () => {
         'CREATE',
         'lead',
         'custom-lead-456',
+        expect.any(String), // tenantId
         expect.any(Object)
+      );
+    });
+
+    it('should handle logging failure gracefully', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const logAction = vi.fn().mockRejectedValue(new Error('Logging failed'));
+      const middleware = auditLog({
+        action: 'CREATE',
+        resourceType: 'lead',
+      });
+      const securityCtx = {
+        ...mockContext,
+        auditLogger: { logAction },
+        requestContext: { requestId: 'test' },
+      };
+
+      const result = await middleware({
+        ctx: securityCtx as any,
+        input: { id: 'lead-123' },
+        path: 'lead.create',
+        type: 'mutation',
+        next: async () => ({ id: 'lead-123', name: 'New Lead' }),
+      });
+
+      // Should not throw, should complete successfully
+      expect(result).toEqual({ id: 'lead-123', name: 'New Lead' });
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        '[AUDIT] Failed to log action:',
+        expect.any(Error)
+      );
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('should use getResourceName when provided', async () => {
+      const logAction = vi.fn().mockResolvedValue('log-123');
+      const getResourceName = vi.fn().mockReturnValue('Test Lead Name');
+      const middleware = auditLog({
+        action: 'CREATE',
+        resourceType: 'lead',
+        getResourceName,
+      });
+      const securityCtx = {
+        ...mockContext,
+        auditLogger: { logAction },
+        requestContext: { requestId: 'test' },
+      };
+
+      await middleware({
+        ctx: securityCtx as any,
+        input: { name: 'Test Lead Name' },
+        path: 'lead.create',
+        type: 'mutation',
+        next: async () => ({ id: 'lead-123', name: 'Test Lead Name' }),
+      });
+
+      expect(getResourceName).toHaveBeenCalled();
+      expect(logAction).toHaveBeenCalledWith(
+        'CREATE',
+        'lead',
+        expect.any(String),
+        expect.any(String),
+        expect.objectContaining({
+          resourceName: 'Test Lead Name',
+        })
+      );
+    });
+
+    it('should fallback to "unknown" resource ID when not available', async () => {
+      const logAction = vi.fn().mockResolvedValue('log-123');
+      const middleware = auditLog({
+        action: 'CREATE',
+        resourceType: 'lead',
+      });
+      const securityCtx = {
+        ...mockContext,
+        auditLogger: { logAction },
+        requestContext: { requestId: 'test' },
+      };
+
+      await middleware({
+        ctx: securityCtx as any,
+        input: {}, // No id field
+        path: 'lead.create',
+        type: 'mutation',
+        next: async () => ({ name: 'New Lead' }), // No id in result
+      });
+
+      expect(logAction).toHaveBeenCalledWith(
+        'CREATE',
+        'lead',
+        'unknown',
+        expect.any(String),
+        expect.any(Object)
+      );
+    });
+
+    it('should use "unknown" tenantId when user is missing', async () => {
+      const logAction = vi.fn().mockResolvedValue('log-123');
+      const middleware = auditLog({
+        action: 'CREATE',
+        resourceType: 'lead',
+      });
+      const ctxWithoutUser = {
+        ...createMockContext(),
+        user: undefined,
+        auditLogger: { logAction },
+        requestContext: { requestId: 'test' },
+      };
+
+      await middleware({
+        ctx: ctxWithoutUser as any,
+        input: { id: 'lead-123' },
+        path: 'lead.create',
+        type: 'mutation',
+        next: async () => ({ id: 'lead-123' }),
+      });
+
+      expect(logAction).toHaveBeenCalledWith(
+        'CREATE',
+        'lead',
+        'lead-123',
+        'unknown',
+        expect.objectContaining({
+          actorId: undefined,
+          actorEmail: undefined,
+          actorRole: undefined,
+        })
       );
     });
   });
@@ -682,6 +994,28 @@ describe('Security Middleware', () => {
           next: async () => ({}),
         })
       ).rejects.toThrow(TRPCError);
+    });
+
+    it('should allow access when ownerId is null/undefined', async () => {
+      const middleware = requireOwnership({
+        getOwnerId: async () => undefined,
+      });
+      const userCtx = createMockContext({
+        userId: 'user-123',
+        email: 'user@example.com',
+        role: 'USER',
+        tenantId: 'test-tenant-123',
+      });
+
+      const result = await middleware({
+        ctx: userCtx as any,
+        input: { id: 'resource-123' },
+        path: 'resource.get',
+        type: 'query',
+        next: async () => ({ id: 'resource-123' }),
+      });
+
+      expect(result).toEqual({ id: 'resource-123' });
     });
   });
 });

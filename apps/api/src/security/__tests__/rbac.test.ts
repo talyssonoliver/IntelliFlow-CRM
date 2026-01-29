@@ -528,3 +528,585 @@ describe('Permissions constants', () => {
     expect(Permissions.SYSTEM_ADMIN).toBe('system:admin');
   });
 });
+
+describe('RBACService - Database Operations', () => {
+  let service: RBACService;
+  let mockPrisma: {
+    permission: { findUnique: ReturnType<typeof vi.fn> };
+    userPermission: {
+      findUnique: ReturnType<typeof vi.fn>;
+      findMany: ReturnType<typeof vi.fn>;
+      upsert: ReturnType<typeof vi.fn>;
+      deleteMany: ReturnType<typeof vi.fn>;
+    };
+    userRoleAssignment: {
+      findMany: ReturnType<typeof vi.fn>;
+      upsert: ReturnType<typeof vi.fn>;
+      deleteMany: ReturnType<typeof vi.fn>;
+    };
+    rBACRole: { findUnique: ReturnType<typeof vi.fn> };
+  };
+
+  const TEST_USER_ID = 'test-user-123';
+
+  beforeEach(() => {
+    mockPrisma = {
+      permission: {
+        findUnique: vi.fn().mockResolvedValue(null),
+      },
+      userPermission: {
+        findUnique: vi.fn().mockResolvedValue(null),
+        findMany: vi.fn().mockResolvedValue([]),
+        upsert: vi.fn().mockResolvedValue({}),
+        deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+      },
+      userRoleAssignment: {
+        findMany: vi.fn().mockResolvedValue([]),
+        upsert: vi.fn().mockResolvedValue({}),
+        deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+      },
+      rBACRole: {
+        findUnique: vi.fn().mockResolvedValue(null),
+      },
+    };
+    service = new RBACService(mockPrisma as unknown as PrismaClient);
+    resetRBACService();
+  });
+
+  afterEach(() => {
+    resetRBACService();
+    vi.clearAllMocks();
+  });
+
+  describe('getUserPermissionOverride (via can method)', () => {
+    it('should apply user permission override when granted', async () => {
+      mockPrisma.permission.findUnique.mockResolvedValue({
+        id: 'perm-1',
+        name: 'lead:read',
+      });
+      mockPrisma.userPermission.findUnique.mockResolvedValue({
+        granted: true,
+        expiresAt: null,
+      });
+
+      const result = await service.can({
+        userId: TEST_USER_ID,
+        userRole: 'VIEWER',
+        resourceType: 'lead',
+        action: 'read',
+      });
+
+      expect(result.granted).toBe(true);
+      expect(result.reason).toBe('Granted by user override');
+      expect(result.checkedPermissions).toContain('user_override:lead:read');
+    });
+
+    it('should apply user permission override when denied', async () => {
+      mockPrisma.permission.findUnique.mockResolvedValue({
+        id: 'perm-1',
+        name: 'lead:write',
+      });
+      mockPrisma.userPermission.findUnique.mockResolvedValue({
+        granted: false,
+        expiresAt: null,
+      });
+
+      const result = await service.can({
+        userId: TEST_USER_ID,
+        userRole: 'ADMIN',
+        resourceType: 'lead',
+        action: 'write',
+      });
+
+      expect(result.granted).toBe(false);
+      expect(result.reason).toBe('Denied by user override');
+    });
+
+    it('should ignore expired permission override', async () => {
+      mockPrisma.permission.findUnique.mockResolvedValue({
+        id: 'perm-1',
+        name: 'lead:delete',
+      });
+      mockPrisma.userPermission.findUnique.mockResolvedValue({
+        granted: false,
+        expiresAt: new Date('2020-01-01'), // Expired
+      });
+
+      const result = await service.can({
+        userId: TEST_USER_ID,
+        userRole: 'ADMIN',
+        resourceType: 'lead',
+        action: 'delete',
+      });
+
+      expect(result.granted).toBe(true); // Falls back to role permission
+    });
+
+    it('should handle database errors gracefully', async () => {
+      mockPrisma.permission.findUnique.mockRejectedValue(
+        new Error('Database error')
+      );
+
+      const result = await service.can({
+        userId: TEST_USER_ID,
+        userRole: 'ADMIN',
+        resourceType: 'lead',
+        action: 'read',
+      });
+
+      expect(result.granted).toBe(true); // Falls back to role permission
+    });
+  });
+
+  describe('getUserRBACRoles', () => {
+    it('should return roles from database', async () => {
+      mockPrisma.userRoleAssignment.findMany.mockResolvedValue([
+        { role: { name: 'MANAGER' } },
+        { role: { name: 'SALES_REP' } },
+      ]);
+
+      const roles = await service.getUserRBACRoles(TEST_USER_ID);
+
+      expect(roles).toContain('MANAGER');
+      expect(roles).toContain('SALES_REP');
+      expect(mockPrisma.userRoleAssignment.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ userId: TEST_USER_ID }),
+        })
+      );
+    });
+
+    it('should return empty array when no roles assigned', async () => {
+      mockPrisma.userRoleAssignment.findMany.mockResolvedValue([]);
+
+      const roles = await service.getUserRBACRoles(TEST_USER_ID);
+
+      expect(roles).toEqual([]);
+    });
+
+    it('should filter out invalid role names', async () => {
+      mockPrisma.userRoleAssignment.findMany.mockResolvedValue([
+        { role: { name: 'ADMIN' } },
+        { role: { name: 'INVALID_ROLE' } },
+        { role: { name: 'USER' } },
+      ]);
+
+      const roles = await service.getUserRBACRoles(TEST_USER_ID);
+
+      expect(roles).toContain('ADMIN');
+      expect(roles).toContain('USER');
+      expect(roles).not.toContain('INVALID_ROLE');
+    });
+
+    it('should handle database errors gracefully', async () => {
+      mockPrisma.userRoleAssignment.findMany.mockRejectedValue(
+        new Error('Database connection failed')
+      );
+
+      const roles = await service.getUserRBACRoles(TEST_USER_ID);
+
+      expect(roles).toEqual([]);
+    });
+  });
+
+  describe('getRolePermissionsFromDB', () => {
+    it('should return permissions for a role', async () => {
+      mockPrisma.rBACRole.findUnique.mockResolvedValue({
+        name: 'CUSTOM_ROLE',
+        permissions: [
+          { granted: true, permission: { name: 'lead:read' } },
+          { granted: true, permission: { name: 'lead:write' } },
+        ],
+      });
+
+      const permissions = await service.getRolePermissionsFromDB('CUSTOM_ROLE');
+
+      expect(permissions).toContain('lead:read');
+      expect(permissions).toContain('lead:write');
+      expect(permissions).toHaveLength(2);
+    });
+
+    it('should return empty array when role not found', async () => {
+      mockPrisma.rBACRole.findUnique.mockResolvedValue(null);
+
+      const permissions = await service.getRolePermissionsFromDB('NONEXISTENT');
+
+      expect(permissions).toEqual([]);
+    });
+
+    it('should handle database errors gracefully', async () => {
+      mockPrisma.rBACRole.findUnique.mockRejectedValue(
+        new Error('Database error')
+      );
+
+      const permissions = await service.getRolePermissionsFromDB('CUSTOM_ROLE');
+
+      expect(permissions).toEqual([]);
+    });
+  });
+
+  describe('getPermissionsWithDB', () => {
+    it('should combine default and database permissions', async () => {
+      mockPrisma.userRoleAssignment.findMany.mockResolvedValue([]);
+      mockPrisma.userPermission.findMany.mockResolvedValue([]);
+
+      const permissions = await service.getPermissionsWithDB(
+        TEST_USER_ID,
+        'USER'
+      );
+
+      expect(permissions).toContain('lead:read');
+      expect(permissions).toContain('lead:write');
+    });
+
+    it('should add permissions from database roles', async () => {
+      mockPrisma.userRoleAssignment.findMany.mockResolvedValue([
+        { role: { name: 'ADMIN' } },
+      ]);
+      mockPrisma.rBACRole.findUnique.mockResolvedValue({
+        permissions: [
+          { granted: true, permission: { name: 'custom:special' } },
+        ],
+      });
+      mockPrisma.userPermission.findMany.mockResolvedValue([]);
+
+      const permissions = await service.getPermissionsWithDB(
+        TEST_USER_ID,
+        'USER'
+      );
+
+      expect(permissions).toContain('custom:special');
+    });
+
+    it('should apply user permission overrides (granted)', async () => {
+      mockPrisma.userRoleAssignment.findMany.mockResolvedValue([]);
+      mockPrisma.userPermission.findMany.mockResolvedValue([
+        {
+          granted: true,
+          permission: { name: 'lead:admin' },
+        },
+      ]);
+
+      const permissions = await service.getPermissionsWithDB(
+        TEST_USER_ID,
+        'USER'
+      );
+
+      expect(permissions).toContain('lead:admin');
+    });
+
+    it('should remove permissions denied by override', async () => {
+      mockPrisma.userRoleAssignment.findMany.mockResolvedValue([]);
+      mockPrisma.userPermission.findMany.mockResolvedValue([
+        {
+          granted: false,
+          permission: { name: 'lead:write' },
+        },
+      ]);
+
+      const permissions = await service.getPermissionsWithDB(
+        TEST_USER_ID,
+        'USER'
+      );
+
+      expect(permissions).not.toContain('lead:write');
+      expect(permissions).toContain('lead:read'); // Still has read
+    });
+
+    it('should cache results', async () => {
+      mockPrisma.userRoleAssignment.findMany.mockResolvedValue([]);
+      mockPrisma.userPermission.findMany.mockResolvedValue([]);
+
+      // First call
+      await service.getPermissionsWithDB(TEST_USER_ID, 'USER');
+      // Second call - should use cache
+      await service.getPermissionsWithDB(TEST_USER_ID, 'USER');
+
+      // Should only call DB once
+      expect(mockPrisma.userRoleAssignment.findMany).toHaveBeenCalledTimes(1);
+    });
+
+    it('should handle user permission query errors', async () => {
+      mockPrisma.userRoleAssignment.findMany.mockResolvedValue([]);
+      mockPrisma.userPermission.findMany.mockRejectedValue(
+        new Error('DB error')
+      );
+
+      const permissions = await service.getPermissionsWithDB(
+        TEST_USER_ID,
+        'USER'
+      );
+
+      // Should still return default permissions
+      expect(permissions).toContain('lead:read');
+    });
+  });
+
+  describe('assignRole', () => {
+    it('should assign role to user', async () => {
+      mockPrisma.rBACRole.findUnique.mockResolvedValue({
+        id: 'role-1',
+        name: 'MANAGER',
+      });
+      mockPrisma.userRoleAssignment.upsert.mockResolvedValue({});
+
+      await service.assignRole(TEST_USER_ID, 'MANAGER', 'admin-1');
+
+      expect(mockPrisma.userRoleAssignment.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            userId_roleId: { userId: TEST_USER_ID, roleId: 'role-1' },
+          },
+          create: expect.objectContaining({
+            userId: TEST_USER_ID,
+            roleId: 'role-1',
+            assignedBy: 'admin-1',
+          }),
+        })
+      );
+    });
+
+    it('should throw error when role not found', async () => {
+      mockPrisma.rBACRole.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.assignRole(TEST_USER_ID, 'NONEXISTENT', 'admin-1')
+      ).rejects.toThrow('Role NONEXISTENT not found');
+    });
+
+    it('should support expiration date', async () => {
+      const expiresAt = new Date('2025-12-31');
+      mockPrisma.rBACRole.findUnique.mockResolvedValue({
+        id: 'role-1',
+        name: 'MANAGER',
+      });
+      mockPrisma.userRoleAssignment.upsert.mockResolvedValue({});
+
+      await service.assignRole(TEST_USER_ID, 'MANAGER', 'admin-1', expiresAt);
+
+      expect(mockPrisma.userRoleAssignment.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          create: expect.objectContaining({ expiresAt }),
+          update: expect.objectContaining({ expiresAt }),
+        })
+      );
+    });
+
+    it('should clear cache after assignment', async () => {
+      mockPrisma.rBACRole.findUnique.mockResolvedValue({
+        id: 'role-1',
+        name: 'MANAGER',
+      });
+      mockPrisma.userRoleAssignment.upsert.mockResolvedValue({});
+
+      // Populate cache first
+      await service.getPermissions(TEST_USER_ID, 'USER');
+
+      // Assign role
+      await service.assignRole(TEST_USER_ID, 'MANAGER', 'admin-1');
+
+      // Next getPermissions should re-fetch (cache cleared)
+      // This is tested implicitly - if it didn't clear, the mock wouldn't be called
+    });
+  });
+
+  describe('removeRole', () => {
+    it('should remove role from user', async () => {
+      mockPrisma.rBACRole.findUnique.mockResolvedValue({
+        id: 'role-1',
+        name: 'MANAGER',
+      });
+      mockPrisma.userRoleAssignment.deleteMany.mockResolvedValue({ count: 1 });
+
+      await service.removeRole(TEST_USER_ID, 'MANAGER');
+
+      expect(mockPrisma.userRoleAssignment.deleteMany).toHaveBeenCalledWith({
+        where: { userId: TEST_USER_ID, roleId: 'role-1' },
+      });
+    });
+
+    it('should do nothing when role not found', async () => {
+      mockPrisma.rBACRole.findUnique.mockResolvedValue(null);
+
+      await service.removeRole(TEST_USER_ID, 'NONEXISTENT');
+
+      expect(mockPrisma.userRoleAssignment.deleteMany).not.toHaveBeenCalled();
+    });
+
+    it('should clear cache after removal', async () => {
+      mockPrisma.rBACRole.findUnique.mockResolvedValue({
+        id: 'role-1',
+        name: 'MANAGER',
+      });
+      mockPrisma.userRoleAssignment.deleteMany.mockResolvedValue({ count: 1 });
+
+      // Populate cache
+      await service.getPermissions(TEST_USER_ID, 'USER');
+
+      // Remove role - should clear cache
+      await service.removeRole(TEST_USER_ID, 'MANAGER');
+    });
+  });
+
+  describe('setUserPermission', () => {
+    it('should grant permission to user', async () => {
+      mockPrisma.permission.findUnique.mockResolvedValue({
+        id: 'perm-1',
+        name: 'lead:admin',
+      });
+      mockPrisma.userPermission.upsert.mockResolvedValue({});
+
+      await service.setUserPermission(
+        TEST_USER_ID,
+        'lead:admin',
+        true,
+        'admin-1',
+        'Special access needed'
+      );
+
+      expect(mockPrisma.userPermission.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            userId_permissionId: { userId: TEST_USER_ID, permissionId: 'perm-1' },
+          },
+          create: expect.objectContaining({
+            granted: true,
+            reason: 'Special access needed',
+            grantedBy: 'admin-1',
+          }),
+        })
+      );
+    });
+
+    it('should deny permission to user', async () => {
+      mockPrisma.permission.findUnique.mockResolvedValue({
+        id: 'perm-1',
+        name: 'lead:delete',
+      });
+      mockPrisma.userPermission.upsert.mockResolvedValue({});
+
+      await service.setUserPermission(
+        TEST_USER_ID,
+        'lead:delete',
+        false,
+        'admin-1',
+        'Restricted access'
+      );
+
+      expect(mockPrisma.userPermission.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          create: expect.objectContaining({ granted: false }),
+        })
+      );
+    });
+
+    it('should throw error when permission not found', async () => {
+      mockPrisma.permission.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.setUserPermission(TEST_USER_ID, 'invalid:permission', true)
+      ).rejects.toThrow('Permission invalid:permission not found');
+    });
+
+    it('should support expiration date', async () => {
+      const expiresAt = new Date('2025-06-30');
+      mockPrisma.permission.findUnique.mockResolvedValue({
+        id: 'perm-1',
+        name: 'lead:admin',
+      });
+      mockPrisma.userPermission.upsert.mockResolvedValue({});
+
+      await service.setUserPermission(
+        TEST_USER_ID,
+        'lead:admin',
+        true,
+        'admin-1',
+        'Temporary access',
+        expiresAt
+      );
+
+      expect(mockPrisma.userPermission.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          create: expect.objectContaining({ expiresAt }),
+        })
+      );
+    });
+
+    it('should clear cache after setting permission', async () => {
+      mockPrisma.permission.findUnique.mockResolvedValue({
+        id: 'perm-1',
+        name: 'lead:admin',
+      });
+      mockPrisma.userPermission.upsert.mockResolvedValue({});
+
+      await service.setUserPermission(TEST_USER_ID, 'lead:admin', true);
+
+      // Cache should be cleared (tested implicitly)
+    });
+  });
+
+  describe('removeUserPermission', () => {
+    it('should remove user permission override', async () => {
+      mockPrisma.permission.findUnique.mockResolvedValue({
+        id: 'perm-1',
+        name: 'lead:admin',
+      });
+      mockPrisma.userPermission.deleteMany.mockResolvedValue({ count: 1 });
+
+      await service.removeUserPermission(TEST_USER_ID, 'lead:admin');
+
+      expect(mockPrisma.userPermission.deleteMany).toHaveBeenCalledWith({
+        where: { userId: TEST_USER_ID, permissionId: 'perm-1' },
+      });
+    });
+
+    it('should do nothing when permission not found', async () => {
+      mockPrisma.permission.findUnique.mockResolvedValue(null);
+
+      await service.removeUserPermission(TEST_USER_ID, 'invalid:permission');
+
+      expect(mockPrisma.userPermission.deleteMany).not.toHaveBeenCalled();
+    });
+
+    it('should clear cache after removal', async () => {
+      mockPrisma.permission.findUnique.mockResolvedValue({
+        id: 'perm-1',
+        name: 'lead:admin',
+      });
+      mockPrisma.userPermission.deleteMany.mockResolvedValue({ count: 1 });
+
+      await service.removeUserPermission(TEST_USER_ID, 'lead:admin');
+
+      // Cache should be cleared (tested implicitly)
+    });
+  });
+
+  describe('evaluateConditions - edge cases', () => {
+    it('should handle non-string value for contains operator', () => {
+      const result = service.evaluateConditions(
+        [{ field: 'count', operator: 'contains', value: '5' }],
+        { count: 123 } // Number, not string
+      );
+
+      expect(result).toBe(false);
+    });
+
+    it('should handle non-string value for startsWith operator', () => {
+      const result = service.evaluateConditions(
+        [{ field: 'count', operator: 'startsWith', value: '1' }],
+        { count: 123 } // Number, not string
+      );
+
+      expect(result).toBe(false);
+    });
+
+    it('should handle non-array value for in operator', () => {
+      const result = service.evaluateConditions(
+        [{ field: 'role', operator: 'in', value: 'admin' as unknown as string[] }],
+        { role: 'admin' }
+      );
+
+      expect(result).toBe(false);
+    });
+  });
+});

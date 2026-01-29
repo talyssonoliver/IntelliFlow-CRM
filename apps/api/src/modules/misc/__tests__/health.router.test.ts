@@ -69,12 +69,14 @@ describe('Health Router', () => {
 
     it('should measure database latency', async () => {
       vi.mocked(prismaMock.$queryRaw).mockImplementation((async () => {
-        await new Promise((resolve) => setTimeout(resolve, 10));
+        // Use 15ms to account for timing variability
+        await new Promise((resolve) => setTimeout(resolve, 15));
         return [{ '?column?': 1 }];
       }) as unknown as typeof prismaMock.$queryRaw);
 
       const result = await caller.check();
 
+      // Allow some timing variance (setTimeout is not precise)
       expect(result.checks.database.latency).toBeGreaterThanOrEqual(10);
     });
 

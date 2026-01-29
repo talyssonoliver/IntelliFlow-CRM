@@ -28,6 +28,7 @@ export const orchestrationRequestSchema = z.object({
       maxRetries: z.number().int().min(0).max(5).default(2),
       timeout: z.number().int().min(1000).max(300000).default(60000),
     })
+    .partial()
     .optional(),
   context: z
     .object({

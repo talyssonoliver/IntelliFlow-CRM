@@ -242,14 +242,14 @@ export class FeedbackAnalyticsGenerator {
     const sortedMagnitudes = [...magnitudes].sort((a, b) => a - b);
 
     // Bucket counts using domain constants
-    const minor = magnitudes.filter(m => m <= CORRECTION_MAGNITUDE_BUCKETS.MINOR).length;
+    const minor = magnitudes.filter(m => m <= CORRECTION_MAGNITUDE_BUCKETS.MINOR_MAX).length;
     const moderate = magnitudes.filter(
-      m => m > CORRECTION_MAGNITUDE_BUCKETS.MINOR && m <= CORRECTION_MAGNITUDE_BUCKETS.MODERATE
+      m => m > CORRECTION_MAGNITUDE_BUCKETS.MINOR_MAX && m <= CORRECTION_MAGNITUDE_BUCKETS.MODERATE_MAX
     ).length;
     const major = magnitudes.filter(
-      m => m > CORRECTION_MAGNITUDE_BUCKETS.MODERATE && m <= CORRECTION_MAGNITUDE_BUCKETS.MAJOR
+      m => m > CORRECTION_MAGNITUDE_BUCKETS.MODERATE_MAX && m <= CORRECTION_MAGNITUDE_BUCKETS.MAJOR_MAX
     ).length;
-    const severe = magnitudes.filter(m => m > CORRECTION_MAGNITUDE_BUCKETS.MAJOR).length;
+    const severe = magnitudes.filter(m => m > CORRECTION_MAGNITUDE_BUCKETS.MAJOR_MAX).length;
 
     // Calculate averages
     const averageMagnitude = magnitudes.reduce((a, b) => a + b, 0) / magnitudes.length;

@@ -1,4 +1,5 @@
 import { ChatOpenAI } from '@langchain/openai';
+import { ChatOllama } from '@langchain/ollama';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { StructuredOutputParser } from '@langchain/core/output_parsers';
 import { z } from 'zod';
@@ -72,11 +73,27 @@ export class LeadScoringChain {
             ]
           : undefined,
       });
+    } else if (aiConfig.provider === 'ollama') {
+      // Ollama local development support (IFC-085)
+      // Uses @langchain/ollama for local LLM inference
+      // Benefits: 90% cost reduction, no rate limits, offline dev, data privacy
+      this.model = new ChatOllama({
+        baseUrl: aiConfig.ollama.baseUrl,
+        model: aiConfig.ollama.model,
+        temperature: aiConfig.ollama.temperature,
+        // Note: Ollama is free, so no cost tracking needed
+      });
+
+      logger.info(
+        {
+          baseUrl: aiConfig.ollama.baseUrl,
+          model: aiConfig.ollama.model,
+        },
+        'Initialized Ollama provider for lead scoring'
+      );
     } else {
-      // Ollama support - would use dynamic import at runtime:
-      // const { ChatOllama } = await import('@langchain/community/chat_models/ollama');
-      // this.model = new ChatOllama({ baseUrl, model, temperature });
-      throw new Error('Ollama support requires dynamic import - not yet implemented');
+      // Mock provider for testing or unsupported provider
+      throw new Error(`Unsupported AI provider: ${aiConfig.provider}`);
     }
 
     // Create structured output parser
@@ -288,6 +305,38 @@ Be thorough but concise. Each factor should have a clear impact score and reason
 }
 
 /**
- * Global scoring chain instance
+ * Global scoring chain instance (lazy initialized)
+ * Use getLeadScoringChain() to access when Ollama is configured
  */
-export const leadScoringChain = new LeadScoringChain();
+let _leadScoringChain: LeadScoringChain | null = null;
+
+/**
+ * Get or create the global lead scoring chain instance
+ * @throws Error if Ollama is not configured (provider='ollama' but no OpenAI API key)
+ */
+export function getLeadScoringChain(): LeadScoringChain {
+  if (!_leadScoringChain) {
+    _leadScoringChain = new LeadScoringChain();
+  }
+  return _leadScoringChain;
+}
+
+/**
+ * Creates a new lead scoring chain proxy that lazily initializes
+ * This allows the module to be imported without throwing
+ */
+function createLazyChainProxy(): LeadScoringChain {
+  return new Proxy({} as LeadScoringChain, {
+    get(_target, prop) {
+      const chain = getLeadScoringChain();
+      const value = (chain as any)[prop];
+      return typeof value === 'function' ? value.bind(chain) : value;
+    },
+  });
+}
+
+/**
+ * Global scoring chain instance
+ * Note: This is lazily initialized - will throw on first method call if Ollama not available
+ */
+export const leadScoringChain = createLazyChainProxy();

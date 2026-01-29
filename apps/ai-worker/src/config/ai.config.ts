@@ -5,7 +5,7 @@ import { z } from 'zod';
  * Supports both OpenAI (production) and Ollama (local development)
  */
 
-export const AIProviderSchema = z.enum(['openai', 'ollama']);
+export const AIProviderSchema = z.enum(['openai', 'ollama', 'mock']);
 export type AIProvider = z.infer<typeof AIProviderSchema>;
 
 export const AIConfigSchema = z.object({

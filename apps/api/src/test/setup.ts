@@ -8,7 +8,7 @@
  * - Mock data generators
  */
 
-import { beforeEach } from 'vitest';
+import { beforeEach, afterAll, vi } from 'vitest';
 import type { PrismaClient } from '@prisma/client';
 import { Prisma } from '@prisma/client';
 import type { DeepMockProxy } from 'vitest-mock-extended';
@@ -23,9 +23,33 @@ export const prismaMock = mockDeep<PrismaClient>() as DeepMockProxy<PrismaClient
 
 /**
  * Reset all mocks before each test
+ * CRITICAL: Reset ALL mock singletons to prevent memory leaks
  */
 beforeEach(() => {
   mockReset(prismaMock);
+  // Reset mockServices - prevents call history accumulation
+  Object.values(mockServices).forEach(mock => mockReset(mock));
+  // Reset mockSecurityServices
+  Object.values(mockSecurityServices).forEach(mock => mockReset(mock));
+  // Reset mockAdapters
+  Object.values(mockAdapters).forEach(mock => mockReset(mock));
+});
+
+/**
+ * Clear all mocks after all tests in this file complete
+ * CRITICAL: Also unstub globals/envs to prevent memory accumulation
+ */
+afterAll(() => {
+  vi.clearAllMocks();
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+
+  // Explicit garbage collection if --expose-gc flag is set
+  // Helps prevent OOM during test cleanup
+  if (global.gc) {
+    global.gc();
+  }
 });
 
 /**
@@ -80,8 +104,12 @@ export const defaultContextProps = {
 
 /**
  * Create a test context with optional overrides
+ * Includes tenant context required by router middleware
  */
 export function createTestContext(overrides?: Partial<BaseContext>): BaseContext {
+  const userId = TEST_UUIDS.user1;
+  const tenantId = 'test-tenant-id';
+
   const defaultContext: BaseContext = {
     prisma: prismaMock as unknown as PrismaClient,
     container: mockDeep<any>(), // Mock container for testing
@@ -89,11 +117,21 @@ export function createTestContext(overrides?: Partial<BaseContext>): BaseContext
     security: mockSecurityServices,
     adapters: mockAdapters,
     user: {
-      userId: TEST_UUIDS.user1,
+      userId,
       email: 'test@example.com',
       role: 'USER',
-      tenantId: 'test-tenant-id',
+      tenantId,
     },
+    // Tenant context required by tenantContextMiddleware
+    tenant: {
+      tenantId,
+      tenantType: 'user' as const,
+      userId,
+      role: 'USER',
+      canAccessAllTenantData: false,
+    },
+    // Prisma with tenant filter applied
+    prismaWithTenant: prismaMock as unknown as PrismaClient,
     req: undefined,
     res: undefined,
   };
@@ -105,12 +143,22 @@ export function createTestContext(overrides?: Partial<BaseContext>): BaseContext
  * Create admin context for testing admin-only procedures
  */
 export function createAdminContext(overrides?: Partial<BaseContext>): BaseContext {
+  const adminId = TEST_UUIDS.admin1;
+  const tenantId = 'test-tenant-id';
+
   return createTestContext({
     user: {
-      userId: TEST_UUIDS.admin1,
+      userId: adminId,
       email: 'admin@example.com',
       role: 'ADMIN',
-      tenantId: 'test-tenant-id',
+      tenantId,
+    },
+    tenant: {
+      tenantId,
+      tenantType: 'user' as const,
+      userId: adminId,
+      role: 'ADMIN',
+      canAccessAllTenantData: true,
     },
     ...overrides,
   });
@@ -156,6 +204,7 @@ export const TEST_UUIDS = {
   task1: generateTestUUID('task-1'),
   task2: generateTestUUID('task-2'),
   user1: generateTestUUID('test-user'),
+  user2: generateTestUUID('test-user-2'),
   admin1: generateTestUUID('admin-user'),
   nonExistent: generateTestUUID('non-existent'),
   score1: generateTestUUID('score-1'),
@@ -191,9 +240,19 @@ export const mockContact = {
   title: 'CTO',
   phone: '+1234567891',
   department: 'Engineering',
+  status: 'ACTIVE' as const,
   accountId: TEST_UUIDS.account1,
   leadId: null,
   ownerId: TEST_UUIDS.user1,
+  // Extended fields (IFC-089)
+  streetAddress: '123 Tech Street',
+  city: 'San Francisco',
+  zipCode: '94102',
+  company: 'TechCorp Inc',
+  linkedInUrl: 'https://linkedin.com/in/janesmith',
+  contactType: 'customer',
+  tags: ['enterprise', 'vip'],
+  contactNotes: 'Key technical contact',
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
 };
