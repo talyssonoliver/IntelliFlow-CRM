@@ -648,7 +648,18 @@ describe('Lead Router Contract Tests', () => {
       const ctx = createTestContext();
       const callerWithService = leadRouter.createCaller(ctx);
 
-      ctx.services!.lead!.getLeadStatistics = vi.fn().mockResolvedValue(mockStats);
+      // Stats procedure uses Prisma directly, not service
+      prismaMock.lead.count.mockResolvedValue(100);
+      (prismaMock.lead.groupBy as any).mockResolvedValue([
+        { status: 'NEW', _count: 30 },
+        { status: 'CONTACTED', _count: 40 },
+        { status: 'QUALIFIED', _count: 30 },
+      ] as any);
+      prismaMock.lead.findMany.mockResolvedValue([
+        { score: 80 }, { score: 85 }, { score: 75 }, // Hot leads (score >= 70)
+        { score: 50 }, { score: 60 }, { score: 45 }, // Warm leads
+        { score: 30 }, { score: 20 }, { score: 10 }, // Cold leads
+      ] as any);
 
       const result = await callerWithService.stats();
 

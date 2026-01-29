@@ -76,14 +76,15 @@ const forecastResponseSchema = z.object({
 const createMockDomainOpportunity = (overrides: Record<string, unknown> = {}) => ({
   id: { value: TEST_UUIDS.opportunity1 },
   name: 'Enterprise Deal',
-  value: 50000,
-  probability: 60,
+  value: { amount: 50000, currency: 'USD' },
+  probability: { value: 60 },
   stage: 'PROPOSAL' as const,
   expectedCloseDate: new Date('2025-12-31'),
   accountId: TEST_UUIDS.account1,
   contactId: null,
   ownerId: TEST_UUIDS.user1,
-  weightedValue: 30000,
+  tenantId: TEST_UUIDS.tenant,
+  weightedValue: { amount: 30000 },
   isClosed: false,
   isWon: false,
   isLost: false,
@@ -119,7 +120,7 @@ describe('Opportunity Router Contract Tests', () => {
       const result = await caller.create(validInput);
 
       expect(result.name).toBe(validInput.name);
-      expect(result.value).toBe(validInput.value);
+      expect(result.value).toBe(validInput.value.amount);
       expect(result.stage).toBe(validInput.stage);
     });
 
@@ -259,7 +260,7 @@ describe('Opportunity Router Contract Tests', () => {
     });
 
     it('should return value as number', async () => {
-      const mockDomainOpportunity = createMockDomainOpportunity({ value: 50000 });
+      const mockDomainOpportunity = createMockDomainOpportunity({ value: { amount: 50000, currency: 'USD' } });
       ctx.services!.opportunity!.createOpportunity = vi.fn().mockResolvedValue({
         isSuccess: true,
         isFailure: false,
@@ -591,14 +592,16 @@ describe('Opportunity Router Contract Tests', () => {
 
       await caller.forecast();
 
-      expect(prismaMock.opportunity.findMany).toHaveBeenCalledWith({
-        where: {
-          stage: {
-            notIn: ['CLOSED_WON', 'CLOSED_LOST'],
-          },
-        },
-        select: expect.any(Object),
-      });
+      // First findMany call should exclude closed stages
+      expect(prismaMock.opportunity.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            stage: {
+              notIn: ['CLOSED_WON', 'CLOSED_LOST'],
+            },
+          }),
+        })
+      );
     });
 
     it('should return weightedValue as string', async () => {

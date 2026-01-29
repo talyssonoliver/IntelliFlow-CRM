@@ -3,13 +3,31 @@
  *
  * Tests that verify the lead contract/schema using real seeded database
  * These tests ensure the actual database schema matches expected types
+ *
+ * NOTE: This file uses lazy imports to gracefully handle missing @prisma/client.
+ * Tests are skipped with clear alerts if infrastructure is unavailable.
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
-import { testPrisma, SEED_IDS, getSeedData, verifySeedData } from '../../test/integration-setup';
-import type { Lead } from '@prisma/client';
+import {
+  testPrisma,
+  SEED_IDS,
+  getSeedData,
+  verifySeedData,
+  isInfrastructureAvailable,
+  infrastructureUnavailableReason,
+} from '../../test/integration-setup';
 
-describe('Lead Contract - Integration Tests', () => {
+// Run integration tests only when infrastructure is available
+// The integration-setup module handles Prisma import gracefully
+const describeIntegration = isInfrastructureAvailable ? describe : describe.skip;
+
+// Log skip reason if not available
+if (!isInfrastructureAvailable && infrastructureUnavailableReason) {
+  console.log(`⏭️  Skipping Lead Contract Integration Tests: ${infrastructureUnavailableReason}`);
+}
+
+describeIntegration('Lead Contract - Integration Tests', () => {
   beforeAll(async () => {
     await verifySeedData();
   });
@@ -95,9 +113,9 @@ describe('Lead Contract - Integration Tests', () => {
       });
 
       // All leads should belong to default tenant
-      leads.forEach((lead) => {
+      for (const lead of leads) {
         expect(lead.tenantId).toBe(defaultTenant!.id);
-      });
+      }
     });
   });
 
@@ -107,11 +125,11 @@ describe('Lead Contract - Integration Tests', () => {
         where: { slug: 'default' },
       });
 
-      // Try to create duplicate email
+      // Try to create duplicate email (sarah@techcorp.com exists in seed data)
       await expect(
         testPrisma.lead.create({
           data: {
-            email: 'sarah.miller@techcorp.example.com', // Exists in seed
+            email: 'sarah@techcorp.com', // Exists in seed
             firstName: 'Duplicate',
             lastName: 'Lead',
             company: 'Test',
@@ -157,10 +175,10 @@ describe('Lead Contract - Integration Tests', () => {
         take: 20,
       });
 
-      leads.forEach((lead) => {
+      for (const lead of leads) {
         expect(lead.score).toBeGreaterThanOrEqual(0);
         expect(lead.score).toBeLessThanOrEqual(100);
-      });
+      }
     });
   });
 
@@ -170,9 +188,9 @@ describe('Lead Contract - Integration Tests', () => {
         take: 20,
       });
 
-      leads.forEach((lead) => {
+      for (const lead of leads) {
         expect(lead.createdAt.getTime()).toBeLessThanOrEqual(lead.updatedAt.getTime());
-      });
+      }
     });
 
     it('should update updatedAt on modification', async () => {
