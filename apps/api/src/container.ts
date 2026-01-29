@@ -17,14 +17,14 @@ import {
   MockAIService,
   InMemoryCache,
 } from '@intelliflow/adapters';
+import { TicketService } from './services/TicketService';
+import { AnalyticsService } from './services/AnalyticsService';
 import {
   LeadService,
   ContactService,
   AccountService,
   OpportunityService,
   TaskService,
-  TicketService,
-  AnalyticsService,
 } from '@intelliflow/application';
 import {
   getAuditLogger,

@@ -49,6 +49,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     user: ['read', 'write', 'delete', 'export', 'manage', 'admin'],
     ai_score: ['read', 'write', 'delete', 'export', 'manage', 'admin'],
     appointment: ['read', 'write', 'delete', 'export', 'manage', 'admin'],
+    session: ['read', 'write', 'delete', 'manage', 'admin'],
     system: ['read', 'write', 'admin'],
   },
   MANAGER: {
@@ -60,6 +61,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     user: ['read', 'manage'],
     ai_score: ['read', 'write', 'manage'],
     appointment: ['read', 'write', 'delete', 'export', 'manage'],
+    session: ['read', 'write', 'delete', 'manage'],
     system: ['read'],
   },
   SALES_REP: {
@@ -71,6 +73,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     user: ['read'],
     ai_score: ['read', 'write'],
     appointment: ['read', 'write', 'delete'],
+    session: ['read', 'write', 'delete'],
     system: [],
   },
   USER: {
@@ -82,6 +85,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     user: ['read'],
     ai_score: ['read'],
     appointment: ['read', 'write'],
+    session: ['read', 'write', 'delete'],
     system: [],
   },
   VIEWER: {
@@ -93,6 +97,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     user: ['read'],
     ai_score: ['read'],
     appointment: ['read'],
+    session: ['read'],
     system: [],
   },
 };

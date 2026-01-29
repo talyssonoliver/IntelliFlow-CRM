@@ -18,8 +18,10 @@ import { container, type Container, apiPrisma } from './container';
 export interface UserSession {
   userId: string;
   email: string;
+  name?: string;
   role: string;
   tenantId: string;
+  stripeCustomerId?: string;
 }
 
 /**
@@ -97,13 +99,13 @@ export interface Context {
 export const createContext = async (opts?: { req?: Request; res?: Response }): Promise<BaseContext> => {
   // TODO: Extract user from auth token/session
   // For development, we'll use a mock user matching the seeded data
-  // Note: These IDs match packages/db/prisma/seed.ts SEED_IDS
+  // Note: These IDs match the actual database (Supabase cloud)
   // Using sarahJohnson because she owns leads in the seed data
   const mockUser: UserSession = {
-    userId: 'seed-user-sarah-johnson',  // Sarah Johnson owns multiple leads/contacts/deals
+    userId: '00000000-0000-4000-8000-000000000013',  // Sarah Johnson from database
     email: 'sarah.johnson@intelliflow.dev',
     role: 'SALES_REP',
-    tenantId: 'cmjtf4rvr00007z79mgsyvlhk',  // Actual tenant ID from Intelliflow database
+    tenantId: '00000000-0000-4000-8000-000000000001',  // Default tenant from database
   };
 
   return {
