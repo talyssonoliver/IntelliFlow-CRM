@@ -63,7 +63,7 @@ describe('Pipeline Config Router', () => {
       expect(result.stages).toHaveLength(7);
       expect(result.stages[0].stageKey).toBe('PROSPECTING');
       expect(result.stages[0].displayName).toBe('Prospecting');
-      expect(result.stages[0].color).toBe('#6366f1');
+      expect(result.stages[0].color).toBe('#94a3b8');  // Actual default from validators
       expect(result.stages[0].probability).toBe(10);
       expect(result.stages[0].isActive).toBe(true);
     });
@@ -140,7 +140,7 @@ describe('Pipeline Config Router', () => {
       prismaMock.pipelineStageConfig.update.mockResolvedValue(updatedConfig as any);
 
       const result = await caller.updateStage({
-        stageKey: 'PROPOSAL',
+        stage: 'PROPOSAL',
         displayName: 'Updated Proposal',
         color: '#22c55e',
       });
@@ -159,7 +159,7 @@ describe('Pipeline Config Router', () => {
       prismaMock.pipelineStageConfig.create.mockResolvedValue(newConfig as any);
 
       const result = await caller.updateStage({
-        stageKey: 'PROPOSAL',
+        stage: 'PROPOSAL',
         displayName: 'New Proposal Name',
       });
 
@@ -174,14 +174,14 @@ describe('Pipeline Config Router', () => {
       );
 
       await caller.updateStage({
-        stageKey: 'NEGOTIATION',
+        stage: 'NEGOTIATION',
         color: '#ff9f43',
       });
 
       expect(prismaMock.pipelineStageConfig.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            stageKey: 'NEGOTIATION',
+            stageKey: 'NEGOTIATION',  // Correct field name
             color: '#ff9f43',
             displayName: 'Negotiation', // Default
             probability: 80, // Default for NEGOTIATION
@@ -194,7 +194,7 @@ describe('Pipeline Config Router', () => {
       // Zod validation should reject invalid colors
       await expect(
         caller.updateStage({
-          stageKey: 'PROPOSAL',
+          stage: 'PROPOSAL',
           color: 'not-a-hex-color',
         })
       ).rejects.toThrow();
@@ -203,14 +203,14 @@ describe('Pipeline Config Router', () => {
     it('should validate probability range 0-100', async () => {
       await expect(
         caller.updateStage({
-          stageKey: 'PROPOSAL',
+          stage: 'PROPOSAL',
           probability: 150, // Invalid - over 100
         })
       ).rejects.toThrow();
 
       await expect(
         caller.updateStage({
-          stageKey: 'PROPOSAL',
+          stage: 'PROPOSAL',
           probability: -10, // Invalid - negative
         })
       ).rejects.toThrow();
@@ -224,7 +224,7 @@ describe('Pipeline Config Router', () => {
       prismaMock.pipelineStageConfig.update.mockResolvedValue(updatedConfig as any);
 
       const result = await caller.updateStage({
-        stageKey: 'NEEDS_ANALYSIS',
+        stage: 'NEEDS_ANALYSIS',
         isActive: false,
       });
 
@@ -235,16 +235,16 @@ describe('Pipeline Config Router', () => {
   describe('updateAll', () => {
     it('should batch update all stages', async () => {
       const stages = OPPORTUNITY_STAGES.map((stageKey, index) => ({
-        stageKey,
+        stage: stageKey as typeof OPPORTUNITY_STAGES[number],
         displayName: `Custom ${stageKey}`,
         color: '#6366f1',
-        order: index,
+        sortOrder: index,
         probability: index * 15,
         isActive: true,
       }));
 
       prismaMock.$transaction.mockResolvedValue(
-        stages.map((s) => createMockPipelineConfig(s.stageKey, s))
+        stages.map((s) => createMockPipelineConfig(s.stage, s))
       );
 
       const result = await caller.updateAll({ stages });
@@ -256,10 +256,10 @@ describe('Pipeline Config Router', () => {
     it('should use upsert for each stage', async () => {
       const stages = [
         {
-          stageKey: 'PROSPECTING' as const,
+          stage: 'PROSPECTING' as const,
           displayName: 'First Contact',
           color: '#6366f1',
-          order: 0,
+          sortOrder: 0,
           probability: 10,
           isActive: true,
         },
@@ -275,10 +275,10 @@ describe('Pipeline Config Router', () => {
     it('should validate all stages in batch', async () => {
       const invalidStages = [
         {
-          stageKey: 'PROSPECTING' as const,
+          stage: 'PROSPECTING' as const,
           displayName: 'Valid',
           color: 'invalid', // Invalid color
-          order: 0,
+          sortOrder: 0,
           probability: 10,
           isActive: true,
         },
@@ -395,7 +395,7 @@ describe('Pipeline Config Router', () => {
 
       const start = Date.now();
       await caller.updateStage({
-        stageKey: 'PROPOSAL',
+        stage: 'PROPOSAL',
         displayName: 'Fast Update',
       });
       const duration = Date.now() - start;

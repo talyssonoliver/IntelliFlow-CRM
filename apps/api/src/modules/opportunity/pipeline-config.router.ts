@@ -21,6 +21,7 @@ import {
   DEFAULT_STAGE_COLORS,
   DEFAULT_STAGE_PROBABILITIES,
   DEFAULT_STAGE_NAMES,
+  validateStageDeactivation,
 } from '@intelliflow/validators/opportunity';
 import { OPPORTUNITY_STAGES } from '@intelliflow/domain';
 import {
@@ -101,7 +102,13 @@ export const pipelineConfigRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const { tenantId } = typedCtx.tenant;
-      const { stageKey, ...updateData } = input;
+      const { stage, sortOrder, ...updateData } = input;
+      const stageKey = stage; // stage enum value serves as the key
+
+      // Validate protected stage deactivation
+      if (input.isActive === false) {
+        validateStageDeactivation(stageKey, input.isActive);
+      }
 
       // Check if config exists for this stage
       const existingConfig = await typedCtx.prismaWithTenant.pipelineStageConfig.findUnique({
@@ -122,7 +129,10 @@ export const pipelineConfigRouter = createTRPCRouter({
               stageKey,
             },
           },
-          data: updateData,
+          data: {
+            ...updateData,
+            ...(sortOrder !== undefined && { order: sortOrder }),
+          },
         });
         return updated;
       }
@@ -136,7 +146,7 @@ export const pipelineConfigRouter = createTRPCRouter({
           stageKey,
           displayName: updateData.displayName ?? defaults.displayName,
           color: updateData.color ?? defaults.color,
-          order: updateData.order ?? defaults.order,
+          order: sortOrder ?? defaults.order,
           probability: updateData.probability ?? defaults.probability,
           isActive: updateData.isActive ?? defaults.isActive,
         },
@@ -154,34 +164,42 @@ export const pipelineConfigRouter = createTRPCRouter({
       const typedCtx = getTenantContext(ctx);
       const { tenantId } = typedCtx.tenant;
 
+      // Validate protected stage deactivation for all stages
+      for (const stageInput of input.stages) {
+        if (stageInput.isActive === false) {
+          validateStageDeactivation(stageInput.stage, stageInput.isActive);
+        }
+      }
+
       // Use transaction to ensure atomicity
       const results = await typedCtx.prismaWithTenant.$transaction(
-        input.stages.map((stage) =>
-          typedCtx.prismaWithTenant.pipelineStageConfig.upsert({
+        input.stages.map((stageInput) => {
+          const stageKey = stageInput.stage; // Use stage enum as key
+          return typedCtx.prismaWithTenant.pipelineStageConfig.upsert({
             where: {
               tenantId_stageKey: {
                 tenantId,
-                stageKey: stage.stageKey,
+                stageKey,
               },
             },
             create: {
               tenantId,
-              stageKey: stage.stageKey,
-              displayName: stage.displayName,
-              color: stage.color,
-              order: stage.order,
-              probability: stage.probability,
-              isActive: stage.isActive,
+              stageKey,
+              displayName: stageInput.displayName ?? DEFAULT_STAGE_NAMES[stageKey] ?? stageKey,
+              color: stageInput.color ?? DEFAULT_STAGE_COLORS[stageKey] ?? '#6366f1',
+              order: stageInput.sortOrder ?? OPPORTUNITY_STAGES.indexOf(stageKey),
+              probability: stageInput.probability ?? DEFAULT_STAGE_PROBABILITIES[stageKey] ?? 0,
+              isActive: stageInput.isActive ?? true,
             },
             update: {
-              displayName: stage.displayName,
-              color: stage.color,
-              order: stage.order,
-              probability: stage.probability,
-              isActive: stage.isActive,
+              ...(stageInput.displayName !== undefined && { displayName: stageInput.displayName }),
+              ...(stageInput.color !== undefined && { color: stageInput.color }),
+              ...(stageInput.sortOrder !== undefined && { order: stageInput.sortOrder }),
+              ...(stageInput.probability !== undefined && { probability: stageInput.probability }),
+              ...(stageInput.isActive !== undefined && { isActive: stageInput.isActive }),
             },
-          })
-        )
+          });
+        })
       );
 
       return { success: true, updatedCount: results.length };
