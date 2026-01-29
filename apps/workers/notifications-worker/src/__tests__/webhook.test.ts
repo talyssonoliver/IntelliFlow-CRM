@@ -16,7 +16,7 @@ import {
 
 // Mock fetch
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
+globalThis.fetch = mockFetch;
 
 describe('WebhookChannel', () => {
   let channel: WebhookChannel;

@@ -6,11 +6,13 @@
  *
  * @module notifications-worker/channels
  * @task IFC-163
+ * @task IFC-170 - Implement Twilio SMS channel
  * @artifact apps/workers/notifications-worker/src/channels/sms.ts
  */
 
 import pino from 'pino';
 import { z } from 'zod';
+import { Twilio } from 'twilio';
 
 // ============================================================================
 // Types & Schemas
@@ -140,6 +142,7 @@ export class SMSChannel {
   private readonly config: SMSChannelConfig;
   private readonly circuitBreaker: SimpleCircuitBreaker;
   private readonly logger: pino.Logger;
+  private twilioClient: Twilio | null = null;
   private sentCount = 0;
   private failedCount = 0;
 
@@ -160,6 +163,11 @@ export class SMSChannel {
       },
       this.logger
     );
+
+    // Initialize Twilio client if configured
+    if (this.config.provider === 'twilio' && this.config.accountSid && this.config.authToken) {
+      this.twilioClient = new Twilio(this.config.accountSid, this.config.authToken);
+    }
   }
 
   /**
@@ -269,26 +277,57 @@ export class SMSChannel {
 
   /**
    * Send via Twilio
+   * @task IFC-170 - Implement Twilio SMS channel
    */
   private async sendViaTwilio(payload: SMSPayload): Promise<Omit<SMSDeliveryResult, 'deliveryTimeMs'>> {
-    // In production, use Twilio SDK:
-    // const twilio = require('twilio')(this.config.accountSid, this.config.authToken);
-    // const message = await twilio.messages.create({
-    //   body: payload.body,
-    //   from: payload.from || this.config.from,
-    //   to: payload.to,
-    //   statusCallback: this.config.statusCallbackUrl,
-    //   mediaUrl: payload.mediaUrls,
-    // });
+    if (!this.twilioClient) {
+      throw new Error('Twilio client not initialized - missing TWILIO_ACCOUNT_SID or TWILIO_AUTH_TOKEN');
+    }
 
-    // Placeholder response
-    return {
-      success: true,
-      messageId: `SM${Date.now()}${Math.random().toString(36).substring(7)}`,
-      status: 'queued',
-      deliveredAt: new Date().toISOString(),
-      segmentCount: Math.ceil(payload.body.length / 160),
-    };
+    try {
+      const message = await this.twilioClient.messages.create({
+        body: payload.body,
+        from: payload.from || this.config.from,
+        to: payload.to,
+        statusCallback: this.config.statusCallbackUrl,
+        mediaUrl: payload.mediaUrls,
+      });
+
+      // Map Twilio status to our status type
+      const statusMap: Record<string, SMSDeliveryResult['status']> = {
+        queued: 'queued',
+        sending: 'queued',
+        sent: 'sent',
+        delivered: 'delivered',
+        failed: 'failed',
+        undelivered: 'undelivered',
+      };
+
+      return {
+        success: message.status !== 'failed' && message.status !== 'undelivered',
+        messageId: message.sid,
+        status: statusMap[message.status] || 'queued',
+        deliveredAt: new Date().toISOString(),
+        segmentCount: message.numSegments ? parseInt(message.numSegments, 10) : Math.ceil(payload.body.length / 160),
+        cost: message.price ? parseFloat(message.price) : undefined,
+      };
+    } catch (error) {
+      // Handle Twilio-specific errors
+      const twilioError = error as { code?: number; message?: string; moreInfo?: string };
+
+      this.logger.error(
+        {
+          twilioCode: twilioError.code,
+          message: twilioError.message,
+          moreInfo: twilioError.moreInfo,
+        },
+        'Twilio API error'
+      );
+
+      throw new Error(
+        twilioError.message || 'Twilio API error'
+      );
+    }
   }
 
   /**

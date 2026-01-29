@@ -13,27 +13,46 @@ import {
   type EmailChannelConfig,
 } from '../channels/email';
 
+// Create mock transporter with methods
+const mockVerify = vi.fn();
+const mockSendMail = vi.fn();
+const mockClose = vi.fn();
+
+const mockTransporter = {
+  verify: mockVerify,
+  sendMail: mockSendMail,
+  close: mockClose,
+};
+
+const mockCreateTransport = vi.fn();
+
 // Mock nodemailer
 vi.mock('nodemailer', () => ({
-  createTransport: vi.fn().mockReturnValue({
-    verify: vi.fn().mockResolvedValue(true),
-    sendMail: vi.fn().mockResolvedValue({
-      messageId: '<test-message-id@localhost>',
-      accepted: ['test@example.com'],
-      rejected: [],
-      pending: [],
-      response: '250 OK',
-    }),
-    close: vi.fn(),
-  }),
+  createTransport: (...args: unknown[]) => mockCreateTransport(...args),
 }));
+
+// Helper to reset all mocks with default implementations
+function setupDefaultMocks() {
+  vi.clearAllMocks();
+
+  mockCreateTransport.mockReturnValue(mockTransporter);
+  mockVerify.mockResolvedValue(true);
+  mockSendMail.mockResolvedValue({
+    messageId: '<test-message-id@localhost>',
+    accepted: ['test@example.com'],
+    rejected: [],
+    pending: [],
+    response: '250 OK',
+  });
+  mockClose.mockResolvedValue(undefined);
+}
 
 describe('EmailChannel', () => {
   let channel: EmailChannel;
   let config: EmailChannelConfig;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    setupDefaultMocks();
 
     config = {
       host: 'localhost',
@@ -73,8 +92,7 @@ describe('EmailChannel', () => {
     it('should create transporter', async () => {
       await channel.initialize();
 
-      const nodemailer = await import('nodemailer');
-      expect(nodemailer.createTransport).toHaveBeenCalledWith(
+      expect(mockCreateTransport).toHaveBeenCalledWith(
         expect.objectContaining({
           host: 'localhost',
           port: 587,
@@ -86,9 +104,7 @@ describe('EmailChannel', () => {
     it('should verify transporter connection', async () => {
       await channel.initialize();
 
-      const nodemailer = await import('nodemailer');
-      const mockTransport = (nodemailer.createTransport as any).mock.results[0].value;
-      expect(mockTransport.verify).toHaveBeenCalled();
+      expect(mockVerify).toHaveBeenCalled();
     });
   });
 
@@ -133,9 +149,7 @@ describe('EmailChannel', () => {
 
       await channel.deliver(payload);
 
-      const nodemailer = await import('nodemailer');
-      const mockTransport = (nodemailer.createTransport as any).mock.results[0].value;
-      expect(mockTransport.sendMail).toHaveBeenCalledWith(
+      expect(mockSendMail).toHaveBeenCalledWith(
         expect.objectContaining({
           text: 'Plain text body',
           html: '<h1>HTML Body</h1>',
@@ -154,9 +168,7 @@ describe('EmailChannel', () => {
 
       await channel.deliver(payload);
 
-      const nodemailer = await import('nodemailer');
-      const mockTransport = (nodemailer.createTransport as any).mock.results[0].value;
-      expect(mockTransport.sendMail).toHaveBeenCalledWith(
+      expect(mockSendMail).toHaveBeenCalledWith(
         expect.objectContaining({
           cc: 'cc1@example.com, cc2@example.com',
           bcc: 'bcc@example.com',
@@ -176,9 +188,7 @@ describe('EmailChannel', () => {
         tenantId: 'tenant-456',
       });
 
-      const nodemailer = await import('nodemailer');
-      const mockTransport = (nodemailer.createTransport as any).mock.results[0].value;
-      expect(mockTransport.sendMail).toHaveBeenCalledWith(
+      expect(mockSendMail).toHaveBeenCalledWith(
         expect.objectContaining({
           headers: expect.objectContaining({
             'X-Correlation-ID': 'corr-123',
@@ -197,9 +207,7 @@ describe('EmailChannel', () => {
 
       await channel.deliver(payload);
 
-      const nodemailer = await import('nodemailer');
-      const mockTransport = (nodemailer.createTransport as any).mock.results[0].value;
-      expect(mockTransport.sendMail).toHaveBeenCalledWith(
+      expect(mockSendMail).toHaveBeenCalledWith(
         expect.objectContaining({
           from: '"Test Sender" <noreply@test.com>',
         })
@@ -307,9 +315,7 @@ describe('EmailChannel', () => {
     });
 
     it('should open circuit after failures', async () => {
-      const nodemailer = await import('nodemailer');
-      const mockTransport = (nodemailer.createTransport as any).mock.results[0].value;
-      mockTransport.sendMail.mockRejectedValue(new Error('SMTP error'));
+      mockSendMail.mockRejectedValue(new Error('SMTP error'));
 
       const payload: EmailPayload = {
         to: 'recipient@example.com',
@@ -349,9 +355,7 @@ describe('EmailChannel', () => {
       await channel.initialize();
       await channel.close();
 
-      const nodemailer = await import('nodemailer');
-      const mockTransport = (nodemailer.createTransport as any).mock.results[0].value;
-      expect(mockTransport.close).toHaveBeenCalled();
+      expect(mockClose).toHaveBeenCalled();
     });
 
     it('should be idempotent', async () => {

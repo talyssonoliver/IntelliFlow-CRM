@@ -359,7 +359,7 @@ export class EmailChannel {
 export function createEmailChannel(logger?: pino.Logger): EmailChannel {
   const config: EmailChannelConfig = {
     host: process.env.SMTP_HOST || 'localhost',
-    port: parseInt(process.env.SMTP_PORT || '587', 10),
+    port: parseInt(process.env.SMTP_PORT || '1025', 10), // Default to Mailhog port for dev
     secure: process.env.SMTP_SECURE === 'true',
     auth:
       process.env.SMTP_USER && process.env.SMTP_PASSWORD
