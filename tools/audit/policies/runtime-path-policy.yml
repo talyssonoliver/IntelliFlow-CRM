@@ -61,8 +61,8 @@ forbidden:
   - pattern: 'playwright-report'
     exceptions: []
     severity: error
-    message: 'Playwright report at root - must be in artifacts/'
-    fix: 'Move to artifacts/playwright-report/'
+    message: 'Playwright report at root - must be in artifacts/misc/'
+    fix: 'Move to artifacts/misc/playwright-report/'
   - pattern: '**/Sprint_plan.csv'
     exceptions:
       - 'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv'

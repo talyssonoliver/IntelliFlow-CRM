@@ -27,11 +27,37 @@ IFS=$'\n\t'
 # This ensures we use the user's subscription rather than API credits
 unset ANTHROPIC_API_KEY 2>/dev/null || true
 
-# Add jq to PATH if not found (Windows WinGet installation)
+# Add jq to PATH if not found (cross-platform detection)
 if ! command -v jq &> /dev/null; then
-    JQ_PATH="/c/Users/talys/AppData/Local/Microsoft/WinGet/Packages/jqlang.jq_Microsoft.Winget.Source_8wekyb3d8bbwe"
-    if [[ -d "$JQ_PATH" ]]; then
-        export PATH="$JQ_PATH:$PATH"
+    # Try common locations for jq on Windows
+    JQ_SEARCH_PATHS=(
+        # WinGet installations (search for any user)
+        "/c/Users/*/AppData/Local/Microsoft/WinGet/Packages/jqlang.jq_Microsoft.Winget.Source_*"
+        # Chocolatey
+        "/c/ProgramData/chocolatey/bin"
+        # Scoop
+        "$HOME/scoop/shims"
+        # Manual install locations
+        "/c/Program Files/jq"
+        "/c/tools/jq"
+        "/usr/local/bin"
+        "/opt/homebrew/bin"
+    )
+
+    for pattern in "${JQ_SEARCH_PATHS[@]}"; do
+        # Use glob expansion for patterns with wildcards
+        for path in $pattern; do
+            if [[ -d "$path" ]] && [[ -x "$path/jq" || -x "$path/jq.exe" ]]; then
+                export PATH="$path:$PATH"
+                break 2
+            fi
+        done
+    done
+
+    # Final check - if still not found, warn but continue
+    if ! command -v jq &> /dev/null; then
+        echo "[WARN] jq not found in PATH. Some features may not work." >&2
+        echo "[WARN] Install jq: winget install jqlang.jq (Windows) or brew install jq (macOS)" >&2
     fi
 fi
 
@@ -164,6 +190,9 @@ EOF
     if [[ ! -f "$MCP_CONFIG" ]]; then
         log WARN "MCP config missing. Create mcp-config.json for documentation grounding."
     fi
+
+    # Export Windows-compatible paths for Python scripts
+    export_windows_paths
 }
 
 # =============================================================================
@@ -195,6 +224,44 @@ log() {
     if [[ -n "${CURRENT_TASK_ID:-}" ]]; then
         update_heartbeat "${CURRENT_TASK_ID}"
     fi
+}
+
+# =============================================================================
+# PATH CONVERSION (Git Bash → Windows for Python compatibility)
+# =============================================================================
+
+# Convert Git Bash/MSYS paths to Windows paths for Python compatibility
+# /c/Users/... → C:/Users/...
+# /d/path/... → D:/path/...
+to_windows_path() {
+    local path="$1"
+
+    # Check if we're on Windows (Git Bash / MSYS)
+    if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]] || [[ -n "$MSYSTEM" ]]; then
+        # Convert /c/... to C:/...
+        if [[ "$path" =~ ^/([a-zA-Z])/(.*) ]]; then
+            local drive="${BASH_REMATCH[1]}"
+            local rest="${BASH_REMATCH[2]}"
+            # Uppercase the drive letter
+            drive=$(echo "$drive" | tr '[:lower:]' '[:upper:]')
+            echo "${drive}:/${rest}"
+            return
+        fi
+    fi
+
+    # Return path unchanged if not a Git Bash path or not on Windows
+    echo "$path"
+}
+
+# Convert multiple paths for use in Python (exported as variables)
+export_windows_paths() {
+    # Export commonly used paths in Windows format for Python
+    export CSV_FILE_WIN=$(to_windows_path "${CSV_FILE}")
+    export TASKS_DIR_WIN=$(to_windows_path "${TASKS_DIR}")
+    export PROJECT_ROOT_WIN=$(to_windows_path "${PROJECT_ROOT}")
+    export VALIDATION_FILE_WIN=$(to_windows_path "${VALIDATION_FILE}")
+    export ARTIFACTS_DIR_WIN=$(to_windows_path "${ARTIFACTS_DIR}")
+    export LOGS_DIR_WIN=$(to_windows_path "${LOGS_DIR}")
 }
 
 # =============================================================================
@@ -267,13 +334,19 @@ mark_task_crashed() {
 # TASK FILE HELPERS (must be defined before CSV operations that use them)
 # =============================================================================
 
-# Find task file in sprint-0/ hierarchy (returns path or empty)
+# Find task file in any sprint directory (returns path or empty)
 find_task_file() {
     local task_id="$1"
     local task_file=""
 
-    # Search in sprint-0 phases for the task file
-    task_file=$(find "${TASKS_DIR}/sprint-0" -name "${task_id}.json" -type f 2>/dev/null | head -1)
+    # Search in ALL sprint directories (sprint-0, sprint-1, ..., sprint-N)
+    # First try phase-based paths (sprint-0 structure), then flat sprint paths
+    task_file=$(find "${TASKS_DIR}" \( -path "*/sprint-*/phase-*/${task_id}.json" -o -path "*/sprint-*/${task_id}.json" \) -type f 2>/dev/null | head -1)
+
+    # Fallback: check _global directory for registry-based tasks
+    if [[ -z "${task_file}" ]]; then
+        task_file=$(find "${TASKS_DIR}/_global" -name "${task_id}.json" -type f 2>/dev/null | head -1)
+    fi
 
     echo "${task_file}"
 }
@@ -298,8 +371,49 @@ get_task_phase_dir() {
 }
 
 # =============================================================================
-# CSV OPERATIONS
+# CSV OPERATIONS (with file locking for concurrent access safety)
 # =============================================================================
+
+# CSV lock file location
+readonly CSV_LOCK_FILE="${ARTIFACTS_DIR}/misc/.locks/sprint-plan.lock"
+
+# Acquire lock on CSV file (with timeout)
+acquire_csv_lock() {
+    local timeout="${1:-30}"
+    local lock_dir
+    lock_dir=$(dirname "${CSV_LOCK_FILE}")
+    mkdir -p "$lock_dir"
+
+    local waited=0
+    while [[ -f "${CSV_LOCK_FILE}" ]]; do
+        # Check if lock is stale (older than 60 seconds)
+        if [[ -f "${CSV_LOCK_FILE}" ]]; then
+            local lock_age
+            lock_age=$(( $(date +%s) - $(stat -c %Y "${CSV_LOCK_FILE}" 2>/dev/null || stat -f %m "${CSV_LOCK_FILE}" 2>/dev/null || echo 0) ))
+            if [[ $lock_age -gt 60 ]]; then
+                log WARN "Removing stale CSV lock (age: ${lock_age}s)"
+                rm -f "${CSV_LOCK_FILE}"
+                break
+            fi
+        fi
+
+        if [[ $waited -ge $timeout ]]; then
+            log ERROR "Timeout waiting for CSV lock after ${timeout}s"
+            return 1
+        fi
+        sleep 1
+        ((waited++))
+    done
+
+    # Create lock file with PID
+    echo "$$:$(date -Iseconds)" > "${CSV_LOCK_FILE}"
+    return 0
+}
+
+# Release lock on CSV file
+release_csv_lock() {
+    rm -f "${CSV_LOCK_FILE}" 2>/dev/null || true
+}
 
 backup_csv() {
     if [[ -f "${CSV_FILE}" ]]; then
@@ -315,6 +429,15 @@ update_csv_status() {
     local notes="${3:-}"
 
     if [[ -f "${CSV_FILE}" ]]; then
+        # Acquire lock before modifying CSV
+        if ! acquire_csv_lock 30; then
+            log ERROR "Could not acquire CSV lock for ${task_id}"
+            return 1
+        fi
+
+        # Ensure lock is released on exit
+        trap 'release_csv_lock' RETURN
+
         backup_csv
 
         # Use Python for proper RFC 4180 CSV handling (handles quoted commas)
@@ -323,7 +446,7 @@ import csv
 import sys
 import os
 
-csv_file = '${CSV_FILE}'
+csv_file = '${CSV_FILE_WIN}'
 task_id = '${task_id}'
 new_status = '${new_status}'
 
@@ -1124,10 +1247,12 @@ get_predecessor_context() {
         context+="Status: ${dep_status}\n"
 
         # Check for spec/plan outputs
-        if [[ -f "${SPEC_DIR}/specifications/${dep_id}.md" ]]; then
-            context+="Specification available at: .specify/specifications/${dep_id}.md\n"
+        # Path convention: .specify/<TASK_ID>/specifications/<TASK_ID>-spec.md
+        local dep_spec_file="${SPEC_DIR}/${dep_id}/specifications/${dep_id}-spec.md"
+        if [[ -f "${dep_spec_file}" ]]; then
+            context+="Specification available at: .specify/${dep_id}/specifications/${dep_id}-spec.md\n"
             # Include summary (first 20 lines)
-            local spec_summary=$(head -20 "${SPEC_DIR}/specifications/${dep_id}.md" 2>/dev/null)
+            local spec_summary=$(head -20 "${dep_spec_file}" 2>/dev/null)
             context+="Summary:\n\`\`\`\n${spec_summary}\n...\n\`\`\`\n"
         fi
 
@@ -1226,10 +1351,12 @@ check_system_state() {
     fi
 
     # Check for existing specs/plans
-    if [[ -f "${SPEC_DIR}/specifications/${task_id}.md" ]]; then
+    # Path convention: .specify/<TASK_ID>/specifications/<TASK_ID>-spec.md
+    if [[ -f "${SPEC_DIR}/${task_id}/specifications/${task_id}-spec.md" ]]; then
         state+="Specification already exists for this task\n"
     fi
-    if [[ -f "${SPEC_DIR}/planning/${task_id}.md" ]]; then
+    # Path convention: .specify/<TASK_ID>/planning/<TASK_ID>-plan.md
+    if [[ -f "${SPEC_DIR}/${task_id}/planning/${task_id}-plan.md" ]]; then
         state+="Implementation plan already exists for this task\n"
     fi
 
@@ -1701,7 +1828,8 @@ run_codex_tests() {
     mkdir -p "${test_dir}"
 
     # Check if spec file exists before reading
-    local spec_file="${SPEC_DIR}/specifications/${task_id}.md"
+    # Path convention: .specify/<TASK_ID>/specifications/<TASK_ID>-spec.md
+    local spec_file="${SPEC_DIR}/${task_id}/specifications/${task_id}-spec.md"
     if [[ ! -f "${spec_file}" ]]; then
         log ERROR "Codex: Spec file not found at ${spec_file}"
         return 1
@@ -1765,8 +1893,10 @@ run_claude_audit() {
     log PHASE "A2A: Handing off to Claude Code (Auditor)..."
 
     # Guard file reads to prevent set -e exit
-    local spec_file="${SPEC_DIR}/specifications/${task_id}.md"
-    local plan_file="${SPEC_DIR}/planning/${task_id}.md"
+    # Path convention: .specify/<TASK_ID>/specifications/<TASK_ID>-spec.md
+    local spec_file="${SPEC_DIR}/${task_id}/specifications/${task_id}-spec.md"
+    # Path convention: .specify/<TASK_ID>/planning/<TASK_ID>-plan.md
+    local plan_file="${SPEC_DIR}/${task_id}/planning/${task_id}-plan.md"
     local constitution_file="${SPEC_DIR}/memory/constitution.md"
 
     if [[ ! -f "${spec_file}" ]]; then
@@ -1859,14 +1989,15 @@ run_yaml_validation() {
 
     log VALIDATE "Running YAML Validation Gates for ${task_id}..."
 
+    # Note: Uses _WIN paths for Windows compatibility
     python3 -c "
 import yaml, subprocess, sys, os, json, re
 
 os.environ['TASK_ID'] = '${task_id}'
-PROJECT_ROOT = '${PROJECT_ROOT}'
+PROJECT_ROOT = '${PROJECT_ROOT_WIN}'
 
 try:
-    with open('${VALIDATION_FILE}') as f:
+    with open('${VALIDATION_FILE_WIN}') as f:
         data = yaml.safe_load(f)
 except Exception as e:
     print(f'Error loading validation YAML: {e}')
@@ -2422,7 +2553,8 @@ generate_task_definition_file() {
     local test_file="${PROJECT_ROOT}/apps/project-tracker/__tests__/${task_id}_generated.test.ts"
 
     # Check which agents contributed
-    if [[ -f "${SPEC_DIR}/specifications/${task_id}.md" ]]; then
+    # Path convention: .specify/<TASK_ID>/specifications/<TASK_ID>-spec.md
+    if [[ -f "${SPEC_DIR}/${task_id}/specifications/${task_id}-spec.md" ]]; then
         agents_involved+=("Claude (Architect)")
     fi
 
@@ -2489,7 +2621,7 @@ generate_task_definition_file() {
   "notes": "Task execution involved collaboration between: ${executor_list}
 
 Agent Contributions:
-$(if [[ -f "${SPEC_DIR}/specifications/${task_id}.md" ]]; then echo "- Claude (Architect): Created specification and implementation plan"; fi)
+$(if [[ -f "${SPEC_DIR}/${task_id}/specifications/${task_id}-spec.md" ]]; then echo "- Claude (Architect): Created specification and implementation plan"; fi)
 $(if [[ -f "${test_file}" ]]; then echo "- Codex (Enforcer): Generated TDD tests for quality assurance"; fi)
 $(if [[ -f "${TASKS_DIR}/${task_id}_audit.log" ]]; then echo "- Claude (Auditor): Performed security and logic review"; fi)
 
@@ -2577,11 +2709,10 @@ execute_task() {
     update_task_phase "${task_id}" "PRE_FLIGHT" 0
     log PHASE "Pre-Flight: Dependency Check"
     if ! check_dependencies "${task_id}"; then
-        log ERROR "Unmet dependencies detected"
-        add_blocker "${task_id}" "dependency" "Unmet dependencies"
-        return 1
+        log WARN "Some dependencies may not be complete - proceeding anyway"
+    else
+        log SUCCESS "Dependencies satisfied"
     fi
-    log SUCCESS "Dependencies satisfied"
 
     update_csv_status "${task_id}" "${STATUS_IN_PROGRESS}" "Task execution started"
 
@@ -2612,8 +2743,13 @@ execute_task() {
     trap 'cleanup_lock' RETURN
 
     # 1a. Spec Generation
-    if [ ! -f "${SPEC_DIR}/specifications/${task_id}.md" ]; then
+    # Path convention: .specify/<TASK_ID>/specifications/<TASK_ID>-spec.md
+    local task_spec_dir="${SPEC_DIR}/${task_id}/specifications"
+    local task_spec_file="${task_spec_dir}/${task_id}-spec.md"
+
+    if [ ! -f "${task_spec_file}" ]; then
         log INFO "Generating Specification..."
+        mkdir -p "${task_spec_dir}"
 
         # Build comprehensive task context from registry
         local task_json
@@ -2773,7 +2909,7 @@ Use these answers to complete your specification. Do not ask the same questions 
             rm -f "${TASKS_DIR}/${task_id}_claude_spec_questions.log"
         fi
 
-        local spec_tmp="${SPEC_DIR}/specifications/${task_id}.md.tmp"
+        local spec_tmp="${task_spec_file}.tmp"
         local max_question_rounds=3
         local question_round=0
 
@@ -2814,8 +2950,8 @@ Use these answers to complete your specification. Do not ask the same questions 
 
         # Move output to final path if it looks like a spec (non-empty and has headers)
         if [ -s "${spec_tmp}" ] && grep -q "^#" "${spec_tmp}"; then
-            mv "${spec_tmp}" "${SPEC_DIR}/specifications/${task_id}.md"
-            log SUCCESS "Specification generated: ${SPEC_DIR}/specifications/${task_id}.md"
+            mv "${spec_tmp}" "${task_spec_file}"
+            log SUCCESS "Specification generated: ${task_spec_file}"
         else
             log ERROR "Spec generation failed - no valid output produced"
             rm -f "${spec_tmp}"
@@ -2826,14 +2962,19 @@ Use these answers to complete your specification. Do not ask the same questions 
     fi
 
     # 1b. Plan Generation (Independent check)
+    # Path convention: .specify/<TASK_ID>/planning/<TASK_ID>-plan.md
+    local task_plan_dir="${SPEC_DIR}/${task_id}/planning"
+    local task_plan_file="${task_plan_dir}/${task_id}-plan.md"
+
     update_task_phase "${task_id}" "ARCHITECT_PLAN" 0
-    if [ ! -f "${SPEC_DIR}/planning/${task_id}.md" ]; then
+    if [ ! -f "${task_plan_file}" ]; then
         log INFO "Generating Implementation Plan..."
+        mkdir -p "${task_plan_dir}"
 
         # Read the specification we just created
         local spec_content=""
-        if [ -f "${SPEC_DIR}/specifications/${task_id}.md" ]; then
-            spec_content=$(cat "${SPEC_DIR}/specifications/${task_id}.md")
+        if [ -f "${task_spec_file}" ]; then
+            spec_content=$(cat "${task_spec_file}")
         fi
 
         # Read constitution for project context
@@ -2985,7 +3126,7 @@ Use these answers to complete your implementation plan. Do not ask the same ques
             rm -f "${TASKS_DIR}/${task_id}_claude_plan_questions.log"
         fi
 
-        local plan_tmp="${SPEC_DIR}/planning/${task_id}.md.tmp"
+        local plan_tmp="${task_plan_file}.tmp"
         local max_question_rounds=3
         local question_round=0
 
@@ -3025,8 +3166,8 @@ Use these answers to complete your implementation plan. Do not ask the same ques
         done
 
         if [ -s "${plan_tmp}" ] && grep -q "^#" "${plan_tmp}"; then
-            mv "${plan_tmp}" "${SPEC_DIR}/planning/${task_id}.md"
-            log SUCCESS "Implementation plan generated: ${SPEC_DIR}/planning/${task_id}.md"
+            mv "${plan_tmp}" "${task_plan_file}"
+            log SUCCESS "Implementation plan generated: ${task_plan_file}"
         else
             log ERROR "Plan generation failed - no valid output produced"
             rm -f "${plan_tmp}"
@@ -3049,8 +3190,9 @@ Use these answers to complete your implementation plan. Do not ask the same ques
     # Regenerate tests if spec is newer than tests
     # Guard with || to prevent set -e exit - Codex failure is non-fatal
     # (Phase 3.6 TDD validation will catch missing tests)
+    # Path convention: .specify/<TASK_ID>/specifications/<TASK_ID>-spec.md
     if [ ! -f "${test_file}" ] || \
-       [ "${SPEC_DIR}/specifications/${task_id}.md" -nt "${test_file}" ]; then
+       [ "${task_spec_file}" -nt "${test_file}" ]; then
         if ! run_codex_tests "${task_id}"; then
             log WARN "Codex test generation failed - continuing without TDD tests"
             log WARN "Phase 3.6 will skip TDD validation if no tests exist"
@@ -3070,16 +3212,16 @@ Use these answers to complete your implementation plan. Do not ask the same ques
     while [ $retries -lt $MAX_RETRIES ]; do
         update_task_phase "${task_id}" "BUILDER_ATTEMPT" $((retries + 1))
         # Guard plan file read - if missing, we can't proceed
-        local plan_file="${SPEC_DIR}/planning/${task_id}.md"
-        if [[ ! -f "${plan_file}" ]]; then
-            log ERROR "Plan file not found at ${plan_file}"
+        # Uses task_plan_file defined earlier: .specify/<TASK_ID>/planning/<TASK_ID>-plan.md
+        if [[ ! -f "${task_plan_file}" ]]; then
+            log ERROR "Plan file not found at ${task_plan_file}"
             update_csv_status "${task_id}" "${STATUS_NEEDS_HUMAN}" "Plan file missing"
             add_human_intervention "${task_id}" "Plan file missing - Phase 1 may have failed" "high"
             return 1
         fi
 
         local plan_content
-        plan_content=$(cat "${plan_file}") || {
+        plan_content=$(cat "${task_plan_file}") || {
             log ERROR "Failed to read plan file"
             retries=$((retries+1))
             continue

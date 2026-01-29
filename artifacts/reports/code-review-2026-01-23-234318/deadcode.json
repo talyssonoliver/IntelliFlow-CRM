@@ -1,0 +1,21 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+TypeError [ERR_INVALID_ARG_VALUE]: The argument 'path' must be a string, Uint8Array, or URL without null bytes. Received 'C:\\Users\\talys\\projects\\intelliFlow-CRM\\!**\\´┐¢´┐¢N\x00U\x00L\x00\r\x00'
+    at Object.lstat (node:fs:1594:10)
+    at Object.read (C:\Users\talys\projects\intelliFlow-CRM\node_modules\.pnpm\@nodelib+fs.stat@2.0.5\node_modules\@nodelib\fs.stat\out\providers\async.js:5:17)
+    at ReaderStream.stat [as _stat] (C:\Users\talys\projects\intelliFlow-CRM\node_modules\.pnpm\@nodelib+fs.stat@2.0.5\node_modules\@nodelib\fs.stat\out\index.js:13:11)
+    at C:\Users\talys\projects\intelliFlow-CRM\node_modules\.pnpm\fast-glob@3.3.3\node_modules\fast-glob\out\readers\stream.js:49:18
+    at new Promise (<anonymous>)
+    at ReaderStream._getStat (C:\Users\talys\projects\intelliFlow-CRM\node_modules\.pnpm\fast-glob@3.3.3\node_modules\fast-glob\out\readers\stream.js:48:16)
+    at ReaderStream._getEntry (C:\Users\talys\projects\intelliFlow-CRM\node_modules\.pnpm\fast-glob@3.3.3\node_modules\fast-glob\out\readers\stream.js:38:21)
+    at stream._write (C:\Users\talys\projects\intelliFlow-CRM\node_modules\.pnpm\fast-glob@3.3.3\node_modules\fast-glob\out\readers\stream.js:20:25)
+    at doWrite (node:internal/streams/writable:596:12)
+    at clearBuffer (node:internal/streams/writable:781:7)
+    at onwrite (node:internal/streams/writable:651:7)
+    at C:\Users\talys\projects\intelliFlow-CRM\node_modules\.pnpm\fast-glob@3.3.3\node_modules\fast-glob\out\readers\stream.js:28:17 {
+  code: 'ERR_INVALID_ARG_VALUE'
+}
+
+Node.js v25.2.1

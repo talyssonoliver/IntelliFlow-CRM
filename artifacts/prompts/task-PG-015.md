@@ -36,13 +36,10 @@ IMPLEMENTS:FLOW-001;FILE:artifacts/sprint0/codex-run/Framework.md;FILE:audit-mat
 3. verified by: pnpm test
 
 ### Artifacts to Track
-- SPEC:.specify/specifications/PG-015.md
-- PLAN:.specify/planning/PG-015.md
-- EVIDENCE:artifacts/attestations/PG-015/context_pack.md
-- EVIDENCE:artifacts/attestations/PG-015/context_ack.json
-- ARTIFACT:apps/web/app/(auth)/login/page.tsx
-- ARTIFACT:apps/web/components/shared/auth-providers.tsx
-- ARTIFACT:apps/web/lib/shared/login-security.ts
+- ARTIFACT:apps/web/src/app/(auth)/login/page.tsx
+- ARTIFACT:apps/web/src/components/shared/auth-providers.tsx
+- ARTIFACT:apps/web/src/lib/shared/login-security.ts
+- EVIDENCE:.specify/sprints/sprint-13/attestations/PG-015/context_ack.json
 
 ### Validation
 VALIDATE:pnpm test;GATE:lighthouse-gte-90
@@ -55,8 +52,8 @@ VALIDATE:pnpm test;GATE:lighthouse-gte-90
 
 ### Context Controls
 - Build context pack and context ack before coding.
-- Evidence folder: artifacts/attestations/<task_id>/
-- Use spec/plan if present under .specify/.
+- Evidence folder: .specify/sprints/sprint-{N}/attestations/<task_id>/
+- Use spec/plan from .specify/sprints/sprint-{N}/specifications/ and planning/
 
 ---
 

@@ -5,7 +5,9 @@
 -- Prerequisites:
 --   - PostgreSQL 15+ with pgvector extension
 --   - Supabase instance (local or cloud)
---   - Run: CREATE EXTENSION IF NOT EXISTS vector;
+--   - Extension should be in 'extensions' schema (not public)
+--   - Run: CREATE SCHEMA IF NOT EXISTS extensions;
+--          CREATE EXTENSION IF NOT EXISTS vector SCHEMA extensions;
 
 -- ============================================
 -- 1. VERIFY PGVECTOR EXTENSION

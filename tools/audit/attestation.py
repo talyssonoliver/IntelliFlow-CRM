@@ -1,7 +1,16 @@
 #!/usr/bin/env python
+"""
+Per-task attestation generator and validator.
+
+Generates attestations to the canonical location:
+  .specify/sprints/sprint-{N}/attestations/{taskId}/{taskId}.json
+
+DEPRECATED: The artifacts/attestations/ path is deprecated.
+"""
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
 import json
 import re
@@ -14,11 +23,58 @@ import yaml
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_ATTESTATIONS_DIR = REPO_ROOT / "artifacts" / "attestations"
+# DEPRECATED: Old location - kept for backwards compatibility during migration
+OLD_ATTESTATIONS_DIR = REPO_ROOT / "artifacts" / "attestations"
 DEFAULT_AUDIT_BUNDLES_DIR = REPO_ROOT / "artifacts" / "reports" / "system-audit"
 DEFAULT_CUTOVER_PATH = REPO_ROOT / "audit-cutover.yml"
+# Sprint plan for looking up task sprint numbers
+SPRINT_PLAN_PATH = REPO_ROOT / "apps" / "project-tracker" / "docs" / "metrics" / "_global" / "Sprint_plan.csv"
 
 SCHEMA_VERSION = "1.0.0"
+
+# Cache for task-to-sprint mapping
+_task_sprint_map: dict[str, int] | None = None
+
+
+def _load_task_sprint_map() -> dict[str, int]:
+    """Load task-to-sprint mapping from Sprint_plan.csv."""
+    global _task_sprint_map
+    if _task_sprint_map is not None:
+        return _task_sprint_map
+
+    _task_sprint_map = {}
+    if not SPRINT_PLAN_PATH.exists():
+        print(f"[attestation] WARNING: Sprint_plan.csv not found, defaulting to sprint 0")
+        return _task_sprint_map
+
+    try:
+        with open(SPRINT_PLAN_PATH, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                task_id = row.get("Task ID", "").strip()
+                sprint_str = row.get("Target Sprint", "").strip()
+                if task_id and sprint_str and sprint_str.isdigit():
+                    _task_sprint_map[task_id] = int(sprint_str)
+    except Exception as e:
+        print(f"[attestation] WARNING: Failed to load Sprint_plan.csv: {e}")
+
+    return _task_sprint_map
+
+
+def _get_task_sprint(task_id: str) -> int:
+    """Get the sprint number for a task ID."""
+    mapping = _load_task_sprint_map()
+    return mapping.get(task_id, 0)
+
+
+def _get_canonical_attestations_dir(task_id: str) -> Path:
+    """Get the canonical attestations directory for a task."""
+    sprint_num = _get_task_sprint(task_id)
+    return REPO_ROOT / ".specify" / "sprints" / f"sprint-{sprint_num}" / "attestations" / task_id
+
+
+# Keep old default for backwards compatibility (CLI argument)
+DEFAULT_ATTESTATIONS_DIR = OLD_ATTESTATIONS_DIR
 
 _TASK_ID_RE = re.compile(r"^[A-Z0-9]+(?:-[A-Z0-9]+)+$")
 _RUN_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]+$")
@@ -221,17 +277,28 @@ def generate_attestation(
     run_id: str,
     attested_by: str,
     notes: str | None,
-    attestations_dir: Path = DEFAULT_ATTESTATIONS_DIR,
+    attestations_dir: Path | None = None,
     audit_bundles_dir: Path = DEFAULT_AUDIT_BUNDLES_DIR,
     cutover_path: Path = DEFAULT_CUTOVER_PATH,
     force: bool = False,
 ) -> Path:
+    """
+    Generate an attestation file for a task.
+
+    If attestations_dir is not provided, uses the canonical location:
+      .specify/sprints/sprint-{N}/attestations/{taskId}/
+    """
     if not _TASK_ID_RE.match(task_id):
         raise ValueError("task_id must match ^[A-Z0-9]+(?:-[A-Z0-9]+)+$")
     if not _RUN_ID_RE.match(run_id):
         raise ValueError("run_id contains invalid characters")
     if not attested_by.strip():
         raise ValueError("attested_by is required")
+
+    # Use canonical location if not specified
+    if attestations_dir is None:
+        attestations_dir = _get_canonical_attestations_dir(task_id)
+        print(f"[attestation] Using canonical location: {_as_repo_rel(attestations_dir)}")
 
     summary_path = audit_bundles_dir / run_id / "summary.json"
     if not summary_path.exists():
@@ -300,12 +367,17 @@ def generate_attestation(
 
 def _cmd_generate(args: argparse.Namespace) -> int:
     try:
+        # Use canonical location unless explicitly specified
+        attestations_dir = None
+        if args.attestations_dir and args.attestations_dir != str(DEFAULT_ATTESTATIONS_DIR):
+            attestations_dir = Path(args.attestations_dir).resolve()
+
         out_path = generate_attestation(
             task_id=args.task_id,
             run_id=args.run_id,
             attested_by=args.attested_by,
             notes=args.notes,
-            attestations_dir=Path(args.attestations_dir).resolve(),
+            attestations_dir=attestations_dir,
             audit_bundles_dir=Path(args.audit_bundles_dir).resolve(),
             cutover_path=Path(args.cutover_path).resolve(),
             force=bool(args.force),
@@ -355,12 +427,13 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Generate and validate per-task attestations.")
     sub = parser.add_subparsers(dest="cmd", required=True)
 
-    p_gen = sub.add_parser("generate", help="Generate artifacts/attestations/<TASK>.json from a run-id bundle.")
+    p_gen = sub.add_parser("generate", help="Generate attestation to .specify/sprints/sprint-{N}/attestations/{taskId}/")
     p_gen.add_argument("--task-id", required=True, help="Task ID (e.g., IFC-160)")
     p_gen.add_argument("--run-id", required=True, help="Audit run-id (e.g., local-smoke)")
     p_gen.add_argument("--attested-by", required=True, help="Human attestor (name/role)")
     p_gen.add_argument("--notes", default=None, help="Optional notes")
-    p_gen.add_argument("--attestations-dir", default=str(DEFAULT_ATTESTATIONS_DIR), help="Attestations directory")
+    p_gen.add_argument("--attestations-dir", default=str(DEFAULT_ATTESTATIONS_DIR),
+                       help="Attestations directory (default: canonical .specify/ location)")
     p_gen.add_argument("--audit-bundles-dir", default=str(DEFAULT_AUDIT_BUNDLES_DIR), help="Audit bundles directory")
     p_gen.add_argument("--cutover-path", default=str(DEFAULT_CUTOVER_PATH), help="audit-cutover.yml path")
     p_gen.add_argument("--force", action="store_true", help="Overwrite if exists")

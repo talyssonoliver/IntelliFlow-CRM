@@ -272,6 +272,49 @@ tools:
     expected_outputs: ['log']
 
   # ---------------------------------------------------------------------------
+  # Code Review Gates (Tier 2)
+  # Comprehensive code analysis integrated with STOA workflow
+  # ---------------------------------------------------------------------------
+  - id: code-review-analysis
+    tier: 2
+    enabled: true
+    required: false
+    owner: 'Tech Lead'
+    scope: 'workspace'
+    description: 'Comprehensive code review analysis (typecheck, lint, deadcode, complexity)'
+    command: 'pwsh scripts/code-review-analysis.ps1 -Sprint {sprint} -TaskId {taskId} -LinkToGates -Quick'
+    thresholds: {}
+    expected_outputs: ['log', 'json']
+    output_dir: '.specify/sprints/sprint-{sprint}/reports/code-review/{runId}/'
+    gate_linkage:
+      typecheck: 'turbo-typecheck.log'
+      lint: 'eslint.log'
+
+  - id: code-review-full
+    tier: 2
+    enabled: true
+    required: false
+    owner: 'Tech Lead'
+    scope: 'workspace'
+    description: 'Full code review with coverage and complexity (slower, more thorough)'
+    command: 'pwsh scripts/code-review-analysis.ps1 -Sprint {sprint} -TaskId {taskId} -LinkToGates -Full'
+    thresholds: {}
+    expected_outputs: ['log', 'json']
+    output_dir: '.specify/sprints/sprint-{sprint}/reports/code-review/{runId}/'
+
+  - id: package-review-priority
+    tier: 2
+    enabled: true
+    required: false
+    owner: 'Tech Lead'
+    scope: 'workspace'
+    description: 'Package-by-package review prioritization analysis'
+    command: 'node scripts/prioritize-reviews.js --sprint={sprint}'
+    thresholds: {}
+    expected_outputs: ['log', 'json', 'md']
+    output_dir: '.specify/sprints/sprint-{sprint}/reports/code-review/package-review/'
+
+  # ---------------------------------------------------------------------------
   # Tier 3 scheduled/manual
   # ---------------------------------------------------------------------------
   - id: lighthouse-ci

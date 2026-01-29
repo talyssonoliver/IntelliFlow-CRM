@@ -267,8 +267,14 @@ async function executeMatop(
   // =========================================================================
   logSection('Phase 4: Initialize Evidence');
 
-  const evidenceDir = getEvidenceDir(repoRoot, runId);
+  // Parse sprint number from task's targetSprint
+  const sprintNumber = task.targetSprint
+    ? parseInt(task.targetSprint, 10)
+    : 0; // Default to sprint 0 if not specified
+
+  const evidenceDir = getEvidenceDir(repoRoot, sprintNumber, taskId, runId);
   await ensureEvidenceDirs(evidenceDir);
+  log(`Evidence path: ${evidenceDir}`);
 
   const gateSelection = { execute, waiverRequired, skipped };
   writeGateSelection(evidenceDir, gateSelection);

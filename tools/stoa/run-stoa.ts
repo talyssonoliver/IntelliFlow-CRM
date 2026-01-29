@@ -23,7 +23,8 @@ import type {
   AuditMatrix,
 } from '../scripts/lib/stoa/types.js';
 import { loadAuditMatrix, getToolById, selectGates } from '../scripts/lib/stoa/gate-selection.js';
-import { loadTaskFromCsv, assignStoas } from '../scripts/lib/stoa/orchestrator.js';
+import { loadTaskFromCsv } from '../scripts/lib/stoa/orchestrator.js';
+import { assignStoas } from '../scripts/lib/stoa/stoa-assignment.js';
 import { runGates, summarizeGateResults } from '../scripts/lib/stoa/gate-runner.js';
 import { generateRunId, getEvidenceDir, ensureEvidenceDirs } from '../scripts/lib/stoa/evidence.js';
 import { createWaiverRecord, saveWaivers } from '../scripts/lib/stoa/waiver.js';
@@ -163,9 +164,21 @@ async function runStoa(args: CliArgs): Promise<void> {
   log(`Dry Run: ${dryRun ? 'Yes' : 'No'}`);
 
   // -------------------------------------------------------------------------
-  // Initialize
+  // Initialize - Load task and setup evidence directory
   // -------------------------------------------------------------------------
-  const evidenceDir = getEvidenceDir(repoRoot, runId);
+  const task = loadTaskFromCsv(taskId, repoRoot);
+  if (!task) {
+    throw new Error(`Task ${taskId} not found in Sprint_plan.csv`);
+  }
+
+  // Parse sprint number from task's targetSprint
+  const sprintNumber = task.targetSprint
+    ? parseInt(task.targetSprint, 10)
+    : 0; // Default to sprint 0 if not specified
+
+  log(`Sprint: ${sprintNumber}`);
+
+  const evidenceDir = getEvidenceDir(repoRoot, sprintNumber, taskId, runId);
   await ensureEvidenceDirs(evidenceDir);
 
   const matrix = loadAuditMatrix(repoRoot);

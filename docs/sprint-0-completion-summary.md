@@ -350,7 +350,7 @@ The Sprint 0 validation script checks:
   uses: actions/upload-artifact@v3
   with:
     name: playwright-report
-    path: artifacts/playwright-report/
+    path: artifacts/misc/playwright-report/
 ```
 
 ## Next Steps

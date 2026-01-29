@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2025-12-25T20:01:25.697Z",
+    "generated_at": "2026-01-29T19:54:23.335Z",
     "schema_version": "1.0.0",
     "sprint_scope": 0
   },
@@ -11,8 +11,8 @@
       "B": 8,
       "C": 7
     },
-    "error_count": 3,
-    "warning_count": 27,
+    "error_count": 0,
+    "warning_count": 37,
     "review_queue_size": 29,
     "validation_coverage": {
       "tasks_with_validation": 33,
@@ -20,35 +20,7 @@
       "coverage_percentage": 97
     }
   },
-  "errors": [
-    {
-      "rule": "TIER_A_GATES_REQUIRED",
-      "severity": "error",
-      "message": "Tier A task IFC-112 missing gate_profile",
-      "tasks": [
-        "IFC-112"
-      ],
-      "fix": "Add gate_profile array to task in plan-overrides.yaml"
-    },
-    {
-      "rule": "TIER_A_OWNER_REQUIRED",
-      "severity": "error",
-      "message": "Tier A task IFC-112 missing acceptance_owner",
-      "tasks": [
-        "IFC-112"
-      ],
-      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
-    },
-    {
-      "rule": "TIER_A_EVIDENCE_REQUIRED",
-      "severity": "error",
-      "message": "Tier A task IFC-112 missing evidence_required",
-      "tasks": [
-        "IFC-112"
-      ],
-      "fix": "Add evidence_required array to task in plan-overrides.yaml"
-    }
-  ],
+  "errors": [],
   "warnings": [
     {
       "rule": "MISSING_VALIDATION",
@@ -91,12 +63,12 @@
     {
       "rule": "HIGH_FANOUT",
       "severity": "info",
-      "message": "Task ENV-001-AI has 6 direct dependents (high fan-out)",
+      "message": "Task ENV-001-AI has 7 direct dependents (high fan-out)",
       "tasks": [
         "ENV-001-AI"
       ],
       "priority": "high",
-      "dependentCount": 6
+      "dependentCount": 7
     },
     {
       "rule": "HIGH_FANOUT",
@@ -121,12 +93,12 @@
     {
       "rule": "HIGH_FANOUT",
       "severity": "info",
-      "message": "Task ENV-005-AI has 11 direct dependents (high fan-out)",
+      "message": "Task ENV-005-AI has 13 direct dependents (high fan-out)",
       "tasks": [
         "ENV-005-AI"
       ],
       "priority": "high",
-      "dependentCount": 11
+      "dependentCount": 13
     },
     {
       "rule": "HIGH_FANOUT",
@@ -201,12 +173,12 @@
     {
       "rule": "HIGH_FANOUT",
       "severity": "info",
-      "message": "Task GTM-002 has 16 direct dependents (high fan-out)",
+      "message": "Task GTM-002 has 17 direct dependents (high fan-out)",
       "tasks": [
         "GTM-002"
       ],
       "priority": "high",
-      "dependentCount": 16
+      "dependentCount": 17
     },
     {
       "rule": "HIGH_FANOUT",
@@ -229,6 +201,16 @@
       "waiver_expiry": "2026-01-31"
     },
     {
+      "rule": "WAIVER_EXPIRING",
+      "severity": "warning",
+      "message": "Task AI-SETUP-003 waiver expires in 1 days (2026-01-31)",
+      "tasks": [
+        "AI-SETUP-003"
+      ],
+      "priority": "high",
+      "days_until_expiry": 1
+    },
+    {
       "rule": "WAIVER_USED",
       "severity": "info",
       "message": "Task ENV-008-AI has debt_allowed=true",
@@ -237,6 +219,16 @@
       ],
       "priority": "low",
       "waiver_expiry": "2026-02-28"
+    },
+    {
+      "rule": "WAIVER_EXPIRING",
+      "severity": "warning",
+      "message": "Task ENV-008-AI waiver expires in 29 days (2026-02-28)",
+      "tasks": [
+        "ENV-008-AI"
+      ],
+      "priority": "high",
+      "days_until_expiry": 29
     },
     {
       "rule": "WAIVER_USED",
@@ -249,6 +241,16 @@
       "waiver_expiry": "2026-01-31"
     },
     {
+      "rule": "WAIVER_EXPIRING",
+      "severity": "warning",
+      "message": "Task ENV-010-AI waiver expires in 1 days (2026-01-31)",
+      "tasks": [
+        "ENV-010-AI"
+      ],
+      "priority": "high",
+      "days_until_expiry": 1
+    },
+    {
       "rule": "WAIVER_USED",
       "severity": "info",
       "message": "Task ENV-011-AI has debt_allowed=true",
@@ -257,6 +259,16 @@
       ],
       "priority": "low",
       "waiver_expiry": "2026-01-31"
+    },
+    {
+      "rule": "WAIVER_EXPIRING",
+      "severity": "warning",
+      "message": "Task ENV-011-AI waiver expires in 1 days (2026-01-31)",
+      "tasks": [
+        "ENV-011-AI"
+      ],
+      "priority": "high",
+      "days_until_expiry": 1
     },
     {
       "rule": "WAIVER_USED",
@@ -269,6 +281,16 @@
       "waiver_expiry": "2026-02-28"
     },
     {
+      "rule": "WAIVER_EXPIRING",
+      "severity": "warning",
+      "message": "Task ENV-012-AI waiver expires in 29 days (2026-02-28)",
+      "tasks": [
+        "ENV-012-AI"
+      ],
+      "priority": "high",
+      "days_until_expiry": 29
+    },
+    {
       "rule": "WAIVER_USED",
       "severity": "info",
       "message": "Task ENV-014-AI has debt_allowed=true",
@@ -277,6 +299,16 @@
       ],
       "priority": "low",
       "waiver_expiry": "2026-02-28"
+    },
+    {
+      "rule": "WAIVER_EXPIRING",
+      "severity": "warning",
+      "message": "Task ENV-014-AI waiver expires in 29 days (2026-02-28)",
+      "tasks": [
+        "ENV-014-AI"
+      ],
+      "priority": "high",
+      "days_until_expiry": 29
     },
     {
       "rule": "WAIVER_USED",
@@ -289,6 +321,16 @@
       "waiver_expiry": "2026-02-28"
     },
     {
+      "rule": "WAIVER_EXPIRING",
+      "severity": "warning",
+      "message": "Task ENV-015-AI waiver expires in 29 days (2026-02-28)",
+      "tasks": [
+        "ENV-015-AI"
+      ],
+      "priority": "high",
+      "days_until_expiry": 29
+    },
+    {
       "rule": "WAIVER_USED",
       "severity": "info",
       "message": "Task ENV-016-AI has debt_allowed=true",
@@ -297,6 +339,16 @@
       ],
       "priority": "low",
       "waiver_expiry": "2026-02-28"
+    },
+    {
+      "rule": "WAIVER_EXPIRING",
+      "severity": "warning",
+      "message": "Task ENV-016-AI waiver expires in 29 days (2026-02-28)",
+      "tasks": [
+        "ENV-016-AI"
+      ],
+      "priority": "high",
+      "days_until_expiry": 29
     },
     {
       "rule": "WAIVER_USED",
@@ -309,6 +361,16 @@
       "waiver_expiry": "2026-02-28"
     },
     {
+      "rule": "WAIVER_EXPIRING",
+      "severity": "warning",
+      "message": "Task AUTOMATION-001 waiver expires in 29 days (2026-02-28)",
+      "tasks": [
+        "AUTOMATION-001"
+      ],
+      "priority": "high",
+      "days_until_expiry": 29
+    },
+    {
       "rule": "WAIVER_USED",
       "severity": "info",
       "message": "Task AUTOMATION-002 has debt_allowed=true",
@@ -317,6 +379,16 @@
       ],
       "priority": "low",
       "waiver_expiry": "2026-02-28"
+    },
+    {
+      "rule": "WAIVER_EXPIRING",
+      "severity": "warning",
+      "message": "Task AUTOMATION-002 waiver expires in 29 days (2026-02-28)",
+      "tasks": [
+        "AUTOMATION-002"
+      ],
+      "priority": "high",
+      "days_until_expiry": 29
     }
   ],
   "review_queue": [
@@ -405,6 +477,7 @@
       "reasons": [
         "Has waiver or debt_allowed"
       ],
+      "dependent_count": 1,
       "waiver_expiry": "2026-02-28",
       "priority": "medium"
     },
@@ -442,7 +515,7 @@
       "reasons": [
         "Has waiver or debt_allowed"
       ],
-      "dependent_count": 1,
+      "dependent_count": 2,
       "waiver_expiry": "2026-02-28",
       "priority": "medium"
     },
@@ -455,7 +528,7 @@
       "reasons": [
         "Tier A task - requires explicit validation"
       ],
-      "dependent_count": 1,
+      "dependent_count": 2,
       "priority": "critical"
     },
     {
@@ -491,9 +564,9 @@
       "owner": "Tech Lead",
       "reasons": [
         "Tier A task - requires explicit validation",
-        "High fan-out (6 dependents)"
+        "High fan-out (7 dependents)"
       ],
-      "dependent_count": 6,
+      "dependent_count": 7,
       "priority": "critical"
     },
     {
@@ -542,9 +615,9 @@
       "owner": "DevOps Engineer",
       "reasons": [
         "Tier A task - requires explicit validation",
-        "High fan-out (11 dependents)"
+        "High fan-out (13 dependents)"
       ],
-      "dependent_count": 11,
+      "dependent_count": 13,
       "priority": "critical"
     },
     {
@@ -657,9 +730,9 @@
       "owner": "PM + Marketing",
       "reasons": [
         "Tier A task - requires explicit validation",
-        "High fan-out (16 dependents)"
+        "High fan-out (17 dependents)"
       ],
-      "dependent_count": 16,
+      "dependent_count": 17,
       "priority": "critical"
     },
     {
@@ -684,6 +757,7 @@
       "reasons": [
         "Tier A task - requires explicit validation"
       ],
+      "dependent_count": 1,
       "priority": "critical"
     }
   ],

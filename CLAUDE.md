@@ -62,17 +62,19 @@ read limit. To read sprint plan data, use the **split files** instead:
 ```
 apps/project-tracker/docs/metrics/_global/
 ├── Sprint_plan.csv      # Source of truth (DO NOT read directly - too large)
-├── Sprint_plan_A.csv    # Rows 1-90 (read this for early tasks)
-├── Sprint_plan_B.csv    # Rows 91-180
-├── Sprint_plan_C.csv    # Rows 181-270
-└── Sprint_plan_D.csv    # Rows 271-316 (read this for later tasks)
+├── Sprint_plan_A.csv    # ~18k tokens (rows 1-79, Sprint 0 early tasks)
+├── Sprint_plan_B.csv    # ~18k tokens (rows 80-165, Sprint 0-1 tasks)
+├── Sprint_plan_C.csv    # ~18k tokens (rows 166-249, Sprint 1-3 tasks)
+├── Sprint_plan_D.csv    # ~18k tokens (rows 250-316, Sprint 3-12 tasks)
+└── Sprint_plan_E.csv    # ~8k tokens (rows 317-353, Sprint 12+ tasks)
 ```
 
 **Rules**:
 
-- **To READ**: Use `Sprint_plan_A.csv`, `B`, `C`, or `D` based on the task range
+- **To READ**: Use `Sprint_plan_A.csv` through `E` based on the task range
 - **To EDIT**: Only edit `Sprint_plan.csv` (source of truth)
 - **Not committed**: Split files are gitignored (local only, derived data)
+- **Token-based splitting**: Files are split by token count (~18k each) not row count
 - **Auto-regeneration**: Split files are auto-regenerated:
   - On git commit (pre-commit hook detects CSV changes)
   - On data-sync (UI sync button or API call)
@@ -82,8 +84,9 @@ apps/project-tracker/docs/metrics/_global/
 **Finding a task by ID**:
 
 - Sprint 0 tasks: Usually in `Sprint_plan_A.csv` or `Sprint_plan_B.csv`
-- Sprint 1-15 tasks: Check `Sprint_plan_B.csv` and `Sprint_plan_C.csv`
-- Sprint 16+ tasks: Check `Sprint_plan_C.csv` and `Sprint_plan_D.csv`
+- Sprint 1-3 tasks: Check `Sprint_plan_B.csv`, `Sprint_plan_C.csv`, or `Sprint_plan_D.csv`
+- Sprint 4-12 tasks: Check `Sprint_plan_D.csv`
+- Sprint 12+ tasks: Check `Sprint_plan_D.csv` and `Sprint_plan_E.csv`
 
   | View       | Purpose in Prompt                              | When to Use                                             |
   | ---------- | ---------------------------------------------- | ------------------------------------------------------- |
@@ -506,6 +509,7 @@ All enum types follow the DRY (Don't Repeat Yourself) principle with domain cons
 
 **Entities with DRY enum pattern**:
 - ✅ Lead (LeadStatus, LeadSource)
+- ✅ Contact (ContactStatus)
 - ✅ Opportunity (OpportunityStage)
 - ✅ Task (TaskStatus, TaskPriority)
 - ✅ Case (CaseStatus, CasePriority, CaseTaskStatus)
@@ -1004,3 +1008,22 @@ $sprint0 | Group-Object Status | Select-Object Name, Count
 - **API Docs**: Auto-generated from tRPC routers (run `pnpm run docs:api`)
 - **Domain Docs**: Docusaurus site at `docs/`
 - **Dependency Graph**: Task dependencies tracked in CSV `Dependencies` column
+
+## Critical Development Rules
+
+### Never Mock or Simulate Data
+
+**CRITICAL**: Never simulate, mock, or fabricate data for demonstrations or testing
+purposes. All data displayed in the application must come from real sources:
+
+- **Performance metrics**: Must come from actual benchmark execution
+- **API responses**: Must come from real API calls
+- **Database queries**: Must query actual database
+- **Inventory data**: Must be extracted from real codebase analysis
+
+If infrastructure is unavailable:
+- Display "pending" or "not available" status
+- Show clear instructions on how to run the real data collection
+- Never populate fields with fake/sample values
+
+This ensures data integrity and prevents false impressions of system capabilities.

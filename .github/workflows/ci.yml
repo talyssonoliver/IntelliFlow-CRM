@@ -142,10 +142,81 @@ jobs:
             echo "Please review the test output for details on which imports violate hexagonal architecture rules." >> $GITHUB_STEP_SUMMARY
           fi
 
+  # ==========================================
+  # Integration Tests with Database Services
+  # ==========================================
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [test]
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: intelliflow_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/intelliflow_test
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup database
+        run: |
+          pnpm --filter @intelliflow/db db:push
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/intelliflow_test
+
+      - name: Run integration tests
+        run: pnpm run test:integration
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/intelliflow_test
+          REDIS_URL: redis://localhost:6379
+
+      - name: Upload integration test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: integration-test-report
+          path: |
+            artifacts/coverage/
+            artifacts/reports/
+          retention-days: 7
+
   build:
     name: Build
     runs-on: ubuntu-latest
-    needs: [lint, typecheck, test, architecture]
+    needs: [lint, typecheck, test, architecture, integration]
     steps:
       - uses: actions/checkout@v4
 

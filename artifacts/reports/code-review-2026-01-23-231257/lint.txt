@@ -1,0 +1,72 @@
+Scope: 25 of 26 workspace projects
+apps/project-tracker lint$ eslint .
+tools/plan-linter lint$ node index.js
+apps/workers lint$ pnpm -r --filter './events-worker' --filter './ingestion-worker' --filter './notifications-worker' run lint
+tools/plan-linter lint: ========================================
+tools/plan-linter lint: Plan Linter v1.0.0
+tools/plan-linter lint: ========================================
+tools/plan-linter lint: Loaded config from C:\Users\talys\projects\intelliFlow-CRM\tools\plan-linter\config.yaml
+tools/plan-linter lint: Loaded Sprint plan from apps/project-tracker/docs/metrics/_global/Sprint_plan.csv
+tools/plan-linter lint: Loaded overrides from apps/project-tracker/docs/metrics/plan-overrides.yaml
+tools/plan-linter lint: Loaded validation rules from apps/project-tracker/docs/metrics/validation.yaml
+tools/plan-linter lint: Parsed 342 tasks from Sprint plan
+tools/plan-linter lint: Filtering to Sprint 0: 34 tasks
+tools/plan-linter lint: Running hard rules...
+tools/plan-linter lint: Running soft rules...
+tools/plan-linter lint: Generating review queue...
+tools/plan-linter lint: ========================================
+tools/plan-linter lint: RESULTS
+tools/plan-linter lint: ========================================
+tools/plan-linter lint: Total tasks (Sprint 0): 34
+tools/plan-linter lint: Tier breakdown: A=19, B=8, C=7
+tools/plan-linter lint: Validation coverage: 97%
+tools/plan-linter lint: Errors: 39
+tools/plan-linter lint: Warnings: 30
+tools/plan-linter lint: Review queue items: 29
+tools/plan-linter lint: --- ERRORS ---
+tools/plan-linter lint:   [TIER_A_GATES_REQUIRED] Tier A task IFC-093 missing gate_profile
+tools/plan-linter lint:   [TIER_A_OWNER_REQUIRED] Tier A task IFC-093 missing acceptance_owner
+tools/plan-linter lint:   [TIER_A_EVIDENCE_REQUIRED] Tier A task IFC-093 missing evidence_required
+tools/plan-linter lint:   [TIER_A_GATES_REQUIRED] Tier A task IFC-096 missing gate_profile
+tools/plan-linter lint:   [TIER_A_OWNER_REQUIRED] Tier A task IFC-096 missing acceptance_owner
+tools/plan-linter lint:   [TIER_A_EVIDENCE_REQUIRED] Tier A task IFC-096 missing evidence_required
+tools/plan-linter lint:   [TIER_A_GATES_REQUIRED] Tier A task IFC-101 missing gate_profile
+tools/plan-linter lint:   [TIER_A_OWNER_REQUIRED] Tier A task IFC-101 missing acceptance_owner
+tools/plan-linter lint:   [TIER_A_EVIDENCE_REQUIRED] Tier A task IFC-101 missing evidence_required
+tools/plan-linter lint:   [TIER_A_GATES_REQUIRED] Tier A task IFC-102 missing gate_profile
+tools/plan-linter lint:   [TIER_A_OWNER_REQUIRED] Tier A task IFC-102 missing acceptance_owner
+tools/plan-linter lint:   [TIER_A_EVIDENCE_REQUIRED] Tier A task IFC-102 missing evidence_required
+tools/plan-linter lint:   [TIER_A_GATES_REQUIRED] Tier A task IFC-104 missing gate_profile
+tools/plan-linter lint:   [TIER_A_OWNER_REQUIRED] Tier A task IFC-104 missing acceptance_owner
+tools/plan-linter lint:   [TIER_A_EVIDENCE_REQUIRED] Tier A task IFC-104 missing evidence_required
+tools/plan-linter lint:   [TIER_A_GATES_REQUIRED] Tier A task EXP-ARTIFACTS-002 missing gate_profile
+tools/plan-linter lint:   [TIER_A_OWNER_REQUIRED] Tier A task EXP-ARTIFACTS-002 missing acceptance_owner
+tools/plan-linter lint:   [TIER_A_EVIDENCE_REQUIRED] Tier A task EXP-ARTIFACTS-002 missing evidence_required
+tools/plan-linter lint:   [TIER_A_GATES_REQUIRED] Tier A task EXP-ARTIFACTS-003 missing gate_profile
+tools/plan-linter lint:   [TIER_A_OWNER_REQUIRED] Tier A task EXP-ARTIFACTS-003 missing acceptance_owner
+tools/plan-linter lint:   [TIER_A_EVIDENCE_REQUIRED] Tier A task EXP-ARTIFACTS-003 missing evidence_required
+tools/plan-linter lint:   [TIER_A_GATES_REQUIRED] Tier A task EXP-REPORTS-001 missing gate_profile
+tools/plan-linter lint:   [TIER_A_OWNER_REQUIRED] Tier A task EXP-REPORTS-001 missing acceptance_owner
+tools/plan-linter lint:   [TIER_A_EVIDENCE_REQUIRED] Tier A task EXP-REPORTS-001 missing evidence_required
+tools/plan-linter lint:   [TIER_A_GATES_REQUIRED] Tier A task EXP-REPORTS-002 missing gate_profile
+tools/plan-linter lint:   [TIER_A_OWNER_REQUIRED] Tier A task EXP-REPORTS-002 missing acceptance_owner
+tools/plan-linter lint:   [TIER_A_EVIDENCE_REQUIRED] Tier A task EXP-REPORTS-002 missing evidence_required
+tools/plan-linter lint:   [TIER_A_GATES_REQUIRED] Tier A task EXP-REPORTS-003 missing gate_profile
+tools/plan-linter lint:   [TIER_A_OWNER_REQUIRED] Tier A task EXP-REPORTS-003 missing acceptance_owner
+tools/plan-linter lint:   [TIER_A_EVIDENCE_REQUIRED] Tier A task EXP-REPORTS-003 missing evidence_required
+tools/plan-linter lint:   [TIER_A_GATES_REQUIRED] Tier A task EXP-REPORTS-004 missing gate_profile
+tools/plan-linter lint:   [TIER_A_OWNER_REQUIRED] Tier A task EXP-REPORTS-004 missing acceptance_owner
+tools/plan-linter lint:   [TIER_A_EVIDENCE_REQUIRED] Tier A task EXP-REPORTS-004 missing evidence_required
+tools/plan-linter lint:   [TIER_A_GATES_REQUIRED] Tier A task EXP-REPORTS-005 missing gate_profile
+tools/plan-linter lint:   [TIER_A_OWNER_REQUIRED] Tier A task EXP-REPORTS-005 missing acceptance_owner
+tools/plan-linter lint:   [TIER_A_EVIDENCE_REQUIRED] Tier A task EXP-REPORTS-005 missing evidence_required
+tools/plan-linter lint:   [TIER_A_GATES_REQUIRED] Tier A task  missing gate_profile
+tools/plan-linter lint:   [TIER_A_OWNER_REQUIRED] Tier A task  missing acceptance_owner
+tools/plan-linter lint:   [TIER_A_EVIDENCE_REQUIRED] Tier A task  missing evidence_required
+tools/plan-linter lint: Review queue written to apps/project-tracker/docs/metrics/review-queue.json
+tools/plan-linter lint: Lint report written to artifacts/reports/plan-lint-report.json
+tools/plan-linter lint: [FAILED] Hard rule violations detected
+tools/plan-linter lint: Failed
+C:\Users\talys\projects\intelliFlow-CRM\tools\plan-linter:
+ÔÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILÔÇë @intelliflow/plan-linter@1.0.0 lint: `node index.js`
+Exit status 1

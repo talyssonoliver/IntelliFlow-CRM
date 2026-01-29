@@ -50,7 +50,7 @@ const invalidLead = {
 const invalidValidationResult = leadSchema.safeParse(invalidLead);
 console.log('❌ Invalid lead validation:', invalidValidationResult.success);
 if (!invalidValidationResult.success) {
-  console.log('Validation errors:', invalidValidationResult.error.errors);
+  console.log('Validation errors:', invalidValidationResult.error.issues);
 }
 
 // ============================================

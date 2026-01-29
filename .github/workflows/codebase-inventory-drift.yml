@@ -1,0 +1,194 @@
+name: Codebase Inventory Drift Detection
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      # Database schema
+      - 'packages/db/prisma/schema.prisma'
+      # Middleware
+      - 'apps/api/src/middleware/**'
+      # Workers
+      - 'apps/workers/**'
+      - 'apps/ai-worker/**'
+      # External integrations (adapters)
+      - 'packages/adapters/src/**'
+      # Domain events
+      - 'packages/domain/src/events/**'
+      - 'packages/domain/src/**/events/**'
+      # Validators
+      - 'packages/validators/src/**'
+      # Inventory scripts
+      - 'tools/scripts/sync-codebase-inventory.ts'
+      - 'artifacts/benchmarks/baseline.json'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'packages/db/prisma/schema.prisma'
+      - 'apps/api/src/middleware/**'
+      - 'apps/workers/**'
+      - 'apps/ai-worker/**'
+      - 'packages/adapters/src/**'
+      - 'packages/domain/src/events/**'
+      - 'packages/domain/src/**/events/**'
+      - 'packages/validators/src/**'
+      - 'tools/scripts/sync-codebase-inventory.ts'
+      - 'artifacts/benchmarks/baseline.json'
+  schedule:
+    # Run daily at 6:30 AM UTC to detect drift (offset from API inventory)
+    - cron: '30 6 * * *'
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8.15.0'
+
+jobs:
+  detect-drift:
+    name: Detect Codebase Inventory Drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Save original baseline hash
+        id: original
+        run: |
+          ORIGINAL_HASH=$(sha256sum artifacts/benchmarks/baseline.json | cut -d' ' -f1)
+          echo "hash=$ORIGINAL_HASH" >> $GITHUB_OUTPUT
+
+      - name: Sync codebase inventory from source files
+        run: pnpm run sync:codebase-inventory
+
+      - name: Check for drift
+        id: drift-check
+        run: |
+          NEW_HASH=$(sha256sum artifacts/benchmarks/baseline.json | cut -d' ' -f1)
+          echo "new_hash=$NEW_HASH" >> $GITHUB_OUTPUT
+
+          if [ "${{ steps.original.outputs.hash }}" != "$NEW_HASH" ]; then
+            echo "drift_detected=true" >> $GITHUB_OUTPUT
+            echo "::error::Codebase inventory drift detected! baseline.json is out of sync with source files."
+            echo ""
+            echo "=== DIFF ==="
+            git diff artifacts/benchmarks/baseline.json || true
+          else
+            echo "drift_detected=false" >> $GITHUB_OUTPUT
+            echo "::notice::Codebase inventory is in sync with source files."
+          fi
+
+      - name: Extract inventory stats
+        id: stats
+        run: |
+          # Database inventory
+          TABLES=$(jq -r '.database_inventory.total_tables // 0' artifacts/benchmarks/baseline.json)
+          FIELDS=$(jq -r '.database_inventory.total_fields // 0' artifacts/benchmarks/baseline.json)
+          ENUMS=$(jq -r '.database_inventory.total_enums // 0' artifacts/benchmarks/baseline.json)
+
+          # Middleware inventory
+          MIDDLEWARE=$(jq -r '.middleware_inventory.total_middleware // 0' artifacts/benchmarks/baseline.json)
+
+          # Workers inventory
+          WORKERS=$(jq -r '.workers_inventory.total_workers // 0' artifacts/benchmarks/baseline.json)
+          JOBS=$(jq -r '.workers_inventory.total_jobs // 0' artifacts/benchmarks/baseline.json)
+
+          # Integrations inventory
+          INTEGRATIONS=$(jq -r '.integrations_inventory.total_integrations // 0' artifacts/benchmarks/baseline.json)
+
+          # Domain events inventory
+          EVENTS=$(jq -r '.domain_events_inventory.total_events // 0' artifacts/benchmarks/baseline.json)
+
+          # Validators inventory
+          VALIDATORS=$(jq -r '.validators_inventory.total_validators // 0' artifacts/benchmarks/baseline.json)
+          SCHEMAS=$(jq -r '.validators_inventory.total_schemas // 0' artifacts/benchmarks/baseline.json)
+
+          # Cache inventory
+          CACHE_ENABLED=$(jq -r '.cache_inventory.enabled // false' artifacts/benchmarks/baseline.json)
+          CACHE_PROVIDER=$(jq -r '.cache_inventory.provider // "none"' artifacts/benchmarks/baseline.json)
+
+          echo "tables=$TABLES" >> $GITHUB_OUTPUT
+          echo "fields=$FIELDS" >> $GITHUB_OUTPUT
+          echo "enums=$ENUMS" >> $GITHUB_OUTPUT
+          echo "middleware=$MIDDLEWARE" >> $GITHUB_OUTPUT
+          echo "workers=$WORKERS" >> $GITHUB_OUTPUT
+          echo "jobs=$JOBS" >> $GITHUB_OUTPUT
+          echo "integrations=$INTEGRATIONS" >> $GITHUB_OUTPUT
+          echo "events=$EVENTS" >> $GITHUB_OUTPUT
+          echo "validators=$VALIDATORS" >> $GITHUB_OUTPUT
+          echo "schemas=$SCHEMAS" >> $GITHUB_OUTPUT
+          echo "cache_enabled=$CACHE_ENABLED" >> $GITHUB_OUTPUT
+          echo "cache_provider=$CACHE_PROVIDER" >> $GITHUB_OUTPUT
+
+      - name: Generate summary
+        run: |
+          echo "## Codebase Inventory Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.drift-check.outputs.drift_detected }}" == "true" ]; then
+            echo ":x: **Drift Detected**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "The codebase inventory in \`baseline.json\` does not match the actual source files." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### To fix:" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+            echo "pnpm run sync:codebase-inventory" >> $GITHUB_STEP_SUMMARY
+            echo "git add artifacts/benchmarks/baseline.json" >> $GITHUB_STEP_SUMMARY
+            echo "git commit -m \"chore: sync codebase inventory\"" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo ":white_check_mark: **No Drift - Codebase Inventory is in sync**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Current Codebase Inventory" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "#### Database Schema" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Tables | ${{ steps.stats.outputs.tables }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Fields | ${{ steps.stats.outputs.fields }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Enums | ${{ steps.stats.outputs.enums }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "#### Infrastructure" >> $GITHUB_STEP_SUMMARY
+          echo "| Category | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Middleware Components | ${{ steps.stats.outputs.middleware }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Background Workers | ${{ steps.stats.outputs.workers }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Worker Jobs | ${{ steps.stats.outputs.jobs }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| External Integrations | ${{ steps.stats.outputs.integrations }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "#### Domain & Validation" >> $GITHUB_STEP_SUMMARY
+          echo "| Category | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Domain Events | ${{ steps.stats.outputs.events }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Validator Files | ${{ steps.stats.outputs.validators }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Validation Schemas | ${{ steps.stats.outputs.schemas }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "#### Caching" >> $GITHUB_STEP_SUMMARY
+          echo "| Setting | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Enabled | ${{ steps.stats.outputs.cache_enabled }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Provider | ${{ steps.stats.outputs.cache_provider }} |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail if drift detected
+        if: steps.drift-check.outputs.drift_detected == 'true'
+        run: |
+          echo "Codebase inventory drift detected. Please run 'pnpm run sync:codebase-inventory' and commit the changes."
+          exit 1

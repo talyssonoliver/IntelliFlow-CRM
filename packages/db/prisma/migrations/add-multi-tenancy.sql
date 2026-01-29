@@ -1,5 +1,8 @@
--- CreateExtension
-CREATE EXTENSION IF NOT EXISTS "vector";
+-- CreateSchema for extensions
+CREATE SCHEMA IF NOT EXISTS extensions;
+
+-- CreateExtension in dedicated schema
+CREATE EXTENSION IF NOT EXISTS "vector" SCHEMA extensions;
 
 -- CreateEnum
 CREATE TYPE "TenantStatus" AS ENUM ('ACTIVE', 'SUSPENDED', 'TRIAL');

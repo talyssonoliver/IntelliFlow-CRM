@@ -1,0 +1,27 @@
+test_id,input_text,expected_sentiment,predicted_sentiment,expected_score,predicted_score,match,confidence,emotion_detected,urgency_level,execution_time_ms,model_version
+SA-001,"I am very happy with your product!",VERY_POSITIVE,VERY_POSITIVE,0.9,0.92,true,0.95,JOY,NONE,145,mock:sentiment:v1
+SA-002,"This is the worst experience ever.",VERY_NEGATIVE,VERY_NEGATIVE,-0.9,-0.88,true,0.93,ANGER,HIGH,132,mock:sentiment:v1
+SA-003,"The product is okay I guess.",NEUTRAL,NEUTRAL,0.0,0.05,true,0.82,NEUTRAL,LOW,128,mock:sentiment:v1
+SA-004,"I'm frustrated with the delays.",NEGATIVE,NEGATIVE,-0.6,-0.55,true,0.88,ANGER,MEDIUM,138,mock:sentiment:v1
+SA-005,"Thank you for the quick response!",POSITIVE,POSITIVE,0.7,0.72,true,0.91,TRUST,NONE,125,mock:sentiment:v1
+SA-006,"URGENT: Need immediate assistance!",NEUTRAL,NEUTRAL,0.0,-0.1,true,0.79,FEAR,CRITICAL,142,mock:sentiment:v1
+SA-007,"Looking forward to our partnership.",POSITIVE,POSITIVE,0.6,0.65,true,0.89,ANTICIPATION,NONE,131,mock:sentiment:v1
+SA-008,"This is unacceptable service.",VERY_NEGATIVE,VERY_NEGATIVE,-0.8,-0.82,true,0.92,DISGUST,HIGH,136,mock:sentiment:v1
+SA-009,"I have a few questions about pricing.",NEUTRAL,NEUTRAL,0.1,0.08,true,0.85,NEUTRAL,LOW,127,mock:sentiment:v1
+SA-010,"Absolutely love the new features!",VERY_POSITIVE,VERY_POSITIVE,0.95,0.94,true,0.96,JOY,NONE,129,mock:sentiment:v1
+SA-011,"The demo was quite impressive.",POSITIVE,POSITIVE,0.5,0.55,true,0.87,TRUST,NONE,133,mock:sentiment:v1
+SA-012,"We need to discuss the contract terms.",NEUTRAL,NEUTRAL,0.0,0.02,true,0.83,NEUTRAL,MEDIUM,140,mock:sentiment:v1
+SA-013,"Your team has been incredibly helpful.",POSITIVE,VERY_POSITIVE,0.7,0.78,false,0.84,TRUST,NONE,126,mock:sentiment:v1
+SA-014,"I'm worried about the implementation timeline.",NEGATIVE,NEGATIVE,-0.4,-0.45,true,0.86,FEAR,MEDIUM,137,mock:sentiment:v1
+SA-015,"Exceptional quality and support!",VERY_POSITIVE,VERY_POSITIVE,0.9,0.91,true,0.94,JOY,NONE,124,mock:sentiment:v1
+SA-016,"Not sure if this meets our requirements.",NEUTRAL,NEGATIVE,-0.1,-0.25,false,0.72,SADNESS,LOW,148,mock:sentiment:v1
+SA-017,"Can we schedule a follow-up call?",NEUTRAL,NEUTRAL,0.1,0.12,true,0.88,ANTICIPATION,LOW,130,mock:sentiment:v1
+SA-018,"The pricing seems too high for our budget.",NEGATIVE,NEGATIVE,-0.4,-0.38,true,0.85,SADNESS,MEDIUM,135,mock:sentiment:v1
+SA-019,"Great work on the proposal!",POSITIVE,POSITIVE,0.6,0.62,true,0.90,JOY,NONE,128,mock:sentiment:v1
+SA-020,"We've decided to go with another vendor.",NEGATIVE,NEGATIVE,-0.5,-0.52,true,0.91,SADNESS,NONE,141,mock:sentiment:v1
+SA-021,"This solves exactly what we needed.",VERY_POSITIVE,VERY_POSITIVE,0.85,0.87,true,0.93,TRUST,NONE,127,mock:sentiment:v1
+SA-022,"I appreciate the detailed explanation.",POSITIVE,POSITIVE,0.5,0.48,true,0.87,TRUST,NONE,134,mock:sentiment:v1
+SA-023,"Still waiting for a response to my email.",NEGATIVE,NEGATIVE,-0.3,-0.35,true,0.84,ANGER,MEDIUM,139,mock:sentiment:v1
+SA-024,"Excellent customer service experience.",VERY_POSITIVE,VERY_POSITIVE,0.88,0.89,true,0.95,JOY,NONE,123,mock:sentiment:v1
+SA-025,"The feature is not working as expected.",NEGATIVE,NEGATIVE,-0.5,-0.48,true,0.89,ANGER,HIGH,136,mock:sentiment:v1
+SUMMARY,Total Tests: 25,Accuracy: 92%,Match Rate: 23/25,Avg Confidence: 0.87,Avg Latency: 133ms,Pass: true,Grade: A,Primary Emotions: JOY (7) TRUST (5) ANGER (4) NEUTRAL (4) SADNESS (3) FEAR (2),,

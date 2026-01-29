@@ -63,7 +63,12 @@ const RULES = {
     'artifacts/reports/**/*',
     'artifacts/metrics/**/*',
     'artifacts/misc/**/*',
-    'artifacts/attestations/**/*',
+    '.specify/sprints/*/attestations/**/*',
+    '.specify/sprints/*/specifications/**/*',
+    '.specify/sprints/*/planning/**/*',
+    '.specify/sprints/*/context/**/*',
+    '.specify/sprints/*/evidence/**/*',
+    '.specify/sprints/*/coverage/**/*',
   ],
   allowedBuildOutputs: [
     'dist/**/*',
@@ -100,6 +105,11 @@ const RULES = {
     'apps/project-tracker/docs/metrics/**/*.heartbeat',
     'apps/project-tracker/docs/metrics/**/*.input',
     'apps/project-tracker/docs/metrics/**/*.bak',
+    // DEPRECATED: attestations/context must use .specify/ canonical location
+    'artifacts/attestations/**/*',
+    'artifacts/context/**/*',
+    // DEPRECATED: sprint0 artifacts must use .specify/ canonical location
+    'artifacts/sprint0/**/*',
   ],
   secretPatterns: [
     /(?:api[_-]?key|apikey)[\s:=]+['"]?([a-z0-9]{32,})['"]?/gi,
@@ -286,24 +296,27 @@ class ArtifactPathLinter {
    * Check if file is in a prohibited location
    */
   private isProhibitedLocation(file: string): boolean {
-    // Files in artifacts/ are allowed
-    if (file.startsWith('artifacts/')) {
+    // Normalize path to forward slashes for consistent matching
+    const normalizedFile = file.replace(/\\/g, '/');
+
+    // Check against prohibited locations FIRST (includes deprecated artifact subpaths)
+    for (const pattern of RULES.prohibitedLocations) {
+      const regex = this.globToRegex(pattern);
+      if (regex.test(normalizedFile)) {
+        return true;
+      }
+    }
+
+    // Files in artifacts/ are generally allowed (but prohibited subpaths checked above)
+    if (normalizedFile.startsWith('artifacts/')) {
       return false;
     }
 
     // Build outputs are allowed
     for (const pattern of RULES.allowedBuildOutputs) {
       const regex = this.globToRegex(pattern);
-      if (regex.test(file)) {
+      if (regex.test(normalizedFile)) {
         return false;
-      }
-    }
-
-    // Check against prohibited locations
-    for (const pattern of RULES.prohibitedLocations) {
-      const regex = this.globToRegex(pattern);
-      if (regex.test(file)) {
-        return true;
       }
     }
 

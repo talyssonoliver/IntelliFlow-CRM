@@ -285,6 +285,11 @@ function computeTiers(tasks, overrides, fanout, config) {
   tasks.forEach(task => {
     const id = task['Task ID'];
 
+    // Skip rows with empty task IDs
+    if (!id || id.trim() === '') {
+      return;
+    }
+
     // Check explicit override first
     if (overrides && overrides[id] && overrides[id].tier) {
       tiers.set(id, overrides[id].tier);
@@ -368,6 +373,12 @@ function checkHardRules(tasks, overrides, validationRules, config) {
 
   tasks.forEach(task => {
     const id = task['Task ID'];
+
+    // Skip rows with empty task IDs
+    if (!id || id.trim() === '') {
+      return;
+    }
+
     const tier = overrides?.[id]?.tier || tiers.get(id);
 
     if (tier === 'A') {

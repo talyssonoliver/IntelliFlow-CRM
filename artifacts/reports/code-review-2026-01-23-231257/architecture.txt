@@ -1,0 +1,25 @@
+
+> intelliflow-crm@0.1.0 test:architecture C:\Users\talys\projects\intelliFlow-CRM
+> vitest run tests/architecture
+
+
+[1m[46m RUN [49m[22m [36mv4.0.16 [39m[90mC:/Users/talys/projects/intelliFlow-CRM[39m
+
+ [32mÔ£ô[39m [30m[46m architecture [49m[39m adapters-dependencies.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 52[2mms[22m[39m
+ [32mÔ£ô[39m [30m[46m architecture [49m[39m application-dependencies.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 64[2mms[22m[39m
+ [32mÔ£ô[39m [30m[46m architecture [49m[39m domain-dependencies.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 107[2mms[22m[39m
+(node:251128) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:251128) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:251128) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mÔ£ô[39m [30m[42m root [49m[39m tests/architecture/adapters-dependencies.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 49[2mms[22m[39m
+ [32mÔ£ô[39m [30m[42m root [49m[39m tests/architecture/application-dependencies.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 60[2mms[22m[39m
+ [32mÔ£ô[39m [30m[42m root [49m[39m tests/architecture/domain-dependencies.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 88[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m6 passed[39m[22m[90m (6)[39m
+[2m      Tests [22m [1m[32m44 passed[39m[22m[90m (44)[39m
+[2m   Start at [22m 23:13:28
+[2m   Duration [22m 576ms[2m (transform 182ms, setup 860ms, import 195ms, tests 421ms, environment 1ms)[22m
+

@@ -26,17 +26,21 @@ model Tenant {
   updatedAt DateTime     @updatedAt
 
   // Relations
-  users           User[]
-  leads           Lead[]
-  contacts        Contact[]
-  accounts        Account[]
-  opportunities   Opportunity[]
-  tasks           Task[]
-  tickets         Ticket[]
-  auditLogs       AuditLog[]
-  auditLogEntries AuditLogEntry[]
-  calendarEvents  CalendarEvent[]
-  dealRenewals    DealRenewal[]  @relation("DealRenewals")
+  users                User[]
+  leads                Lead[]
+  contacts             Contact[]
+  accounts             Account[]
+  opportunities        Opportunity[]
+  tasks                Task[]
+  tickets              Ticket[]
+  auditLogs            AuditLog[]
+  auditLogEntries      AuditLogEntry[]
+  calendarEvents       CalendarEvent[]
+  dealRenewals         DealRenewal[]          @relation("DealRenewals")
+  contactNotes         ContactNote[]
+  conversationRecords  ConversationRecord[]
+  pipelineStageConfigs PipelineStageConfig[]
+  chainVersions        ChainVersion[]
 
   @@index([slug])
   @@index([status])
@@ -54,30 +58,33 @@ enum TenantStatus {
 // ============================================
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  avatarUrl     String?
-  role          UserRole  @default(USER)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id               String    @id @default(cuid())
+  email            String    @unique
+  name             String?
+  avatarUrl        String?
+  role             UserRole  @default(USER)
+  stripeCustomerId String?   @unique // Stripe customer ID for billing
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   // Multi-tenancy
-  tenantId      String
-  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId         String
+  tenant           Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   // Relations
-  leads         Lead[]
-  contacts      Contact[]
-  accounts      Account[]
-  opportunities Opportunity[]
-  tasks         Task[]
-  aiScores      AIScore[]
-  auditLogs     AuditLog[]
+  leads               Lead[]
+  contacts            Contact[]
+  accounts            Account[]
+  opportunities       Opportunity[]
+  tasks               Task[]
+  aiScores            AIScore[]
+  auditLogs           AuditLog[]
+  conversationRecords ConversationRecord[]
 
   @@index([email])
   @@index([role])
   @@index([tenantId])
+  @@index([stripeCustomerId])
   @@map("users")
 }
 
@@ -120,6 +127,7 @@ model Lead {
   // AI Embedding for semantic search
   embedding     Unsupported("vector(1536)")?
 
+  @@unique([email, tenantId])
   @@index([email])
   @@index([status])
   @@index([score])
@@ -148,6 +156,14 @@ enum LeadStatus {
   LOST
 }
 
+enum ContactStatus {
+  ACTIVE
+  INACTIVE
+  PROSPECT
+  CUSTOMER
+  FORMER_CUSTOMER
+}
+
 model Contact {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -156,6 +172,18 @@ model Contact {
   title         String?
   phone         String?
   department    String?
+  status        ContactStatus @default(ACTIVE)
+
+  // Extended contact fields (IFC-089 form support)
+  streetAddress String?
+  city          String?
+  zipCode       String?
+  company       String?   // Company name (may differ from linked account)
+  linkedInUrl   String?
+  contactType   String?   // customer, prospect, partner, vendor, investor, other
+  tags          String[]  @default([])
+  contactNotes  String?   @db.Text  // Free-form notes field
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -258,6 +286,32 @@ enum OpportunityStage {
   NEGOTIATION
   CLOSED_WON
   CLOSED_LOST
+}
+
+// ============================================
+// PIPELINE STAGE CONFIGURATION
+// IFC-063: FLOW-007 Pipeline Stage Customization
+// ============================================
+
+model PipelineStageConfig {
+  id            String   @id @default(cuid())
+  stageKey      String
+  displayName   String
+  color         String   @default("#6366f1")
+  order         Int
+  probability   Float    @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Multi-tenancy
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, stageKey])
+  @@index([tenantId])
+  @@index([order])
+  @@map("pipeline_stage_configs")
 }
 
 // ============================================
@@ -529,6 +583,134 @@ model AIScore {
   @@index([leadId])
   @@index([createdAt])
   @@map("ai_scores")
+}
+
+/// AI Conversation records for agent interactions
+model ConversationRecord {
+  id               String    @id @default(cuid())
+  sessionId        String    @unique
+  title            String?
+  summary          String?   @db.Text
+  contextName      String?
+  contextType      String?
+  contextId        String?
+  agentId          String?
+  agentName        String?
+  agentModel       String?
+  userName         String?
+  userAgent        String?
+  channel          String    @default("web")
+  messageCount     Int       @default(0)
+  toolCallCount    Int       @default(0)
+  tokenCountInput  Int?
+  tokenCountOutput Int?
+  status           String    @default("ACTIVE")
+  startedAt        DateTime  @default(now())
+  endedAt          DateTime?
+  lastMessageAt    DateTime?
+  endReason        String?
+  userRating       Int?
+  feedbackText     String?   @db.Text
+  wasEscalated     Boolean   @default(false)
+  escalatedTo      String?
+  escalatedAt      DateTime?
+  ipAddress        String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  // Multi-tenancy
+  tenantId         String
+  tenant           Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // User relation
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Messages relation
+  messages         MessageRecord[]
+  toolCalls        ToolCallRecord[]
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([sessionId])
+  @@index([status])
+  @@index([startedAt])
+  @@map("conversation_records")
+}
+
+/// Messages within AI conversations
+model MessageRecord {
+  id               String    @id @default(cuid())
+  role             String    // 'user', 'assistant', 'system'
+  content          String    @db.Text
+  contentType      String    @default("text")
+  metadata         Json?
+  attachments      Json?     // Array of attachment objects
+  modelUsed        String?
+  finishReason     String?
+  tokenCount       Int?
+  promptTokens     Int?
+  completionTokens Int?
+  confidence       Float?
+  createdAt        DateTime  @default(now())
+
+  // Conversation relation
+  conversationId   String
+  conversation     ConversationRecord @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  // Tool calls relation
+  toolCalls        ToolCallRecord[]
+
+  @@index([conversationId])
+  @@index([role])
+  @@index([createdAt])
+  @@map("message_records")
+}
+
+/// Tool call records for AI agent interactions
+model ToolCallRecord {
+  id                  String    @id @default(cuid())
+  toolName            String
+  toolType            String?
+  toolVersion         String?
+  toolInput           Json?
+  toolOutput          Json?
+  inputParameters     Json?     // Alternative field name for tool input
+  outputResult        Json?     // Alternative field name for tool output
+  status              String    @default("PENDING") // PENDING, RUNNING, SUCCESS, ERROR, CANCELLED
+  duration            Int?      // milliseconds
+  durationMs          Int?      // milliseconds (alternative field)
+  startedAt           DateTime?
+  completedAt         DateTime?
+  requiresApproval    Boolean   @default(false)
+  isReversible        Boolean   @default(false)
+  approvalStatus      String?   // PENDING, APPROVED, REJECTED
+  approvedBy          String?
+  approvedAt          DateTime?
+  rejectionReason     String?
+  errorMessage        String?
+  errorCode           String?
+  affectedEntityType  String?
+  affectedEntityId    String?
+  affectedEntity      String?
+  changeDescription   String?
+  rollbackData        Json?     // Data for reversing the operation
+  createdAt           DateTime  @default(now())
+
+  // Relations
+  conversationId      String
+  conversation        ConversationRecord @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  messageId           String?
+  message             MessageRecord? @relation(fields: [messageId], references: [id], onDelete: SetNull)
+
+  @@index([conversationId])
+  @@index([messageId])
+  @@index([toolName])
+  @@index([toolType])
+  @@index([status])
+  @@index([startedAt])
+  @@map("tool_call_records")
 }
 
 // ============================================
@@ -899,6 +1081,9 @@ model TicketActivity {
   systemEventType String?
   systemEventData Json?
 
+  // Tenant isolation
+  tenantId        String
+
   // Relations
   ticketId        String
   ticket          Ticket                @relation(fields: [ticketId], references: [id], onDelete: Cascade)
@@ -906,6 +1091,7 @@ model TicketActivity {
   @@index([ticketId])
   @@index([type])
   @@index([timestamp])
+  @@index([tenantId])
   @@map("ticket_activities")
 }
 
@@ -1254,8 +1440,17 @@ model ContactNote {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Multi-tenancy
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Vector embeddings for semantic search
+  embedding Unsupported("vector(1536)")?
+  searchVector Unsupported("tsvector")? @map("search_vector")
+
   @@index([contactId])
   @@index([createdAt])
+  @@index([tenantId])
   @@map("contact_notes")
 }
 
@@ -2885,4 +3080,137 @@ enum DLQStatus {
   RETRYING
   RESOLVED
   DISCARDED
+}
+
+
+// ============================================
+// LEAD CONVERSION AUDIT (IFC-061, FLOW-006)
+// ============================================
+
+/// Lead conversion audit trail for tracking lead-to-contact conversions
+model LeadConversionAudit {
+  id                  String   @id @default(cuid())
+  leadId              String
+  contactId           String
+  accountId           String?
+  tenantId            String
+  convertedBy         String
+  conversionSnapshot  Json     // Complete snapshot of lead data at conversion time
+  idempotencyKey      String   @unique
+  createdAt           DateTime @default(now())
+
+  @@unique([leadId, tenantId])
+  @@index([leadId])
+  @@index([tenantId])
+  @@index([idempotencyKey])
+  @@index([createdAt])
+  @@map("lead_conversion_audit")
+}
+
+// ============================================
+// ZEP EPISODE TRACKING - IFC-086
+// Tracks Zep Cloud episode usage for free tier budget management
+// ============================================
+
+/// Tracks Zep Cloud episode usage per tenant
+/// FREE PLAN LIMIT: 1,000 episodes lifetime
+model ZepEpisodeUsage {
+  id               String   @id @default(cuid())
+  tenantId         String   @default("global")
+  episodesUsed     Int      @default(0)
+  maxEpisodes      Int      @default(1000)
+  warningPercent   Int      @default(80)
+  hardLimitPercent Int      @default(95)
+  lastUpdated      DateTime @updatedAt
+  createdAt        DateTime @default(now())
+  lastSyncedAt     DateTime?
+  lastSyncSuccess  Boolean  @default(false)
+
+  @@unique([tenantId])
+  @@index([episodesUsed])
+  @@map("zep_episode_usage")
+}
+
+/// Audit log for episode usage changes
+model ZepEpisodeAudit {
+  id            String   @id @default(cuid())
+  tenantId      String   @default("global")
+  previousCount Int
+  newCount      Int
+  delta         Int
+  operation     String   // CREATE_SESSION, ADD_MEMORY, SYNC_FROM_API, MANUAL_CORRECTION
+  sessionId     String?
+  createdAt     DateTime @default(now())
+
+  @@index([tenantId, createdAt])
+  @@map("zep_episode_audit")
+}
+
+// ============================================
+// CHAIN VERSION MANAGEMENT - IFC-086
+// Version control for AI chains and prompts
+// ============================================
+
+/// Chain version for AI prompt/model versioning
+model ChainVersion {
+  id              String   @id @default(cuid())
+  tenantId        String
+  chainType       String   // SCORING, QUALIFICATION, EMAIL_WRITER, FOLLOWUP
+  version         String   // Semantic version: 1.0.0
+  prompt          String   @db.Text
+  promptHash      String   // SHA256 for integrity
+  model           String   @default("gpt-4o-mini")
+  temperature     Float    @default(0.7)
+  maxTokens       Int?
+  config          Json?
+  status          ChainVersionStatus @default(DRAFT)
+  rolloutStrategy RolloutStrategy    @default(IMMEDIATE)
+  rolloutPercent  Int      @default(100)
+  experimentId    String?
+  createdAt       DateTime @default(now())
+  createdBy       String
+  activatedAt     DateTime?
+  activatedBy     String?
+  deprecatedAt    DateTime?
+  deprecatedBy    String?
+  archivedAt      DateTime?
+
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  audits          ChainVersionAudit[]
+
+  @@unique([tenantId, chainType, version])
+  @@index([tenantId, chainType, status])
+  @@map("chain_versions")
+}
+
+/// Audit log for chain version changes
+model ChainVersionAudit {
+  id              String   @id @default(cuid())
+  versionId       String
+  action          String   // CREATED, ACTIVATED, DEPRECATED, ARCHIVED, ROLLBACK
+  previousStatus  String?
+  newStatus       String
+  reason          String?
+  performedBy     String
+  performedAt     DateTime @default(now())
+  metadata        Json?
+
+  version         ChainVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@index([versionId])
+  @@index([performedAt])
+  @@map("chain_version_audit")
+}
+
+enum ChainVersionStatus {
+  DRAFT
+  ACTIVE
+  DEPRECATED
+  ARCHIVED
+}
+
+enum RolloutStrategy {
+  IMMEDIATE
+  PERCENTAGE
+  AB_TEST
 }

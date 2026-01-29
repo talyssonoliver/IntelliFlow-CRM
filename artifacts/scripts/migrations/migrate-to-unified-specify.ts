@@ -1,8 +1,17 @@
 #!/usr/bin/env npx tsx
 /**
- * Migration Script: Move artifacts to unified .specify/{TASK_ID}/ structure
+ * [DEPRECATED] Migration Script: Move artifacts to unified .specify/{TASK_ID}/ structure
  *
- * All files in the new structure are prefixed with {TASK_ID}- for self-identification.
+ * NOTE: This script migrates to an INTERMEDIATE task-based structure.
+ * The CURRENT actual implementation uses a SPRINT-BASED structure:
+ *
+ *   .specify/sprints/sprint-{N}/specifications/{TASK_ID}-spec.md
+ *   .specify/sprints/sprint-{N}/planning/{TASK_ID}-plan.md
+ *   .specify/sprints/sprint-{N}/attestations/{TASK_ID}/
+ *   .specify/sprints/sprint-{N}/context/{TASK_ID}/
+ *
+ * This script was used for historical migration and may create legacy folders.
+ * For new tasks, use the sprint-based structure directly.
  *
  * Migrates from:
  *   artifacts/attestations/{TASK_ID}/context_ack.json -> .specify/{TASK_ID}/attestations/{TASK_ID}-context_ack.json

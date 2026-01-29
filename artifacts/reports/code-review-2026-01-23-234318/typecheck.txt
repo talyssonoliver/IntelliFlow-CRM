@@ -1,0 +1,44 @@
+Scope: 24 of 26 workspace projects
+apps/workers typecheck$ pnpm -r --filter './events-worker' --filter './ingestion-worker' --filter './notifications-worker' run typecheck
+apps/workers typecheck: No projects matched the filters in "C:\Users\talys\projects\intelliFlow-CRM"
+apps/workers typecheck: Done
+packages/observability typecheck$ tsc --noEmit
+packages/db typecheck$ tsc --noEmit
+apps/workers/shared typecheck$ tsc --noEmit
+packages/domain typecheck$ tsc --noEmit
+apps/workers/shared typecheck: Done
+packages/webhooks typecheck$ tsc --noEmit
+packages/domain typecheck: Done
+packages/observability typecheck: Done
+packages/db typecheck: Done
+packages/webhooks typecheck: Done
+apps/workers/events-worker typecheck$ tsc --noEmit
+packages/ai typecheck$ tsc --noEmit
+packages/platform typecheck$ tsc --noEmit
+packages/search typecheck$ tsc --noEmit
+packages/ai typecheck: Done
+packages/ui typecheck$ tsc --noEmit
+packages/search typecheck: Done
+packages/validators typecheck$ tsc --noEmit
+apps/workers/events-worker typecheck: Done
+packages/platform typecheck: Done
+packages/validators typecheck: Done
+packages/ui typecheck: Done
+apps/ai-worker typecheck$ tsc --noEmit
+packages/application typecheck$ tsc --noEmit
+packages/application typecheck: Done
+apps/ai-worker typecheck: Done
+apps/workers/ingestion-worker typecheck$ tsc --noEmit
+packages/adapters typecheck$ tsc --noEmit
+apps/workers/ingestion-worker typecheck: Done
+packages/adapters typecheck: Done
+apps/api typecheck$ tsc --noEmit
+apps/workers/notifications-worker typecheck$ tsc --noEmit
+apps/workers/notifications-worker typecheck: Done
+apps/api typecheck: Done
+packages/api-client typecheck$ tsc --noEmit
+packages/api-client typecheck: Done
+apps/web typecheck$ tsc --noEmit
+packages/sdk typecheck$ tsc --noEmit
+packages/sdk typecheck: Done
+apps/web typecheck: Done

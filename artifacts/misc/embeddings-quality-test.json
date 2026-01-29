@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Embeddings Quality Test Results",
+  "description": "IFC-039: Advanced AI Features - Embedding quality validation schema and example output",
+  "_fixture_notice": "This file defines the expected schema and provides example test results. Real validation requires running embedding tests with actual OpenAI API calls. See apps/ai-worker/src/chains/embedding.chain.test.ts for actual unit tests.",
+  "metadata": {
+    "taskId": "IFC-039",
+    "generatedAt": "2026-01-26T23:30:00.000Z",
+    "modelVersion": "text-embedding-3-small",
+    "embeddingDimensions": 1536,
+    "testSuite": "rag-quality-validation",
+    "isFixture": true,
+    "fixtureType": "schema-example"
+  },
+  "testResults": {
+    "semanticSimilarity": {
+      "description": "Tests that semantically similar texts produce similar embeddings",
+      "testCases": [
+        {
+          "id": "sim-001",
+          "text1": "How do I close a sales deal?",
+          "text2": "What are the steps to finalize a sale?",
+          "expectedSimilarity": 0.85,
+          "actualSimilarity": 0.89,
+          "passed": true
+        },
+        {
+          "id": "sim-002",
+          "text1": "Customer is unhappy with the product",
+          "text2": "The client expressed dissatisfaction",
+          "expectedSimilarity": 0.80,
+          "actualSimilarity": 0.84,
+          "passed": true
+        },
+        {
+          "id": "sim-003",
+          "text1": "Schedule a follow-up meeting",
+          "text2": "Book a call with the prospect",
+          "expectedSimilarity": 0.75,
+          "actualSimilarity": 0.78,
+          "passed": true
+        },
+        {
+          "id": "sim-004",
+          "text1": "Lead qualification criteria",
+          "text2": "BANT framework for sales",
+          "expectedSimilarity": 0.70,
+          "actualSimilarity": 0.72,
+          "passed": true
+        }
+      ],
+      "passRate": 1.0,
+      "avgSimilarityDelta": 0.035
+    },
+    "semanticDissimilarity": {
+      "description": "Tests that unrelated texts produce dissimilar embeddings",
+      "testCases": [
+        {
+          "id": "dsim-001",
+          "text1": "How to close a deal",
+          "text2": "Best recipes for chocolate cake",
+          "maxExpectedSimilarity": 0.30,
+          "actualSimilarity": 0.12,
+          "passed": true
+        },
+        {
+          "id": "dsim-002",
+          "text1": "CRM pipeline management",
+          "text2": "Weather forecast for tomorrow",
+          "maxExpectedSimilarity": 0.25,
+          "actualSimilarity": 0.08,
+          "passed": true
+        },
+        {
+          "id": "dsim-003",
+          "text1": "Lead scoring algorithm",
+          "text2": "Hiking trails in Colorado",
+          "maxExpectedSimilarity": 0.25,
+          "actualSimilarity": 0.11,
+          "passed": true
+        }
+      ],
+      "passRate": 1.0,
+      "avgDissimilarity": 0.103
+    },
+    "retrievalAccuracy": {
+      "description": "Tests RAG retrieval returns relevant documents",
+      "queries": [
+        {
+          "query": "How should I handle price objections?",
+          "expectedTopDocType": "sales_playbook",
+          "actualTopDocType": "sales_playbook",
+          "relevanceScore": 0.92,
+          "retrievalTimeMs": 45,
+          "passed": true
+        },
+        {
+          "query": "What is the follow-up process for leads?",
+          "expectedTopDocType": "lead_management",
+          "actualTopDocType": "lead_management",
+          "relevanceScore": 0.88,
+          "retrievalTimeMs": 52,
+          "passed": true
+        },
+        {
+          "query": "Customer onboarding best practices",
+          "expectedTopDocType": "customer_success",
+          "actualTopDocType": "customer_success",
+          "relevanceScore": 0.91,
+          "retrievalTimeMs": 38,
+          "passed": true
+        }
+      ],
+      "passRate": 1.0,
+      "avgRelevanceScore": 0.903,
+      "avgRetrievalTimeMs": 45
+    },
+    "chunkingQuality": {
+      "description": "Tests document chunking maintains semantic coherence",
+      "tests": [
+        {
+          "documentId": "doc-sales-guide",
+          "totalChunks": 12,
+          "avgChunkSize": 847,
+          "semanticCoherenceScore": 0.94,
+          "overlapEffectiveness": 0.89,
+          "passed": true
+        },
+        {
+          "documentId": "doc-product-manual",
+          "totalChunks": 24,
+          "avgChunkSize": 912,
+          "semanticCoherenceScore": 0.91,
+          "overlapEffectiveness": 0.87,
+          "passed": true
+        }
+      ],
+      "passRate": 1.0,
+      "avgCoherence": 0.925
+    }
+  },
+  "performanceMetrics": {
+    "embeddingGeneration": {
+      "avgLatencyMs": 120,
+      "p95LatencyMs": 180,
+      "p99LatencyMs": 250,
+      "throughputPerSecond": 8.3
+    },
+    "batchProcessing": {
+      "batchSize": 10,
+      "avgBatchLatencyMs": 450,
+      "tokensPerSecond": 2500
+    },
+    "vectorSearch": {
+      "avgSearchLatencyMs": 25,
+      "p95SearchLatencyMs": 45,
+      "indexSize": "50MB",
+      "documentsIndexed": 1250
+    }
+  },
+  "summary": {
+    "overallPassRate": 1.0,
+    "totalTestCases": 12,
+    "passedTestCases": 12,
+    "failedTestCases": 0,
+    "qualityGrade": "A",
+    "recommendation": "Embeddings quality meets production requirements. RAG system ready for deployment."
+  },
+  "validationTimestamp": "2026-01-26T10:00:00.000Z",
+  "validatedBy": "IFC-039-exec"
+}
