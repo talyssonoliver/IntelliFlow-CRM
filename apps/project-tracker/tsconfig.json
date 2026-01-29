@@ -22,7 +22,8 @@
       "@/*": ["./*"],
       "@/components/*": ["./components/*"],
       "@/lib/*": ["./lib/*"],
-      "@/hooks/*": ["./hooks/*"]
+      "@/hooks/*": ["./hooks/*"],
+      "@tools/*": ["../../tools/*"]
     }
   },
   "include": [
@@ -30,7 +31,8 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
+    ".next/dev/types/**/*.ts",
+    "../../tools/scripts/lib/workflow/**/*.ts"
   ],
   "exclude": ["node_modules"]
 }

@@ -12,7 +12,7 @@
   ],
   "globalPassThroughEnv": ["CI", "VERCEL", "VERCEL_ENV", "GITHUB_ACTIONS"],
   "ui": "tui",
-  "concurrency": "14",
+  "concurrency": "20",
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -104,9 +104,10 @@
       "dependsOn": ["^build", "build"],
       "inputs": ["tests/e2e/**", "playwright.config.ts"],
       "outputs": [
-        "test-results/**",
-        "playwright-report/**",
-        "artifacts/playwright-report/**"
+        "artifacts/misc/playwright-report/**",
+        "artifacts/misc/playwright-output/**",
+        "artifacts/test-results/playwright-*.json",
+        "artifacts/test-results/playwright-*.xml"
       ],
       "cache": false,
       "outputLogs": "full"

@@ -8,29 +8,29 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     },
     "./tracer": {
+      "types": "./dist/tracer.d.ts",
       "import": "./dist/tracer.mjs",
-      "require": "./dist/tracer.js",
-      "types": "./dist/tracer.d.ts"
+      "require": "./dist/tracer.js"
     },
     "./tracing": {
+      "types": "./dist/tracing.d.ts",
       "import": "./dist/tracing.mjs",
-      "require": "./dist/tracing.js",
-      "types": "./dist/tracing.d.ts"
+      "require": "./dist/tracing.js"
     },
     "./metrics": {
+      "types": "./dist/metrics.d.ts",
       "import": "./dist/metrics.mjs",
-      "require": "./dist/metrics.js",
-      "types": "./dist/metrics.d.ts"
+      "require": "./dist/metrics.js"
     },
     "./logging": {
+      "types": "./dist/logging.d.ts",
       "import": "./dist/logging.mjs",
-      "require": "./dist/logging.js",
-      "types": "./dist/logging.d.ts"
+      "require": "./dist/logging.js"
     }
   },
   "scripts": {

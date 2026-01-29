@@ -63,7 +63,6 @@
     "clsx",
     "tailwind-merge",
     "@radix-ui/*",
-    "lucide-react",
     "autoprefixer",
     "postcss",
     "depcheck",

@@ -2,31 +2,29 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    name: 'architecture',
+    name: 'events-worker',
     globals: true,
     environment: 'node',
-    include: ['**/*.test.ts', '**/*.spec.ts'],
+    include: ['src/**/*.{test,spec}.ts'],
     exclude: ['node_modules', 'dist'],
 
     // Memory optimization
     restoreMocks: true,
     clearMocks: true,
-    resetMocks: true,
+    mockReset: true,
     unstubGlobals: true,
     unstubEnvs: true,
 
-    // Pool configuration
     pool: 'forks',
     isolate: true,
-    forceExit: true,
     cache: false,
+    forceExit: true,
 
     // Memory management
     execArgv: ['--max-old-space-size=4096', '--expose-gc'],
     maxWorkers: 4,
     minWorkers: 1,
 
-    // Timeouts
     testTimeout: 30000,
     hookTimeout: 30000,
     teardownTimeout: 10000,

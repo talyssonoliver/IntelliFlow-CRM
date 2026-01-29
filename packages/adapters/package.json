@@ -38,6 +38,7 @@
     "@intelliflow/application": "workspace:*",
     "@intelliflow/db": "workspace:*",
     "@intelliflow/webhooks": "workspace:*",
+    "@prisma/client": "^5.10.0",
     "@supabase/supabase-js": "^2.89.0",
     "clamscan": "^2.2.1",
     "ics": "^3.8.1"

@@ -32,7 +32,7 @@
     "@intelliflow/typescript-config": "workspace:*",
     "@types/node": "^20.11.0",
     "@types/react": "19.2.3",
-    "eslint": "^8.56.0",
+    "eslint": "^9.0.0",
     "react": "19.2.3",
     "tsup": "^8.0.0",
     "typescript": "^5.3.0",

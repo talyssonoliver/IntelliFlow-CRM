@@ -18,6 +18,7 @@
     "storybook:build": "storybook build"
   },
   "dependencies": {
+    "@intelliflow/domain": "workspace:*",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-alert-dialog": "^1.0.5",
     "@radix-ui/react-avatar": "^1.0.4",
@@ -40,7 +41,6 @@
     "@tanstack/react-table": "^8.11.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
-    "lucide-react": "^0.303.0",
     "react-hook-form": "^7.69.0",
     "tailwind-merge": "^2.2.0"
   },
@@ -49,26 +49,26 @@
     "react-dom": "^19.2.3"
   },
   "devDependencies": {
-    "@storybook/addon-a11y": "^8.4.7",
-    "@storybook/addon-essentials": "^8.4.7",
-    "@storybook/addon-interactions": "^8.4.7",
-    "@storybook/addon-links": "^8.4.7",
-    "@storybook/addon-onboarding": "^8.4.7",
-    "@storybook/react": "^8.4.7",
-    "@storybook/react-vite": "^8.4.7",
-    "@storybook/test": "^8.4.7",
+    "@storybook/addon-a11y": "^8.6.15",
+    "@storybook/addon-essentials": "^8.6.15",
+    "@storybook/addon-interactions": "^8.6.15",
+    "@storybook/addon-links": "^8.6.15",
+    "@storybook/addon-onboarding": "^8.6.15",
+    "@storybook/react": "^8.6.15",
+    "@storybook/react-vite": "^8.6.15",
+    "@storybook/test": "^8.6.15",
     "@testing-library/jest-dom": "^6.1.5",
-    "@testing-library/react": "^14.1.2",
+    "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.5.1",
     "@types/react": "^19.2.3",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^4.2.1",
-    "@vitest/coverage-v8": "^1.0.4",
+    "@vitejs/plugin-react": "^4.7.0",
+    "@vitest/coverage-v8": "^4.0.16",
     "axe-core": "^4.8.4",
     "jsdom": "^23.0.1",
-    "storybook": "^8.4.7",
+    "storybook": "^8.6.15",
     "typescript": "^5.3.3",
-    "vitest": "^1.0.4",
+    "vitest": "^4.0.16",
     "vitest-axe": "^0.1.0"
   }
 }

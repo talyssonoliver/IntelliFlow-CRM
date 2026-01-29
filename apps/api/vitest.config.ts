@@ -1,19 +1,20 @@
 import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react';
 import path from 'node:path';
 
 export default defineConfig({
-  // Type assertion needed due to vite version mismatch between
-  // @vitejs/plugin-react (vite@6.x) and vitest (vite@7.x)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  plugins: [react() as any],
   test: {
-    name: 'web',
+    name: 'api',
     globals: true,
-    environment: 'happy-dom',
-    setupFiles: ['./vitest.setup.ts'],
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
-    exclude: ['node_modules', 'dist', '.next', 'build'],
+    environment: 'node',
+    setupFiles: ['./src/test/setup.ts'],
+    include: ['src/**/*.{test,spec}.ts'],
+    exclude: [
+      'node_modules',
+      'dist',
+      '.turbo',
+      // Integration tests require seeded database - run with pnpm test:integration
+      '**/*.integration.test.ts',
+    ],
 
     // Memory optimization
     restoreMocks: true,
@@ -28,10 +29,12 @@ export default defineConfig({
     isolate: true,
 
     // Memory management - control heap size per worker
-    // Note: vmMemoryLimit only works with vmThreads pool, not forks
     execArgv: ['--max-old-space-size=4096', '--expose-gc'],
     maxWorkers: 4,
     minWorkers: 1,
+
+    // Prevent hanging
+    forceExit: true,
 
     // Disable caching to prevent stale state accumulation
     cache: false,
@@ -41,10 +44,7 @@ export default defineConfig({
     hookTimeout: 30000,
     teardownTimeout: 10000,
 
-    // Force exit after tests complete to prevent hanging
-    forceExit: true,
-
-    // Handle worker exit errors gracefully - uses generic type to match Vitest's callback signature
+    // Handle worker exit errors gracefully
     onUnhandledError(error): boolean | void {
       const msg = typeof error === 'object' && error !== null && 'message' in error
         ? String((error as { message?: unknown }).message)
@@ -55,12 +55,31 @@ export default defineConfig({
         return false;
       }
     },
+
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/**',
+        'dist/**',
+        '**/*.test.ts',
+        '**/*.spec.ts',
+        'vitest.config.ts',
+        'src/test/**',
+        // Pure re-export barrel files (no testable logic, just exports)
+        'src/index.ts',
+        'src/agent/index.ts',
+        'src/security/index.ts',
+        'src/services/index.ts',
+        'src/security/audit/handlers/index.ts',
+        // Deprecated re-export file
+        'src/security/audit-logger.ts',
+      ],
+    },
   },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@/components': path.resolve(__dirname, './src/components'),
-      '@/lib': path.resolve(__dirname, './src/lib'),
     },
   },
 });
