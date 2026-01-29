@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Card } from '@intelliflow/ui';
+import { Card, ToastProvider, ToastViewport, Toast, ToastTitle, ToastDescription, ToastClose } from '@intelliflow/ui';
+import { trpc } from '@/lib/trpc';
 
 // Step configuration
 type StepId = 'personal' | 'company' | 'additional';
@@ -19,6 +20,9 @@ const steps: Step[] = [
   { id: 'company', number: 2, label: 'Company & Role' },
   { id: 'additional', number: 3, label: 'Additional Info' },
 ];
+
+// Contact status type
+type ContactStatus = 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
 
 // Form data structure
 interface ContactFormData {
@@ -39,6 +43,7 @@ interface ContactFormData {
   // Step 3: Additional Info
   contactType: string;
   contactTypeOther: string;
+  status: ContactStatus;
   tags: string;
   notes: string;
 }
@@ -58,6 +63,7 @@ const initialFormData: ContactFormData = {
   linkedIn: '',
   contactType: '',
   contactTypeOther: '',
+  status: 'ACTIVE',
   tags: '',
   notes: '',
 };
@@ -87,14 +93,62 @@ const departmentOptions = [
   { value: 'other', label: 'Other' },
 ];
 
+// Status options
+const statusOptions: { value: ContactStatus; label: string; description: string }[] = [
+  { value: 'ACTIVE', label: 'Active', description: 'Currently engaged contact' },
+  { value: 'INACTIVE', label: 'Inactive', description: 'Temporarily not engaged' },
+  { value: 'ARCHIVED', label: 'Archived', description: 'No longer active' },
+];
+
+// Toast notification type
+type ToastData = {
+  open: boolean;
+  variant: 'default' | 'destructive' | 'success';
+  title: string;
+  description: string;
+};
+
 export default function CreateNewContactPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<StepId>('personal');
   const [formData, setFormData] = useState<ContactFormData>(initialFormData);
   const [errors, setErrors] = useState<Partial<Record<keyof ContactFormData, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [toast, setToast] = useState<ToastData>({
+    open: false,
+    variant: 'default',
+    title: '',
+    description: '',
+  });
 
   const currentStepIndex = steps.findIndex(s => s.id === currentStep);
+
+  // tRPC mutation for creating contacts (IFC-089 integration)
+  const createContact = trpc.contact.create.useMutation({
+    onSuccess: () => {
+      setToast({
+        open: true,
+        variant: 'success',
+        title: 'Success!',
+        description: 'Contact created successfully. Redirecting...',
+      });
+
+      // Redirect to contacts list after a short delay
+      setTimeout(() => {
+        router.push('/contacts');
+      }, 1500);
+    },
+    onError: (error) => {
+      console.error('Failed to create contact:', error.message);
+
+      setToast({
+        open: true,
+        variant: 'destructive',
+        title: 'Failed to create contact',
+        description: error.message,
+      });
+    },
+  });
 
   // Update form field
   const updateField = (field: keyof ContactFormData, value: string) => {
@@ -161,16 +215,45 @@ export default function CreateNewContactPage() {
 
     setIsSubmitting(true);
     try {
-      // TODO: Call tRPC mutation to create contact
-      console.log('Creating contact:', formData);
+      // Helper to convert empty strings to undefined
+      const toOptional = (value: string): string | undefined =>
+        value.trim() ? value.trim() : undefined;
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Parse comma-separated tags into array
+      const parseTags = (tagsString: string): string[] =>
+        tagsString
+          .split(',')
+          .map(t => t.trim())
+          .filter(t => t.length > 0);
 
-      // Redirect to contacts list on success
-      router.push('/contacts');
+      // Map form data to API schema
+      const contactData = {
+        email: formData.email.trim(),
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        title: toOptional(formData.jobTitle),
+        phone: toOptional(formData.phone),
+        department: formData.department === 'other'
+          ? toOptional(formData.departmentOther)
+          : toOptional(formData.department),
+        streetAddress: toOptional(formData.streetAddress),
+        city: toOptional(formData.city),
+        zipCode: toOptional(formData.zipCode),
+        company: toOptional(formData.company),
+        linkedInUrl: toOptional(formData.linkedIn),
+        contactType: formData.contactType === 'other'
+          ? 'other' as const
+          : (toOptional(formData.contactType) as 'customer' | 'prospect' | 'partner' | 'vendor' | 'investor' | undefined),
+        status: formData.status,
+        tags: parseTags(formData.tags),
+        contactNotes: toOptional(formData.notes),
+      };
+
+      await createContact.mutateAsync(contactData);
+      // Success handled by mutation onSuccess callback
     } catch (error) {
-      console.error('Failed to create contact:', error);
+      // Error handled by mutation onError callback
+      console.error('Mutation error:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -199,8 +282,9 @@ export default function CreateNewContactPage() {
   };
 
   return (
-    <div className="flex flex-col gap-8">
-      {/* Breadcrumb */}
+    <ToastProvider>
+      <div className="flex flex-col gap-8">
+        {/* Breadcrumb */}
       <div className="flex flex-col gap-4">
         <nav aria-label="Breadcrumb" className="flex">
           <ol className="flex items-center space-x-2">
@@ -580,6 +664,35 @@ export default function CreateNewContactPage() {
                     </div>
                   </div>
 
+                  {/* Status */}
+                  <div className="space-y-1.5">
+                    <label htmlFor="status" className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+                      Status
+                    </label>
+                    <div className="relative">
+                      <select
+                        id="status"
+                        value={formData.status}
+                        onChange={(e) => updateField('status', e.target.value)}
+                        className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] appearance-none cursor-pointer transition-shadow"
+                      >
+                        {statusOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
+                        </svg>
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-400">
+                      {statusOptions.find(o => o.value === formData.status)?.description}
+                    </p>
+                  </div>
+
                   {/* Tags */}
                   <div className="space-y-1.5">
                     <label htmlFor="tags" className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
@@ -685,18 +798,29 @@ export default function CreateNewContactPage() {
         </div>
       </Card>
 
-      {/* Pro Tip */}
-      <div className="flex items-start gap-3 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/30">
-        <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
-        </svg>
-        <div className="flex flex-col gap-1">
-          <h4 className="text-sm font-bold text-blue-900 dark:text-blue-100">Pro Tip</h4>
-          <p className="text-sm text-blue-800 dark:text-blue-300/80">
-            You can skip the &apos;Additional Info&apos; step if you don&apos;t have all details handy. You can always enrich the contact profile later from the contact detail view or through data enrichment integrations.
-          </p>
+        {/* Pro Tip */}
+        <div className="flex items-start gap-3 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/30">
+          <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+          </svg>
+          <div className="flex flex-col gap-1">
+            <h4 className="text-sm font-bold text-blue-900 dark:text-blue-100">Pro Tip</h4>
+            <p className="text-sm text-blue-800 dark:text-blue-300/80">
+              You can skip the &apos;Additional Info&apos; step if you don&apos;t have all details handy. You can always enrich the contact profile later from the contact detail view or through data enrichment integrations.
+            </p>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Toast Notifications */}
+      <Toast open={toast.open} onOpenChange={(open) => setToast({ ...toast, open })} variant={toast.variant}>
+        <div className="grid gap-1">
+          <ToastTitle>{toast.title}</ToastTitle>
+          <ToastDescription>{toast.description}</ToastDescription>
+        </div>
+        <ToastClose />
+      </Toast>
+      <ToastViewport />
+    </ToastProvider>
   );
 }

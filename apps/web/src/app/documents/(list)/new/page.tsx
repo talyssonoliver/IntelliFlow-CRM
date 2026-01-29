@@ -79,7 +79,7 @@ export default function UploadDocumentPage() {
   const createDocument = trpc.documents.create.useMutation();
 
   // Update form field
-  const updateField = (field: keyof DocumentFormData, value: any) => {
+  const updateField = (field: keyof DocumentFormData, value: DocumentFormData[keyof DocumentFormData]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error when user types
     if (errors[field]) {

@@ -55,6 +55,9 @@ interface Activity {
   comments?: { user: string; text: string; timestamp: string }[];
 }
 
+// Contact status type
+type ContactStatus = 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
+
 // Mock contact data
 const mockContact = {
   id: '1',
@@ -67,6 +70,7 @@ const mockContact = {
   department: 'Marketing',
   location: 'San Francisco, CA',
   timezone: 'PST (UTC-8)',
+  status: 'ACTIVE' as ContactStatus,
   isOnline: true,
   isVIP: true,
   hasActiveDeal: true,
@@ -316,6 +320,48 @@ const tabs: Tab[] = [
   { id: 'notes', label: 'Notes', count: mockNotes.length },
   { id: 'ai-insights', label: 'AI Insights' },
 ];
+
+// Contact Status Badge Component
+function ContactStatusBadge({ status }: { status: ContactStatus }) {
+  const statusConfig = {
+    ACTIVE: {
+      label: 'Active',
+      className: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800',
+      icon: (
+        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+        </svg>
+      ),
+    },
+    INACTIVE: {
+      label: 'Inactive',
+      className: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
+      icon: (
+        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+        </svg>
+      ),
+    },
+    ARCHIVED: {
+      label: 'Archived',
+      className: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800',
+      icon: (
+        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+          <path d="m20.54 5.23-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM12 17.5L6.5 12H10v-2h4v2h3.5L12 17.5zM5.12 5l.81-1h12l.94 1H5.12z" />
+        </svg>
+      ),
+    },
+  };
+
+  const config = statusConfig[status];
+
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded border text-xs font-semibold ${config.className}`}>
+      {config.icon}
+      {config.label}
+    </span>
+  );
+}
 
 export default function Contact360Page() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
@@ -684,6 +730,7 @@ export default function Contact360Page() {
                 </Link>
               </div>
               <div className="flex flex-wrap gap-2 mb-6">
+                <ContactStatusBadge status={contact.status} />
                 {contact.isVIP && <span className="px-2 py-1 rounded bg-yellow-50 text-yellow-700 border border-yellow-200 text-xs font-semibold">VIP</span>}
                 {contact.hasActiveDeal && <span className="px-2 py-1 rounded bg-green-50 text-green-700 border border-green-200 text-xs font-semibold">Active Deal</span>}
                 {contact.tags.map((tag) => (
@@ -1018,6 +1065,10 @@ export default function Contact360Page() {
               <Card className="p-6">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Contact Information</h3>
                 <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <dt className="text-sm text-slate-500 dark:text-slate-400">Status</dt>
+                    <dd className="text-sm font-medium mt-1"><ContactStatusBadge status={contact.status} /></dd>
+                  </div>
                   <div>
                     <dt className="text-sm text-slate-500 dark:text-slate-400">Department</dt>
                     <dd className="text-sm font-medium text-slate-900 dark:text-white">{contact.department}</dd>

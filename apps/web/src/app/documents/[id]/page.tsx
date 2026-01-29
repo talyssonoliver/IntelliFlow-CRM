@@ -18,6 +18,17 @@ interface Tab {
 type DocumentStatus = 'DRAFT' | 'UNDER_REVIEW' | 'APPROVED' | 'SIGNED' | 'ARCHIVED' | 'SUPERSEDED';
 type AccessLevel = 'NONE' | 'VIEW' | 'COMMENT' | 'EDIT' | 'ADMIN';
 
+interface ACLEntry {
+  id: string;
+  principalType: string;
+  principalId: string;
+  principalName: string;
+  level: AccessLevel;
+  grantedAt: string;
+  grantedBy: string;
+  expiresAt?: string | null;
+}
+
 export default function DocumentDetailPage() {
   const params = useParams();
   const documentId = params.id as string;
@@ -30,9 +41,69 @@ export default function DocumentDetailPage() {
   });
 
   // Fetch audit trail for version history
-  const { data: auditTrail } = trpc.documents.getAuditTrail.useQuery({
+  const { data: rawAuditTrail } = trpc.documents.getAuditTrail.useQuery({
     documentId,
   });
+
+  // Map audit trail to UI-friendly format
+  // Prisma CaseDocumentAudit has: id, document_id, tenant_id, event_type, user_id, ip_address, user_agent, changes, metadata, created_at
+  // UI expects: versionMajor, versionMinor, versionPatch, action, timestamp, performedBy, changes, metadata
+
+  // Define simplified types to avoid deep type instantiation issues with Prisma's complex Json type
+  interface RawAuditEntry {
+    id: string;
+    document_id: string;
+    tenant_id: string;
+    event_type: string;
+    user_id: string;
+    ip_address: string | null;
+    user_agent: string | null;
+    changes: unknown;
+    metadata: unknown;
+    created_at: string | Date;
+  }
+
+  interface AuditEntry {
+    id: string;
+    versionMajor: number;
+    versionMinor: number;
+    versionPatch: number;
+    action: string;
+    timestamp: string;
+    performedBy: string;
+    changes: string | null;
+    metadata: { sizeBytes?: number } | null;
+  }
+
+  // Cast to simplified type to avoid deep type instantiation issues with Prisma's Json type
+  // The tRPC return type for caseDocumentAudit is complex; using explicit cast is safe since
+  // we're only accessing documented Prisma model fields
+  const auditEntries: RawAuditEntry[] = rawAuditTrail
+    ? (rawAuditTrail as unknown as RawAuditEntry[])
+    : [];
+  const auditTrail: AuditEntry[] = [];
+  for (let index = 0; index < auditEntries.length; index++) {
+    const entry = auditEntries[index];
+    // Extract version from metadata if available, otherwise use index as fallback
+    const metadata = entry.metadata as { version?: { major?: number; minor?: number; patch?: number }; sizeBytes?: number } | null;
+    const version = metadata?.version;
+    // created_at comes as string from tRPC serialization
+    const createdAt = typeof entry.created_at === 'string' ? entry.created_at : String(entry.created_at);
+    // changes field can be JSON object or null from Prisma
+    const changesStr = entry.changes != null ? JSON.stringify(entry.changes) : null;
+
+    auditTrail.push({
+      id: entry.id,
+      versionMajor: version?.major ?? 1,
+      versionMinor: version?.minor ?? 0,
+      versionPatch: version?.patch ?? (auditEntries.length - index - 1),
+      action: entry.event_type.replace(/_/g, ' ').toLowerCase().replace(/^\w/, (c) => c.toUpperCase()),
+      timestamp: createdAt,
+      performedBy: entry.user_id,
+      changes: changesStr,
+      metadata: metadata ? { sizeBytes: metadata.sizeBytes } : null,
+    });
+  }
 
   if (isLoading) {
     return (
@@ -84,15 +155,24 @@ export default function DocumentDetailPage() {
   };
 
   // Map ACL entries from API response
-  const accessControlList = (documentData.acl || []).map((acl: any) => ({
-    id: acl.id,
+  // ACL structure from domain: { principalId, principalType, accessLevel, grantedBy, grantedAt, expiresAt }
+  interface DomainACLEntry {
+    principalId: string;
+    principalType: 'USER' | 'ROLE' | 'TENANT';
+    accessLevel: string;
+    grantedBy: string;
+    grantedAt: string | Date;
+    expiresAt?: string | Date | null;
+  }
+  const accessControlList: ACLEntry[] = (documentData.acl || []).map((acl: DomainACLEntry, index: number) => ({
+    id: `acl-${index}`, // Generate ID since domain ACL doesn't have a separate ID
     principalType: acl.principalType,
     principalId: acl.principalId,
     principalName: acl.principalId, // In real app, this would be looked up
-    level: acl.accessLevel,
-    grantedAt: acl.grantedAt,
+    level: acl.accessLevel as AccessLevel,
+    grantedAt: typeof acl.grantedAt === 'string' ? acl.grantedAt : String(acl.grantedAt),
     grantedBy: acl.grantedBy,
-    expiresAt: acl.expiresAt,
+    expiresAt: acl.expiresAt ? (typeof acl.expiresAt === 'string' ? acl.expiresAt : String(acl.expiresAt)) : null,
   }));
 
   // Map e-signature data from API response
@@ -108,7 +188,15 @@ export default function DocumentDetailPage() {
   }] : [];
 
   // Comments are not yet implemented in backend
-  const comments: any[] = [];
+  interface Comment {
+    id: string;
+    author: string;
+    authorAvatar?: string;
+    content: string;
+    createdAt: string;
+    isResolved?: boolean;
+  }
+  const comments: Comment[] = [];
 
   const tabs: Tab[] = [
     { id: 'overview', label: 'Overview' },
@@ -272,7 +360,7 @@ export default function DocumentDetailPage() {
               <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
                 <p className="text-xs text-slate-400 uppercase font-semibold mb-3">Tags</p>
                 <div className="flex flex-wrap gap-2">
-                  {document.tags.map((tag) => (
+                  {document.tags.map((tag: string) => (
                     <span key={tag} className="px-2 py-1 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs font-medium">
                       {tag}
                     </span>
@@ -385,7 +473,7 @@ export default function DocumentDetailPage() {
                   </div>
 
                   {auditTrail && auditTrail.length > 0 ? (
-                    auditTrail.map((event: any, index: number) => {
+                    auditTrail.map((event, index) => {
                       const isCurrent = index === 0; // Most recent event is current
                       return (
                         <div key={event.id} className="p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-[#137fec] transition-colors">
@@ -473,7 +561,7 @@ export default function DocumentDetailPage() {
                       </thead>
                       <tbody>
                         {accessControlList.length > 0 ? (
-                          accessControlList.map((acl) => {
+                          accessControlList.map((acl: ACLEntry) => {
                             const levelBadge = getAccessLevelBadge(acl.level);
                             return (
                               <tr key={acl.id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">

@@ -5,25 +5,12 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Card, Button } from '@intelliflow/ui';
-import {
-  ChevronRight,
-  Calendar,
-  Building2,
-  Mail,
-  Phone,
-  ExternalLink,
-  Globe,
-  Plus,
-  Upload,
-  FileText,
-  Bot,
-  Check,
-  Clock,
-  TrendingUp,
-  MessageSquare,
-  CheckCircle,
-  BarChart3,
-} from 'lucide-react';
+// Material Symbols icon helper component
+const Icon = ({ name, className = '' }: { name: string; className?: string }) => (
+  <span className={`material-symbols-outlined ${className}`} aria-hidden="true">
+    {name}
+  </span>
+);
 
 // =============================================================================
 // Types
@@ -217,19 +204,19 @@ function formatCurrency(value: number): string {
 function getActivityIcon(type: ActivityType): React.ReactNode {
   switch (type) {
     case 'email':
-      return <Mail className="h-5 w-5 text-primary" />;
+      return <Icon name="mail" className="text-xl text-primary" />;
     case 'call':
-      return <Phone className="h-5 w-5 text-green-600" />;
+      return <Icon name="phone" className="text-xl text-green-600" />;
     case 'stage_change':
-      return <TrendingUp className="h-5 w-5 text-orange-500" />;
+      return <Icon name="trending_up" className="text-xl text-orange-500" />;
     case 'note':
-      return <MessageSquare className="h-5 w-5 text-blue-500" />;
+      return <Icon name="chat" className="text-xl text-blue-500" />;
     case 'task':
-      return <CheckCircle className="h-5 w-5 text-purple-500" />;
+      return <Icon name="check_circle" className="text-xl text-purple-500" />;
     case 'agent_action':
-      return <Bot className="h-5 w-5 text-purple-600" />;
+      return <Icon name="smart_toy" className="text-xl text-purple-600" />;
     default:
-      return <FileText className="h-5 w-5 text-slate-400" />;
+      return <Icon name="description" className="text-xl text-slate-400" />;
   }
 }
 
@@ -315,7 +302,7 @@ function AboutDealCard({ deal }: { deal: Deal }) {
         <div>
           <p className="text-xs text-slate-500 mb-1">Expected Close Date</p>
           <div className="flex items-center gap-2 text-slate-900 dark:text-slate-200 font-medium">
-            <Calendar className="h-4 w-4 text-slate-400" />
+            <Icon name="calendar_today" className="text-base text-slate-400" />
             {deal.expectedCloseDate
               ? new Date(deal.expectedCloseDate).toLocaleDateString('en-US', {
                   month: 'short',
@@ -362,17 +349,17 @@ function StakeholdersCard({ deal }: { deal: Deal }) {
         {/* Account */}
         <div className="flex items-start gap-3">
           <div className="bg-slate-100 p-2 rounded-lg text-slate-500">
-            <Building2 className="h-5 w-5" />
+            <Icon name="apartment" className="text-xl" />
           </div>
           <div className="flex-1">
             <p className="text-sm font-bold text-slate-900 dark:text-white">{deal.account.name}</p>
             <p className="text-xs text-slate-500">{deal.account.location}</p>
             <div className="flex gap-2 mt-2">
               <button className="text-slate-400 hover:text-primary">
-                <ExternalLink className="h-4 w-4" />
+                <Icon name="open_in_new" className="text-base" />
               </button>
               <button className="text-slate-400 hover:text-primary">
-                <Globe className="h-4 w-4" />
+                <Icon name="language" className="text-base" />
               </button>
             </div>
           </div>
@@ -390,10 +377,10 @@ function StakeholdersCard({ deal }: { deal: Deal }) {
             <p className="text-xs text-slate-500">{deal.contact.title}</p>
             <div className="flex gap-3 mt-2">
               <button className="bg-primary/10 hover:bg-primary/20 p-1.5 rounded text-primary transition-colors">
-                <Mail className="h-4 w-4" />
+                <Icon name="mail" className="text-base" />
               </button>
               <button className="bg-primary/10 hover:bg-primary/20 p-1.5 rounded text-primary transition-colors">
-                <Phone className="h-4 w-4" />
+                <Icon name="phone" className="text-base" />
               </button>
             </div>
           </div>
@@ -432,7 +419,7 @@ function ActivityTimeline({ activities, dealId }: { activities: ActivityEvent[];
           className="text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1"
         >
           View All
-          <ChevronRight className="h-4 w-4" />
+          <Icon name="chevron_right" className="text-base" />
         </Link>
       </div>
 
@@ -460,10 +447,10 @@ function ActivityTimeline({ activities, dealId }: { activities: ActivityEvent[];
             className="flex-1 bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
           />
           <button className="p-2.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
-            <Phone className="h-5 w-5" />
+            <Icon name="phone" className="text-xl" />
           </button>
           <button className="p-2.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
-            <CheckCircle className="h-5 w-5" />
+            <Icon name="check_circle" className="text-xl" />
           </button>
           <Button>Save</Button>
         </div>
@@ -476,9 +463,9 @@ function ActivityTimeline({ activities, dealId }: { activities: ActivityEvent[];
             {/* Date marker */}
             <div className="absolute -left-[29px] top-1 bg-white border-2 border-slate-200 rounded-full p-1 z-10">
               {date === 'today' ? (
-                <Calendar className="h-4 w-4 text-slate-500" />
+                <Icon name="calendar_today" className="text-base text-slate-500" />
               ) : (
-                <Clock className="h-4 w-4 text-slate-500" />
+                <Icon name="schedule" className="text-base text-slate-500" />
               )}
             </div>
 
@@ -508,7 +495,7 @@ function ActivityTimeline({ activities, dealId }: { activities: ActivityEvent[];
                     <div className="mb-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <Bot className="h-4 w-4 text-purple-600" />
+                          <Icon name="smart_toy" className="text-base text-purple-600" />
                           <span className="font-medium text-purple-800 text-sm">
                             {event.agentName}
                           </span>
@@ -542,7 +529,7 @@ function ActivityTimeline({ activities, dealId }: { activities: ActivityEvent[];
                           href={`/agent-approvals/preview?actionId=${event.agentActionId}`}
                           className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors mt-2"
                         >
-                          <ExternalLink className="h-3 w-3" />
+                          <Icon name="open_in_new" className="text-xs" />
                           Review & Approve
                         </Link>
                       )}
@@ -552,7 +539,7 @@ function ActivityTimeline({ activities, dealId }: { activities: ActivityEvent[];
                   {/* Attachment */}
                   {event.attachment && (
                     <div className="flex items-center gap-2 p-2 bg-slate-50 rounded border border-slate-100 max-w-fit">
-                      <FileText className="h-4 w-4 text-red-500" />
+                      <Icon name="description" className="text-base text-red-500" />
                       <span className="text-xs font-medium text-slate-700">
                         {event.attachment.name}
                       </span>
@@ -565,7 +552,7 @@ function ActivityTimeline({ activities, dealId }: { activities: ActivityEvent[];
                       <span className="px-2 py-0.5 bg-slate-100 rounded text-slate-600">
                         {event.stageChange.from}
                       </span>
-                      <ChevronRight className="h-4 w-4 text-slate-400" />
+                      <Icon name="chevron_right" className="text-base text-slate-400" />
                       <span className="px-2 py-0.5 bg-primary/10 text-primary font-medium rounded">
                         {event.stageChange.to}
                       </span>
@@ -589,7 +576,7 @@ function ProductsCard({ products, total }: { products: Deal['products']; total: 
           Products
         </h3>
         <button className="w-6 h-6 flex items-center justify-center rounded bg-primary/10 hover:bg-primary/20 text-primary transition-colors">
-          <Plus className="h-4 w-4" />
+          <Icon name="add" className="text-base" />
         </button>
       </div>
       <div className="space-y-3">
@@ -626,7 +613,7 @@ function NextStepsCard({ steps }: { steps: Deal['nextSteps'] }) {
           Next Steps
         </h3>
         <button className="w-6 h-6 flex items-center justify-center rounded bg-primary/10 hover:bg-primary/20 text-primary transition-colors">
-          <Plus className="h-4 w-4" />
+          <Icon name="add" className="text-base" />
         </button>
       </div>
       <div className="space-y-3">
@@ -677,7 +664,7 @@ function FilesCard({ files }: { files: Deal['files'] }) {
           Files
         </h3>
         <button className="w-6 h-6 flex items-center justify-center rounded bg-primary/10 hover:bg-primary/20 text-primary transition-colors">
-          <Upload className="h-4 w-4" />
+          <Icon name="upload" className="text-base" />
         </button>
       </div>
       <div className="space-y-2">
@@ -688,7 +675,7 @@ function FilesCard({ files }: { files: Deal['files'] }) {
             className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors group"
           >
             <div className={`p-1.5 rounded ${getFileIcon(file.type)}`}>
-              <FileText className="h-5 w-5" />
+              <Icon name="description" className="text-xl" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-slate-900 truncate group-hover:text-primary">
@@ -727,7 +714,7 @@ export default function DealDetailPage() {
               <Link href="/deals" className="hover:text-primary transition-colors">
                 Deals
               </Link>
-              <ChevronRight className="h-3.5 w-3.5" />
+              <Icon name="chevron_right" className="text-sm" />
               <span className="text-slate-900 dark:text-slate-200 font-medium">{deal.name}</span>
             </nav>
 
@@ -744,14 +731,14 @@ export default function DealDetailPage() {
           <div className="flex gap-3">
             <Link href={`/deals/${dealId}/forecast`}>
               <Button variant="outline" className="gap-2">
-                <BarChart3 className="h-4 w-4" />
+                <Icon name="bar_chart" className="text-base" />
                 Forecast
               </Button>
             </Link>
             <Button variant="outline">Lost</Button>
             <Button variant="outline">Edit</Button>
             <Button className="gap-2">
-              <Check className="h-4 w-4" />
+              <Icon name="check" className="text-base" />
               Won
             </Button>
           </div>

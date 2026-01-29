@@ -134,7 +134,7 @@ const SAMPLE_TICKETS: Ticket[] = [
     id: 'T-10698',
     subject: 'Awaiting Customer Response',
     description: 'Requested additional logs from customer',
-    status: 'WAITING_ON_CUSTOMER',
+    status: 'IN_PROGRESS', // Was WAITING_ON_CUSTOMER
     priority: 'MEDIUM',
     slaStatus: 'ON_TRACK',
     slaTimeRemaining: 480,
@@ -149,7 +149,7 @@ const SAMPLE_TICKETS: Ticket[] = [
     id: 'T-10654',
     subject: 'Account Upgrade Request',
     description: 'Customer requested upgrade to enterprise plan',
-    status: 'PENDING',
+    status: 'OPEN', // Was PENDING
     priority: 'LOW',
     slaStatus: 'ON_TRACK',
     slaTimeRemaining: 1200,
@@ -491,21 +491,22 @@ export default function TicketsPage() {
       setIsSubmitting(true);
       try {
         const result = await bulkUpdateStatusMutation.mutateAsync({
-          ids: tickets.map((t) => t.id),
+          ticketIds: tickets.map((t) => t.id),
           status: newStatus as TicketStatus,
         });
 
-        if (result.successful.length > 0) {
+        if (result.updated > 0) {
           toast({
             title: 'Status Updated',
-            description: `Successfully updated ${result.successful.length} ticket(s) to "${newStatus}".`,
+            description: `Successfully updated ${result.updated} ticket(s) to "${newStatus}".`,
           });
         }
 
-        if (result.failed.length > 0) {
+        const failedCount = tickets.length - result.updated;
+        if (failedCount > 0) {
           toast({
             title: 'Some updates failed',
-            description: `${result.failed.length} ticket(s) could not be updated.`,
+            description: `${failedCount} ticket(s) could not be updated.`,
             variant: 'destructive',
           });
         }
@@ -530,21 +531,21 @@ export default function TicketsPage() {
     setIsSubmitting(true);
     try {
       const result = await bulkResolveMutation.mutateAsync({
-        ids: tickets.map((t) => t.id),
+        ticketIds: tickets.map((t) => t.id),
       });
 
-      if (result.successful.length > 0) {
+      if (result.updated > 0) {
         toast({
           title: 'Tickets Resolved',
-          description: `Successfully resolved ${result.successful.length} ticket(s).`,
+          description: `Successfully resolved ${result.updated} ticket(s).`,
         });
       }
 
-      if (result.failed.length > 0) {
-        const firstFailed = result.failed[0] as { id: string; error?: string } | undefined;
+      const failedCount = tickets.length - result.updated;
+      if (failedCount > 0) {
         toast({
           title: 'Some tickets could not be resolved',
-          description: `${result.failed.length} ticket(s) failed: ${firstFailed?.error ?? 'Unknown error'}`,
+          description: `${failedCount} ticket(s) could not be resolved.`,
           variant: 'destructive',
         });
       }
@@ -567,21 +568,21 @@ export default function TicketsPage() {
     setIsSubmitting(true);
     try {
       const result = await bulkEscalateMutation.mutateAsync({
-        ids: tickets.map((t) => t.id),
+        ticketIds: tickets.map((t) => t.id),
       });
 
-      if (result.successful.length > 0) {
+      if (result.updated > 0) {
         toast({
           title: 'Tickets Escalated',
-          description: `Successfully escalated ${result.successful.length} ticket(s) to CRITICAL priority.`,
+          description: `Successfully escalated ${result.updated} ticket(s) to CRITICAL priority.`,
         });
       }
 
-      if (result.failed.length > 0) {
-        const firstFailed = result.failed[0] as { id: string; error?: string } | undefined;
+      const failedCount = tickets.length - result.updated;
+      if (failedCount > 0) {
         toast({
           title: 'Some tickets could not be escalated',
-          description: `${result.failed.length} ticket(s) failed: ${firstFailed?.error ?? 'Unknown error'}`,
+          description: `${failedCount} ticket(s) could not be escalated.`,
           variant: 'destructive',
         });
       }
@@ -604,21 +605,21 @@ export default function TicketsPage() {
     setIsSubmitting(true);
     try {
       const result = await bulkCloseMutation.mutateAsync({
-        ids: tickets.map((t) => t.id),
+        ticketIds: tickets.map((t) => t.id),
       });
 
-      if (result.successful.length > 0) {
+      if (result.updated > 0) {
         toast({
           title: 'Tickets Closed',
-          description: `Successfully closed ${result.successful.length} ticket(s).`,
+          description: `Successfully closed ${result.updated} ticket(s).`,
         });
       }
 
-      if (result.failed.length > 0) {
-        const firstFailed = result.failed[0] as { id: string; error?: string } | undefined;
+      const failedCount = tickets.length - result.updated;
+      if (failedCount > 0) {
         toast({
           title: 'Some tickets could not be closed',
-          description: `${result.failed.length} ticket(s) failed: ${firstFailed?.error ?? 'Unknown error'}`,
+          description: `${failedCount} ticket(s) could not be closed.`,
           variant: 'destructive',
         });
       }
@@ -642,22 +643,22 @@ export default function TicketsPage() {
       setIsSubmitting(true);
       try {
         const result = await bulkAssignMutation.mutateAsync({
-          ids: tickets.map((t) => t.id),
+          ticketIds: tickets.map((t) => t.id),
           assigneeId,
         });
 
-        if (result.successful.length > 0) {
+        if (result.updated > 0) {
           toast({
             title: 'Tickets Assigned',
-            description: `Successfully assigned ${result.successful.length} ticket(s).`,
+            description: `Successfully assigned ${result.updated} ticket(s).`,
           });
         }
 
-        if (result.failed.length > 0) {
-          const firstFailed = result.failed[0] as { id: string; error?: string } | undefined;
+        const failedCount = tickets.length - result.updated;
+        if (failedCount > 0) {
           toast({
             title: 'Some tickets could not be assigned',
-            description: `${result.failed.length} ticket(s) failed: ${firstFailed?.error ?? 'Unknown error'}`,
+            description: `${failedCount} ticket(s) could not be assigned.`,
             variant: 'destructive',
           });
         }
