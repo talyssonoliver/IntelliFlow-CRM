@@ -179,21 +179,33 @@ export function getLogPath(category: string, filename: string): string {
 
 /**
  * Build path under artifacts/reports/system-audit/{runId}/
- * Used for STOA evidence bundles.
+ *
+ * @deprecated Use `getEvidenceDir(repoRoot, sprintNumber, taskId, runId)` from
+ * `tools/scripts/lib/stoa/evidence.ts` instead. The new canonical path is:
+ * `.specify/sprints/sprint-{N}/execution/{taskId}/{runId}/matop/`
+ *
+ * This function is kept for backwards compatibility only.
  *
  * @param filename - Optional evidence filename
  * @returns Absolute path to STOA evidence directory or file
  *
  * @example
  * ```typescript
+ * // DEPRECATED - do not use in new code
  * const evidenceDir = getStoaEvidencePath();
  * // => /repo/artifacts/reports/system-audit/20251221-143022-8a4f/
  *
- * const summaryFile = getStoaEvidencePath('summary.json');
- * // => /repo/artifacts/reports/system-audit/20251221-143022-8a4f/summary.json
+ * // NEW approach - use evidence.ts instead:
+ * import { getEvidenceDir } from './stoa/evidence.js';
+ * const evidenceDir = getEvidenceDir(repoRoot, sprintNumber, taskId, runId);
+ * // => /repo/.specify/sprints/sprint-0/execution/IFC-001/20251221-143022-abc123/matop/
  * ```
  */
 export function getStoaEvidencePath(filename?: string): string {
+  console.warn(
+    'DEPRECATED: getStoaEvidencePath() uses old path structure. ' +
+      'Use getEvidenceDir(repoRoot, sprintNumber, taskId, runId) from stoa/evidence.ts instead.'
+  );
   const base = join(getRepoRoot(), ARTIFACTS_DIR, 'reports', 'system-audit', RUN_ID);
   mkdirSync(base, { recursive: true });
   return filename ? join(base, filename) : base;
@@ -315,10 +327,16 @@ export async function createLatestLink(source: string, linkPath: string): Promis
  * // => artifacts/benchmarks/baseline.json
  * ```
  *
- * ## STOA Evidence
+ * ## STOA Evidence (NEW - Sprint-Based Paths)
  * ```typescript
- * const evidenceFile = getStoaEvidencePath('summary.json');
- * // => artifacts/reports/system-audit/20251221-143022-8a4f/summary.json
+ * // Use the new sprint-based evidence paths:
+ * import { getEvidenceDir } from './stoa/evidence.js';
+ *
+ * const evidenceDir = getEvidenceDir(repoRoot, sprintNumber, taskId, runId);
+ * // => .specify/sprints/sprint-0/execution/IFC-001/20251221-143022-abc123/matop/
+ *
+ * // DEPRECATED (avoid in new code):
+ * // const evidenceFile = getStoaEvidencePath('summary.json');
  * ```
  *
  * ## Environment Variable Overrides

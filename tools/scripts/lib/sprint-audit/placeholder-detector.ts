@@ -27,11 +27,11 @@ import type {
  */
 export const PLACEHOLDER_PATTERNS: Record<PlaceholderPattern, RegExp> = {
   // Comment markers indicating incomplete work
-  TODO: /\b(TODO|@TODO)\s*[:(.\-]/gi,
-  FIXME: /\b(FIXME|@FIXME)\s*[:(.\-]/gi,
+  TODO: /\b(TODO|@TODO)\s*[:(.-]/gi,
+  FIXME: /\b(FIXME|@FIXME)\s*[:(.-]/gi,
   PLACEHOLDER: /\bPLACEHOLDER\b/gi,
   STUB: /\bSTUB\b/gi,
-  HACK: /\b(HACK|@HACK)\s*[:(.\-]/gi,
+  HACK: /\b(HACK|@HACK)\s*[:(.-]/gi,
   XXX: /\bXXX\b/gi,
 
   // Empty or placeholder implementations
@@ -44,7 +44,37 @@ export const PLACEHOLDER_PATTERNS: Record<PlaceholderPattern, RegExp> = {
   PENDING_TEST: /\b(?:it|test)\.todo\s*\(/g,
 
   // Mock returns that may indicate incomplete implementation
-  MOCK_RETURN: /return\s+['"`](?:mock|fake|dummy|placeholder|test)[_\-]?/gi,
+  MOCK_RETURN: /return\s+['"`](?:mock|fake|dummy|placeholder|test)[_-]?/gi,
+
+  // Simulated/synthetic data markers (IFC-085: fake benchmark data)
+  SIMULATED_DATA: /\b(simulated|mock:.*:v\d|fake[_-]?data|synthetic)\b/gi,
+
+  // Placeholder return values (IFC-157: SMS/Webhook/Push channels)
+  PLACEHOLDER_RETURN: /return\s*\{\s*placeholder:\s*true\s*\}/g,
+
+  // Not wired/integrated comments (IFC-099, IFC-117, IFC-144)
+  NOT_WIRED_COMMENT: /\/\/\s*(TODO|PLACEHOLDER):\s*(wire|integrate|connect)/gi,
+
+  // Placeholder channel switch cases (IFC-157: notification channels)
+  PLACEHOLDER_CHANNEL: /case\s+['"](\w+)['"]\s*:[\s\S]{0,100}placeholder:\s*true/g,
+
+  // Null fallback returns (IFC-020, IFC-155)
+  NULL_FALLBACK: /\/\/\s*For now,?\s*return\s*null\s*to\s*fallback|return\s*null\s*;?\s*\/\/\s*(placeholder|TODO|fallback)/gi,
+
+  // Hardcoded AI prediction values (IFC-095)
+  HARDCODED_PREDICTION: /\/\/\s*TODO:\s*Implement\s+with\s+real\s+.*chain|return\s*\{\s*(confidence|score|risk|churnProbability):\s*\d+\.?\d*\s*,/gi,
+
+  // Deferred audit logging (IFC-125)
+  DEFERRED_AUDIT: /\/\/\s*TODO:?\s*.*audit\s*log/gi,
+
+  // Placeholder demonstration comments (IFC-128)
+  DEMONSTRATION_PLACEHOLDER: /\/\/\s*This\s+is\s+a\s+placeholder\s+for\s+demonstration/gi,
+
+  // Simulated benchmark entries (IFC-150)
+  SIMULATED_BENCHMARK: /["']name["']\s*:\s*["'][^"']*\(simulated\)["']/gi,
+
+  // Stubbed token counting (IFC-115)
+  STUBBED_TOKEN_COUNT: /\/\/\s*Would\s+need\s+actual\s+token\s+counting/gi,
 };
 
 /**

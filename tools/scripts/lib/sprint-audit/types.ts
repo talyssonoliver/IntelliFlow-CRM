@@ -73,7 +73,19 @@ export type PlaceholderPattern =
   | 'SKIP_TEST'
   | 'EMPTY_TEST'
   | 'PENDING_TEST'
-  | 'MOCK_RETURN';
+  | 'MOCK_RETURN'
+  // New patterns for detecting incomplete implementations (IFC-085, IFC-099, etc.)
+  | 'SIMULATED_DATA'
+  | 'PLACEHOLDER_RETURN'
+  | 'NOT_WIRED_COMMENT'
+  | 'PLACEHOLDER_CHANNEL'
+  // Additional patterns for AI/ML incomplete implementations
+  | 'NULL_FALLBACK'
+  | 'HARDCODED_PREDICTION'
+  | 'DEFERRED_AUDIT'
+  | 'DEMONSTRATION_PLACEHOLDER'
+  | 'SIMULATED_BENCHMARK'
+  | 'STUBBED_TOKEN_COUNT';
 
 export interface PlaceholderFinding {
   /** File path where placeholder was found */

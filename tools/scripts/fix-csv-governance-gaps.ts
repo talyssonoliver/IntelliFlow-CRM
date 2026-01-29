@@ -108,7 +108,7 @@ const OWNER_TO_STOA_ROLE: Record<string, string> = {
 // ============================================================================
 
 const MANDATORY_GOVERNANCE_PREREQS = [
-  'FILE:artifacts/sprint0/codex-run/Framework.md',
+  'FILE:.specify/memory/Framework.md',
   'FILE:audit-matrix.yml',
   'POLICY:STOA-v4.2',
 ];

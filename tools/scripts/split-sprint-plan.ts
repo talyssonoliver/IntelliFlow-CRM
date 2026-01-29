@@ -46,11 +46,14 @@ function resolveMetricsDir(): string {
 const METRICS_DIR = resolveMetricsDir();
 const SOURCE_CSV = join(METRICS_DIR, 'Sprint_plan.csv');
 
-// Target: <25000 tokens per file
-// ~267 tokens per row average, so max ~90 rows per file
-const ROWS_PER_FILE = 90;
+// Token-based splitting configuration
+// Target: <20000 tokens per file (leaves headroom below 25000 limit)
+// Estimate: ~4 characters per token (conservative for CSV data with special chars)
+const CHARS_PER_TOKEN = 4;
+const MAX_TOKENS_PER_FILE = 18000; // Conservative limit to stay well under 25000
+const MAX_CHARS_PER_FILE = MAX_TOKENS_PER_FILE * CHARS_PER_TOKEN; // ~72000 chars
 
-const PART_NAMES = ['A', 'B', 'C', 'D', 'E', 'F']; // Support up to 6 parts if needed
+const PART_NAMES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']; // Support up to 8 parts if needed
 
 interface PartInfo {
   name: string;
@@ -67,65 +70,117 @@ interface SplitResult {
   error?: string;
 }
 
+/**
+ * Estimate token count for a string.
+ * Uses conservative estimate of ~4 chars per token for CSV data.
+ */
+function estimateTokens(text: string): number {
+  return Math.ceil(text.length / CHARS_PER_TOKEN);
+}
+
 export function splitSprintPlan(): SplitResult {
   try {
     const content = readFileSync(SOURCE_CSV, 'utf-8');
     const lines = content.split('\n');
 
     const header = lines[0];
+    const headerChars = header.length + 1; // +1 for newline
     const dataLines = lines.slice(1).filter((line) => line.trim().length > 0);
 
-    // Calculate number of parts needed
-    const numParts = Math.ceil(dataLines.length / ROWS_PER_FILE);
+    // Token-based splitting: accumulate rows until we approach the limit
+    const parts: PartInfo[] = [];
+    let currentPartLines: string[] = [];
+    let currentPartChars = headerChars; // Start with header size
+    let currentStartRow = 1;
+    let partIndex = 0;
 
-    if (numParts > PART_NAMES.length) {
-      throw new Error(
-        `File too large: needs ${numParts} parts but only ${PART_NAMES.length} supported`
-      );
+    for (let i = 0; i < dataLines.length; i++) {
+      const line = dataLines[i];
+      const lineChars = line.length + 1; // +1 for newline
+
+      // Check if adding this line would exceed the limit
+      // (but always add at least one line per part)
+      if (currentPartLines.length > 0 && currentPartChars + lineChars > MAX_CHARS_PER_FILE) {
+        // Save current part
+        if (partIndex >= PART_NAMES.length) {
+          throw new Error(
+            `File too large: needs more than ${PART_NAMES.length} parts. ` +
+              `Consider increasing MAX_TOKENS_PER_FILE or adding more PART_NAMES.`
+          );
+        }
+
+        const partName = PART_NAMES[partIndex];
+        const partPath = join(METRICS_DIR, `Sprint_plan_${partName}.csv`);
+        const partContent = header + '\n' + currentPartLines.join('\n');
+        writeFileSync(partPath, partContent, 'utf-8');
+
+        parts.push({
+          name: partName,
+          path: partPath,
+          rows: currentPartLines.length,
+          startRow: currentStartRow,
+          endRow: currentStartRow + currentPartLines.length - 1,
+        });
+
+        // Start new part
+        partIndex++;
+        currentStartRow = i + 1; // 1-indexed
+        currentPartLines = [];
+        currentPartChars = headerChars;
+      }
+
+      // Add line to current part
+      currentPartLines.push(line);
+      currentPartChars += lineChars;
     }
 
-    const parts: PartInfo[] = [];
+    // Save final part if there are remaining lines
+    if (currentPartLines.length > 0) {
+      if (partIndex >= PART_NAMES.length) {
+        throw new Error(
+          `File too large: needs more than ${PART_NAMES.length} parts. ` +
+            `Consider increasing MAX_TOKENS_PER_FILE or adding more PART_NAMES.`
+        );
+      }
 
-    // Generate each part
-    for (let i = 0; i < numParts; i++) {
-      const partName = PART_NAMES[i];
+      const partName = PART_NAMES[partIndex];
       const partPath = join(METRICS_DIR, `Sprint_plan_${partName}.csv`);
-
-      const startIdx = i * ROWS_PER_FILE;
-      const endIdx = Math.min((i + 1) * ROWS_PER_FILE, dataLines.length);
-      const partData = dataLines.slice(startIdx, endIdx);
-
-      // Write part file
-      const partContent = header + '\n' + partData.join('\n');
+      const partContent = header + '\n' + currentPartLines.join('\n');
       writeFileSync(partPath, partContent, 'utf-8');
 
       parts.push({
         name: partName,
         path: partPath,
-        rows: partData.length,
-        startRow: startIdx + 1, // 1-indexed for human readability
-        endRow: endIdx,
+        rows: currentPartLines.length,
+        startRow: currentStartRow,
+        endRow: currentStartRow + currentPartLines.length - 1,
       });
+
+      partIndex++;
     }
 
-    // Clean up unused part files (if file got smaller)
-    for (let i = numParts; i < PART_NAMES.length; i++) {
+    // Clean up unused part files (if file got smaller or split changed)
+    for (let i = partIndex; i < PART_NAMES.length; i++) {
       const unusedPath = join(METRICS_DIR, `Sprint_plan_${PART_NAMES[i]}.csv`);
       if (existsSync(unusedPath)) {
         unlinkSync(unusedPath);
       }
     }
 
-    // Print summary
+    // Print summary with token estimates
     console.log('='.repeat(70));
-    console.log('SPRINT PLAN SPLIT COMPLETE');
+    console.log('SPRINT PLAN SPLIT COMPLETE (Token-Based)');
     console.log('='.repeat(70));
     console.log(`Source: Sprint_plan.csv (${dataLines.length} rows)`);
+    console.log(`Token limit per file: ~${MAX_TOKENS_PER_FILE} tokens (~${MAX_CHARS_PER_FILE} chars)`);
     console.log('');
     console.log('Generated Parts:');
     for (const part of parts) {
+      const partContent = readFileSync(part.path, 'utf-8');
+      const estTokens = estimateTokens(partContent);
       console.log(
-        `  Sprint_plan_${part.name}.csv: rows ${part.startRow}-${part.endRow} (${part.rows} rows)`
+        `  Sprint_plan_${part.name}.csv: rows ${part.startRow}-${part.endRow} ` +
+          `(${part.rows} rows, ~${estTokens} tokens, ${partContent.length} chars)`
       );
     }
     console.log('');

@@ -173,3 +173,61 @@ export {
   type TaskAttestation,
   type SprintAttestationReport,
 } from './attestation.js';
+
+// Context Hydration
+export {
+  extractTaskMetadata,
+  getFullTaskRecord,
+  resolveDependencyArtifacts,
+  scanCodebasePatterns,
+  loadProjectKnowledge,
+  hydrateContext,
+  getContextDir,
+  writeHydratedContext,
+  loadHydratedContext,
+  hasHydratedContext,
+  generateContextMarkdown,
+  hydrateContextCli,
+} from './context-hydration.js';
+
+// Agent Selection
+export {
+  AGENT_POOL,
+  analyzeTaskDomain,
+  selectAgents,
+  writeAgentSelection,
+} from './agent-selection.js';
+
+// Spec Session
+export {
+  createSpecSession,
+  getRoundType,
+  getTopicForRound,
+  buildAgentPrompt,
+  addRoundToSession,
+  checkConsensus,
+  generateSpecification,
+  writeSpecification,
+  writeDiscussionLog,
+} from './spec-session.js';
+
+// Plan Session
+export {
+  createPlanSession,
+  generatePlan,
+  writePlan,
+} from './plan-session.js';
+
+// Paths
+export {
+  getSpecificationsDir,
+  getContextDir as getContextDirPath,
+  getSpecPath,
+  getPlanPath,
+  getDiscussionPath,
+  getHydratedContextMdPath,
+  getHydratedContextJsonPath,
+  getAgentSelectionPath,
+  getAttestationsDir,
+  getEvidenceDir,
+} from './paths.js';

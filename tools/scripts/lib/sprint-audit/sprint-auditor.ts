@@ -181,10 +181,14 @@ export function verifyDependencies(
       continue;
     }
 
-    // Check for attestation file
+    // Check for attestation file (sprint-based path)
+    const depSprintNumber = parseInt(depTask?.['Target Sprint'] || '0', 10);
     const attestationPath = path.join(
       repoRoot,
-      'artifacts/attestations',
+      '.specify',
+      'sprints',
+      `sprint-${depSprintNumber}`,
+      'attestations',
       depId,
       'attestation.json'
     );
@@ -435,8 +439,9 @@ export async function auditTask(
     issues.join('; ')
   );
 
-  // 9. Write attestation to standard location
-  await writeAttestation(config.repoRoot, attestation);
+  // 9. Write attestation to sprint-based location
+  const sprintNumber = parseInt(task['Target Sprint'] || '0', 10);
+  await writeAttestation(config.repoRoot, attestation, sprintNumber);
 
   // 10. Create action items for failures (integrates with debt-ledger.yaml)
   if (attestation.verdict !== 'COMPLETE') {

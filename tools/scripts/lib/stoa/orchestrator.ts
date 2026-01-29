@@ -205,10 +205,6 @@ export async function runStoaOrchestration(
   log(`Strict Mode: ${strictMode ? 'Yes' : 'No'}`);
   log(`Dry Run: ${dryRun ? 'Yes' : 'No'}`);
 
-  // Initialize evidence directory
-  const evidenceDir = getEvidenceDir(repoRoot, runId);
-  await ensureEvidenceDirs(evidenceDir);
-
   // -------------------------------------------------------------------------
   // Phase 1: Load task and assign STOAs
   // -------------------------------------------------------------------------
@@ -222,6 +218,17 @@ export async function runStoaOrchestration(
 
   log(`Task: ${task.description || taskId}`);
   log(`Current Status: ${task.status || 'Unknown'}`);
+
+  // Parse sprint number from task's targetSprint
+  const sprintNumber = task.targetSprint
+    ? parseInt(task.targetSprint, 10)
+    : 0; // Default to sprint 0 if not specified
+
+  log(`Sprint: ${sprintNumber}`);
+
+  // Initialize evidence directory (requires sprint number and taskId)
+  const evidenceDir = getEvidenceDir(repoRoot, sprintNumber, taskId, runId);
+  await ensureEvidenceDirs(evidenceDir);
 
   const stoaAssignment = assignStoas(task);
   log(`Lead STOA: ${stoaAssignment.leadStoa}`);
@@ -370,8 +377,9 @@ export async function runStoaOrchestration(
 
   const evidenceBundle = await createEvidenceBundle(
     repoRoot,
-    runId,
+    sprintNumber,
     taskId,
+    runId,
     gateSelection,
     gateResults,
     waivers,

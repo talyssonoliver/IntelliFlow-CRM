@@ -240,9 +240,9 @@ export function buildContextPack(
   const filePaths = getFilePrerequisites(contract);
   const dirPaths = getDirPrerequisites(contract);
 
-  // Create output directory - consolidated structure: artifacts/attestations/{taskId}/
-  // runId is stored as metadata inside the files, not as directory structure
-  const outputDir = join(root, 'artifacts', 'attestations', taskId);
+  // Create output directory - sprint-based structure: .specify/sprints/sprint-{N}/attestations/{taskId}/
+  const sprintNumber = parseInt(task['Target Sprint'] || '0', 10);
+  const outputDir = join(root, '.specify', 'sprints', `sprint-${sprintNumber}`, 'attestations', taskId);
   mkdirSync(outputDir, { recursive: true });
 
   const packPath = join(outputDir, 'context_pack.md');

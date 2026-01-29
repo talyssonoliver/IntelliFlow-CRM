@@ -100,14 +100,36 @@ export function generateDirectoryHashes(dirPath: string, baseDir: string): Evide
 }
 
 // ============================================================================
-// Evidence Bundle Directory Structure
+// Evidence Bundle Directory Structure (Sprint-Based)
 // ============================================================================
 
 /**
  * Get the evidence bundle directory path.
+ *
+ * Uses canonical sprint-based structure:
+ * .specify/sprints/sprint-{N}/execution/{taskId}/{runId}/matop/
+ *
+ * @param repoRoot - Repository root path
+ * @param sprintNumber - Sprint number for the task
+ * @param taskId - Task ID (e.g., "IFC-009")
+ * @param runId - Unique run identifier
  */
-export function getEvidenceDir(repoRoot: string, runId: string): string {
-  return join(repoRoot, 'artifacts', 'reports', 'system-audit', runId);
+export function getEvidenceDir(
+  repoRoot: string,
+  sprintNumber: number,
+  taskId: string,
+  runId: string
+): string {
+  return join(
+    repoRoot,
+    '.specify',
+    'sprints',
+    `sprint-${sprintNumber}`,
+    'execution',
+    taskId,
+    runId,
+    'matop'
+  );
 }
 
 /**
@@ -139,6 +161,18 @@ export async function ensureEvidenceDirs(evidenceDir: string): Promise<void> {
   await mkdir(getGatesDir(evidenceDir), { recursive: true });
   await mkdir(getStoaVerdictsDir(evidenceDir), { recursive: true });
   await mkdir(getTaskUpdatesDir(evidenceDir), { recursive: true });
+}
+
+/**
+ * @deprecated Use getEvidenceDir with sprint-based paths
+ * Legacy function for backwards compatibility during migration.
+ */
+export function getLegacyEvidenceDir(repoRoot: string, runId: string): string {
+  console.warn(
+    'DEPRECATED: getLegacyEvidenceDir uses old path structure. ' +
+      'Use getEvidenceDir(repoRoot, sprintNumber, taskId, runId) instead.'
+  );
+  return join(repoRoot, 'artifacts', 'reports', 'system-audit', runId);
 }
 
 // ============================================================================
@@ -248,18 +282,29 @@ export function writeCsvPatchProposal(evidenceDir: string, proposal: CsvPatchPro
 
 /**
  * Create a complete evidence bundle.
+ *
+ * @param repoRoot - Repository root path
+ * @param sprintNumber - Sprint number for the task
+ * @param taskId - Task ID (e.g., "IFC-009")
+ * @param runId - Unique run identifier
+ * @param gateSelection - Gate selection result
+ * @param gateResults - Array of gate execution results
+ * @param waivers - Array of waiver records
+ * @param stoaVerdicts - Array of STOA verdicts
+ * @param csvPatchProposal - Optional CSV patch proposal
  */
 export async function createEvidenceBundle(
   repoRoot: string,
-  runId: string,
+  sprintNumber: number,
   taskId: string,
+  runId: string,
   gateSelection: GateSelectionResult,
   gateResults: GateExecutionResult[],
   waivers: WaiverRecord[],
   stoaVerdicts: StoaVerdict[],
   csvPatchProposal?: CsvPatchProposal
 ): Promise<EvidenceBundle> {
-  const evidenceDir = getEvidenceDir(repoRoot, runId);
+  const evidenceDir = getEvidenceDir(repoRoot, sprintNumber, taskId, runId);
   await ensureEvidenceDirs(evidenceDir);
 
   // Write all files

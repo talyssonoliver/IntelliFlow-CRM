@@ -555,18 +555,19 @@ function calculateTotalEstimate(testFiles: number, implFiles: number, integratio
 
 /**
  * Write plan to file
- * Uses new unified path structure: .specify/{TASK_ID}/planning/plan.md
+ * Uses new unified path structure: .specify/sprints/sprint-{N}/planning/{TASK_ID}-plan.md
  */
 export function writePlan(
   plan: PlanDocument,
   repoRoot: string,
+  sprintNumber: number,
   specifyDir: string = '.specify'
 ): string {
   const fullSpecifyDir = join(repoRoot, specifyDir);
-  const planDir = getPlanningDir(fullSpecifyDir, plan.taskId);
+  const planDir = getPlanningDir(fullSpecifyDir, sprintNumber);
   mkdirSync(planDir, { recursive: true });
 
-  const outputPath = getPlanPath(fullSpecifyDir, plan.taskId);
+  const outputPath = getPlanPath(fullSpecifyDir, sprintNumber, plan.taskId);
   const md = generatePlanMarkdown(plan);
   writeFileSync(outputPath, md);
 
@@ -575,16 +576,17 @@ export function writePlan(
 
 /**
  * Write plan session state to file
- * Uses new unified path structure: .specify/{TASK_ID}/context/plan-session.json
+ * Uses new unified path structure: .specify/sprints/sprint-{N}/context/{TASK_ID}/plan-session.json
  */
 export function writePlanSession(
   session: PlanSession,
   repoRoot: string,
+  sprintNumber: number,
   specifyDir: string = '.specify'
 ): string {
   const fullSpecifyDir = join(repoRoot, specifyDir);
-  const outputPath = getPlanSessionPath(fullSpecifyDir, session.taskId);
-  const outputDir = join(fullSpecifyDir, session.taskId, 'context');
+  const outputPath = getPlanSessionPath(fullSpecifyDir, sprintNumber, session.taskId);
+  const outputDir = join(fullSpecifyDir, 'sprints', `sprint-${sprintNumber}`, 'context', session.taskId);
   mkdirSync(outputDir, { recursive: true });
 
   writeFileSync(outputPath, JSON.stringify(session, null, 2));

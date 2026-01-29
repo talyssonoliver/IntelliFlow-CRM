@@ -9,6 +9,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { getRelativeSchemaPath, SCHEMA_FILES } from '../schema-paths';
 import type {
   ArtifactVerification,
   ValidationResult,
@@ -170,7 +171,8 @@ export function generateAttestation(
   taskId: string,
   findings: AuditFindings,
   runId?: string,
-  notes?: string
+  notes?: string,
+  outputDir?: string
 ): TaskAttestation {
   const verdict = determineVerdict(findings);
   const now = new Date().toISOString();
@@ -223,8 +225,13 @@ export function generateAttestation(
     placeholders_found: findings.placeholders.length,
   };
 
+  // Calculate schema path - use relative path if outputDir provided, otherwise use filename only
+  const schemaRef = outputDir
+    ? getRelativeSchemaPath(outputDir, 'ATTESTATION')
+    : SCHEMA_FILES.ATTESTATION;
+
   return {
-    $schema: 'https://intelliflow-crm.com/schemas/attestation.schema.json',
+    $schema: schemaRef,
     schema_version: '1.0.0',
     task_id: taskId,
     run_id: runId,
@@ -247,17 +254,17 @@ export function generateAttestation(
 // =============================================================================
 
 /**
- * Gets the attestation directory for a task
+ * Gets the attestation directory for a task (sprint-based structure)
  */
-export function getAttestationDir(repoRoot: string, taskId: string): string {
-  return path.join(repoRoot, 'artifacts/attestations', taskId);
+export function getAttestationDir(repoRoot: string, taskId: string, sprintNumber: number = 0): string {
+  return path.join(repoRoot, '.specify', 'sprints', `sprint-${sprintNumber}`, 'attestations', taskId);
 }
 
 /**
  * Gets the latest attestation file path for a task
  */
-export function getAttestationPath(repoRoot: string, taskId: string): string {
-  return path.join(getAttestationDir(repoRoot, taskId), 'attestation-latest.json');
+export function getAttestationPath(repoRoot: string, taskId: string, sprintNumber: number = 0): string {
+  return path.join(getAttestationDir(repoRoot, taskId, sprintNumber), 'attestation-latest.json');
 }
 
 /**
@@ -278,9 +285,10 @@ function generateAttestationFilename(timestamp: string): string {
  */
 export async function writeAttestation(
   repoRoot: string,
-  attestation: TaskAttestation
+  attestation: TaskAttestation,
+  sprintNumber: number = 0
 ): Promise<string> {
-  const dir = getAttestationDir(repoRoot, attestation.task_id);
+  const dir = getAttestationDir(repoRoot, attestation.task_id, sprintNumber);
   await fs.promises.mkdir(dir, { recursive: true });
 
   // Write timestamped file (preserves history)
@@ -302,19 +310,20 @@ export async function writeAttestation(
  */
 export async function readAttestation(
   repoRoot: string,
-  taskId: string
+  taskId: string,
+  sprintNumber: number = 0
 ): Promise<TaskAttestation | null> {
-  const latestPath = path.join(getAttestationDir(repoRoot, taskId), 'attestation-latest.json');
+  const latestPath = path.join(getAttestationDir(repoRoot, taskId, sprintNumber), 'attestation-latest.json');
 
   if (fs.existsSync(latestPath)) {
     const content = await fs.promises.readFile(latestPath, 'utf-8');
     return JSON.parse(content) as TaskAttestation;
   }
 
-  // Fallback: try legacy attestation.json
-  const legacyPath = path.join(getAttestationDir(repoRoot, taskId), 'attestation.json');
-  if (fs.existsSync(legacyPath)) {
-    const content = await fs.promises.readFile(legacyPath, 'utf-8');
+  // Fallback: try attestation.json in the same sprint-based directory
+  const attestationPath = path.join(getAttestationDir(repoRoot, taskId, sprintNumber), 'attestation.json');
+  if (fs.existsSync(attestationPath)) {
+    const content = await fs.promises.readFile(attestationPath, 'utf-8');
     return JSON.parse(content) as TaskAttestation;
   }
 
@@ -326,9 +335,10 @@ export async function readAttestation(
  */
 export async function listAttestationHistory(
   repoRoot: string,
-  taskId: string
+  taskId: string,
+  sprintNumber: number = 0
 ): Promise<TaskAttestation[]> {
-  const dir = getAttestationDir(repoRoot, taskId);
+  const dir = getAttestationDir(repoRoot, taskId, sprintNumber);
 
   if (!fs.existsSync(dir)) {
     return [];
@@ -360,12 +370,13 @@ export async function listAttestationHistory(
  */
 export async function listSprintAttestations(
   repoRoot: string,
-  taskIds: string[]
+  taskIds: string[],
+  sprintNumber: number = 0
 ): Promise<Map<string, TaskAttestation | null>> {
   const results = new Map<string, TaskAttestation | null>();
 
   for (const taskId of taskIds) {
-    const attestation = await readAttestation(repoRoot, taskId);
+    const attestation = await readAttestation(repoRoot, taskId, sprintNumber);
     results.set(taskId, attestation);
   }
 

@@ -40,8 +40,11 @@ export interface Task {
   status?: string;
   dependencies?: string[];
   definitionOfDone?: string;
-  targetSprint?: string;
+  targetSprint?: string | number;
   affectedPaths?: string[];
+  kpis?: string;
+  prerequisites?: string;
+  validationMethod?: string;
 }
 
 // ============================================================================
@@ -310,4 +313,219 @@ export interface StoaConfig {
   sprintPlanPath?: string;
   evidenceOutputDir: string;
   dryRun?: boolean;
+}
+
+// ============================================================================
+// Hydrated Context Types
+// ============================================================================
+
+/**
+ * Dependency artifact with paths to spec, plan, attestation, and code files
+ */
+export interface DependencyArtifact {
+  taskId: string;
+  status?: string;
+  hasSpec?: boolean;
+  hasPlan?: boolean;
+  specPath?: string;
+  planPath?: string;
+  attestationPath?: string;
+  deliveryPath?: string;
+  codeFiles?: string[];
+  interfaces?: string[];
+  patterns?: string[];
+}
+
+/**
+ * Codebase pattern found during context hydration
+ */
+export interface CodebasePattern {
+  filePath: string;
+  lineNumber: number;
+  keyword: string;
+  snippet?: string;
+  relevanceScore?: number;
+}
+
+/**
+ * Project knowledge gathered during hydration
+ */
+export interface ProjectKnowledge {
+  claudeMd?: string;
+  architectureDocs?: string[];
+  domainModels?: string[];
+  schemas?: string[];
+}
+
+/**
+ * Source of hydration data for traceability
+ */
+export interface HydrationSource {
+  type: 'csv' | 'file' | 'grep' | 'glob' | 'task_metadata' | 'dependency_artifact' | 'codebase_pattern' | 'project_knowledge';
+  path?: string;
+  query?: string;
+  timestamp?: string;
+  loadedAt?: string;
+}
+
+/**
+ * Full hydrated context for agent discussion
+ */
+export interface HydratedContext {
+  taskId: string;
+  taskMetadata: Task;
+  section?: string;
+  description?: string;
+  definitionOfDone?: string;
+  kpis?: string;
+  prerequisites?: string;
+  dependencies?: string[];
+  artifacts?: string[];
+  codebasePatterns: CodebasePattern[];
+  relevantFiles?: string[];
+  dependencyArtifacts: DependencyArtifact[];
+  projectKnowledge?: ProjectKnowledge;
+  sources?: HydrationSource[];
+  hydratedAt?: string;
+  contextHash?: string;
+}
+
+// ============================================================================
+// Agent Types
+// ============================================================================
+
+/**
+ * Agent role identifiers used in spec sessions
+ * Human-readable names for better UX in discussion logs
+ */
+export type AgentRole =
+  | 'Backend-Architect'
+  | 'Frontend-Lead'
+  | 'AI-Specialist'
+  | 'Security-Lead'
+  | 'DevOps-Lead'
+  | 'Data-Engineer'
+  | 'A11y-Expert'
+  | 'Compliance'
+  | 'Domain-Expert'
+  | 'Test-Engineer';
+
+/**
+ * All available agent roles as const array for iteration
+ */
+export const AGENT_ROLES: readonly AgentRole[] = [
+  'Backend-Architect',
+  'Frontend-Lead',
+  'AI-Specialist',
+  'Security-Lead',
+  'DevOps-Lead',
+  'Data-Engineer',
+  'A11y-Expert',
+  'Compliance',
+  'Domain-Expert',
+  'Test-Engineer',
+] as const;
+
+/**
+ * Agent profile with expertise and trigger conditions
+ */
+export interface AgentProfile {
+  role: AgentRole;
+  expertise: string[];
+  triggerKeywords: RegExp;
+  triggerPaths: RegExp[];
+  alwaysInclude: boolean;
+  priority: number;
+}
+
+/**
+ * Result of agent selection for a task
+ */
+export interface AgentSelection {
+  taskId: string;
+  selectedAgents: AgentRole[];
+  rationale?: string;
+  domain?: string;
+  taskDomain?: string;
+  selectedAt?: string;
+  selectionRationale?: Record<string, string>;
+}
+
+// ============================================================================
+// Spec Session Types
+// ============================================================================
+
+export type SpecRoundType = 'ANALYSIS' | 'PROPOSAL' | 'CHALLENGE' | 'CONSENSUS';
+
+export interface AgentContribution {
+  agent: string;
+  interpretation?: string;
+  questions?: string[];
+  concerns?: string[];
+  proposal?: string;
+  challenges?: string[];
+  consensus?: string;
+  timestamp: string;
+}
+
+export interface SpecSessionRound {
+  roundNumber: number;
+  roundType: SpecRoundType;
+  topic: string;
+  contributions: AgentContribution[];
+  startedAt: string;
+  completedAt?: string;
+  consensusReached: boolean;
+}
+
+export interface SpecSession {
+  sessionId: string;
+  taskId: string;
+  hydratedContext: HydratedContext;
+  selectedAgents: AgentSelection;
+  rounds: SpecSessionRound[];
+  status: 'in_progress' | 'completed' | 'failed';
+  startedAt?: string;
+  completedAt?: string;
+}
+
+// ============================================================================
+// Specification Document Types
+// ============================================================================
+
+export interface SpecComponent {
+  name: string;
+  type: string;
+  location: string;
+  purpose: string;
+}
+
+export interface SpecIntegrationPoint {
+  integratsWith: string;
+  how: string;
+  contract: string;
+}
+
+export interface SpecRisk {
+  risk: string;
+  mitigation: string;
+}
+
+export interface SpecificationDocument {
+  taskId: string;
+  sessionId: string;
+  overview: string;
+  technicalApproach: string;
+  components: SpecComponent[];
+  interfaces: string;
+  integrationPoints: SpecIntegrationPoint[];
+  acceptanceCriteria: string[];
+  testRequirements: {
+    unitTests: string[];
+    integrationTests: string[];
+    edgeCases: string[];
+  };
+  risks: SpecRisk[];
+  agentSignoffs: Record<string, boolean>;
+  generatedAt: string;
 }

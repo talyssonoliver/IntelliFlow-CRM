@@ -180,13 +180,14 @@ export function validateContextAck(
   taskId: string,
   runId: string,
   repoRoot: string,
-  filePrerequisites: string[]
+  filePrerequisites: string[],
+  sprintNumber: number = 0
 ): ContextAckValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
-  // Paths - canonical location: artifacts/attestations/{taskId}/
-  const contextDir = join(repoRoot, 'artifacts', 'attestations', taskId);
+  // Paths - sprint-based structure: .specify/sprints/sprint-{N}/attestations/{taskId}/
+  const contextDir = join(repoRoot, '.specify', 'sprints', `sprint-${sprintNumber}`, 'attestations', taskId);
   const ackPath = join(contextDir, 'context_ack.json');
   const manifestPath = join(contextDir, 'context_pack.manifest.json');
 
@@ -285,7 +286,8 @@ export function runContextAckGate(
   repoRoot: string,
   prerequisites: string,
   artifactsToTrack: string,
-  validationMethod: string
+  validationMethod: string,
+  sprintNumber: number = 0
 ): GateResult {
   // Parse contract to check if context_ack is required
   const contract = parseTaskContract(prerequisites, artifactsToTrack, validationMethod);
@@ -302,7 +304,7 @@ export function runContextAckGate(
   const filePrerequisites = getFilePrerequisites(contract);
 
   // Validate context ack
-  const result = validateContextAck(taskId, runId, repoRoot, filePrerequisites);
+  const result = validateContextAck(taskId, runId, repoRoot, filePrerequisites, sprintNumber);
 
   const details: string[] = [];
   if (result.errors.length > 0) {
@@ -341,6 +343,7 @@ export interface TaskContextAckCheck {
   prerequisites: string;
   artifactsToTrack: string;
   validationMethod: string;
+  sprintNumber?: number;
 }
 
 /**
@@ -357,7 +360,8 @@ export function runContextAckGateBatch(
       repoRoot,
       task.prerequisites,
       task.artifactsToTrack,
-      task.validationMethod
+      task.validationMethod,
+      task.sprintNumber ?? 0
     )
   );
 }

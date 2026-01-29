@@ -259,7 +259,7 @@ export function listGitIgnoredOrUntrackedFiles(
   if (untracked.error) return { files: [], error: untracked.error };
 
   const merged = [...ignored.files, ...untracked.files];
-  const uniq = [...new Set(merged.map(normalizeRepoPath))].sort();
+  const uniq = Array.from(new Set(merged.map(normalizeRepoPath))).sort();
   return { files: uniq };
 }
 
@@ -520,7 +520,7 @@ export function findIgnoredRuntimeArtifacts(
 
   const all = [...tracked.files, ...notTracked.files];
   const matches = matchForbiddenDocsRuntimeArtifacts(all, forbiddenPatterns);
-  const uniq = [...new Set(matches.map(normalizeRepoPath))].sort();
+  const uniq = Array.from(new Set(matches.map(normalizeRepoPath))).sort();
   return { files: uniq };
 }
 

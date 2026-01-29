@@ -22,6 +22,14 @@ artifacts/coverage/.tmp/
 artifacts/test-results/playwright-results.json
 artifacts/test-results/playwright-junit.xml
 
+# Playwright output (consolidated under artifacts/misc/)
+# - playwright-output/: screenshots, videos, traces (ephemeral)
+# - playwright-report/data/: report assets (ephemeral)
+# - playwright-report/index.html: kept as required artifact for IFC-026
+artifacts/misc/playwright-output/
+artifacts/misc/playwright-report/data/
+!artifacts/misc/playwright-report/index.html
+
 # Coverage: keep only data files, ignore generated HTML reports
 artifacts/coverage/**/*.html
 artifacts/coverage/**/*.css
@@ -96,10 +104,15 @@ __pycache__/
 
 # Claude AI
 .claude/commands/
+.claude/skills/
+tmpclaude-*-cwd
+tmpclaude-*-cwd/
 
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
+nul
 
 # Prisma
 prisma/migrations/**/migration.sql.backup
@@ -175,6 +188,10 @@ artifacts/reports/code-analysis/depcheck-report.json
 # Temporary and backup files
 **/*.tmp
 **/*.bak
+*.old
+build_output.txt
+test-results.json
+Tree_unified.txt
 
 # ============================================
 # Drift Prevention - Added 2025-12-21
@@ -238,6 +255,9 @@ override.tf.json
 # Package-level coverage artifacts (regenerated during tests)
 packages/*/artifacts/coverage/
 packages/*/coverage/
+apps/*/coverage-output.txt
+apps/*/coverage-report.json
+apps/*/coverage-results.json
 
 # Vitest cache files
 packages/*/node_modules/.vite/
@@ -247,6 +267,28 @@ apps/api/.env
 # Runtime Artifacts - Added 2026-01-03
 # ============================================
 
-# Ignore artifacts/logs/ and artifacts/attestations/ to reduce git status noise
+# Ignore artifacts/logs/ to reduce git status noise
 artifacts/logs/
+
+# ============================================
+# DEPRECATED Paths - Added 2026-01-25
+# ============================================
+# These paths are deprecated. Use .specify/sprints/sprint-{N}/attestations/{taskId}/ instead.
+# CI lint rules in tools/lint/artifact-paths.ts will fail if files are written here.
+
+# DEPRECATED: Use .specify/sprints/sprint-{N}/attestations/{taskId}/ instead
 artifacts/attestations/
+
+# DEPRECATED: Use .specify/sprints/sprint-{N}/context/{taskId}/ instead
+artifacts/context/
+
+# DEPRECATED: Use .specify/memory/ for docs and .specify/sprints/sprint-0/planning/ for plans
+artifacts/sprint0/
+
+# HTML reports
+Executive_Sumary.html
+ARCHITECTURE_ANALYSIS_SINGLE_SOURCE_OF_TRUTH.md
+
+# Runtime schemas (generated)
+artifacts/schemas/
+apps/project-tracker/docs/metrics/schemas/

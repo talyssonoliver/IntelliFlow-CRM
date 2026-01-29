@@ -25,6 +25,8 @@ import type {
   SpecComponent,
   SpecIntegrationPoint,
   SpecRisk,
+  DependencyArtifact,
+  CodebasePattern,
 } from './types.js';
 import { AGENT_POOL } from './agent-selection.js';
 import {
@@ -129,7 +131,7 @@ export function buildAgentPrompt(
 ### Dependencies
 ${session.hydratedContext.dependencyArtifacts.length > 0
     ? session.hydratedContext.dependencyArtifacts
-        .map((d) => `- ${d.taskId}: ${d.status || 'Unknown'}`)
+        .map((d: DependencyArtifact) => `- ${d.taskId}: ${d.status || 'Unknown'}`)
         .join('\n')
     : 'No dependencies.'
   }
@@ -138,7 +140,7 @@ ${session.hydratedContext.dependencyArtifacts.length > 0
 ${session.hydratedContext.codebasePatterns.length > 0
     ? session.hydratedContext.codebasePatterns
         .slice(0, 5)
-        .map((p) => `- ${p.filePath}:${p.lineNumber} (${p.keyword})`)
+        .map((p: CodebasePattern) => `- ${p.filePath}:${p.lineNumber} (${p.keyword})`)
         .join('\n')
     : 'No patterns found.'
   }
@@ -363,8 +365,8 @@ export function prepareSpecRound(
 
   // Get previous contributions from this round (for sequential within round)
   const previousContributions = session.rounds
-    .filter((r) => r.roundNumber === session.rounds.length + 1)
-    .flatMap((r) => r.contributions);
+    .filter((r: SpecSessionRound) => r.roundNumber === session.rounds.length + 1)
+    .flatMap((r: SpecSessionRound) => r.contributions);
 
   for (const agent of agents) {
     const prompt = buildAgentPrompt(agent, session, roundType, topic, previousContributions);
@@ -448,7 +450,7 @@ export function shouldContinueSession(session: SpecSession): boolean {
   const lastRound = session.rounds[session.rounds.length - 1];
   if (lastRound?.roundType === 'CONSENSUS' && !lastRound.consensusReached) {
     // Allow up to 3 consensus attempts
-    const consensusRounds = session.rounds.filter((r) => r.roundType === 'CONSENSUS');
+    const consensusRounds = session.rounds.filter((r: SpecSessionRound) => r.roundType === 'CONSENSUS');
     if (consensusRounds.length >= 3) {
       return false;
     }
@@ -469,18 +471,18 @@ export function generateSpecification(session: SpecSession): SpecificationDocume
 
   // Aggregate contributions
   const allProposals = session.rounds
-    .filter((r) => r.roundType === 'PROPOSAL')
-    .flatMap((r) => r.contributions)
-    .filter((c) => c.proposal);
+    .filter((r: SpecSessionRound) => r.roundType === 'PROPOSAL')
+    .flatMap((r: SpecSessionRound) => r.contributions)
+    .filter((c: AgentContribution) => c.proposal);
 
   const allConsensus = session.rounds
-    .filter((r) => r.roundType === 'CONSENSUS')
-    .flatMap((r) => r.contributions)
-    .filter((c) => c.consensus);
+    .filter((r: SpecSessionRound) => r.roundType === 'CONSENSUS')
+    .flatMap((r: SpecSessionRound) => r.contributions)
+    .filter((c: AgentContribution) => c.consensus);
 
   const allChallenges = session.rounds
-    .filter((r) => r.roundType === 'CHALLENGE')
-    .flatMap((r) => r.contributions);
+    .filter((r: SpecSessionRound) => r.roundType === 'CHALLENGE')
+    .flatMap((r: SpecSessionRound) => r.contributions);
 
   // Build specification
   const overview = buildOverview(task, session);
@@ -511,9 +513,9 @@ export function generateSpecification(session: SpecSession): SpecificationDocume
 
 function buildOverview(task: any, session: SpecSession): string {
   const analyses = session.rounds
-    .filter((r) => r.roundType === 'ANALYSIS')
-    .flatMap((r) => r.contributions)
-    .filter((c) => c.interpretation);
+    .filter((r: SpecSessionRound) => r.roundType === 'ANALYSIS')
+    .flatMap((r: SpecSessionRound) => r.contributions)
+    .filter((c: AgentContribution) => c.interpretation);
 
   if (analyses.length > 0) {
     return analyses[0].interpretation || task.description || 'No overview available.';
@@ -631,7 +633,7 @@ function extractTestRequirements(
 
   for (const c of challenges) {
     if (c.challenges) {
-      edgeCases.push(...c.challenges.map((ch) => `Test: ${ch}`));
+      edgeCases.push(...c.challenges.map((ch: string) => `Test: ${ch}`));
     }
   }
 
@@ -671,7 +673,7 @@ function buildSignoffs(session: SpecSession): Record<string, boolean> {
   const signoffs: Record<string, boolean> = {};
 
   const lastConsensusRound = session.rounds
-    .filter((r) => r.roundType === 'CONSENSUS')
+    .filter((r: SpecSessionRound) => r.roundType === 'CONSENSUS')
     .pop();
 
   if (lastConsensusRound) {
@@ -694,18 +696,19 @@ function buildSignoffs(session: SpecSession): Record<string, boolean> {
 
 /**
  * Write specification to file
- * Uses new unified path structure: .specify/{TASK_ID}/specifications/spec.md
+ * Uses new unified path structure: .specify/sprints/sprint-{N}/specifications/{TASK_ID}-spec.md
  */
 export function writeSpecification(
   spec: SpecificationDocument,
   repoRoot: string,
+  sprintNumber: number,
   specifyDir: string = '.specify'
 ): string {
   const fullSpecifyDir = join(repoRoot, specifyDir);
-  const specDir = getSpecificationsDir(fullSpecifyDir, spec.taskId);
+  const specDir = getSpecificationsDir(fullSpecifyDir, sprintNumber);
   mkdirSync(specDir, { recursive: true });
 
-  const outputPath = getSpecPath(fullSpecifyDir, spec.taskId);
+  const outputPath = getSpecPath(fullSpecifyDir, sprintNumber, spec.taskId);
   const md = generateSpecificationMarkdown(spec);
   writeFileSync(outputPath, md);
 
@@ -714,18 +717,19 @@ export function writeSpecification(
 
 /**
  * Write discussion log to file
- * Uses new unified path structure: .specify/{TASK_ID}/specifications/discussion.md
+ * Uses new unified path structure: .specify/sprints/sprint-{N}/specifications/{TASK_ID}-discussion.md
  */
 export function writeDiscussionLog(
   session: SpecSession,
   repoRoot: string,
+  sprintNumber: number,
   specifyDir: string = '.specify'
 ): string {
   const fullSpecifyDir = join(repoRoot, specifyDir);
-  const specDir = getSpecificationsDir(fullSpecifyDir, session.taskId);
+  const specDir = getSpecificationsDir(fullSpecifyDir, sprintNumber);
   mkdirSync(specDir, { recursive: true });
 
-  const outputPath = getDiscussionPath(fullSpecifyDir, session.taskId);
+  const outputPath = getDiscussionPath(fullSpecifyDir, sprintNumber, session.taskId);
   const md = generateDiscussionMarkdown(session);
   writeFileSync(outputPath, md);
 
@@ -759,7 +763,7 @@ ${spec.technicalApproach}
 
 | Component | Type | Location | Purpose |
 |-----------|------|----------|---------|
-${spec.components.map((c) => `| ${c.name} | ${c.type} | ${c.location} | ${c.purpose} |`).join('\n')}
+${spec.components.map((c: SpecComponent) => `| ${c.name} | ${c.type} | ${c.location} | ${c.purpose} |`).join('\n')}
 
 ---
 
@@ -773,7 +777,7 @@ ${spec.interfaces}
 
 | Integrates With | How | Contract |
 |-----------------|-----|----------|
-${spec.integrationPoints.map((p) => `| ${p.integratsWith} | ${p.how} | ${p.contract} |`).join('\n')}
+${spec.integrationPoints.map((p: SpecIntegrationPoint) => `| ${p.integratsWith} | ${p.how} | ${p.contract} |`).join('\n')}
 
 ---
 
@@ -786,13 +790,13 @@ ${spec.acceptanceCriteria.join('\n')}
 ## Test Requirements
 
 ### Unit Tests
-${spec.testRequirements.unitTests.map((t) => `- ${t}`).join('\n')}
+${spec.testRequirements.unitTests.map((t: string) => `- ${t}`).join('\n')}
 
 ### Integration Tests
-${spec.testRequirements.integrationTests.map((t) => `- ${t}`).join('\n')}
+${spec.testRequirements.integrationTests.map((t: string) => `- ${t}`).join('\n')}
 
 ### Edge Cases
-${spec.testRequirements.edgeCases.map((t) => `- ${t}`).join('\n')}
+${spec.testRequirements.edgeCases.map((t: string) => `- ${t}`).join('\n')}
 
 ---
 
@@ -800,7 +804,7 @@ ${spec.testRequirements.edgeCases.map((t) => `- ${t}`).join('\n')}
 
 | Risk | Mitigation |
 |------|------------|
-${spec.risks.map((r) => `| ${r.risk} | ${r.mitigation} |`).join('\n')}
+${spec.risks.map((r: SpecRisk) => `| ${r.risk} | ${r.mitigation} |`).join('\n')}
 
 ---
 
@@ -831,7 +835,7 @@ export function generateDiscussionMarkdown(session: SpecSession): string {
 
 ## Participating Agents
 
-${session.selectedAgents.selectedAgents.map((a) => `- ${a}`).join('\n')}
+${session.selectedAgents.selectedAgents.map((a: string) => `- ${a}`).join('\n')}
 
 ---
 
@@ -856,10 +860,10 @@ ${session.selectedAgents.selectedAgents.map((a) => `- ${a}`).join('\n')}
 
 `;
       if (contrib.interpretation) md += `**Interpretation:** ${contrib.interpretation}\n\n`;
-      if (contrib.questions?.length) md += `**Questions:**\n${contrib.questions.map((q) => `- ${q}`).join('\n')}\n\n`;
-      if (contrib.concerns?.length) md += `**Concerns:**\n${contrib.concerns.map((c) => `- ${c}`).join('\n')}\n\n`;
+      if (contrib.questions?.length) md += `**Questions:**\n${contrib.questions.map((q: string) => `- ${q}`).join('\n')}\n\n`;
+      if (contrib.concerns?.length) md += `**Concerns:**\n${contrib.concerns.map((c: string) => `- ${c}`).join('\n')}\n\n`;
       if (contrib.proposal) md += `**Proposal:** ${contrib.proposal}\n\n`;
-      if (contrib.challenges?.length) md += `**Challenges:**\n${contrib.challenges.map((c) => `- ${c}`).join('\n')}\n\n`;
+      if (contrib.challenges?.length) md += `**Challenges:**\n${contrib.challenges.map((c: string) => `- ${c}`).join('\n')}\n\n`;
       if (contrib.consensus) md += `**Consensus:** ${contrib.consensus}\n\n`;
     }
 

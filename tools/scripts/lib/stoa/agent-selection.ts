@@ -19,8 +19,8 @@ import type {
   AgentRole,
   AgentProfile,
   AgentSelection,
-  AGENT_ROLES,
 } from './types.js';
+import { AGENT_ROLES } from './types.js';
 import { getAgentSelectionPath, getContextDir } from './paths.js';
 
 // ============================================================================
@@ -350,18 +350,19 @@ export function selectAgents(task: Task, context?: HydratedContext): AgentSelect
 
 /**
  * Write agent selection to file
- * Uses new unified path structure: .specify/{TASK_ID}/context/agent-selection.json
+ * Uses new unified path structure: .specify/sprints/sprint-{N}/context/{TASK_ID}/agent-selection.json
  */
 export function writeAgentSelection(
   selection: AgentSelection,
   repoRoot: string,
+  sprintNumber: number,
   specifyDir: string = '.specify'
 ): string {
   const fullSpecifyDir = join(repoRoot, specifyDir);
-  const contextDir = getContextDir(fullSpecifyDir, selection.taskId);
+  const contextDir = getContextDir(fullSpecifyDir, sprintNumber, selection.taskId);
   mkdirSync(contextDir, { recursive: true });
 
-  const outputPath = getAgentSelectionPath(fullSpecifyDir, selection.taskId);
+  const outputPath = getAgentSelectionPath(fullSpecifyDir, sprintNumber, selection.taskId);
   writeFileSync(outputPath, JSON.stringify(selection, null, 2));
 
   return relative(repoRoot, outputPath);

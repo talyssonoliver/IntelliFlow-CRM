@@ -23,6 +23,52 @@ const DEFAULT_TIMEOUT_MS = 120_000; // 2 minutes
 const MAX_TIMEOUT_MS = 600_000; // 10 minutes
 
 // ============================================================================
+// Command Template Substitution
+// ============================================================================
+
+export interface CommandContext {
+  sprint?: number;
+  taskId?: string;
+  runId?: string;
+  gatesDir?: string;
+}
+
+/**
+ * Substitute placeholders in command templates.
+ *
+ * Supported placeholders:
+ * - {sprint} - Sprint number (e.g., 0, 1, 2)
+ * - {taskId} - Task ID (e.g., IFC-001)
+ * - {runId} - Run ID (e.g., 20260125-143022-abc123)
+ * - {gatesDir} - Full path to gates directory
+ *
+ * @param command - Command template with placeholders
+ * @param context - Values to substitute
+ * @returns Command with placeholders replaced
+ */
+export function substituteCommandTemplate(
+  command: string,
+  context: CommandContext
+): string {
+  let result = command;
+
+  if (context.sprint !== undefined) {
+    result = result.replace(/\{sprint\}/g, String(context.sprint));
+  }
+  if (context.taskId) {
+    result = result.replace(/\{taskId\}/g, context.taskId);
+  }
+  if (context.runId) {
+    result = result.replace(/\{runId\}/g, context.runId);
+  }
+  if (context.gatesDir) {
+    result = result.replace(/\{gatesDir\}/g, context.gatesDir);
+  }
+
+  return result;
+}
+
+// ============================================================================
 // Path Normalization
 // ============================================================================
 
@@ -155,6 +201,8 @@ export interface GateRunnerOptions {
   matrix: AuditMatrix;
   dryRun?: boolean;
   parallelLimit?: number;
+  /** Context for command template substitution */
+  commandContext?: CommandContext;
 }
 
 /**
@@ -164,11 +212,17 @@ export async function runGates(
   gateIds: string[],
   options: GateRunnerOptions
 ): Promise<GateExecutionResult[]> {
-  const { repoRoot, evidenceDir, matrix, dryRun } = options;
+  const { repoRoot, evidenceDir, matrix, dryRun, commandContext } = options;
   const gatesDir = getGatesDir(evidenceDir);
 
   // Order gates for execution
   const orderedGates = orderGatesForExecution(gateIds, matrix);
+
+  // Build command context with gatesDir
+  const context: CommandContext = {
+    ...commandContext,
+    gatesDir: normalizeRepoPath(gatesDir),
+  };
 
   const results: GateExecutionResult[] = [];
 
@@ -188,11 +242,14 @@ export async function runGates(
       continue;
     }
 
+    // Substitute placeholders in command template
+    const command = substituteCommandTemplate(tool.command, context);
+
     const logPath = join(gatesDir, `${toolId}.log`);
 
     if (dryRun) {
       // Dry run - don't actually execute
-      console.log(`[DRY RUN] Would execute: ${tool.command}`);
+      console.log(`[DRY RUN] Would execute: ${command}`);
       results.push({
         toolId,
         exitCode: 0,
@@ -207,7 +264,7 @@ export async function runGates(
     const timeoutMs = tool.timeout_seconds ? tool.timeout_seconds * 1000 : DEFAULT_TIMEOUT_MS;
 
     console.log(`Running gate: ${toolId}...`);
-    const result = await runGate(toolId, tool.command, logPath, repoRoot, timeoutMs);
+    const result = await runGate(toolId, command, logPath, repoRoot, timeoutMs);
     results.push(result);
 
     // Log result

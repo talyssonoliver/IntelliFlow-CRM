@@ -131,10 +131,8 @@ function main() {
 
   const strict = hasFlag(['--strict', '-s']);
 
-  const defaultOutput =
-    sprintArg.sprint === '0'
-      ? 'artifacts/sprint0/codex-run/validation-output.txt'
-      : `artifacts/reports/validation/sprint-${sprintArg.sprint}-validation-output.txt`;
+  // Canonical location for validation outputs: artifacts/reports/validation/
+  const defaultOutput = `artifacts/reports/validation/sprint-${sprintArg.sprint}-validation-output.txt`;
 
   const outputPath = getArgValue(['--output', '--out']) ?? defaultOutput;
 

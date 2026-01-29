@@ -20,7 +20,7 @@ const CSV_PATH = join(process.cwd(), 'apps/project-tracker/docs/metrics/_global/
 // ============================================================================
 
 const MANDATORY_FILES = [
-  'artifacts/sprint0/codex-run/Framework.md',
+  '.specify/memory/Framework.md',
   'audit-matrix.yml',
 ];
 

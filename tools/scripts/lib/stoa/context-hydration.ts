@@ -25,8 +25,9 @@ import {
   getEvidenceDir,
   getLegacySpecPath,
   getLegacyPlanPath,
-  getLegacyContextDir,
+  getLegacyFlatContextDir,
   getLegacyAttestationsDir,
+  getLegacyContextDir,
 } from './paths.js';
 import type {
   Task,
@@ -120,6 +121,8 @@ export function resolveDependencyArtifacts(
     if (!depId || depId.trim() === '') continue;
 
     const depTask = allTasks.find((t) => t.taskId === depId);
+    const depSprint = parseInt(depTask?.targetSprint || '0', 10);
+
     const artifact: DependencyArtifact = {
       taskId: depId,
       status: depTask?.status,
@@ -128,8 +131,8 @@ export function resolveDependencyArtifacts(
       patterns: [],
     };
 
-    // Check for spec file (new path first, then legacy fallbacks)
-    const specPathNew = getSpecPath(fullSpecifyDir, depId);
+    // Check for spec file (new sprint-based path first, then legacy fallbacks)
+    const specPathNew = getSpecPath(fullSpecifyDir, depSprint, depId);
     const specPathLegacy = getLegacySpecPath(fullSpecifyDir, depId);
     const specPathLegacyOld = join(repoRoot, specifyDir, 'specifications', `${depId}.md`);
 
@@ -141,8 +144,8 @@ export function resolveDependencyArtifacts(
       artifact.specPath = relative(repoRoot, specPathLegacyOld);
     }
 
-    // Check for plan file (new path first, then legacy fallbacks)
-    const planPathNew = getPlanPath(fullSpecifyDir, depId);
+    // Check for plan file (new sprint-based path first, then legacy fallbacks)
+    const planPathNew = getPlanPath(fullSpecifyDir, depSprint, depId);
     const planPathLegacy = getLegacyPlanPath(fullSpecifyDir, depId);
     const planPathLegacyOld = join(repoRoot, specifyDir, 'planning', `${depId}.md`);
 
@@ -154,8 +157,8 @@ export function resolveDependencyArtifacts(
       artifact.planPath = relative(repoRoot, planPathLegacyOld);
     }
 
-    // Check for attestation folder (new path first, then legacy)
-    const attestationPathNew = getAttestationsDir(fullSpecifyDir, depId);
+    // Check for attestation folder (new sprint-based path first, then legacy)
+    const attestationPathNew = getAttestationsDir(fullSpecifyDir, depSprint, depId);
     const attestationPathLegacy = getLegacyAttestationsDir(repoRoot, depId);
 
     let attestationPath: string | null = null;
@@ -186,8 +189,8 @@ export function resolveDependencyArtifacts(
       }
     }
 
-    // Check for evidence directory (new unified path first)
-    const evidencePathNew = getEvidenceDir(fullSpecifyDir, depId);
+    // Check for evidence directory (new sprint-based path first)
+    const evidencePathNew = getEvidenceDir(fullSpecifyDir, depSprint, depId);
     if (existsSync(evidencePathNew)) {
       artifact.deliveryPath = relative(repoRoot, evidencePathNew);
     } else if (depTask?.status === 'Completed' || depTask?.status === 'Done') {
@@ -249,7 +252,7 @@ function extractKeywords(task: Task): string[] {
     .filter((w) => w.length >= 3 && !commonWords.has(w));
 
   // Deduplicate and return top keywords
-  return [...new Set(words)].slice(0, 10);
+  return Array.from(new Set(words)).slice(0, 10);
 }
 
 /**
@@ -576,11 +579,11 @@ export async function hydrateContext(
 
 /**
  * Get the context directory for a task
- * Uses new unified structure: .specify/{TASK_ID}/context/
+ * Uses new unified structure: .specify/sprints/sprint-{N}/context/{TASK_ID}/
  */
-export function getContextDir(specifyDir: string, taskId: string): string {
-  // Use new unified path structure
-  return getContextDirNew(specifyDir, taskId);
+export function getContextDir(specifyDir: string, sprintNumber: number, taskId: string): string {
+  // Use new sprint-based path structure
+  return getContextDirNew(specifyDir, sprintNumber, taskId);
 }
 
 /**
@@ -589,9 +592,10 @@ export function getContextDir(specifyDir: string, taskId: string): string {
 export function writeHydratedContext(
   context: HydratedContext,
   repoRoot: string,
+  sprintNumber: number,
   specifyDir: string = '.specify'
 ): { jsonPath: string; mdPath: string } {
-  const contextDir = join(repoRoot, getContextDir(specifyDir, context.taskId));
+  const contextDir = join(repoRoot, getContextDir(specifyDir, sprintNumber, context.taskId));
   mkdirSync(contextDir, { recursive: true });
 
   // Write JSON
@@ -607,6 +611,60 @@ export function writeHydratedContext(
     jsonPath: relative(repoRoot, jsonPath),
     mdPath: relative(repoRoot, mdPath),
   };
+}
+
+/**
+ * Load hydrated context from disk
+ *
+ * Reads a previously hydrated context JSON file and returns the HydratedContext object.
+ * Returns null if the file doesn't exist.
+ *
+ * @param repoRoot - Repository root path
+ * @param sprintNumber - Sprint number for the task
+ * @param taskId - Task ID to load context for
+ * @param specifyDir - Specify directory (default: '.specify')
+ * @returns HydratedContext object or null if not found
+ */
+export function loadHydratedContext(
+  repoRoot: string,
+  sprintNumber: number,
+  taskId: string,
+  specifyDir: string = '.specify'
+): HydratedContext | null {
+  const contextDir = join(repoRoot, getContextDir(specifyDir, sprintNumber, taskId));
+  const jsonPath = join(contextDir, 'hydrated-context.json');
+
+  if (!existsSync(jsonPath)) {
+    return null;
+  }
+
+  try {
+    const content = readFileSync(jsonPath, 'utf-8');
+    return JSON.parse(content) as HydratedContext;
+  } catch (error) {
+    console.error(`[Context] Failed to load hydrated context from ${jsonPath}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Check if hydrated context exists for a task
+ *
+ * @param repoRoot - Repository root path
+ * @param sprintNumber - Sprint number for the task
+ * @param taskId - Task ID to check
+ * @param specifyDir - Specify directory (default: '.specify')
+ * @returns true if hydrated context exists
+ */
+export function hasHydratedContext(
+  repoRoot: string,
+  sprintNumber: number,
+  taskId: string,
+  specifyDir: string = '.specify'
+): boolean {
+  const contextDir = join(repoRoot, getContextDir(specifyDir, sprintNumber, taskId));
+  const jsonPath = join(contextDir, 'hydrated-context.json');
+  return existsSync(jsonPath);
 }
 
 /**
@@ -739,6 +797,11 @@ export async function hydrateContextCli(taskId: string): Promise<void> {
   console.log(`[Context Hydration] Repo root: ${repoRoot}`);
 
   try {
+    // Get task record to determine sprint number
+    const taskRecord = getFullTaskRecord(taskId, repoRoot);
+    const sprintNumber = parseInt(taskRecord?.targetSprint || '0', 10);
+    console.log(`[Context Hydration] Sprint: ${sprintNumber}`);
+
     const context = await hydrateContext(taskId, repoRoot);
 
     console.log(`[Context Hydration] Task metadata loaded`);
@@ -746,7 +809,7 @@ export async function hydrateContextCli(taskId: string): Promise<void> {
     console.log(`[Context Hydration] Codebase patterns: ${context.codebasePatterns.length}`);
     console.log(`[Context Hydration] Project knowledge loaded`);
 
-    const { jsonPath, mdPath } = writeHydratedContext(context, repoRoot);
+    const { jsonPath, mdPath } = writeHydratedContext(context, repoRoot, sprintNumber);
 
     console.log(`[Context Hydration] Output:`);
     console.log(`  - JSON: ${jsonPath}`);
