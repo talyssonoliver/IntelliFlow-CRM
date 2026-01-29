@@ -22,6 +22,12 @@ import {
   convertLeadSchema,
   idSchema,
 } from '@intelliflow/validators/lead';
+import {
+  bulkConvertLeadsSchema,
+  bulkUpdateLeadStatusSchema,
+  bulkArchiveLeadsSchema,
+  bulkDeleteLeadsSchema,
+} from '@intelliflow/validators';
 import { mapLeadToResponse } from '../../shared/mappers';
 import type { Context } from '../../context';
 import {
@@ -482,5 +488,238 @@ export const leadRouter = createTRPCRouter({
 
       const result = await leadService.bulkScoreLeads(input.leadIds);
       return result;
+    }),
+
+  /**
+   * Get filter options with counts
+   *
+   * Returns available filter values with count of matching records.
+   * Used for dynamic filters that hide options with 0 matches.
+   */
+  filterOptions: tenantProcedure
+    .input(
+      z.object({
+        search: z.string().optional(),
+        status: z.array(z.string()).optional(),
+        source: z.array(z.string()).optional(),
+        ownerId: z.string().optional(),
+      }).optional()
+    )
+    .query(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+
+      // Build base where clause with current filters
+      const baseWhere: Record<string, unknown> = {};
+
+      if (input?.search) {
+        baseWhere.OR = [
+          { email: { contains: input.search, mode: 'insensitive' } },
+          { firstName: { contains: input.search, mode: 'insensitive' } },
+          { lastName: { contains: input.search, mode: 'insensitive' } },
+          { company: { contains: input.search, mode: 'insensitive' } },
+        ];
+      }
+
+      if (input?.status && input.status.length > 0) {
+        baseWhere.status = { in: input.status };
+      }
+
+      if (input?.source && input.source.length > 0) {
+        baseWhere.source = { in: input.source };
+      }
+
+      if (input?.ownerId) {
+        baseWhere.ownerId = input.ownerId;
+      }
+
+      const where = createTenantWhereClause(typedCtx.tenant, baseWhere);
+
+      // Get counts for each filter option
+      const [statusCounts, sourceCounts, ownerCounts] = await Promise.all([
+        typedCtx.prismaWithTenant.lead.groupBy({
+          by: ['status'],
+          where,
+          _count: true,
+        }),
+        typedCtx.prismaWithTenant.lead.groupBy({
+          by: ['source'],
+          where,
+          _count: true,
+        }),
+        typedCtx.prismaWithTenant.lead.groupBy({
+          by: ['ownerId'],
+          where,
+          _count: true,
+        }),
+      ]);
+
+      // Get owner names for display
+      const ownerIds = ownerCounts.map(o => o.ownerId).filter(Boolean) as string[];
+      const owners = ownerIds.length > 0
+        ? await ctx.prisma.user.findMany({
+            where: { id: { in: ownerIds } },
+            select: { id: true, name: true, email: true },
+          })
+        : [];
+      const ownerMap = new Map(owners.map(o => [o.id, o.name || o.email]));
+
+      return {
+        statuses: statusCounts.map(s => ({
+          value: s.status,
+          label: s.status,
+          count: s._count,
+        })),
+        sources: sourceCounts.map(s => ({
+          value: s.source,
+          label: s.source,
+          count: s._count,
+        })),
+        owners: ownerCounts
+          .filter(o => o.ownerId)
+          .map(o => ({
+            value: o.ownerId as string,
+            label: ownerMap.get(o.ownerId as string) || o.ownerId,
+            count: o._count,
+          })),
+      };
+    }),
+
+  /**
+   * Bulk convert leads to contacts
+   */
+  bulkConvert: tenantProcedure
+    .input(bulkConvertLeadsSchema)
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const leadService = getLeadService(ctx);
+      const { ids, createAccounts } = input;
+
+      const successful: string[] = [];
+      const failed: Array<{ id: string; error: string }> = [];
+
+      for (const leadId of ids) {
+        try {
+          const result = await leadService.convertLead(
+            leadId,
+            createAccounts ? null : null,
+            typedCtx.tenant.userId
+          );
+          if (result.isSuccess) {
+            successful.push(leadId);
+          } else {
+            failed.push({ id: leadId, error: result.error.message });
+          }
+        } catch (error) {
+          failed.push({
+            id: leadId,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      }
+
+      return { successful, failed, totalProcessed: ids.length };
+    }),
+
+  /**
+   * Bulk update lead status
+   */
+  bulkUpdateStatus: tenantProcedure
+    .input(bulkUpdateLeadStatusSchema)
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const leadService = getLeadService(ctx);
+      const { ids, status } = input;
+
+      const successful: string[] = [];
+      const failed: Array<{ id: string; error: string }> = [];
+
+      for (const leadId of ids) {
+        try {
+          const result = await leadService.changeLeadStatus(
+            leadId,
+            status,
+            typedCtx.tenant.userId
+          );
+          if (result.isSuccess) {
+            successful.push(leadId);
+          } else {
+            failed.push({ id: leadId, error: result.error.message });
+          }
+        } catch (error) {
+          failed.push({
+            id: leadId,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      }
+
+      return { successful, failed, totalProcessed: ids.length };
+    }),
+
+  /**
+   * Bulk archive leads (set status to LOST)
+   */
+  bulkArchive: tenantProcedure
+    .input(bulkArchiveLeadsSchema)
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const leadService = getLeadService(ctx);
+      const { ids } = input;
+
+      const successful: string[] = [];
+      const failed: Array<{ id: string; error: string }> = [];
+
+      for (const leadId of ids) {
+        try {
+          const result = await leadService.changeLeadStatus(
+            leadId,
+            'LOST',
+            typedCtx.tenant.userId
+          );
+          if (result.isSuccess) {
+            successful.push(leadId);
+          } else {
+            failed.push({ id: leadId, error: result.error.message });
+          }
+        } catch (error) {
+          failed.push({
+            id: leadId,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      }
+
+      return { successful, failed, totalProcessed: ids.length };
+    }),
+
+  /**
+   * Bulk delete leads
+   */
+  bulkDelete: tenantProcedure
+    .input(bulkDeleteLeadsSchema)
+    .mutation(async ({ ctx, input }) => {
+      const leadService = getLeadService(ctx);
+      const { ids } = input;
+
+      const successful: string[] = [];
+      const failed: Array<{ id: string; error: string }> = [];
+
+      for (const leadId of ids) {
+        try {
+          const result = await leadService.deleteLead(leadId);
+          if (result.isSuccess) {
+            successful.push(leadId);
+          } else {
+            failed.push({ id: leadId, error: result.error.message });
+          }
+        } catch (error) {
+          failed.push({
+            id: leadId,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      }
+
+      return { successful, failed, totalProcessed: ids.length };
     }),
 });

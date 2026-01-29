@@ -16,8 +16,7 @@
 
 import { TRPCError } from '@trpc/server';
 import { PrismaClient } from '@prisma/client';
-import { TenantContext, TenantAwareContext } from './tenant-context';
-import { Context } from '../context';
+import { TenantAwareContext } from './tenant-context';
 
 /**
  * Resource types that can be limited
@@ -210,7 +209,7 @@ export async function checkResourceUsage(
       current = await prisma.task.count({ where: { ownerId: tenantId } });
       limit = limits.maxTasks;
       break;
-    case 'ai_scores':
+    case 'ai_scores': {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       current = await prisma.aIScore.count({
@@ -221,6 +220,7 @@ export async function checkResourceUsage(
       });
       limit = limits.maxAiScoresPerDay;
       break;
+    }
     case 'api_requests_per_minute':
       current = getRateLimitCount(tenantId);
       limit = limits.apiRateLimit;
@@ -290,11 +290,11 @@ function getDailyRequestCount(tenantId: string): number {
   const today = new Date().toISOString().split('T')[0];
   const state = dailyRequestStore.get(key);
 
-  if (!state || state.date !== today) {
-    return 0;
+  if (state?.date === today) {
+    return state.count;
   }
 
-  return state.count;
+  return 0;
 }
 
 /**
@@ -328,10 +328,10 @@ export function incrementDailyRequests(tenantId: string): void {
   const today = new Date().toISOString().split('T')[0];
   const state = dailyRequestStore.get(key);
 
-  if (!state || state.date !== today) {
-    dailyRequestStore.set(key, { count: 1, date: today });
-  } else {
+  if (state?.date === today) {
     state.count++;
+  } else {
+    dailyRequestStore.set(key, { count: 1, date: today });
   }
 }
 

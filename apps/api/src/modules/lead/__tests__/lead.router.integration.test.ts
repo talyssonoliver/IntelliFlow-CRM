@@ -3,19 +3,35 @@
  *
  * Tests using real seeded database instead of mocks
  * Run with: pnpm test lead.router.integration
+ *
+ * NOTE: This file uses lazy imports to gracefully handle missing @prisma/client.
+ * Tests are skipped with clear alerts if infrastructure is unavailable.
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
-import { leadRouter } from '../lead.router';
+import { randomUUID } from 'crypto';
 import {
   createIntegrationTestContext,
   SEED_IDS,
   getSeedData,
   verifySeedData,
   testPrisma,
+  isInfrastructureAvailable,
+  infrastructureUnavailableReason,
 } from '../../../test/integration-setup';
 
-describe('Lead Router - Integration Tests', () => {
+// Import leadRouter directly - Vitest handles ESM imports properly
+import { leadRouter } from '../lead.router';
+
+// Run integration tests only when infrastructure is available
+const describeIntegration = isInfrastructureAvailable ? describe : describe.skip;
+
+// Log skip reason if not available
+if (!isInfrastructureAvailable && infrastructureUnavailableReason) {
+  console.log(`⏭️  Skipping Lead Router Integration Tests: ${infrastructureUnavailableReason}`);
+}
+
+describeIntegration('Lead Router - Integration Tests', () => {
   beforeAll(async () => {
     await verifySeedData();
   });
@@ -29,10 +45,10 @@ describe('Lead Router - Integration Tests', () => {
 
       // Verify it returns the actual seeded lead
       expect(result.id).toBe(SEED_IDS.leads.sarahMiller);
-      expect(result.email).toBe('sarah.miller@techcorp.example.com');
+      expect(result.email).toBe('sarah@techcorp.com');
       expect(result.firstName).toBe('Sarah');
       expect(result.lastName).toBe('Miller');
-      expect(result.company).toBe('TechCorp Industries');
+      expect(result.company).toBe('TechCorp');
       expect(result.tenantId).toBeDefined(); // Has tenantId from seed
     });
 
@@ -40,8 +56,10 @@ describe('Lead Router - Integration Tests', () => {
       const ctx = await createIntegrationTestContext();
       const caller = leadRouter.createCaller(ctx);
 
+      // Use a valid UUID format that doesn't exist in the database
+      const nonExistentUuid = '00000000-0000-4000-8000-000000999999';
       await expect(
-        caller.getById({ id: 'non-existent-lead-id' })
+        caller.getById({ id: nonExistentUuid })
       ).rejects.toThrow(/not found/i);
     });
   });
@@ -60,16 +78,16 @@ describe('Lead Router - Integration Tests', () => {
       expect(result.limit).toBe(10);
 
       // Verify leads have tenantId
-      result.leads.forEach((lead) => {
+      for (const lead of result.leads) {
         expect(lead.tenantId).toBeDefined();
-      });
+      }
 
       // Verify we get actual seed data
       const sarahMillerLead = result.leads.find(
-        (l) => l.id === SEED_IDS.leads.sarahMiller
+        (l: { id: string }) => l.id === SEED_IDS.leads.sarahMiller
       );
       expect(sarahMillerLead).toBeDefined();
-      expect(sarahMillerLead?.email).toBe('sarah.miller@techcorp.example.com');
+      expect(sarahMillerLead?.email).toBe('sarah@techcorp.com');
     });
 
     it('should filter leads by status', async () => {
@@ -79,9 +97,9 @@ describe('Lead Router - Integration Tests', () => {
       const result = await caller.list({ status: ['QUALIFIED'] });
 
       // Verify all returned leads have QUALIFIED status
-      result.leads.forEach((lead) => {
+      for (const lead of result.leads) {
         expect(lead.status).toBe('QUALIFIED');
-      });
+      }
     });
 
     it('should filter leads by score range', async () => {
@@ -91,10 +109,10 @@ describe('Lead Router - Integration Tests', () => {
       const result = await caller.list({ minScore: 80, maxScore: 100 });
 
       // Verify all returned leads have score in range
-      result.leads.forEach((lead) => {
+      for (const lead of result.leads) {
         expect(lead.score).toBeGreaterThanOrEqual(80);
         expect(lead.score).toBeLessThanOrEqual(100);
-      });
+      }
     });
 
     it('should search leads by text', async () => {
@@ -105,7 +123,7 @@ describe('Lead Router - Integration Tests', () => {
 
       // Should find Sarah Miller who works at TechCorp Industries
       const sarahMillerLead = result.leads.find(
-        (l) => l.id === SEED_IDS.leads.sarahMiller
+        (l: { id: string }) => l.id === SEED_IDS.leads.sarahMiller
       );
       expect(sarahMillerLead).toBeDefined();
     });
@@ -150,7 +168,7 @@ describe('Lead Router - Integration Tests', () => {
 
       // Try to create lead with Sarah Miller's email (already exists in seed)
       const input = {
-        email: 'sarah.miller@techcorp.example.com',
+        email: 'sarah@techcorp.com',
         firstName: 'Duplicate',
         lastName: 'Lead',
         company: 'Test Company',
@@ -198,11 +216,17 @@ describe('Lead Router - Integration Tests', () => {
     it('should soft delete a lead', async () => {
       const ctx = await createIntegrationTestContext();
       const caller = leadRouter.createCaller(ctx);
+      const tenantId = (await ctx.prisma.tenant.findUnique({ where: { slug: 'default' } }))!.id;
 
-      // Create a test lead first
+      // Use unique email and UUID (API expects UUID format, not CUID)
+      const uniqueEmail = `delete-test-${Date.now()}@example.com`;
+      const testLeadId = randomUUID();
+
+      // Create a test lead first with explicit UUID
       const testLead = await testPrisma.lead.create({
         data: {
-          email: 'delete-test@example.com',
+          id: testLeadId,
+          email: uniqueEmail,
           firstName: 'Delete',
           lastName: 'Test',
           company: 'Test Company',
@@ -211,7 +235,7 @@ describe('Lead Router - Integration Tests', () => {
           status: 'NEW',
           score: 0,
           ownerId: SEED_IDS.users.sarahJohnson,
-          tenantId: (await ctx.prisma.tenant.findUnique({ where: { slug: 'default' } }))!.id,
+          tenantId,
         },
       });
 
@@ -242,53 +266,38 @@ describe('Lead Router - Integration Tests', () => {
     it('should qualify a seeded lead', async () => {
       const ctx = await createIntegrationTestContext();
       const caller = leadRouter.createCaller(ctx);
+      const tenantId = (await ctx.prisma.tenant.findUnique({ where: { slug: 'default' } }))!.id;
 
-      // Get a NEW lead from seed data
-      const newLeads = await testPrisma.lead.findMany({
-        where: { status: 'NEW' },
-        take: 1,
+      // Use unique email and UUID (API expects UUID format, not CUID)
+      const uniqueEmail = `qualify-test-${Date.now()}@example.com`;
+      const testLeadId = randomUUID();
+
+      // Always create a test lead with a score above the qualification threshold (>= 50)
+      const testLead = await testPrisma.lead.create({
+        data: {
+          id: testLeadId,
+          email: uniqueEmail,
+          firstName: 'Qualify',
+          lastName: 'Test',
+          company: 'Test Company',
+          phone: '+1234567890',
+          source: 'WEBSITE',
+          status: 'NEW',
+          score: 75, // Above threshold of 50
+          ownerId: SEED_IDS.users.sarahJohnson,
+          tenantId,
+        },
       });
 
-      if (newLeads.length === 0) {
-        // Create a test lead if no NEW leads exist
-        const testLead = await testPrisma.lead.create({
-          data: {
-            email: 'qualify-test@example.com',
-            firstName: 'Qualify',
-            lastName: 'Test',
-            company: 'Test Company',
-            phone: '+1234567890',
-            source: 'WEBSITE',
-            status: 'NEW',
-            score: 75,
-            ownerId: SEED_IDS.users.sarahJohnson,
-            tenantId: (await ctx.prisma.tenant.findUnique({ where: { slug: 'default' } }))!.id,
-          },
-        });
-
+      try {
         const result = await caller.qualify({
           leadId: testLead.id,
           reason: 'Test qualification for integration test'
         });
         expect(result.status).toBe('QUALIFIED');
-
+      } finally {
         // Cleanup
         await testPrisma.lead.delete({ where: { id: testLead.id } });
-      } else {
-        const leadToQualify = newLeads[0];
-        const originalStatus = leadToQualify.status;
-
-        const result = await caller.qualify({
-          leadId: leadToQualify.id,
-          reason: 'Test qualification for integration test'
-        });
-        expect(result.status).toBe('QUALIFIED');
-
-        // Restore original status
-        await testPrisma.lead.update({
-          where: { id: leadToQualify.id },
-          data: { status: originalStatus },
-        });
       }
     });
   });
