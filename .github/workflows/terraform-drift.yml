@@ -165,9 +165,15 @@ jobs:
             console.log(`Created issue #${issue.data.number}`);
 
       - name: Notify Slack on Drift
-        if: steps.parse_drift.outputs.status == 'drift-detected' && secrets.SLACK_WEBHOOK_URL != ''
+        if: steps.parse_drift.outputs.status == 'drift-detected'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
-          curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} \
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "SLACK_WEBHOOK_URL not configured, skipping notification"
+            exit 0
+          fi
+          curl -X POST "$SLACK_WEBHOOK_URL" \
             -H 'Content-Type: application/json' \
             -d '{
               "text": "🚨 Terraform Drift Detected",
