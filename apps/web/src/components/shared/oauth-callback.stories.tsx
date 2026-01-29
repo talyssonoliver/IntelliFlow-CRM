@@ -8,7 +8,6 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/react';
-import { OAuthCallback, type OAuthCallbackProps } from './oauth-callback';
 
 // Wrapper for auth background styling
 const AuthBackgroundWrapper = ({ children }: { children: React.ReactNode }) => (

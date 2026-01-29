@@ -33,7 +33,6 @@ import {
   extractOAuthParams,
   validateOAuthParams,
   storeSessionTokens,
-  type OAuthError,
 } from '@/lib/shared/token-exchange';
 
 // ============================================

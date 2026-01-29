@@ -1,4 +1,7 @@
 /**
+ * @vitest-environment jsdom
+ */
+/**
  * @vitest-environment happy-dom
  *
  * OAuth Callback Component Tests
@@ -54,7 +57,6 @@ vi.mock('@/lib/shared/login-security', () => ({
 }));
 
 // Mock tRPC - create a proper hook structure
-const mockMutateAsync = vi.fn();
 vi.mock('@/lib/trpc', () => ({
   trpc: {
     auth: {
