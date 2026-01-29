@@ -62,12 +62,13 @@ const DEFAULT_CONFIG: TrackingConfig = {
  * Check if user has Do Not Track enabled
  */
 export function isDoNotTrackEnabled(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (globalThis.window === undefined) return false;
 
+  const nav = navigator as NavigatorWithMsDoNotTrack;
   const dnt =
     navigator.doNotTrack ||
-    (window as Window & { doNotTrack?: string }).doNotTrack ||
-    (navigator as Navigator & { msDoNotTrack?: string }).msDoNotTrack;
+    globalThis.doNotTrack ||
+    nav.msDoNotTrack;
 
   return dnt === '1' || dnt === 'yes';
 }
@@ -93,18 +94,28 @@ declare global {
     fbq?: (...args: unknown[]) => void;
     _linkedin_data_partner_ids?: string[];
     lintrk?: (action: string, data: Record<string, unknown>) => void;
+    doNotTrack?: string;
   }
+  var dataLayer: Record<string, unknown>[] | undefined;
+  var gtag: ((...args: unknown[]) => void) | undefined;
+  var fbq: ((...args: unknown[]) => void) | undefined;
+  var lintrk: ((action: string, data: Record<string, unknown>) => void) | undefined;
+  var doNotTrack: string | undefined;
+}
+
+interface NavigatorWithMsDoNotTrack extends Navigator {
+  msDoNotTrack?: string;
 }
 
 /**
  * Push event to Google Tag Manager dataLayer
  */
 export function pushToDataLayer(event: TrackingEvent): void {
-  if (typeof window === 'undefined') return;
+  if (globalThis.window === undefined) return;
   if (!isTrackingAllowed()) return;
 
-  window.dataLayer = window.dataLayer || [];
-  window.dataLayer.push({
+  globalThis.dataLayer = globalThis.dataLayer || [];
+  globalThis.dataLayer.push({
     event: event.name,
     eventCategory: event.category,
     eventAction: event.action,
@@ -122,10 +133,10 @@ export function pushToDataLayer(event: TrackingEvent): void {
  * Track Google Analytics 4 event via gtag
  */
 export function trackGA4Event(event: TrackingEvent): void {
-  if (typeof window === 'undefined' || !window.gtag) return;
+  if (globalThis.window === undefined || !globalThis.gtag) return;
   if (!isTrackingAllowed()) return;
 
-  window.gtag('event', event.name, {
+  globalThis.gtag('event', event.name, {
     event_category: event.category,
     event_label: event.label,
     value: event.value,
@@ -145,11 +156,11 @@ export function trackGA4Event(event: TrackingEvent): void {
  * Track Facebook Pixel event
  */
 export function trackFacebookEvent(event: TrackingEvent): void {
-  if (typeof window === 'undefined' || !window.fbq) return;
+  if (globalThis.window === undefined || !globalThis.fbq) return;
   if (!isTrackingAllowed()) return;
 
   const eventName = mapToFacebookEvent(event.name);
-  window.fbq('track', eventName, {
+  globalThis.fbq('track', eventName, {
     content_category: event.category,
     content_name: event.label,
     value: event.value,
@@ -187,10 +198,10 @@ function mapToFacebookEvent(eventName: string): string {
  * Track LinkedIn conversion event
  */
 export function trackLinkedInConversion(conversionId: string): void {
-  if (typeof window === 'undefined' || !window.lintrk) return;
+  if (globalThis.window === undefined || !globalThis.lintrk) return;
   if (!isTrackingAllowed()) return;
 
-  window.lintrk('track', { conversion_id: conversionId });
+  globalThis.lintrk('track', { conversion_id: conversionId });
 
   if (DEFAULT_CONFIG.debug) {
     console.log('[Tracking] LinkedIn conversion:', conversionId);

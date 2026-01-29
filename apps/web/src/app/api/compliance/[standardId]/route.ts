@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import type { ComplianceDetailResponse, ComplianceControl, HistoricalScore, RecentChange } from '../types';
+import type { ComplianceDetailResponse } from '../types';
 
 // Mock data for compliance standards
 // In production, this would come from a database

@@ -323,6 +323,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /**
    * Logout
+   *
+   * Enhanced logout with comprehensive cleanup (PG-018):
+   * 1. Clear all client-side tokens
+   * 2. Broadcast logout to other tabs
+   * 3. Clear React state
+   * 4. Redirect to login
    */
   const logout = useCallback(async (): Promise<void> => {
     setState((prev) => ({ ...prev, isLoading: true }));
@@ -332,19 +338,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      // Import and run comprehensive cleanup (PG-018)
+      if (typeof window !== 'undefined') {
+        try {
+          const { cleanupSession } = await import('@/lib/shared/session-cleanup');
+          const { authBroadcast } = await import('@/lib/broadcast');
+
+          // Clear all client-side tokens and data
+          await cleanupSession({
+            clearLocalStorage: true,
+            clearSessionStorage: true,
+            clearCookies: true,
+            clearIndexedDB: true,
+            broadcastLogout: false, // We handle broadcast separately
+            preservePreferences: true,
+          });
+
+          // Broadcast logout to other tabs
+          if (authBroadcast) {
+            authBroadcast.broadcast('LOGOUT_EVENT');
+          }
+        } catch (cleanupError) {
+          console.error('Session cleanup error:', cleanupError);
+          // Fallback: at least clear accessToken
+          localStorage.removeItem('accessToken');
+        }
+      }
+
       // Clear state regardless of API result
       setState({
         ...initialState,
         isLoading: false,
       });
 
-      // Clear localStorage
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('accessToken');
-      }
-
       // Redirect to login
-      router.push('/login');
+      router.push('/login?logged_out=true');
     }
   }, [logoutMutation, router]);
 

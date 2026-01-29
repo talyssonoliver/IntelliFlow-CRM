@@ -18,7 +18,6 @@ import {
   getPaymentErrorMessage,
   validateCardDetails,
   type CardDetails,
-  type ValidationResult,
 } from '../payment-processor';
 
 // ============================================

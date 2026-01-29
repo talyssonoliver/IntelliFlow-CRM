@@ -13,7 +13,6 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
-  rollbackService,
   createAction,
   approveAction,
   rejectAction,
@@ -27,8 +26,6 @@ import {
   expirePendingActions,
   getPendingActionCount,
   clearStore,
-  type AgentAction,
-  type ActionStatus,
 } from './rollback-service';
 
 describe('Rollback Service', () => {

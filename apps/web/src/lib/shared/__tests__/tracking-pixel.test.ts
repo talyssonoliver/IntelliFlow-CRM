@@ -18,15 +18,23 @@ import {
   trackPageView,
 } from '../tracking-pixel';
 
+// Extend globalThis types for tests
+declare const globalThis: {
+  dataLayer?: Record<string, unknown>[];
+  gtag?: (...args: unknown[]) => void;
+  fbq?: (...args: unknown[]) => void;
+  lintrk?: (action: string, data: Record<string, unknown>) => void;
+};
+
 describe('tracking-pixel', () => {
   let consoleLogSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    // Reset window properties
-    (window as Window & { dataLayer?: unknown[] }).dataLayer = undefined;
-    (window as Window & { gtag?: unknown }).gtag = undefined;
-    (window as Window & { fbq?: unknown }).fbq = undefined;
-    (window as Window & { lintrk?: unknown }).lintrk = undefined;
+    // Reset globalThis properties
+    globalThis.dataLayer = undefined;
+    globalThis.gtag = undefined;
+    globalThis.fbq = undefined;
+    globalThis.lintrk = undefined;
 
     // Mock console.log for debug output
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -110,12 +118,12 @@ describe('tracking-pixel', () => {
     it('initializes dataLayer if not present', () => {
       pushToDataLayer({ name: 'test_event' });
 
-      expect(window.dataLayer).toBeDefined();
-      expect(window.dataLayer).toHaveLength(1);
+      expect(globalThis.dataLayer).toBeDefined();
+      expect(globalThis.dataLayer).toHaveLength(1);
     });
 
     it('pushes event to dataLayer', () => {
-      window.dataLayer = [];
+      globalThis.dataLayer = [];
 
       pushToDataLayer({
         name: 'test_event',
@@ -125,8 +133,8 @@ describe('tracking-pixel', () => {
         value: 100,
       });
 
-      expect(window.dataLayer).toHaveLength(1);
-      expect(window.dataLayer[0]).toMatchObject({
+      expect(globalThis.dataLayer).toHaveLength(1);
+      expect(globalThis.dataLayer[0]).toMatchObject({
         event: 'test_event',
         eventCategory: 'test_category',
         eventAction: 'test_action',
@@ -140,18 +148,18 @@ describe('tracking-pixel', () => {
         value: '1',
         configurable: true,
       });
-      window.dataLayer = [];
+      globalThis.dataLayer = [];
 
       pushToDataLayer({ name: 'test_event' });
 
-      expect(window.dataLayer).toHaveLength(0);
+      expect(globalThis.dataLayer).toHaveLength(0);
     });
   });
 
   describe('trackGA4Event', () => {
     it('calls gtag with event parameters', () => {
       const mockGtag = vi.fn();
-      window.gtag = mockGtag;
+      globalThis.gtag = mockGtag;
 
       trackGA4Event({
         name: 'button_click',
@@ -176,7 +184,7 @@ describe('tracking-pixel', () => {
   describe('trackFacebookEvent', () => {
     it('calls fbq with mapped event name', () => {
       const mockFbq = vi.fn();
-      window.fbq = mockFbq;
+      globalThis.fbq = mockFbq;
 
       trackFacebookEvent({
         name: 'signup_complete',
@@ -192,7 +200,7 @@ describe('tracking-pixel', () => {
 
     it('maps standard events correctly', () => {
       const mockFbq = vi.fn();
-      window.fbq = mockFbq;
+      globalThis.fbq = mockFbq;
 
       trackFacebookEvent({ name: 'lead_captured' });
       expect(mockFbq).toHaveBeenCalledWith('track', 'Lead', expect.any(Object));
@@ -205,7 +213,7 @@ describe('tracking-pixel', () => {
   describe('trackLinkedInConversion', () => {
     it('calls lintrk with conversion ID', () => {
       const mockLintrk = vi.fn();
-      window.lintrk = mockLintrk;
+      globalThis.lintrk = mockLintrk;
 
       trackLinkedInConversion('12345');
 
@@ -221,13 +229,13 @@ describe('tracking-pixel', () => {
     it('tracks to all providers by default', () => {
       const mockGtag = vi.fn();
       const mockFbq = vi.fn();
-      window.gtag = mockGtag;
-      window.fbq = mockFbq;
-      window.dataLayer = [];
+      globalThis.gtag = mockGtag;
+      globalThis.fbq = mockFbq;
+      globalThis.dataLayer = [];
 
       trackEvent({ name: 'test_event' });
 
-      expect(window.dataLayer.length).toBeGreaterThan(0);
+      expect(globalThis.dataLayer.length).toBeGreaterThan(0);
       expect(mockGtag).toHaveBeenCalled();
       expect(mockFbq).toHaveBeenCalled();
     });
@@ -235,20 +243,20 @@ describe('tracking-pixel', () => {
     it('tracks only to specified providers', () => {
       const mockGtag = vi.fn();
       const mockFbq = vi.fn();
-      window.gtag = mockGtag;
-      window.fbq = mockFbq;
-      window.dataLayer = [];
+      globalThis.gtag = mockGtag;
+      globalThis.fbq = mockFbq;
+      globalThis.dataLayer = [];
 
       trackEvent({ name: 'test_event' }, ['gtm']);
 
-      expect(window.dataLayer.length).toBeGreaterThan(0);
+      expect(globalThis.dataLayer.length).toBeGreaterThan(0);
       expect(mockGtag).toHaveBeenCalled();
       expect(mockFbq).not.toHaveBeenCalled();
     });
 
     it('tracks LinkedIn conversion when ID is provided', () => {
       const mockLintrk = vi.fn();
-      window.lintrk = mockLintrk;
+      globalThis.lintrk = mockLintrk;
 
       trackEvent(
         { name: 'test', properties: { linkedInConversionId: '12345' } },
@@ -261,7 +269,7 @@ describe('tracking-pixel', () => {
 
   describe('trackConversion', () => {
     it('includes conversion metadata in event', () => {
-      window.dataLayer = [];
+      globalThis.dataLayer = [];
 
       trackConversion({
         name: 'purchase',
@@ -271,7 +279,7 @@ describe('tracking-pixel', () => {
         value: 99.99,
       });
 
-      expect(window.dataLayer[0]).toMatchObject({
+      expect(globalThis.dataLayer[0]).toMatchObject({
         event: 'purchase',
         conversion_id: 'conv_123',
         currency: 'USD',
@@ -283,11 +291,11 @@ describe('tracking-pixel', () => {
 
   describe('trackSignupComplete', () => {
     it('tracks signup with email method', () => {
-      window.dataLayer = [];
+      globalThis.dataLayer = [];
 
       trackSignupComplete({ method: 'email', email: 'test@example.com' });
 
-      expect(window.dataLayer[0]).toMatchObject({
+      expect(globalThis.dataLayer[0]).toMatchObject({
         event: 'signup_complete',
         signup_method: 'email',
         has_email: true,
@@ -295,18 +303,18 @@ describe('tracking-pixel', () => {
     });
 
     it('tracks signup with Google OAuth', () => {
-      window.dataLayer = [];
+      globalThis.dataLayer = [];
 
       trackSignupComplete({ method: 'google' });
 
-      expect(window.dataLayer[0]).toMatchObject({
+      expect(globalThis.dataLayer[0]).toMatchObject({
         event: 'signup_complete',
         signup_method: 'google',
       });
     });
 
     it('does not include PII', () => {
-      window.dataLayer = [];
+      globalThis.dataLayer = [];
 
       trackSignupComplete({
         method: 'email',
@@ -314,7 +322,7 @@ describe('tracking-pixel', () => {
         userId: 'user_123',
       });
 
-      const event = window.dataLayer[0] as Record<string, unknown>;
+      const event = globalThis.dataLayer[0] as Record<string, unknown>;
       expect(event.email).toBeUndefined();
       expect(event.userId).toBeUndefined();
       expect(event.has_email).toBe(true);
@@ -324,11 +332,11 @@ describe('tracking-pixel', () => {
 
   describe('trackEmailVerified', () => {
     it('tracks email verification event', () => {
-      window.dataLayer = [];
+      globalThis.dataLayer = [];
 
       trackEmailVerified({ userId: 'user_123', timeToVerify: 300 });
 
-      expect(window.dataLayer[0]).toMatchObject({
+      expect(globalThis.dataLayer[0]).toMatchObject({
         event: 'email_verified',
         eventCategory: 'registration',
         eventAction: 'verify',
@@ -339,7 +347,7 @@ describe('tracking-pixel', () => {
 
   describe('trackOnboardingStep', () => {
     it('tracks step with progress percentage', () => {
-      window.dataLayer = [];
+      globalThis.dataLayer = [];
 
       trackOnboardingStep({
         step: 2,
@@ -347,7 +355,7 @@ describe('tracking-pixel', () => {
         totalSteps: 4,
       });
 
-      expect(window.dataLayer[0]).toMatchObject({
+      expect(globalThis.dataLayer[0]).toMatchObject({
         event: 'onboarding_step',
         step_number: 2,
         step_name: 'Complete Profile',
@@ -359,11 +367,11 @@ describe('tracking-pixel', () => {
 
   describe('trackOnboardingComplete', () => {
     it('tracks onboarding completion', () => {
-      window.dataLayer = [];
+      globalThis.dataLayer = [];
 
       trackOnboardingComplete({ totalSteps: 4, timeToComplete: 600 });
 
-      expect(window.dataLayer[0]).toMatchObject({
+      expect(globalThis.dataLayer[0]).toMatchObject({
         event: 'onboarding_complete',
         total_steps: 4,
         time_to_complete_seconds: 600,
@@ -373,7 +381,7 @@ describe('tracking-pixel', () => {
 
   describe('trackPageView', () => {
     it('tracks page view with path', () => {
-      window.dataLayer = [];
+      globalThis.dataLayer = [];
 
       trackPageView({
         path: '/signup/success',
@@ -381,7 +389,7 @@ describe('tracking-pixel', () => {
         referrer: 'https://google.com',
       });
 
-      expect(window.dataLayer[0]).toMatchObject({
+      expect(globalThis.dataLayer[0]).toMatchObject({
         event: 'page_view',
         page_path: '/signup/success',
         page_title: 'Sign Up Success',
@@ -390,3 +398,4 @@ describe('tracking-pixel', () => {
     });
   });
 });
+

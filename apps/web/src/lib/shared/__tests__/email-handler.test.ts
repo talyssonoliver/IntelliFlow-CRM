@@ -64,13 +64,13 @@ describe('Email Handler', () => {
 
     it('should include phone number when provided', () => {
       // Note: Phone number validation happens in Zod schema
-      // This test assumes valid phone already passed validation
+      // Implementation uses String(phone) which works with string or formatted object
       const dataWithPhone = {
         ...validFormData,
-        phone: { value: '+1234567890', formatted: '+1 (234) 567-890', countryCode: 'US' }
+        phone: '+1 (234) 567-890'
       };
 
-      const payload = buildContactEmailPayload(dataWithPhone as ContactFormInput);
+      const payload = buildContactEmailPayload(dataWithPhone as unknown as ContactFormInput);
 
       expect(payload.htmlBody).toContain('234');
     });

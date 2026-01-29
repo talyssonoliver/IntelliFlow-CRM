@@ -164,7 +164,6 @@ export function RemindersProvider({
       remindersService.stop();
       setIsRunning(false);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once on mount
 
   // Calculate unread count

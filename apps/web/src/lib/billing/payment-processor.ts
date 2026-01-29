@@ -183,8 +183,6 @@ export function validateCVC(cvc: string, brand: CardBrand): ValidationResult {
     return { valid: false, error: 'CVC must contain only digits' };
   }
 
-  const expectedLength = brand === 'amex' ? 4 : 3;
-
   if (brand === 'amex' && cvc.length !== 4) {
     return { valid: false, error: 'CVC must be 4 digits for Amex' };
   }

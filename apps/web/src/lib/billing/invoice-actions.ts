@@ -199,7 +199,7 @@ export async function copyInvoiceLink(invoice: InvoiceData): Promise<InvoiceActi
       success: true,
       message: 'Link copied to clipboard',
     };
-  } catch (_error) {
+  } catch {
     return {
       success: false,
       message: 'Copy failed',
@@ -245,7 +245,7 @@ export function emailInvoice(
       success: true,
       message: 'Email client opened',
     };
-  } catch (_error) {
+  } catch {
     return {
       success: false,
       message: 'Email failed',

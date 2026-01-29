@@ -181,9 +181,12 @@ export function useContactFilterOptions(
   currentFilters?: ContactFilterState,
   config: UseFilterOptionsConfig = DEFAULT_CONFIG
 ) {
+  // UI filter state uses string[] for flexibility, but tRPC expects enum arrays.
+  // Values are validated at the API layer, making these casts safe at runtime.
   const queryInput = currentFilters
     ? {
         search: currentFilters.search || undefined,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- UI string[] to tRPC enum[] boundary
         status: currentFilters.status?.length ? (currentFilters.status as any) : undefined,
         accountId: currentFilters.accountId || undefined,
         department: currentFilters.department || undefined,
@@ -205,10 +208,14 @@ export function useLeadFilterOptions(
   currentFilters?: LeadFilterState,
   config: UseFilterOptionsConfig = DEFAULT_CONFIG
 ) {
+  // UI filter state uses string[] for flexibility, but tRPC expects enum arrays.
+  // Values are validated at the API layer, making these casts safe at runtime.
   const queryInput = currentFilters
     ? {
         search: currentFilters.search || undefined,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- UI string[] to tRPC enum[] boundary
         status: currentFilters.status?.length ? (currentFilters.status as any) : undefined,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- UI string[] to tRPC enum[] boundary
         source: currentFilters.source?.length ? (currentFilters.source as any) : undefined,
         ownerId: currentFilters.ownerId || undefined,
       }
@@ -247,11 +254,16 @@ export function useTicketFilterOptions(
   currentFilters?: TicketFilterState,
   config: UseFilterOptionsConfig = DEFAULT_CONFIG
 ) {
+  // UI filter state uses string for flexibility, but tRPC expects enum types.
+  // Values are validated at the API layer, making these casts safe at runtime.
   const queryInput = currentFilters
     ? {
         search: currentFilters.search || undefined,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- UI string to tRPC enum boundary
         status: currentFilters.status ? (currentFilters.status as any) : undefined,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- UI string to tRPC enum boundary
         priority: currentFilters.priority ? (currentFilters.priority as any) : undefined,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- UI string to tRPC enum boundary
         slaStatus: currentFilters.slaStatus ? (currentFilters.slaStatus as any) : undefined,
         assigneeId: currentFilters.assigneeId || undefined,
       }

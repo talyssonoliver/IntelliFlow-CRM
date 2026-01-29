@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { generateADRIndex, writeADRIndex } from '@/lib/adr/adr-service';
 
 export async function GET() {
