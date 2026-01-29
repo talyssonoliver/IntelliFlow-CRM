@@ -30,6 +30,7 @@ describe('InMemoryAccountRepository', () => {
       revenue: 50000000,
       description: 'Enterprise software company',
       ownerId: 'owner-123',
+      tenantId: 'tenant-123',
     });
 
     testAccount = accountResult.value;
@@ -65,14 +66,14 @@ describe('InMemoryAccountRepository', () => {
     it('should overwrite existing account with same ID', async () => {
       await repository.save(testAccount);
 
-      const originalWebsite = testAccount.website;
+      const originalWebsite = testAccount.website?.value;
       testAccount.updateAccountInfo({ website: 'https://new.acme.com' }, 'user-123');
       await repository.save(testAccount);
 
       const allAccounts = repository.getAll();
       expect(allAccounts).toHaveLength(1);
-      expect(allAccounts[0].website).toBe('https://new.acme.com');
-      expect(allAccounts[0].website).not.toBe(originalWebsite);
+      expect(allAccounts[0].website?.value).toBe('https://new.acme.com');
+      expect(allAccounts[0].website?.value).not.toBe(originalWebsite);
     });
 
     it('should save multiple accounts', async () => {
@@ -80,12 +81,14 @@ describe('InMemoryAccountRepository', () => {
         name: 'TechCorp',
         industry: 'Technology',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       const account3Result = Account.create({
         name: 'HealthCo',
         industry: 'Healthcare',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
 
       await repository.save(testAccount);
@@ -128,6 +131,7 @@ describe('InMemoryAccountRepository', () => {
       const account2Result = Account.create({
         name: 'Other Company',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       await repository.save(testAccount);
@@ -146,11 +150,13 @@ describe('InMemoryAccountRepository', () => {
       const account2Result = Account.create({
         name: 'Acme Industries',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       const account3Result = Account.create({
         name: 'TechCorp',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       await repository.save(testAccount);
@@ -184,11 +190,13 @@ describe('InMemoryAccountRepository', () => {
       const account2Result = Account.create({
         name: 'Beta Corp',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       const account3Result = Account.create({
         name: 'Alpha Inc',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       await repository.save(testAccount);
@@ -223,11 +231,13 @@ describe('InMemoryAccountRepository', () => {
       const account2Result = Account.create({
         name: 'Second Company',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       const account3Result = Account.create({
         name: 'Third Company',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       await repository.save(testAccount);
@@ -252,6 +262,7 @@ describe('InMemoryAccountRepository', () => {
       const account2Result = Account.create({
         name: 'Other Owner Account',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
 
       await repository.save(testAccount);
@@ -269,6 +280,7 @@ describe('InMemoryAccountRepository', () => {
       const account2Result = Account.create({
         name: 'Second Company',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       vi.advanceTimersByTime(1000);
@@ -276,6 +288,7 @@ describe('InMemoryAccountRepository', () => {
       const account3Result = Account.create({
         name: 'Third Company',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       await repository.save(testAccount);
@@ -296,12 +309,14 @@ describe('InMemoryAccountRepository', () => {
         name: 'TechCorp',
         industry: 'Technology',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
 
       const account3Result = Account.create({
         name: 'HealthCo',
         industry: 'Healthcare',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       await repository.save(testAccount);
@@ -326,6 +341,7 @@ describe('InMemoryAccountRepository', () => {
       const accountWithoutIndustry = Account.create({
         name: 'No Industry Corp',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       await repository.save(testAccount);
@@ -344,6 +360,7 @@ describe('InMemoryAccountRepository', () => {
         name: 'TechCorp',
         industry: 'Technology',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
 
       vi.advanceTimersByTime(1000);
@@ -352,6 +369,7 @@ describe('InMemoryAccountRepository', () => {
         name: 'TechStart',
         industry: 'Technology',
         ownerId: 'owner-789',
+        tenantId: 'tenant-123',
       });
 
       await repository.save(testAccount);
@@ -394,6 +412,7 @@ describe('InMemoryAccountRepository', () => {
       const account2Result = Account.create({
         name: 'Second Company',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       await repository.save(testAccount);
@@ -475,12 +494,14 @@ describe('InMemoryAccountRepository', () => {
         name: 'TechCorp',
         industry: 'Technology',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
 
       const account3Result = Account.create({
         name: 'HealthCo',
         industry: 'Healthcare',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       await repository.save(testAccount);
@@ -497,6 +518,7 @@ describe('InMemoryAccountRepository', () => {
       const accountWithoutIndustry = Account.create({
         name: 'No Industry Corp',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       await repository.save(testAccount);
@@ -522,6 +544,7 @@ describe('InMemoryAccountRepository', () => {
           name: `${industry} Company`,
           industry,
           ownerId: 'owner-123',
+          tenantId: 'tenant-123',
         });
         await repository.save(accountResult.value);
       }
@@ -541,6 +564,7 @@ describe('InMemoryAccountRepository', () => {
           name: `Tech Company ${i}`,
           industry: 'Technology',
           ownerId: 'owner-123',
+          tenantId: 'tenant-123',
         });
         await repository.save(accountResult.value);
       }
@@ -578,6 +602,7 @@ describe('InMemoryAccountRepository', () => {
         const account2Result = Account.create({
           name: 'Second Company',
           ownerId: 'owner-123',
+          tenantId: 'tenant-123',
         });
 
         await repository.save(testAccount);
@@ -620,7 +645,7 @@ describe('InMemoryAccountRepository', () => {
 
       // Verify update
       const updated = await repository.findById(testAccountId);
-      expect(updated?.website).toBe('https://acme-new.com');
+      expect(updated?.website?.value).toBe('https://acme-new.com');
 
       // Update revenue
       testAccount.updateRevenue(75000000, 'user-123');
@@ -651,18 +676,21 @@ describe('InMemoryAccountRepository', () => {
         name: 'Owner1 Tech',
         industry: 'Technology',
         ownerId: 'owner-1',
+        tenantId: 'tenant-123',
       });
 
       const owner1Account2 = Account.create({
         name: 'Owner1 Health',
         industry: 'Healthcare',
         ownerId: 'owner-1',
+        tenantId: 'tenant-123',
       });
 
       const owner2Account1 = Account.create({
         name: 'Owner2 Tech',
         industry: 'Technology',
         ownerId: 'owner-2',
+        tenantId: 'tenant-123',
       });
 
       await repository.save(owner1Account1.value);
@@ -689,6 +717,7 @@ describe('InMemoryAccountRepository', () => {
         name: 'Concurrent Company',
         industry: 'Finance',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       // Simulate concurrent saves
@@ -729,6 +758,7 @@ describe('InMemoryAccountRepository', () => {
       const accountWithSpecialName = Account.create({
         name: 'ABC & Partners Ltd.',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       await repository.save(testAccount);
@@ -744,6 +774,7 @@ describe('InMemoryAccountRepository', () => {
       const minimalAccount = Account.create({
         name: 'Minimal Corp',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       await repository.save(minimalAccount.value);
@@ -761,6 +792,7 @@ describe('InMemoryAccountRepository', () => {
       const account2Result = Account.create({
         name: 'Another Company',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       await repository.save(testAccount);

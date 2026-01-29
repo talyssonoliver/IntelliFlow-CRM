@@ -1,5 +1,5 @@
 import { PrismaClient } from '@intelliflow/db';
-import { Contact, ContactId, Email, PhoneNumber } from '@intelliflow/domain';
+import { Contact, ContactId, Email, PhoneNumber, ContactStatus } from '@intelliflow/domain';
 import { ContactRepository } from '@intelliflow/application';
 
 /**
@@ -43,6 +43,7 @@ export class PrismaContactRepository implements ContactRepository {
       title: contact.title ?? null,
       phone: contact.phone?.toValue() ?? null, // Convert PhoneNumber to string
       department: contact.department ?? null,
+      status: contact.status,
       accountId: contact.accountId ?? null,
       leadId: contact.leadId ?? null,
       ownerId: contact.ownerId,
@@ -72,6 +73,7 @@ export class PrismaContactRepository implements ContactRepository {
       title: record.title ?? undefined,
       phone: toPhoneNumber(record.phone),
       department: record.department ?? undefined,
+      status: record.status as ContactStatus,
       accountId: record.accountId ?? undefined,
       leadId: record.leadId ?? undefined,
       ownerId: record.ownerId,
@@ -95,10 +97,11 @@ export class PrismaContactRepository implements ContactRepository {
         title: record.title ?? undefined,
         phone: toPhoneNumber(record.phone),
         department: record.department ?? undefined,
+        status: record.status as ContactStatus,
         accountId: record.accountId ?? undefined,
         leadId: record.leadId ?? undefined,
         ownerId: record.ownerId,
-      tenantId: record.tenantId,
+        tenantId: record.tenantId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
       })
@@ -119,10 +122,11 @@ export class PrismaContactRepository implements ContactRepository {
         title: record.title ?? undefined,
         phone: toPhoneNumber(record.phone),
         department: record.department ?? undefined,
+        status: record.status as ContactStatus,
         accountId: record.accountId ?? undefined,
         leadId: record.leadId ?? undefined,
         ownerId: record.ownerId,
-      tenantId: record.tenantId,
+        tenantId: record.tenantId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
       })
@@ -143,6 +147,7 @@ export class PrismaContactRepository implements ContactRepository {
       title: record.title ?? undefined,
       phone: toPhoneNumber(record.phone),
       department: record.department ?? undefined,
+      status: record.status as ContactStatus,
       accountId: record.accountId ?? undefined,
       leadId: record.leadId ?? undefined,
       ownerId: record.ownerId,
@@ -179,6 +184,7 @@ export class PrismaContactRepository implements ContactRepository {
       title: record.title ?? undefined,
       phone: toPhoneNumber(record.phone),
       department: record.department ?? undefined,
+      status: record.status as ContactStatus,
       accountId: record.accountId ?? undefined,
       leadId: record.leadId ?? undefined,
       ownerId: record.ownerId,

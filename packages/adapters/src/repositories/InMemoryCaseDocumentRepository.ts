@@ -59,12 +59,12 @@ export class InMemoryCaseDocumentRepository implements CaseDocumentRepository {
 
     // Find root of version chain
     let current = startDoc;
-    while (true) {
-      const parentId = current.toJSON().parentVersionId;
-      if (!parentId) break;
+    let parentId = current.toJSON().parentVersionId;
+    while (parentId) {
       const parent = this.documents.get(parentId);
       if (!parent) break;
       current = parent;
+      parentId = current.toJSON().parentVersionId;
     }
 
     collectVersions(current);

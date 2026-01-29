@@ -72,6 +72,7 @@ describe('PrismaOpportunityRepository', () => {
       expectedCloseDate: new Date('2024-12-31'),
       description: 'Large enterprise opportunity',
       ownerId: 'owner-123',
+      tenantId: 'tenant-123',
     });
 
     testOpportunity = opportunityResult.value;
@@ -123,6 +124,7 @@ describe('PrismaOpportunityRepository', () => {
         value: 5000,
         accountId: 'account-789',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
 
       const upsertMock = vi.fn().mockResolvedValue({});
@@ -180,7 +182,7 @@ describe('PrismaOpportunityRepository', () => {
       expect(result).not.toBeNull();
       expect(result?.id.value).toBe(testOpportunityId.value);
       expect(result?.name).toBe('Enterprise Deal');
-      expect(result?.value).toBe(100000);
+      expect(result?.value.amount).toBe(100000);
       expect(result?.stage).toBe('PROSPECTING');
     });
 
@@ -607,14 +609,15 @@ describe('PrismaOpportunityRepository', () => {
       const mockRecord = {
         id: testOpportunity.id.value,
         name: testOpportunity.name,
-        value: mockDecimal(testOpportunity.value),
+        value: mockDecimal(testOpportunity.value.amount),
         stage: testOpportunity.stage,
-        probability: testOpportunity.probability,
+        probability: testOpportunity.probability.value,
         expectedCloseDate: testOpportunity.expectedCloseDate,
         description: testOpportunity.description,
         accountId: testOpportunity.accountId,
         contactId: testOpportunity.contactId,
         ownerId: testOpportunity.ownerId,
+        tenantId: testOpportunity.tenantId,
         createdAt: testOpportunity.createdAt,
         updatedAt: testOpportunity.updatedAt,
         closedAt: testOpportunity.closedAt,
@@ -631,9 +634,9 @@ describe('PrismaOpportunityRepository', () => {
 
       expect(found).not.toBeNull();
       expect(found?.name).toBe(testOpportunity.name);
-      expect(found?.value).toBe(testOpportunity.value);
+      expect(found?.value.amount).toBe(testOpportunity.value.amount);
       expect(found?.stage).toBe(testOpportunity.stage);
-      expect(found?.probability).toBe(testOpportunity.probability);
+      expect(found?.probability.value).toBe(testOpportunity.probability.value);
       expect(found?.accountId).toBe(testOpportunity.accountId);
     });
   });

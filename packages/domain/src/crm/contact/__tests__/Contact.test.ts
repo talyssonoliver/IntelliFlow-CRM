@@ -45,7 +45,8 @@ describe('Contact Aggregate', () => {
       expect(contact.lastName).toBe('Doe');
       expect(contact.fullName).toBe('John Doe');
       expect(contact.title).toBe('CEO');
-      expect(contact.phone).toBe('+1-555-0100');
+      // PhoneNumber normalizes to E.164 format
+      expect(contact.phone?.value).toBe('+15550100');
       expect(contact.department).toBe('Executive');
       expect(contact.ownerId).toBe('owner-123');
       expect(contact.hasAccount).toBe(false);
@@ -262,7 +263,8 @@ describe('Contact Aggregate', () => {
       expect(contact.firstName).toBe('Jane');
       expect(contact.lastName).toBe('Doe'); // Unchanged
       expect(contact.title).toBe('Senior Manager');
-      expect(contact.phone).toBe('+1-555-9999');
+      // PhoneNumber normalizes to E.164 format (removes dashes/spaces)
+      expect(contact.phone?.value).toBe('+15559999');
     });
 
     it('should emit ContactUpdatedEvent when fields change', () => {
@@ -522,7 +524,8 @@ describe('Contact Aggregate', () => {
       expect(json.lastName).toBe('Test');
       expect(json.fullName).toBe('JSON Test');
       expect(json.title).toBe('Developer');
-      expect(json.phone).toBe('+1-555-1234');
+      // toJSON() uses PhoneNumber.toValue() which returns E.164 normalized format
+      expect(json.phone).toBe('+15551234');
       expect(json.department).toBe('Engineering');
       expect(json.accountId).toBe('account-123');
       expect(json.leadId).toBe('lead-456');
@@ -556,6 +559,7 @@ describe('Contact Aggregate', () => {
       expect(contact.firstName).toBe('Reconstituted');
       expect(contact.lastName).toBe('Contact');
       expect(contact.title).toBe('Manager');
+      // reconstitute receives phone as string from persistence, stored as-is
       expect(contact.phone).toBe('+1-555-0000');
       expect(contact.department).toBe('Sales');
       expect(contact.accountId).toBe('account-999');

@@ -11,6 +11,22 @@ import {
   ContactConvertedFromLeadEvent,
 } from './ContactEvents';
 
+// Canonical enum values - single source of truth (IFC-089)
+export const CONTACT_TYPES = [
+  'customer',
+  'prospect',
+  'partner',
+  'vendor',
+  'investor',
+  'other',
+] as const;
+
+export const CONTACT_STATUSES = ['ACTIVE', 'INACTIVE', 'PROSPECT', 'CUSTOMER', 'FORMER_CUSTOMER'] as const;
+
+// Derive types from const arrays
+export type ContactType = (typeof CONTACT_TYPES)[number];
+export type ContactStatus = (typeof CONTACT_STATUSES)[number];
+
 export class ContactAlreadyHasAccountError extends DomainError {
   readonly code = 'CONTACT_ALREADY_HAS_ACCOUNT';
   constructor() {
@@ -36,6 +52,16 @@ interface ContactProps {
   leadId?: string;
   ownerId: string;
   tenantId: string;
+  status: ContactStatus;
+  // Extended fields (IFC-089 form support)
+  streetAddress?: string;
+  city?: string;
+  zipCode?: string;
+  company?: string;
+  linkedInUrl?: string;
+  contactType?: ContactType;
+  tags?: string[];
+  contactNotes?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -51,6 +77,16 @@ export interface CreateContactProps {
   leadId?: string;
   ownerId: string;
   tenantId: string;
+  status?: ContactStatus;
+  // Extended fields (IFC-089 form support)
+  streetAddress?: string;
+  city?: string;
+  zipCode?: string;
+  company?: string;
+  linkedInUrl?: string;
+  contactType?: ContactType;
+  tags?: string[];
+  contactNotes?: string;
 }
 
 /**
@@ -110,6 +146,10 @@ export class Contact extends AggregateRoot<ContactId> {
     return this.props.tenantId;
   }
 
+  get status(): ContactStatus {
+    return this.props.status;
+  }
+
   get createdAt(): Date {
     return this.props.createdAt;
   }
@@ -124,6 +164,39 @@ export class Contact extends AggregateRoot<ContactId> {
 
   get isConvertedFromLead(): boolean {
     return this.props.leadId !== undefined;
+  }
+
+  // Extended field getters (IFC-089)
+  get streetAddress(): string | undefined {
+    return this.props.streetAddress;
+  }
+
+  get city(): string | undefined {
+    return this.props.city;
+  }
+
+  get zipCode(): string | undefined {
+    return this.props.zipCode;
+  }
+
+  get company(): string | undefined {
+    return this.props.company;
+  }
+
+  get linkedInUrl(): string | undefined {
+    return this.props.linkedInUrl;
+  }
+
+  get contactType(): string | undefined {
+    return this.props.contactType;
+  }
+
+  get tags(): string[] | undefined {
+    return this.props.tags;
+  }
+
+  get contactNotes(): string | undefined {
+    return this.props.contactNotes;
   }
 
   // Factory method
@@ -162,6 +235,16 @@ export class Contact extends AggregateRoot<ContactId> {
       leadId: props.leadId,
       ownerId: props.ownerId,
       tenantId: props.tenantId,
+      status: props.status ?? 'ACTIVE',
+      // Extended fields
+      streetAddress: props.streetAddress,
+      city: props.city,
+      zipCode: props.zipCode,
+      company: props.company,
+      linkedInUrl: props.linkedInUrl,
+      contactType: props.contactType,
+      tags: props.tags,
+      contactNotes: props.contactNotes,
       createdAt: now,
       updatedAt: now,
     });
@@ -189,12 +272,13 @@ export class Contact extends AggregateRoot<ContactId> {
   // Reconstitute from persistence
   static reconstitute(
     id: ContactId,
-    props: Omit<ContactProps, 'email'> & { email: string }
+    props: Omit<ContactProps, 'email' | 'status'> & { email: string; status?: ContactStatus }
   ): Contact {
     const emailResult = Email.create(props.email);
     return new Contact(id, {
       ...props,
       email: emailResult.isSuccess ? emailResult.value : Email.create('unknown@unknown.com').value,
+      status: props.status ?? 'ACTIVE',
     });
   }
 
@@ -206,6 +290,16 @@ export class Contact extends AggregateRoot<ContactId> {
       title: string;
       phone: string | PhoneNumber;
       department: string;
+      status: ContactStatus;
+      // Extended fields
+      streetAddress: string;
+      city: string;
+      zipCode: string;
+      company: string;
+      linkedInUrl: string;
+      contactType: ContactType;
+      tags: string[];
+      contactNotes: string;
     }>,
     updatedBy: string
   ): Result<void, DomainError> {
@@ -248,6 +342,52 @@ export class Contact extends AggregateRoot<ContactId> {
     if (updates.department !== undefined && updates.department !== this.props.department) {
       this.props.department = updates.department;
       updatedFields.push('department');
+    }
+
+    if (updates.status !== undefined && updates.status !== this.props.status) {
+      this.props.status = updates.status;
+      updatedFields.push('status');
+    }
+
+    // Extended field updates
+    if (updates.streetAddress !== undefined && updates.streetAddress !== this.props.streetAddress) {
+      this.props.streetAddress = updates.streetAddress;
+      updatedFields.push('streetAddress');
+    }
+
+    if (updates.city !== undefined && updates.city !== this.props.city) {
+      this.props.city = updates.city;
+      updatedFields.push('city');
+    }
+
+    if (updates.zipCode !== undefined && updates.zipCode !== this.props.zipCode) {
+      this.props.zipCode = updates.zipCode;
+      updatedFields.push('zipCode');
+    }
+
+    if (updates.company !== undefined && updates.company !== this.props.company) {
+      this.props.company = updates.company;
+      updatedFields.push('company');
+    }
+
+    if (updates.linkedInUrl !== undefined && updates.linkedInUrl !== this.props.linkedInUrl) {
+      this.props.linkedInUrl = updates.linkedInUrl;
+      updatedFields.push('linkedInUrl');
+    }
+
+    if (updates.contactType !== undefined && updates.contactType !== this.props.contactType) {
+      this.props.contactType = updates.contactType;
+      updatedFields.push('contactType');
+    }
+
+    if (updates.tags !== undefined) {
+      this.props.tags = updates.tags;
+      updatedFields.push('tags');
+    }
+
+    if (updates.contactNotes !== undefined && updates.contactNotes !== this.props.contactNotes) {
+      this.props.contactNotes = updates.contactNotes;
+      updatedFields.push('contactNotes');
     }
 
     if (updatedFields.length > 0) {
@@ -320,6 +460,16 @@ export class Contact extends AggregateRoot<ContactId> {
       accountId: this.accountId,
       leadId: this.leadId,
       ownerId: this.ownerId,
+      status: this.status,
+      // Extended fields
+      streetAddress: this.streetAddress,
+      city: this.city,
+      zipCode: this.zipCode,
+      company: this.company,
+      linkedInUrl: this.linkedInUrl,
+      contactType: this.contactType,
+      tags: this.tags,
+      contactNotes: this.contactNotes,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),
     };

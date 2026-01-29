@@ -25,6 +25,8 @@ import {
   OpportunityProbabilityUpdatedEvent,
   OpportunityCloseDateChangedEvent,
 } from '../OpportunityEvents';
+import { Money } from '../../../shared/Money';
+import { Percentage } from '../../../shared/Percentage';
 
 describe('Opportunity Aggregate', () => {
   describe('Factory Method - create()', () => {
@@ -38,6 +40,7 @@ describe('Opportunity Aggregate', () => {
         expectedCloseDate,
         description: 'Major opportunity',
         ownerId: 'owner-789',
+        tenantId: 'tenant-123',
       });
 
       expect(result.isSuccess).toBe(true);
@@ -45,14 +48,14 @@ describe('Opportunity Aggregate', () => {
 
       const opportunity = result.value;
       expect(opportunity.name).toBe('Big Deal');
-      expect(opportunity.value).toBe(100000);
+      expect(opportunity.value.amount).toBe(100000);
       expect(opportunity.accountId).toBe('account-123');
       expect(opportunity.contactId).toBe('contact-456');
       expect(opportunity.expectedCloseDate).toBe(expectedCloseDate);
       expect(opportunity.description).toBe('Major opportunity');
       expect(opportunity.ownerId).toBe('owner-789');
       expect(opportunity.stage).toBe('PROSPECTING');
-      expect(opportunity.probability).toBe(10);
+      expect(opportunity.probability.value).toBe(10);
       expect(opportunity.isClosed).toBe(false);
       expect(opportunity.isWon).toBe(false);
       expect(opportunity.isLost).toBe(false);
@@ -64,13 +67,14 @@ describe('Opportunity Aggregate', () => {
         value: 50000,
         accountId: 'account-999',
         ownerId: 'owner-111',
+        tenantId: 'tenant-123',
       });
 
       expect(result.isSuccess).toBe(true);
 
       const opportunity = result.value;
       expect(opportunity.name).toBe('Minimal Deal');
-      expect(opportunity.value).toBe(50000);
+      expect(opportunity.value.amount).toBe(50000);
       expect(opportunity.accountId).toBe('account-999');
       expect(opportunity.contactId).toBeUndefined();
       expect(opportunity.expectedCloseDate).toBeUndefined();
@@ -84,6 +88,7 @@ describe('Opportunity Aggregate', () => {
         value: 0,
         accountId: 'account-123',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
 
       expect(result.isFailure).toBe(true);
@@ -97,6 +102,7 @@ describe('Opportunity Aggregate', () => {
         value: -1000,
         accountId: 'account-123',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
 
       expect(result.isFailure).toBe(true);
@@ -109,6 +115,7 @@ describe('Opportunity Aggregate', () => {
         value: 75000,
         accountId: 'account-789',
         ownerId: 'owner-999',
+        tenantId: 'tenant-123',
       });
 
       const opportunity = result.value;
@@ -131,11 +138,12 @@ describe('Opportunity Aggregate', () => {
         value: 100000,
         accountId: 'account-123',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
 
       const opportunity = result.value;
       // Stage is PROSPECTING with 10% probability
-      expect(opportunity.weightedValue).toBe(10000); // 100000 * 0.10
+      expect(opportunity.weightedValue.amount).toBe(10000); // 100000 * 0.10
     });
   });
 
@@ -151,19 +159,20 @@ describe('Opportunity Aggregate', () => {
         expectedCloseDate: new Date('2024-12-31'),
         description: 'Test opportunity',
         ownerId: 'owner-789',
+        tenantId: 'tenant-123',
       });
       opportunity = result.value;
     });
 
     it('should return all properties correctly', () => {
       expect(opportunity.name).toBe('Test Deal');
-      expect(opportunity.value).toBe(100000);
+      expect(opportunity.value.amount).toBe(100000);
       expect(opportunity.accountId).toBe('account-123');
       expect(opportunity.contactId).toBe('contact-456');
       expect(opportunity.ownerId).toBe('owner-789');
       expect(opportunity.description).toBe('Test opportunity');
       expect(opportunity.stage).toBe('PROSPECTING');
-      expect(opportunity.probability).toBe(10);
+      expect(opportunity.probability.value).toBe(10);
     });
 
     it('should check if opportunity is closed', () => {
@@ -190,10 +199,10 @@ describe('Opportunity Aggregate', () => {
     });
 
     it('should calculate weighted value based on probability', () => {
-      expect(opportunity.weightedValue).toBe(10000); // 100000 * 0.10
+      expect(opportunity.weightedValue.amount).toBe(10000); // 100000 * 0.10
 
       opportunity.changeStage('PROPOSAL', 'user-123');
-      expect(opportunity.weightedValue).toBe(60000); // 100000 * 0.60
+      expect(opportunity.weightedValue.amount).toBe(60000); // 100000 * 0.60
     });
   });
 
@@ -206,6 +215,7 @@ describe('Opportunity Aggregate', () => {
         value: 100000,
         accountId: 'account-123',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
       opportunity = result.value;
       opportunity.clearDomainEvents();
@@ -216,7 +226,7 @@ describe('Opportunity Aggregate', () => {
 
       expect(result.isSuccess).toBe(true);
       expect(opportunity.stage).toBe('QUALIFICATION');
-      expect(opportunity.probability).toBe(20); // Auto-adjusted for stage
+      expect(opportunity.probability.value).toBe(20); // Auto-adjusted for stage
     });
 
     it('should auto-adjust probability for each stage', () => {
@@ -230,7 +240,7 @@ describe('Opportunity Aggregate', () => {
 
       stages.forEach(({ stage, expectedProbability }) => {
         opportunity.changeStage(stage, 'user-123');
-        expect(opportunity.probability).toBe(expectedProbability);
+        expect(opportunity.probability.value).toBe(expectedProbability);
       });
     });
 
@@ -269,6 +279,7 @@ describe('Opportunity Aggregate', () => {
         value: 100000,
         accountId: 'account-123',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
       opportunity = result.value;
       opportunity.clearDomainEvents();
@@ -278,7 +289,7 @@ describe('Opportunity Aggregate', () => {
       const result = opportunity.updateValue(150000, 'user-123');
 
       expect(result.isSuccess).toBe(true);
-      expect(opportunity.value).toBe(150000);
+      expect(opportunity.value.amount).toBe(150000);
     });
 
     it('should emit OpportunityValueUpdatedEvent', () => {
@@ -300,7 +311,7 @@ describe('Opportunity Aggregate', () => {
 
       expect(result.isFailure).toBe(true);
       expect(result.error).toBeInstanceOf(InvalidOpportunityValueError);
-      expect(opportunity.value).toBe(100000); // Unchanged
+      expect(opportunity.value.amount).toBe(100000); // Unchanged
     });
 
     it('should fail with negative value', () => {
@@ -308,7 +319,7 @@ describe('Opportunity Aggregate', () => {
 
       expect(result.isFailure).toBe(true);
       expect(result.error).toBeInstanceOf(InvalidOpportunityValueError);
-      expect(opportunity.value).toBe(100000); // Unchanged
+      expect(opportunity.value.amount).toBe(100000); // Unchanged
     });
 
     it('should fail to update value when already closed', () => {
@@ -331,6 +342,7 @@ describe('Opportunity Aggregate', () => {
         value: 100000,
         accountId: 'account-123',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
       opportunity = result.value;
       opportunity.clearDomainEvents();
@@ -340,7 +352,7 @@ describe('Opportunity Aggregate', () => {
       const result = opportunity.updateProbability(50, 'user-123');
 
       expect(result.isSuccess).toBe(true);
-      expect(opportunity.probability).toBe(50);
+      expect(opportunity.probability.value).toBe(50);
     });
 
     it('should emit OpportunityProbabilityUpdatedEvent', () => {
@@ -361,14 +373,14 @@ describe('Opportunity Aggregate', () => {
       const result = opportunity.updateProbability(0, 'user-123');
 
       expect(result.isSuccess).toBe(true);
-      expect(opportunity.probability).toBe(0);
+      expect(opportunity.probability.value).toBe(0);
     });
 
     it('should accept 100% probability', () => {
       const result = opportunity.updateProbability(100, 'user-123');
 
       expect(result.isSuccess).toBe(true);
-      expect(opportunity.probability).toBe(100);
+      expect(opportunity.probability.value).toBe(100);
     });
 
     it('should fail with probability below 0', () => {
@@ -377,7 +389,7 @@ describe('Opportunity Aggregate', () => {
       expect(result.isFailure).toBe(true);
       expect(result.error).toBeInstanceOf(InvalidProbabilityError);
       expect(result.error.code).toBe('INVALID_PROBABILITY');
-      expect(opportunity.probability).toBe(10); // Unchanged
+      expect(opportunity.probability.value).toBe(10); // Unchanged
     });
 
     it('should fail with probability above 100', () => {
@@ -385,7 +397,7 @@ describe('Opportunity Aggregate', () => {
 
       expect(result.isFailure).toBe(true);
       expect(result.error).toBeInstanceOf(InvalidProbabilityError);
-      expect(opportunity.probability).toBe(10); // Unchanged
+      expect(opportunity.probability.value).toBe(10); // Unchanged
     });
 
     it('should fail to update probability when already closed', () => {
@@ -409,6 +421,7 @@ describe('Opportunity Aggregate', () => {
         accountId: 'account-123',
         expectedCloseDate: new Date('2024-06-30'),
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
       opportunity = result.value;
       opportunity.clearDomainEvents();
@@ -443,6 +456,7 @@ describe('Opportunity Aggregate', () => {
         value: 50000,
         accountId: 'account-999',
         ownerId: 'owner-111',
+        tenantId: 'tenant-123',
       });
 
       const opp = noDateResult.value;
@@ -476,6 +490,7 @@ describe('Opportunity Aggregate', () => {
         value: 100000,
         accountId: 'account-123',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
       opportunity = result.value;
       opportunity.clearDomainEvents();
@@ -486,7 +501,7 @@ describe('Opportunity Aggregate', () => {
 
       expect(result.isSuccess).toBe(true);
       expect(opportunity.stage).toBe('CLOSED_WON');
-      expect(opportunity.probability).toBe(100);
+      expect(opportunity.probability.value).toBe(100);
       expect(opportunity.isClosed).toBe(true);
       expect(opportunity.isWon).toBe(true);
       expect(opportunity.closedAt).toBeInstanceOf(Date);
@@ -518,7 +533,7 @@ describe('Opportunity Aggregate', () => {
 
     it('should set weighted value to full value when won', () => {
       opportunity.markAsWon('user-123');
-      expect(opportunity.weightedValue).toBe(100000); // 100% probability
+      expect(opportunity.weightedValue.amount).toBe(100000); // 100% probability
     });
   });
 
@@ -531,6 +546,7 @@ describe('Opportunity Aggregate', () => {
         value: 100000,
         accountId: 'account-123',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
       opportunity = result.value;
       opportunity.clearDomainEvents();
@@ -541,7 +557,7 @@ describe('Opportunity Aggregate', () => {
 
       expect(result.isSuccess).toBe(true);
       expect(opportunity.stage).toBe('CLOSED_LOST');
-      expect(opportunity.probability).toBe(0);
+      expect(opportunity.probability.value).toBe(0);
       expect(opportunity.isClosed).toBe(true);
       expect(opportunity.isLost).toBe(true);
       expect(opportunity.closedAt).toBeInstanceOf(Date);
@@ -573,7 +589,7 @@ describe('Opportunity Aggregate', () => {
 
     it('should set weighted value to zero when lost', () => {
       opportunity.markAsLost('No budget', 'user-123');
-      expect(opportunity.weightedValue).toBe(0); // 0% probability
+      expect(opportunity.weightedValue.amount).toBe(0); // 0% probability
     });
   });
 
@@ -587,6 +603,7 @@ describe('Opportunity Aggregate', () => {
         accountId: 'account-123',
         description: 'Original description',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
       opportunity = result.value;
     });
@@ -613,6 +630,7 @@ describe('Opportunity Aggregate', () => {
         value: 100000,
         accountId: 'account-123',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
 
       const opportunity = result.value;
@@ -636,6 +654,7 @@ describe('Opportunity Aggregate', () => {
         value: 100000,
         accountId: 'account-123',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
 
       const opportunity = result.value;
@@ -657,6 +676,7 @@ describe('Opportunity Aggregate', () => {
         value: 100000,
         accountId: 'account-123',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
 
       const opportunity = result.value;
@@ -684,6 +704,7 @@ describe('Opportunity Aggregate', () => {
         expectedCloseDate,
         description: 'JSON test opportunity',
         ownerId: 'owner-789',
+        tenantId: 'tenant-123',
       });
 
       const opportunity = result.value;
@@ -693,10 +714,11 @@ describe('Opportunity Aggregate', () => {
 
       expect(json).toHaveProperty('id');
       expect(json.name).toBe('JSON Test');
-      expect(json.value).toBe(100000);
+      // Money.toValue() returns { cents, currency, amount }
+      expect((json.value as { amount: number }).amount).toBe(100000);
       expect(json.stage).toBe('PROPOSAL');
       expect(json.probability).toBe(60);
-      expect(json.weightedValue).toBe(60000);
+      expect((json.weightedValue as { amount: number }).amount).toBe(60000);
       expect(json.expectedCloseDate).toBe(expectedCloseDate.toISOString());
       expect(json.description).toBe('JSON test opportunity');
       expect(json.accountId).toBe('account-123');
@@ -713,6 +735,7 @@ describe('Opportunity Aggregate', () => {
         value: 50000,
         accountId: 'account-999',
         ownerId: 'owner-111',
+        tenantId: 'tenant-123',
       });
 
       const opportunity = result.value;
@@ -729,25 +752,32 @@ describe('Opportunity Aggregate', () => {
       const now = new Date();
       const expectedCloseDate = new Date('2024-12-31');
 
+      // Create proper value objects for reconstitute
+      const moneyResult = Money.create(100000, 'USD');
+      const probabilityResult = Percentage.create(60);
+      expect(moneyResult.isSuccess).toBe(true);
+      expect(probabilityResult.isSuccess).toBe(true);
+
       const opportunity = Opportunity.reconstitute(id, {
         name: 'Reconstituted Deal',
-        value: 100000,
+        value: moneyResult.value,
         stage: 'PROPOSAL',
-        probability: 60,
+        probability: probabilityResult.value,
         expectedCloseDate,
         description: 'Reconstituted opportunity',
         accountId: 'account-999',
         contactId: 'contact-888',
         ownerId: 'owner-777',
+        tenantId: 'tenant-123',
         createdAt: now,
         updatedAt: now,
       });
 
       expect(opportunity.id).toBe(id);
       expect(opportunity.name).toBe('Reconstituted Deal');
-      expect(opportunity.value).toBe(100000);
+      expect(opportunity.value.amount).toBe(100000);
       expect(opportunity.stage).toBe('PROPOSAL');
-      expect(opportunity.probability).toBe(60);
+      expect(opportunity.probability.value).toBe(60);
       expect(opportunity.expectedCloseDate).toBe(expectedCloseDate);
       expect(opportunity.description).toBe('Reconstituted opportunity');
       expect(opportunity.accountId).toBe('account-999');
@@ -759,13 +789,20 @@ describe('Opportunity Aggregate', () => {
       const id = OpportunityId.generate();
       const closedAt = new Date();
 
+      // Create proper value objects for reconstitute
+      const moneyResult = Money.create(200000, 'USD');
+      const probabilityResult = Percentage.create(100);
+      expect(moneyResult.isSuccess).toBe(true);
+      expect(probabilityResult.isSuccess).toBe(true);
+
       const opportunity = Opportunity.reconstitute(id, {
         name: 'Won Deal',
-        value: 200000,
+        value: moneyResult.value,
         stage: 'CLOSED_WON',
-        probability: 100,
+        probability: probabilityResult.value,
         accountId: 'account-123',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
         createdAt: new Date(),
         updatedAt: new Date(),
         closedAt,
@@ -785,6 +822,7 @@ describe('Opportunity Aggregate', () => {
         value: 100000,
         accountId: 'account-123',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
 
       const opportunity = result.value;
@@ -808,6 +846,7 @@ describe('Opportunity Aggregate', () => {
         value: 100000,
         accountId: 'account-123',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
 
       const opportunity = result.value;

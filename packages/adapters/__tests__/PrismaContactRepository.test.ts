@@ -42,10 +42,11 @@ describe('PrismaContactRepository', () => {
       firstName: 'John',
       lastName: 'Doe',
       title: 'CTO',
-      phone: '+1-555-0100',
+      phone: '+15550100',
       department: 'Engineering',
       accountId: 'account-123',
       ownerId: 'owner-123',
+      tenantId: 'tenant-123',
     });
 
     testContact = contactResult.value;
@@ -70,10 +71,11 @@ describe('PrismaContactRepository', () => {
           firstName: 'John',
           lastName: 'Doe',
           title: 'CTO',
-          phone: '+1-555-0100',
+          phone: '+15550100',
           department: 'Engineering',
           accountId: 'account-123',
           ownerId: 'owner-123',
+          tenantId: 'tenant-123',
         }),
         update: expect.objectContaining({
           email: 'john.doe@example.com',
@@ -87,6 +89,7 @@ describe('PrismaContactRepository', () => {
         firstName: 'Min',
         lastName: 'Imal',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
 
       const upsertMock = vi.fn().mockResolvedValue({});
@@ -123,11 +126,12 @@ describe('PrismaContactRepository', () => {
         firstName: 'John',
         lastName: 'Doe',
         title: 'CTO',
-        phone: '+1-555-0100',
+        phone: '+15550100',
         department: 'Engineering',
         accountId: 'account-123',
         leadId: null,
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -169,6 +173,7 @@ describe('PrismaContactRepository', () => {
         accountId: null,
         leadId: null,
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -199,6 +204,7 @@ describe('PrismaContactRepository', () => {
           accountId: 'account-123',
           leadId: null,
           ownerId: 'owner-123',
+          tenantId: 'tenant-123',
           createdAt: new Date(),
           updatedAt: new Date(),
         },
@@ -213,6 +219,7 @@ describe('PrismaContactRepository', () => {
           accountId: 'account-123',
           leadId: null,
           ownerId: 'owner-123',
+          tenantId: 'tenant-123',
           createdAt: new Date(),
           updatedAt: new Date(),
         },
@@ -257,6 +264,7 @@ describe('PrismaContactRepository', () => {
           accountId: null,
           leadId: null,
           ownerId: 'owner-123',
+          tenantId: 'tenant-123',
           createdAt: new Date(),
           updatedAt: new Date(),
         },
@@ -298,6 +306,7 @@ describe('PrismaContactRepository', () => {
         accountId: null,
         leadId: null,
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -386,6 +395,7 @@ describe('PrismaContactRepository', () => {
         accountId: null,
         leadId: null,
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -405,11 +415,12 @@ describe('PrismaContactRepository', () => {
         firstName: testContact.firstName,
         lastName: testContact.lastName,
         title: testContact.title,
-        phone: testContact.phone,
+        phone: testContact.phone?.value ?? null,
         department: testContact.department,
         accountId: testContact.accountId,
         leadId: testContact.leadId,
         ownerId: testContact.ownerId,
+        tenantId: testContact.tenantId,
         createdAt: testContact.createdAt,
         updatedAt: testContact.updatedAt,
       };

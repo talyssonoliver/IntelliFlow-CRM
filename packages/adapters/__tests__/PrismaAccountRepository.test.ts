@@ -72,6 +72,7 @@ describe('PrismaAccountRepository', () => {
       revenue: 50000000,
       description: 'A leading tech company',
       ownerId: 'owner-123',
+      tenantId: 'tenant-123',
     });
 
     testAccount = accountResult.value;
@@ -109,6 +110,7 @@ describe('PrismaAccountRepository', () => {
       const minimalAccountResult = Account.create({
         name: 'Minimal Corp',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
 
       const upsertMock = vi.fn().mockResolvedValue({});
@@ -452,12 +454,13 @@ describe('PrismaAccountRepository', () => {
       const mockRecord = {
         id: testAccount.id.value,
         name: testAccount.name,
-        website: testAccount.website,
+        website: testAccount.website?.value ?? null,
         industry: testAccount.industry,
         employees: testAccount.employees,
         revenue: testAccount.revenue ? mockDecimal(testAccount.revenue) : null,
         description: testAccount.description,
         ownerId: testAccount.ownerId,
+        tenantId: testAccount.tenantId,
         createdAt: testAccount.createdAt,
         updatedAt: testAccount.updatedAt,
       };
@@ -473,7 +476,7 @@ describe('PrismaAccountRepository', () => {
 
       expect(found).not.toBeNull();
       expect(found?.name).toBe(testAccount.name);
-      expect(found?.website).toBe(testAccount.website);
+      expect(found?.website?.value).toBe(testAccount.website?.value);
       expect(found?.industry).toBe(testAccount.industry);
       expect(found?.employees).toBe(testAccount.employees);
       expect(found?.revenue).toBe(testAccount.revenue);

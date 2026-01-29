@@ -10,6 +10,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Account, InvalidRevenueError, InvalidEmployeeCountError } from '../Account';
 import { AccountId } from '../AccountId';
+import { WebsiteUrl } from '../../../shared/WebsiteUrl';
 import {
   AccountCreatedEvent,
   AccountUpdatedEvent,
@@ -28,6 +29,7 @@ describe('Account Aggregate', () => {
         revenue: 5000000,
         description: 'Leading tech company',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       expect(result.isSuccess).toBe(true);
@@ -35,7 +37,7 @@ describe('Account Aggregate', () => {
 
       const account = result.value;
       expect(account.name).toBe('Acme Corporation');
-      expect(account.website).toBe('https://acme.com');
+      expect(account.website?.value).toBe('https://acme.com');
       expect(account.industry).toBe('Technology');
       expect(account.employees).toBe(500);
       expect(account.revenue).toBe(5000000);
@@ -49,6 +51,7 @@ describe('Account Aggregate', () => {
       const result = Account.create({
         name: 'Minimal Corp',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
 
       expect(result.isSuccess).toBe(true);
@@ -69,6 +72,7 @@ describe('Account Aggregate', () => {
         name: 'Invalid Corp',
         revenue: -1000,
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       expect(result.isFailure).toBe(true);
@@ -81,6 +85,7 @@ describe('Account Aggregate', () => {
         name: 'Invalid Corp',
         employees: 0,
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       expect(result.isFailure).toBe(true);
@@ -93,6 +98,7 @@ describe('Account Aggregate', () => {
         name: 'Invalid Corp',
         employees: -10,
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       expect(result.isFailure).toBe(true);
@@ -105,6 +111,7 @@ describe('Account Aggregate', () => {
         name: 'Startup Corp',
         revenue: 0,
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       expect(result.isSuccess).toBe(true);
@@ -115,6 +122,7 @@ describe('Account Aggregate', () => {
       const result = Account.create({
         name: 'Event Corp',
         ownerId: 'owner-789',
+        tenantId: 'tenant-123',
       });
 
       const account = result.value;
@@ -142,13 +150,14 @@ describe('Account Aggregate', () => {
         revenue: 1000000,
         description: 'Test company',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
       account = result.value;
     });
 
     it('should return all properties correctly', () => {
       expect(account.name).toBe('Test Corp');
-      expect(account.website).toBe('https://test.com');
+      expect(account.website?.value).toBe('https://test.com');
       expect(account.industry).toBe('Technology');
       expect(account.employees).toBe(100);
       expect(account.revenue).toBe(1000000);
@@ -162,6 +171,7 @@ describe('Account Aggregate', () => {
       const noIndustryResult = Account.create({
         name: 'No Industry Corp',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
 
       expect(noIndustryResult.value.hasIndustry).toBe(false);
@@ -173,6 +183,7 @@ describe('Account Aggregate', () => {
       const noRevenueResult = Account.create({
         name: 'No Revenue Corp',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
 
       expect(noRevenueResult.value.hasRevenue).toBe(false);
@@ -188,6 +199,7 @@ describe('Account Aggregate', () => {
         website: 'https://original.com',
         description: 'Original description',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
       account = result.value;
       account.clearDomainEvents();
@@ -204,7 +216,7 @@ describe('Account Aggregate', () => {
       );
 
       expect(account.name).toBe('Updated Corp');
-      expect(account.website).toBe('https://updated.com');
+      expect(account.website?.value).toBe('https://updated.com');
       expect(account.description).toBe('Updated description');
     });
 
@@ -250,7 +262,7 @@ describe('Account Aggregate', () => {
       );
 
       expect(account.name).toBe('Changed Name');
-      expect(account.website).toBe('https://original.com'); // Unchanged
+      expect(account.website?.value).toBe('https://original.com'); // Unchanged
       expect(account.description).toBe('Original description'); // Unchanged
     });
   });
@@ -263,6 +275,7 @@ describe('Account Aggregate', () => {
         name: 'Revenue Corp',
         revenue: 1000000,
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
       account = result.value;
       account.clearDomainEvents();
@@ -279,6 +292,7 @@ describe('Account Aggregate', () => {
       const noRevenueResult = Account.create({
         name: 'No Revenue',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
 
       const account2 = noRevenueResult.value;
@@ -307,6 +321,7 @@ describe('Account Aggregate', () => {
       const noRevenueResult = Account.create({
         name: 'No Revenue',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
 
       const account2 = noRevenueResult.value;
@@ -344,6 +359,7 @@ describe('Account Aggregate', () => {
         name: 'Employee Corp',
         employees: 100,
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
       account = result.value;
       account.clearDomainEvents();
@@ -394,6 +410,7 @@ describe('Account Aggregate', () => {
       const result = Account.create({
         name: 'Industry Corp',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
       account = result.value;
       account.clearDomainEvents();
@@ -438,6 +455,7 @@ describe('Account Aggregate', () => {
       const result = Account.create({
         name: 'Transition Corp',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       const account = result.value;
@@ -451,6 +469,7 @@ describe('Account Aggregate', () => {
       const result = Account.create({
         name: 'Transition Corp',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       const account = result.value;
@@ -465,6 +484,7 @@ describe('Account Aggregate', () => {
         name: 'Revenue Corp',
         revenue: 1000000,
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       const account = result.value;
@@ -486,6 +506,7 @@ describe('Account Aggregate', () => {
         revenue: 2500000,
         description: 'JSON test company',
         ownerId: 'owner-789',
+        tenantId: 'tenant-123',
       });
 
       const account = result.value;
@@ -507,6 +528,7 @@ describe('Account Aggregate', () => {
       const result = Account.create({
         name: 'Minimal JSON',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       const account = result.value;
@@ -525,22 +547,25 @@ describe('Account Aggregate', () => {
     it('should reconstitute account from persistence', () => {
       const id = AccountId.generate();
       const now = new Date();
+      const websiteResult = WebsiteUrl.create('https://recon.com');
+      expect(websiteResult.isSuccess).toBe(true);
 
       const account = Account.reconstitute(id, {
         name: 'Reconstituted Corp',
-        website: 'https://recon.com',
+        website: websiteResult.value,
         industry: 'Finance',
         employees: 300,
         revenue: 3000000,
         description: 'Reconstituted account',
         ownerId: 'owner-999',
+        tenantId: 'tenant-123',
         createdAt: now,
         updatedAt: now,
       });
 
       expect(account.id).toBe(id);
       expect(account.name).toBe('Reconstituted Corp');
-      expect(account.website).toBe('https://recon.com');
+      expect(account.website?.value).toBe('https://recon.com');
       expect(account.industry).toBe('Finance');
       expect(account.employees).toBe(300);
       expect(account.revenue).toBe(3000000);
@@ -554,6 +579,7 @@ describe('Account Aggregate', () => {
       const account = Account.reconstitute(id, {
         name: 'Minimal Recon',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -572,6 +598,7 @@ describe('Account Aggregate', () => {
       const result = Account.create({
         name: 'Events Corp',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       const account = result.value;
@@ -593,6 +620,7 @@ describe('Account Aggregate', () => {
       const result = Account.create({
         name: 'Clear Corp',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
 
       const account = result.value;

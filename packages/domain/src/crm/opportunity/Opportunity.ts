@@ -160,12 +160,20 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     // Convert value to Money if number provided
     let moneyValue: Money;
     if (typeof props.value === 'number') {
+      // Opportunity value must be greater than 0
+      if (props.value <= 0) {
+        return Result.fail(new InvalidOpportunityValueError('Opportunity value must be greater than zero'));
+      }
       const moneyResult = Money.create(props.value, props.currency || 'USD');
       if (moneyResult.isFailure) {
         return Result.fail(new InvalidOpportunityValueError(moneyResult.error.message));
       }
       moneyValue = moneyResult.value;
     } else {
+      // When Money object is provided, check its amount
+      if (props.value.amount <= 0) {
+        return Result.fail(new InvalidOpportunityValueError('Opportunity value must be greater than zero'));
+      }
       moneyValue = props.value;
     }
 
@@ -246,12 +254,20 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     // Convert to Money if number provided
     let moneyValue: Money;
     if (typeof newValue === 'number') {
+      // Opportunity value must be greater than 0
+      if (newValue <= 0) {
+        return Result.fail(new InvalidOpportunityValueError('Opportunity value must be greater than zero'));
+      }
       const moneyResult = Money.create(newValue, this.props.value.currency);
       if (moneyResult.isFailure) {
         return Result.fail(new InvalidOpportunityValueError(moneyResult.error.message));
       }
       moneyValue = moneyResult.value;
     } else {
+      // When Money object is provided, check its amount
+      if (newValue.amount <= 0) {
+        return Result.fail(new InvalidOpportunityValueError('Opportunity value must be greater than zero'));
+      }
       moneyValue = newValue;
     }
 
