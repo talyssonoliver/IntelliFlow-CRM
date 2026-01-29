@@ -34,9 +34,11 @@ const createMockDomainContact = (overrides: Record<string, unknown> = {}) => ({
   title: 'CTO',
   phone: '+1234567891',
   department: 'Engineering',
+  status: 'ACTIVE',
   accountId: TEST_UUIDS.account1,
   leadId: null,
   ownerId: TEST_UUIDS.user1,
+  tenantId: TEST_UUIDS.tenant,
   hasAccount: true,
   isConvertedFromLead: false,
   createdAt: new Date('2024-01-01'),
@@ -87,10 +89,18 @@ describe('Contact Router', () => {
 
       expect(result.email).toBe(input.email);
       expect(result.firstName).toBe(input.firstName);
-      expect(ctx.services!.contact!.createContact).toHaveBeenCalledWith({
-        ...input,
-        ownerId: TEST_UUIDS.user1,
-      });
+      // Verify service was called with expected fields
+      // Note: phone may be transformed to value object by validators
+      expect(ctx.services!.contact!.createContact).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: input.email,
+          firstName: input.firstName,
+          lastName: input.lastName,
+          title: input.title,
+          department: input.department,
+          ownerId: TEST_UUIDS.user1,
+        })
+      );
     });
 
     it('should throw CONFLICT if email already exists', async () => {

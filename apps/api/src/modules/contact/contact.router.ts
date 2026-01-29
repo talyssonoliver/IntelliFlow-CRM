@@ -21,6 +21,11 @@ import {
   contactQuerySchema,
   idSchema,
 } from '@intelliflow/validators/contact';
+import {
+  bulkEmailContactsSchema,
+  bulkExportContactsSchema,
+  bulkDeleteContactsSchema,
+} from '@intelliflow/validators';
 import { mapContactToResponse } from '../../shared/mappers';
 import type { Context } from '../../context';
 import {
@@ -198,6 +203,7 @@ export const contactRouter = createTRPCRouter({
       accountId,
       ownerId,
       department,
+      status,
       sortBy = 'createdAt',
       sortOrder = 'desc',
     } = input;
@@ -227,6 +233,10 @@ export const contactRouter = createTRPCRouter({
 
     if (department) {
       baseWhere.department = { contains: department, mode: 'insensitive' };
+    }
+
+    if (status) {
+      baseWhere.status = status;
     }
 
     // Apply tenant filtering
@@ -283,7 +293,7 @@ export const contactRouter = createTRPCRouter({
     const contactService = getContactService(ctx);
 
     // Handle contact info updates via service
-    if (data.firstName || data.lastName || data.title || data.phone || data.department) {
+    if (data.firstName || data.lastName || data.title || data.phone || data.department || data.status) {
       const result = await contactService.updateContactInfo(
         id,
         {
@@ -292,6 +302,7 @@ export const contactRouter = createTRPCRouter({
           title: data.title,
           phone: data.phone?.toValue?.() ?? (data.phone as string | undefined),
           department: data.department,
+          status: data.status,
         },
         typedCtx.tenant.userId
       );
@@ -522,6 +533,7 @@ export const contactRouter = createTRPCRouter({
         title: true,
         phone: true,
         department: true,
+        status: true,
         accountId: true,
         ...(includeAccount && {
           account: {
@@ -551,4 +563,204 @@ export const contactRouter = createTRPCRouter({
       meetsKpi: durationMs < 200,
     };
   }),
+
+  /**
+   * Get filter options with counts
+   *
+   * Returns available filter values with count of matching records.
+   * Used for dynamic filters that hide options with 0 matches.
+   */
+  filterOptions: tenantProcedure
+    .input(
+      z.object({
+        search: z.string().optional(),
+        status: z.array(z.string()).optional(),
+        accountId: z.string().optional(),
+        department: z.string().optional(),
+      }).optional()
+    )
+    .query(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+
+      // Build base where clause with current filters
+      const baseWhere: Record<string, unknown> = {};
+
+      if (input?.search) {
+        baseWhere.OR = [
+          { email: { contains: input.search, mode: 'insensitive' } },
+          { firstName: { contains: input.search, mode: 'insensitive' } },
+          { lastName: { contains: input.search, mode: 'insensitive' } },
+        ];
+      }
+
+      if (input?.accountId) {
+        baseWhere.accountId = input.accountId;
+      }
+
+      if (input?.department) {
+        baseWhere.department = { contains: input.department, mode: 'insensitive' };
+      }
+
+      const where = createTenantWhereClause(typedCtx.tenant, baseWhere);
+
+      // Get counts for each filter option
+      const [departmentCounts, accountCounts] = await Promise.all([
+        typedCtx.prismaWithTenant.contact.groupBy({
+          by: ['department'],
+          where,
+          _count: true,
+        }),
+        typedCtx.prismaWithTenant.contact.groupBy({
+          by: ['accountId'],
+          where,
+          _count: true,
+        }),
+      ]);
+
+      // Get account names for display
+      const accountIds = accountCounts.map(a => a.accountId).filter(Boolean) as string[];
+      const accounts = accountIds.length > 0
+        ? await typedCtx.prismaWithTenant.account.findMany({
+            where: { id: { in: accountIds } },
+            select: { id: true, name: true },
+          })
+        : [];
+      const accountMap = new Map(accounts.map(a => [a.id, a.name]));
+
+      return {
+        departments: departmentCounts
+          .filter(d => d.department)
+          .map(d => ({
+            value: d.department as string,
+            label: d.department as string,
+            count: d._count,
+          })),
+        accounts: accountCounts
+          .filter(a => a.accountId)
+          .map(a => ({
+            value: a.accountId as string,
+            label: accountMap.get(a.accountId as string) ?? a.accountId ?? 'Unknown',
+            count: a._count,
+          })),
+      };
+    }),
+
+  /**
+   * Bulk email contacts - returns email addresses for mailto:
+   */
+  bulkEmail: tenantProcedure
+    .input(bulkEmailContactsSchema)
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const { ids } = input;
+
+      const contacts = await typedCtx.prismaWithTenant.contact.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, email: true },
+      });
+
+      const emails = contacts.map(c => c.email);
+      const mailtoUrl = `mailto:${emails.join(',')}`;
+
+      return {
+        successful: contacts.map(c => c.id),
+        failed: ids.filter((id: string) => !contacts.find(c => c.id === id)).map((id: string) => ({
+          id,
+          error: 'Contact not found'
+        })),
+        totalProcessed: ids.length,
+        emails,
+        mailtoUrl,
+      };
+    }),
+
+  /**
+   * Bulk export contacts as CSV/JSON
+   */
+  bulkExport: tenantProcedure
+    .input(bulkExportContactsSchema)
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const { ids, format } = input;
+
+      const contacts = await typedCtx.prismaWithTenant.contact.findMany({
+        where: { id: { in: ids } },
+        include: {
+          account: { select: { name: true } },
+        },
+      });
+
+      let data: string;
+      if (format === 'csv') {
+        const headers = 'Email,First Name,Last Name,Title,Phone,Department,Account\n';
+        const rows = contacts.map(c =>
+          `"${c.email}","${c.firstName}","${c.lastName}","${c.title || ''}","${c.phone || ''}","${c.department || ''}","${c.account?.name || ''}"`
+        ).join('\n');
+        data = headers + rows;
+      } else {
+        data = JSON.stringify(contacts, null, 2);
+      }
+
+      return {
+        successful: contacts.map(c => c.id),
+        failed: ids.filter((id: string) => !contacts.find(c => c.id === id)).map((id: string) => ({
+          id,
+          error: 'Contact not found'
+        })),
+        totalProcessed: ids.length,
+        data,
+        count: contacts.length,
+      };
+    }),
+
+  /**
+   * Bulk delete contacts
+   */
+  bulkDelete: tenantProcedure
+    .input(bulkDeleteContactsSchema)
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const contactService = getContactService(ctx);
+      const { ids } = input;
+
+      const successful: string[] = [];
+      const failed: Array<{ id: string; error: string }> = [];
+
+      for (const contactId of ids) {
+        try {
+          // Check for opportunities first
+          const contact = await typedCtx.prismaWithTenant.contact.findUnique({
+            where: { id: contactId },
+            include: { _count: { select: { opportunities: true } } },
+          });
+
+          if (!contact) {
+            failed.push({ id: contactId, error: 'Contact not found' });
+            continue;
+          }
+
+          if (contact._count.opportunities > 0) {
+            failed.push({
+              id: contactId,
+              error: `Contact has ${contact._count.opportunities} opportunities`
+            });
+            continue;
+          }
+
+          const result = await contactService.deleteContact(contactId);
+          if (result.isSuccess) {
+            successful.push(contactId);
+          } else {
+            failed.push({ id: contactId, error: result.error.message });
+          }
+        } catch (error) {
+          failed.push({
+            id: contactId,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      }
+
+      return { successful, failed, totalProcessed: ids.length };
+    }),
 });
