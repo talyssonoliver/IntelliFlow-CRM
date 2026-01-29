@@ -93,7 +93,8 @@ describe('DocumentIndexer', () => {
       expect(result.documentId).toBe(mockDocument.id);
       expect(result.success).toBe(true);
       expect(result.embeddingGenerated).toBe(true);
-      expect(result.processingTimeMs).toBeGreaterThan(0);
+      // With mocked methods, processing can complete in 0ms on fast systems
+      expect(result.processingTimeMs).toBeGreaterThanOrEqual(0);
       expect(result.error).toBeUndefined();
     });
 

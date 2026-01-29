@@ -4,7 +4,7 @@
  * BullMQ worker for background document and note re-indexing.
  * Handles batch processing, progress tracking, and error recovery.
  *
- * Queue: intelliflow:document-reindex
+ * Queue: intelliflow-document-reindex
  *
  * @module @intelliflow/ai-worker/workers/reindex-worker
  */
@@ -23,7 +23,7 @@ import {
 // Configuration
 // ============================================
 
-export const REINDEX_QUEUE_NAME = 'intelliflow:document-reindex';
+export const REINDEX_QUEUE_NAME = 'intelliflow-document-reindex';
 
 export const ReindexJobDataSchema = z.object({
   // Target scope
@@ -112,7 +112,7 @@ export class ReindexWorker {
     // Create worker
     this.worker = new Worker<ReindexJobData, ReindexJobResult>(
       REINDEX_QUEUE_NAME,
-      async (job) => this.processJob(job),
+      async (job: Job<ReindexJobData, ReindexJobResult>) => this.processJob(job),
       {
         connection: this.redisConnection,
         concurrency: 1, // Process one reindex job at a time

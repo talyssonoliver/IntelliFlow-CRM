@@ -427,7 +427,8 @@ export class DocumentIndexer {
     const startTime = Date.now();
     const allResults: IndexResult[] = [];
 
-    const whereClause = tenantId ? { tenantId } : {};
+    // ContactNote doesn't have tenantId directly - filter through Contact relation
+    const whereClause = tenantId ? { contact: { tenantId } } : {};
 
     const totalCount = await this.prisma.contactNote.count({
       where: whereClause,
@@ -447,7 +448,7 @@ export class DocumentIndexer {
         orderBy: { createdAt: 'asc' },
       });
 
-      const batchResult = await this.indexNotesBatch(notes.map(n => n.id));
+      const batchResult = await this.indexNotesBatch(notes.map((n: { id: string }) => n.id));
       allResults.push(...batchResult.results);
 
       processed += batchResult.total;

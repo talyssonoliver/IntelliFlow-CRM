@@ -25,6 +25,7 @@ import {
   TicketStatus as PrismaTicketStatus,
 } from '@intelliflow/db';
 import { z } from 'zod';
+import { EmbeddingChain } from '../chains/embedding.chain';
 
 // Simple type interfaces to avoid Prisma generic complexity
 interface RolePermission {
@@ -138,6 +139,18 @@ export interface VectorSearchResult {
   title: string;
   description: string | null;
   similarity: number;
+}
+
+// IFC-155: Note search result from FTS
+export interface NoteSearchResult {
+  id: string;
+  content: string;
+  author: string;
+  contactId: string;
+  rank: number;
+  snippet: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // IFC-155: Contact note record for search (reserved for future use)
@@ -526,16 +539,21 @@ export class RelevanceEvaluator {
 export class RetrievalService {
   private aclService: ACLService;
   private relevanceEvaluator: RelevanceEvaluator;
+  private embeddingChain: EmbeddingChain;
 
   constructor(
     private prisma: PrismaClient,
-    relevanceConfig?: Partial<RelevanceConfig>
+    relevanceConfig?: Partial<RelevanceConfig>,
+    embeddingChain?: EmbeddingChain
   ) {
     this.aclService = new ACLService(prisma);
     this.relevanceEvaluator = new RelevanceEvaluator({
       ...DEFAULT_RELEVANCE_CONFIG,
       ...relevanceConfig,
     });
+    // IFC-020: Inject EmbeddingChain for pgvector semantic search
+    // GATE:no-null-fallback - Must use actual embeddings, not null fallback
+    this.embeddingChain = embeddingChain || new EmbeddingChain();
     // Reserved for IFC-155 document search - suppress unused warning
     void this._searchDocuments;
   }
@@ -701,7 +719,7 @@ export class RetrievalService {
     `;
 
     // Fetch full documents with ACL for filtering
-    const docIds = results.map(r => r.id);
+    const docIds = results.map((r: FTSSearchResult) => r.id);
     if (docIds.length === 0) return [];
 
     const documents = await this.prisma.caseDocument.findMany({
@@ -760,7 +778,7 @@ export class RetrievalService {
     `;
 
     // Fetch full documents with ACL for filtering
-    const docIds = results.map(r => r.id);
+    const docIds = results.map((r: VectorSearchResult) => r.id);
     if (docIds.length === 0) return [];
 
     const documents = await this.prisma.caseDocument.findMany({
@@ -848,16 +866,7 @@ export class RetrievalService {
     const { query, limit = 20 } = config;
 
     // FTS search on notes
-    const results = await this.prisma.$queryRaw<Array<{
-      id: string;
-      content: string;
-      author: string;
-      contactId: string;
-      rank: number;
-      snippet: string;
-      createdAt: Date;
-      updatedAt: Date;
-    }>>`
+    const results = await this.prisma.$queryRaw<NoteSearchResult[]>`
       SELECT
         cn.id::text,
         cn.content,
@@ -879,9 +888,9 @@ export class RetrievalService {
     const isAdmin = roles.includes('ADMIN');
     const filteredResults = isAdmin
       ? results
-      : results.filter(r => r.author === userId);
+      : results.filter((r: NoteSearchResult) => r.author === userId);
 
-    return filteredResults.map(note => ({
+    return filteredResults.map((note: NoteSearchResult) => ({
       id: note.id,
       source: 'notes',
       title: `Note on contact`,
@@ -902,17 +911,27 @@ export class RetrievalService {
   }
 
   /**
-   * Generate query embedding (placeholder - integrate with embedding chain)
+   * Generate query embedding using EmbeddingChain (IFC-020)
+   *
+   * GATE:no-null-fallback - This method must return actual embeddings from
+   * the EmbeddingChain, not null. Null is only returned on actual errors
+   * (API failures, rate limits, etc.), not by default.
    */
   private async generateQueryEmbedding(query: string): Promise<number[] | null> {
-    // TODO: Integrate with apps/ai-worker/src/chains/embedding.chain.ts
-    // For now, return null to fallback to FTS
-    // In production, this would call:
-    // const embeddingChain = new EmbeddingChain();
-    // const result = await embeddingChain.generateEmbedding({ text: query });
-    // return result.vector;
-    console.log(`[IFC-155] Embedding generation for query: ${query.slice(0, 50)}...`);
-    return null;
+    try {
+      // IFC-020: Use actual EmbeddingChain for pgvector semantic search
+      const result = await this.embeddingChain.generateEmbedding({ text: query });
+      console.log(`[IFC-020] Embedding generated for query: ${query.slice(0, 50)}... (${result.dimensions} dimensions)`);
+      return result.vector;
+    } catch (error) {
+      // GATE:no-null-fallback - Only fallback to FTS on actual errors
+      // Log the error for debugging and monitoring
+      console.error(
+        '[IFC-020] Embedding generation failed, falling back to FTS:',
+        error instanceof Error ? error.message : String(error)
+      );
+      return null;
+    }
   }
 
   /**
@@ -1563,9 +1582,10 @@ export class RetrievalService {
 // Export singleton factory
 export function createRetrievalService(
   prisma: PrismaClient,
-  relevanceConfig?: Partial<RelevanceConfig>
+  relevanceConfig?: Partial<RelevanceConfig>,
+  embeddingChain?: EmbeddingChain
 ): RetrievalService {
-  return new RetrievalService(prisma, relevanceConfig);
+  return new RetrievalService(prisma, relevanceConfig, embeddingChain);
 }
 
 export default RetrievalService;

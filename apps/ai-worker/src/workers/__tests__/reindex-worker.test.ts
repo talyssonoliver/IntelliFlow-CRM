@@ -142,7 +142,7 @@ describe('ReindexWorker', () => {
 
   describe('Queue Configuration', () => {
     it('should use correct queue name', () => {
-      expect(REINDEX_QUEUE_NAME).toBe('intelliflow:document-reindex');
+      expect(REINDEX_QUEUE_NAME).toBe('intelliflow-document-reindex');
     });
   });
 
