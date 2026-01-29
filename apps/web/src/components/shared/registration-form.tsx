@@ -16,10 +16,15 @@
  * - ARIA accessibility support
  */
 
-import { useState, useCallback, useId } from 'react';
+import { useState, useCallback, useId, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { cn } from '@intelliflow/ui';
 import { PasswordInput } from './password-input';
+import {
+  checkPasswordBreach,
+  formatBreachCount,
+  type BreachCheckResult,
+} from '@/lib/shared/password-breach-check';
 
 // ============================================
 // Types
@@ -207,6 +212,57 @@ export function RegistrationForm({
   const [errors, setErrors] = useState<RegistrationFormErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
+  // Breach check state (PG-016 security enhancement)
+  const [breachWarning, setBreachWarning] = useState<string | null>(null);
+  const [isCheckingBreach, setIsCheckingBreach] = useState(false);
+  const breachCheckTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup breach check timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (breachCheckTimeoutRef.current) {
+        clearTimeout(breachCheckTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Debounced password breach check (500ms delay)
+  const debouncedBreachCheck = useCallback((password: string) => {
+    // Clear any pending check
+    if (breachCheckTimeoutRef.current) {
+      clearTimeout(breachCheckTimeoutRef.current);
+    }
+
+    // Skip check for short passwords
+    if (!password || password.length < 8) {
+      setBreachWarning(null);
+      setIsCheckingBreach(false);
+      return;
+    }
+
+    setIsCheckingBreach(true);
+
+    breachCheckTimeoutRef.current = setTimeout(async () => {
+      try {
+        const result: BreachCheckResult = await checkPasswordBreach(password);
+
+        if (result.breached && result.count) {
+          setBreachWarning(
+            `This password has been found in ${formatBreachCount(result.count)} data breaches. Consider using a different password.`
+          );
+        } else {
+          setBreachWarning(null);
+        }
+      } catch (error) {
+        // Non-blocking - don't show error to user
+        console.warn('[RegistrationForm] Breach check failed:', error);
+        setBreachWarning(null);
+      } finally {
+        setIsCheckingBreach(false);
+      }
+    }, 500);
+  }, []);
+
   // Validation
   const validateField = useCallback((name: keyof RegistrationFormData, value: string | boolean): string | undefined => {
     switch (name) {
@@ -289,7 +345,9 @@ export function RegistrationForm({
       const confirmError = formData.confirmPassword !== value ? 'Passwords do not match' : undefined;
       setErrors((prev) => ({ ...prev, confirmPassword: confirmError }));
     }
-  }, [touched, validateField, formData.confirmPassword]);
+    // Trigger debounced breach check
+    debouncedBreachCheck(value);
+  }, [touched, validateField, formData.confirmPassword, debouncedBreachCheck]);
 
   const handleConfirmPasswordChange = useCallback((value: string) => {
     setFormData((prev) => ({ ...prev, confirmPassword: value }));
@@ -356,7 +414,7 @@ export function RegistrationForm({
           aria-describedby={errors.fullName ? `${formId}-fullName-error` : undefined}
           className={cn(
             'w-full px-4 py-3 rounded-lg border bg-slate-800/50 text-white placeholder-slate-400',
-            'focus:outline-none focus:ring-2 focus:ring-[#137fec]/50 focus:border-[#137fec]',
+            'focus:outline-none focus:ring-2 focus:ring-[#137fec]/50 focus:border-primary',
             'transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
             errors.fullName
               ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/50'
@@ -399,7 +457,7 @@ export function RegistrationForm({
           aria-describedby={errors.email ? `${formId}-email-error` : undefined}
           className={cn(
             'w-full px-4 py-3 rounded-lg border bg-slate-800/50 text-white placeholder-slate-400',
-            'focus:outline-none focus:ring-2 focus:ring-[#137fec]/50 focus:border-[#137fec]',
+            'focus:outline-none focus:ring-2 focus:ring-[#137fec]/50 focus:border-primary',
             'transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
             errors.email
               ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/50'
@@ -438,6 +496,31 @@ export function RegistrationForm({
           placeholder="Create a password"
         />
         <PasswordStrengthIndicator password={formData.password} />
+
+        {/* Breach Warning (PG-016 security) */}
+        {isCheckingBreach && (
+          <div className="mt-2 flex items-center gap-2 text-xs text-slate-400">
+            <span className="material-symbols-outlined animate-spin text-sm" aria-hidden="true">
+              progress_activity
+            </span>
+            Checking password security...
+          </div>
+        )}
+        {breachWarning && !isCheckingBreach && (
+          <div
+            className="mt-2 p-2 rounded bg-amber-500/10 border border-amber-500/30 flex items-start gap-2"
+            role="alert"
+            aria-live="polite"
+          >
+            <span
+              className="material-symbols-outlined text-amber-500 text-base flex-shrink-0 mt-0.5"
+              aria-hidden="true"
+            >
+              warning
+            </span>
+            <p className="text-xs text-amber-400">{breachWarning}</p>
+          </div>
+        )}
       </div>
 
       {/* Confirm Password Field */}
@@ -475,7 +558,7 @@ export function RegistrationForm({
           aria-describedby={errors.acceptTerms ? `${formId}-acceptTerms-error` : undefined}
           className={cn(
             'mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-800/50',
-            'text-[#137fec] focus:ring-[#137fec]/50 focus:ring-offset-0',
+            'text-primary focus:ring-[#137fec]/50 focus:ring-offset-0',
             'disabled:opacity-50 disabled:cursor-not-allowed'
           )}
         />
@@ -487,7 +570,7 @@ export function RegistrationForm({
             I agree to the{' '}
             <Link
               href="/terms"
-              className="text-[#137fec] hover:text-[#137fec]/80 underline"
+              className="text-primary hover:text-primary/80 underline"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -496,7 +579,7 @@ export function RegistrationForm({
             and{' '}
             <Link
               href="/privacy"
-              className="text-[#137fec] hover:text-[#137fec]/80 underline"
+              className="text-primary hover:text-primary/80 underline"
               target="_blank"
               rel="noopener noreferrer"
             >

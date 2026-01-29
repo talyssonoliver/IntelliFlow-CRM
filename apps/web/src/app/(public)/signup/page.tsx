@@ -16,9 +16,10 @@
  * - Rate limiting protection
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
 import {
   ToastProvider,
   ToastViewport,
@@ -52,13 +53,98 @@ type ToastData = {
   description: string;
 };
 
+interface UTMData {
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+  utm_content: string | null;
+  utm_term: string | null;
+  referrer: string;
+  landing_page: string;
+  captured_at: string;
+}
+
+// ============================================
+// Error Fallback Component
+// ============================================
+
+function SignUpErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
+  const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+
+  return (
+    <AuthBackground>
+      <div className="relative z-10 w-full max-w-md mx-auto">
+        <AuthCard
+          badge="INTELLIFLOW"
+          badgeIcon="error"
+          title="Something went wrong"
+          description="An unexpected error occurred during registration."
+        >
+          <div className="text-center space-y-4">
+            <p className="text-red-400 text-sm">{errorMessage}</p>
+            <button
+              onClick={resetErrorBoundary}
+              className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors"
+            >
+              Try again
+            </button>
+          </div>
+        </AuthCard>
+      </div>
+    </AuthBackground>
+  );
+}
+
+// ============================================
+// UTM Capture Hook
+// ============================================
+
+function useUTMCapture() {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    // Capture UTM params from URL on mount
+    const utmData: UTMData = {
+      utm_source: searchParams.get('utm_source'),
+      utm_medium: searchParams.get('utm_medium'),
+      utm_campaign: searchParams.get('utm_campaign'),
+      utm_content: searchParams.get('utm_content'),
+      utm_term: searchParams.get('utm_term'),
+      referrer: typeof document !== 'undefined' ? document.referrer : '',
+      landing_page: typeof window !== 'undefined' ? window.location.pathname : '',
+      captured_at: new Date().toISOString(),
+    };
+
+    // Only store if we have at least one UTM parameter
+    const hasUTM = utmData.utm_source || utmData.utm_medium || utmData.utm_campaign;
+    if (hasUTM) {
+      try {
+        localStorage.setItem('intelliflow_utm', JSON.stringify(utmData));
+      } catch (e) {
+        console.warn('[SignUp] Failed to store UTM data:', e);
+      }
+    }
+  }, [searchParams]);
+
+  // Return function to retrieve UTM data
+  return useCallback((): UTMData | null => {
+    try {
+      const stored = localStorage.getItem('intelliflow_utm');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  }, []);
+}
+
 // ============================================
 // Component
 // ============================================
 
-export default function SignUpPage() {
+function SignUpPageContent() {
   const router = useRouter();
   const auth = useAuth();
+  const getUTMData = useUTMCapture();
 
   // Redirect if already authenticated
   useRedirectIfAuthenticated('/dashboard');
@@ -98,6 +184,9 @@ export default function SignUpPage() {
       //   body: JSON.stringify({ email: data.email, password: data.password, fullName: data.fullName }),
       // });
 
+      // Get UTM data for marketing attribution
+      const utmData = getUTMData();
+
       // Generate verification token and send welcome email
       const verificationToken = generateVerificationToken();
       const emailResult = await sendWelcomeEmail({
@@ -105,6 +194,11 @@ export default function SignUpPage() {
         email: data.email,
         verificationToken,
       });
+
+      // Log UTM data for attribution (in production, send to analytics)
+      if (utmData) {
+        console.info('[SignUp] Registration with UTM:', utmData);
+      }
 
       if (!emailResult.ok) {
         console.warn('[SignUp] Failed to send welcome email:', emailResult.error);
@@ -132,7 +226,7 @@ export default function SignUpPage() {
       );
       setIsSubmitting(false);
     }
-  }, [router, showToast]);
+  }, [router, showToast, getUTMData]);
 
   // Handle OAuth registration
   // Maps 'microsoft' to 'azure' for the auth context
@@ -166,7 +260,7 @@ export default function SignUpPage() {
                 Already have an account?{' '}
                 <Link
                   href="/login"
-                  className="text-[#137fec] hover:text-[#137fec]/80 font-medium transition-colors"
+                  className="text-primary hover:text-primary/80 font-medium transition-colors"
                 >
                   Sign in
                 </Link>
@@ -235,5 +329,17 @@ export default function SignUpPage() {
         <ToastViewport />
       </AuthBackground>
     </ToastProvider>
+  );
+}
+
+// ============================================
+// Exported Page with ErrorBoundary
+// ============================================
+
+export default function SignUpPage() {
+  return (
+    <ErrorBoundary FallbackComponent={SignUpErrorFallback}>
+      <SignUpPageContent />
+    </ErrorBoundary>
   );
 }
