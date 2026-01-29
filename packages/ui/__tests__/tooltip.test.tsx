@@ -84,7 +84,8 @@ describe('Tooltip', () => {
           </Tooltip>
         </TooltipWrapper>
       );
-      expect(screen.getByText('Visible tooltip')).toBeInTheDocument();
+      // Radix creates duplicate content for accessibility - use getAllByText
+      expect(screen.getAllByText('Visible tooltip').length).toBeGreaterThan(0);
     });
   });
 
@@ -100,7 +101,8 @@ describe('Tooltip', () => {
           </Tooltip>
         </TooltipWrapper>
       );
-      expect(screen.getByText('Bold text')).toBeInTheDocument();
+      // Radix creates duplicate content for accessibility - use getAllByText
+      expect(screen.getAllByText('Bold text').length).toBeGreaterThan(0);
     });
 
     it('should apply sideOffset', () => {

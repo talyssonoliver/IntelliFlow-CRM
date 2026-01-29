@@ -21,6 +21,7 @@ export * from './opportunity';
 export * from './task';
 export * from './ticket';
 export * from './case';
+export * from './appointment';
 
 // Public Forms
 export * from './contact-form';
@@ -45,3 +46,6 @@ export * from './bulk-operations';
 
 // Billing Schemas (PG-025: Billing Portal)
 export * from './billing';
+
+// Platform Metrics Schemas (IFC-078: Platform Engineering Foundation)
+export * from './platform-metrics';

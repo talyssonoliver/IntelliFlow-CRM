@@ -2,10 +2,8 @@
 import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { axe, toHaveNoViolations } from 'vitest-axe';
+import { axe } from 'vitest-axe';
 import { ConfidenceIndicator } from '../src/components/score/ConfidenceIndicator';
-
-expect.extend(toHaveNoViolations);
 
 describe('ConfidenceIndicator', () => {
   describe('Rendering', () => {

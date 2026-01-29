@@ -1,8 +1,7 @@
 /**
  * Icon Mapping Reference
  *
- * Maps Lucide React icons to Material Symbols Outlined equivalents.
- * Use this as a reference when migrating from Lucide to Material Symbols.
+ * Maps common icon names to Material Symbols Outlined equivalents.
  *
  * Material Symbols Pattern:
  * <span className="material-symbols-outlined text-base" aria-hidden="true">icon_name</span>
@@ -113,8 +112,8 @@ export const ICON_MAPPING = {
   Globe: 'language',
 } as const;
 
-export type LucideIconName = keyof typeof ICON_MAPPING;
-export type MaterialSymbolName = (typeof ICON_MAPPING)[LucideIconName];
+export type IconNameKey = keyof typeof ICON_MAPPING;
+export type MaterialSymbolName = (typeof ICON_MAPPING)[IconNameKey];
 
 /**
  * Helper component for Material Symbols

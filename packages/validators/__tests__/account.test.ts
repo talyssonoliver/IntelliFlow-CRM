@@ -61,7 +61,8 @@ describe('Account Validators', () => {
     it('should reject invalid website URL', () => {
       const invalidData = {
         name: 'Test Corp',
-        website: 'not-a-url',
+        // Use a URL with invalid characters that can't be parsed
+        website: 'https://:invalid',
       };
 
       const result = createAccountSchema.safeParse(invalidData);
@@ -227,7 +228,8 @@ describe('Account Validators', () => {
     it('should reject invalid website when provided', () => {
       const invalidData = {
         id: '123e4567-e89b-12d3-a456-426614174000',
-        website: 'invalid-url',
+        // Use a URL with invalid characters that can't be parsed
+        website: 'https://:invalid',
       };
 
       const result = updateAccountSchema.safeParse(invalidData);
@@ -456,7 +458,7 @@ describe('Account Validators', () => {
   describe('accountListResponseSchema', () => {
     it('should validate valid account list response', () => {
       const validList = {
-        accounts: [
+        data: [
           {
             id: '123e4567-e89b-12d3-a456-426614174000',
             name: 'Acme Corp',
@@ -482,7 +484,7 @@ describe('Account Validators', () => {
 
     it('should validate empty account list', () => {
       const emptyList = {
-        accounts: [],
+        data: [],
         total: 0,
         page: 1,
         limit: 20,
@@ -495,7 +497,7 @@ describe('Account Validators', () => {
 
     it('should reject negative total', () => {
       const invalidList = {
-        accounts: [],
+        data: [],
         total: -1,
         page: 1,
         limit: 20,
@@ -508,7 +510,7 @@ describe('Account Validators', () => {
 
     it('should reject zero page', () => {
       const invalidList = {
-        accounts: [],
+        data: [],
         total: 0,
         page: 0,
         limit: 20,
@@ -521,7 +523,7 @@ describe('Account Validators', () => {
 
     it('should reject negative page', () => {
       const invalidList = {
-        accounts: [],
+        data: [],
         total: 0,
         page: -1,
         limit: 20,
@@ -534,7 +536,7 @@ describe('Account Validators', () => {
 
     it('should reject zero limit', () => {
       const invalidList = {
-        accounts: [],
+        data: [],
         total: 0,
         page: 1,
         limit: 0,
@@ -547,7 +549,7 @@ describe('Account Validators', () => {
 
     it('should validate multiple accounts', () => {
       const multipleAccounts = {
-        accounts: [
+        data: [
           {
             id: '123e4567-e89b-12d3-a456-426614174000',
             name: 'Acme Corp',

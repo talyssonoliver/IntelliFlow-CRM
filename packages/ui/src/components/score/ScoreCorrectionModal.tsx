@@ -202,7 +202,7 @@ export function ScoreCorrectionModal({
                 <SelectValue placeholder="Select a reason..." />
               </SelectTrigger>
               <SelectContent>
-                {FEEDBACK_CATEGORIES.map((cat) => (
+                {FEEDBACK_CATEGORIES.map((cat: FeedbackCategory) => (
                   <SelectItem key={cat} value={cat}>
                     {CATEGORY_LABELS[cat]}
                   </SelectItem>

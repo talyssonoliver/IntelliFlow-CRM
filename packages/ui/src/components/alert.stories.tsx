@@ -1,6 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { Alert, AlertTitle, AlertDescription } from './alert';
-import { AlertCircle, CheckCircle, Info, AlertTriangle } from 'lucide-react';
+
+// Material Symbol icon component for stories
+const MaterialIcon = ({ name, className }: { name: string; className?: string }) => (
+  <span className={`material-symbols-outlined ${className || ''}`} aria-hidden="true">
+    {name}
+  </span>
+);
 
 const meta: Meta<typeof Alert> = {
   title: 'Components/Alert',
@@ -20,7 +26,7 @@ type Story = StoryObj<typeof Alert>;
 export const Default: Story = {
   render: () => (
     <Alert>
-      <Info className="h-4 w-4" />
+      <MaterialIcon name="info" className="text-base" />
       <AlertTitle>Heads up!</AlertTitle>
       <AlertDescription>
         You can add components to your app using the cli.
@@ -32,7 +38,7 @@ export const Default: Story = {
 export const Destructive: Story = {
   render: () => (
     <Alert variant="destructive">
-      <AlertCircle className="h-4 w-4" />
+      <MaterialIcon name="error" className="text-base" />
       <AlertTitle>Error</AlertTitle>
       <AlertDescription>
         Your session has expired. Please log in again.
@@ -44,7 +50,7 @@ export const Destructive: Story = {
 export const Success: Story = {
   render: () => (
     <Alert variant="success">
-      <CheckCircle className="h-4 w-4" />
+      <MaterialIcon name="check_circle" className="text-base" />
       <AlertTitle>Success!</AlertTitle>
       <AlertDescription>
         Your changes have been saved successfully.
@@ -56,7 +62,7 @@ export const Success: Story = {
 export const Warning: Story = {
   render: () => (
     <Alert variant="warning">
-      <AlertTriangle className="h-4 w-4" />
+      <MaterialIcon name="warning" className="text-base" />
       <AlertTitle>Warning</AlertTitle>
       <AlertDescription>
         Your subscription is about to expire.
@@ -87,22 +93,22 @@ export const AllVariants: Story = {
   render: () => (
     <div className="space-y-4">
       <Alert>
-        <Info className="h-4 w-4" />
+        <MaterialIcon name="info" className="text-base" />
         <AlertTitle>Info</AlertTitle>
         <AlertDescription>This is an informational alert.</AlertDescription>
       </Alert>
       <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
+        <MaterialIcon name="error" className="text-base" />
         <AlertTitle>Error</AlertTitle>
         <AlertDescription>This is an error alert.</AlertDescription>
       </Alert>
       <Alert variant="success">
-        <CheckCircle className="h-4 w-4" />
+        <MaterialIcon name="check_circle" className="text-base" />
         <AlertTitle>Success</AlertTitle>
         <AlertDescription>This is a success alert.</AlertDescription>
       </Alert>
       <Alert variant="warning">
-        <AlertTriangle className="h-4 w-4" />
+        <MaterialIcon name="warning" className="text-base" />
         <AlertTitle>Warning</AlertTitle>
         <AlertDescription>This is a warning alert.</AlertDescription>
       </Alert>

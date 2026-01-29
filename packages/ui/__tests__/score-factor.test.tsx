@@ -2,10 +2,8 @@
 import * as React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { axe, toHaveNoViolations } from 'vitest-axe';
-import { ScoreFactorComponent } from '../src/components/score/ScoreFactor';
-
-expect.extend(toHaveNoViolations);
+import { axe } from 'vitest-axe';
+import { ScoreFactor as ScoreFactorComponent } from '../src/components/score/ScoreFactor';
 
 describe('ScoreFactor', () => {
   const defaultFactor = {
@@ -102,7 +100,10 @@ describe('ScoreFactor', () => {
 
     it('should be collapsed by default', () => {
       render(<ScoreFactorComponent factor={defaultFactor} />);
-      expect(screen.queryByText(defaultFactor.reasoning)).not.toBeVisible();
+      // When collapsed, the wrapper has aria-hidden="true" and max-h-0 opacity-0
+      const reasoningContainer = screen.getByText(defaultFactor.reasoning).parentElement;
+      expect(reasoningContainer).toHaveAttribute('aria-hidden', 'true');
+      expect(reasoningContainer).toHaveClass('max-h-0', 'opacity-0');
     });
 
     it('should expand on click', () => {

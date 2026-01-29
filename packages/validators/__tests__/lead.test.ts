@@ -545,7 +545,7 @@ describe('Lead Validators', () => {
   describe('leadListResponseSchema', () => {
     it('should validate valid lead list response', () => {
       const validList = {
-        leads: [
+        data: [
           {
             id: '123e4567-e89b-12d3-a456-426614174000',
             email: 'test1@example.com',
@@ -574,7 +574,7 @@ describe('Lead Validators', () => {
 
     it('should validate empty lead list', () => {
       const emptyList = {
-        leads: [],
+        data: [],
         total: 0,
         page: 1,
         limit: 20,
@@ -587,7 +587,7 @@ describe('Lead Validators', () => {
 
     it('should reject negative total', () => {
       const invalidList = {
-        leads: [],
+        data: [],
         total: -1,
         page: 1,
         limit: 20,
@@ -600,7 +600,7 @@ describe('Lead Validators', () => {
 
     it('should reject zero or negative page', () => {
       const invalidList = {
-        leads: [],
+        data: [],
         total: 0,
         page: 0,
         limit: 20,

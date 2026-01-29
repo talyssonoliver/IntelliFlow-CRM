@@ -50,7 +50,8 @@ describe('Accordion', () => {
           </AccordionItem>
         </Accordion>
       );
-      expect(screen.queryByText('Hidden Content')).not.toBeVisible();
+      // Content is hidden/removed when collapsed
+      expect(screen.queryByText('Hidden Content')).not.toBeInTheDocument();
     });
   });
 
@@ -86,7 +87,8 @@ describe('Accordion', () => {
       expect(screen.getByText('Toggle Content')).toBeVisible();
 
       await user.click(trigger);
-      expect(screen.queryByText('Toggle Content')).not.toBeVisible();
+      // Content is hidden/removed when collapsed
+      expect(screen.queryByText('Toggle Content')).not.toBeInTheDocument();
     });
   });
 
@@ -111,7 +113,8 @@ describe('Accordion', () => {
 
       await user.click(screen.getByText('Section 2'));
       expect(screen.getByText('Content 2')).toBeVisible();
-      expect(screen.queryByText('Content 1')).not.toBeVisible();
+      // Content 1 is hidden/removed in single mode when another opens
+      expect(screen.queryByText('Content 1')).not.toBeInTheDocument();
     });
 
     it('should allow multiple open items in multiple mode', async () => {
@@ -151,7 +154,8 @@ describe('Accordion', () => {
         </Accordion>
       );
 
-      expect(screen.queryByText('Content 1')).not.toBeVisible();
+      // Content 1 is hidden when not in defaultValue
+      expect(screen.queryByText('Content 1')).not.toBeInTheDocument();
       expect(screen.getByText('Content 2')).toBeVisible();
     });
   });
@@ -196,7 +200,8 @@ describe('Accordion', () => {
       );
 
       await user.click(screen.getByText('Disabled Section'));
-      expect(screen.queryByText('Content')).not.toBeVisible();
+      // Content stays hidden when disabled item is clicked
+      expect(screen.queryByText('Content')).not.toBeInTheDocument();
     });
   });
 });

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { emailSchema, phoneSchema, idSchema, paginationSchema, nameSchema } from './common';
-import { CONTACT_TYPES } from '@intelliflow/domain';
+import { CONTACT_TYPES, CONTACT_STATUSES } from '@intelliflow/domain';
 
 // Re-export common schemas used by API routers
 export { idSchema } from './common';
@@ -9,8 +9,6 @@ export { idSchema } from './common';
 export const contactTypeSchema = z.enum(CONTACT_TYPES);
 export type ContactType = z.infer<typeof contactTypeSchema>;
 
-// Contact status enum
-export const CONTACT_STATUSES = ['ACTIVE', 'INACTIVE', 'ARCHIVED'] as const;
 export const contactStatusSchema = z.enum(CONTACT_STATUSES);
 export type ContactStatus = z.infer<typeof contactStatusSchema>;
 
@@ -22,6 +20,7 @@ const baseContactFieldsSchema = z.object({
   title: nameSchema.optional(),
   phone: phoneSchema,
   department: nameSchema.optional(),
+  status: contactStatusSchema.optional(),
   accountId: idSchema.optional(),
   // Extended fields (IFC-089 form support)
   streetAddress: z.string().max(200).optional(),
@@ -55,6 +54,7 @@ export const contactQuerySchema = paginationSchema.extend({
   accountId: idSchema.optional(),
   ownerId: idSchema.optional(),
   department: z.string().optional(),
+  status: contactStatusSchema.optional(),
 });
 
 export type ContactQueryInput = z.infer<typeof contactQuerySchema>;
@@ -68,6 +68,7 @@ export const contactResponseSchema = z.object({
   title: nameSchema.nullable(),
   phone: phoneSchema, // Uses PhoneNumber Value Object transformer
   department: nameSchema.nullable(),
+  status: contactStatusSchema,
   accountId: idSchema.nullable(),
   ownerId: idSchema,
   leadId: idSchema.nullable(),

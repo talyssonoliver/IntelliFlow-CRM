@@ -2,10 +2,8 @@
 import * as React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { axe, toHaveNoViolations } from 'vitest-axe';
+import { axe } from 'vitest-axe';
 import { ScoreBadge } from '../src/components/score/ScoreBadge';
-
-expect.extend(toHaveNoViolations);
 
 describe('ScoreBadge', () => {
   describe('Rendering', () => {
@@ -131,7 +129,8 @@ describe('ScoreBadge', () => {
   describe('Confidence Display', () => {
     it('should show confidence when provided and mode is inline', () => {
       render(<ScoreBadge score={85} confidence={0.9} mode="inline" showConfidence />);
-      expect(screen.getByText('90%')).toBeInTheDocument();
+      // Confidence is rendered with parentheses and possibly whitespace
+      expect(screen.getByText(/90%/)).toBeInTheDocument();
     });
 
     it('should not show confidence in compact mode', () => {

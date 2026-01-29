@@ -154,8 +154,11 @@ describe('Contact Validators', () => {
       expect(result.success).toBe(true);
 
       if (result.success) {
-        // Phone should be normalized (spaces/dashes removed)
-        expect(result.data.phone).toBe('+15551234567');
+        // Phone should be normalized (spaces/dashes removed), returned as PhoneNumber value object
+        const phoneValue = typeof result.data.phone === 'object' && result.data.phone !== null
+          ? (result.data.phone as { props: { value: string } }).props.value
+          : result.data.phone;
+        expect(phoneValue).toBe('+15551234567');
       }
     });
 
@@ -171,7 +174,11 @@ describe('Contact Validators', () => {
       expect(result.success).toBe(true);
 
       if (result.success) {
-        expect(result.data.phone).toBe('+15551234567');
+        // Phone should be normalized (spaces/dashes removed), returned as PhoneNumber value object
+        const phoneValue = typeof result.data.phone === 'object' && result.data.phone !== null
+          ? (result.data.phone as { props: { value: string } }).props.value
+          : result.data.phone;
+        expect(phoneValue).toBe('+15551234567');
       }
     });
 
@@ -441,9 +448,19 @@ describe('Contact Validators', () => {
         title: 'Manager',
         phone: '+15551234567',
         department: 'Sales',
+        status: 'ACTIVE' as const,
         accountId: '456e4567-e89b-12d3-a456-426614174000',
         ownerId: '789e4567-e89b-12d3-a456-426614174000',
         leadId: 'abce4567-e89b-12d3-a456-426614174000',
+        // Extended fields (IFC-089)
+        streetAddress: '123 Main St',
+        city: 'New York',
+        zipCode: '10001',
+        company: 'Acme Inc',
+        linkedInUrl: 'https://linkedin.com/in/johndoe',
+        contactType: 'customer',
+        tags: ['enterprise'],
+        contactNotes: 'Important client',
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-02T00:00:00Z',
       };
@@ -461,9 +478,19 @@ describe('Contact Validators', () => {
         title: null,
         phone: null,
         department: null,
+        status: 'ACTIVE' as const,
         accountId: null,
         ownerId: '789e4567-e89b-12d3-a456-426614174000',
         leadId: null,
+        // Extended fields (IFC-089)
+        streetAddress: null,
+        city: null,
+        zipCode: null,
+        company: null,
+        linkedInUrl: null,
+        contactType: null,
+        tags: [],
+        contactNotes: null,
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-02T00:00:00Z',
       };
@@ -481,9 +508,19 @@ describe('Contact Validators', () => {
         title: null,
         phone: null,
         department: null,
+        status: 'ACTIVE' as const,
         accountId: null,
         ownerId: '789e4567-e89b-12d3-a456-426614174000',
         leadId: null,
+        // Extended fields (IFC-089)
+        streetAddress: null,
+        city: null,
+        zipCode: null,
+        company: null,
+        linkedInUrl: null,
+        contactType: null,
+        tags: [],
+        contactNotes: null,
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-02T00:00:00Z',
       };
@@ -506,9 +543,19 @@ describe('Contact Validators', () => {
         title: null,
         phone: null,
         department: null,
+        status: 'ACTIVE' as const,
         accountId: null,
         ownerId: '789e4567-e89b-12d3-a456-426614174000',
         leadId: null,
+        // Extended fields (IFC-089)
+        streetAddress: null,
+        city: null,
+        zipCode: null,
+        company: null,
+        linkedInUrl: null,
+        contactType: null,
+        tags: [],
+        contactNotes: null,
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-02T00:00:00Z',
       };
@@ -526,9 +573,19 @@ describe('Contact Validators', () => {
         title: null,
         phone: null,
         department: null,
+        status: 'ACTIVE' as const,
         accountId: null,
         ownerId: '789e4567-e89b-12d3-a456-426614174000',
         leadId: null,
+        // Extended fields (IFC-089)
+        streetAddress: null,
+        city: null,
+        zipCode: null,
+        company: null,
+        linkedInUrl: null,
+        contactType: null,
+        tags: [],
+        contactNotes: null,
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-02T00:00:00Z',
       };
@@ -541,7 +598,7 @@ describe('Contact Validators', () => {
   describe('contactListResponseSchema', () => {
     it('should validate valid contact list response', () => {
       const validList = {
-        contacts: [
+        data: [
           {
             id: '123e4567-e89b-12d3-a456-426614174000',
             email: 'john@example.com',
@@ -550,9 +607,19 @@ describe('Contact Validators', () => {
             title: 'Manager',
             phone: '+15551234567',
             department: 'Sales',
+            status: 'ACTIVE' as const,
             accountId: '456e4567-e89b-12d3-a456-426614174000',
             ownerId: '789e4567-e89b-12d3-a456-426614174000',
             leadId: null,
+            // Extended fields (IFC-089)
+            streetAddress: '123 Main St',
+            city: 'New York',
+            zipCode: '10001',
+            company: 'Acme Inc',
+            linkedInUrl: null,
+            contactType: 'customer',
+            tags: ['vip', 'enterprise'],
+            contactNotes: null,
             createdAt: '2024-01-01T00:00:00Z',
             updatedAt: '2024-01-02T00:00:00Z',
           },
@@ -569,7 +636,7 @@ describe('Contact Validators', () => {
 
     it('should validate empty contact list', () => {
       const emptyList = {
-        contacts: [],
+        data: [],
         total: 0,
         page: 1,
         limit: 20,
@@ -582,7 +649,7 @@ describe('Contact Validators', () => {
 
     it('should reject negative total', () => {
       const invalidList = {
-        contacts: [],
+        data: [],
         total: -1,
         page: 1,
         limit: 20,
@@ -595,7 +662,7 @@ describe('Contact Validators', () => {
 
     it('should reject zero page', () => {
       const invalidList = {
-        contacts: [],
+        data: [],
         total: 0,
         page: 0,
         limit: 20,
@@ -608,7 +675,7 @@ describe('Contact Validators', () => {
 
     it('should validate multiple contacts', () => {
       const multipleContacts = {
-        contacts: [
+        data: [
           {
             id: '123e4567-e89b-12d3-a456-426614174000',
             email: 'john@example.com',
@@ -617,9 +684,19 @@ describe('Contact Validators', () => {
             title: 'Manager',
             phone: '+15551234567',
             department: 'Sales',
+            status: 'ACTIVE' as const,
             accountId: '456e4567-e89b-12d3-a456-426614174000',
             ownerId: '789e4567-e89b-12d3-a456-426614174000',
             leadId: null,
+            // Extended fields (IFC-089)
+            streetAddress: '123 Main St',
+            city: 'New York',
+            zipCode: '10001',
+            company: 'Acme Inc',
+            linkedInUrl: 'https://linkedin.com/in/johndoe',
+            contactType: 'customer',
+            tags: ['vip'],
+            contactNotes: null,
             createdAt: '2024-01-01T00:00:00Z',
             updatedAt: '2024-01-02T00:00:00Z',
           },
@@ -631,9 +708,19 @@ describe('Contact Validators', () => {
             title: null,
             phone: null,
             department: null,
+            status: 'INACTIVE' as const,
             accountId: null,
             ownerId: '789e4567-e89b-12d3-a456-426614174000',
             leadId: null,
+            // Extended fields (IFC-089)
+            streetAddress: null,
+            city: null,
+            zipCode: null,
+            company: null,
+            linkedInUrl: null,
+            contactType: 'prospect',
+            tags: [],
+            contactNotes: null,
             createdAt: '2024-01-01T00:00:00Z',
             updatedAt: '2024-01-02T00:00:00Z',
           },

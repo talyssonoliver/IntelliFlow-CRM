@@ -141,6 +141,25 @@ export const DEFAULT_STAGE_PROBABILITIES: Record<string, number> = {
 };
 
 /**
+ * Protected stages that cannot be deactivated (terminal pipeline stages)
+ * These stages represent final outcomes and must always be available
+ */
+export const PROTECTED_STAGES = ['CLOSED_WON', 'CLOSED_LOST'] as const;
+export type ProtectedStage = (typeof PROTECTED_STAGES)[number];
+
+/**
+ * Validates that protected stages are not being deactivated
+ * @param stageKey - The stage key to validate
+ * @param isActive - The new active state
+ * @throws Error if attempting to deactivate a protected stage
+ */
+export function validateStageDeactivation(stageKey: string, isActive: boolean): void {
+  if (PROTECTED_STAGES.includes(stageKey as ProtectedStage) && !isActive) {
+    throw new Error(`Cannot deactivate terminal stage: ${stageKey}`);
+  }
+}
+
+/**
  * Schema for updating a single pipeline stage configuration
  */
 export const updatePipelineStageConfigSchema = z.object({
@@ -158,7 +177,7 @@ export type UpdatePipelineStageConfigInput = z.infer<typeof updatePipelineStageC
  * Schema for batch updating pipeline configuration
  */
 export const updatePipelineConfigSchema = z.object({
-  stages: z.array(updatePipelineStageConfigSchema),
+  stages: z.array(updatePipelineStageConfigSchema).min(1, 'At least one stage required'),
 });
 
 export type UpdatePipelineConfigInput = z.infer<typeof updatePipelineConfigSchema>;

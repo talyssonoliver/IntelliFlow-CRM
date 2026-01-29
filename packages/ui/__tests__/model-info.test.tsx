@@ -2,10 +2,8 @@
 import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { axe, toHaveNoViolations } from 'vitest-axe';
+import { axe } from 'vitest-axe';
 import { ModelInfo } from '../src/components/score/ModelInfo';
-
-expect.extend(toHaveNoViolations);
 
 describe('ModelInfo', () => {
   describe('Rendering', () => {

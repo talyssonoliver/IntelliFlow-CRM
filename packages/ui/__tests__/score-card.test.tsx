@@ -2,10 +2,8 @@
 import * as React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { axe, toHaveNoViolations } from 'vitest-axe';
+import { axe } from 'vitest-axe';
 import { ScoreCard } from '../src/components/score/ScoreCard';
-
-expect.extend(toHaveNoViolations);
 
 describe('ScoreCard', () => {
   const defaultData = {
@@ -83,14 +81,16 @@ describe('ScoreCard', () => {
     it('should show feedback buttons when onFeedback is provided', () => {
       const handleFeedback = vi.fn();
       render(<ScoreCard data={defaultData} onFeedback={handleFeedback} />);
-      expect(screen.getByRole('button', { name: /helpful/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /not helpful/i })).toBeInTheDocument();
+      // Use aria-label for precise matching
+      expect(screen.getByRole('button', { name: /This score was helpful/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /This score was not helpful/i })).toBeInTheDocument();
     });
 
     it('should call onFeedback with positive when helpful clicked', () => {
       const handleFeedback = vi.fn();
       render(<ScoreCard data={defaultData} onFeedback={handleFeedback} />);
-      fireEvent.click(screen.getByRole('button', { name: /helpful/i }));
+      // Use aria-label for precise matching to avoid matching "Not helpful"
+      fireEvent.click(screen.getByRole('button', { name: /This score was helpful/i }));
       expect(handleFeedback).toHaveBeenCalledWith('positive');
     });
 
@@ -103,7 +103,7 @@ describe('ScoreCard', () => {
 
     it('should not show feedback buttons when onFeedback is not provided', () => {
       render(<ScoreCard data={defaultData} />);
-      expect(screen.queryByRole('button', { name: /helpful/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /This score was helpful/i })).not.toBeInTheDocument();
     });
   });
 

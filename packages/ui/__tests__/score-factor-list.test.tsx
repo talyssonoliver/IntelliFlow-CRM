@@ -2,10 +2,8 @@
 import * as React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { axe, toHaveNoViolations } from 'vitest-axe';
+import { axe } from 'vitest-axe';
 import { ScoreFactorList } from '../src/components/score/ScoreFactorList';
-
-expect.extend(toHaveNoViolations);
 
 describe('ScoreFactorList', () => {
   const defaultFactors = [
