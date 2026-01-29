@@ -333,6 +333,90 @@ export const EFFECT_SIZE_THRESHOLDS = {
 } as const;
 
 // =============================================================================
+// Sentiment Analysis (IFC-039)
+// =============================================================================
+
+/**
+ * Sentiment classification labels
+ */
+export const SENTIMENT_LABELS = [
+  'VERY_POSITIVE',
+  'POSITIVE',
+  'NEUTRAL',
+  'NEGATIVE',
+  'VERY_NEGATIVE',
+] as const;
+
+export type SentimentLabel = (typeof SENTIMENT_LABELS)[number];
+
+/**
+ * Emotion detection labels (Plutchik's wheel of emotions)
+ */
+export const EMOTION_LABELS = [
+  'JOY',
+  'TRUST',
+  'ANTICIPATION',
+  'SURPRISE',
+  'SADNESS',
+  'FEAR',
+  'ANGER',
+  'DISGUST',
+  'NEUTRAL',
+] as const;
+
+export type EmotionLabel = (typeof EMOTION_LABELS)[number];
+
+/**
+ * Urgency levels for customer communications
+ */
+export const URGENCY_LEVELS = [
+  'CRITICAL',
+  'HIGH',
+  'MEDIUM',
+  'LOW',
+  'NONE',
+] as const;
+
+export type UrgencyLevel = (typeof URGENCY_LEVELS)[number];
+
+// =============================================================================
+// Next Best Action (IFC-039)
+// =============================================================================
+
+/**
+ * Action types for NBA recommendations
+ */
+export const NBA_ACTION_TYPES = [
+  'CALL',
+  'EMAIL',
+  'SCHEDULE_MEETING',
+  'SEND_PROPOSAL',
+  'FOLLOW_UP',
+  'ESCALATE',
+  'NURTURE',
+  'CLOSE_DEAL',
+  'RE_ENGAGE',
+  'PROVIDE_DEMO',
+  'SEND_CONTENT',
+  'RESEARCH',
+  'WAIT',
+] as const;
+
+export type NBAActionType = (typeof NBA_ACTION_TYPES)[number];
+
+/**
+ * Priority levels for NBA actions
+ */
+export const NBA_ACTION_PRIORITIES = [
+  'CRITICAL',
+  'HIGH',
+  'MEDIUM',
+  'LOW',
+] as const;
+
+export type NBAActionPriority = (typeof NBA_ACTION_PRIORITIES)[number];
+
+// =============================================================================
 // Chain Versioning (IFC-086)
 // =============================================================================
 

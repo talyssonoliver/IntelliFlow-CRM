@@ -349,7 +349,7 @@ export function getEventTypeLabel(type: TimelineEventType): string {
 }
 
 /**
- * Get icon name for event type (for use with Lucide icons)
+ * Get icon name for event type (for use with Material Symbols)
  */
 export function getEventTypeIcon(type: TimelineEventType): string {
   const icons: Record<TimelineEventType, string> = {

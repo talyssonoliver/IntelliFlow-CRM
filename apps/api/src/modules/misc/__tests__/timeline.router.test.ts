@@ -35,6 +35,8 @@ describe('Timeline Router', () => {
       prismaMock.appointment.findMany.mockResolvedValue([]);
       prismaMock.auditLog.findMany.mockResolvedValue([]);
       prismaMock.domainEvent.findMany.mockResolvedValue([]);
+      prismaMock.caseDocument.findMany.mockResolvedValue([]);
+      prismaMock.caseDocument.findMany.mockResolvedValue([]);
 
       const result = await caller.getEvents({});
 
@@ -60,6 +62,7 @@ describe('Timeline Router', () => {
       prismaMock.appointment.findMany.mockResolvedValue([]);
       prismaMock.auditLog.findMany.mockResolvedValue([]);
       prismaMock.domainEvent.findMany.mockResolvedValue([]);
+      prismaMock.caseDocument.findMany.mockResolvedValue([]);
 
       const result = await caller.getEvents({});
 
@@ -97,6 +100,7 @@ describe('Timeline Router', () => {
       prismaMock.appointment.findMany.mockResolvedValue([]);
       prismaMock.auditLog.findMany.mockResolvedValue([]);
       prismaMock.domainEvent.findMany.mockResolvedValue([]);
+      prismaMock.caseDocument.findMany.mockResolvedValue([]);
 
       const result = await caller.getEvents({});
 
@@ -117,6 +121,7 @@ describe('Timeline Router', () => {
       prismaMock.appointment.findMany.mockResolvedValue([]);
       prismaMock.auditLog.findMany.mockResolvedValue([]);
       prismaMock.domainEvent.findMany.mockResolvedValue([]);
+      prismaMock.caseDocument.findMany.mockResolvedValue([]);
 
       const result = await caller.getEvents({ includeCompleted: true });
 
@@ -139,6 +144,7 @@ describe('Timeline Router', () => {
       prismaMock.appointment.findMany.mockResolvedValue([]);
       prismaMock.auditLog.findMany.mockResolvedValue([]);
       prismaMock.domainEvent.findMany.mockResolvedValue([]);
+      prismaMock.caseDocument.findMany.mockResolvedValue([]);
 
       const result = await caller.getEvents({
         eventTypes: ['task'],
@@ -158,6 +164,7 @@ describe('Timeline Router', () => {
       prismaMock.appointment.findMany.mockResolvedValue([]);
       prismaMock.auditLog.findMany.mockResolvedValue([]);
       prismaMock.domainEvent.findMany.mockResolvedValue([]);
+      prismaMock.caseDocument.findMany.mockResolvedValue([]);
 
       const result = await caller.getEvents({
         excludeTypes: ['task', 'task_overdue', 'task_completed'],
@@ -177,6 +184,7 @@ describe('Timeline Router', () => {
       prismaMock.appointment.findMany.mockResolvedValue([]);
       prismaMock.auditLog.findMany.mockResolvedValue([]);
       prismaMock.domainEvent.findMany.mockResolvedValue([]);
+      prismaMock.caseDocument.findMany.mockResolvedValue([]);
 
       const result = await caller.getEvents({
         dealId: TEST_UUIDS.opportunity1,
@@ -197,6 +205,7 @@ describe('Timeline Router', () => {
       prismaMock.appointment.findMany.mockResolvedValue([]);
       prismaMock.auditLog.findMany.mockResolvedValue([]);
       prismaMock.domainEvent.findMany.mockResolvedValue([]);
+      prismaMock.caseDocument.findMany.mockResolvedValue([]);
 
       await caller.getEvents({
         priorities: ['high', 'urgent'],
@@ -224,6 +233,7 @@ describe('Timeline Router', () => {
       prismaMock.appointment.findMany.mockResolvedValue([]);
       prismaMock.auditLog.findMany.mockResolvedValue([]);
       prismaMock.domainEvent.findMany.mockResolvedValue([]);
+      prismaMock.caseDocument.findMany.mockResolvedValue([]);
 
       const result = await caller.getEvents({
         page: 1,
@@ -252,6 +262,7 @@ describe('Timeline Router', () => {
       prismaMock.appointment.findMany.mockResolvedValue([]);
       prismaMock.auditLog.findMany.mockResolvedValue([]);
       prismaMock.domainEvent.findMany.mockResolvedValue([]);
+      prismaMock.caseDocument.findMany.mockResolvedValue([]);
 
       const result = await caller.getEvents({ sortOrder: 'desc' });
 
@@ -289,6 +300,7 @@ describe('Timeline Router', () => {
       prismaMock.appointment.findMany.mockResolvedValue([appointment]);
       prismaMock.auditLog.findMany.mockResolvedValue([]);
       prismaMock.domainEvent.findMany.mockResolvedValue([]);
+      prismaMock.caseDocument.findMany.mockResolvedValue([]);
 
       const result = await caller.getEvents({});
 
@@ -330,6 +342,7 @@ describe('Timeline Router', () => {
       prismaMock.appointment.findMany.mockResolvedValue([]);
       prismaMock.auditLog.findMany.mockResolvedValue([]);
       prismaMock.domainEvent.findMany.mockResolvedValue([agentEvent]);
+      prismaMock.caseDocument.findMany.mockResolvedValue([]);
 
       const result = await caller.getEvents({ eventTypes: ['agent_action'] });
 
@@ -353,6 +366,7 @@ describe('Timeline Router', () => {
       prismaMock.appointment.findMany.mockResolvedValue([]);
       prismaMock.auditLog.findMany.mockResolvedValue([]);
       prismaMock.domainEvent.findMany.mockResolvedValue([]);
+      prismaMock.caseDocument.findMany.mockResolvedValue([]);
 
       const result = await caller.getEvents({});
 
@@ -539,6 +553,7 @@ describe('Timeline Router', () => {
 
     it('should filter by dealId', async () => {
       prismaMock.domainEvent.findMany.mockResolvedValue([]);
+      prismaMock.caseDocument.findMany.mockResolvedValue([]);
 
       await caller.getPendingAgentActions({
         dealId: TEST_UUIDS.opportunity1,

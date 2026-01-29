@@ -129,7 +129,7 @@ export const TIMELINE_EVENT_TYPE_LABELS: Record<TimelineEventType, string> = {
 };
 
 /**
- * Icon names for event types (for use with Lucide icons)
+ * Icon names for event types (for use with Material Symbols)
  */
 export const TIMELINE_EVENT_TYPE_ICONS: Record<TimelineEventType, string> = {
   task: 'CheckSquare',
