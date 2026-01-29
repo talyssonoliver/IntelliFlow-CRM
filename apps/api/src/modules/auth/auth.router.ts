@@ -191,8 +191,7 @@ export const authRouter = createTRPCRouter({
    */
   loginWithOAuth: publicProcedure.input(oauthInitSchema).mutation(async ({ input }) => {
     const provider = input.provider as OAuthProvider;
-    const { url, error } = await signInWithOAuth({
-      provider,
+    const { url, error } = await signInWithOAuth(provider, {
       redirectTo: input.redirectTo,
     });
 
@@ -370,7 +369,11 @@ export const authRouter = createTRPCRouter({
           ? mfaService.getChallengeInfo(input.challengeId)
           : { exists: false, userId: undefined };
 
-        const result = await mfaService.sendSmsOtp(input.phone, challengeInfo.userId || 'unknown');
+        // Extract userId safely from challenge info
+        const userId = 'userId' in challengeInfo && challengeInfo.userId
+          ? String(challengeInfo.userId)
+          : 'unknown';
+        const result = await mfaService.sendSmsOtp(input.phone, userId);
 
         return {
           success: result.success,
@@ -383,7 +386,11 @@ export const authRouter = createTRPCRouter({
           ? mfaService.getChallengeInfo(input.challengeId)
           : { exists: false, userId: undefined };
 
-        const result = await mfaService.sendEmailOtp(input.email, challengeInfo.userId || 'unknown');
+        // Extract userId safely from challenge info
+        const userId = 'userId' in challengeInfo && challengeInfo.userId
+          ? String(challengeInfo.userId)
+          : 'unknown';
+        const result = await mfaService.sendEmailOtp(input.email, userId);
 
         return {
           success: result.success,
