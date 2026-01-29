@@ -188,7 +188,7 @@ export function getExtension(filename: string): string {
 export function sanitizeFilename(filename: string): string {
   // Remove path separators and dangerous characters
   return filename
-    .replace(/[\/\\:*?"<>|]/g, '_')
+    .replace(/[/\\:*?"<>|]/g, '_')
     .replace(/\.{2,}/g, '.')
     .replace(/^\.+/, '')
     .slice(0, 255);

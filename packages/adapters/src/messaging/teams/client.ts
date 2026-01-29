@@ -1155,9 +1155,10 @@ export class TeamsAdapter implements TeamsMessagingPort {
         return Result.fail(new TeamsAuthenticationError(error.message ?? 'Token expired or invalid'));
       case 404:
         return Result.fail(new TeamsNotFoundError('Resource', error.message ?? 'unknown'));
-      case 429:
+      case 429: {
         const retryAfter = parseInt(response.headers.get('Retry-After') ?? '60');
         return Result.fail(new TeamsRateLimitError(retryAfter));
+      }
       default:
         return Result.fail(new TeamsInvalidRequestError(error.message ?? 'Request failed'));
     }

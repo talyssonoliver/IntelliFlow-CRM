@@ -59,7 +59,7 @@ describe('OpportunityService', () => {
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.name).toBe('Test Opportunity');
-      expect(result.value.value).toBe(50000);
+      expect(result.value.value.amount).toBe(50000);
       expect(result.value.stage).toBe('PROSPECTING');
     });
 
@@ -266,7 +266,7 @@ describe('OpportunityService', () => {
       const result = await service.updateValue(opp.id.value, 75000, 'user');
 
       expect(result.isSuccess).toBe(true);
-      expect(result.value.value).toBe(75000);
+      expect(result.value.value.amount).toBe(75000);
     });
 
     it('should fail with negative value', async () => {
@@ -306,7 +306,7 @@ describe('OpportunityService', () => {
       const result = await service.updateProbability(opp.id.value, 25, 'user');
 
       expect(result.isSuccess).toBe(true);
-      expect(result.value.probability).toBe(25);
+      expect(result.value.probability.value).toBe(25);
     });
 
     it('should fail if probability is too far from stage default', async () => {
@@ -398,7 +398,7 @@ describe('OpportunityService', () => {
       expect(result.isSuccess).toBe(true);
       expect(result.value.isWon).toBe(true);
       expect(result.value.stage).toBe('CLOSED_WON');
-      expect(result.value.probability).toBe(100);
+      expect(result.value.probability.value).toBe(100);
     });
 
     it('should fail if not in NEGOTIATION stage', async () => {
@@ -444,7 +444,7 @@ describe('OpportunityService', () => {
       expect(result.isSuccess).toBe(true);
       expect(result.value.isLost).toBe(true);
       expect(result.value.stage).toBe('CLOSED_LOST');
-      expect(result.value.probability).toBe(0);
+      expect(result.value.probability.value).toBe(0);
     });
 
     it('should fail without sufficient reason', async () => {

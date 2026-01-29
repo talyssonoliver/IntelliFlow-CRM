@@ -53,9 +53,9 @@ describe('OpportunityService', () => {
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.name).toBe('New Deal');
-      expect(result.value.value).toBe(50000);
+      expect(result.value.value.amount).toBe(50000);
       expect(result.value.stage).toBe('PROSPECTING');
-      expect(result.value.probability).toBe(10);
+      expect(result.value.probability.value).toBe(10);
     });
 
     it('should fail with invalid account', async () => {
@@ -245,7 +245,7 @@ describe('OpportunityService', () => {
       const result = await service.updateValue(opp.id.value, 75000, 'updater');
 
       expect(result.isSuccess).toBe(true);
-      expect(result.value.value).toBe(75000);
+      expect(result.value.value.amount).toBe(75000);
     });
 
     it('should fail with invalid value', async () => {
@@ -278,7 +278,7 @@ describe('OpportunityService', () => {
       const result = await service.updateProbability(opp.id.value, 25, 'updater');
 
       expect(result.isSuccess).toBe(true);
-      expect(result.value.probability).toBe(25);
+      expect(result.value.probability.value).toBe(25);
     });
 
     it('should fail if probability too far from stage default', async () => {
@@ -353,7 +353,7 @@ describe('OpportunityService', () => {
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.stage).toBe('CLOSED_WON');
-      expect(result.value.probability).toBe(100);
+      expect(result.value.probability.value).toBe(100);
       expect(result.value.isWon).toBe(true);
     });
 
@@ -414,7 +414,7 @@ describe('OpportunityService', () => {
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.stage).toBe('CLOSED_LOST');
-      expect(result.value.probability).toBe(0);
+      expect(result.value.probability.value).toBe(0);
       expect(result.value.isLost).toBe(true);
     });
 

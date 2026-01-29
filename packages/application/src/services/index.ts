@@ -11,8 +11,6 @@ export * from './ContactService';
 export * from './AccountService';
 export * from './OpportunityService';
 export * from './TaskService';
-export * from './TicketService';
-export * from './AnalyticsService';
 
 // Event Handlers & Schedulers (IFC-158)
 export * from './AppointmentIcsEventHandler';
@@ -20,3 +18,6 @@ export * from './ReminderSchedulerService';
 
 // Notification Service (IFC-157)
 export * from './NotificationService';
+
+// File Ingestion (IFC-125)
+export * from './IngestionOrchestrator';

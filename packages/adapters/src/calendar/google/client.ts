@@ -1009,9 +1009,10 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
         return Result.fail(
           new CalendarEventNotFoundError('google', error.error?.message ?? 'Event not found')
         );
-      case 429:
+      case 429: {
         const retryAfter = parseInt(error.error?.details?.[0]?.metadata?.retryAfterSeconds ?? '60');
         return Result.fail(new CalendarRateLimitError('google', retryAfter));
+      }
       default:
         return Result.fail(
           new CalendarSyncError('google', error.error?.message ?? 'Unknown API error')

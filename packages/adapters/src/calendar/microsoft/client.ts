@@ -1036,9 +1036,10 @@ export class MicrosoftCalendarAdapter implements CalendarServicePort {
         return Result.fail(new CalendarSyncError('microsoft', errorMessage));
       case 404:
         return Result.fail(new CalendarEventNotFoundError('microsoft', errorMessage));
-      case 429:
+      case 429: {
         const retryAfter = parseInt(error.error?.innerError?.retryAfterSeconds ?? '60');
         return Result.fail(new CalendarRateLimitError('microsoft', retryAfter));
+      }
       default:
         return Result.fail(new CalendarSyncError('microsoft', errorMessage));
     }

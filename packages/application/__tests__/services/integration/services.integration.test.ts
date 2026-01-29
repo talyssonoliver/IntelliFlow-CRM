@@ -161,7 +161,7 @@ describe('Domain Services Integration', () => {
 
       const wonOpp = await opportunityRepository.findById(oppResult.value.id);
       expect(wonOpp?.stage).toBe('CLOSED_WON');
-      expect(wonOpp?.probability).toBe(100);
+      expect(wonOpp?.probability.value).toBe(100);
     });
 
     it('should handle account with multiple contacts and opportunities', async () => {

@@ -13,10 +13,85 @@ import { ZEP_CONFIG } from '@intelliflow/domain';
 // Types
 // =============================================================================
 
+/**
+ * Prisma client interface for episode tracking
+ * This allows us to inject a mock in tests
+ */
+export interface ZepPrismaClient {
+  zepEpisodeUsage: {
+    upsert: (args: {
+      where: { tenantId: string };
+      create: {
+        tenantId: string;
+        episodesUsed: number;
+        maxEpisodes: number;
+        warningPercent: number;
+        hardLimitPercent: number;
+      };
+      update: Record<string, unknown>;
+    }) => Promise<{
+      id: string;
+      tenantId: string;
+      episodesUsed: number;
+      maxEpisodes: number;
+      warningPercent: number;
+      hardLimitPercent: number;
+      lastUpdated: Date;
+      createdAt: Date;
+      lastSyncedAt: Date | null;
+      lastSyncSuccess: boolean;
+    }>;
+    update: (args: {
+      where: { tenantId: string };
+      data: Partial<{
+        episodesUsed: number;
+        lastSyncedAt: Date;
+        lastSyncSuccess: boolean;
+      }>;
+    }) => Promise<Record<string, unknown>>;
+    findUnique: (args: {
+      where: { tenantId: string };
+    }) => Promise<{
+      id: string;
+      tenantId: string;
+      episodesUsed: number;
+      maxEpisodes: number;
+      warningPercent: number;
+      hardLimitPercent: number;
+      lastUpdated: Date;
+      createdAt: Date;
+      lastSyncedAt: Date | null;
+      lastSyncSuccess: boolean;
+    } | null>;
+  };
+  zepEpisodeAudit: {
+    create: (args: {
+      data: {
+        tenantId: string;
+        previousCount: number;
+        newCount: number;
+        delta: number;
+        operation: string;
+        sessionId?: string;
+      };
+    }) => Promise<Record<string, unknown>>;
+    findMany: (args: {
+      where: { tenantId: string };
+      orderBy: { createdAt: 'desc' };
+      take?: number;
+    }) => Promise<Array<Record<string, unknown>>>;
+  };
+  $transaction: <T>(operations: Promise<T>[]) => Promise<T[]>;
+}
+
 export interface ZepConfig {
   apiKey: string;
   projectId?: string;
   maxEpisodes?: number;
+  warningThresholdPercent?: number;
+  hardLimitPercent?: number;
+  prisma?: ZepPrismaClient;
+  tenantId?: string;
 }
 
 export interface SessionMetadata {
@@ -55,6 +130,8 @@ export interface EpisodeBudget {
   limitThreshold: number;
   isWarning: boolean;
   isLimited: boolean;
+  isPersisted?: boolean;
+  lastSyncedAt?: Date | null;
 }
 
 // =============================================================================
@@ -66,41 +143,96 @@ export class ZepMemoryAdapter {
   private projectId?: string;
   private episodeCount = 0;
   private maxEpisodes: number;
-  private isInitialized = false;
+  private warningThresholdPercent: number;
+  private hardLimitPercent: number;
+  private isInitializedFlag = false;
 
   // In-memory fallback when approaching limit
   private inMemoryFallback: Map<string, ZepMemory> = new Map();
   private useFallback = false;
 
+  // Prisma persistence
+  private prisma?: ZepPrismaClient;
+  private tenantId: string;
+  private isPersisted = false;
+  private lastSyncedAt: Date | null = null;
+
   constructor(config: ZepConfig) {
     this.apiKey = config.apiKey;
     this.projectId = config.projectId;
     this.maxEpisodes = config.maxEpisodes ?? ZEP_CONFIG.MAX_FREE_EPISODES;
+    this.warningThresholdPercent = config.warningThresholdPercent ?? ZEP_CONFIG.WARNING_THRESHOLD_PERCENT;
+    this.hardLimitPercent = config.hardLimitPercent ?? ZEP_CONFIG.HARD_LIMIT_PERCENT;
+    this.prisma = config.prisma as ZepPrismaClient | undefined;
+    this.tenantId = config.tenantId ?? 'global';
   }
 
   /**
    * Initialize the Zep client
    */
   async initialize(): Promise<void> {
-    if (this.isInitialized) return;
+    if (this.isInitializedFlag) return;
+
+    // First, try to load from database if Prisma is available
+    if (this.prisma) {
+      try {
+        const record = await this.prisma.zepEpisodeUsage.upsert({
+          where: { tenantId: this.tenantId },
+          create: {
+            tenantId: this.tenantId,
+            episodesUsed: 0,
+            maxEpisodes: this.maxEpisodes,
+            warningPercent: this.warningThresholdPercent,
+            hardLimitPercent: this.hardLimitPercent,
+          },
+          update: {},
+        });
+
+        this.episodeCount = record.episodesUsed;
+        this.isPersisted = true;
+        this.lastSyncedAt = record.lastSyncedAt;
+      } catch (error) {
+        console.warn('[ZepMemoryAdapter] Failed to load from database:', error);
+      }
+    }
 
     // Validate API key
     if (!this.apiKey) {
       console.warn('[ZepMemoryAdapter] No API key provided, using in-memory fallback');
       this.useFallback = true;
-      this.isInitialized = true;
+      this.isInitializedFlag = true;
       return;
     }
 
     try {
-      // Check connection by fetching episode count
-      await this.fetchEpisodeCount();
-      this.isInitialized = true;
+      // Check connection by fetching episode count from Cloud API
+      const cloudCount = await this.fetchEpisodeCountFromCloud();
+
+      // If Cloud count is higher, sync to database
+      if (cloudCount > this.episodeCount && this.prisma) {
+        await this.syncToDatabase(cloudCount, 'SYNC_FROM_API');
+      }
+
+      this.isInitializedFlag = true;
       console.log(`[ZepMemoryAdapter] Initialized. Episodes used: ${this.episodeCount}/${this.maxEpisodes}`);
     } catch (error) {
-      console.error('[ZepMemoryAdapter] Failed to initialize, using in-memory fallback:', error);
-      this.useFallback = true;
-      this.isInitialized = true;
+      console.error('[ZepMemoryAdapter] Failed to sync with Cloud API:', error);
+
+      // Mark sync as failed in database
+      if (this.prisma) {
+        try {
+          await this.prisma.zepEpisodeUsage.update({
+            where: { tenantId: this.tenantId },
+            data: { lastSyncSuccess: false },
+          });
+        } catch {
+          // Ignore database errors during error handling
+        }
+      }
+
+      // Still mark as initialized - we can work with local data
+      this.isInitializedFlag = true;
+      console.log(`[ZepMemoryAdapter] Initialized. Episodes used: ${this.episodeCount}/${this.maxEpisodes}`);
     }
   }
 
@@ -129,7 +261,12 @@ export class ZepMemoryAdapter {
         metadata,
       });
 
+      const previousCount = this.episodeCount;
       this.episodeCount++;
+
+      // Persist and audit
+      await this.incrementEpisodeCount(previousCount, 'CREATE_SESSION', sessionId);
+
       return {
         sessionId: response.session_id as string,
         metadata: response.metadata as SessionMetadata,
@@ -164,7 +301,11 @@ export class ZepMemoryAdapter {
       });
 
       // Increment episode count for each message batch
+      const previousCount = this.episodeCount;
       this.episodeCount++;
+
+      // Persist and audit
+      await this.incrementEpisodeCount(previousCount, 'ADD_MEMORY', sessionId);
     } catch (error) {
       console.error('[ZepMemoryAdapter] Failed to add memory:', error);
       this.addFallbackMemory(sessionId, messages);
@@ -230,10 +371,10 @@ export class ZepMemoryAdapter {
     await this.ensureInitialized();
 
     const warningThreshold = Math.floor(
-      (this.maxEpisodes * ZEP_CONFIG.WARNING_THRESHOLD_PERCENT) / 100
+      (this.maxEpisodes * this.warningThresholdPercent) / 100
     );
     const limitThreshold = Math.floor(
-      (this.maxEpisodes * ZEP_CONFIG.HARD_LIMIT_PERCENT) / 100
+      (this.maxEpisodes * this.hardLimitPercent) / 100
     );
 
     return {
@@ -243,6 +384,8 @@ export class ZepMemoryAdapter {
       limitThreshold,
       isWarning: this.episodeCount >= warningThreshold,
       isLimited: this.episodeCount >= limitThreshold,
+      isPersisted: this.isPersisted,
+      lastSyncedAt: this.lastSyncedAt,
     };
   }
 
@@ -292,25 +435,97 @@ export class ZepMemoryAdapter {
   // =============================================================================
 
   private async ensureInitialized(): Promise<void> {
-    if (!this.isInitialized) {
+    if (!this.isInitializedFlag) {
       await this.initialize();
     }
   }
 
   private shouldUseFallback(): boolean {
     const limitThreshold = Math.floor(
-      (this.maxEpisodes * ZEP_CONFIG.HARD_LIMIT_PERCENT) / 100
+      (this.maxEpisodes * this.hardLimitPercent) / 100
     );
     return this.episodeCount >= limitThreshold;
   }
 
-  private async fetchEpisodeCount(): Promise<void> {
+  /**
+   * Fetch episode count from Zep Cloud API
+   * Note: Does NOT update this.episodeCount - caller should handle sync logic
+   * Throws on network/API errors - caller must handle exceptions
+   */
+  private async fetchEpisodeCountFromCloud(): Promise<number> {
+    const response = await this.makeRequest('/account/usage', 'GET');
+    const count = (response.episodes_used as number) ?? 0;
+    return count;
+  }
+
+  /**
+   * Sync episode count to database
+   */
+  private async syncToDatabase(
+    newCount: number,
+    operation: string,
+    sessionId?: string
+  ): Promise<void> {
+    if (!this.prisma) return;
+
     try {
-      const response = await this.makeRequest('/account/usage', 'GET');
-      this.episodeCount = (response.episodes_used as number) ?? 0;
-    } catch {
-      // Default to 0 if we can't fetch
-      this.episodeCount = 0;
+      const previousCount = this.episodeCount;
+
+      await this.prisma.zepEpisodeUsage.update({
+        where: { tenantId: this.tenantId },
+        data: {
+          episodesUsed: newCount,
+          lastSyncedAt: new Date(),
+          lastSyncSuccess: true,
+        },
+      });
+
+      await this.prisma.zepEpisodeAudit.create({
+        data: {
+          tenantId: this.tenantId,
+          previousCount,
+          newCount,
+          delta: newCount - previousCount,
+          operation,
+          sessionId,
+        },
+      });
+
+      this.episodeCount = newCount;
+      this.lastSyncedAt = new Date();
+    } catch (error) {
+      console.error('[ZepMemoryAdapter] Failed to sync to database:', error);
+    }
+  }
+
+  /**
+   * Increment episode count and persist
+   */
+  private async incrementEpisodeCount(
+    previousCount: number,
+    operation: string,
+    sessionId?: string
+  ): Promise<void> {
+    if (!this.prisma) return;
+
+    try {
+      await this.prisma.zepEpisodeUsage.update({
+        where: { tenantId: this.tenantId },
+        data: { episodesUsed: this.episodeCount },
+      });
+
+      await this.prisma.zepEpisodeAudit.create({
+        data: {
+          tenantId: this.tenantId,
+          previousCount,
+          newCount: this.episodeCount,
+          delta: 1,
+          operation,
+          sessionId,
+        },
+      });
+    } catch (error) {
+      console.error('[ZepMemoryAdapter] Failed to increment episode count:', error);
     }
   }
 

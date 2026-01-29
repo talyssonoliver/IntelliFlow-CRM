@@ -104,7 +104,7 @@ export class ConflictResolver {
           requiresManualResolution: false,
         };
 
-      case 'newest_wins':
+      case 'newest_wins': {
         const localWins = localUpdatedAt >= remoteUpdatedAt;
         return {
           strategy,
@@ -113,6 +113,7 @@ export class ConflictResolver {
           resolvedVersion: localWins ? localAppointment : remoteEvent,
           requiresManualResolution: false,
         };
+      }
 
       case 'manual':
         return {
@@ -122,7 +123,7 @@ export class ConflictResolver {
           requiresManualResolution: true,
         };
 
-      default:
+      default: {
         // Default to newest_wins for unknown strategies
         const defaultLocalWins = localUpdatedAt >= remoteUpdatedAt;
         return {
@@ -132,6 +133,7 @@ export class ConflictResolver {
           resolvedVersion: defaultLocalWins ? localAppointment : remoteEvent,
           requiresManualResolution: false,
         };
+      }
     }
   }
 

@@ -3,6 +3,7 @@ import {
   DomainError,
   Contact,
   ContactId,
+  ContactStatus,
   Email,
   ContactRepository,
   AccountRepository,
@@ -115,6 +116,7 @@ export class ContactService {
       title?: string;
       phone?: string;
       department?: string;
+      status?: ContactStatus;
     },
     updatedBy: string
   ): Promise<Result<Contact, DomainError>> {

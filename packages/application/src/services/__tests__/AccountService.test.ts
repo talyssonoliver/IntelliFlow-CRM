@@ -47,7 +47,7 @@ describe('AccountService', () => {
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.name).toBe('Test Company');
-      expect(result.value.website).toBe('https://test.com');
+      expect(result.value.website?.value).toBe('https://test.com');
       expect(result.value.industry).toBe('Technology');
     });
 
@@ -116,7 +116,7 @@ describe('AccountService', () => {
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.name).toBe('Updated Name');
-      expect(result.value.website).toBe('https://updated.com');
+      expect(result.value.website?.value).toBe('https://updated.com');
     });
 
     it('should fail if new name already exists', async () => {
