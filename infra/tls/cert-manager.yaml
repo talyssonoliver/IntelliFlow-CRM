@@ -1,0 +1,415 @@
+# IntelliFlow CRM - Certificate Manager Configuration
+# IMPLEMENTS: IFC-113 (Secrets Management & Encryption)
+#
+# This configuration manages certificate lifecycle including:
+# - Certificate issuance and renewal
+# - Integration with cert-manager for Kubernetes
+# - Self-signed CA for development
+# - ACME/Let's Encrypt for production
+
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: intelliflow-selfsigned-issuer
+  labels:
+    app.kubernetes.io/name: intelliflow
+    app.kubernetes.io/component: security
+spec:
+  selfSigned: {}
+
+---
+# Root CA Certificate (self-signed)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: intelliflow-root-ca
+  namespace: cert-manager
+  labels:
+    app.kubernetes.io/name: intelliflow
+    app.kubernetes.io/component: security
+spec:
+  isCA: true
+  commonName: IntelliFlow Root CA
+  secretName: intelliflow-root-ca-secret
+  duration: 87600h  # 10 years
+  renewBefore: 8760h  # 1 year before expiry
+  subject:
+    organizations:
+      - IntelliFlow
+    organizationalUnits:
+      - Security
+    countries:
+      - GB
+  privateKey:
+    algorithm: ECDSA
+    size: 384
+    encoding: PKCS8
+  issuerRef:
+    name: intelliflow-selfsigned-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+
+---
+# Intermediate CA Issuer
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: intelliflow-ca-issuer
+  labels:
+    app.kubernetes.io/name: intelliflow
+    app.kubernetes.io/component: security
+spec:
+  ca:
+    secretName: intelliflow-root-ca-secret
+
+---
+# API Service Certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: intelliflow-api-cert
+  namespace: intelliflow
+  labels:
+    app.kubernetes.io/name: intelliflow
+    app.kubernetes.io/component: api
+spec:
+  secretName: intelliflow-api-tls
+  duration: 8760h  # 1 year
+  renewBefore: 720h  # 30 days before expiry
+  subject:
+    organizations:
+      - IntelliFlow
+    organizationalUnits:
+      - API Services
+  commonName: intelliflow-api
+  isCA: false
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    encoding: PKCS8
+    rotationPolicy: Always
+  usages:
+    - server auth
+    - client auth
+    - digital signature
+    - key encipherment
+  dnsNames:
+    - api.intelliflow.local
+    - api.intelliflow.svc
+    - api.intelliflow.svc.cluster.local
+    - localhost
+  ipAddresses:
+    - 127.0.0.1
+  issuerRef:
+    name: intelliflow-ca-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+
+---
+# Web Service Certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: intelliflow-web-cert
+  namespace: intelliflow
+  labels:
+    app.kubernetes.io/name: intelliflow
+    app.kubernetes.io/component: web
+spec:
+  secretName: intelliflow-web-tls
+  duration: 8760h
+  renewBefore: 720h
+  subject:
+    organizations:
+      - IntelliFlow
+    organizationalUnits:
+      - Web Services
+  commonName: intelliflow-web
+  isCA: false
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    encoding: PKCS8
+    rotationPolicy: Always
+  usages:
+    - server auth
+    - digital signature
+    - key encipherment
+  dnsNames:
+    - web.intelliflow.local
+    - web.intelliflow.svc
+    - web.intelliflow.svc.cluster.local
+    - localhost
+  ipAddresses:
+    - 127.0.0.1
+  issuerRef:
+    name: intelliflow-ca-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+
+---
+# AI Worker Service Certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: intelliflow-ai-worker-cert
+  namespace: intelliflow
+  labels:
+    app.kubernetes.io/name: intelliflow
+    app.kubernetes.io/component: ai-worker
+spec:
+  secretName: intelliflow-ai-worker-tls
+  duration: 8760h
+  renewBefore: 720h
+  subject:
+    organizations:
+      - IntelliFlow
+    organizationalUnits:
+      - AI Services
+  commonName: intelliflow-ai-worker
+  isCA: false
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    encoding: PKCS8
+    rotationPolicy: Always
+  usages:
+    - server auth
+    - client auth
+    - digital signature
+    - key encipherment
+  dnsNames:
+    - ai-worker.intelliflow.local
+    - ai-worker.intelliflow.svc
+    - ai-worker.intelliflow.svc.cluster.local
+  issuerRef:
+    name: intelliflow-ca-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+
+---
+# Database Service Certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: intelliflow-database-cert
+  namespace: intelliflow
+  labels:
+    app.kubernetes.io/name: intelliflow
+    app.kubernetes.io/component: database
+spec:
+  secretName: intelliflow-database-tls
+  duration: 8760h
+  renewBefore: 720h
+  subject:
+    organizations:
+      - IntelliFlow
+    organizationalUnits:
+      - Data Services
+  commonName: intelliflow-database
+  isCA: false
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    encoding: PKCS8
+    rotationPolicy: Always
+  usages:
+    - server auth
+    - digital signature
+    - key encipherment
+  dnsNames:
+    - db.intelliflow.local
+    - database.intelliflow.svc
+    - database.intelliflow.svc.cluster.local
+    - supabase.intelliflow.local
+  issuerRef:
+    name: intelliflow-ca-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+
+---
+# Redis Service Certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: intelliflow-redis-cert
+  namespace: intelliflow
+  labels:
+    app.kubernetes.io/name: intelliflow
+    app.kubernetes.io/component: redis
+spec:
+  secretName: intelliflow-redis-tls
+  duration: 8760h
+  renewBefore: 720h
+  subject:
+    organizations:
+      - IntelliFlow
+    organizationalUnits:
+      - Cache Services
+  commonName: intelliflow-redis
+  isCA: false
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    encoding: PKCS8
+    rotationPolicy: Always
+  usages:
+    - server auth
+    - digital signature
+    - key encipherment
+  dnsNames:
+    - redis.intelliflow.local
+    - redis.intelliflow.svc
+    - redis.intelliflow.svc.cluster.local
+    - cache.intelliflow.local
+  issuerRef:
+    name: intelliflow-ca-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+
+---
+# Production Issuer (ACME/Let's Encrypt)
+# Uncomment and configure for production use
+# apiVersion: cert-manager.io/v1
+# kind: ClusterIssuer
+# metadata:
+#   name: intelliflow-letsencrypt-prod
+#   labels:
+#     app.kubernetes.io/name: intelliflow
+#     app.kubernetes.io/component: security
+# spec:
+#   acme:
+#     server: https://acme-v02.api.letsencrypt.org/directory
+#     email: ${ACME_EMAIL}
+#     privateKeySecretRef:
+#       name: letsencrypt-prod-key
+#     solvers:
+#       - http01:
+#           ingress:
+#             class: nginx
+#       - dns01:
+#           cloudflare:
+#             email: ${CLOUDFLARE_EMAIL}
+#             apiTokenSecretRef:
+#               name: cloudflare-api-token
+#               key: api-token
+
+---
+# Certificate Policy for automation
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: intelliflow-cert-policy
+  namespace: intelliflow
+  labels:
+    app.kubernetes.io/name: intelliflow
+    app.kubernetes.io/component: security
+data:
+  policy.yaml: |
+    # Certificate policy configuration
+    policy:
+      # Default settings for all certificates
+      defaults:
+        algorithm: ECDSA
+        key_size: 256
+        duration: 8760h  # 1 year
+        renew_before: 720h  # 30 days
+
+      # Service-specific overrides
+      services:
+        api:
+          duration: 8760h
+          renew_before: 720h
+          usages:
+            - server auth
+            - client auth
+
+        web:
+          duration: 8760h
+          renew_before: 720h
+          usages:
+            - server auth
+
+        ai-worker:
+          duration: 8760h
+          renew_before: 720h
+          usages:
+            - server auth
+            - client auth
+
+      # Validation rules
+      validation:
+        min_key_size: 256
+        allowed_algorithms:
+          - ECDSA
+          - RSA
+        max_duration: 8760h
+        required_usages:
+          - digital signature
+
+      # Rotation settings
+      rotation:
+        enabled: true
+        threshold_percent: 66  # Rotate at 66% of lifetime
+        grace_period: 72h
+
+      # Monitoring
+      monitoring:
+        expiry_warning_days:
+          - 30
+          - 14
+          - 7
+          - 1
+        alert_on_renewal_failure: true
+        metrics_enabled: true
+
+---
+# Certificate Monitoring Alert Rules
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: intelliflow-cert-alerts
+  namespace: intelliflow
+  labels:
+    app.kubernetes.io/name: intelliflow
+    app.kubernetes.io/component: monitoring
+data:
+  alerts.yaml: |
+    groups:
+      - name: certificate-alerts
+        rules:
+          - alert: CertificateExpiringSoon
+            expr: certmanager_certificate_expiration_timestamp_seconds - time() < 86400 * 7
+            for: 1h
+            labels:
+              severity: warning
+            annotations:
+              summary: "Certificate expiring in less than 7 days"
+              description: "Certificate {{ $labels.name }} in namespace {{ $labels.namespace }} expires in less than 7 days"
+
+          - alert: CertificateExpiryCritical
+            expr: certmanager_certificate_expiration_timestamp_seconds - time() < 86400
+            for: 1h
+            labels:
+              severity: critical
+            annotations:
+              summary: "Certificate expiring in less than 24 hours"
+              description: "Certificate {{ $labels.name }} in namespace {{ $labels.namespace }} expires in less than 24 hours"
+
+          - alert: CertificateRenewalFailed
+            expr: increase(certmanager_certificate_renewal_timestamp_seconds[1h]) == 0 and certmanager_certificate_expiration_timestamp_seconds - time() < 86400 * 14
+            for: 1h
+            labels:
+              severity: high
+            annotations:
+              summary: "Certificate renewal may have failed"
+              description: "Certificate {{ $labels.name }} has not renewed and expires soon"
+
+          - alert: CertificateNotReady
+            expr: certmanager_certificate_ready_status{condition="False"} == 1
+            for: 30m
+            labels:
+              severity: high
+            annotations:
+              summary: "Certificate not ready"
+              description: "Certificate {{ $labels.name }} in namespace {{ $labels.namespace }} is not ready"

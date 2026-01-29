@@ -1,0 +1,345 @@
+name: Runtime Path Linting
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'apps/project-tracker/docs/metrics/**/*'
+      - 'artifacts/**/*'
+      - '**/*.log'
+      - '**/*.json'
+      - '**/*.csv'
+      - 'tools/audit/runtime-path-linter.ts'
+      - 'tools/audit/policies/runtime-path-policy.yml'
+      - '.github/workflows/runtime-path-lint.yml'
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch: # Allow manual triggering
+    inputs:
+      strict_mode:
+        description: 'Enable strict mode'
+        required: false
+        default: 'true'
+        type: boolean
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8.15.0'
+
+jobs:
+  lint-runtime-paths:
+    name: Lint Runtime Artifact Paths
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history for drift detection
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run runtime path linter (strict mode)
+        id: lint
+        env:
+          CI: 'true'
+          STRICT_VALIDATION: 'true'
+        run: |
+          echo "Running runtime path linter in STRICT mode..."
+          pnpm tsx tools/audit/runtime-path-linter.ts --strict --format=all > lint-output.txt 2>&1 || echo "LINT_FAILED=true" >> $GITHUB_ENV
+          cat lint-output.txt
+
+      - name: Upload lint results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-path-lint-results
+          path: |
+            lint-output.txt
+            artifacts/reports/runtime-path-lint-report.json
+            artifacts/reports/runtime-path-lint-summary.md
+          retention-days: 30
+
+      - name: Check for violations
+        if: env.LINT_FAILED == 'true'
+        run: |
+          echo "::error::Runtime path violations detected. Please review the lint output above."
+          exit 1
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request' && failure()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+
+            // Read markdown summary if available
+            let summary = '';
+            try {
+              summary = fs.readFileSync('artifacts/reports/runtime-path-lint-summary.md', 'utf8');
+            } catch {
+              // Fallback to text output
+              summary = fs.readFileSync('lint-output.txt', 'utf8');
+            }
+
+            const body = `## 🚨 Runtime Path Linting Failed
+
+            The runtime path linter detected violations in your changes.
+
+            <details>
+            <summary>View Lint Report</summary>
+
+            ${summary.substring(0, 4000)}
+
+            </details>
+
+            ### Common Issues:
+
+            #### Forbidden Paths
+            - **Root-level artifacts**: Move \`.json\`, \`.log\`, \`.csv\` files to \`artifacts/\` directory
+            - **Runtime artifacts in docs/**: Files like \`.lock\`, \`.heartbeat\`, \`.input\` should not be in \`docs/metrics\`
+            - **Logs in source code**: Move \`.log\` files from \`src/\`, \`packages/\`, \`apps/\` to \`artifacts/logs/\`
+
+            #### Duplicate Files
+            - **Sprint_plan.csv**: Must have exactly ONE canonical copy at \`apps/project-tracker/docs/metrics/_global/Sprint_plan.csv\`
+            - **task-registry.json**: Single source of truth at \`apps/project-tracker/docs/metrics/_global/task-registry.json\`
+
+            #### Policy Pending (Migration in Progress)
+            - **docs/artifacts → artifacts/**: Migration deadline approaching
+            - **Local audit runs**: Should be in \`.gitignore\`, not committed
+
+            ### How to Fix:
+
+            1. **Review violations** in the lint report above
+            2. **Run locally**: \`pnpm tsx tools/audit/runtime-path-linter.ts\`
+            3. **Check policy**: See \`tools/audit/policies/runtime-path-policy.yml\`
+            4. **Move files**: Follow the suggested fixes in the lint output
+            5. **Update .gitignore**: Add runtime artifacts to \`.gitignore\`
+            6. **Re-run linter**: Verify all violations are resolved
+
+            ### Documentation:
+
+            - [Runtime Path Policy](../../tools/audit/policies/runtime-path-policy.yml)
+            - [Artifact Conventions](../../docs/architecture/artifact-conventions.md)
+            - [Data Sync Documentation](../../apps/project-tracker/docs/DATA_SYNC.md)
+
+            ---
+            💡 **Tip**: Run \`pnpm tsx tools/audit/runtime-path-linter.ts --verbose\` for detailed output
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+  check-canonical-files:
+    name: Verify Canonical Files
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check Sprint_plan.csv exists
+        run: |
+          if [ ! -f "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv" ]; then
+            echo "::error::Canonical Sprint_plan.csv is missing!"
+            exit 1
+          fi
+          echo "✓ Sprint_plan.csv found"
+
+      - name: Check task-registry.json exists
+        run: |
+          if [ ! -f "apps/project-tracker/docs/metrics/_global/task-registry.json" ]; then
+            echo "::error::Canonical task-registry.json is missing!"
+            exit 1
+          fi
+          echo "✓ task-registry.json found"
+
+      - name: Check for duplicate Sprint_plan.csv
+        run: |
+          DUPLICATES=$(find . -name "Sprint_plan.csv" -not -path "*/node_modules/*" -not -path "*/.git/*" | wc -l)
+          if [ $DUPLICATES -gt 1 ]; then
+            echo "::error::Multiple Sprint_plan.csv files detected:"
+            find . -name "Sprint_plan.csv" -not -path "*/node_modules/*" -not -path "*/.git/*"
+            exit 1
+          fi
+          echo "✓ No duplicates found"
+
+      - name: Check for duplicate task-registry.json
+        run: |
+          DUPLICATES=$(find . -name "task-registry.json" -not -path "*/node_modules/*" -not -path "*/.git/*" | wc -l)
+          if [ $DUPLICATES -gt 1 ]; then
+            echo "::error::Multiple task-registry.json files detected:"
+            find . -name "task-registry.json" -not -path "*/node_modules/*" -not -path "*/.git/*"
+            exit 1
+          fi
+          echo "✓ No duplicates found"
+
+  drift-detection:
+    name: Drift Detection (Ignored Files)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Only run on main/develop to avoid noise in PRs
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Scan ignored files for forbidden patterns
+        env:
+          CI: 'true'
+          STRICT_VALIDATION: 'true'
+        run: |
+          echo "Scanning ignored files for drift detection..."
+          pnpm tsx tools/audit/runtime-path-linter.ts --strict --format=json
+
+          # Extract drift violations from report
+          if [ -f "artifacts/reports/runtime-path-lint-report.json" ]; then
+            DRIFT_COUNT=$(jq '.result.stats.ignored_files_scanned' artifacts/reports/runtime-path-lint-report.json)
+            echo "Scanned $DRIFT_COUNT ignored files"
+
+            # Check for violations in ignored files
+            VIOLATIONS=$(jq '.result.violations | length' artifacts/reports/runtime-path-lint-report.json)
+            if [ $VIOLATIONS -gt 0 ]; then
+              echo "::warning::Found $VIOLATIONS violations in ignored files (drift detection)"
+            fi
+          fi
+
+      - name: Upload drift detection report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: drift-detection-report
+          path: artifacts/reports/runtime-path-lint-report.json
+          retention-days: 14
+
+  validate-gitignore:
+    name: Validate .gitignore Coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check runtime artifacts are ignored
+        run: |
+          # Check if common runtime patterns are in .gitignore
+          MISSING_PATTERNS=""
+
+          if ! grep -q "artifacts/reports/system-audit/local-" .gitignore; then
+            MISSING_PATTERNS="${MISSING_PATTERNS}\n- artifacts/reports/system-audit/local-*"
+          fi
+
+          if ! grep -q "\.heartbeat" .gitignore; then
+            MISSING_PATTERNS="${MISSING_PATTERNS}\n- **/*.heartbeat"
+          fi
+
+          if ! grep -q "\.input" .gitignore; then
+            MISSING_PATTERNS="${MISSING_PATTERNS}\n- **/*.input"
+          fi
+
+          if [ -n "$MISSING_PATTERNS" ]; then
+            echo "::warning::Missing .gitignore patterns:$MISSING_PATTERNS"
+          else
+            echo "✓ All runtime patterns covered"
+          fi
+
+      - name: Check for committed forbidden files
+        run: |
+          # Check for files that should be ignored
+          FORBIDDEN_FILES=""
+
+          # Check for .lock files in docs/metrics
+          if git ls-files | grep -q "apps/project-tracker/docs/metrics/.*\.lock"; then
+            FORBIDDEN_FILES="${FORBIDDEN_FILES}\n- Lock files in docs/metrics"
+          fi
+
+          # Check for .heartbeat files
+          if git ls-files | grep -q "\.heartbeat$"; then
+            FORBIDDEN_FILES="${FORBIDDEN_FILES}\n- Heartbeat files"
+          fi
+
+          # Check for .input files
+          if git ls-files | grep -q "\.input$"; then
+            FORBIDDEN_FILES="${FORBIDDEN_FILES}\n- Input files"
+          fi
+
+          if [ -n "$FORBIDDEN_FILES" ]; then
+            echo "::error::Committed forbidden files:$FORBIDDEN_FILES"
+            exit 1
+          else
+            echo "✓ No forbidden files committed"
+          fi
+
+  summary:
+    name: Summary
+    runs-on: ubuntu-latest
+    needs: [lint-runtime-paths, check-canonical-files, validate-gitignore]
+    if: always()
+
+    steps:
+      - name: Check results
+        run: |
+          if [ "${{ needs.lint-runtime-paths.result }}" != "success" ] || \
+             [ "${{ needs.check-canonical-files.result }}" != "success" ] || \
+             [ "${{ needs.validate-gitignore.result }}" != "success" ]; then
+            echo "::error::One or more runtime path validation checks failed"
+            exit 1
+          fi
+
+          echo "✓ All runtime path validation checks passed"
+
+      - name: Generate job summary
+        if: always()
+        run: |
+          echo "## Runtime Path Lint Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Runtime Path Linting | ${{ needs.lint-runtime-paths.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Canonical Files | ${{ needs.check-canonical-files.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| .gitignore Coverage | ${{ needs.validate-gitignore.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY

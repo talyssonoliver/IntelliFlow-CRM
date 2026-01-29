@@ -1,0 +1,283 @@
+# OWASP Dependency-Check Configuration
+# Identifies project dependencies and checks for known vulnerabilities
+# Reference: https://jeremylong.github.io/DependencyCheck/
+
+# Suppression file (optional)
+# suppressionFile: dependency-check-suppressions.xml
+
+# Project information
+project:
+  name: 'IntelliFlow CRM'
+  version: '0.1.0'
+  description: 'AI-powered CRM system with modern stack'
+
+# Scan configuration
+scan:
+  # Path to scan
+  path: '.'
+
+  # File extensions to scan
+  extensions:
+    - js
+    - ts
+    - jsx
+    - tsx
+    - json
+    - yaml
+    - yml
+
+  # Directories to exclude from scanning
+  exclude:
+    - '**/node_modules/**'
+    - '**/dist/**'
+    - '**/build/**'
+    - '**/.next/**'
+    - '**/.turbo/**'
+    - '**/coverage/**'
+    - '**/test/**'
+    - '**/tests/**'
+    - '**/__tests__/**'
+    - '**/*.test.ts'
+    - '**/*.spec.ts'
+    - '**/*.test.tsx'
+    - '**/*.spec.tsx'
+
+# Analyzers configuration
+analyzers:
+  # Node.js specific analyzers
+  node:
+    enabled: true
+    package-lock: true
+    pnpm-lock: true
+    yarn-lock: false
+
+  # Retire.js for JavaScript libraries
+  retirejs:
+    enabled: true
+    filters: []
+    filterNonVulnerable: false
+
+  # Archive analyzers
+  jar:
+    enabled: false
+  assembly:
+    enabled: false
+  nuspec:
+    enabled: false
+  central:
+    enabled: false
+
+  # Other analyzers
+  experimental:
+    enabled: false
+  autoconf:
+    enabled: false
+  cmake:
+    enabled: false
+  bundle:
+    enabled: false
+  cocoapods:
+    enabled: false
+  swift:
+    enabled: false
+  go:
+    enabled: false
+  msbuild:
+    enabled: false
+
+# Data source configuration
+data:
+  # NVD (National Vulnerability Database) API
+  nvd:
+    # API key for NVD (set via environment variable NVD_API_KEY)
+    # Get free API key from: https://nvd.nist.gov/developers/request-an-api-key
+    apiKey: '${NVD_API_KEY}'
+
+    # Delay between requests in milliseconds (2000ms = 0.5 requests/second for free tier)
+    delay: 2000
+
+    # Maximum number of retry attempts
+    maxRetryCount: 3
+
+    # Datafeed URLs
+    datafeedUrl: 'https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-%d.json.gz'
+    datafeedValidForHours: 4
+
+  # Local database directory
+  directory: '${HOME}/.dependency-check/data'
+
+  # Database connection (use embedded H2 by default)
+  # connectionString: "jdbc:h2:file:%s;AUTOCOMMIT=ON;MV_STORE=FALSE;"
+
+  # Database driver
+  # driver: "org.h2.Driver"
+
+  # Database update settings
+  autoUpdate: true
+  updateOnly: false
+
+# Vulnerability filtering
+vulnerability:
+  # CVSS score threshold (0-10)
+  # Only report vulnerabilities with CVSS score >= threshold
+  failOnCVSS: 7.0
+
+  # Suppression file for false positives
+  # suppressionFile: "dependency-check-suppressions.xml"
+
+  # Hints file for analysis hints
+  # hintsFile: "dependency-check-hints.xml"
+
+# Reporting configuration
+report:
+  # Output formats (HTML, XML, JSON, CSV, ALL)
+  format:
+    - HTML
+    - JSON
+    - XML
+    - SARIF
+
+  # Output directory
+  outputDirectory: 'artifacts/reports/dependency-check'
+
+  # Report name prefix
+  name: 'dependency-check-report'
+
+  # Pretty print JSON output
+  prettyPrint: true
+
+  # Include verbose output
+  # verbose: false
+
+# Advanced settings
+advanced:
+  # Enable experimental features
+  enableExperimental: false
+
+  # Enable retired dependencies detection
+  enableRetired: true
+
+  # Working directory for temporary files
+  # workingDirectory: "./dependency-check-work"
+
+  # Disable all auto-updates
+  # noupdate: false
+
+  # Skip dependencies with no version information
+  skipTestScope: true
+
+# CVE modification settings
+cve:
+  # Start year for CVE checks (reduce data download size)
+  # startYear: 2020
+
+  # URL template for CVE links
+  urlModified: 'https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-modified.json.gz'
+  urlBase: 'https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-%d.json.gz'
+
+  # Check using modified feed
+  checkModified: true
+
+# Proxy settings (if needed)
+# proxy:
+#   server: "proxy.example.com"
+#   port: 8080
+#   username: ""
+#   password: ""
+#   nonProxyHosts: ""
+
+# Logging
+log:
+  level: INFO # TRACE, DEBUG, INFO, WARN, ERROR
+  # file: "dependency-check.log"
+
+# Node Security Platform (NSP) settings
+nsp:
+  enabled: false
+
+# OSS Index settings (Sonatype)
+ossIndex:
+  enabled: true
+  # username: ""
+  # password: ""
+  warnOnlyOnRemoteErrors: false
+
+# Central analyzer (Maven Central)
+central:
+  enabled: false
+
+# Nexus analyzer
+nexus:
+  enabled: false
+  # url: "https://nexus.example.com"
+  # usesProxy: true
+
+# Artifactory analyzer
+artifactory:
+  enabled: false
+  # url: "https://artifactory.example.com"
+  # usesProxy: true
+  # bearerToken: ""
+
+# IntelliFlow CRM Specific Configuration
+
+# CI/CD Integration
+ci:
+  # Fail build on vulnerabilities
+  failBuildOnCVSS: 7.0
+
+  # Maximum allowed vulnerabilities by severity
+  maxAllowed:
+    critical: 0
+    high: 5
+    medium: 20
+    low: 50
+
+  # Auto-create issues for vulnerabilities
+  autoCreateIssues: true
+
+  # Integration with GitHub Security Advisories
+  githubAdvisories: true
+
+# Notification settings
+notifications:
+  # Enable notifications
+  enabled: true
+
+  # Channels (configure in CI/CD)
+  # channels:
+  #   - slack
+  #   - email
+  #   - teams
+
+# Dependency sources to scan
+dependencySources:
+  - pnpm-lock.yaml
+  - package.json
+  - apps/*/package.json
+  - packages/*/package.json
+
+# Custom CVE suppressions (examples)
+# suppressions:
+#   - cve: CVE-2023-XXXXX
+#     reason: "False positive - not applicable to our use case"
+#     until: "2024-12-31"
+#
+#   - cve: CVE-2024-XXXXX
+#     reason: "Mitigated by infrastructure controls"
+#     until: "2025-01-31"
+
+# Performance tuning
+performance:
+  # Number of hours to wait before checking for updates
+  cveValidForHours: 4
+
+  # Batch size for NVD API requests
+  batchSize: 100
+
+# Metadata
+metadata:
+  createdBy: 'ENV-014-AI'
+  createdDate: '2025-12-15'
+  purpose: 'Sprint 0 - Security Scanning Setup'
+  taskId: 'ENV-014-AI'

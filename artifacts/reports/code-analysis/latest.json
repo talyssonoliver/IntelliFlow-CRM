@@ -1,0 +1,29 @@
+{
+  "timestamp": "2026-01-09T23:13:08.223Z",
+  "knip": {
+    "success": false,
+    "error": "Command failed: npx knip --reporter json --exclude unlisted,unresolved\nnpm warn Unknown env config \"global-bin-dir\". This will stop working in the next major version of npm.\nnode:internal/modules/run_main:122\r\n    triggerUncaughtException(\r\n    ^\r\n\r\nTypeError [ERR_INVALID_ARG_VALUE]: The argument 'path' must be a string, Uint8Array, or URL without null bytes. Received 'C:\\\\taly\\\\intelliFlow-CRM\\\\!**\\\\��N\\x00U\\x00L\\x00\\r\\x00'\r\n    at Object.lstat (node:fs:1633:10)\r\n    at Object.read (C:\\taly\\intelliFlow-CRM\\node_modules\\.pnpm\\@nodelib+fs.stat@2.0.5\\node_modules\\@nodelib\\fs.stat\\out\\providers\\async.js:5:17)\r\n    at ReaderStream.stat [as _stat] (C:\\taly\\intelliFlow-CRM\\node_modules\\.pnpm\\@nodelib+fs.stat@2.0.5\\node_modules\\@nodelib\\fs.stat\\out\\index.js:13:11)\r\n    at C:\\taly\\intelliFlow-CRM\\node_modules\\.pnpm\\fast-glob@3.3.3\\node_modules\\fast-glob\\out\\readers\\stream.js:49:18\r\n    at new Promise (<anonymous>)\r\n    at ReaderStream._getStat (C:\\taly\\intelliFlow-CRM\\node_modules\\.pnpm\\fast-glob@3.3.3\\node_modules\\fast-glob\\out\\readers\\stream.js:48:16)\r\n    at ReaderStream._getEntry (C:\\taly\\intelliFlow-CRM\\node_modules\\.pnpm\\fast-glob@3.3.3\\node_modules\\fast-glob\\out\\readers\\stream.js:38:21)\r\n    at stream._write (C:\\taly\\intelliFlow-CRM\\node_modules\\.pnpm\\fast-glob@3.3.3\\node_modules\\fast-glob\\out\\readers\\stream.js:20:25)\r\n    at doWrite (node:internal/streams/writable:598:12)\r\n    at clearBuffer (node:internal/streams/writable:783:7) {\r\n  code: 'ERR_INVALID_ARG_VALUE'\r\n}\r\n\r\nNode.js v22.14.0\r\n"
+  },
+  "depcheck": {
+    "success": true,
+    "data": {
+      "dependencies": [],
+      "devDependencies": [
+        "@vitest/coverage-v8",
+        "cspell",
+        "dependency-cruiser",
+        "license-checker",
+        "madge",
+        "markdownlint-cli",
+        "ts-node",
+        "ts-prune"
+      ],
+      "missing": {}
+    },
+    "summary": {
+      "unusedDeps": 0,
+      "unusedDevDeps": 8,
+      "missingDeps": 0
+    }
+  }
+}

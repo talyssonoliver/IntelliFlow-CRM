@@ -1,0 +1,79 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "GOV-001",
+  "section": "Governance",
+  "description": "Architecture Governance Pack (ADR + ARP templates, decision workflow, flowcharts)",
+  "owner": "Tech Lead + PM",
+  "dependencies": {
+    "required": [
+      "ENG-OPS-001"
+    ],
+    "verified_at": "2026-01-29T01:33:17.604Z",
+    "all_satisfied": true
+  },
+  "status": "DONE",
+  "status_history": [
+    {
+      "status": "PLANNED",
+      "at": "2025-12-20T00:00:00Z"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "at": "2025-12-21T12:00:00Z"
+    },
+    {
+      "status": "DONE",
+      "at": "2025-12-21T14:00:00Z"
+    }
+  ],
+  "execution": {
+    "started_at": "2025-12-21T12:00:00Z",
+    "completed_at": "2025-12-21T14:00:00Z",
+    "duration_minutes": 120,
+    "executor": "claude-opus-4.5",
+    "execution_log": "logs/sprint-1/GOV-001.log"
+  },
+  "artifacts": {
+    "expected": [
+      "docs/architecture/adr/000-template.md",
+      "docs/architecture/decision-workflow.md"
+    ],
+    "created": [
+      "docs/architecture/adr/000-template.md",
+      "docs/architecture/decision-workflow.md"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "adr_template_exists",
+      "command": "test -f docs/architecture/adr/000-template.md",
+      "passed": true,
+      "exit_code": 0,
+      "executed_at": "2025-12-21T14:00:00Z",
+      "timestamp": "2025-12-27T11:33:39.127Z"
+    }
+  ],
+  "kpis": {
+    "templates_created": {
+      "target": true,
+      "actual": true,
+      "met": true,
+      "unit": "boolean"
+    },
+    "workflow_documented": {
+      "target": true,
+      "actual": true,
+      "met": true,
+      "unit": "boolean"
+    }
+  },
+  "blockers": [],
+  "notes": "Governance pack with ADR templates, ARP templates, and decision workflows.",
+  "completed_at": "2025-12-27T11:33:39.127Z",
+  "started_at": "2025-12-27T11:18:39.127Z",
+  "actual_duration_minutes": 15,
+  "dependencies_resolved": [
+    "ENG-OPS-001"
+  ]
+}

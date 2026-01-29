@@ -1,0 +1,53 @@
+Risk ID,Category,Description,Likelihood (1-5),Impact (1-5),Score,Mitigation Strategy,Owner,Status,Review Date,Escalation Path,Evidence,Notes
+RISK-001,Technology,LangChain API breaking changes may disrupt AI chains,4,4,16,Version pinning at 0.3.x; abstraction layer via ports pattern; weekly release note monitoring; fallback to direct API calls,Tech Lead,Mitigated,2025-01-15,CTO if migration required > 5 days,apps/ai-worker/package.json shows pinned versions,LangChain releases frequently; abstraction is key
+RISK-002,Vendor,Supabase vendor lock-in could limit migration options,2,3,6,Prisma ORM abstracts database; standard PostgreSQL features only; export scripts documented in runbook; migration path in ADR-001,DevOps Lead,Mitigated,2025-03-01,CTO for strategic vendor decisions,docs/planning/adr/001-supabase-choice.md,Migration path documented and tested
+RISK-003,Team,Learning curve for modern stack slows delivery,3,2,6,Training plan executed; pair programming mandatory; comprehensive documentation; team confidence survey,PM,Mitigated,2025-02-01,Scrum Master for resource allocation,artifacts/reports/confidence-survey.md shows 81.2%,Team confidence improving sprint-over-sprint
+RISK-004,Cost,AI API costs exceed monthly budget thresholds,3,4,12,Ollama for development environments; usage monitoring dashboard; alerts at $100/mo; cost optimization playbook,DevOps Lead,Monitored,2025-01-20,CFO if > $500/mo projected,artifacts/reports/weekly-cost-report.csv,Daily tracking active; current spend within budget
+RISK-005,Performance,Application response times exceed SLA targets,2,3,6,Performance benchmarks in CI; automated alerting at p95 thresholds; pre-prod load testing,Performance Eng,Mitigated,2025-02-15,Tech Lead if p99 > 300ms,artifacts/benchmarks/ reports,Current p99 at 92ms (target <200ms)
+RISK-006,Security,Authentication bypass vulnerability exposes user data,5,1,5,Supabase Auth with JWT validation; RLS policies on all tables; quarterly penetration testing; bug bounty planned,Security Lead,Mitigated,2025-02-01,CISO for critical findings,docs/security/zero-trust-design.md,Zero critical vulnerabilities in last scan
+RISK-007,Security,SQL injection attacks compromise database,5,1,5,Prisma parameterized queries only; Zod input validation on all endpoints; SAST scanning in CI,Security Lead,Mitigated,2025-02-01,CISO for any injection vector found,SAST scan reports in CI,Prisma eliminates raw SQL
+RISK-008,Compliance,GDPR non-compliance leads to regulatory action,3,5,15,Data governance policies defined; consent management in Sprint 12; audit trail on all PII access; DPIA drafted,Compliance Lead,In Progress,2025-04-01,Legal counsel for compliance gaps,artifacts/reports/gdpr-compliance.md,Phase 2 data subject rights in Sprint 12
+RISK-009,Infrastructure,Single region deployment causes availability issues,3,3,9,Blue-green deployment configured; rollback under 5 minutes; multi-region DR planned Sprint 20,DevOps Lead,Accepted,2025-06-01,CTO for regional expansion approval,infra/terraform/ multi-region plans,Accepted for MVP; DR is roadmap item
+RISK-010,Dependency,Vulnerable npm packages introduce security flaws,3,4,12,pnpm audit in CI with fail on high; Snyk integration; automated dependency PRs; weekly review,DevOps Lead,Mitigated,Weekly,Security Lead for critical CVEs,CI pipeline audit logs,Continuous monitoring with auto-remediation
+RISK-011,AI,LLM hallucination produces incorrect lead scores,3,4,12,Human-in-the-loop for scores > 80 or < 20; confidence thresholds at 70%; audit logging all predictions,AI Lead,Mitigated,2025-01-25,Product Owner for business impact,apps/ai-worker/src/chains/scoring.chain.ts,Zod schema validation on all outputs
+RISK-012,AI,CrewAI agent coordination failures block workflows,2,3,6,Retry logic with exponential backoff; fallback to single-agent mode; circuit breaker pattern,AI Lead,Mitigated,2025-02-15,Tech Lead if failures > 5%,Error monitoring dashboards,Graceful degradation implemented
+RISK-013,Scalability,Database connection pool exhaustion under load,2,4,8,Supabase connection pooling enabled; auto-scaling tier ready; connection monitoring,Backend Lead,Mitigated,2025-03-01,DevOps for scaling triggers,Supabase dashboard metrics,Current usage at 10% capacity
+RISK-014,Development,TypeScript strict mode adoption causes friction,1,2,2,Gradual migration complete; team training done; automated fixes in IDE,Tech Lead,Mitigated,2025-01-15,None - fully resolved,tsconfig.json strict mode enabled,99% type coverage achieved
+RISK-015,Integration,Third-party API rate limits block operations,2,3,6,Rate limiting middleware; Redis caching layer; exponential backoff; usage quotas,Backend Lead,Mitigated,2025-02-15,Vendor support for quota increases,packages/adapters/src/rate-limiter.ts,Rate limiting implemented
+RISK-016,Business,Competitor launches similar AI CRM product,3,4,12,Accelerated MVP timeline; focus on AI differentiation; weekly competitor analysis; unique value props,PM,Monitored,Weekly,CEO for strategic pivot decisions,Competitor tracking dashboard,Tracking 5 main competitors
+RISK-017,Resource,Key developer departure creates knowledge gap,2,4,8,Comprehensive documentation; knowledge sharing sessions; pair programming; no single owners,PM,Mitigated,2025-03-01,HR for retention strategies,docs/ knowledge base,Cross-training complete for all domains
+RISK-018,Deployment,CI/CD pipeline failures block releases,1,3,3,Multi-stage pipelines with retry; automated rollback; PagerDuty alerts; runbooks,DevOps Lead,Mitigated,2025-02-01,Tech Lead for pipeline redesign,.github/workflows/ success rate,99.9% pipeline success rate
+RISK-019,Testing,Insufficient test coverage misses regressions,2,3,6,90% coverage threshold enforced in CI; mutation testing quarterly; TDD guidelines,QA Lead,Mitigated,2025-02-15,Tech Lead for coverage exceptions,artifacts/coverage/ reports,Current coverage at 92%
+RISK-020,Architecture,Hexagonal boundary violations create coupling,2,3,6,Architecture tests in CI; dependency-cruiser rules; code review checklist item,Tech Lead,Mitigated,2025-02-01,None - automated enforcement,packages/architecture-tests/,Automated enforcement active
+RISK-021,Sprint Execution,Swarm orchestration errors cause task failures,3,3,9,Blocker detection and human escalation; qualitative review gates; attestation verification,STOA-Foundation,Monitored,Per Sprint,PM for pattern of failures,artifacts/blockers.json,Continuous monitoring during sprints
+RISK-022,Metrics,Fabricated metrics undermine project tracking,4,1,4,SHA256 hash verification; stdout capture; attestation JSON schemas; automated validation,STOA-Quality,Mitigated,2025-01-20,PM for validation failures,apps/project-tracker/docs/metrics/,Schema enforcement active
+RISK-023,AI Governance,AI outputs not reviewed before customer impact,4,2,8,Human-in-the-loop mandatory; review checklist; confidence thresholds; audit logging,STOA-Intelligence,Mitigated,2025-02-01,AI Lead for process violations,docs/shared/ai-review-checklist.md,Review process documented
+RISK-024,Budget,Sprint overruns exceed approved investment gates,3,4,12,Gate reviews at IFC-010/019/027/034/049; weekly cost tracking; automatic alerts,PM,Monitored,Weekly,CFO for budget reallocation,artifacts/reports/budget-approval.md,Gate 1 passed; tracking to Gate 2
+RISK-025,Data,Data migration errors corrupt production data,5,2,10,Migration scripts tested in staging; rollback procedures; data validation checksums,Backend Lead,Mitigated,2025-03-01,DBA for corruption incidents,scripts/migration/,Dry-run validation on all migrations
+
+Risk Score Legend
+Score Range,Classification,Action Required
+20-25,Critical,Immediate escalation and mitigation
+15-19,High,Active mitigation plan required
+10-14,Medium,Monitoring and documented mitigation
+5-9,Low,Documented acceptance or mitigation
+1-4,Minimal,Track only
+
+Summary Statistics
+Total Risks,25
+Critical (20-25),0
+High (15-19),1
+Medium (10-14),7
+Low (5-9),13
+Minimal (1-4),4
+
+Risk Status Distribution
+Mitigated,18
+Monitored,5
+In Progress,1
+Accepted,1
+
+Overall Risk Profile,LOW-MEDIUM
+Assessment Date,2025-12-28
+Next Review Date,2025-01-15
+Assessor,STOA-Foundation

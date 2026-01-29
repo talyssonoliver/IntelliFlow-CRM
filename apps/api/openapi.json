@@ -1,0 +1,575 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "IntelliFlow CRM API",
+    "description": "Type-safe tRPC API for IntelliFlow CRM. This OpenAPI specification documents the REST-compatible endpoints generated from the tRPC router.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "IntelliFlow Team",
+      "email": "support@intelliflow-crm.com"
+    },
+    "license": {
+      "name": "Proprietary",
+      "url": "https://intelliflow-crm.com/terms"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3001",
+      "description": "Development server"
+    },
+    {
+      "url": "https://api.intelliflow-crm.com",
+      "description": "Production server"
+    }
+  ],
+  "tags": [
+    { "name": "Lead", "description": "Lead management operations" },
+    { "name": "Contact", "description": "Contact management operations" },
+    { "name": "Account", "description": "Account management operations" },
+    { "name": "Opportunity", "description": "Opportunity/deal management" },
+    { "name": "Task", "description": "Task management operations" },
+    { "name": "Ticket", "description": "Support ticket management" },
+    { "name": "Analytics", "description": "Dashboard analytics and metrics" },
+    { "name": "Agent", "description": "AI agent tools and approvals" },
+    { "name": "Audit", "description": "Audit logs and security events" },
+    { "name": "System", "description": "Health checks and system info" }
+  ],
+  "paths": {
+    "/trpc/lead.create": {
+      "post": {
+        "tags": ["Lead"],
+        "summary": "Create a new lead",
+        "description": "Creates a new lead with tenant isolation. Requires authentication.",
+        "operationId": "leadCreate",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateLeadInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Lead created successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LeadResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/trpc/lead.getById": {
+      "get": {
+        "tags": ["Lead"],
+        "summary": "Get a lead by ID",
+        "operationId": "leadGetById",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lead found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LeadResponse" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/trpc/lead.list": {
+      "get": {
+        "tags": ["Lead"],
+        "summary": "List leads with filtering and pagination",
+        "operationId": "leadList",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } },
+          { "name": "status", "in": "query", "schema": { "type": "array", "items": { "$ref": "#/components/schemas/LeadStatus" } } },
+          { "name": "source", "in": "query", "schema": { "type": "array", "items": { "$ref": "#/components/schemas/LeadSource" } } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "minScore", "in": "query", "schema": { "type": "integer", "minimum": 0, "maximum": 100 } },
+          { "name": "maxScore", "in": "query", "schema": { "type": "integer", "minimum": 0, "maximum": 100 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated lead list",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LeadListResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trpc/lead.update": {
+      "post": {
+        "tags": ["Lead"],
+        "summary": "Update a lead",
+        "operationId": "leadUpdate",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateLeadInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Lead updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LeadResponse" } } } },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/trpc/lead.delete": {
+      "post": {
+        "tags": ["Lead"],
+        "summary": "Delete a lead",
+        "operationId": "leadDelete",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "properties": { "id": { "type": "string", "format": "uuid" } }, "required": ["id"] } } }
+        },
+        "responses": {
+          "200": { "description": "Lead deleted" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/trpc/lead.qualify": {
+      "post": {
+        "tags": ["Lead"],
+        "summary": "Qualify a lead",
+        "operationId": "leadQualify",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/QualifyLeadInput" } } }
+        },
+        "responses": {
+          "200": { "description": "Lead qualified", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LeadResponse" } } } }
+        }
+      }
+    },
+    "/trpc/lead.convert": {
+      "post": {
+        "tags": ["Lead"],
+        "summary": "Convert lead to contact",
+        "operationId": "leadConvert",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ConvertLeadInput" } } }
+        },
+        "responses": {
+          "200": { "description": "Lead converted", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ConvertLeadResponse" } } } }
+        }
+      }
+    },
+    "/trpc/lead.scoreWithAI": {
+      "post": {
+        "tags": ["Lead"],
+        "summary": "Score lead with AI",
+        "operationId": "leadScoreWithAI",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "properties": { "leadId": { "type": "string", "format": "uuid" } }, "required": ["leadId"] } } }
+        },
+        "responses": {
+          "200": { "description": "AI scoring result", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AIScoreResponse" } } } }
+        }
+      }
+    },
+    "/trpc/lead.stats": {
+      "get": {
+        "tags": ["Lead"],
+        "summary": "Get lead statistics",
+        "operationId": "leadStats",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Lead statistics", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LeadStatsResponse" } } } }
+        }
+      }
+    },
+    "/trpc/contact.create": {
+      "post": {
+        "tags": ["Contact"],
+        "summary": "Create a new contact",
+        "operationId": "contactCreate",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateContactInput" } } } },
+        "responses": { "200": { "description": "Contact created" } }
+      }
+    },
+    "/trpc/contact.list": {
+      "get": {
+        "tags": ["Contact"],
+        "summary": "List contacts with filtering",
+        "operationId": "contactList",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Contact list" } }
+      }
+    },
+    "/trpc/account.create": {
+      "post": {
+        "tags": ["Account"],
+        "summary": "Create a new account",
+        "operationId": "accountCreate",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateAccountInput" } } } },
+        "responses": { "200": { "description": "Account created" } }
+      }
+    },
+    "/trpc/account.list": {
+      "get": {
+        "tags": ["Account"],
+        "summary": "List accounts",
+        "operationId": "accountList",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Account list" } }
+      }
+    },
+    "/trpc/opportunity.create": {
+      "post": {
+        "tags": ["Opportunity"],
+        "summary": "Create a new opportunity",
+        "operationId": "opportunityCreate",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateOpportunityInput" } } } },
+        "responses": { "200": { "description": "Opportunity created" } }
+      }
+    },
+    "/trpc/opportunity.list": {
+      "get": {
+        "tags": ["Opportunity"],
+        "summary": "List opportunities",
+        "operationId": "opportunityList",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Opportunity list" } }
+      }
+    },
+    "/trpc/opportunity.updateStage": {
+      "post": {
+        "tags": ["Opportunity"],
+        "summary": "Update opportunity stage",
+        "operationId": "opportunityUpdateStage",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Stage updated" } }
+      }
+    },
+    "/trpc/task.create": {
+      "post": {
+        "tags": ["Task"],
+        "summary": "Create a new task",
+        "operationId": "taskCreate",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateTaskInput" } } } },
+        "responses": { "200": { "description": "Task created" } }
+      }
+    },
+    "/trpc/task.list": {
+      "get": {
+        "tags": ["Task"],
+        "summary": "List tasks",
+        "operationId": "taskList",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Task list" } }
+      }
+    },
+    "/trpc/ticket.create": {
+      "post": {
+        "tags": ["Ticket"],
+        "summary": "Create a support ticket",
+        "operationId": "ticketCreate",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Ticket created" } }
+      }
+    },
+    "/trpc/ticket.list": {
+      "get": {
+        "tags": ["Ticket"],
+        "summary": "List tickets",
+        "operationId": "ticketList",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Ticket list" } }
+      }
+    },
+    "/trpc/analytics.dashboard": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Get dashboard analytics",
+        "operationId": "analyticsDashboard",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Dashboard metrics" } }
+      }
+    },
+    "/trpc/agent.listPending": {
+      "get": {
+        "tags": ["Agent"],
+        "summary": "List pending AI approvals",
+        "operationId": "agentListPending",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Pending approvals" } }
+      }
+    },
+    "/trpc/agent.approve": {
+      "post": {
+        "tags": ["Agent"],
+        "summary": "Approve AI action",
+        "operationId": "agentApprove",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Approved" } }
+      }
+    },
+    "/trpc/audit.list": {
+      "get": {
+        "tags": ["Audit"],
+        "summary": "List audit events",
+        "operationId": "auditList",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Audit events" } }
+      }
+    },
+    "/trpc/health.check": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Health check",
+        "operationId": "healthCheck",
+        "responses": { "200": { "description": "System healthy" } }
+      }
+    },
+    "/trpc/system.info": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Get system information",
+        "operationId": "systemInfo",
+        "responses": { "200": { "description": "System info" } }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "LeadStatus": {
+        "type": "string",
+        "enum": ["NEW", "CONTACTED", "QUALIFIED", "UNQUALIFIED", "CONVERTED"]
+      },
+      "LeadSource": {
+        "type": "string",
+        "enum": ["WEBSITE", "REFERRAL", "COLD_CALL", "TRADE_SHOW", "PARTNER", "OTHER"]
+      },
+      "CreateLeadInput": {
+        "type": "object",
+        "required": ["email", "firstName", "lastName"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "firstName": { "type": "string", "minLength": 1 },
+          "lastName": { "type": "string", "minLength": 1 },
+          "phone": { "type": "string" },
+          "company": { "type": "string" },
+          "title": { "type": "string" },
+          "source": { "$ref": "#/components/schemas/LeadSource" }
+        }
+      },
+      "UpdateLeadInput": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "phone": { "type": "string" },
+          "company": { "type": "string" },
+          "title": { "type": "string" },
+          "status": { "$ref": "#/components/schemas/LeadStatus" }
+        }
+      },
+      "QualifyLeadInput": {
+        "type": "object",
+        "required": ["leadId"],
+        "properties": {
+          "leadId": { "type": "string", "format": "uuid" },
+          "reason": { "type": "string" }
+        }
+      },
+      "ConvertLeadInput": {
+        "type": "object",
+        "required": ["leadId"],
+        "properties": {
+          "leadId": { "type": "string", "format": "uuid" },
+          "createAccount": { "type": "boolean", "default": false },
+          "accountName": { "type": "string" }
+        }
+      },
+      "LeadResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "email": { "type": "string", "format": "email" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "phone": { "type": "string" },
+          "company": { "type": "string" },
+          "title": { "type": "string" },
+          "status": { "$ref": "#/components/schemas/LeadStatus" },
+          "source": { "$ref": "#/components/schemas/LeadSource" },
+          "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "LeadListResponse": {
+        "type": "object",
+        "properties": {
+          "leads": { "type": "array", "items": { "$ref": "#/components/schemas/LeadResponse" } },
+          "total": { "type": "integer" },
+          "page": { "type": "integer" },
+          "limit": { "type": "integer" },
+          "hasMore": { "type": "boolean" }
+        }
+      },
+      "ConvertLeadResponse": {
+        "type": "object",
+        "properties": {
+          "contact": { "type": "object" },
+          "account": { "type": "object" }
+        }
+      },
+      "AIScoreResponse": {
+        "type": "object",
+        "properties": {
+          "leadId": { "type": "string", "format": "uuid" },
+          "previousScore": { "type": "integer" },
+          "score": { "type": "integer" },
+          "confidence": { "type": "number" },
+          "tier": { "type": "string", "enum": ["HOT", "WARM", "COLD"] },
+          "autoQualified": { "type": "boolean" },
+          "autoDisqualified": { "type": "boolean" }
+        }
+      },
+      "LeadStatsResponse": {
+        "type": "object",
+        "properties": {
+          "total": { "type": "integer" },
+          "byStatus": { "type": "object", "additionalProperties": { "type": "integer" } },
+          "averageScore": { "type": "number" },
+          "hotLeads": { "type": "integer" },
+          "warmLeads": { "type": "integer" },
+          "coldLeads": { "type": "integer" }
+        }
+      },
+      "CreateContactInput": {
+        "type": "object",
+        "required": ["email", "firstName", "lastName"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "phone": { "type": "string" },
+          "accountId": { "type": "string", "format": "uuid" }
+        }
+      },
+      "CreateAccountInput": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "industry": { "type": "string" },
+          "website": { "type": "string", "format": "uri" },
+          "phone": { "type": "string" }
+        }
+      },
+      "CreateOpportunityInput": {
+        "type": "object",
+        "required": ["name", "amount"],
+        "properties": {
+          "name": { "type": "string" },
+          "amount": { "type": "number" },
+          "stage": { "type": "string" },
+          "closeDate": { "type": "string", "format": "date" },
+          "accountId": { "type": "string", "format": "uuid" },
+          "contactId": { "type": "string", "format": "uuid" }
+        }
+      },
+      "CreateTaskInput": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "dueDate": { "type": "string", "format": "date-time" },
+          "priority": { "type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "URGENT"] },
+          "relatedToType": { "type": "string" },
+          "relatedToId": { "type": "string", "format": "uuid" }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Bad request - validation error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": { "type": "object", "properties": { "message": { "type": "string" }, "code": { "type": "string" } } }
+              }
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Unauthorized - authentication required",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": { "type": "object", "properties": { "message": { "type": "string" }, "code": { "type": "string", "enum": ["UNAUTHORIZED"] } } }
+              }
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": { "type": "object", "properties": { "message": { "type": "string" }, "code": { "type": "string", "enum": ["NOT_FOUND"] } } }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

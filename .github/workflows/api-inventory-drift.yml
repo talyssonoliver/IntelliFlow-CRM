@@ -1,0 +1,119 @@
+name: API Inventory Drift Detection
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'apps/api/src/modules/**/*.router.ts'
+      - 'artifacts/benchmarks/baseline.json'
+      - 'tools/scripts/sync-api-inventory.ts'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'apps/api/src/modules/**/*.router.ts'
+      - 'artifacts/benchmarks/baseline.json'
+      - 'tools/scripts/sync-api-inventory.ts'
+  schedule:
+    # Run daily at 6 AM UTC to detect drift
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8.15.0'
+
+jobs:
+  detect-drift:
+    name: Detect API Inventory Drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Save original baseline hash
+        id: original
+        run: |
+          ORIGINAL_HASH=$(sha256sum artifacts/benchmarks/baseline.json | cut -d' ' -f1)
+          echo "hash=$ORIGINAL_HASH" >> $GITHUB_OUTPUT
+
+      - name: Sync API inventory from router files
+        run: pnpm run sync:api-inventory
+
+      - name: Check for drift
+        id: drift-check
+        run: |
+          NEW_HASH=$(sha256sum artifacts/benchmarks/baseline.json | cut -d' ' -f1)
+          echo "new_hash=$NEW_HASH" >> $GITHUB_OUTPUT
+
+          if [ "${{ steps.original.outputs.hash }}" != "$NEW_HASH" ]; then
+            echo "drift_detected=true" >> $GITHUB_OUTPUT
+            echo "::error::API inventory drift detected! baseline.json is out of sync with router files."
+            echo ""
+            echo "=== DIFF ==="
+            git diff artifacts/benchmarks/baseline.json || true
+          else
+            echo "drift_detected=false" >> $GITHUB_OUTPUT
+            echo "::notice::API inventory is in sync with router files."
+          fi
+
+      - name: Extract inventory stats
+        id: stats
+        run: |
+          ROUTERS=$(jq -r '.api_inventory.total_routers' artifacts/benchmarks/baseline.json)
+          ENDPOINTS=$(jq -r '.api_inventory.total_endpoints' artifacts/benchmarks/baseline.json)
+          QUERIES=$(jq -r '.api_inventory.total_queries' artifacts/benchmarks/baseline.json)
+          MUTATIONS=$(jq -r '.api_inventory.total_mutations' artifacts/benchmarks/baseline.json)
+
+          echo "routers=$ROUTERS" >> $GITHUB_OUTPUT
+          echo "endpoints=$ENDPOINTS" >> $GITHUB_OUTPUT
+          echo "queries=$QUERIES" >> $GITHUB_OUTPUT
+          echo "mutations=$MUTATIONS" >> $GITHUB_OUTPUT
+
+      - name: Generate summary
+        run: |
+          echo "## API Inventory Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.drift-check.outputs.drift_detected }}" == "true" ]; then
+            echo ":x: **Drift Detected**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "The API inventory in \`baseline.json\` does not match the actual router files." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### To fix:" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+            echo "pnpm run sync:api-inventory" >> $GITHUB_STEP_SUMMARY
+            echo "git add artifacts/benchmarks/baseline.json" >> $GITHUB_STEP_SUMMARY
+            echo "git commit -m \"chore: sync API inventory\"" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo ":white_check_mark: **No Drift - API Inventory is in sync**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Current API Inventory" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Total Routers | ${{ steps.stats.outputs.routers }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Total Endpoints | ${{ steps.stats.outputs.endpoints }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Queries (GET) | ${{ steps.stats.outputs.queries }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Mutations (POST) | ${{ steps.stats.outputs.mutations }} |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail if drift detected
+        if: steps.drift-check.outputs.drift_detected == 'true'
+        run: |
+          echo "API inventory drift detected. Please run 'pnpm run sync:api-inventory' and commit the changes."
+          exit 1

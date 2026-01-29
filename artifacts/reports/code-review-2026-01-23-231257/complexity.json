@@ -1,0 +1,1703 @@
+{
+  "summary": {
+    "totalLines": 231840,
+    "totalFiles": 865,
+    "averageComplexity": 19.39,
+    "highComplexityFiles": 282
+  },
+  "timestamp": "2026-01-23T23:13:28.9730714+00:00",
+  "packages": [
+    {
+      "file": "\\apps\\ai-worker\\src\\agents\\base.agent.ts",
+      "warning": "High complexity",
+      "complexity": 38,
+      "lines": 321
+    },
+    {
+      "file": "\\apps\\ai-worker\\src\\agents\\email-writer.agent.ts",
+      "warning": "High complexity",
+      "complexity": 36,
+      "lines": 315
+    },
+    {
+      "file": "\\apps\\ai-worker\\src\\agents\\followup.agent.ts",
+      "warning": "High complexity",
+      "complexity": 26,
+      "lines": 298
+    },
+    {
+      "file": "\\apps\\ai-worker\\src\\agents\\qualification.agent.ts",
+      "warning": "High complexity",
+      "complexity": 25,
+      "lines": 307
+    },
+    {
+      "file": "\\apps\\ai-worker\\src\\analytics\\feedback-analytics-generator.ts",
+      "warning": "High complexity",
+      "complexity": 43,
+      "lines": 614
+    },
+    {
+      "file": "\\apps\\ai-worker\\src\\analytics\\statistical-analysis.ts",
+      "warning": "High complexity",
+      "complexity": 73,
+      "lines": 774
+    },
+    {
+      "file": "\\apps\\ai-worker\\src\\chains\\embedding.chain.ts",
+      "warning": "High complexity",
+      "complexity": 31,
+      "lines": 364
+    },
+    {
+      "file": "\\apps\\ai-worker\\src\\chains\\scoring.chain.ts",
+      "warning": "High complexity",
+      "complexity": 23,
+      "lines": 294
+    },
+    {
+      "file": "\\apps\\ai-worker\\src\\monitoring\\drift-detector.ts",
+      "warning": "High complexity",
+      "complexity": 58,
+      "lines": 624
+    },
+    {
+      "file": "\\apps\\ai-worker\\src\\monitoring\\hallucination-checker.ts",
+      "warning": "High complexity",
+      "complexity": 88,
+      "lines": 718
+    },
+    {
+      "file": "\\apps\\ai-worker\\src\\monitoring\\latency-monitor.ts",
+      "warning": "High complexity",
+      "complexity": 52,
+      "lines": 711
+    },
+    {
+      "file": "\\apps\\ai-worker\\src\\monitoring\\roi-tracker.ts",
+      "warning": "High complexity",
+      "complexity": 54,
+      "lines": 702
+    },
+    {
+      "file": "\\apps\\ai-worker\\src\\prompts\\index.ts",
+      "warning": "High complexity",
+      "complexity": 30,
+      "lines": 168
+    },
+    {
+      "file": "\\apps\\ai-worker\\src\\services\\document-indexer.ts",
+      "warning": "High complexity",
+      "complexity": 49,
+      "lines": 636
+    },
+    {
+      "file": "\\apps\\ai-worker\\src\\services\\retrieval-service.ts",
+      "warning": "High complexity",
+      "complexity": 80,
+      "lines": 1575
+    },
+    {
+      "file": "\\apps\\ai-worker\\src\\utils\\retry.ts",
+      "warning": "High complexity",
+      "complexity": 26,
+      "lines": 276
+    },
+    {
+      "file": "\\apps\\ai-worker\\src\\versioning\\version-loader.ts",
+      "warning": "High complexity",
+      "complexity": 32,
+      "lines": 392
+    },
+    {
+      "file": "\\apps\\ai-worker\\src\\workers\\ocr-worker.ts",
+      "warning": "High complexity",
+      "complexity": 41,
+      "lines": 450
+    },
+    {
+      "file": "\\apps\\ai-worker\\src\\workers\\reindex-worker.ts",
+      "warning": "High complexity",
+      "complexity": 29,
+      "lines": 411
+    },
+    {
+      "file": "\\apps\\api\\src\\agent\\tools\\create.ts",
+      "warning": "High complexity",
+      "complexity": 34,
+      "lines": 599
+    },
+    {
+      "file": "\\apps\\api\\src\\agent\\tools\\draft-message.ts",
+      "warning": "High complexity",
+      "complexity": 40,
+      "lines": 376
+    },
+    {
+      "file": "\\apps\\api\\src\\agent\\tools\\search.ts",
+      "warning": "High complexity",
+      "complexity": 70,
+      "lines": 528
+    },
+    {
+      "file": "\\apps\\api\\src\\agent\\tools\\update.ts",
+      "warning": "High complexity",
+      "complexity": 63,
+      "lines": 652
+    },
+    {
+      "file": "\\apps\\api\\src\\agent\\approval-workflow.ts",
+      "warning": "High complexity",
+      "complexity": 32,
+      "lines": 482
+    },
+    {
+      "file": "\\apps\\api\\src\\agent\\authorization.ts",
+      "warning": "High complexity",
+      "complexity": 36,
+      "lines": 380
+    },
+    {
+      "file": "\\apps\\api\\src\\agent\\logger.ts",
+      "warning": "High complexity",
+      "complexity": 52,
+      "lines": 439
+    },
+    {
+      "file": "\\apps\\api\\src\\agent\\types.ts",
+      "warning": "High complexity",
+      "complexity": 41,
+      "lines": 326
+    },
+    {
+      "file": "\\apps\\api\\src\\modules\\account\\account.router.ts",
+      "warning": "High complexity",
+      "complexity": 36,
+      "lines": 383
+    },
+    {
+      "file": "\\apps\\api\\src\\modules\\agent\\conversation.router.ts",
+      "warning": "High complexity",
+      "complexity": 33,
+      "lines": 699
+    },
+    {
+      "file": "\\apps\\api\\src\\modules\\auth\\auth.router.ts",
+      "warning": "High complexity",
+      "complexity": 51,
+      "lines": 792
+    },
+    {
+      "file": "\\apps\\api\\src\\modules\\billing\\billing.router.ts",
+      "warning": "High complexity",
+      "complexity": 71,
+      "lines": 628
+    },
+    {
+      "file": "\\apps\\api\\src\\modules\\contact\\contact.router.ts",
+      "warning": "High complexity",
+      "complexity": 47,
+      "lines": 636
+    },
+    {
+      "file": "\\apps\\api\\src\\modules\\lead\\lead.router.ts",
+      "warning": "High complexity",
+      "complexity": 47,
+      "lines": 581
+    },
+    {
+      "file": "\\apps\\api\\src\\modules\\legal\\appointments.router.ts",
+      "warning": "High complexity",
+      "complexity": 69,
+      "lines": 1189
+    },
+    {
+      "file": "\\apps\\api\\src\\modules\\legal\\documents.router.ts",
+      "warning": "High complexity",
+      "complexity": 45,
+      "lines": 529
+    },
+    {
+      "file": "\\apps\\api\\src\\modules\\misc\\health.router.ts",
+      "warning": "High complexity",
+      "complexity": 22,
+      "lines": 180
+    },
+    {
+      "file": "\\apps\\api\\src\\modules\\misc\\timeline.router.ts",
+      "warning": "High complexity",
+      "complexity": 75,
+      "lines": 1168
+    },
+    {
+      "file": "\\apps\\api\\src\\modules\\misc\\timeline.ts",
+      "warning": "High complexity",
+      "complexity": 81,
+      "lines": 575
+    },
+    {
+      "file": "\\apps\\api\\src\\modules\\opportunity\\opportunity.router.ts",
+      "warning": "High complexity",
+      "complexity": 39,
+      "lines": 504
+    },
+    {
+      "file": "\\apps\\api\\src\\modules\\task\\task.router.ts",
+      "warning": "High complexity",
+      "complexity": 39,
+      "lines": 437
+    },
+    {
+      "file": "\\apps\\api\\src\\modules\\ticket\\ticket.router.ts",
+      "warning": "High complexity",
+      "complexity": 23,
+      "lines": 412
+    },
+    {
+      "file": "\\apps\\api\\src\\security\\audit-event-handler.ts",
+      "warning": "High complexity",
+      "complexity": 51,
+      "lines": 644
+    },
+    {
+      "file": "\\apps\\api\\src\\security\\audit-logger.ts",
+      "warning": "High complexity",
+      "complexity": 158,
+      "lines": 786
+    },
+    {
+      "file": "\\apps\\api\\src\\security\\encryption.ts",
+      "warning": "High complexity",
+      "complexity": 53,
+      "lines": 516
+    },
+    {
+      "file": "\\apps\\api\\src\\security\\key-rotation.ts",
+      "warning": "High complexity",
+      "complexity": 56,
+      "lines": 698
+    },
+    {
+      "file": "\\apps\\api\\src\\security\\login-limiter.ts",
+      "warning": "High complexity",
+      "complexity": 65,
+      "lines": 438
+    },
+    {
+      "file": "\\apps\\api\\src\\security\\middleware.ts",
+      "warning": "High complexity",
+      "complexity": 53,
+      "lines": 403
+    },
+    {
+      "file": "\\apps\\api\\src\\security\\rbac.ts",
+      "warning": "High complexity",
+      "complexity": 74,
+      "lines": 759
+    },
+    {
+      "file": "\\apps\\api\\src\\security\\tenant-context.ts",
+      "warning": "High complexity",
+      "complexity": 57,
+      "lines": 398
+    },
+    {
+      "file": "\\apps\\api\\src\\security\\tenant-limiter.ts",
+      "warning": "High complexity",
+      "complexity": 40,
+      "lines": 524
+    },
+    {
+      "file": "\\apps\\api\\src\\security\\types.ts",
+      "warning": "High complexity",
+      "complexity": 46,
+      "lines": 241
+    },
+    {
+      "file": "\\apps\\api\\src\\services\\AnalyticsService.ts",
+      "warning": "High complexity",
+      "complexity": 21,
+      "lines": 322
+    },
+    {
+      "file": "\\apps\\api\\src\\services\\appointment-domain.service.ts",
+      "warning": "High complexity",
+      "complexity": 73,
+      "lines": 457
+    },
+    {
+      "file": "\\apps\\api\\src\\services\\deadline-domain.service.ts",
+      "warning": "High complexity",
+      "complexity": 68,
+      "lines": 546
+    },
+    {
+      "file": "\\apps\\api\\src\\services\\mfa.service.ts",
+      "warning": "High complexity",
+      "complexity": 85,
+      "lines": 743
+    },
+    {
+      "file": "\\apps\\api\\src\\services\\session.service.ts",
+      "warning": "High complexity",
+      "complexity": 103,
+      "lines": 672
+    },
+    {
+      "file": "\\apps\\api\\src\\services\\TicketService.ts",
+      "warning": "High complexity",
+      "complexity": 38,
+      "lines": 420
+    },
+    {
+      "file": "\\apps\\api\\src\\shared\\audit-encryption-module.ts",
+      "warning": "High complexity",
+      "complexity": 32,
+      "lines": 319
+    },
+    {
+      "file": "\\apps\\api\\src\\shared\\bias-detector.ts",
+      "warning": "High complexity",
+      "complexity": 24,
+      "lines": 369
+    },
+    {
+      "file": "\\apps\\api\\src\\shared\\performance-benchmark.ts",
+      "warning": "High complexity",
+      "complexity": 21,
+      "lines": 298
+    },
+    {
+      "file": "\\apps\\api\\src\\shared\\prompt-sanitizer.ts",
+      "warning": "High complexity",
+      "complexity": 27,
+      "lines": 356
+    },
+    {
+      "file": "\\apps\\api\\src\\shared\\retry-policy.ts",
+      "warning": "High complexity",
+      "complexity": 47,
+      "lines": 480
+    },
+    {
+      "file": "\\apps\\api\\src\\shared\\subscription-demo.ts",
+      "warning": "High complexity",
+      "complexity": 25,
+      "lines": 438
+    },
+    {
+      "file": "\\apps\\api\\src\\tracing\\correlation.ts",
+      "warning": "High complexity",
+      "complexity": 21,
+      "lines": 228
+    },
+    {
+      "file": "\\apps\\api\\src\\tracing\\sentry.ts",
+      "warning": "High complexity",
+      "complexity": 24,
+      "lines": 270
+    },
+    {
+      "file": "\\apps\\api\\src\\webhooks\\handler.ts",
+      "warning": "High complexity",
+      "complexity": 52,
+      "lines": 586
+    },
+    {
+      "file": "\\apps\\api\\src\\webhooks\\idempotency.ts",
+      "warning": "High complexity",
+      "complexity": 49,
+      "lines": 484
+    },
+    {
+      "file": "\\apps\\api\\src\\webhooks\\retry.ts",
+      "warning": "High complexity",
+      "complexity": 65,
+      "lines": 671
+    },
+    {
+      "file": "\\apps\\api\\src\\workflow\\handlers\\case-handler.ts",
+      "warning": "High complexity",
+      "complexity": 87,
+      "lines": 948
+    },
+    {
+      "file": "\\apps\\api\\src\\workflow\\dsar-workflow.ts",
+      "warning": "High complexity",
+      "complexity": 39,
+      "lines": 584
+    },
+    {
+      "file": "\\apps\\api\\src\\workflow\\state-machine.ts",
+      "warning": "High complexity",
+      "complexity": 35,
+      "lines": 482
+    },
+    {
+      "file": "\\apps\\api\\src\\workflow\\types.ts",
+      "warning": "High complexity",
+      "complexity": 34,
+      "lines": 267
+    },
+    {
+      "file": "\\apps\\api\\src\\context.ts",
+      "warning": "High complexity",
+      "complexity": 26,
+      "lines": 141
+    },
+    {
+      "file": "\\apps\\api\\src\\trpc.ts",
+      "warning": "High complexity",
+      "complexity": 25,
+      "lines": 236
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\api\\artifacts\\history\\route.ts",
+      "warning": "High complexity",
+      "complexity": 23,
+      "lines": 299
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\api\\audit\\sprint-completion\\route.ts",
+      "warning": "High complexity",
+      "complexity": 48,
+      "lines": 456
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\api\\audit\\stream\\route.ts",
+      "warning": "High complexity",
+      "complexity": 30,
+      "lines": 309
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\api\\code-analysis\\route.ts",
+      "warning": "High complexity",
+      "complexity": 33,
+      "lines": 339
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\api\\governance\\revert-incomplete\\route.ts",
+      "warning": "High complexity",
+      "complexity": 25,
+      "lines": 237
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\api\\governance\\traceability\\route.ts",
+      "warning": "High complexity",
+      "complexity": 43,
+      "lines": 447
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\api\\infrastructure\\env-validation\\route.ts",
+      "warning": "High complexity",
+      "complexity": 22,
+      "lines": 202
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\api\\matop\\plan\\route.ts",
+      "warning": "High complexity",
+      "complexity": 29,
+      "lines": 355
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\api\\metrics\\executive\\route.ts",
+      "warning": "High complexity",
+      "complexity": 63,
+      "lines": 448
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\api\\metrics\\feedback-analytics\\route.ts",
+      "warning": "High complexity",
+      "complexity": 30,
+      "lines": 242
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\api\\metrics\\phases\\route.ts",
+      "warning": "High complexity",
+      "complexity": 29,
+      "lines": 239
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\api\\metrics\\sprint\\route.ts",
+      "warning": "High complexity",
+      "complexity": 27,
+      "lines": 315
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\api\\metrics\\task\\[taskId]\\route.ts",
+      "warning": "High complexity",
+      "complexity": 27,
+      "lines": 315
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\api\\metrics\\team-velocity\\route.ts",
+      "warning": "High complexity",
+      "complexity": 28,
+      "lines": 290
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\api\\metrics\\web-vitals\\route.ts",
+      "warning": "High complexity",
+      "complexity": 22,
+      "lines": 279
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\api\\sprint\\baseline\\route.ts",
+      "warning": "High complexity",
+      "complexity": 29,
+      "lines": 264
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\api\\sprint\\completion\\route.ts",
+      "warning": "High complexity",
+      "complexity": 38,
+      "lines": 353
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\api\\sprint\\execute\\route.ts",
+      "warning": "High complexity",
+      "complexity": 45,
+      "lines": 668
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\api\\sprint\\progress\\route.ts",
+      "warning": "High complexity",
+      "complexity": 35,
+      "lines": 319
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\api\\sprint\\status\\route.ts",
+      "warning": "High complexity",
+      "complexity": 24,
+      "lines": 421
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\api\\sprint\\validation\\route.ts",
+      "warning": "High complexity",
+      "complexity": 36,
+      "lines": 357
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\api\\tasks\\generate-prompt\\route.ts",
+      "warning": "High complexity",
+      "complexity": 25,
+      "lines": 202
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\api\\tasks\\plan\\route.ts",
+      "warning": "High complexity",
+      "complexity": 23,
+      "lines": 414
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\api\\tracking\\status\\route.ts",
+      "warning": "High complexity",
+      "complexity": 21,
+      "lines": 266
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\api\\unified-data\\route.ts",
+      "warning": "High complexity",
+      "complexity": 39,
+      "lines": 303
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\swarm\\page.tsx",
+      "warning": "High complexity",
+      "complexity": 74,
+      "lines": 1084
+    },
+    {
+      "file": "\\apps\\project-tracker\\app\\terminal\\[taskId]\\page.tsx",
+      "warning": "High complexity",
+      "complexity": 74,
+      "lines": 1084
+    },
+    {
+      "file": "\\apps\\project-tracker\\components\\tracking\\SecurityDashboard.tsx",
+      "warning": "High complexity",
+      "complexity": 28,
+      "lines": 295
+    },
+    {
+      "file": "\\apps\\project-tracker\\components\\tracking\\StatusHistory.tsx",
+      "warning": "High complexity",
+      "complexity": 24,
+      "lines": 252
+    },
+    {
+      "file": "\\apps\\project-tracker\\components\\ArtifactsView.tsx",
+      "warning": "High complexity",
+      "complexity": 70,
+      "lines": 1891
+    },
+    {
+      "file": "\\apps\\project-tracker\\components\\AuditView.tsx",
+      "warning": "High complexity",
+      "complexity": 80,
+      "lines": 1211
+    },
+    {
+      "file": "\\apps\\project-tracker\\components\\DailyWorkflowSummary.tsx",
+      "warning": "High complexity",
+      "complexity": 49,
+      "lines": 890
+    },
+    {
+      "file": "\\apps\\project-tracker\\components\\ExecutiveSummary.tsx",
+      "warning": "High complexity",
+      "complexity": 21,
+      "lines": 509
+    },
+    {
+      "file": "\\apps\\project-tracker\\components\\GovernanceView.tsx",
+      "warning": "High complexity",
+      "complexity": 65,
+      "lines": 1229
+    },
+    {
+      "file": "\\apps\\project-tracker\\components\\MetricsView.tsx",
+      "warning": "High complexity",
+      "complexity": 22,
+      "lines": 417
+    },
+    {
+      "file": "\\apps\\project-tracker\\components\\SprintExecutionView.tsx",
+      "warning": "High complexity",
+      "complexity": 44,
+      "lines": 956
+    },
+    {
+      "file": "\\apps\\project-tracker\\components\\SwarmMonitor.tsx",
+      "warning": "High complexity",
+      "complexity": 42,
+      "lines": 414
+    },
+    {
+      "file": "\\apps\\project-tracker\\components\\TaskDetailModal.tsx",
+      "warning": "High complexity",
+      "complexity": 29,
+      "lines": 647
+    },
+    {
+      "file": "\\apps\\project-tracker\\components\\TaskModal.tsx",
+      "warning": "High complexity",
+      "complexity": 25,
+      "lines": 573
+    },
+    {
+      "file": "\\apps\\project-tracker\\lib\\artifact-registry.ts",
+      "warning": "High complexity",
+      "complexity": 99,
+      "lines": 957
+    },
+    {
+      "file": "\\apps\\project-tracker\\lib\\csv-parser.ts",
+      "warning": "High complexity",
+      "complexity": 24,
+      "lines": 244
+    },
+    {
+      "file": "\\apps\\project-tracker\\lib\\data-sync.ts",
+      "warning": "High complexity",
+      "complexity": 179,
+      "lines": 1392
+    },
+    {
+      "file": "\\apps\\project-tracker\\lib\\data-validator.ts",
+      "warning": "High complexity",
+      "complexity": 54,
+      "lines": 468
+    },
+    {
+      "file": "\\apps\\project-tracker\\lib\\execution-history.ts",
+      "warning": "High complexity",
+      "complexity": 57,
+      "lines": 425
+    },
+    {
+      "file": "\\apps\\project-tracker\\lib\\governance.ts",
+      "warning": "High complexity",
+      "complexity": 74,
+      "lines": 719
+    },
+    {
+      "file": "\\apps\\project-tracker\\lib\\phase-calculator.ts",
+      "warning": "High complexity",
+      "complexity": 58,
+      "lines": 560
+    },
+    {
+      "file": "\\apps\\project-tracker\\lib\\prompt-generator.ts",
+      "warning": "High complexity",
+      "complexity": 110,
+      "lines": 1071
+    },
+    {
+      "file": "\\apps\\project-tracker\\lib\\run-assistant.ts",
+      "warning": "High complexity",
+      "complexity": 33,
+      "lines": 221
+    },
+    {
+      "file": "\\apps\\project-tracker\\lib\\subprocess-spawner.ts",
+      "warning": "High complexity",
+      "complexity": 43,
+      "lines": 460
+    },
+    {
+      "file": "\\apps\\project-tracker\\lib\\types.ts",
+      "warning": "High complexity",
+      "complexity": 46,
+      "lines": 556
+    },
+    {
+      "file": "\\apps\\web\\hooks\\use-subscription.ts",
+      "warning": "High complexity",
+      "complexity": 49,
+      "lines": 505
+    },
+    {
+      "file": "\\apps\\web\\lib\\documents\\timeline-event-model.ts",
+      "warning": "High complexity",
+      "complexity": 97,
+      "lines": 369
+    },
+    {
+      "file": "\\apps\\web\\lib\\status\\incident-tracker.ts",
+      "warning": "High complexity",
+      "complexity": 27,
+      "lines": 384
+    },
+    {
+      "file": "\\apps\\web\\lib\\tickets\\sla-notifications.ts",
+      "warning": "High complexity",
+      "complexity": 42,
+      "lines": 404
+    },
+    {
+      "file": "\\apps\\web\\lib\\tickets\\sla-service.ts",
+      "warning": "High complexity",
+      "complexity": 53,
+      "lines": 473
+    },
+    {
+      "file": "\\apps\\web\\lib\\timeline\\types.ts",
+      "warning": "High complexity",
+      "complexity": 62,
+      "lines": 485
+    },
+    {
+      "file": "\\apps\\web\\src\\app\\(public)\\login\\page.tsx",
+      "warning": "High complexity",
+      "complexity": 31,
+      "lines": 555
+    },
+    {
+      "file": "\\apps\\web\\src\\app\\agent-approvals\\preview\\page.tsx",
+      "warning": "High complexity",
+      "complexity": 35,
+      "lines": 1073
+    },
+    {
+      "file": "\\apps\\web\\src\\app\\api\\quality-reports\\generate\\route.ts",
+      "warning": "High complexity",
+      "complexity": 57,
+      "lines": 677
+    },
+    {
+      "file": "\\apps\\web\\src\\app\\api\\quality-reports\\route.ts",
+      "warning": "High complexity",
+      "complexity": 62,
+      "lines": 586
+    },
+    {
+      "file": "\\apps\\web\\src\\app\\api\\trpc\\[trpc]\\route.ts",
+      "warning": "High complexity",
+      "complexity": 62,
+      "lines": 586
+    },
+    {
+      "file": "\\apps\\web\\src\\app\\cases\\timeline\\page.tsx",
+      "warning": "High complexity",
+      "complexity": 77,
+      "lines": 1062
+    },
+    {
+      "file": "\\apps\\web\\src\\app\\contacts\\(list)\\new\\page.tsx",
+      "warning": "High complexity",
+      "complexity": 35,
+      "lines": 785
+    },
+    {
+      "file": "\\apps\\web\\src\\app\\deals\\(list)\\page.tsx",
+      "warning": "High complexity",
+      "complexity": 29,
+      "lines": 744
+    },
+    {
+      "file": "\\apps\\web\\src\\app\\deals\\[id]\\forecast\\page.tsx",
+      "warning": "High complexity",
+      "complexity": 29,
+      "lines": 744
+    },
+    {
+      "file": "\\apps\\web\\src\\app\\deals\\[id]\\page.tsx",
+      "warning": "High complexity",
+      "complexity": 29,
+      "lines": 744
+    },
+    {
+      "file": "\\apps\\web\\src\\app\\documents\\(list)\\new\\page.tsx",
+      "warning": "High complexity",
+      "complexity": 27,
+      "lines": 634
+    },
+    {
+      "file": "\\apps\\web\\src\\app\\governance\\adr\\page.tsx",
+      "warning": "High complexity",
+      "complexity": 24,
+      "lines": 736
+    },
+    {
+      "file": "\\apps\\web\\src\\app\\governance\\quality-reports\\page.tsx",
+      "warning": "High complexity",
+      "complexity": 65,
+      "lines": 984
+    },
+    {
+      "file": "\\apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+      "warning": "High complexity",
+      "complexity": 31,
+      "lines": 844
+    },
+    {
+      "file": "\\apps\\web\\src\\app\\settings\\security\\mfa\\page.tsx",
+      "warning": "High complexity",
+      "complexity": 28,
+      "lines": 612
+    },
+    {
+      "file": "\\apps\\web\\src\\app\\tickets\\(list)\\page.tsx",
+      "warning": "High complexity",
+      "complexity": 38,
+      "lines": 917
+    },
+    {
+      "file": "\\apps\\web\\src\\app\\tickets\\[id]\\page.tsx",
+      "warning": "High complexity",
+      "complexity": 38,
+      "lines": 917
+    },
+    {
+      "file": "\\apps\\web\\src\\app\\tickets\\page.tsx",
+      "warning": "High complexity",
+      "complexity": 21,
+      "lines": 750
+    },
+    {
+      "file": "\\apps\\web\\src\\components\\auth\\mfa-challenge.tsx",
+      "warning": "High complexity",
+      "complexity": 43,
+      "lines": 502
+    },
+    {
+      "file": "\\apps\\web\\src\\components\\billing\\checkout-form.tsx",
+      "warning": "High complexity",
+      "complexity": 29,
+      "lines": 490
+    },
+    {
+      "file": "\\apps\\web\\src\\components\\billing\\invoice-detail.tsx",
+      "warning": "High complexity",
+      "complexity": 45,
+      "lines": 689
+    },
+    {
+      "file": "\\apps\\web\\src\\components\\billing\\payment-methods.tsx",
+      "warning": "High complexity",
+      "complexity": 26,
+      "lines": 845
+    },
+    {
+      "file": "\\apps\\web\\src\\components\\billing\\subscription-manager.tsx",
+      "warning": "High complexity",
+      "complexity": 26,
+      "lines": 796
+    },
+    {
+      "file": "\\apps\\web\\src\\components\\shared\\apply-button.tsx",
+      "warning": "High complexity",
+      "complexity": 26,
+      "lines": 254
+    },
+    {
+      "file": "\\apps\\web\\src\\components\\shared\\auth-providers.tsx",
+      "warning": "High complexity",
+      "complexity": 22,
+      "lines": 328
+    },
+    {
+      "file": "\\apps\\web\\src\\components\\shared\\mfa-verification.tsx",
+      "warning": "High complexity",
+      "complexity": 40,
+      "lines": 344
+    },
+    {
+      "file": "\\apps\\web\\src\\components\\shared\\oauth-callback.tsx",
+      "warning": "High complexity",
+      "complexity": 21,
+      "lines": 351
+    },
+    {
+      "file": "\\apps\\web\\src\\components\\shared\\onboarding-flow.tsx",
+      "warning": "High complexity",
+      "complexity": 27,
+      "lines": 376
+    },
+    {
+      "file": "\\apps\\web\\src\\components\\shared\\password-reset.tsx",
+      "warning": "High complexity",
+      "complexity": 25,
+      "lines": 554
+    },
+    {
+      "file": "\\apps\\web\\src\\components\\shared\\registration-form.tsx",
+      "warning": "High complexity",
+      "complexity": 46,
+      "lines": 550
+    },
+    {
+      "file": "\\apps\\web\\src\\components\\shared\\reset-email.tsx",
+      "warning": "High complexity",
+      "complexity": 31,
+      "lines": 504
+    },
+    {
+      "file": "\\apps\\web\\src\\components\\sidebar\\AppSidebar.tsx",
+      "warning": "High complexity",
+      "complexity": 49,
+      "lines": 661
+    },
+    {
+      "file": "\\apps\\web\\src\\hooks\\use-dynamic-filters.ts",
+      "warning": "High complexity",
+      "complexity": 47,
+      "lines": 307
+    },
+    {
+      "file": "\\apps\\web\\src\\lib\\adr\\adr-service.ts",
+      "warning": "High complexity",
+      "complexity": 57,
+      "lines": 551
+    },
+    {
+      "file": "\\apps\\web\\src\\lib\\agent\\rollback-service.ts",
+      "warning": "High complexity",
+      "complexity": 42,
+      "lines": 684
+    },
+    {
+      "file": "\\apps\\web\\src\\lib\\auth\\AuthContext.tsx",
+      "warning": "High complexity",
+      "complexity": 26,
+      "lines": 454
+    },
+    {
+      "file": "\\apps\\web\\src\\lib\\billing\\card-manager.ts",
+      "warning": "High complexity",
+      "complexity": 33,
+      "lines": 284
+    },
+    {
+      "file": "\\apps\\web\\src\\lib\\billing\\invoice-actions.ts",
+      "warning": "High complexity",
+      "complexity": 22,
+      "lines": 282
+    },
+    {
+      "file": "\\apps\\web\\src\\lib\\billing\\payment-processor.ts",
+      "warning": "High complexity",
+      "complexity": 61,
+      "lines": 375
+    },
+    {
+      "file": "\\apps\\web\\src\\lib\\billing\\plan-changes.ts",
+      "warning": "High complexity",
+      "complexity": 46,
+      "lines": 517
+    },
+    {
+      "file": "\\apps\\web\\src\\lib\\billing\\stripe-portal.ts",
+      "warning": "High complexity",
+      "complexity": 27,
+      "lines": 336
+    },
+    {
+      "file": "\\apps\\web\\src\\lib\\cases\\reminders-service.ts",
+      "warning": "High complexity",
+      "complexity": 40,
+      "lines": 392
+    },
+    {
+      "file": "\\apps\\web\\src\\lib\\shared\\account-activation.ts",
+      "warning": "High complexity",
+      "complexity": 31,
+      "lines": 374
+    },
+    {
+      "file": "\\apps\\web\\src\\lib\\shared\\code-validator.ts",
+      "warning": "High complexity",
+      "complexity": 22,
+      "lines": 165
+    },
+    {
+      "file": "\\apps\\web\\src\\lib\\shared\\login-security.ts",
+      "warning": "High complexity",
+      "complexity": 59,
+      "lines": 545
+    },
+    {
+      "file": "\\apps\\web\\src\\lib\\shared\\logout-redirect.ts",
+      "warning": "High complexity",
+      "complexity": 57,
+      "lines": 343
+    },
+    {
+      "file": "\\apps\\web\\src\\lib\\shared\\password-validation.ts",
+      "warning": "High complexity",
+      "complexity": 21,
+      "lines": 275
+    },
+    {
+      "file": "\\apps\\web\\src\\lib\\shared\\reset-token.ts",
+      "warning": "High complexity",
+      "complexity": 27,
+      "lines": 373
+    },
+    {
+      "file": "\\apps\\web\\src\\lib\\shared\\session-cleanup.ts",
+      "warning": "High complexity",
+      "complexity": 58,
+      "lines": 477
+    },
+    {
+      "file": "\\apps\\web\\src\\lib\\shared\\token-exchange.ts",
+      "warning": "High complexity",
+      "complexity": 23,
+      "lines": 237
+    },
+    {
+      "file": "\\apps\\web\\src\\lib\\shared\\tracking-pixel.ts",
+      "warning": "High complexity",
+      "complexity": 49,
+      "lines": 404
+    },
+    {
+      "file": "\\apps\\workers\\events-worker\\src\\outbox\\event-dispatcher.ts",
+      "warning": "High complexity",
+      "complexity": 29,
+      "lines": 272
+    },
+    {
+      "file": "\\apps\\workers\\events-worker\\src\\outbox\\pollOutbox.ts",
+      "warning": "High complexity",
+      "complexity": 21,
+      "lines": 331
+    },
+    {
+      "file": "\\apps\\workers\\events-worker\\src\\main.ts",
+      "warning": "High complexity",
+      "complexity": 38,
+      "lines": 437
+    },
+    {
+      "file": "\\apps\\workers\\ingestion-worker\\src\\jobs\\extractText.job.ts",
+      "warning": "High complexity",
+      "complexity": 32,
+      "lines": 332
+    },
+    {
+      "file": "\\apps\\workers\\notifications-worker\\src\\channels\\email.ts",
+      "warning": "High complexity",
+      "complexity": 33,
+      "lines": 382
+    },
+    {
+      "file": "\\apps\\workers\\notifications-worker\\src\\channels\\sms.ts",
+      "warning": "High complexity",
+      "complexity": 22,
+      "lines": 368
+    },
+    {
+      "file": "\\apps\\workers\\notifications-worker\\src\\channels\\webhook.ts",
+      "warning": "High complexity",
+      "complexity": 31,
+      "lines": 442
+    },
+    {
+      "file": "\\apps\\workers\\notifications-worker\\src\\main.ts",
+      "warning": "High complexity",
+      "complexity": 41,
+      "lines": 556
+    },
+    {
+      "file": "\\apps\\workers\\shared\\src\\graceful-shutdown.ts",
+      "warning": "High complexity",
+      "complexity": 21,
+      "lines": 211
+    },
+    {
+      "file": "\\apps\\workers\\shared\\src\\queue-connector.ts",
+      "warning": "High complexity",
+      "complexity": 24,
+      "lines": 352
+    },
+    {
+      "file": "\\packages\\adapters\\src\\calendar\\google\\client.ts",
+      "warning": "High complexity",
+      "complexity": 118,
+      "lines": 1022
+    },
+    {
+      "file": "\\packages\\adapters\\src\\calendar\\microsoft\\client.ts",
+      "warning": "High complexity",
+      "complexity": 133,
+      "lines": 1047
+    },
+    {
+      "file": "\\packages\\adapters\\src\\calendar\\shared\\ConflictResolver.ts",
+      "warning": "High complexity",
+      "complexity": 28,
+      "lines": 224
+    },
+    {
+      "file": "\\packages\\adapters\\src\\calendar\\shared\\IdempotencyManager.ts",
+      "warning": "High complexity",
+      "complexity": 23,
+      "lines": 216
+    },
+    {
+      "file": "\\packages\\adapters\\src\\calendar\\shared\\RetryHandler.ts",
+      "warning": "High complexity",
+      "complexity": 29,
+      "lines": 241
+    },
+    {
+      "file": "\\packages\\adapters\\src\\email\\gmail\\client.ts",
+      "warning": "High complexity",
+      "complexity": 132,
+      "lines": 1182
+    },
+    {
+      "file": "\\packages\\adapters\\src\\email\\outlook\\client.ts",
+      "warning": "High complexity",
+      "complexity": 106,
+      "lines": 1052
+    },
+    {
+      "file": "\\packages\\adapters\\src\\erp\\sap\\client.ts",
+      "warning": "High complexity",
+      "complexity": 121,
+      "lines": 922
+    },
+    {
+      "file": "\\packages\\adapters\\src\\external\\GuardrailsAIService.ts",
+      "warning": "High complexity",
+      "complexity": 42,
+      "lines": 383
+    },
+    {
+      "file": "\\packages\\adapters\\src\\ics\\IcsGenerationService.ts",
+      "warning": "High complexity",
+      "complexity": 33,
+      "lines": 357
+    },
+    {
+      "file": "\\packages\\adapters\\src\\memory\\zep\\zep-client.ts",
+      "warning": "High complexity",
+      "complexity": 53,
+      "lines": 432
+    },
+    {
+      "file": "\\packages\\adapters\\src\\messaging\\email\\attachments.ts",
+      "warning": "High complexity",
+      "complexity": 70,
+      "lines": 578
+    },
+    {
+      "file": "\\packages\\adapters\\src\\messaging\\email\\dkim-signer.ts",
+      "warning": "High complexity",
+      "complexity": 66,
+      "lines": 582
+    },
+    {
+      "file": "\\packages\\adapters\\src\\messaging\\email\\inbound.ts",
+      "warning": "High complexity",
+      "complexity": 85,
+      "lines": 683
+    },
+    {
+      "file": "\\packages\\adapters\\src\\messaging\\email\\outbound.ts",
+      "warning": "High complexity",
+      "complexity": 39,
+      "lines": 530
+    },
+    {
+      "file": "\\packages\\adapters\\src\\messaging\\slack\\client.ts",
+      "warning": "High complexity",
+      "complexity": 194,
+      "lines": 1094
+    },
+    {
+      "file": "\\packages\\adapters\\src\\messaging\\teams\\client.ts",
+      "warning": "High complexity",
+      "complexity": 155,
+      "lines": 1305
+    },
+    {
+      "file": "\\packages\\adapters\\src\\payments\\paypal\\client.ts",
+      "warning": "High complexity",
+      "complexity": 189,
+      "lines": 1178
+    },
+    {
+      "file": "\\packages\\adapters\\src\\payments\\stripe\\client.ts",
+      "warning": "High complexity",
+      "complexity": 190,
+      "lines": 1017
+    },
+    {
+      "file": "\\packages\\adapters\\src\\repositories\\InMemoryAnalyticsRepository.ts",
+      "warning": "High complexity",
+      "complexity": 27,
+      "lines": 373
+    },
+    {
+      "file": "\\packages\\adapters\\src\\repositories\\InMemoryAppointmentRepository.ts",
+      "warning": "High complexity",
+      "complexity": 45,
+      "lines": 298
+    },
+    {
+      "file": "\\packages\\adapters\\src\\repositories\\InMemoryCaseDocumentRepository.ts",
+      "warning": "High complexity",
+      "complexity": 28,
+      "lines": 160
+    },
+    {
+      "file": "\\packages\\adapters\\src\\repositories\\InMemoryTicketRepository.ts",
+      "warning": "High complexity",
+      "complexity": 58,
+      "lines": 399
+    },
+    {
+      "file": "\\packages\\adapters\\src\\repositories\\PrismaAppointmentRepository.ts",
+      "warning": "High complexity",
+      "complexity": 50,
+      "lines": 553
+    },
+    {
+      "file": "\\packages\\adapters\\src\\shared\\bias-detector.ts",
+      "warning": "High complexity",
+      "complexity": 24,
+      "lines": 369
+    },
+    {
+      "file": "\\packages\\adapters\\src\\shared\\prompt-sanitizer.ts",
+      "warning": "High complexity",
+      "complexity": 27,
+      "lines": 356
+    },
+    {
+      "file": "\\packages\\adapters\\src\\types\\clamscan.d.ts",
+      "warning": "High complexity",
+      "complexity": 29,
+      "lines": 57
+    },
+    {
+      "file": "\\packages\\ai\\tools\\retrieve-case-context.ts",
+      "warning": "High complexity",
+      "complexity": 59,
+      "lines": 889
+    },
+    {
+      "file": "\\packages\\application\\src\\ports\\external\\CalendarServicePort.ts",
+      "warning": "High complexity",
+      "complexity": 47,
+      "lines": 400
+    },
+    {
+      "file": "\\packages\\application\\src\\ports\\external\\EmailServicePort.ts",
+      "warning": "High complexity",
+      "complexity": 42,
+      "lines": 227
+    },
+    {
+      "file": "\\packages\\application\\src\\ports\\external\\IcsGenerationServicePort.ts",
+      "warning": "High complexity",
+      "complexity": 30,
+      "lines": 237
+    },
+    {
+      "file": "\\packages\\application\\src\\ports\\external\\NotificationServicePort.ts",
+      "warning": "High complexity",
+      "complexity": 30,
+      "lines": 218
+    },
+    {
+      "file": "\\packages\\application\\src\\ports\\repositories\\TicketRepositoryPort.ts",
+      "warning": "High complexity",
+      "complexity": 39,
+      "lines": 255
+    },
+    {
+      "file": "\\packages\\application\\src\\services\\AccountService.ts",
+      "warning": "High complexity",
+      "complexity": 42,
+      "lines": 489
+    },
+    {
+      "file": "\\packages\\application\\src\\services\\AppointmentIcsEventHandler.ts",
+      "warning": "High complexity",
+      "complexity": 32,
+      "lines": 392
+    },
+    {
+      "file": "\\packages\\application\\src\\services\\ChainVersionService.ts",
+      "warning": "High complexity",
+      "complexity": 36,
+      "lines": 679
+    },
+    {
+      "file": "\\packages\\application\\src\\services\\ContactService.ts",
+      "warning": "High complexity",
+      "complexity": 64,
+      "lines": 571
+    },
+    {
+      "file": "\\packages\\application\\src\\services\\ConversationSearchService.ts",
+      "warning": "High complexity",
+      "complexity": 43,
+      "lines": 399
+    },
+    {
+      "file": "\\packages\\application\\src\\services\\ExperimentService.ts",
+      "warning": "High complexity",
+      "complexity": 65,
+      "lines": 980
+    },
+    {
+      "file": "\\packages\\application\\src\\services\\FeedbackService.ts",
+      "warning": "High complexity",
+      "complexity": 33,
+      "lines": 565
+    },
+    {
+      "file": "\\packages\\application\\src\\services\\IngestionOrchestrator.ts",
+      "warning": "High complexity",
+      "complexity": 24,
+      "lines": 316
+    },
+    {
+      "file": "\\packages\\application\\src\\services\\LeadService.ts",
+      "warning": "High complexity",
+      "complexity": 64,
+      "lines": 628
+    },
+    {
+      "file": "\\packages\\application\\src\\services\\NotificationService.ts",
+      "warning": "High complexity",
+      "complexity": 67,
+      "lines": 616
+    },
+    {
+      "file": "\\packages\\application\\src\\services\\OpportunityService.ts",
+      "warning": "High complexity",
+      "complexity": 100,
+      "lines": 826
+    },
+    {
+      "file": "\\packages\\application\\src\\services\\ReminderSchedulerService.ts",
+      "warning": "High complexity",
+      "complexity": 29,
+      "lines": 294
+    },
+    {
+      "file": "\\packages\\application\\src\\services\\TaskService.ts",
+      "warning": "High complexity",
+      "complexity": 81,
+      "lines": 780
+    },
+    {
+      "file": "\\packages\\application\\src\\usecases\\leads\\ConvertLeadToContactUseCase.ts",
+      "warning": "High complexity",
+      "complexity": 23,
+      "lines": 263
+    },
+    {
+      "file": "\\packages\\application\\src\\usecases\\leads\\ConvertLeadToDealUseCase.ts",
+      "warning": "High complexity",
+      "complexity": 42,
+      "lines": 378
+    },
+    {
+      "file": "\\packages\\application\\src\\usecases\\scheduling\\CheckConflicts.ts",
+      "warning": "High complexity",
+      "complexity": 26,
+      "lines": 247
+    },
+    {
+      "file": "\\packages\\application\\src\\usecases\\scheduling\\ScheduleAppointment.ts",
+      "warning": "High complexity",
+      "complexity": 38,
+      "lines": 228
+    },
+    {
+      "file": "\\packages\\db\\prisma\\seed.ts",
+      "warning": "High complexity",
+      "complexity": 140,
+      "lines": 5627
+    },
+    {
+      "file": "\\packages\\db\\src\\client.ts",
+      "warning": "High complexity",
+      "complexity": 24,
+      "lines": 229
+    },
+    {
+      "file": "\\packages\\db\\src\\pgvector.ts",
+      "warning": "High complexity",
+      "complexity": 29,
+      "lines": 292
+    },
+    {
+      "file": "\\packages\\domain\\src\\crm\\account\\Account.ts",
+      "warning": "High complexity",
+      "complexity": 28,
+      "lines": 267
+    },
+    {
+      "file": "\\packages\\domain\\src\\crm\\contact\\Contact.ts",
+      "warning": "High complexity",
+      "complexity": 54,
+      "lines": 460
+    },
+    {
+      "file": "\\packages\\domain\\src\\crm\\lead\\Lead.ts",
+      "warning": "High complexity",
+      "complexity": 24,
+      "lines": 308
+    },
+    {
+      "file": "\\packages\\domain\\src\\crm\\opportunity\\Opportunity.ts",
+      "warning": "High complexity",
+      "complexity": 36,
+      "lines": 439
+    },
+    {
+      "file": "\\packages\\domain\\src\\crm\\opportunity\\OpportunityRepository.ts",
+      "warning": "High complexity",
+      "complexity": 23,
+      "lines": 145
+    },
+    {
+      "file": "\\packages\\domain\\src\\crm\\task\\Task.ts",
+      "warning": "High complexity",
+      "complexity": 25,
+      "lines": 332
+    },
+    {
+      "file": "\\packages\\domain\\src\\crm\\task\\TaskRepository.ts",
+      "warning": "High complexity",
+      "complexity": 25,
+      "lines": 129
+    },
+    {
+      "file": "\\packages\\domain\\src\\legal\\appointments\\Appointment.ts",
+      "warning": "High complexity",
+      "complexity": 67,
+      "lines": 680
+    },
+    {
+      "file": "\\packages\\domain\\src\\legal\\appointments\\AppointmentRepository.ts",
+      "warning": "High complexity",
+      "complexity": 32,
+      "lines": 168
+    },
+    {
+      "file": "\\packages\\domain\\src\\legal\\appointments\\ConflictDetector.ts",
+      "warning": "High complexity",
+      "complexity": 65,
+      "lines": 478
+    },
+    {
+      "file": "\\packages\\domain\\src\\legal\\appointments\\Recurrence.ts",
+      "warning": "High complexity",
+      "complexity": 48,
+      "lines": 437
+    },
+    {
+      "file": "\\packages\\domain\\src\\legal\\cases\\case-document.ts",
+      "warning": "High complexity",
+      "complexity": 30,
+      "lines": 637
+    },
+    {
+      "file": "\\packages\\domain\\src\\legal\\cases\\case.ts",
+      "warning": "High complexity",
+      "complexity": 33,
+      "lines": 470
+    },
+    {
+      "file": "\\packages\\domain\\src\\legal\\cases\\CaseRepository.ts",
+      "warning": "High complexity",
+      "complexity": 22,
+      "lines": 130
+    },
+    {
+      "file": "\\packages\\domain\\src\\legal\\deadlines\\deadline-engine.ts",
+      "warning": "High complexity",
+      "complexity": 48,
+      "lines": 516
+    },
+    {
+      "file": "\\packages\\domain\\src\\legal\\deadlines\\Deadline.ts",
+      "warning": "High complexity",
+      "complexity": 26,
+      "lines": 382
+    },
+    {
+      "file": "\\packages\\domain\\src\\notifications\\Notification.ts",
+      "warning": "High complexity",
+      "complexity": 29,
+      "lines": 373
+    },
+    {
+      "file": "\\packages\\domain\\src\\notifications\\NotificationPreference.ts",
+      "warning": "High complexity",
+      "complexity": 21,
+      "lines": 342
+    },
+    {
+      "file": "\\packages\\domain\\src\\notifications\\NotificationRepository.ts",
+      "warning": "High complexity",
+      "complexity": 21,
+      "lines": 103
+    },
+    {
+      "file": "\\packages\\domain\\src\\shared\\DateRange.ts",
+      "warning": "High complexity",
+      "complexity": 21,
+      "lines": 253
+    },
+    {
+      "file": "\\packages\\observability\\src\\logging.ts",
+      "warning": "High complexity",
+      "complexity": 48,
+      "lines": 558
+    },
+    {
+      "file": "\\packages\\observability\\src\\metrics.ts",
+      "warning": "High complexity",
+      "complexity": 28,
+      "lines": 500
+    },
+    {
+      "file": "\\packages\\observability\\src\\tracing.ts",
+      "warning": "High complexity",
+      "complexity": 36,
+      "lines": 424
+    },
+    {
+      "file": "\\packages\\platform\\src\\queues\\bull-board.ts",
+      "warning": "High complexity",
+      "complexity": 21,
+      "lines": 250
+    },
+    {
+      "file": "\\packages\\platform\\src\\queues\\connection.ts",
+      "warning": "High complexity",
+      "complexity": 21,
+      "lines": 192
+    },
+    {
+      "file": "\\packages\\platform\\src\\queues\\metrics-collector.ts",
+      "warning": "High complexity",
+      "complexity": 26,
+      "lines": 311
+    },
+    {
+      "file": "\\packages\\platform\\src\\queues\\queue-factory.ts",
+      "warning": "High complexity",
+      "complexity": 22,
+      "lines": 294
+    },
+    {
+      "file": "\\packages\\platform\\src\\queues\\retry-strategy.ts",
+      "warning": "High complexity",
+      "complexity": 27,
+      "lines": 271
+    },
+    {
+      "file": "\\packages\\platform\\src\\resilience\\circuit-breaker.ts",
+      "warning": "High complexity",
+      "complexity": 41,
+      "lines": 504
+    },
+    {
+      "file": "\\packages\\platform\\src\\workflow\\engine.ts",
+      "warning": "High complexity",
+      "complexity": 59,
+      "lines": 649
+    },
+    {
+      "file": "\\packages\\platform\\src\\workflow\\rules-engine.ts",
+      "warning": "High complexity",
+      "complexity": 69,
+      "lines": 817
+    },
+    {
+      "file": "\\packages\\sdk\\src\\index.ts",
+      "warning": "High complexity",
+      "complexity": 21,
+      "lines": 157
+    },
+    {
+      "file": "\\packages\\ui\\src\\components\\cookie-consent\\cookie-consent.tsx",
+      "warning": "High complexity",
+      "complexity": 44,
+      "lines": 716
+    },
+    {
+      "file": "\\packages\\ui\\src\\components\\experiment\\ExperimentDashboard.tsx",
+      "warning": "High complexity",
+      "complexity": 29,
+      "lines": 470
+    },
+    {
+      "file": "\\packages\\ui\\src\\components\\data-table.tsx",
+      "warning": "High complexity",
+      "complexity": 49,
+      "lines": 361
+    },
+    {
+      "file": "\\packages\\ui\\src\\components\\entity-avatar.tsx",
+      "warning": "High complexity",
+      "complexity": 21,
+      "lines": 200
+    },
+    {
+      "file": "\\packages\\ui\\src\\components\\pagination.tsx",
+      "warning": "High complexity",
+      "complexity": 37,
+      "lines": 347
+    },
+    {
+      "file": "\\packages\\webhooks\\src\\framework.ts",
+      "warning": "High complexity",
+      "complexity": 71,
+      "lines": 875
+    }
+  ]
+}

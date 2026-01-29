@@ -1,44 +1,52 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://intelliflow-crm.com/schemas/sprint-summary.schema.json",
+  "$id": "sprint-summary.schema.json",
   "title": "Sprint Summary Schema",
   "description": "Schema for aggregating metrics across an entire sprint",
   "type": "object",
-  "required": [
-    "sprint",
-    "name",
-    "target_date",
-    "phases",
-    "task_summary"
-  ],
   "properties": {
     "sprint": {
+      "description": "Sprint identifier (e.g., sprint-0)",
       "type": "string",
-      "pattern": "^sprint-[0-9]+$",
-      "description": "Sprint identifier (e.g., sprint-0)"
+      "pattern": "^sprint-[0-9]+$"
     },
     "name": {
-      "type": "string",
-      "description": "Sprint name/title"
+      "description": "Sprint name/title",
+      "type": "string"
     },
     "target_date": {
-      "type": "string",
-      "format": "date",
-      "description": "Target completion date (YYYY-MM-DD)"
+      "description": "Target completion date (YYYY-MM-DD)",
+      "type": "string"
     },
     "started_at": {
-      "type": ["string", "null"],
-      "format": "date-time"
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "completed_at": {
-      "type": ["string", "null"],
-      "format": "date-time"
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "phases": {
+      "description": "Status of each phase in the sprint",
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "status"],
         "properties": {
           "id": {
             "type": "string",
@@ -46,73 +54,149 @@
           },
           "status": {
             "type": "string",
-            "enum": ["NOT_STARTED", "IN_PROGRESS", "DONE", "BLOCKED"]
+            "enum": [
+              "NOT_STARTED",
+              "IN_PROGRESS",
+              "DONE",
+              "BLOCKED"
+            ]
           },
           "started_at": {
-            "type": ["string", "null"],
-            "format": "date-time"
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "completed_at": {
-            "type": ["string", "null"],
-            "format": "date-time"
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
-        }
-      },
-      "description": "Status of each phase in the sprint"
+        },
+        "required": [
+          "id",
+          "status"
+        ],
+        "additionalProperties": false
+      }
     },
     "task_summary": {
       "type": "object",
-      "required": ["total", "done", "in_progress", "blocked", "not_started"],
       "properties": {
         "total": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 9007199254740991
         },
         "done": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 9007199254740991
         },
         "in_progress": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 9007199254740991
         },
         "blocked": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 9007199254740991
         },
         "not_started": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 9007199254740991
         },
         "failed": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 9007199254740991
         }
-      }
+      },
+      "required": [
+        "total",
+        "done",
+        "in_progress",
+        "blocked",
+        "not_started"
+      ],
+      "additionalProperties": false
     },
     "kpi_summary": {
       "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
       "additionalProperties": {
         "type": "object",
-        "required": ["target", "actual", "status"],
         "properties": {
-          "target": {},
-          "actual": {},
+          "target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
+          },
+          "actual": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
+          },
           "status": {
             "type": "string",
-            "enum": ["MEASURING", "ON_TARGET", "BELOW_TARGET", "ABOVE_TARGET", "MET"]
+            "enum": [
+              "MEASURING",
+              "ON_TARGET",
+              "BELOW_TARGET",
+              "ABOVE_TARGET",
+              "MET"
+            ]
           },
           "unit": {
             "type": "string"
           }
-        }
+        },
+        "required": [
+          "target",
+          "actual",
+          "status"
+        ],
+        "additionalProperties": false
       }
     },
     "blockers": {
+      "description": "Active blockers in the sprint",
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["task_id", "blocker", "owner", "raised_at"],
         "properties": {
           "task_id": {
             "type": "string"
@@ -125,15 +209,38 @@
           },
           "raised_at": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
           },
           "resolved_at": {
-            "type": ["string", "null"],
-            "format": "date-time"
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
-        }
-      },
-      "description": "Active blockers in the sprint"
+        },
+        "required": [
+          "task_id",
+          "blocker",
+          "owner",
+          "raised_at"
+        ],
+        "additionalProperties": false
+      }
     }
-  }
+  },
+  "required": [
+    "sprint",
+    "name",
+    "target_date",
+    "phases",
+    "task_summary"
+  ],
+  "additionalProperties": false
 }

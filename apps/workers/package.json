@@ -1,0 +1,20 @@
+{
+  "name": "@intelliflow/workers",
+  "version": "0.0.1",
+  "private": true,
+  "description": "IntelliFlow CRM Workers - Unified worker runtime",
+  "scripts": {
+    "build": "echo 'Workers meta-package - sub-workers built by root turbo'",
+    "dev": "pnpm -r --filter './events-worker' --filter './ingestion-worker' --filter './notifications-worker' run dev",
+    "test": "pnpm -r --filter './events-worker' --filter './ingestion-worker' --filter './notifications-worker' run test",
+    "test:coverage": "pnpm -r --filter './events-worker' --filter './ingestion-worker' --filter './notifications-worker' run test:coverage",
+    "typecheck": "pnpm -r --filter './events-worker' --filter './ingestion-worker' --filter './notifications-worker' run typecheck",
+    "lint": "pnpm -r --filter './events-worker' --filter './ingestion-worker' --filter './notifications-worker' run lint",
+    "clean": "rimraf .turbo dist"
+  },
+  "devDependencies": {
+    "@intelliflow/typescript-config": "workspace:*",
+    "typescript": "^5.3.3",
+    "vitest": "^4.0.16"
+  }
+}

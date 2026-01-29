@@ -1,0 +1,369 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "attestation.schema.json",
+  "title": "Task Attestation Schema",
+  "description": "Schema for task completion attestations combining context acknowledgment and verification evidence",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "description": "Schema reference for validation",
+      "type": "string"
+    },
+    "schema_version": {
+      "description": "Schema version for backward compatibility",
+      "type": "string",
+      "enum": [
+        "1.0.0"
+      ]
+    },
+    "task_id": {
+      "description": "Unique task identifier (e.g., ENV-002-AI, IFC-001)",
+      "type": "string",
+      "pattern": "^[A-Z]+-[A-Z0-9-]+$"
+    },
+    "run_id": {
+      "description": "Execution run identifier (e.g., 20251225-181500)",
+      "type": "string"
+    },
+    "attestor": {
+      "description": "Entity that created the attestation (e.g., 'Claude Code - Task Integrity Validator')",
+      "type": "string"
+    },
+    "attestation_timestamp": {
+      "description": "ISO 8601 timestamp when attestation was created",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+    },
+    "verdict": {
+      "description": "Final verdict on task completion",
+      "type": "string",
+      "enum": [
+        "COMPLETE",
+        "INCOMPLETE",
+        "PARTIAL",
+        "BLOCKED",
+        "NEEDS_HUMAN"
+      ]
+    },
+    "context_acknowledgment": {
+      "description": "Evidence that prerequisite files were read and understood",
+      "type": "object",
+      "properties": {
+        "files_read": {
+          "description": "List of prerequisite files that were read",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "description": "File path relative to repo root",
+                "type": "string"
+              },
+              "sha256": {
+                "description": "SHA256 hash of file contents",
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "invariants_acknowledged": {
+          "description": "List of invariants/constraints that were acknowledged",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "acknowledged_at": {
+          "description": "When context was acknowledged",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "evidence_summary": {
+      "description": "Summary counts of verification evidence",
+      "type": "object",
+      "properties": {
+        "artifacts_verified": {
+          "description": "Number of artifacts verified",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "validations_passed": {
+          "description": "Number of validations that passed",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "validations_failed": {
+          "description": "Number of validations that failed",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "gates_passed": {
+          "description": "Number of gates that passed",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "gates_failed": {
+          "description": "Number of gates that failed",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "kpis_met": {
+          "description": "Number of KPIs met",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "kpis_missed": {
+          "description": "Number of KPIs missed",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "placeholders_found": {
+          "description": "Number of placeholder values found (should be 0)",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "additionalProperties": false
+    },
+    "artifact_hashes": {
+      "description": "Map of artifact paths to their SHA256 hashes",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      }
+    },
+    "validation_results": {
+      "description": "Results from validation commands",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "Validation name",
+            "type": "string"
+          },
+          "command": {
+            "description": "Command that was executed",
+            "type": "string"
+          },
+          "exit_code": {
+            "description": "Exit code from command execution",
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "passed": {
+            "description": "Whether validation passed",
+            "type": "boolean"
+          },
+          "timestamp": {
+            "description": "When validation was executed",
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+          },
+          "duration_ms": {
+            "description": "Execution duration in milliseconds",
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "stdout_hash": {
+            "description": "SHA256 hash of stdout for verification",
+            "type": "string"
+          }
+        },
+        "required": [
+          "command",
+          "exit_code",
+          "passed",
+          "timestamp"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "gate_results": {
+      "description": "Results from audit-matrix gates",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "gate_id": {
+            "description": "Gate identifier from audit-matrix.yml",
+            "type": "string"
+          },
+          "passed": {
+            "type": "boolean"
+          },
+          "exit_code": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "score": {
+            "description": "Quantitative result of the gate (e.g. percentage)",
+            "type": "number"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+          },
+          "log_path": {
+            "description": "Path to gate execution log",
+            "type": "string"
+          }
+        },
+        "required": [
+          "gate_id",
+          "passed"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "kpi_results": {
+      "description": "KPI verification results",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kpi": {
+            "description": "KPI name/description",
+            "type": "string"
+          },
+          "target": {
+            "description": "Target value",
+            "type": "string"
+          },
+          "actual": {
+            "description": "Actual measured value",
+            "type": "string"
+          },
+          "met": {
+            "description": "Whether target was met",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "kpi",
+          "target",
+          "actual",
+          "met"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "dependencies_verified": {
+      "description": "List of dependency task IDs that were verified complete",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "definition_of_done_items": {
+      "description": "Definition of Done verification",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "criterion": {
+            "description": "DoD criterion from Sprint_plan.csv",
+            "type": "string"
+          },
+          "met": {
+            "description": "Whether criterion was met",
+            "type": "boolean"
+          },
+          "evidence": {
+            "description": "Evidence supporting the claim",
+            "type": "string"
+          }
+        },
+        "required": [
+          "criterion",
+          "met"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "manual_verification": {
+      "description": "Results from manual audit/review",
+      "type": "object",
+      "properties": {
+        "performed_by": {
+          "description": "Person who performed the manual verification",
+          "type": "string"
+        },
+        "performed_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+        },
+        "review_notes": {
+          "type": "string"
+        },
+        "items_checked": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "environment": {
+      "description": "Environment details where attestation was generated",
+      "type": "object",
+      "properties": {
+        "os": {
+          "type": "string"
+        },
+        "node_version": {
+          "type": "string"
+        },
+        "git_commit": {
+          "type": "string"
+        },
+        "branch": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "notes": {
+      "description": "Additional notes or context",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "task_id",
+    "attestor",
+    "attestation_timestamp",
+    "verdict"
+  ],
+  "additionalProperties": false
+}

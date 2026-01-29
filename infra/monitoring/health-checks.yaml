@@ -1,0 +1,319 @@
+# Health Check Configuration for IntelliFlow CRM
+# This configuration defines health check endpoints and monitoring for all services
+
+# Global health check settings
+global:
+  check_interval: 30s
+  timeout: 10s
+  retries: 3
+  retry_interval: 5s
+
+# Service health checks
+services:
+  # Web Application
+  - name: intelliflow-web
+    type: http
+    endpoint: http://localhost:3000/api/health
+    expected_status: 200
+    timeout: 5s
+    interval: 30s
+    checks:
+      - name: database-connection
+        description: 'Verify database connectivity'
+        critical: true
+      - name: api-connectivity
+        description: 'Verify API server connectivity'
+        critical: true
+      - name: session-store
+        description: 'Verify session store (Redis) connectivity'
+        critical: false
+
+  # API Server
+  - name: intelliflow-api
+    type: http
+    endpoint: http://localhost:3001/health
+    expected_status: 200
+    timeout: 5s
+    interval: 30s
+    checks:
+      - name: database
+        description: 'PostgreSQL database connection'
+        critical: true
+        query: 'SELECT 1'
+      - name: redis
+        description: 'Redis cache connection'
+        critical: false
+      - name: otel-collector
+        description: 'OpenTelemetry collector connectivity'
+        critical: false
+      - name: memory
+        description: 'Memory usage below 90%'
+        critical: true
+        threshold:
+          max: 90
+          unit: 'percent'
+      - name: disk
+        description: 'Disk space available'
+        critical: true
+        threshold:
+          min: 10
+          unit: 'percent'
+
+  # AI Worker
+  - name: intelliflow-ai-worker
+    type: http
+    endpoint: http://localhost:3002/health
+    expected_status: 200
+    timeout: 10s
+    interval: 60s
+    checks:
+      - name: database
+        description: 'Database connection for AI worker'
+        critical: true
+      - name: langchain
+        description: 'LangChain initialization status'
+        critical: true
+      - name: ollama
+        description: 'Ollama local model availability'
+        critical: false
+      - name: openai-api
+        description: 'OpenAI API connectivity'
+        critical: false
+      - name: queue
+        description: 'Job queue connectivity'
+        critical: true
+
+  # PostgreSQL Database
+  - name: postgres
+    type: tcp
+    endpoint: localhost:5432
+    timeout: 5s
+    interval: 30s
+    checks:
+      - name: connection
+        description: 'TCP connection to PostgreSQL'
+        critical: true
+      - name: replication
+        description: 'Replication lag (if applicable)'
+        critical: false
+        threshold:
+          max: 1000
+          unit: 'milliseconds'
+
+  # Redis Cache
+  - name: redis
+    type: tcp
+    endpoint: localhost:6379
+    timeout: 3s
+    interval: 30s
+    checks:
+      - name: connection
+        description: 'TCP connection to Redis'
+        critical: false
+      - name: memory
+        description: 'Redis memory usage'
+        critical: false
+        threshold:
+          max: 80
+          unit: 'percent'
+
+  # OpenTelemetry Collector
+  - name: otel-collector
+    type: http
+    endpoint: http://localhost:13133
+    expected_status: 200
+    timeout: 5s
+    interval: 60s
+    checks:
+      - name: receivers
+        description: 'OTLP receivers status'
+        critical: false
+      - name: exporters
+        description: 'Exporters connectivity'
+        critical: false
+
+  # Supabase (if self-hosted)
+  - name: supabase
+    type: http
+    endpoint: ${env:SUPABASE_URL}/health
+    expected_status: 200
+    timeout: 10s
+    interval: 60s
+    enabled: ${env:SUPABASE_SELF_HOSTED:-false}
+
+# Readiness checks (before accepting traffic)
+readiness:
+  - name: database-migrations
+    description: 'Verify all database migrations are applied'
+    type: script
+    command: 'pnpm run db:migrate:status'
+    expected_exit_code: 0
+
+  - name: environment-variables
+    description: 'Verify required environment variables are set'
+    type: script
+    command: 'node scripts/check-env.js'
+    expected_exit_code: 0
+
+  - name: dependency-health
+    description: 'Verify all critical dependencies are healthy'
+    type: composite
+    services:
+      - postgres
+      - intelliflow-api
+
+# Liveness checks (service is running)
+liveness:
+  - name: process-running
+    description: 'Verify the main process is running'
+    type: process
+    process_name: node
+
+  - name: memory-leak-detection
+    description: 'Detect potential memory leaks'
+    type: metric
+    metric: 'process.memory.usage'
+    threshold:
+      max: 2048
+      unit: 'MB'
+    window: 5m
+
+  - name: cpu-saturation
+    description: 'Detect CPU saturation'
+    type: metric
+    metric: 'process.cpu.usage'
+    threshold:
+      max: 95
+      unit: 'percent'
+    window: 1m
+
+# Startup probes (initial health check with longer timeout)
+startup:
+  initial_delay: 10s
+  timeout: 60s
+  interval: 5s
+  failure_threshold: 12
+  checks:
+    - name: database-connection
+      description: 'Initial database connection'
+    - name: cache-warmup
+      description: 'Cache warmup complete'
+
+# Health check endpoints
+endpoints:
+  # Simple health check (returns 200 if service is up)
+  - path: /health
+    type: simple
+    response:
+      status: 200
+      body:
+        status: 'healthy'
+
+  # Detailed health check (includes all component statuses)
+  - path: /health/detailed
+    type: detailed
+    response:
+      status: 200
+      body:
+        status: 'healthy'
+        timestamp: '${timestamp}'
+        service: '${service_name}'
+        version: '${service_version}'
+        checks: '${checks}'
+
+  # Readiness check
+  - path: /health/ready
+    type: readiness
+    response:
+      status: 200
+      body:
+        ready: true
+
+  # Liveness check
+  - path: /health/live
+    type: liveness
+    response:
+      status: 200
+      body:
+        alive: true
+
+# Monitoring integration
+monitoring:
+  # Prometheus health check metrics
+  prometheus:
+    enabled: true
+    metrics:
+      - name: health_check_status
+        type: gauge
+        description: 'Health check status (1 = healthy, 0 = unhealthy)'
+        labels:
+          - service
+          - check_name
+
+      - name: health_check_duration_seconds
+        type: histogram
+        description: 'Health check duration in seconds'
+        labels:
+          - service
+          - check_name
+        buckets: [0.001, 0.01, 0.1, 1, 10]
+
+      - name: health_check_failures_total
+        type: counter
+        description: 'Total number of health check failures'
+        labels:
+          - service
+          - check_name
+
+  # Alerting rules
+  alerts:
+    - name: ServiceDown
+      condition: health_check_status == 0
+      severity: critical
+      duration: 2m
+      annotations:
+        summary: 'Service {{ $labels.service }} is down'
+        description: 'Health check {{ $labels.check_name }} has been failing for 2 minutes'
+
+    - name: ServiceDegraded
+      condition: health_check_status == 0.5
+      severity: warning
+      duration: 5m
+      annotations:
+        summary: 'Service {{ $labels.service }} is degraded'
+        description: 'Non-critical health check {{ $labels.check_name }} is failing'
+
+    - name: HighLatency
+      condition: health_check_duration_seconds > 5
+      severity: warning
+      duration: 5m
+      annotations:
+        summary: 'High health check latency for {{ $labels.service }}'
+        description: 'Health check taking more than 5 seconds'
+
+# Notification channels
+notifications:
+  - name: slack
+    type: slack
+    webhook_url: ${env:SLACK_WEBHOOK_URL}
+    channel: '#alerts'
+    enabled: ${env:SLACK_NOTIFICATIONS_ENABLED:-false}
+
+  - name: email
+    type: email
+    recipients:
+      - ${env:ALERT_EMAIL}
+    enabled: ${env:EMAIL_NOTIFICATIONS_ENABLED:-false}
+
+  - name: pagerduty
+    type: pagerduty
+    service_key: ${env:PAGERDUTY_SERVICE_KEY}
+    enabled: ${env:PAGERDUTY_ENABLED:-false}
+
+# Logging
+logging:
+  level: info
+  format: json
+  destination: stdout
+  include_timestamps: true
+  include_caller: true

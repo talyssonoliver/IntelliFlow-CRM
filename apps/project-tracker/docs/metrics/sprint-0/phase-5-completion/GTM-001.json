@@ -1,0 +1,50 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "GTM-001",
+  "description": "ICP & Personas Pack (target customers, job stories, objections)",
+  "owner": "PM + Marketing",
+  "status": "DONE",
+  "sprint": "sprint-0",
+  "phase": "phase-5-completion",
+  "stream": null,
+  "dependencies": {
+    "all_satisfied": true,
+    "verified_at": "2026-01-29T01:33:17.579Z",
+    "required": [
+      "DOC-001"
+    ]
+  },
+  "dependencies_resolved": [
+    "DOC-001"
+  ],
+  "started_at": "2025-12-21T07:06:10.560Z",
+  "completed_at": "2025-12-21T07:21:10.560Z",
+  "target_duration_minutes": null,
+  "actual_duration_minutes": 15,
+  "artifacts": {
+    "expected": [
+      "docs/company/go-to-market/icp.md",
+      "docs/company/go-to-market/personas.md",
+      "docs/company/go-to-market/objections.md"
+    ],
+    "created": [
+      "docs/company/go-to-market/icp.md",
+      "docs/company/go-to-market/personas.md",
+      "docs/company/go-to-market/objections.md"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "GTM Docs Created",
+      "command": "verify docs/company/go-to-market/*.md exist",
+      "executed_at": "2025-12-20T00:00:00Z",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2025-12-21T07:21:10.560Z"
+    }
+  ],
+  "blockers": [],
+  "section": "Go-to-Market",
+  "status_history": []
+}

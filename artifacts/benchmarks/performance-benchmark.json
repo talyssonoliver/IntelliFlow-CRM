@@ -1,0 +1,66 @@
+{
+  "timestamp": "2026-01-25T22:13:37.791Z",
+  "environment": {
+    "node": "v25.2.1",
+    "platform": "win32",
+    "arch": "x64"
+  },
+  "benchmarks": [
+    {
+      "operation": "Zod validation",
+      "runs": 1000,
+      "avgTime": 0.0034357999999995175,
+      "minTime": 0.0007999999999697138,
+      "maxTime": 0.8034000000000106,
+      "p95Time": 0.004500000000007276,
+      "p99Time": 0.014299999999991542,
+      "unit": "ms"
+    },
+    {
+      "operation": "JSON serialization",
+      "runs": 1000,
+      "avgTime": 0.004112300000000857,
+      "minTime": 0.002699999999947522,
+      "maxTime": 0.8299999999999841,
+      "p95Time": 0.0049999999999954525,
+      "p99Time": 0.006899999999973261,
+      "unit": "ms"
+    },
+    {
+      "operation": "Database lookup (in-memory)",
+      "runs": 1000,
+      "avgTime": 0.0005318000000006009,
+      "minTime": 0.00009999999997489795,
+      "maxTime": 0.054600000000050386,
+      "p95Time": 0.0009000000000014552,
+      "p99Time": 0.0013000000000147338,
+      "unit": "ms"
+    },
+    {
+      "operation": "Full tRPC request (simulated)",
+      "runs": 1000,
+      "avgTime": 0.039247399999999745,
+      "minTime": 0.019700000000000273,
+      "maxTime": 1.4732999999999947,
+      "p95Time": 0.058500000000037744,
+      "p99Time": 0.0928000000000111,
+      "unit": "ms"
+    },
+    {
+      "operation": "Network request (simulated)",
+      "runs": 100,
+      "avgTime": 15.638721000000018,
+      "minTime": 14.92410000000001,
+      "maxTime": 21.280399999999986,
+      "p95Time": 16.114399999999932,
+      "p99Time": 21.280399999999986,
+      "unit": "ms"
+    }
+  ],
+  "validation": {
+    "tRPC_p95_under_50ms": true,
+    "database_p95_under_20ms": true,
+    "type_safety_overhead": 0,
+    "all_targets_met": true
+  }
+}

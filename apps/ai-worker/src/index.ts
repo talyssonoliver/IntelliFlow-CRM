@@ -5,9 +5,33 @@
 
 import dotenv from 'dotenv';
 import pino from 'pino';
+import path from 'node:path';
+import fs from 'node:fs';
 
-// Load environment variables
-dotenv.config();
+// Load environment variables from multiple .env files
+// Order: .env -> .env.local -> .env.development (later files override earlier)
+function loadEnvFiles() {
+  // Find project root (monorepo root with pnpm-workspace.yaml)
+  let root = process.cwd();
+  while (root !== path.dirname(root)) {
+    if (fs.existsSync(path.join(root, 'pnpm-workspace.yaml'))) break;
+    root = path.dirname(root);
+  }
+
+  const envFiles = [
+    path.join(root, '.env'),
+    path.join(root, '.env.local'),
+    path.join(root, '.env.development'),
+  ];
+
+  for (const envFile of envFiles) {
+    if (fs.existsSync(envFile)) {
+      dotenv.config({ path: envFile });
+    }
+  }
+}
+
+loadEnvFiles();
 
 const logger = pino({
   name: 'ai-worker',
@@ -29,43 +53,79 @@ const logger = pino({
 export { aiConfig, loadAIConfig, calculateCost } from './config/ai.config';
 export { costTracker, CostTracker } from './utils/cost-tracker';
 export { leadScoringChain, LeadScoringChain } from './chains/scoring.chain';
+export { embeddingChain, EmbeddingChain } from './chains/embedding.chain';
 export { BaseAgent } from './agents/base.agent';
 export {
   qualificationAgent,
   LeadQualificationAgent,
   createQualificationTask,
 } from './agents/qualification.agent';
+export { createLogger, withContext, withTiming } from './utils/logger';
+export {
+  withRetry,
+  withTimeout,
+  withRetryAndTimeout,
+  CircuitBreaker,
+  RetryableError,
+  RateLimitError,
+  TimeoutError,
+  NetworkError,
+} from './utils/retry';
+
+// Export worker and jobs (IFC-168)
+export { AIWorker, createAIWorker } from './ai-worker';
+export {
+  AI_WORKER_QUEUES,
+  SCORING_QUEUE,
+  PREDICTION_QUEUE,
+  processScoringJob,
+  processPredictionJob,
+  ScoringJobDataSchema,
+  ScoringJobResultSchema,
+  PredictionJobDataSchema,
+  PredictionJobResultSchema,
+  DEFAULT_SCORING_JOB_OPTIONS,
+  DEFAULT_PREDICTION_JOB_OPTIONS,
+} from './jobs';
 
 // Export types
 export type { AIConfig, AIProvider, ModelName } from './config/ai.config';
 export type { UsageMetrics, CostStatistics } from './utils/cost-tracker';
 export type { LeadInput, ScoringResult } from './chains/scoring.chain';
 export type {
-  AgentContext,
-  AgentTask,
-  AgentResult,
-  BaseAgentConfig,
-} from './agents/base.agent';
+  EmbeddingInput,
+  EmbeddingResult,
+  BatchEmbeddingResult,
+} from './chains/embedding.chain';
+export type { AgentContext, AgentTask, AgentResult, BaseAgentConfig } from './agents/base.agent';
+export type { QualificationInput, QualificationOutput } from './agents/qualification.agent';
+export type { LoggerContext, LogLevel } from './utils/logger';
+export type { RetryConfig } from './utils/retry';
+
+// Export job types (IFC-168)
 export type {
-  QualificationInput,
-  QualificationOutput,
-} from './agents/qualification.agent';
+  ScoringJobData,
+  ScoringJobResult,
+  PredictionJobData,
+  PredictionJobResult,
+  PredictionType,
+} from './jobs';
 
 /**
- * Initialize the AI Worker
+ * Initialize the AI Worker (legacy mode - library only)
+ * @deprecated Use createAIWorker() for queue-based processing
  */
 async function initializeWorker() {
-  logger.info('🤖 IntelliFlow AI Worker starting...');
+  logger.info('🤖 IntelliFlow AI Worker starting (library mode)...');
 
   try {
     // Validate configuration
-    const { aiConfig } = await import('./config/ai.config');
+    const { aiConfig } = await import('./config/ai.config.js');
 
     logger.info(
       {
         provider: aiConfig.provider,
-        model:
-          aiConfig.provider === 'openai' ? aiConfig.openai.model : aiConfig.ollama.model,
+        model: aiConfig.provider === 'openai' ? aiConfig.openai.model : aiConfig.ollama.model,
         costTrackingEnabled: aiConfig.costTracking.enabled,
         cacheEnabled: aiConfig.performance.cacheEnabled,
       },
@@ -73,24 +133,28 @@ async function initializeWorker() {
     );
 
     // Initialize cost tracker
-    const { costTracker } = await import('./utils/cost-tracker');
+    const { costTracker } = await import('./utils/cost-tracker.js');
     logger.info('Cost tracker initialized');
 
     // Initialize chains
-    const { leadScoringChain } = await import('./chains/scoring.chain');
+    const { leadScoringChain } = await import('./chains/scoring.chain.js');
     logger.info('Lead scoring chain initialized');
 
+    const { embeddingChain } = await import('./chains/embedding.chain.js');
+    logger.info('Embedding chain initialized');
+
     // Initialize agents
-    const { qualificationAgent } = await import('./agents/qualification.agent');
+    const { qualificationAgent } = await import('./agents/qualification.agent.js');
     logger.info('Qualification agent initialized');
 
-    logger.info('✅ AI Worker initialized successfully');
+    logger.info('✅ AI Worker initialized successfully (library mode)');
 
     // Return public API
     return {
       aiConfig,
       costTracker,
       leadScoringChain,
+      embeddingChain,
       qualificationAgent,
     };
   } catch (error) {
@@ -113,7 +177,7 @@ async function shutdown() {
 
   try {
     // Generate final cost report
-    const { costTracker } = await import('./utils/cost-tracker');
+    const { costTracker } = await import('./utils/cost-tracker.js');
     const report = costTracker.generateReport();
     logger.info('\n' + report);
 
@@ -168,39 +232,67 @@ function setupSignalHandlers() {
 
 /**
  * Main entry point
+ *
+ * Supports two modes:
+ * 1. Queue mode (default): Starts BullMQ worker to process jobs from Redis
+ * 2. Library mode (AI_WORKER_MODE=library): Exports APIs without queue processing
  */
 async function main() {
-  setupSignalHandlers();
+  const mode = process.env.AI_WORKER_MODE || 'queue';
 
-  try {
-    const worker = await initializeWorker();
+  if (mode === 'library') {
+    // Legacy library-only mode
+    setupSignalHandlers();
+    await initializeWorker();
+    logger.info('AI Worker running in library mode (no queue processing)');
+    // Keep process alive for library mode
+    await new Promise(() => {});
+  } else {
+    // Queue mode - use the new AIWorker class (IFC-168)
+    logger.info('🤖 Starting AI Worker in queue mode...');
 
-    // Keep the process running
-    logger.info('AI Worker is ready and waiting for tasks...');
+    try {
+      const { createAIWorker } = await import('./ai-worker.js');
+      const worker = await createAIWorker();
 
-    // In a production setup, this would connect to a message queue
-    // or start an HTTP server to receive tasks
-    // For now, we just keep the process alive
-    await new Promise(() => {
-      // Keep alive indefinitely
-    });
-  } catch (error) {
-    logger.error(
-      {
-        error: error instanceof Error ? error.message : String(error),
-      },
-      'Fatal error in main'
-    );
-    process.exit(1);
+      logger.info('AI Worker is ready and processing jobs from queues');
+
+      // The worker handles its own shutdown via BaseWorker
+      // Keep process alive by waiting for worker status
+      await new Promise<void>((resolve) => {
+        const checkStatus = setInterval(() => {
+          const status = worker.getStatus();
+          if (status.state === 'stopped' || status.state === 'error') {
+            clearInterval(checkStatus);
+            resolve();
+          }
+        }, 1000);
+      });
+    } catch (error) {
+      logger.error(
+        {
+          error: error instanceof Error ? error.message : String(error),
+        },
+        'Fatal error starting AI Worker'
+      );
+      process.exit(1);
+    }
   }
 }
 
 // Run the worker if this file is executed directly
+// NOSONAR: S7785 - Top-level await not available in CommonJS modules
 if (require.main === module) {
-  main().catch((error) => {
-    console.error('Fatal error:', error);
-    process.exit(1);
-  });
+  // eslint-disable-next-line @typescript-eslint/no-floating-promises
+  (async () => {
+    // NOSONAR
+    try {
+      await main();
+    } catch (error: unknown) {
+      console.error('Fatal error:', error);
+      process.exit(1);
+    }
+  })();
 }
 
 // Export initialize function for programmatic use

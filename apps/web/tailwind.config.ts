@@ -11,6 +11,16 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Design system colors (matching mockups)
+        'ds-primary': '#137fec',
+        'ds-primary-hover': '#0e6ac7',
+        'background-light': '#f6f7f8',
+        'background-dark': '#101922',
+        'surface-light': '#ffffff',
+        'surface-dark': '#1e2936',
+        'border-light': '#e2e8f0',
+        'border-dark': '#334155',
+        // shadcn/ui colors (CSS variables)
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',

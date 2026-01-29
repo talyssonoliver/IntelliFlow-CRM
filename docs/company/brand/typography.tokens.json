@@ -1,0 +1,149 @@
+{
+  "$schema": "https://design-tokens.org/schema.json",
+  "typography": {
+    "fontFamily": {
+      "display": {
+        "value": "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        "description": "Primary display font for headings and UI"
+      },
+      "body": {
+        "value": "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        "description": "Body text font"
+      },
+      "mono": {
+        "value": "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace",
+        "description": "Monospace font for code"
+      }
+    },
+    "fontWeight": {
+      "light": { "value": 300, "description": "Light text" },
+      "normal": { "value": 400, "description": "Regular body text" },
+      "medium": { "value": 500, "description": "Slightly emphasized text" },
+      "semibold": { "value": 600, "description": "Subheadings, labels" },
+      "bold": { "value": 700, "description": "Headings, emphasis" },
+      "extrabold": { "value": 800, "description": "Hero text, strong emphasis" },
+      "black": { "value": 900, "description": "Maximum weight" }
+    },
+    "fontSize": {
+      "xs": { "value": "0.75rem", "px": "12px", "description": "Extra small - labels, captions" },
+      "sm": { "value": "0.875rem", "px": "14px", "description": "Small - secondary text" },
+      "base": { "value": "1rem", "px": "16px", "description": "Base body text" },
+      "lg": { "value": "1.125rem", "px": "18px", "description": "Large body text" },
+      "xl": { "value": "1.25rem", "px": "20px", "description": "Small headings" },
+      "2xl": { "value": "1.5rem", "px": "24px", "description": "H4 headings" },
+      "3xl": { "value": "1.875rem", "px": "30px", "description": "H3 headings" },
+      "4xl": { "value": "2.25rem", "px": "36px", "description": "H2 headings" },
+      "5xl": { "value": "3rem", "px": "48px", "description": "H1 headings" },
+      "6xl": { "value": "3.75rem", "px": "60px", "description": "Hero text" }
+    },
+    "lineHeight": {
+      "none": { "value": 1, "description": "No extra line height" },
+      "tight": { "value": 1.25, "description": "Headings" },
+      "snug": { "value": 1.375, "description": "Compact text" },
+      "normal": { "value": 1.5, "description": "Body text (default)" },
+      "relaxed": { "value": 1.625, "description": "Readable paragraphs" },
+      "loose": { "value": 2, "description": "Spacious text" }
+    },
+    "letterSpacing": {
+      "tighter": { "value": "-0.05em", "description": "Tight tracking for large text" },
+      "tight": { "value": "-0.025em", "description": "Slightly tight" },
+      "normal": { "value": "0em", "description": "Default tracking" },
+      "wide": { "value": "0.025em", "description": "Slightly wide" },
+      "wider": { "value": "0.05em", "description": "Labels, uppercase text" },
+      "widest": { "value": "0.1em", "description": "Maximum tracking" }
+    }
+  },
+  "textStyles": {
+    "h1": {
+      "fontFamily": "display",
+      "fontSize": "5xl",
+      "fontWeight": "bold",
+      "lineHeight": "tight",
+      "letterSpacing": "tight"
+    },
+    "h2": {
+      "fontFamily": "display",
+      "fontSize": "4xl",
+      "fontWeight": "bold",
+      "lineHeight": "tight",
+      "letterSpacing": "tight"
+    },
+    "h3": {
+      "fontFamily": "display",
+      "fontSize": "3xl",
+      "fontWeight": "semibold",
+      "lineHeight": "tight",
+      "letterSpacing": "normal"
+    },
+    "h4": {
+      "fontFamily": "display",
+      "fontSize": "2xl",
+      "fontWeight": "semibold",
+      "lineHeight": "snug",
+      "letterSpacing": "normal"
+    },
+    "h5": {
+      "fontFamily": "display",
+      "fontSize": "xl",
+      "fontWeight": "medium",
+      "lineHeight": "snug",
+      "letterSpacing": "normal"
+    },
+    "h6": {
+      "fontFamily": "display",
+      "fontSize": "lg",
+      "fontWeight": "medium",
+      "lineHeight": "normal",
+      "letterSpacing": "normal"
+    },
+    "body": {
+      "fontFamily": "body",
+      "fontSize": "base",
+      "fontWeight": "normal",
+      "lineHeight": "normal",
+      "letterSpacing": "normal"
+    },
+    "body-sm": {
+      "fontFamily": "body",
+      "fontSize": "sm",
+      "fontWeight": "normal",
+      "lineHeight": "normal",
+      "letterSpacing": "normal"
+    },
+    "caption": {
+      "fontFamily": "body",
+      "fontSize": "xs",
+      "fontWeight": "normal",
+      "lineHeight": "normal",
+      "letterSpacing": "wide"
+    },
+    "label": {
+      "fontFamily": "body",
+      "fontSize": "sm",
+      "fontWeight": "medium",
+      "lineHeight": "normal",
+      "letterSpacing": "normal"
+    },
+    "button": {
+      "fontFamily": "body",
+      "fontSize": "sm",
+      "fontWeight": "medium",
+      "lineHeight": "normal",
+      "letterSpacing": "normal"
+    },
+    "code": {
+      "fontFamily": "mono",
+      "fontSize": "sm",
+      "fontWeight": "normal",
+      "lineHeight": "relaxed",
+      "letterSpacing": "normal"
+    }
+  },
+  "tailwind": {
+    "fontFamily": {
+      "display": ["Inter", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
+      "body": ["Inter", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
+      "mono": ["ui-monospace", "SFMono-Regular", "SF Mono", "Menlo", "Consolas", "Liberation Mono", "monospace"]
+    }
+  }
+}

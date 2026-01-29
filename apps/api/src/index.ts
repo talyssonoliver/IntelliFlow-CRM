@@ -13,3 +13,9 @@ export { router, protectedProcedure, publicProcedure } from './server';
 
 // Re-export for convenience
 export type { UserSession } from './context';
+
+// Agent module (IFC-139)
+export * from './agent';
+
+// Security module (IFC-098, IFC-113, IFC-127)
+export * from './security';

@@ -1,0 +1,309 @@
+{
+  "metadata": {
+    "lastUpdated": "2025-01-15",
+    "totalPages": 3
+  },
+  "pages": {
+    "ai-crm": {
+      "slug": "ai-crm",
+      "title": "AI-Powered CRM for Modern Sales Teams | IntelliFlow",
+      "description": "Transform your sales process with AI-powered lead scoring, automated workflows, and intelligent insights. Start your free trial today.",
+      "sections": [
+        {
+          "type": "hero",
+          "badge": "AI-Powered CRM",
+          "badgeIcon": "smart_toy",
+          "headline": "Close More Deals with AI-Powered Intelligence",
+          "subheadline": "IntelliFlow CRM uses machine learning to score leads, automate follow-ups, and provide actionable insights that help your team sell smarter.",
+          "primaryCta": {
+            "text": "Start Free Trial",
+            "href": "/sign-up?source=lp-ai-crm"
+          },
+          "secondaryCta": {
+            "text": "Watch Demo",
+            "href": "/demo"
+          }
+        },
+        {
+          "type": "logo-cloud",
+          "title": "Trusted by innovative sales teams worldwide",
+          "logos": [
+            { "name": "TechCorp" },
+            { "name": "SalesForce Pro" },
+            { "name": "GrowthCo" },
+            { "name": "DataDriven" },
+            { "name": "ScaleUp Inc" }
+          ]
+        },
+        {
+          "type": "features",
+          "title": "AI That Actually Helps You Sell",
+          "subtitle": "Not just another CRM. Intelligent automation that understands your sales process.",
+          "features": [
+            {
+              "icon": "psychology",
+              "title": "Predictive Lead Scoring",
+              "description": "ML models analyze 50+ signals to prioritize your hottest leads automatically."
+            },
+            {
+              "icon": "auto_fix_high",
+              "title": "Smart Follow-ups",
+              "description": "AI suggests the best time and channel to reach out, increasing response rates by 40%."
+            },
+            {
+              "icon": "insights",
+              "title": "Deal Intelligence",
+              "description": "Get real-time insights on deal health and recommended actions to close faster."
+            },
+            {
+              "icon": "assistant",
+              "title": "AI Email Writer",
+              "description": "Generate personalized emails in seconds. Human-quality writing, AI speed."
+            },
+            {
+              "icon": "analytics",
+              "title": "Revenue Forecasting",
+              "description": "Accurate pipeline forecasts powered by historical data and market signals."
+            },
+            {
+              "icon": "integration_instructions",
+              "title": "100+ Integrations",
+              "description": "Connect your entire stack. Seamless sync with email, calendar, and tools you use."
+            }
+          ],
+          "columns": 3
+        },
+        {
+          "type": "stats",
+          "background": "brand",
+          "stats": [
+            { "value": "40%", "label": "Faster Deal Cycles" },
+            { "value": "3x", "label": "More Qualified Leads" },
+            { "value": "95%", "label": "Scoring Accuracy" },
+            { "value": "2hrs", "label": "Saved Per Day" }
+          ]
+        },
+        {
+          "type": "testimonials",
+          "title": "Loved by Sales Teams",
+          "subtitle": "See what our customers have to say about IntelliFlow CRM",
+          "testimonials": [
+            {
+              "quote": "The AI lead scoring is incredible. We went from guessing which leads to call to knowing exactly who's ready to buy.",
+              "author": "Sarah Chen",
+              "role": "VP of Sales",
+              "company": "TechCorp"
+            },
+            {
+              "quote": "IntelliFlow cut our sales cycle in half. The automated follow-ups and smart insights are game-changers.",
+              "author": "Marcus Johnson",
+              "role": "Sales Director",
+              "company": "GrowthCo"
+            },
+            {
+              "quote": "Finally, a CRM that works for us instead of against us. The AI suggestions are spot-on.",
+              "author": "Emily Rodriguez",
+              "role": "Account Executive",
+              "company": "ScaleUp Inc"
+            }
+          ]
+        },
+        {
+          "type": "cta",
+          "title": "Ready to Supercharge Your Sales?",
+          "subtitle": "Join thousands of sales teams using AI to close more deals. No credit card required.",
+          "primaryCta": {
+            "text": "Start Free Trial",
+            "href": "/sign-up?source=lp-ai-crm"
+          },
+          "secondaryCta": {
+            "text": "Talk to Sales",
+            "href": "/contact"
+          }
+        }
+      ],
+      "conversionGoal": "trial_signup"
+    },
+    "enterprise": {
+      "slug": "enterprise",
+      "title": "Enterprise CRM Solution | IntelliFlow",
+      "description": "Enterprise-grade CRM with SSO, advanced security, dedicated support, and custom integrations. Built for scale.",
+      "sections": [
+        {
+          "type": "hero",
+          "badge": "Enterprise",
+          "badgeIcon": "business",
+          "headline": "Enterprise CRM Built for Scale",
+          "subheadline": "Advanced security, dedicated support, and custom integrations. Everything your enterprise needs to succeed.",
+          "primaryCta": {
+            "text": "Request Demo",
+            "href": "/demo?plan=enterprise"
+          },
+          "secondaryCta": {
+            "text": "View Security",
+            "href": "/security"
+          }
+        },
+        {
+          "type": "features",
+          "title": "Enterprise-Grade Capabilities",
+          "subtitle": "Built to meet the demanding requirements of large organizations",
+          "features": [
+            {
+              "icon": "security",
+              "title": "Advanced Security",
+              "description": "SOC 2 Type II, ISO 27001 certified. End-to-end encryption and SSO/SAML support."
+            },
+            {
+              "icon": "groups",
+              "title": "Unlimited Users",
+              "description": "Scale your team without limits. Role-based access control and team hierarchies."
+            },
+            {
+              "icon": "support_agent",
+              "title": "Dedicated Support",
+              "description": "24/7 priority support with dedicated customer success manager."
+            },
+            {
+              "icon": "api",
+              "title": "Custom Integrations",
+              "description": "Full API access with custom integration development support."
+            }
+          ],
+          "columns": 2
+        },
+        {
+          "type": "stats",
+          "background": "dark",
+          "stats": [
+            { "value": "500+", "label": "Enterprise Customers" },
+            { "value": "99.99%", "label": "Uptime SLA" },
+            { "value": "< 1hr", "label": "Support Response" },
+            { "value": "SOC 2", "label": "Certified" }
+          ]
+        },
+        {
+          "type": "cta",
+          "title": "Ready for Enterprise CRM?",
+          "subtitle": "Let's discuss how IntelliFlow can transform your organization's sales process.",
+          "primaryCta": {
+            "text": "Schedule a Call",
+            "href": "/contact?type=enterprise"
+          }
+        }
+      ],
+      "conversionGoal": "enterprise_demo"
+    },
+    "startup": {
+      "slug": "startup",
+      "title": "CRM for Startups | IntelliFlow",
+      "description": "The modern CRM built for fast-moving startups. Free tier available, scales as you grow.",
+      "sections": [
+        {
+          "type": "hero",
+          "badge": "For Startups",
+          "badgeIcon": "rocket_launch",
+          "headline": "The CRM That Grows With You",
+          "subheadline": "Start free, scale infinitely. Modern CRM designed for fast-moving startups who can't afford to waste time on clunky tools.",
+          "primaryCta": {
+            "text": "Start Free",
+            "href": "/sign-up?plan=startup"
+          },
+          "secondaryCta": {
+            "text": "See Pricing",
+            "href": "/pricing"
+          }
+        },
+        {
+          "type": "features",
+          "title": "Built for Speed",
+          "subtitle": "Everything you need, nothing you don't. Ship faster with a CRM that works the way you do.",
+          "features": [
+            {
+              "icon": "bolt",
+              "title": "5-Minute Setup",
+              "description": "Import contacts, connect email, and start selling in minutes. No IT required."
+            },
+            {
+              "icon": "trending_up",
+              "title": "Scales With You",
+              "description": "From 2 users to 200. Pricing that grows with your team, not against it."
+            },
+            {
+              "icon": "code",
+              "title": "Developer Friendly",
+              "description": "Full API, webhooks, and Zapier integration. Build what you need."
+            }
+          ],
+          "columns": 3
+        },
+        {
+          "type": "pricing",
+          "title": "Simple, Startup-Friendly Pricing",
+          "subtitle": "No hidden fees. No per-seat surprises. Just straightforward pricing.",
+          "tiers": [
+            {
+              "name": "Free",
+              "price": "$0",
+              "period": "forever",
+              "description": "For solo founders and tiny teams",
+              "features": [
+                "Up to 3 users",
+                "1,000 contacts",
+                "Basic integrations",
+                "Email support"
+              ],
+              "cta": {
+                "text": "Get Started",
+                "href": "/sign-up?plan=free"
+              }
+            },
+            {
+              "name": "Startup",
+              "price": "$49",
+              "period": "month",
+              "description": "For growing teams ready to scale",
+              "features": [
+                "Up to 10 users",
+                "Unlimited contacts",
+                "AI lead scoring",
+                "Priority support"
+              ],
+              "cta": {
+                "text": "Start Trial",
+                "href": "/sign-up?plan=startup"
+              },
+              "highlighted": true
+            },
+            {
+              "name": "Scale",
+              "price": "$149",
+              "period": "month",
+              "description": "For teams hitting hypergrowth",
+              "features": [
+                "Unlimited users",
+                "Advanced AI features",
+                "Custom integrations",
+                "Dedicated CSM"
+              ],
+              "cta": {
+                "text": "Contact Sales",
+                "href": "/contact?plan=scale"
+              }
+            }
+          ]
+        },
+        {
+          "type": "cta",
+          "title": "Join 1,000+ Startups Using IntelliFlow",
+          "subtitle": "Start free today. No credit card required.",
+          "primaryCta": {
+            "text": "Start Free",
+            "href": "/sign-up?plan=startup"
+          }
+        }
+      ],
+      "conversionGoal": "startup_signup"
+    }
+  }
+}

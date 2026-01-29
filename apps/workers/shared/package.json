@@ -1,0 +1,42 @@
+{
+  "name": "@intelliflow/worker-shared",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Shared worker infrastructure for IntelliFlow CRM",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm && tsc -p tsconfig.json --emitDeclarationOnly",
+    "dev": "tsup src/index.ts --format cjs,esm --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "bullmq": "^5.66.4",
+    "ioredis": "^5.3.2",
+    "pino": "^8.17.2",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@intelliflow/typescript-config": "workspace:*",
+    "@types/node": "^20.10.0",
+    "pino-pretty": "^10.3.1",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^4.0.16"
+  },
+  "peerDependencies": {
+    "@intelliflow/observability": "workspace:*",
+    "@intelliflow/platform": "workspace:*"
+  }
+}

@@ -1,6 +1,7 @@
 # @intelliflow/observability
 
-Comprehensive observability package for IntelliFlow CRM, providing distributed tracing, metrics collection, and structured logging using OpenTelemetry.
+Comprehensive observability package for IntelliFlow CRM, providing distributed
+tracing, metrics collection, and structured logging using OpenTelemetry.
 
 ## Features
 
@@ -78,10 +79,7 @@ import { logger, LogContexts } from '@intelliflow/observability/logging';
 logger.info('User logged in');
 
 // Logging with context
-logger.info(
-  LogContexts.user('user-123', 'user@example.com'),
-  'User logged in'
-);
+logger.info(LogContexts.user('user-123', 'user@example.com'), 'User logged in');
 
 // Error logging
 logger.error(error, 'Failed to process request');
@@ -177,6 +175,7 @@ Import the pre-configured Grafana dashboard:
 ```
 
 The dashboard includes:
+
 - API performance metrics (request rate, latency, errors)
 - Business KPIs (leads, conversions, pipeline value)
 - AI performance (inference latency, cost, confidence)
@@ -251,7 +250,8 @@ try {
 
 ## Testing
 
-The observability package is disabled by default in test environments to avoid noise. To enable in tests:
+The observability package is disabled by default in test environments to avoid
+noise. To enable in tests:
 
 ```typescript
 initObservability({

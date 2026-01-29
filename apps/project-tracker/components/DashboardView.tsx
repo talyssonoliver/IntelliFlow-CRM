@@ -1,18 +1,29 @@
 'use client';
 
-import { Task } from '@/lib/types';
+import { Task, SprintNumber } from '@/lib/types';
 import { countTasksByStatus, calculateCompletionRate } from '@/lib/csv-parser';
 import { groupBy } from '@/lib/utils';
 import React from 'react';
-import { Clock, CheckCircle2, PlayCircle } from 'lucide-react';
+import { Icon } from '@/lib/icons';
+import ExecutiveSummary from './ExecutiveSummary';
+import SwarmMonitor from './SwarmMonitor';
+import NextStepsView from './NextStepsView';
+import DailyWorkflowSummary from './DailyWorkflowSummary';
+import ScheduleHealthWidget from './ScheduleHealthWidget';
 
 interface DashboardViewProps {
   readonly tasks: Task[];
   readonly sections: string[];
   readonly onTaskClick: (task: Task) => void;
+  readonly sprint?: SprintNumber;
 }
 
-export default function DashboardView({ tasks, sections, onTaskClick }: DashboardViewProps) {
+export default function DashboardView({
+  tasks,
+  sections,
+  onTaskClick,
+  sprint,
+}: DashboardViewProps) {
   const stats = countTasksByStatus(tasks);
   const completionRate = calculateCompletionRate(tasks);
   const tasksBySection = groupBy(tasks, 'section');
@@ -28,7 +39,7 @@ export default function DashboardView({ tasks, sections, onTaskClick }: Dashboar
               <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
             </div>
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <CheckCircle2 className="w-6 h-6 text-blue-600" />
+              <Icon name="check_circle" size="xl" className="text-blue-600" />
             </div>
           </div>
         </div>
@@ -40,7 +51,7 @@ export default function DashboardView({ tasks, sections, onTaskClick }: Dashboar
               <p className="text-3xl font-bold text-green-600">{stats.completed}</p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <CheckCircle2 className="w-6 h-6 text-green-600" />
+              <Icon name="check_circle" size="xl" className="text-green-600" />
             </div>
           </div>
         </div>
@@ -52,7 +63,7 @@ export default function DashboardView({ tasks, sections, onTaskClick }: Dashboar
               <p className="text-3xl font-bold text-blue-600">{stats.inProgress}</p>
             </div>
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <PlayCircle className="w-6 h-6 text-blue-600" />
+              <Icon name="play_circle" size="xl" className="text-blue-600" />
             </div>
           </div>
         </div>
@@ -64,7 +75,7 @@ export default function DashboardView({ tasks, sections, onTaskClick }: Dashboar
               <p className="text-3xl font-bold text-gray-600">{stats.planned}</p>
             </div>
             <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-              <Clock className="w-6 h-6 text-gray-600" />
+              <Icon name="schedule" size="xl" className="text-gray-600" />
             </div>
           </div>
         </div>
@@ -84,11 +95,36 @@ export default function DashboardView({ tasks, sections, onTaskClick }: Dashboar
         </div>
       </div>
 
+      {/* Schedule Health (EVM Metrics) */}
+      <ScheduleHealthWidget sprint={typeof sprint === 'number' ? sprint : sprint === 'all' ? 'all' : 0} />
+
+      {/* Executive Summary */}
+      <ExecutiveSummary sprint={sprint} />
+
+      {/* Daily Workflow Summary */}
+      <DailyWorkflowSummary
+        tasks={tasks}
+        sprint={sprint ?? 'all'}
+        onTaskClick={onTaskClick}
+      />
+
+      {/* Swarm Monitor */}
+      <SwarmMonitor />
+
+      {/* Next Steps - Ready to Start Tasks */}
+      <NextStepsView
+        sprint={sprint}
+        onTaskClick={(taskId) => {
+          const task = tasks.find((t) => t.id === taskId);
+          if (task) onTaskClick(task);
+        }}
+      />
+
       {/* Section Breakdown */}
       <div className="bg-white rounded-lg shadow p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Tasks by Section</h3>
         <div className="space-y-4">
-          {sections.map(section => {
+          {sections.map((section) => {
             const sectionTasks = tasksBySection[section] || [];
             const sectionStats = countTasksByStatus(sectionTasks);
             const sectionCompletion = calculateCompletionRate(sectionTasks);
@@ -135,7 +171,7 @@ export default function DashboardView({ tasks, sections, onTaskClick }: Dashboar
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {tasks.slice(0, 10).map(task => (
+              {tasks.slice(0, 10).map((task) => (
                 <tr
                   key={task.id}
                   onClick={() => onTaskClick(task)}
@@ -145,20 +181,26 @@ export default function DashboardView({ tasks, sections, onTaskClick }: Dashboar
                     <span className="text-sm font-medium text-blue-600">{task.id}</span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-sm text-gray-900">{task.description.substring(0, 60)}...</span>
+                    <span className="text-sm text-gray-900">
+                      {task.description.substring(0, 60)}...
+                    </span>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <span className="text-sm text-gray-600">{task.owner}</span>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      (() => {
+                    <span
+                      className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${(() => {
                         if (task.status === 'Completed') return 'bg-green-100 text-green-800';
-                        if (task.status === 'In Progress') return 'bg-blue-100 text-blue-800';
+                        if (task.status === 'In Progress' || task.status === 'Validating')
+                          return 'bg-blue-100 text-blue-800';
                         if (task.status === 'Blocked') return 'bg-red-100 text-red-800';
+                        if (task.status === 'Failed') return 'bg-red-200 text-red-900';
+                        if (task.status === 'Needs Human') return 'bg-orange-100 text-orange-800';
+                        if (task.status === 'In Review') return 'bg-purple-100 text-purple-800';
                         return 'bg-gray-100 text-gray-800';
-                      })()
-                    }`}>
+                      })()}`}
+                    >
                       {task.status}
                     </span>
                   </td>

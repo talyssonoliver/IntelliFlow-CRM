@@ -30,8 +30,9 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
 
   // Reporter configuration
+  // Consolidated to artifacts/misc/playwright-report/ (matches Sprint_plan.json artifact path)
   reporter: [
-    ['html', { outputFolder: 'artifacts/playwright-report' }],
+    ['html', { outputFolder: 'artifacts/misc/playwright-report' }],
     ['json', { outputFile: 'artifacts/test-results/playwright-results.json' }],
     ['junit', { outputFile: 'artifacts/test-results/playwright-junit.xml' }],
     ['list'],
@@ -77,55 +78,61 @@ export default defineConfig({
   },
 
   // Configure projects for different browsers and devices
+  // Following Testing Pyramid: Project-level filtering reduces test bloat
   projects: [
-    // Desktop Browsers
+    // Desktop Browsers - Full suite on Chromium (baseline)
     {
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        // Enable Chrome DevTools Protocol for advanced features
         launchOptions: {
           args: ['--disable-dev-shm-usage'],
         },
       },
+      // Chromium runs ALL tests including VRT (baseline browser)
     },
 
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      use: {
+        ...devices['Desktop Firefox'],
+        actionTimeout: 15 * 1000,
+        navigationTimeout: 45 * 1000,
+      },
+      timeout: 60 * 1000,
+      // Exclude VRT and mobile-specific tests
+      testIgnore: ['**/*.vrt.spec.ts', '**/*.mobile.spec.ts'],
     },
 
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
+      // Exclude VRT and mobile-specific tests
+      testIgnore: ['**/*.vrt.spec.ts', '**/*.mobile.spec.ts'],
     },
 
-    // Mobile Browsers
+    // Mobile Browsers - Only mobile-specific + smoke tests
     {
       name: 'mobile-chrome',
       use: { ...devices['Pixel 5'] },
+      // Only run mobile-specific tests and smoke tests
+      testMatch: ['**/*.mobile.spec.ts', '**/smoke.spec.ts'],
     },
 
     {
       name: 'mobile-safari',
       use: { ...devices['iPhone 13'] },
+      // Only run mobile-specific tests and smoke tests
+      testMatch: ['**/*.mobile.spec.ts', '**/smoke.spec.ts'],
     },
 
-    // Tablet
+    // Tablet - Only tablet-specific + smoke tests
     {
       name: 'tablet',
       use: { ...devices['iPad Pro'] },
+      // Only run tablet-specific tests and smoke tests
+      testMatch: ['**/*.tablet.spec.ts', '**/smoke.spec.ts'],
     },
-
-    // Branded browsers (optional, commented out by default)
-    // {
-    //   name: 'Microsoft Edge',
-    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    // },
-    // {
-    //   name: 'Google Chrome',
-    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    // },
   ],
 
   // Web Server configuration
@@ -148,8 +155,9 @@ export default defineConfig({
   globalSetup: path.join(__dirname, 'tests/e2e/global-setup.ts'),
   globalTeardown: path.join(__dirname, 'tests/e2e/global-teardown.ts'),
 
-  // Output folder for test artifacts
-  outputDir: 'artifacts/playwright-output',
+  // Output folder for test artifacts (screenshots, videos, traces)
+  // Consolidated under artifacts/misc/playwright-output/
+  outputDir: 'artifacts/misc/playwright-output',
 
   // Snapshot path template
   snapshotPathTemplate: '{testDir}/__snapshots__/{testFilePath}/{arg}{ext}',

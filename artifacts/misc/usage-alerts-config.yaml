@@ -1,0 +1,339 @@
+# IntelliFlow CRM - FinOps Usage Alerts Configuration
+# Task: IFC-055 - Budget Tracking with FinOps
+# Version: 1.0.0
+# Last Updated: 2025-12-28
+
+metadata:
+  task_id: IFC-055
+  owner: CFO + PM (STOA-Leadership)
+  version: "1.0.0"
+  created_at: "2025-12-28T22:30:00Z"
+  review_frequency: weekly
+
+# Global alert settings
+global:
+  enabled: true
+  notification_channels:
+    - type: email
+      recipients:
+        - cfo@intelliflow.io
+        - pm@intelliflow.io
+        - tech-lead@intelliflow.io
+    - type: slack
+      webhook_url: "${SLACK_FINOPS_WEBHOOK}"
+      channel: "#finops-alerts"
+    - type: pagerduty
+      service_key: "${PAGERDUTY_FINOPS_KEY}"
+      severity_threshold: critical
+
+  # Escalation policy
+  escalation:
+    warning:
+      notify: [email, slack]
+      repeat_interval: 24h
+    critical:
+      notify: [email, slack, pagerduty]
+      repeat_interval: 1h
+    emergency:
+      notify: [email, slack, pagerduty]
+      repeat_interval: 15m
+
+# Budget alerts
+budget_alerts:
+  # Weekly budget threshold
+  weekly_spend:
+    budget: 125.00
+    currency: USD
+    alerts:
+      - threshold_percent: 50
+        severity: info
+        message: "Weekly spend at 50% of budget"
+      - threshold_percent: 80
+        severity: warning
+        message: "Weekly spend at 80% of budget - review recommended"
+      - threshold_percent: 100
+        severity: critical
+        message: "Weekly budget exceeded - immediate action required"
+      - threshold_percent: 120
+        severity: emergency
+        message: "Weekly budget exceeded by 20% - escalation triggered"
+
+  # Monthly budget threshold
+  monthly_spend:
+    budget: 500.00
+    currency: USD
+    alerts:
+      - threshold_percent: 50
+        severity: info
+        message: "Monthly spend at 50% of budget"
+      - threshold_percent: 75
+        severity: warning
+        message: "Monthly spend at 75% - on track monitoring"
+      - threshold_percent: 90
+        severity: warning
+        message: "Monthly spend at 90% - close to limit"
+      - threshold_percent: 100
+        severity: critical
+        message: "Monthly budget exceeded"
+
+  # Variance alert
+  budget_variance:
+    threshold_percent: 10
+    direction: over
+    severity: warning
+    message: "Budget variance exceeds 10% - review cost drivers"
+
+# Service-specific alerts
+service_alerts:
+  supabase:
+    provider: supabase
+    tier: free
+    alerts:
+      storage:
+        metric: database_storage_mb
+        limit: 500
+        thresholds:
+          - percent: 70
+            severity: warning
+            message: "Supabase storage at 70% - plan upgrade evaluation needed"
+          - percent: 90
+            severity: critical
+            message: "Supabase storage at 90% - upgrade required soon"
+      bandwidth:
+        metric: bandwidth_gb
+        limit: 2
+        thresholds:
+          - percent: 80
+            severity: warning
+            message: "Supabase bandwidth at 80%"
+          - percent: 95
+            severity: critical
+            message: "Supabase bandwidth near limit"
+      connections:
+        metric: realtime_connections
+        limit: 200
+        thresholds:
+          - percent: 80
+            severity: warning
+            message: "Realtime connections at 80%"
+
+  vercel:
+    provider: vercel
+    tier: hobby
+    alerts:
+      bandwidth:
+        metric: bandwidth_gb
+        limit: 100
+        thresholds:
+          - percent: 70
+            severity: warning
+            message: "Vercel bandwidth at 70%"
+          - percent: 90
+            severity: critical
+            message: "Vercel bandwidth at 90% - upgrade evaluation"
+      builds:
+        metric: build_minutes
+        limit: 6000  # monthly
+        thresholds:
+          - percent: 80
+            severity: warning
+            message: "Build minutes at 80%"
+
+  railway:
+    provider: railway
+    tier: starter
+    alerts:
+      compute:
+        metric: compute_hours
+        limit: 500
+        thresholds:
+          - percent: 70
+            severity: info
+            message: "Railway compute at 70%"
+          - percent: 85
+            severity: warning
+            message: "Railway compute at 85%"
+      cost:
+        metric: monthly_cost
+        limit: 25.00
+        thresholds:
+          - amount: 15.00
+            severity: info
+            message: "Railway cost at $15"
+          - amount: 20.00
+            severity: warning
+            message: "Railway cost approaching limit"
+
+  openai:
+    provider: openai
+    tier: pay_as_you_go
+    alerts:
+      daily_cost:
+        metric: daily_spend
+        limit: 15.00
+        thresholds:
+          - amount: 10.00
+            severity: info
+            message: "OpenAI daily spend at $10"
+          - amount: 12.00
+            severity: warning
+            message: "OpenAI daily spend high"
+          - amount: 15.00
+            severity: critical
+            message: "OpenAI daily limit reached - throttle AI features"
+      monthly_cost:
+        metric: monthly_spend
+        limit: 200.00
+        thresholds:
+          - percent: 50
+            severity: info
+            message: "OpenAI monthly at 50%"
+          - percent: 80
+            severity: warning
+            message: "OpenAI monthly at 80%"
+          - percent: 100
+            severity: critical
+            message: "OpenAI monthly limit - switch to Ollama only"
+      rate_limit:
+        metric: requests_per_minute
+        limit: 60
+        thresholds:
+          - percent: 80
+            severity: warning
+            message: "OpenAI rate limit at 80%"
+
+  upstash:
+    provider: upstash
+    tier: free
+    alerts:
+      commands:
+        metric: daily_commands
+        limit: 10000
+        thresholds:
+          - percent: 70
+            severity: info
+            message: "Upstash commands at 70%"
+          - percent: 90
+            severity: warning
+            message: "Upstash commands at 90%"
+
+# Anomaly detection
+anomaly_detection:
+  enabled: true
+  baseline_period_days: 14
+  algorithms:
+    - type: moving_average
+      window: 7
+      deviation_threshold: 2.0  # standard deviations
+    - type: trend_detection
+      sensitivity: medium
+
+  alerts:
+    cost_spike:
+      threshold_percent: 50  # 50% above normal
+      severity: warning
+      message: "Unusual cost spike detected"
+
+    usage_spike:
+      threshold_percent: 100  # double normal usage
+      severity: warning
+      message: "Unusual usage pattern detected"
+
+# Forecast alerts
+forecast_alerts:
+  enabled: true
+  horizon_days: 30
+
+  alerts:
+    projected_overage:
+      trigger: projected_spend > budget
+      severity: warning
+      lead_time_days: 7
+      message: "Projected to exceed budget in 7 days"
+
+    tier_upgrade_needed:
+      trigger: projected_usage > tier_limit
+      severity: info
+      lead_time_days: 14
+      message: "Service tier upgrade may be needed"
+
+# Automated actions
+automated_actions:
+  # Cost control actions
+  cost_controls:
+    - trigger: openai_daily_limit_reached
+      action: switch_to_ollama
+      description: "Automatically switch to Ollama when OpenAI limit reached"
+      enabled: true
+
+    - trigger: weekly_budget_exceeded
+      action: notify_and_audit
+      description: "Generate audit report and notify stakeholders"
+      enabled: true
+
+  # Scaling actions
+  scaling:
+    - trigger: supabase_storage_90_percent
+      action: cleanup_old_data
+      description: "Trigger data retention cleanup"
+      enabled: false  # manual approval required
+
+    - trigger: vercel_bandwidth_critical
+      action: enable_aggressive_caching
+      description: "Enable aggressive CDN caching"
+      enabled: true
+
+# Reporting configuration
+reporting:
+  weekly_report:
+    enabled: true
+    schedule: "0 9 * * MON"  # Every Monday at 9 AM
+    recipients:
+      - cfo@intelliflow.io
+      - pm@intelliflow.io
+    format: csv
+    include:
+      - executive_summary
+      - cost_by_service
+      - usage_metrics
+      - projections
+      - recommendations
+
+  monthly_report:
+    enabled: true
+    schedule: "0 9 1 * *"  # 1st of every month
+    recipients:
+      - cfo@intelliflow.io
+      - ceo@intelliflow.io
+    format: pdf
+    include:
+      - all_sections
+      - trend_analysis
+      - roi_metrics
+
+# Integration settings
+integrations:
+  grafana:
+    enabled: true
+    dashboard_id: "finops-main"
+    alert_annotations: true
+
+  prometheus:
+    enabled: true
+    metrics_prefix: "intelliflow_finops"
+    scrape_interval: 60s
+
+  datadog:
+    enabled: false  # Future implementation
+    api_key: "${DATADOG_API_KEY}"
+
+# Maintenance windows (suppress alerts)
+maintenance_windows:
+  - name: "Weekend Development"
+    schedule: "0 0 * * SAT-SUN"
+    duration: 48h
+    suppress_severity: [info, warning]
+
+  - name: "Planned Maintenance"
+    schedule: manual
+    suppress_severity: [info, warning, critical]

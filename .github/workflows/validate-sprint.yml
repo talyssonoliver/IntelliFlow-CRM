@@ -1,0 +1,64 @@
+name: Validate Sprint (Governance)
+
+on:
+  pull_request:
+    paths:
+      - '.gitignore'
+      - 'apps/project-tracker/docs/**'
+      - 'tools/scripts/sprint-validation.ts'
+      - 'tools/scripts/lib/**'
+  push:
+    branches:
+      - main
+      - master
+      - develop
+    paths:
+      - '.gitignore'
+      - 'apps/project-tracker/docs/**'
+      - 'tools/scripts/sprint-validation.ts'
+      - 'tools/scripts/lib/**'
+
+jobs:
+  validate-sprint:
+    name: Validate Sprint Gates (Strict)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        sprint: [0, 1, 2] # Add new sprints as they are started
+      fail-fast: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate Sprint ${{ matrix.sprint }} (baseline + completion + hygiene + uniqueness)
+        run: pnpm run validate:sprint -- --sprint ${{ matrix.sprint }} --strict
+
+      - name: Remediation hint
+        if: failure()
+        run: |
+          echo "Sprint ${{ matrix.sprint }} governance validation failed (strict mode)."
+          echo ""
+          echo "Common causes:"
+          echo "1) Sprint ${{ matrix.sprint }} tasks not all Done/Completed in Sprint_plan.csv"
+          echo "2) Ignored/untracked runtime artifacts under apps/project-tracker/docs"
+          echo "3) Duplicate or missing canonical source-of-truth artifacts"
+          echo ""
+          echo "To investigate locally:"
+          echo "  pnpm run validate:sprint -- --sprint ${{ matrix.sprint }} --strict"
+          echo "  git ls-files -o -i --exclude-standard apps/project-tracker/docs"
+          echo ""
+          exit 1

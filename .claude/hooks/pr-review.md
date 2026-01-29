@@ -3,6 +3,7 @@
 Automated pull request review with AI assistance.
 
 ## Trigger
+
 Runs on PR creation and updates via GitHub webhook
 
 ## Automated Reviews
@@ -59,6 +60,7 @@ jobs:
 ## Review Output
 
 Posted as PR comment with:
+
 - Summary of changes
 - Quality score (0-100)
 - List of issues/suggestions

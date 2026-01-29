@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Contact 360 - IntelliFlow CRM</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display antialiased min-h-screen flex flex-col">
+<header class="sticky top-0 z-50 flex h-16 w-full items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm transition-colors dark:border-slate-800 dark:bg-slate-900 sm:px-6 lg:px-8">
+<div class="flex items-center gap-8">
+<a class="flex items-center gap-2.5 focus:outline-none" href="#">
+<div class="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-primary/20">
+<span class="material-symbols-outlined !text-2xl">hub</span>
+</div>
+<span class="text-lg font-bold tracking-tight text-slate-900 dark:text-white">IntelliFlow CRM</span>
+</a>
+<nav class="hidden md:flex items-center gap-1">
+<a class="rounded-md px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white" href="#">Dashboard</a>
+<a class="rounded-md bg-slate-100 px-3 py-2 text-sm font-medium text-primary transition-colors dark:bg-slate-800 dark:text-blue-400" href="#">Contacts</a>
+<a class="rounded-md px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white" href="#">Deals</a>
+<a class="rounded-md px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white" href="#">Tickets</a>
+<a class="rounded-md px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white" href="#">Reports</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden lg:block">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-slate-400 group-focus-within:text-primary transition-colors">search</span>
+<input class="h-10 w-64 rounded-lg border-none bg-slate-100 pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-500 focus:ring-2 focus:ring-primary transition-all dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-400" placeholder="Search..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-2 pl-2 sm:border-l sm:border-slate-200 sm:pl-4 dark:border-slate-800">
+<button class="flex size-9 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">
+<span class="material-symbols-outlined !text-[20px]">notifications</span>
+</button>
+<button class="flex size-9 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">
+<span class="material-symbols-outlined !text-[20px]">settings</span>
+</button>
+<div class="hidden sm:block">
+<div class="size-9 rounded-full bg-cover bg-center border border-slate-200 dark:border-slate-700 ml-2 cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all" data-alt="User profile picture" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBEKBe-TH2quGJjHsn8MHbUMSO51ksBFiKE4vv9u4_1gm4eQ_jCou_YCXjSQygRmZfg-Qm4NzI892bjZl0ZB4XetvdXxVX2xS3tCcL54nbDpGQ0BbLobq0oPW0dUJUKplk8zg2B-kFLZDtCae_YI02BdOlWie1NUxzTXSOp_X45rJl9Ck9dQOwic9Qf6TPn7F5WaGb-om0P1aa_TAqppFWijMZuHv9_vyfM4QCayqfDIV_XGYcfA4cLtHozCyZJ28gwWAbV0Aw2Boqr");'></div>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-1 px-4 sm:px-6 lg:px-8 py-8 max-w-[1600px] mx-auto w-full">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+<div>
+<div class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
+<a class="hover:text-primary" href="#">Contacts</a>
+<span class="material-symbols-outlined !text-sm">chevron_right</span>
+<span class="font-medium text-slate-900 dark:text-white">Sarah Jenkins</span>
+</div>
+<h1 class="text-2xl font-bold text-slate-900 dark:text-white">Sarah Jenkins</h1>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+<span class="material-symbols-outlined !text-[18px]">edit</span>
+                    Edit Profile
+                </button>
+<button class="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+<span class="material-symbols-outlined !text-[18px]">mail</span>
+                    Email
+                </button>
+<button class="flex items-center gap-2 px-4 h-10 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none">
+<span class="material-symbols-outlined !text-[18px]">call</span>
+                    Log Call
+                </button>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+<aside class="lg:col-span-3 flex flex-col gap-6">
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="h-24 bg-gradient-to-r from-blue-100 to-blue-50 dark:from-slate-800 dark:to-slate-800" data-alt="Abstract blue gradient header background"></div>
+<div class="px-5 pb-6 relative">
+<div class="size-20 rounded-full border-4 border-white dark:border-slate-900 bg-cover bg-center -mt-10 mb-3 shadow-sm relative group" data-alt="Profile picture of Sarah Jenkins, a professional woman with blonde hair" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBclesb202hAuscfsUrI1vZY-vuTCwATgdP5n9RcAOUxyvf7WaxvPnWKsLqc3NwMMWzL9BgDZcWintPB0nCLm8sqaTljBAFNQgwO-WDreSwyl5-JrsDurs2hKKo3q22Rrd3HZ-xJ5bv_PW3y2I3fLzLQz0Cm629nCiMTWiwGLbOuIwQkt8387HZHEzaHeZSjqE8fAPGJ8ynnyb0W-VsEJynf51i2Q9_HDhXZ1u-j5apHzaTW_meKwRQJ3KCra4hnw-c8AlgmhNJGXne");'>
+<div class="absolute bottom-0 right-0 size-4 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full" title="Online"></div>
+</div>
+<div class="mb-4">
+<h2 class="text-xl font-bold text-slate-900 dark:text-white">Sarah Jenkins</h2>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">VP of Marketing</p>
+<div class="flex items-center gap-1 text-primary text-sm font-medium mt-1">
+<span class="material-symbols-outlined !text-sm">apartment</span>
+<span>TechFlow Inc.</span>
+</div>
+</div>
+<div class="flex flex-wrap gap-2 mb-6">
+<span class="px-2 py-1 rounded bg-yellow-50 text-yellow-700 border border-yellow-200 text-xs font-semibold">VIP</span>
+<span class="px-2 py-1 rounded bg-green-50 text-green-700 border border-green-200 text-xs font-semibold">Active Deal</span>
+</div>
+<div class="space-y-4">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">mail</span>
+<div class="flex flex-col">
+<span class="text-xs text-slate-400 uppercase font-semibold">Email</span>
+<a class="text-sm text-slate-700 dark:text-slate-300 hover:text-primary break-all" href="mailto:sarah.j@techflow.com">sarah.j@techflow.com</a>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">call</span>
+<div class="flex flex-col">
+<span class="text-xs text-slate-400 uppercase font-semibold">Phone</span>
+<a class="text-sm text-slate-700 dark:text-slate-300 hover:text-primary" href="tel:+15550123456">+1 (555) 012-3456</a>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">location_on</span>
+<div class="flex flex-col">
+<span class="text-xs text-slate-400 uppercase font-semibold">Location</span>
+<span class="text-sm text-slate-700 dark:text-slate-300">San Francisco, CA</span>
+</div>
+</div>
+</div>
+</div>
+<div class="h-32 w-full bg-cover bg-center border-t border-slate-200 dark:border-slate-800" data-alt="Map showing location in San Francisco" data-location="San Francisco" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBokuJd1xM_8KAuP04rRkcnjrURxt_w-48Gg2dxeUvxVnOaoe9xv7p526ISFgbWQ9fwfS-0gonTC-tsfWee0r9hLUyTetct0KCDi30mhH0Oek2BMu2pF-Sdh2Z-_9i28kXMXX1UMEF4nkZS2OO9oW1Gwrhxxc96fe5SctFPm5gl-e1AqcBObndEqD1spdqDVhH8EEpljvnn4TCqYkpdt0ThHKaY3tlBnLoMDj21mD58ei-Oq0DgEaWj7PJblBEpK9J2834dMX1q77-O");'>
+<div class="w-full h-full bg-black/10 flex items-center justify-center">
+<button class="bg-white/90 text-slate-900 text-xs font-bold px-3 py-1.5 rounded shadow-sm hover:bg-white transition">View Map</button>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-5">
+<h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase mb-3 tracking-wider">Contact Owner</h3>
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-slate-200 bg-cover bg-center" data-alt="Profile picture of the current user" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCgHm5yigRyE6k5r7IReOgA3qhNNWMkBCasavVbAqAChgps6-8JUvM4kbFRNw864IZdFK_g5iv9o4eg6lBmfTt4UqDhmiite0mbexv1aP5QOZCp-UNYButSE7lyuWGrFSbfDysz77Man7vwgHe9XIhhgVsyGONenuAwll8PHGxLyhR0ZDuds6zf_9QEUGuSNW--D9wcHZEC8kTfvVGe3RZK2hUio_U8Ti4YUzFve3dlDMWSI5B9sugqiFufaKabcUUOs59aynYroz2f");'></div>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white">Alex Morgan</p>
+<p class="text-xs text-slate-500">Account Executive</p>
+</div>
+</div>
+</div>
+</aside>
+<section class="lg:col-span-6 flex flex-col gap-6">
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
+<div class="flex border-b border-slate-200 dark:border-slate-800 px-2 overflow-x-auto no-scrollbar">
+<button class="px-4 py-4 text-sm font-semibold text-primary border-b-2 border-primary">Activity</button>
+<button class="px-4 py-4 text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 border-b-2 border-transparent transition-colors">Deals <span class="ml-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] px-1.5 py-0.5 rounded-full">2</span></button>
+<button class="px-4 py-4 text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 border-b-2 border-transparent transition-colors">Tickets</button>
+<button class="px-4 py-4 text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 border-b-2 border-transparent transition-colors">Documents</button>
+<button class="px-4 py-4 text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 border-b-2 border-transparent transition-colors">Notes</button>
+</div>
+<div class="p-4">
+<div class="flex gap-3">
+<div class="pt-1">
+<div class="size-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500">
+<span class="material-symbols-outlined !text-[20px]">edit_note</span>
+</div>
+</div>
+<div class="flex-1">
+<textarea class="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-sm focus:border-primary focus:ring-1 focus:ring-primary min-h-[80px] p-3 placeholder:text-slate-400" placeholder="Log a note, call, or email..."></textarea>
+<div class="flex justify-between items-center mt-2">
+<div class="flex gap-2">
+<button class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors"><span class="material-symbols-outlined !text-[20px]">attach_file</span></button>
+<button class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors"><span class="material-symbols-outlined !text-[20px]">format_bold</span></button>
+<button class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors"><span class="material-symbols-outlined !text-[20px]">list</span></button>
+</div>
+<button class="bg-primary text-white text-sm font-semibold px-4 py-1.5 rounded-lg hover:bg-blue-600 transition-colors">Log Activity</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
+<h3 class="text-base font-bold text-slate-900 dark:text-white mb-6">Timeline</h3>
+<div class="relative pl-4 space-y-8 before:absolute before:inset-0 before:ml-4 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent dark:before:via-slate-800">
+<div class="relative flex items-start group">
+<div class="absolute left-0 -ml-4 mt-1 size-8 rounded-full border-2 border-white dark:border-slate-900 bg-blue-100 dark:bg-slate-800 text-primary flex items-center justify-center z-10">
+<span class="material-symbols-outlined !text-[16px]">mail</span>
+</div>
+<div class="ml-6 w-full">
+<div class="flex justify-between items-start">
+<p class="text-sm font-semibold text-slate-900 dark:text-white">Email Opened: <span class="font-normal text-slate-600 dark:text-slate-300">"Proposal Follow-up - Q3 Software"</span></p>
+<span class="text-xs text-slate-400 whitespace-nowrap">2h ago</span>
+</div>
+<p class="text-xs text-slate-500 mt-1">Opened 3 times in San Francisco, CA</p>
+</div>
+</div>
+<div class="relative flex items-start group">
+<div class="absolute left-0 -ml-4 mt-1 size-8 rounded-full border-2 border-white dark:border-slate-900 bg-purple-100 dark:bg-slate-800 text-purple-600 flex items-center justify-center z-10">
+<span class="material-symbols-outlined !text-[16px]">handshake</span>
+</div>
+<div class="ml-6 w-full">
+<div class="flex justify-between items-start">
+<p class="text-sm font-semibold text-slate-900 dark:text-white">Deal Stage Updated</p>
+<span class="text-xs text-slate-400 whitespace-nowrap">Yesterday</span>
+</div>
+<div class="mt-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 border border-slate-100 dark:border-slate-800">
+<div class="flex items-center gap-2 text-sm">
+<span class="font-medium text-slate-500 line-through">Qualification</span>
+<span class="material-symbols-outlined text-slate-400 !text-sm">arrow_forward</span>
+<span class="font-bold text-slate-900 dark:text-white">Negotiation</span>
+</div>
+<p class="text-xs text-slate-500 mt-1">Moved by Alex Morgan</p>
+</div>
+</div>
+</div>
+<div class="relative flex items-start group">
+<div class="absolute left-0 -ml-4 mt-1 size-8 rounded-full border-2 border-white dark:border-slate-900 bg-green-100 dark:bg-slate-800 text-green-600 flex items-center justify-center z-10">
+<span class="material-symbols-outlined !text-[16px]">call</span>
+</div>
+<div class="ml-6 w-full">
+<div class="flex justify-between items-start">
+<p class="text-sm font-semibold text-slate-900 dark:text-white">Call Logged: <span class="font-normal text-slate-600 dark:text-slate-300">"Discussed requirements for custom API integration"</span></p>
+<span class="text-xs text-slate-400 whitespace-nowrap">2 days ago</span>
+</div>
+<div class="mt-2 flex gap-2">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200">
+<span class="material-symbols-outlined !text-[14px] mr-1">schedule</span> 15m
+                                    </span>
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-50 text-green-700 border border-green-100">
+                                        Connected
+                                    </span>
+</div>
+</div>
+</div>
+<div class="relative flex items-start group">
+<div class="absolute left-0 -ml-4 mt-1 size-8 rounded-full border-2 border-white dark:border-slate-900 bg-orange-100 dark:bg-slate-800 text-orange-600 flex items-center justify-center z-10">
+<span class="material-symbols-outlined !text-[16px]">sticky_note_2</span>
+</div>
+<div class="ml-6 w-full">
+<div class="flex justify-between items-start">
+<p class="text-sm font-semibold text-slate-900 dark:text-white">Note Added</p>
+<span class="text-xs text-slate-400 whitespace-nowrap">3 days ago</span>
+</div>
+<p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Sarah mentioned they are evaluating 2 other competitors. Key decision criteria is speed of implementation.</p>
+</div>
+</div>
+</div>
+<button class="w-full mt-6 py-2 text-sm text-slate-500 font-medium hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                        View older activity
+                    </button>
+</div>
+</section>
+<aside class="lg:col-span-3 flex flex-col gap-6">
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-5">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">auto_awesome</span>
+<h3 class="text-base font-bold text-slate-900 dark:text-white">AI Insights</h3>
+</div>
+<span class="text-xs text-slate-400">Updated today</span>
+</div>
+<div class="space-y-5">
+<div>
+<div class="flex justify-between mb-1.5">
+<span class="text-sm font-medium text-slate-600 dark:text-slate-300">Conversion Probability</span>
+<span class="text-sm font-bold text-primary">85%</span>
+</div>
+<div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
+<div class="bg-primary h-2 rounded-full" style="width: 85%"></div>
+</div>
+<p class="text-xs text-slate-500 mt-1.5 leading-relaxed">High probability based on recent email engagement and deal stage velocity.</p>
+</div>
+<div class="h-px bg-slate-100 dark:bg-slate-800 w-full"></div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<p class="text-xs text-slate-500 mb-1">Lifetime Value</p>
+<p class="text-lg font-bold text-slate-900 dark:text-white tracking-tight">$12,500</p>
+</div>
+<div>
+<p class="text-xs text-slate-500 mb-1">Churn Risk</p>
+<div class="flex items-center gap-1 text-green-600 font-bold text-lg">
+<span>12%</span>
+<span class="material-symbols-outlined !text-sm">trending_down</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-5">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-base font-bold text-slate-900 dark:text-white">Tasks</h3>
+<button class="size-6 rounded hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500">
+<span class="material-symbols-outlined !text-[20px]">add</span>
+</button>
+</div>
+<div class="space-y-3">
+<label class="flex items-start gap-3 group cursor-pointer">
+<input class="rounded border-slate-300 text-primary focus:ring-primary mt-1" type="checkbox"/>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-700 dark:text-slate-200 group-hover:text-primary transition-colors">Follow up on contract</p>
+<p class="text-xs text-orange-600 font-medium mt-0.5">Due Tomorrow</p>
+</div>
+</label>
+<label class="flex items-start gap-3 group cursor-pointer">
+<input class="rounded border-slate-300 text-primary focus:ring-primary mt-1" type="checkbox"/>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-700 dark:text-slate-200 group-hover:text-primary transition-colors">Schedule tech demo</p>
+<p class="text-xs text-slate-400 mt-0.5">Due Oct 24</p>
+</div>
+</label>
+<label class="flex items-start gap-3 group cursor-pointer opacity-50">
+<input checked="" class="rounded border-slate-300 text-primary focus:ring-primary mt-1" type="checkbox"/>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-700 dark:text-slate-200 line-through">Send initial proposal</p>
+<p class="text-xs text-slate-400 mt-0.5">Completed yesterday</p>
+</div>
+</label>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-5">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-base font-bold text-slate-900 dark:text-white">Upcoming</h3>
+<button class="size-6 rounded hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500">
+<span class="material-symbols-outlined !text-[20px]">calendar_add_on</span>
+</button>
+</div>
+<div class="flex gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+<div class="flex flex-col items-center justify-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded w-12 h-12 flex-shrink-0">
+<span class="text-[10px] font-bold text-red-500 uppercase">Oct</span>
+<span class="text-lg font-bold text-slate-900 dark:text-white leading-none">24</span>
+</div>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white">Q3 Review</p>
+<p class="text-xs text-slate-500 mt-0.5">2:00 PM - 3:00 PM</p>
+<div class="flex -space-x-1.5 mt-1.5">
+<div class="size-5 rounded-full ring-2 ring-white dark:ring-slate-900 bg-cover bg-center" data-alt="Avatar of Sarah Jenkins" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCUsueJa8KikZrCIlaNlBISZQyIDqk81cbc6oZ_EKAHioEEY7gujzyhl3b_-4GNudg0YPe5zrrvmhhpw6N5lHBQbOIN1GGG8B5GzO2JWxrMM5PgsW_uxf-1vX-RBuY2grTsqJ3b8LWtiI4IUDu21b2SZxaNmg8atjE5i1yWxfOR5ufehapHaV5_aayvE5ugWAHea635VF9SyMvRoXm3pQ7WSdzkNfpvvDV42nFK_D4eO3BD4iYfE0Rz0Ec_V0wnyrjhPBFVS09_gNo6");'></div>
+<div class="size-5 rounded-full ring-2 ring-white dark:ring-slate-900 bg-cover bg-center" data-alt="Avatar of Alex Morgan" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC1DXIXZq0m1Z-Y_3MrzKBsrG8rxVuhVmu6Cvv8IZN6_wIZbC4sGEpsgj0UZLTfFO9H8Z0D5f3nHWojNPYm4J9NRO3fO0odCO_JhNZm670m0EyA3ExsXPEp2X-ztwxOCZF6-wyTNl-JNajJOWElVTfQ3X5lhDvsD0deJMJVGkqWaFZUCRwwPnf0QynZOvOkUeNB18ZVaP9ZmrXNyjyy1fq1l_FPeoe6CCGE_1nuywSDqnkL-1uzAe8_ga1E2YMwb9HXETrkk6MBMgEV");'></div>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</main>
+</body></html>

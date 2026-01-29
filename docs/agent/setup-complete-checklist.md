@@ -1,8 +1,8 @@
 # Sprint 0 Setup Complete Checklist
 
 ## Status: In Progress
-**Started**: 2025-12-14
-**Target Completion**: 4 hours from start
+
+**Started**: 2025-12-14 **Target Completion**: 4 hours from start
 
 ## Pre-requisites Verification
 
@@ -30,10 +30,12 @@
 ## Phase 2: Parallel Streams
 
 ### PARALLEL-A: AI Tools
+
 - [ ] AI-SETUP-002: GitHub Copilot Enterprise
 - [ ] AI-SETUP-003: External AI Tools (Codex, Jules)
 
 ### PARALLEL-B: Environment Foundation
+
 - [ ] ENV-001-AI: Monorepo Enhancement
 - [ ] ENV-002-AI: Dev Tools (ESLint, Prettier, Husky)
 - [ ] ENV-003-AI: Docker Environment
@@ -41,6 +43,7 @@
 - [ ] ENV-012-AI: Documentation Setup
 
 ### PARALLEL-C: Governance & Standards
+
 - [ ] EXC-SEC-001: Secrets Management (Vault)
 - [ ] IFC-160: Artifact Path Conventions + CI Lint
 
@@ -67,15 +70,15 @@
 
 ## Success Criteria
 
-| KPI | Target | Current |
-|-----|--------|---------|
-| Total setup time | <4 hours | - |
-| Tasks automated | >80% | - |
-| Manual interventions | 0 | 0 |
-| CI/CD pipeline | Operational | Pending |
-| Test coverage | >90% | Pending |
-| Security scan | A+ rating | Pending |
-| Documentation coverage | 100% | Pending |
+| KPI                    | Target      | Current |
+| ---------------------- | ----------- | ------- |
+| Total setup time       | <4 hours    | -       |
+| Tasks automated        | >80%        | -       |
+| Manual interventions   | 0           | 0       |
+| CI/CD pipeline         | Operational | Pending |
+| Test coverage          | >90%        | Pending |
+| Security scan          | A+ rating   | Pending |
+| Documentation coverage | 100%        | Pending |
 
 ## Artifact Locations
 

@@ -1,0 +1,100 @@
+{
+  "$schema": "https://design-tokens.org/schema.json",
+  "spacing": {
+    "0": { "value": "0", "description": "No spacing" },
+    "px": { "value": "1px", "description": "1 pixel" },
+    "0.5": { "value": "0.125rem", "px": "2px", "description": "Micro spacing" },
+    "1": { "value": "0.25rem", "px": "4px", "description": "Tight spacing" },
+    "1.5": { "value": "0.375rem", "px": "6px", "description": "Between tight and small" },
+    "2": { "value": "0.5rem", "px": "8px", "description": "Small spacing" },
+    "2.5": { "value": "0.625rem", "px": "10px", "description": "Between small and medium" },
+    "3": { "value": "0.75rem", "px": "12px", "description": "Medium-small spacing" },
+    "3.5": { "value": "0.875rem", "px": "14px", "description": "Between medium-small and medium" },
+    "4": { "value": "1rem", "px": "16px", "description": "Medium spacing (base)" },
+    "5": { "value": "1.25rem", "px": "20px", "description": "Medium-large spacing" },
+    "6": { "value": "1.5rem", "px": "24px", "description": "Large spacing" },
+    "7": { "value": "1.75rem", "px": "28px", "description": "Between large and larger" },
+    "8": { "value": "2rem", "px": "32px", "description": "Larger spacing" },
+    "9": { "value": "2.25rem", "px": "36px", "description": "Between larger and extra-large" },
+    "10": { "value": "2.5rem", "px": "40px", "description": "Extra-large spacing" },
+    "11": { "value": "2.75rem", "px": "44px", "description": "Between extra-large and huge" },
+    "12": { "value": "3rem", "px": "48px", "description": "Huge spacing" },
+    "14": { "value": "3.5rem", "px": "56px", "description": "Section spacing" },
+    "16": { "value": "4rem", "px": "64px", "description": "Large section spacing" },
+    "20": { "value": "5rem", "px": "80px", "description": "Page section spacing" },
+    "24": { "value": "6rem", "px": "96px", "description": "Major section spacing" },
+    "28": { "value": "7rem", "px": "112px", "description": "Large page spacing" },
+    "32": { "value": "8rem", "px": "128px", "description": "Extra-large page spacing" },
+    "36": { "value": "9rem", "px": "144px", "description": "Hero spacing" },
+    "40": { "value": "10rem", "px": "160px", "description": "Maximum spacing" }
+  },
+  "borderRadius": {
+    "none": { "value": "0", "description": "No rounding" },
+    "sm": { "value": "0.125rem", "px": "2px", "description": "Subtle rounding" },
+    "DEFAULT": { "value": "0.25rem", "px": "4px", "description": "Default rounding" },
+    "md": { "value": "0.375rem", "px": "6px", "description": "Medium rounding" },
+    "lg": { "value": "0.5rem", "px": "8px", "description": "Large rounding" },
+    "xl": { "value": "0.75rem", "px": "12px", "description": "Extra-large rounding" },
+    "2xl": { "value": "1rem", "px": "16px", "description": "Double extra-large rounding" },
+    "3xl": { "value": "1.5rem", "px": "24px", "description": "Triple extra-large rounding" },
+    "full": { "value": "9999px", "description": "Fully rounded (pills, circles)" }
+  },
+  "shadows": {
+    "sm": {
+      "value": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+      "description": "Subtle shadow"
+    },
+    "DEFAULT": {
+      "value": "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
+      "description": "Default shadow"
+    },
+    "md": {
+      "value": "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+      "description": "Medium shadow"
+    },
+    "lg": {
+      "value": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+      "description": "Large shadow"
+    },
+    "xl": {
+      "value": "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
+      "description": "Extra-large shadow"
+    },
+    "2xl": {
+      "value": "0 25px 50px -12px rgb(0 0 0 / 0.25)",
+      "description": "Double extra-large shadow"
+    },
+    "inner": {
+      "value": "inset 0 2px 4px 0 rgb(0 0 0 / 0.05)",
+      "description": "Inner shadow"
+    },
+    "none": {
+      "value": "0 0 #0000",
+      "description": "No shadow"
+    }
+  },
+  "layout": {
+    "sidebar": {
+      "width": { "value": "280px", "description": "Default sidebar width" },
+      "collapsed": { "value": "64px", "description": "Collapsed sidebar width" }
+    },
+    "header": {
+      "height": { "value": "64px", "description": "Main header height" }
+    },
+    "container": {
+      "sm": { "value": "640px", "description": "Small container" },
+      "md": { "value": "768px", "description": "Medium container" },
+      "lg": { "value": "1024px", "description": "Large container" },
+      "xl": { "value": "1280px", "description": "Extra-large container" },
+      "2xl": { "value": "1536px", "description": "Double extra-large container" }
+    }
+  },
+  "tailwind": {
+    "borderRadius": {
+      "DEFAULT": "0.25rem",
+      "lg": "0.5rem",
+      "xl": "0.75rem",
+      "full": "9999px"
+    }
+  }
+}

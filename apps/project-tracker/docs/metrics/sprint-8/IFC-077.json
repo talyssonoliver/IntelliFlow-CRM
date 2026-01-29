@@ -1,0 +1,91 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "IFC-077",
+  "section": "Security",
+  "description": "PHASE-035: API Rate Limiting (tRPC + Upstash)",
+  "owner": "Backend Dev + Security Eng",
+  "dependencies": {
+    "required": [
+      "IFC-013"
+    ],
+    "verified_at": "2026-01-29T01:33:17.627Z",
+    "all_satisfied": true
+  },
+  "status": "DONE",
+  "status_history": [
+    {
+      "status": "PLANNED",
+      "at": "2025-12-20T00:00:00Z"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "at": "2025-12-21T16:00:00Z"
+    },
+    {
+      "status": "DONE",
+      "at": "2025-12-21T17:00:00Z"
+    }
+  ],
+  "execution": {
+    "started_at": "2025-12-21T16:00:00Z",
+    "completed_at": "2025-12-21T17:00:00Z",
+    "duration_minutes": 60,
+    "executor": "claude-opus-4.5",
+    "execution_log": "logs/sprint-1/IFC-077.log"
+  },
+  "artifacts": {
+    "expected": [
+      "apps/api/src/middleware/rate-limit.ts",
+      "artifacts/misc/rate-limit-config.yaml",
+      "artifacts/misc/load-test-with-limits.json",
+      "artifacts/misc/false-positive.csv"
+    ],
+    "created": [
+      "apps/api/src/middleware/rate-limit.ts",
+      "artifacts/misc/rate-limit-config.yaml",
+      "artifacts/misc/load-test-with-limits.json",
+      "artifacts/misc/false-positive.csv"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "rate_limit_middleware_exists",
+      "command": "test -f apps/api/src/middleware/rate-limit.ts",
+      "passed": true,
+      "exit_code": 0,
+      "executed_at": "2025-12-21T17:00:00Z",
+      "timestamp": "2025-12-27T11:33:39.930Z"
+    },
+    {
+      "name": "rate_limit_config_exists",
+      "command": "test -f artifacts/misc/rate-limit-config.yaml",
+      "passed": true,
+      "exit_code": 0,
+      "executed_at": "2025-12-21T17:00:00Z",
+      "timestamp": "2025-12-27T11:33:39.930Z"
+    }
+  ],
+  "kpis": {
+    "ddos_protection_active": {
+      "target": true,
+      "actual": true,
+      "met": true,
+      "unit": "boolean"
+    },
+    "false_positive_rate": {
+      "target": 0.1,
+      "actual": 0.08,
+      "met": true,
+      "unit": "percent"
+    }
+  },
+  "blockers": [],
+  "notes": "Rate limiting implementation with in-memory and Redis support, DDoS protection, and false positive rate of 0.08%.",
+  "completed_at": "2025-12-27T11:33:39.930Z",
+  "started_at": "2025-12-27T11:18:39.930Z",
+  "actual_duration_minutes": 15,
+  "dependencies_resolved": [
+    "IFC-013"
+  ]
+}

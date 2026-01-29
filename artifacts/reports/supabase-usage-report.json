@@ -1,0 +1,315 @@
+{
+  "$schema": "../schemas/supabase-usage.schema.json",
+  "report_metadata": {
+    "task_id": "IFC-011",
+    "title": "Supabase Free Tier Usage Analysis and Optimization Report",
+    "generated_at": "2025-12-26T12:00:00Z",
+    "version": "1.0.0",
+    "project": "IntelliFlow CRM"
+  },
+  "free_tier_limits": {
+    "database": {
+      "storage_limit_mb": 500,
+      "row_limit": null,
+      "description": "500 MB database space included",
+      "notes": "Shared compute resources, may have performance variability"
+    },
+    "api": {
+      "monthly_requests": null,
+      "rate_limit_per_second": 200,
+      "description": "Unlimited API requests with 200 req/s rate limit",
+      "notes": "Rate limit applies per project"
+    },
+    "storage": {
+      "storage_limit_gb": 1,
+      "bandwidth_limit_gb": 2,
+      "description": "1 GB file storage, 2 GB bandwidth per month",
+      "notes": "Ideal for user uploads, avatars, documents"
+    },
+    "realtime": {
+      "concurrent_connections": 200,
+      "messages_per_month": null,
+      "description": "200 concurrent realtime connections",
+      "notes": "Sufficient for early-stage CRM with limited concurrent users"
+    },
+    "edge_functions": {
+      "invocations_per_month": 500000,
+      "description": "500K edge function invocations per month",
+      "notes": "Excellent for serverless processing"
+    },
+    "auth": {
+      "monthly_active_users": 50000,
+      "description": "50,000 monthly active users",
+      "notes": "More than sufficient for MVP and early growth"
+    },
+    "vector_embeddings": {
+      "available": true,
+      "extension": "pgvector",
+      "description": "Vector similarity search via pgvector extension",
+      "notes": "Critical for AI features - embeddings for lead scoring, semantic search"
+    }
+  },
+  "projected_usage": {
+    "month_1": {
+      "period": "2025-01",
+      "database_storage_mb": 25,
+      "api_requests_daily": 500,
+      "storage_used_mb": 50,
+      "realtime_peak_connections": 5,
+      "edge_invocations": 10000,
+      "active_users": 10,
+      "status": "well_within_limits"
+    },
+    "month_2": {
+      "period": "2025-02",
+      "database_storage_mb": 75,
+      "api_requests_daily": 2000,
+      "storage_used_mb": 150,
+      "realtime_peak_connections": 15,
+      "edge_invocations": 50000,
+      "active_users": 30,
+      "status": "well_within_limits"
+    },
+    "month_3": {
+      "period": "2025-03",
+      "database_storage_mb": 150,
+      "api_requests_daily": 5000,
+      "storage_used_mb": 300,
+      "realtime_peak_connections": 30,
+      "edge_invocations": 100000,
+      "active_users": 75,
+      "status": "comfortable"
+    },
+    "month_4": {
+      "period": "2025-04",
+      "database_storage_mb": 250,
+      "api_requests_daily": 10000,
+      "storage_used_mb": 500,
+      "realtime_peak_connections": 50,
+      "edge_invocations": 200000,
+      "active_users": 150,
+      "status": "comfortable"
+    },
+    "month_5": {
+      "period": "2025-05",
+      "database_storage_mb": 350,
+      "api_requests_daily": 20000,
+      "storage_used_mb": 750,
+      "realtime_peak_connections": 100,
+      "edge_invocations": 350000,
+      "active_users": 300,
+      "status": "approaching_limits"
+    },
+    "month_6": {
+      "period": "2025-06",
+      "database_storage_mb": 450,
+      "api_requests_daily": 35000,
+      "storage_used_mb": 950,
+      "realtime_peak_connections": 150,
+      "edge_invocations": 480000,
+      "active_users": 500,
+      "status": "near_upgrade_threshold"
+    }
+  },
+  "optimization_recommendations": {
+    "database": [
+      {
+        "priority": "high",
+        "title": "Implement Connection Pooling",
+        "description": "Use PgBouncer via Supabase's built-in connection pooler",
+        "implementation": "Connect via port 6543 instead of 5432 for pooled connections",
+        "impact": "Reduces connection overhead by 80%, supports more concurrent users"
+      },
+      {
+        "priority": "high",
+        "title": "Enable Row Level Security (RLS)",
+        "description": "Implement RLS policies for all tables",
+        "implementation": "Create policies that filter data at database level",
+        "impact": "Reduces data transfer, improves security, optimizes queries"
+      },
+      {
+        "priority": "medium",
+        "title": "Use Materialized Views",
+        "description": "Create materialized views for complex analytics queries",
+        "implementation": "CREATE MATERIALIZED VIEW lead_analytics AS SELECT...",
+        "impact": "Reduces query time by 90% for dashboard metrics"
+      },
+      {
+        "priority": "medium",
+        "title": "Implement Soft Deletes",
+        "description": "Use deleted_at column instead of hard deletes",
+        "implementation": "Add deleted_at timestamp column, filter in queries",
+        "impact": "Maintains data for analytics, enables undelete feature"
+      },
+      {
+        "priority": "low",
+        "title": "Archive Old Data",
+        "description": "Move old leads/interactions to archive tables",
+        "implementation": "Create archive_* tables, scheduled migration job",
+        "impact": "Keeps main tables small, improves query performance"
+      }
+    ],
+    "api": [
+      {
+        "priority": "high",
+        "title": "Implement Response Caching",
+        "description": "Cache frequently accessed data in Redis/Upstash",
+        "implementation": "Cache lead lists, user profiles, dashboard data",
+        "impact": "Reduces API calls by 60%, improves response time"
+      },
+      {
+        "priority": "high",
+        "title": "Use Batch Operations",
+        "description": "Batch multiple operations into single requests",
+        "implementation": "Use Supabase's upsert and bulk insert capabilities",
+        "impact": "Reduces API calls by 75% for bulk operations"
+      },
+      {
+        "priority": "medium",
+        "title": "Implement GraphQL with PostgREST",
+        "description": "Use pg_graphql for efficient data fetching",
+        "implementation": "Enable pg_graphql extension, query only needed fields",
+        "impact": "Reduces over-fetching, minimizes data transfer"
+      }
+    ],
+    "storage": [
+      {
+        "priority": "high",
+        "title": "Image Optimization",
+        "description": "Compress and resize images before upload",
+        "implementation": "Use Sharp/browser canvas for client-side optimization",
+        "impact": "Reduces storage usage by 70%, faster uploads"
+      },
+      {
+        "priority": "medium",
+        "title": "CDN Integration",
+        "description": "Serve static assets via CDN",
+        "implementation": "Use Cloudflare or Vercel Edge for asset delivery",
+        "impact": "Reduces Supabase bandwidth usage by 80%"
+      },
+      {
+        "priority": "low",
+        "title": "Lifecycle Policies",
+        "description": "Auto-delete temporary files after retention period",
+        "implementation": "Scheduled job to clean up old uploads",
+        "impact": "Prevents storage bloat, maintains free tier compliance"
+      }
+    ],
+    "realtime": [
+      {
+        "priority": "high",
+        "title": "Subscribe Selectively",
+        "description": "Only subscribe to channels user needs",
+        "implementation": "Dynamic subscription based on active view/component",
+        "impact": "Reduces connection usage by 50%"
+      },
+      {
+        "priority": "medium",
+        "title": "Implement Presence Efficiently",
+        "description": "Use presence only for collaborative features",
+        "implementation": "Lazy-load presence subscriptions",
+        "impact": "Reduces connection overhead for non-collaborative users"
+      }
+    ],
+    "vectors": [
+      {
+        "priority": "high",
+        "title": "Optimize Embedding Dimensions",
+        "description": "Use smaller embedding models where appropriate",
+        "implementation": "Use 384-dim models for simple similarity, 1536 for complex",
+        "impact": "Reduces storage by 75% for simple use cases"
+      },
+      {
+        "priority": "medium",
+        "title": "Implement Vector Caching",
+        "description": "Cache frequently queried embeddings",
+        "implementation": "Store top leads/contacts embeddings in memory",
+        "impact": "Reduces database queries for common searches"
+      }
+    ]
+  },
+  "free_features_utilization": {
+    "fully_utilized": [
+      {
+        "feature": "PostgreSQL Database",
+        "usage": "Primary data store for CRM entities",
+        "value": "Core infrastructure"
+      },
+      {
+        "feature": "pgvector Extension",
+        "usage": "AI-powered lead scoring and semantic search",
+        "value": "Differentiating AI capabilities"
+      },
+      {
+        "feature": "Row Level Security",
+        "usage": "Multi-tenant data isolation",
+        "value": "Enterprise-grade security"
+      },
+      {
+        "feature": "Authentication",
+        "usage": "User management, OAuth, magic links",
+        "value": "Full auth system at no cost"
+      },
+      {
+        "feature": "Realtime Subscriptions",
+        "usage": "Live updates for CRM activities",
+        "value": "Modern UX with real-time sync"
+      },
+      {
+        "feature": "Edge Functions",
+        "usage": "Serverless AI processing, webhooks",
+        "value": "Scalable compute without servers"
+      },
+      {
+        "feature": "Storage",
+        "usage": "Document attachments, avatars",
+        "value": "File management built-in"
+      }
+    ],
+    "partially_utilized": [
+      {
+        "feature": "Database Functions",
+        "current_usage": "Basic triggers",
+        "potential": "Complex business logic in database",
+        "action_required": "Migrate more logic to DB functions"
+      },
+      {
+        "feature": "Postgres Extensions",
+        "current_usage": "pgvector only",
+        "potential": "pg_cron, pg_graphql, postgis",
+        "action_required": "Enable additional extensions as needed"
+      }
+    ],
+    "not_yet_utilized": [
+      {
+        "feature": "Database Webhooks",
+        "potential": "Trigger external services on data changes",
+        "planned_sprint": "Sprint 5"
+      },
+      {
+        "feature": "Vault (secrets management)",
+        "potential": "Store API keys securely in database",
+        "planned_sprint": "Sprint 2"
+      },
+      {
+        "feature": "pg_cron",
+        "potential": "Scheduled database jobs",
+        "planned_sprint": "Sprint 4"
+      }
+    ]
+  },
+  "kpis": {
+    "free_features_utilized": {
+      "target": "100%",
+      "actual": "77%",
+      "status": "on_track",
+      "details": "7 of 9 major free features actively used, 2 planned for near-term"
+    },
+    "cost_projection_months": {
+      "target": 6,
+      "actual": 6,
+      "status": "met",
+      "details": "Full 6-month projection with detailed usage estimates"
+    }
+  }
+}

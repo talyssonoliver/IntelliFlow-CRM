@@ -1,0 +1,167 @@
+{
+  "blockers": [
+    {
+      "taskId": "ENV-003-AI",
+      "runId": "20251221-174441-05ae6baf",
+      "type": "gate_failure",
+      "message": "2 gate(s) failed: prettier-check, turbo-typecheck",
+      "failedGates": [
+        "prettier-check",
+        "turbo-typecheck"
+      ],
+      "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-174441-05ae6baf",
+      "createdAt": "2025-12-21T17:46:36.409Z",
+      "resolvedAt": null,
+      "resolvedBy": null
+    },
+    {
+      "taskId": "ENV-004-AI",
+      "runId": "20251221-174643-c031fb76",
+      "type": "gate_failure",
+      "message": "1 gate(s) failed: prettier-check",
+      "failedGates": [
+        "prettier-check"
+      ],
+      "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-174643-c031fb76",
+      "createdAt": "2025-12-21T17:50:33.105Z",
+      "resolvedAt": null,
+      "resolvedBy": null
+    },
+    {
+      "taskId": "ENV-006-AI",
+      "runId": "20251221-175335-651b7461",
+      "type": "gate_failure",
+      "message": "1 gate(s) failed: turbo-test-coverage",
+      "failedGates": [
+        "prettier-check",
+        "turbo-build",
+        "turbo-test-coverage",
+        "turbo-typecheck"
+      ],
+      "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-175335-651b7461",
+      "createdAt": "2025-12-21T17:56:09.634Z",
+      "resolvedAt": null,
+      "resolvedBy": null
+    },
+    {
+      "taskId": "EXC-INIT-001",
+      "runId": "20251221-180417-1a0e2880",
+      "type": "gate_failure",
+      "message": "1 gate(s) failed: prettier-check",
+      "failedGates": [
+        "prettier-check",
+        "turbo-build"
+      ],
+      "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-180417-1a0e2880",
+      "createdAt": "2025-12-21T18:10:24.130Z",
+      "resolvedAt": null,
+      "resolvedBy": null
+    },
+    {
+      "taskId": "ENV-001-AI",
+      "runId": "20251221-181126-8130081f",
+      "type": "gate_failure",
+      "message": "1 gate(s) failed: prettier-check",
+      "failedGates": [
+        "prettier-check"
+      ],
+      "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-181126-8130081f",
+      "createdAt": "2025-12-21T18:13:30.409Z",
+      "resolvedAt": null,
+      "resolvedBy": null
+    },
+    {
+      "taskId": "ENV-002-AI",
+      "runId": "20251221-181333-5ca97e22",
+      "type": "gate_failure",
+      "message": "1 gate(s) failed: prettier-check",
+      "failedGates": [
+        "prettier-check"
+      ],
+      "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-181333-5ca97e22",
+      "createdAt": "2025-12-21T18:15:26.057Z",
+      "resolvedAt": null,
+      "resolvedBy": null
+    },
+    {
+      "taskId": "ENV-005-AI",
+      "runId": "20251221-181903-ace24f3e",
+      "type": "gate_failure",
+      "message": "2 gate(s) failed: turbo-build, turbo-typecheck",
+      "failedGates": [
+        "turbo-build",
+        "turbo-typecheck"
+      ],
+      "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-181903-ace24f3e",
+      "createdAt": "2025-12-21T18:20:33.946Z",
+      "resolvedAt": null,
+      "resolvedBy": null
+    },
+    {
+      "taskId": "IFC-008",
+      "runId": "20251222-211124-d01dd204",
+      "type": "gate_failure",
+      "message": "1 gate(s) failed: turbo-typecheck",
+      "failedGates": [
+        "turbo-typecheck"
+      ],
+      "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251222-211124-d01dd204",
+      "createdAt": "2025-12-22T21:13:40.985Z",
+      "resolvedAt": null,
+      "resolvedBy": null
+    },
+    {
+      "taskId": "IFC-101",
+      "runId": "20251222-211532-eca8cc2d",
+      "type": "gate_failure",
+      "message": "1 gate(s) failed: turbo-typecheck",
+      "failedGates": [
+        "turbo-typecheck"
+      ],
+      "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251222-211532-eca8cc2d",
+      "createdAt": "2025-12-22T21:16:41.023Z",
+      "resolvedAt": null,
+      "resolvedBy": null
+    },
+    {
+      "taskId": "IFC-102",
+      "runId": "20251222-211645-5159b335",
+      "type": "gate_failure",
+      "message": "1 gate(s) failed: turbo-typecheck",
+      "failedGates": [
+        "turbo-typecheck"
+      ],
+      "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251222-211645-5159b335",
+      "createdAt": "2025-12-22T21:18:18.832Z",
+      "resolvedAt": null,
+      "resolvedBy": null
+    },
+    {
+      "taskId": "IFC-103",
+      "runId": "20251222-211828-1a7c95a2",
+      "type": "gate_failure",
+      "message": "1 gate(s) failed: turbo-typecheck",
+      "failedGates": [
+        "turbo-typecheck"
+      ],
+      "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251222-211828-1a7c95a2",
+      "createdAt": "2025-12-22T21:19:16.036Z",
+      "resolvedAt": null,
+      "resolvedBy": null
+    },
+    {
+      "taskId": "IFC-118",
+      "runId": "20251222-211918-6e7017cf",
+      "type": "gate_failure",
+      "message": "1 gate(s) failed: turbo-typecheck",
+      "failedGates": [
+        "turbo-typecheck"
+      ],
+      "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251222-211918-6e7017cf",
+      "createdAt": "2025-12-22T21:20:06.909Z",
+      "resolvedAt": null,
+      "resolvedBy": null
+    }
+  ],
+  "last_updated": "2026-01-24T01:18:42Z"
+}

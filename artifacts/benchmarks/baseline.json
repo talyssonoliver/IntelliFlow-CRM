@@ -1,0 +1,2361 @@
+{
+  "benchmark_id": "ENV-015-AI-performance-baseline",
+  "title": "IntelliFlow CRM - Performance Baseline",
+  "description": "Real performance baseline with all infrastructure available",
+  "timestamp": "2026-01-29T20:44:14.392Z",
+  "status": "COMPLETED",
+  "environment": {
+    "node": "v25.2.1",
+    "platform": "win32",
+    "architecture": "x64",
+    "api_available": true,
+    "api_type": "trpc",
+    "api_url": "http://localhost:3000/api/trpc",
+    "database_available": true
+  },
+  "task_context": {
+    "original_task": "ENV-015-AI",
+    "original_task_status": "Real benchmarks completed"
+  },
+  "results": {
+    "api": [
+      {
+        "name": "health-ping",
+        "description": "Health ping endpoint response time",
+        "iterations": 20,
+        "totalTime": 104.17210000000023,
+        "avgTime": 5.208605000000011,
+        "minTime": 4.409500000000094,
+        "maxTime": 6.608899999999949,
+        "p50": 5.221150000000023,
+        "p95": 6.468204999999949,
+        "p99": 6.580760999999948,
+        "timestamp": "2026-01-28T23:42:17.985Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/health.ping"
+        },
+        "status": "PASS"
+      },
+      {
+        "name": "health-check",
+        "description": "Health check with DB endpoint response time",
+        "iterations": 20,
+        "totalTime": 627.8048999999999,
+        "avgTime": 31.390244999999993,
+        "minTime": 29.338399999999865,
+        "maxTime": 37.20679999999993,
+        "p50": 30.737799999999993,
+        "p95": 36.60098500000015,
+        "p99": 37.08563699999998,
+        "timestamp": "2026-01-28T23:42:18.708Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/health.check"
+        },
+        "status": "PASS"
+      },
+      {
+        "name": "health-ready",
+        "description": "Readiness probe endpoint response time",
+        "iterations": 20,
+        "totalTime": 629.3583000000006,
+        "avgTime": 31.467915000000026,
+        "minTime": 29.587800000000243,
+        "maxTime": 38.91399999999999,
+        "p50": 30.617950000000064,
+        "p95": 36.13933500000009,
+        "p99": 38.359067,
+        "timestamp": "2026-01-28T23:42:19.428Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/health.ready"
+        },
+        "status": "PASS"
+      },
+      {
+        "name": "health-alive",
+        "description": "Liveness probe endpoint response time",
+        "iterations": 20,
+        "totalTime": 127.69820000000118,
+        "avgTime": 6.384910000000059,
+        "minTime": 4.9421000000002095,
+        "maxTime": 9.334399999999732,
+        "p50": 5.917100000000119,
+        "p95": 9.005225000000065,
+        "p99": 9.268564999999798,
+        "timestamp": "2026-01-28T23:42:19.573Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/health.alive"
+        },
+        "status": "PASS"
+      },
+      {
+        "name": "health-dbStats",
+        "description": "Database stats endpoint response time",
+        "iterations": 20,
+        "totalTime": 123.24649999999838,
+        "avgTime": 6.162324999999919,
+        "minTime": 4.929599999999937,
+        "maxTime": 10.073999999999614,
+        "p50": 6.105199999999968,
+        "p95": 7.5621050000000665,
+        "p99": 9.571620999999702,
+        "timestamp": "2026-01-28T23:42:19.715Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/health.dbStats"
+        },
+        "status": "PASS"
+      },
+      {
+        "name": "system-version",
+        "description": "System version endpoint response time",
+        "iterations": 20,
+        "totalTime": 137.33649999999807,
+        "avgTime": 6.866824999999904,
+        "minTime": 5.14469999999983,
+        "maxTime": 16.010899999999765,
+        "p50": 6.074550000000045,
+        "p95": 15.399479999999881,
+        "p99": 15.888615999999788,
+        "timestamp": "2026-01-28T23:42:19.868Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/system.version"
+        },
+        "status": "PASS"
+      },
+      {
+        "name": "system-info",
+        "description": "System info endpoint response time",
+        "iterations": 20,
+        "totalTime": 225.6185000000014,
+        "avgTime": 11.280925000000071,
+        "minTime": 4.355799999999817,
+        "maxTime": 114.40200000000004,
+        "p50": 5.404449999999997,
+        "p95": 14.212055000000175,
+        "p99": 94.36401099999992,
+        "timestamp": "2026-01-28T23:42:20.115Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/system.info"
+        },
+        "status": "PASS"
+      },
+      {
+        "name": "system-features",
+        "description": "Feature flags endpoint response time",
+        "iterations": 20,
+        "totalTime": 100.47859999999991,
+        "avgTime": 5.023929999999996,
+        "minTime": 3.7854999999999563,
+        "maxTime": 9.419300000000021,
+        "p50": 4.849649999999883,
+        "p95": 6.716265000000068,
+        "p99": 8.878693000000027,
+        "timestamp": "2026-01-28T23:42:20.227Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/system.features"
+        },
+        "status": "PASS"
+      },
+      {
+        "name": "system-capabilities",
+        "description": "System capabilities endpoint response time",
+        "iterations": 20,
+        "totalTime": 106.10900000000265,
+        "avgTime": 5.305450000000133,
+        "minTime": 4.2236000000002605,
+        "maxTime": 7.159100000000308,
+        "p50": 5.01604999999995,
+        "p95": 6.754305000000182,
+        "p99": 7.078141000000282,
+        "timestamp": "2026-01-28T23:42:20.347Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/system.capabilities"
+        },
+        "status": "PASS"
+      },
+      {
+        "name": "auth-getStatus",
+        "description": "Auth status endpoint response time",
+        "iterations": 20,
+        "totalTime": 106.07149999999865,
+        "avgTime": 5.303574999999933,
+        "minTime": 4.45719999999983,
+        "maxTime": 6.61449999999968,
+        "p50": 5.451099999999769,
+        "p95": 6.046970000000011,
+        "p99": 6.500993999999745,
+        "timestamp": "2026-01-28T23:42:20.478Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/auth.getStatus"
+        },
+        "status": "PASS"
+      },
+      {
+        "name": "auth-getSessions",
+        "description": "User sessions endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:12.552Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/auth.getSessions",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "lead-list",
+        "description": "Lead list endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:12.582Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/lead.list?input=%7B%22limit%22%3A10%7D",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "lead-stats",
+        "description": "Lead stats endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:12.615Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/lead.stats",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "lead-getHotLeads",
+        "description": "Hot leads endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:12.649Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/lead.getHotLeads",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "lead-getReadyForQualification",
+        "description": "Ready for qualification endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:12.683Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/lead.getReadyForQualification",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "contact-list",
+        "description": "Contact list endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:12.715Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/contact.list?input=%7B%22limit%22%3A10%7D",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "contact-stats",
+        "description": "Contact stats endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:12.746Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/contact.stats",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "contact-search",
+        "description": "Contact search endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:12.775Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/contact.search?input=%7B%22query%22%3A%22test%22%7D",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "account-list",
+        "description": "Account list endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:12.805Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/account.list?input=%7B%22limit%22%3A10%7D",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "account-stats",
+        "description": "Account stats endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:12.834Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/account.stats",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "opportunity-list",
+        "description": "Opportunity list endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:12.870Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/opportunity.list?input=%7B%22limit%22%3A10%7D",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "opportunity-stats",
+        "description": "Opportunity stats endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:12.902Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/opportunity.stats",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "opportunity-forecast",
+        "description": "Opportunity forecast endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:12.931Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/opportunity.forecast",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "task-list",
+        "description": "Task list endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:12.962Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/task.list?input=%7B%22limit%22%3A10%7D",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "task-stats",
+        "description": "Task stats endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:12.989Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/task.stats",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "ticket-list",
+        "description": "Ticket list endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:13.017Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/ticket.list?input=%7B%22limit%22%3A10%7D",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "ticket-stats",
+        "description": "Ticket stats endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:13.063Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/ticket.stats",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "appointments-list",
+        "description": "Appointments list endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:13.100Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/appointments.list?input=%7B%22limit%22%3A10%7D",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "appointments-stats",
+        "description": "Appointments stats endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:13.128Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/appointments.stats",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "appointments-checkConflicts",
+        "description": "Check conflicts endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:13.166Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/appointments.checkConflicts?input=%7B%22startTime%22%3A%222026-01-28T23%3A42%3A17.859Z%22%2C%22endTime%22%3A%222026-01-28T23%3A42%3A17.860Z%22%7D",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "documents-list",
+        "description": "Documents list endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:13.198Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/documents.list?input=%7B%22limit%22%3A10%7D",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "conversation-list",
+        "description": "Conversation list endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:13.229Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/conversation.list?input=%7B%22limit%22%3A10%7D",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "agent-listTools",
+        "description": "Agent tools list endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:13.259Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/agent.listTools",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "agent-getPendingApprovals",
+        "description": "Pending approvals endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:13.289Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/agent.getPendingApprovals",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "agent-getPendingCount",
+        "description": "Pending count endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:13.316Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/agent.getPendingCount",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "billing-getSubscription",
+        "description": "Subscription info endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:13.343Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/billing.getSubscription",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "billing-getPaymentMethods",
+        "description": "Payment methods endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:13.370Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/billing.getPaymentMethods",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "billing-getUsageMetrics",
+        "description": "Usage metrics endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:13.398Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/billing.getUsageMetrics",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "analytics-leadStats",
+        "description": "Lead analytics endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:13.429Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/analytics.leadStats",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "analytics-trafficSources",
+        "description": "Traffic sources endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:13.460Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/analytics.trafficSources",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "timeline-getEvents",
+        "description": "Timeline events endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:13.511Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/timeline.getEvents?input=%7B%22entityType%22%3A%22lead%22%2C%22entityId%22%3A%22test%22%7D",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "pipelineConfig-getAll",
+        "description": "All pipeline configs endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:13.555Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/pipelineConfig.getAll",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "pipelineConfig-getStats",
+        "description": "Pipeline stats endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:13.584Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/pipelineConfig.getStats",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "integrations-getAllConnectorsHealth",
+        "description": "Connectors health endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:13.616Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/integrations.getAllConnectorsHealth",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "integrations-getDashboardConfig",
+        "description": "Dashboard config endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:13.648Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/integrations.getDashboardConfig",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "audit-search",
+        "description": "Audit search endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:13.691Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/audit.search?input=%7B%22limit%22%3A10%7D",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "experiment-list",
+        "description": "Experiment list endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:13.725Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/experiment.list?input=%7B%22limit%22%3A10%7D",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "feedback-list",
+        "description": "Feedback list endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:13.754Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/feedback.list?input=%7B%22limit%22%3A10%7D",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "chainVersion-list",
+        "description": "Chain version list endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:13.781Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/chainVersion.list?input=%7B%22limit%22%3A10%7D",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "inbound-list",
+        "description": "Inbound list endpoint response time",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:13.809Z",
+        "metadata": {
+          "endpoint": "http://localhost:3000/api/trpc/inbound.list?input=%7B%22limit%22%3A10%7D",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      },
+      {
+        "name": "api-p95",
+        "description": "Aggregate API p95 response time",
+        "iterations": 50,
+        "totalTime": 724.5246500000031,
+        "avgTime": 14.490493000000063,
+        "minTime": 6.046970000000011,
+        "maxTime": 36.60098500000015,
+        "p50": 8.283665000000067,
+        "p95": 36.39324250000013,
+        "p99": 36.559436500000146,
+        "timestamp": "2026-01-28T23:43:13.809Z",
+        "metadata": {
+          "aggregate": true
+        },
+        "status": "PASS"
+      }
+    ],
+    "database": [
+      {
+        "name": "db-query-simple",
+        "description": "Simple SELECT COUNT query",
+        "iterations": 0,
+        "totalTime": 0,
+        "avgTime": 0,
+        "minTime": 0,
+        "maxTime": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "timestamp": "2026-01-28T23:43:14.303Z",
+        "metadata": {
+          "query": "SELECT COUNT(*) FROM leads",
+          "error": "All iterations failed"
+        },
+        "status": "FAIL"
+      }
+    ],
+    "build": [
+      {
+        "name": "build-typecheck",
+        "description": "TypeScript typecheck time",
+        "iterations": 1,
+        "totalTime": 7143.516300000003,
+        "avgTime": 7143.516300000003,
+        "minTime": 7143.516300000003,
+        "maxTime": 7143.516300000003,
+        "p50": 7143.516300000003,
+        "p95": 7143.516300000003,
+        "p99": 7143.516300000003,
+        "timestamp": "2026-01-28T23:43:21.448Z",
+        "metadata": {
+          "command": "pnpm run typecheck",
+          "error": "Error: Command failed: pnpm run typecheck\n• turbo 2.7.2\n@intelliflow/adapters:typecheck: ERROR: command finished with error: command (C:\\Users\\talys\\projects\\intelliFlow-CRM\\packages\\adapters) C:\\Users\\talys\\AppData\\Local\\pnpm\\.tools\\pnpm\\8.15.0\\bin\\pnpm.CMD run typecheck exited (1)\n@intelliflow/adapters#typecheck: command (C:\\Users\\talys\\projects\\intelliFlow-CRM\\packages\\adapters) C:\\Users\\talys\\AppData\\Local\\pnpm\\.tools\\pnpm\\8.15.0\\bin\\pnpm.CMD run typecheck exited (1)\n ERROR  run failed: command  exited (1)\n"
+        },
+        "status": "FAIL"
+      }
+    ]
+  },
+  "budgets": [
+    {
+      "metric": "api-p95",
+      "target": 100,
+      "unit": "ms",
+      "threshold": "error"
+    },
+    {
+      "metric": "api-p99",
+      "target": 200,
+      "unit": "ms",
+      "threshold": "error"
+    },
+    {
+      "metric": "api-avg",
+      "target": 50,
+      "unit": "ms",
+      "threshold": "warn"
+    },
+    {
+      "metric": "db-query-simple",
+      "target": 20,
+      "unit": "ms",
+      "threshold": "error"
+    },
+    {
+      "metric": "db-query-complex",
+      "target": 100,
+      "unit": "ms",
+      "threshold": "warn"
+    },
+    {
+      "metric": "build-typecheck",
+      "target": 60000,
+      "unit": "ms",
+      "threshold": "warn"
+    }
+  ],
+  "kpi_validation": {
+    "benchmarks_run": true,
+    "api_tested": true,
+    "database_tested": false,
+    "build_tested": false,
+    "all_targets_met": true,
+    "violations": []
+  },
+  "api_inventory": {
+    "total_routers": 25,
+    "total_endpoints": 232,
+    "total_queries": 110,
+    "total_mutations": 122,
+    "routers": [
+      {
+        "name": "appointments",
+        "endpoints": 19,
+        "queries": 7,
+        "mutations": 12
+      },
+      {
+        "name": "lead",
+        "endpoints": 17,
+        "queries": 6,
+        "mutations": 11
+      },
+      {
+        "name": "documents",
+        "endpoints": 17,
+        "queries": 3,
+        "mutations": 14
+      },
+      {
+        "name": "auth",
+        "endpoints": 15,
+        "queries": 2,
+        "mutations": 13
+      },
+      {
+        "name": "experiment",
+        "endpoints": 15,
+        "queries": 5,
+        "mutations": 10
+      },
+      {
+        "name": "chainVersion",
+        "endpoints": 14,
+        "queries": 8,
+        "mutations": 6
+      },
+      {
+        "name": "contact",
+        "endpoints": 14,
+        "queries": 6,
+        "mutations": 8
+      },
+      {
+        "name": "conversation",
+        "endpoints": 13,
+        "queries": 5,
+        "mutations": 8
+      },
+      {
+        "name": "ticket",
+        "endpoints": 13,
+        "queries": 4,
+        "mutations": 9
+      },
+      {
+        "name": "billing",
+        "endpoints": 11,
+        "queries": 5,
+        "mutations": 6
+      },
+      {
+        "name": "agent",
+        "endpoints": 8,
+        "queries": 5,
+        "mutations": 3
+      },
+      {
+        "name": "timeline",
+        "endpoints": 8,
+        "queries": 8,
+        "mutations": 0
+      },
+      {
+        "name": "account",
+        "endpoints": 7,
+        "queries": 4,
+        "mutations": 3
+      },
+      {
+        "name": "opportunity",
+        "endpoints": 7,
+        "queries": 4,
+        "mutations": 3
+      },
+      {
+        "name": "task",
+        "endpoints": 7,
+        "queries": 3,
+        "mutations": 4
+      },
+      {
+        "name": "inbound",
+        "endpoints": 6,
+        "queries": 4,
+        "mutations": 2
+      },
+      {
+        "name": "feedback",
+        "endpoints": 6,
+        "queries": 3,
+        "mutations": 3
+      },
+      {
+        "name": "integrations",
+        "endpoints": 6,
+        "queries": 4,
+        "mutations": 2
+      },
+      {
+        "name": "system",
+        "endpoints": 6,
+        "queries": 6,
+        "mutations": 0
+      },
+      {
+        "name": "analytics",
+        "endpoints": 5,
+        "queries": 5,
+        "mutations": 0
+      },
+      {
+        "name": "health",
+        "endpoints": 5,
+        "queries": 5,
+        "mutations": 0
+      },
+      {
+        "name": "pipelineConfig",
+        "endpoints": 5,
+        "queries": 2,
+        "mutations": 3
+      },
+      {
+        "name": "audit",
+        "endpoints": 5,
+        "queries": 5,
+        "mutations": 0
+      },
+      {
+        "name": "upload",
+        "endpoints": 2,
+        "queries": 1,
+        "mutations": 1
+      },
+      {
+        "name": "emailInbound",
+        "endpoints": 1,
+        "queries": 0,
+        "mutations": 1
+      }
+    ]
+  },
+  "database_inventory": {
+    "total_tables": 96,
+    "total_fields": 1301,
+    "total_indexes": 418,
+    "total_relations": 72,
+    "tables_with_embeddings": 3,
+    "enums": 51,
+    "tables": [
+      {
+        "name": "ConversationRecord",
+        "fields": 36,
+        "indexes": 7,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Contact",
+        "fields": 33,
+        "indexes": 7,
+        "relations": 4,
+        "hasEmbedding": true
+      },
+      {
+        "name": "CaseDocument",
+        "fields": 32,
+        "indexes": 11,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ToolCallRecord",
+        "fields": 31,
+        "indexes": 7,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AuditLogEntry",
+        "fields": 31,
+        "indexes": 8,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Ticket",
+        "fields": 29,
+        "indexes": 10,
+        "relations": 3,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Notification",
+        "fields": 27,
+        "indexes": 9,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Appointment",
+        "fields": 25,
+        "indexes": 8,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Document",
+        "fields": 23,
+        "indexes": 6,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Opportunity",
+        "fields": 22,
+        "indexes": 6,
+        "relations": 4,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EmailRecord",
+        "fields": 22,
+        "indexes": 5,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "CallRecord",
+        "fields": 22,
+        "indexes": 5,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AgentAction",
+        "fields": 21,
+        "indexes": 5,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Tenant",
+        "fields": 20,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Lead",
+        "fields": 20,
+        "indexes": 8,
+        "relations": 2,
+        "hasEmbedding": true
+      },
+      {
+        "name": "FeedbackSurvey",
+        "fields": 20,
+        "indexes": 5,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Task",
+        "fields": 19,
+        "indexes": 5,
+        "relations": 5,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AIInsight",
+        "fields": 19,
+        "indexes": 6,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "User",
+        "fields": 18,
+        "indexes": 7,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ActivityEvent",
+        "fields": 17,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "SLAPolicy",
+        "fields": 17,
+        "indexes": 1,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "DealRenewal",
+        "fields": 17,
+        "indexes": 5,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ReportDefinition",
+        "fields": 17,
+        "indexes": 3,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "MessageRecord",
+        "fields": 16,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TicketActivity",
+        "fields": 16,
+        "indexes": 5,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "NotificationDLQ",
+        "fields": 16,
+        "indexes": 4,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Account",
+        "fields": 15,
+        "indexes": 4,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "CalendarEvent",
+        "fields": 15,
+        "indexes": 5,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ChatConversation",
+        "fields": 15,
+        "indexes": 5,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ReportSchedule",
+        "fields": 15,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ContactAIInsight",
+        "fields": 14,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Workspace",
+        "fields": 14,
+        "indexes": 4,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "WebhookEndpoint",
+        "fields": 14,
+        "indexes": 2,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "NotificationTemplate",
+        "fields": 14,
+        "indexes": 6,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AuditLog",
+        "fields": 13,
+        "indexes": 5,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "SecurityEvent",
+        "fields": 13,
+        "indexes": 5,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AccountHealthScore",
+        "fields": 13,
+        "indexes": 4,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "SLABreach",
+        "fields": 13,
+        "indexes": 4,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "WorkflowDefinition",
+        "fields": 13,
+        "indexes": 3,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "WorkflowExecution",
+        "fields": 13,
+        "indexes": 5,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "BusinessRule",
+        "fields": 13,
+        "indexes": 4,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ReportExecution",
+        "fields": 13,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AlertIncident",
+        "fields": 13,
+        "indexes": 5,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "WebhookDelivery",
+        "fields": 13,
+        "indexes": 5,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "APIKey",
+        "fields": 13,
+        "indexes": 5,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "NotificationDeliveryLog",
+        "fields": 13,
+        "indexes": 4,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ChatMessage",
+        "fields": 12,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EscalationHistory",
+        "fields": 12,
+        "indexes": 4,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "DashboardConfig",
+        "fields": 12,
+        "indexes": 3,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "KPIDefinition",
+        "fields": 12,
+        "indexes": 3,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "APIUsageRecord",
+        "fields": 12,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "PipelineStageConfig",
+        "fields": 11,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ContactActivity",
+        "fields": 11,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ContactNote",
+        "fields": 11,
+        "indexes": 4,
+        "relations": 2,
+        "hasEmbedding": true
+      },
+      {
+        "name": "AgentAvailability",
+        "fields": 11,
+        "indexes": 4,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "RoutingAudit",
+        "fields": 11,
+        "indexes": 4,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TicketCategory",
+        "fields": 11,
+        "indexes": 4,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "BusinessRuleExecution",
+        "fields": 11,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "CaseDocumentAudit",
+        "fields": 11,
+        "indexes": 5,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "DealProduct",
+        "fields": 10,
+        "indexes": 2,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "DealFile",
+        "fields": 10,
+        "indexes": 2,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AIScore",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TicketAttachment",
+        "fields": 10,
+        "indexes": 2,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TicketAIInsight",
+        "fields": 10,
+        "indexes": 2,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Team",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EmailTemplate",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "RoutingRule",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "CaseDocumentACL",
+        "fields": 10,
+        "indexes": 5,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "DomainEvent",
+        "fields": 9,
+        "indexes": 5,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "SLANotification",
+        "fields": 9,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "RBACRole",
+        "fields": 9,
+        "indexes": 3,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "UserPermission",
+        "fields": 9,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "SalesPerformance",
+        "fields": 9,
+        "indexes": 5,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "DocumentAccessLog",
+        "fields": 9,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "DocumentShare",
+        "fields": 9,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AgentSkill",
+        "fields": 9,
+        "indexes": 5,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "APIVersion",
+        "fields": 9,
+        "indexes": 3,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "LeadConversionAudit",
+        "fields": 9,
+        "indexes": 7,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "RelatedTicket",
+        "fields": 8,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "WorkspaceMember",
+        "fields": 8,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EmailAttachment",
+        "fields": 8,
+        "indexes": 2,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "PerformanceMetric",
+        "fields": 8,
+        "indexes": 4,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "RolePermission",
+        "fields": 7,
+        "indexes": 4,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "UserRoleAssignment",
+        "fields": 7,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TeamMessage",
+        "fields": 7,
+        "indexes": 3,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "PipelineSnapshot",
+        "fields": 7,
+        "indexes": 3,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TicketNextStep",
+        "fields": 7,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "HealthCheck",
+        "fields": 7,
+        "indexes": 4,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "GrowthMetric",
+        "fields": 6,
+        "indexes": 4,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TeamMember",
+        "fields": 6,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AppointmentAttendee",
+        "fields": 5,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AppointmentCase",
+        "fields": 5,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Permission",
+        "fields": 5,
+        "indexes": 2,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TrafficSource",
+        "fields": 5,
+        "indexes": 3,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "DealsWonMetric",
+        "fields": 5,
+        "indexes": 3,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "NotificationPreference",
+        "fields": 4,
+        "indexes": 1,
+        "relations": 0,
+        "hasEmbedding": false
+      }
+    ]
+  },
+  "middleware_inventory": {
+    "total_middleware": 6,
+    "by_type": {
+      "auth": 1,
+      "other": 2,
+      "logging": 2,
+      "error": 1
+    },
+    "middleware": [
+      {
+        "name": "createAuthMiddleware",
+        "type": "auth",
+        "description": "Authentication and authorization",
+        "enabled": true
+      },
+      {
+        "name": "createAdminMiddleware",
+        "type": "other",
+        "description": "Admin role verification",
+        "enabled": true
+      },
+      {
+        "name": "createManagerMiddleware",
+        "type": "other",
+        "description": "Manager role verification",
+        "enabled": true
+      },
+      {
+        "name": "createLoggingMiddleware",
+        "type": "logging",
+        "description": "Request/response logging",
+        "enabled": true
+      },
+      {
+        "name": "createPerformanceMiddleware",
+        "type": "logging",
+        "description": "Performance monitoring and metrics",
+        "enabled": true
+      },
+      {
+        "name": "createErrorTrackingMiddleware",
+        "type": "error",
+        "description": "Error tracking and reporting",
+        "enabled": true
+      }
+    ]
+  },
+  "workers_inventory": {
+    "total_workers": 3,
+    "total_jobs": 6,
+    "workers": [
+      {
+        "name": "events",
+        "type": "events",
+        "jobs": [
+          "event-dispatcher",
+          "pollOutbox"
+        ],
+        "description": "Domain event processing and outbox polling"
+      },
+      {
+        "name": "ingestion",
+        "type": "ingestion",
+        "jobs": [
+          "extractText"
+        ],
+        "description": "Document ingestion and text extraction"
+      },
+      {
+        "name": "notifications",
+        "type": "notifications",
+        "jobs": [
+          "channel:email",
+          "channel:sms",
+          "channel:webhook"
+        ],
+        "description": "Multi-channel notification delivery"
+      }
+    ]
+  },
+  "integrations_inventory": {
+    "total_integrations": 12,
+    "by_category": {
+      "calendar": 2,
+      "email": 2,
+      "payment": 2,
+      "messaging": 2,
+      "erp": 1,
+      "storage": 1,
+      "ai": 1,
+      "other": 1
+    },
+    "integrations": [
+      {
+        "name": "google-calendar",
+        "category": "calendar",
+        "provider": "Google Calendar",
+        "description": "Google Calendar calendar sync and event management"
+      },
+      {
+        "name": "microsoft-outlook",
+        "category": "calendar",
+        "provider": "Microsoft Outlook",
+        "description": "Microsoft Outlook calendar sync and event management"
+      },
+      {
+        "name": "gmail",
+        "category": "email",
+        "provider": "Gmail",
+        "description": "Gmail email sending and receiving"
+      },
+      {
+        "name": "outlook",
+        "category": "email",
+        "provider": "Outlook",
+        "description": "Outlook email sending and receiving"
+      },
+      {
+        "name": "stripe",
+        "category": "payment",
+        "provider": "Stripe",
+        "description": "Stripe payment processing"
+      },
+      {
+        "name": "paypal",
+        "category": "payment",
+        "provider": "PayPal",
+        "description": "PayPal payment processing"
+      },
+      {
+        "name": "slack",
+        "category": "messaging",
+        "provider": "Slack",
+        "description": "Slack team messaging integration"
+      },
+      {
+        "name": "microsoft-teams",
+        "category": "messaging",
+        "provider": "Microsoft Teams",
+        "description": "Microsoft Teams team messaging integration"
+      },
+      {
+        "name": "sap",
+        "category": "erp",
+        "provider": "SAP",
+        "description": "SAP ERP system integration"
+      },
+      {
+        "name": "supabase-storage",
+        "category": "storage",
+        "provider": "Supabase Storage",
+        "description": "Supabase Storage file storage"
+      },
+      {
+        "name": "zep-memory",
+        "category": "ai",
+        "provider": "Zep Memory",
+        "description": "Zep Memory AI memory/context management"
+      },
+      {
+        "name": "clamav",
+        "category": "other",
+        "provider": "ClamAV",
+        "description": "ClamAV integration"
+      }
+    ]
+  },
+  "domain_events_inventory": {
+    "total_events": 23,
+    "by_aggregate": {
+      "case": 21,
+      "document": 2
+    },
+    "by_workflow_engine": {
+      "temporal": 10,
+      "rules": 5,
+      "bullmq": 6
+    },
+    "events": [
+      {
+        "name": "CaseWorkflowStartedEvent",
+        "eventType": "case.workflow_started",
+        "aggregate": "case",
+        "workflowEngine": "temporal"
+      },
+      {
+        "name": "CaseWorkflowCompletedEvent",
+        "eventType": "case.workflow_completed",
+        "aggregate": "case",
+        "workflowEngine": "temporal"
+      },
+      {
+        "name": "CaseWorkflowFailedEvent",
+        "eventType": "case.workflow_failed",
+        "aggregate": "case",
+        "workflowEngine": "temporal"
+      },
+      {
+        "name": "CaseApprovalRequiredEvent",
+        "eventType": "case.approval_required",
+        "aggregate": "case",
+        "workflowEngine": "temporal"
+      },
+      {
+        "name": "CaseApprovalReceivedEvent",
+        "eventType": "case.approval_received",
+        "aggregate": "case",
+        "workflowEngine": "temporal"
+      },
+      {
+        "name": "CaseEscalatedEvent",
+        "eventType": "case.escalated",
+        "aggregate": "case",
+        "workflowEngine": "temporal"
+      },
+      {
+        "name": "CaseSLABreachedEvent",
+        "eventType": "case.sla_breached",
+        "aggregate": "case",
+        "workflowEngine": "rules"
+      },
+      {
+        "name": "CaseAssignedEvent",
+        "eventType": "case.assigned",
+        "aggregate": "case",
+        "workflowEngine": "bullmq"
+      },
+      {
+        "name": "CaseNoteAddedEvent",
+        "eventType": "case.note_added",
+        "aggregate": "case",
+        "workflowEngine": "bullmq"
+      },
+      {
+        "name": "CaseDocumentAttachedEvent",
+        "eventType": "case.document_attached",
+        "aggregate": "case",
+        "workflowEngine": "bullmq"
+      },
+      {
+        "name": "CaseReopenedEvent",
+        "eventType": "case.reopened",
+        "aggregate": "case",
+        "workflowEngine": "temporal"
+      },
+      {
+        "name": "CaseTimerStartedEvent",
+        "eventType": "case.timer_started",
+        "aggregate": "case",
+        "workflowEngine": "rules"
+      },
+      {
+        "name": "CaseTimerPausedEvent",
+        "eventType": "case.timer_paused",
+        "aggregate": "case",
+        "workflowEngine": "rules"
+      },
+      {
+        "name": "CaseCreatedEvent",
+        "eventType": "case.created",
+        "aggregate": "case",
+        "workflowEngine": "temporal"
+      },
+      {
+        "name": "CaseStatusChangedEvent",
+        "eventType": "case.status_changed",
+        "aggregate": "case",
+        "workflowEngine": "temporal"
+      },
+      {
+        "name": "CaseDeadlineUpdatedEvent",
+        "eventType": "case.deadline_updated",
+        "aggregate": "case",
+        "workflowEngine": "rules"
+      },
+      {
+        "name": "CaseTaskAddedEvent",
+        "eventType": "case.task_added",
+        "aggregate": "case",
+        "workflowEngine": "bullmq"
+      },
+      {
+        "name": "CaseTaskRemovedEvent",
+        "eventType": "case.task_removed",
+        "aggregate": "case",
+        "workflowEngine": "bullmq"
+      },
+      {
+        "name": "CaseTaskCompletedEvent",
+        "eventType": "case.task_completed",
+        "aggregate": "case",
+        "workflowEngine": "bullmq"
+      },
+      {
+        "name": "CasePriorityChangedEvent",
+        "eventType": "case.priority_changed",
+        "aggregate": "case",
+        "workflowEngine": "rules"
+      },
+      {
+        "name": "CaseClosedEvent",
+        "eventType": "case.closed",
+        "aggregate": "case",
+        "workflowEngine": "temporal"
+      },
+      {
+        "name": "DocumentIngestionCreatedEvent",
+        "eventType": "document.ingestion.created",
+        "aggregate": "document"
+      },
+      {
+        "name": "DocumentIngestionFailedEvent",
+        "eventType": "document.ingestion_failed",
+        "aggregate": "document"
+      }
+    ]
+  },
+  "validators_inventory": {
+    "total_validators": 22,
+    "total_schemas": 248,
+    "by_complexity": {
+      "complex": 13,
+      "moderate": 8,
+      "simple": 1
+    },
+    "validators": [
+      {
+        "name": "platform-metrics",
+        "file": "platform-metrics.ts",
+        "schemas": 27,
+        "complexity": "complex"
+      },
+      {
+        "name": "auth",
+        "file": "auth.ts",
+        "schemas": 24,
+        "complexity": "complex"
+      },
+      {
+        "name": "billing",
+        "file": "billing.ts",
+        "schemas": 21,
+        "complexity": "complex"
+      },
+      {
+        "name": "ai",
+        "file": "ai.ts",
+        "schemas": 20,
+        "complexity": "complex"
+      },
+      {
+        "name": "timeline",
+        "file": "timeline.ts",
+        "schemas": 19,
+        "complexity": "complex"
+      },
+      {
+        "name": "chain-version",
+        "file": "chain-version.ts",
+        "schemas": 17,
+        "complexity": "complex"
+      },
+      {
+        "name": "experiment",
+        "file": "experiment.ts",
+        "schemas": 17,
+        "complexity": "complex"
+      },
+      {
+        "name": "feedback",
+        "file": "feedback.ts",
+        "schemas": 16,
+        "complexity": "complex"
+      },
+      {
+        "name": "case",
+        "file": "case.ts",
+        "schemas": 15,
+        "complexity": "complex"
+      },
+      {
+        "name": "config",
+        "file": "config.ts",
+        "schemas": 11,
+        "complexity": "complex"
+      },
+      {
+        "name": "env",
+        "file": "env.ts",
+        "schemas": 11,
+        "complexity": "complex"
+      },
+      {
+        "name": "lead",
+        "file": "lead.ts",
+        "schemas": 9,
+        "complexity": "complex"
+      },
+      {
+        "name": "common",
+        "file": "common.ts",
+        "schemas": 7,
+        "complexity": "complex"
+      },
+      {
+        "name": "task",
+        "file": "task.ts",
+        "schemas": 7,
+        "complexity": "moderate"
+      },
+      {
+        "name": "opportunity",
+        "file": "opportunity.ts",
+        "schemas": 6,
+        "complexity": "moderate"
+      },
+      {
+        "name": "ticket",
+        "file": "ticket.ts",
+        "schemas": 6,
+        "complexity": "moderate"
+      },
+      {
+        "name": "contact",
+        "file": "contact.ts",
+        "schemas": 5,
+        "complexity": "moderate"
+      },
+      {
+        "name": "account",
+        "file": "account.ts",
+        "schemas": 3,
+        "complexity": "moderate"
+      },
+      {
+        "name": "appointment",
+        "file": "appointment.ts",
+        "schemas": 2,
+        "complexity": "simple"
+      },
+      {
+        "name": "bulk-operations",
+        "file": "bulk-operations.ts",
+        "schemas": 2,
+        "complexity": "moderate"
+      },
+      {
+        "name": "contact-form",
+        "file": "contact-form.ts",
+        "schemas": 2,
+        "complexity": "moderate"
+      },
+      {
+        "name": "base-schemas",
+        "file": "base-schemas.ts",
+        "schemas": 1,
+        "complexity": "moderate"
+      }
+    ]
+  },
+  "cache_inventory": {
+    "enabled": true,
+    "provider": "Redis (Upstash)",
+    "total_key_patterns": 5,
+    "keys": [
+      {
+        "pattern": "session:*",
+        "purpose": "User session data",
+        "ttl": "24h"
+      },
+      {
+        "pattern": "rate-limit:*",
+        "purpose": "Rate limiting counters",
+        "ttl": "1m"
+      },
+      {
+        "pattern": "ai-score:*",
+        "purpose": "AI scoring cache",
+        "ttl": "1h"
+      },
+      {
+        "pattern": "user:*",
+        "purpose": "User profile cache",
+        "ttl": "15m"
+      },
+      {
+        "pattern": "tenant:*",
+        "purpose": "Tenant configuration cache",
+        "ttl": "5m"
+      }
+    ]
+  },
+  "load_test_results": {
+    "timestamp": "2026-01-29T20:43:43.551Z",
+    "target_vus": 10,
+    "max_concurrent_users": 10,
+    "requests_per_second": 18.531522248300828,
+    "error_rate": 100,
+    "p50_response_time": null,
+    "p95_response_time": 330.3659899999997,
+    "p99_response_time": null,
+    "duration_seconds": 30,
+    "thresholds_passed": true
+  }
+}

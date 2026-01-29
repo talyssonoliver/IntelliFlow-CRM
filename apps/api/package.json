@@ -8,28 +8,46 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "build": "tsup",
     "start": "node dist/index.js",
     "clean": "rm -rf dist .turbo",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src/",
+    "lint": "eslint \"src/**/*.ts\"",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@intelliflow/adapters": "workspace:*",
+    "@intelliflow/application": "workspace:*",
     "@intelliflow/db": "workspace:*",
+    "@intelliflow/domain": "workspace:*",
+    "@intelliflow/platform": "workspace:*",
     "@intelliflow/validators": "workspace:*",
-    "@trpc/server": "^10.45.0",
+    "@opentelemetry/api": "1.9.0",
+    "@opentelemetry/auto-instrumentations-node": "0.56.0",
+    "@opentelemetry/exporter-metrics-otlp-http": "^0.208.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.208.0",
+    "@opentelemetry/resources": "1.30.1",
+    "@opentelemetry/sdk-node": "0.56.0",
+    "@opentelemetry/semantic-conventions": "1.30.0",
     "@prisma/client": "^5.10.0",
+    "@sentry/node": "^10.32.1",
+    "@sentry/tracing": "^7.120.4",
+    "@supabase/supabase-js": "^2.89.0",
+    "@trpc/server": "^11.8.0",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.36.1",
     "zod": "^3.22.0"
   },
   "devDependencies": {
     "@intelliflow/typescript-config": "workspace:*",
     "@types/node": "^20.11.0",
+    "@vitest/ui": "^4.0.16",
+    "eslint": "^9.0.0",
     "tsup": "^8.0.0",
     "tsx": "^4.7.0",
     "typescript": "^5.3.0",
-    "vitest": "^1.2.0",
-    "eslint": "^8.56.0"
+    "vitest": "^4.0.16",
+    "vitest-mock-extended": "^3.1.0"
   }
 }

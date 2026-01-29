@@ -1,0 +1,427 @@
+{
+  "$schema": "../schemas/cost-projection.schema.json",
+  "report_metadata": {
+    "task_id": "IFC-011",
+    "title": "Supabase Cost Projection Analysis",
+    "generated_at": "2025-12-26T12:00:00Z",
+    "version": "1.0.0",
+    "currency": "USD",
+    "analysis_period_months": 6
+  },
+  "tier_comparison": {
+    "free": {
+      "monthly_cost": 0,
+      "database_storage_gb": 0.5,
+      "file_storage_gb": 1,
+      "bandwidth_gb": 2,
+      "realtime_connections": 200,
+      "edge_function_invocations": 500000,
+      "mau_limit": 50000,
+      "support_level": "Community",
+      "daily_backups": false,
+      "point_in_time_recovery": false,
+      "metrics_retention_days": 1,
+      "log_retention_hours": 1,
+      "branching": false,
+      "sso": false,
+      "dedicated_support": false,
+      "sla": "None"
+    },
+    "pro": {
+      "monthly_cost": 25,
+      "database_storage_gb": 8,
+      "file_storage_gb": 100,
+      "bandwidth_gb": 250,
+      "realtime_connections": 500,
+      "edge_function_invocations": 2000000,
+      "mau_limit": 100000,
+      "support_level": "Email",
+      "daily_backups": true,
+      "point_in_time_recovery": true,
+      "metrics_retention_days": 7,
+      "log_retention_hours": 168,
+      "branching": true,
+      "sso": false,
+      "dedicated_support": false,
+      "sla": "None",
+      "additional_costs": {
+        "compute_per_hour": 0.01344,
+        "storage_per_gb": 0.125,
+        "bandwidth_per_gb": 0.09,
+        "mau_overage_per_1000": 0.00325
+      }
+    },
+    "team": {
+      "monthly_cost": 599,
+      "database_storage_gb": 8,
+      "file_storage_gb": 100,
+      "bandwidth_gb": 250,
+      "realtime_connections": 500,
+      "edge_function_invocations": 2000000,
+      "mau_limit": 100000,
+      "support_level": "Priority",
+      "daily_backups": true,
+      "point_in_time_recovery": true,
+      "metrics_retention_days": 28,
+      "log_retention_hours": 720,
+      "branching": true,
+      "sso": true,
+      "dedicated_support": true,
+      "sla": "99.9%",
+      "additional_costs": {
+        "compute_per_hour": 0.01344,
+        "storage_per_gb": 0.125,
+        "bandwidth_per_gb": 0.09,
+        "mau_overage_per_1000": 0.00325
+      }
+    }
+  },
+  "monthly_projections": {
+    "month_1": {
+      "period": "2025-01",
+      "scenario": "MVP Development",
+      "usage": {
+        "database_storage_mb": 25,
+        "file_storage_mb": 50,
+        "bandwidth_gb": 0.5,
+        "mau": 10,
+        "realtime_peak": 5,
+        "edge_invocations": 10000
+      },
+      "tier_costs": {
+        "free": {
+          "base_cost": 0,
+          "overage_cost": 0,
+          "total": 0,
+          "status": "within_limits"
+        },
+        "pro": {
+          "base_cost": 25,
+          "overage_cost": 0,
+          "total": 25,
+          "status": "overkill"
+        },
+        "team": {
+          "base_cost": 599,
+          "overage_cost": 0,
+          "total": 599,
+          "status": "not_recommended"
+        }
+      },
+      "recommendation": "free",
+      "savings_vs_pro": 25
+    },
+    "month_2": {
+      "period": "2025-02",
+      "scenario": "Alpha Testing",
+      "usage": {
+        "database_storage_mb": 75,
+        "file_storage_mb": 150,
+        "bandwidth_gb": 2,
+        "mau": 30,
+        "realtime_peak": 15,
+        "edge_invocations": 50000
+      },
+      "tier_costs": {
+        "free": {
+          "base_cost": 0,
+          "overage_cost": 0,
+          "total": 0,
+          "status": "within_limits"
+        },
+        "pro": {
+          "base_cost": 25,
+          "overage_cost": 0,
+          "total": 25,
+          "status": "overkill"
+        },
+        "team": {
+          "base_cost": 599,
+          "overage_cost": 0,
+          "total": 599,
+          "status": "not_recommended"
+        }
+      },
+      "recommendation": "free",
+      "savings_vs_pro": 25
+    },
+    "month_3": {
+      "period": "2025-03",
+      "scenario": "Beta Launch",
+      "usage": {
+        "database_storage_mb": 150,
+        "file_storage_mb": 300,
+        "bandwidth_gb": 5,
+        "mau": 75,
+        "realtime_peak": 30,
+        "edge_invocations": 100000
+      },
+      "tier_costs": {
+        "free": {
+          "base_cost": 0,
+          "overage_cost": 0,
+          "total": 0,
+          "status": "within_limits",
+          "warning": "Bandwidth approaching limit"
+        },
+        "pro": {
+          "base_cost": 25,
+          "overage_cost": 0,
+          "total": 25,
+          "status": "recommended_soon"
+        },
+        "team": {
+          "base_cost": 599,
+          "overage_cost": 0,
+          "total": 599,
+          "status": "not_recommended"
+        }
+      },
+      "recommendation": "free",
+      "savings_vs_pro": 25
+    },
+    "month_4": {
+      "period": "2025-04",
+      "scenario": "Early Adopters",
+      "usage": {
+        "database_storage_mb": 250,
+        "file_storage_mb": 500,
+        "bandwidth_gb": 15,
+        "mau": 150,
+        "realtime_peak": 50,
+        "edge_invocations": 200000
+      },
+      "tier_costs": {
+        "free": {
+          "base_cost": 0,
+          "overage_cost": 0,
+          "total": 0,
+          "status": "within_limits",
+          "warning": "Database storage at 50% capacity"
+        },
+        "pro": {
+          "base_cost": 25,
+          "overage_cost": 0,
+          "total": 25,
+          "status": "consider_for_backups"
+        },
+        "team": {
+          "base_cost": 599,
+          "overage_cost": 0,
+          "total": 599,
+          "status": "not_recommended"
+        }
+      },
+      "recommendation": "free",
+      "savings_vs_pro": 25,
+      "notes": "Consider Pro for daily backups if handling critical customer data"
+    },
+    "month_5": {
+      "period": "2025-05",
+      "scenario": "Growth Phase",
+      "usage": {
+        "database_storage_mb": 350,
+        "file_storage_mb": 750,
+        "bandwidth_gb": 35,
+        "mau": 300,
+        "realtime_peak": 100,
+        "edge_invocations": 350000
+      },
+      "tier_costs": {
+        "free": {
+          "base_cost": 0,
+          "overage_cost": 0,
+          "total": 0,
+          "status": "at_risk",
+          "warning": "Database at 70%, storage at 75%, bandwidth over limit"
+        },
+        "pro": {
+          "base_cost": 25,
+          "overage_cost": 0,
+          "total": 25,
+          "status": "recommended"
+        },
+        "team": {
+          "base_cost": 599,
+          "overage_cost": 0,
+          "total": 599,
+          "status": "not_recommended"
+        }
+      },
+      "recommendation": "pro",
+      "trigger_reason": "Bandwidth exceeds free tier, need backups for customer data",
+      "additional_cost_from_free": 25
+    },
+    "month_6": {
+      "period": "2025-06",
+      "scenario": "Scaling",
+      "usage": {
+        "database_storage_mb": 450,
+        "file_storage_mb": 950,
+        "bandwidth_gb": 75,
+        "mau": 500,
+        "realtime_peak": 150,
+        "edge_invocations": 480000
+      },
+      "tier_costs": {
+        "free": {
+          "base_cost": 0,
+          "overage_cost": 0,
+          "total": 0,
+          "status": "exceeds_limits",
+          "blocked": ["database_storage", "file_storage", "bandwidth"]
+        },
+        "pro": {
+          "base_cost": 25,
+          "overage_cost": 0,
+          "total": 25,
+          "status": "adequate"
+        },
+        "team": {
+          "base_cost": 599,
+          "overage_cost": 0,
+          "total": 599,
+          "status": "consider_if_sso_needed"
+        }
+      },
+      "recommendation": "pro",
+      "additional_cost_from_free": 25
+    }
+  },
+  "cumulative_costs": {
+    "free_tier": {
+      "month_1": 0,
+      "month_2": 0,
+      "month_3": 0,
+      "month_4": 0,
+      "month_5": 0,
+      "month_6": 0,
+      "total_6_months": 0
+    },
+    "pro_tier": {
+      "month_1": 25,
+      "month_2": 50,
+      "month_3": 75,
+      "month_4": 100,
+      "month_5": 125,
+      "month_6": 150,
+      "total_6_months": 150
+    },
+    "team_tier": {
+      "month_1": 599,
+      "month_2": 1198,
+      "month_3": 1797,
+      "month_4": 2396,
+      "month_5": 2995,
+      "month_6": 3594,
+      "total_6_months": 3594
+    },
+    "optimized_path": {
+      "description": "Free tier months 1-4, Pro tier months 5-6",
+      "month_1": 0,
+      "month_2": 0,
+      "month_3": 0,
+      "month_4": 0,
+      "month_5": 25,
+      "month_6": 50,
+      "total_6_months": 50,
+      "savings_vs_pro": 100,
+      "savings_vs_team": 3544
+    }
+  },
+  "upgrade_trigger_points": {
+    "immediate_triggers": [
+      {
+        "trigger": "Database storage exceeds 450 MB",
+        "threshold_percent": 90,
+        "action": "Upgrade to Pro immediately or implement archiving"
+      },
+      {
+        "trigger": "Monthly bandwidth exceeds 1.8 GB",
+        "threshold_percent": 90,
+        "action": "Upgrade to Pro or implement CDN offloading"
+      },
+      {
+        "trigger": "Realtime connections consistently above 180",
+        "threshold_percent": 90,
+        "action": "Upgrade to Pro for 500 connection limit"
+      }
+    ],
+    "planned_triggers": [
+      {
+        "trigger": "First paying customer",
+        "rationale": "Need daily backups and point-in-time recovery",
+        "recommended_tier": "pro"
+      },
+      {
+        "trigger": "Enterprise customer requires SSO",
+        "rationale": "SSO only available in Team tier",
+        "recommended_tier": "team"
+      },
+      {
+        "trigger": "SLA requirement from customer contract",
+        "rationale": "99.9% SLA only in Team tier",
+        "recommended_tier": "team"
+      }
+    ],
+    "optimization_before_upgrade": [
+      {
+        "trigger": "Database storage above 80%",
+        "optimization": "Archive old data, implement soft deletes cleanup",
+        "potential_savings": "30-50% storage reduction"
+      },
+      {
+        "trigger": "Bandwidth approaching limit",
+        "optimization": "Enable CDN, compress images, cache responses",
+        "potential_savings": "60-80% bandwidth reduction"
+      }
+    ]
+  },
+  "roi_analysis": {
+    "development_phase": {
+      "months": "1-3",
+      "recommended_tier": "free",
+      "cost": 0,
+      "value_delivered": "Full development environment with production-grade features"
+    },
+    "beta_phase": {
+      "months": "4",
+      "recommended_tier": "free",
+      "cost": 0,
+      "value_delivered": "Beta testing with real users, monitoring usage patterns"
+    },
+    "launch_phase": {
+      "months": "5-6",
+      "recommended_tier": "pro",
+      "cost": 50,
+      "value_delivered": "Production-ready with backups, extended limits, support"
+    },
+    "total_6_month_cost": 50,
+    "features_gained_for_free": [
+      "PostgreSQL database with pgvector",
+      "Authentication system (OAuth, magic links)",
+      "Realtime subscriptions",
+      "Edge functions",
+      "File storage",
+      "Row level security"
+    ],
+    "estimated_alternative_costs": {
+      "aws_equivalent": 150,
+      "gcp_equivalent": 130,
+      "self_hosted": 250,
+      "notes": "Estimates include compute, storage, auth service, realtime, edge functions"
+    }
+  },
+  "kpis": {
+    "cost_projection_months": {
+      "target": 6,
+      "actual": 6,
+      "status": "met"
+    },
+    "free_tier_utilization": {
+      "target": "Maximum before upgrade",
+      "actual": "4 months at $0",
+      "status": "optimized"
+    }
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "BRAND-002",
+  "section": "Brand & Design",
+  "description": "Design Tokens Integration Plan (Tailwind/shadcn theme mapping)",
+  "owner": "UX Designer + Frontend Dev",
+  "dependencies": {
+    "required": [
+      "BRAND-001",
+      "ENV-002-AI"
+    ],
+    "verified_at": "2026-01-29T01:33:17.602Z",
+    "all_satisfied": true
+  },
+  "status": "DONE",
+  "status_history": [
+    {
+      "status": "PLANNED",
+      "at": "2025-12-20T00:00:00Z"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "at": "2025-12-21T12:00:00Z"
+    },
+    {
+      "status": "DONE",
+      "at": "2025-12-21T14:00:00Z"
+    }
+  ],
+  "execution": {
+    "started_at": "2025-12-21T12:00:00Z",
+    "completed_at": "2025-12-21T14:00:00Z",
+    "duration_minutes": 120,
+    "executor": "claude-opus-4.5",
+    "execution_log": "logs/sprint-1/BRAND-002.log"
+  },
+  "artifacts": {
+    "expected": [
+      "docs/design-system/token-mapping.md",
+      "docs/design-system/token-naming.md"
+    ],
+    "created": [
+      "docs/design-system/token-mapping.md",
+      "docs/design-system/token-naming.md"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "token_mapping_exists",
+      "command": "test -f docs/design-system/token-mapping.md",
+      "passed": true,
+      "exit_code": 0,
+      "executed_at": "2025-12-21T14:00:00Z",
+      "timestamp": "2025-12-27T11:33:39.043Z"
+    }
+  ],
+  "kpis": {
+    "tokens_documented": {
+      "target": true,
+      "actual": true,
+      "met": true,
+      "unit": "boolean"
+    },
+    "theme_spec_created": {
+      "target": true,
+      "actual": true,
+      "met": true,
+      "unit": "boolean"
+    }
+  },
+  "blockers": [],
+  "notes": "Design tokens with token mapping, naming conventions, and theme reference specification.",
+  "completed_at": "2025-12-27T11:33:39.043Z",
+  "started_at": "2025-12-27T11:18:39.043Z",
+  "actual_duration_minutes": 15,
+  "dependencies_resolved": [
+    "BRAND-001",
+    "ENV-002-AI"
+  ]
+}

@@ -9,7 +9,7 @@
  * would require additional dependencies and implementation.
  */
 
-import { BaseAgent, AgentTask, AgentResult } from './base.agent';
+import { BaseAgent, AgentResult } from './base.agent';
 import pino from 'pino';
 
 const logger = pino({
@@ -56,7 +56,7 @@ export interface CrewResult {
  * Supports different execution strategies (sequential, hierarchical, parallel)
  */
 export class Crew {
-  private config: CrewConfig;
+  private readonly config: CrewConfig;
   private executionCount: number = 0;
 
   constructor(config: CrewConfig) {
@@ -160,13 +160,13 @@ export class Crew {
    * Each agent builds upon the previous agent's output
    */
   private async executeSequential(
-    task: CrewTask,
-    results: Map<string, AgentResult>
+    _task: CrewTask,
+    _results: Map<string, AgentResult>
   ): Promise<void> {
     logger.info('Executing agents sequentially');
 
-    // TODO: Implement sequential execution
-    // For now, this is a placeholder
+    // Stub: Sequential execution requires implementing agent delegation
+    // and context passing between agents in order
     throw new Error('Sequential execution not yet implemented');
   }
 
@@ -175,12 +175,12 @@ export class Crew {
    * All agents work on the same input simultaneously
    */
   private async executeParallel(
-    task: CrewTask,
-    results: Map<string, AgentResult>
+    _task: CrewTask,
+    _results: Map<string, AgentResult>
   ): Promise<void> {
     logger.info('Executing agents in parallel');
 
-    // TODO: Implement parallel execution
+    // Stub: Parallel execution requires Promise.all coordination
     throw new Error('Parallel execution not yet implemented');
   }
 
@@ -189,12 +189,12 @@ export class Crew {
    * Manager agent delegates tasks to worker agents
    */
   private async executeHierarchical(
-    task: CrewTask,
-    results: Map<string, AgentResult>
+    _task: CrewTask,
+    _results: Map<string, AgentResult>
   ): Promise<void> {
     logger.info('Executing agents hierarchically');
 
-    // TODO: Implement hierarchical execution
+    // Stub: Hierarchical execution requires manager agent delegation logic
     throw new Error('Hierarchical execution not yet implemented');
   }
 

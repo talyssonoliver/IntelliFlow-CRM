@@ -4,7 +4,6 @@
   "title": "KPI Definitions Schema",
   "description": "Schema for kpi-definitions.json - standardized KPI measurement definitions",
   "type": "object",
-  "required": ["version", "last_updated", "categories", "measurement_schedule"],
   "properties": {
     "$schema": {
       "type": "string"
@@ -15,25 +14,30 @@
     },
     "last_updated": {
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
     },
     "description": {
       "type": "string"
     },
     "categories": {
       "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
       "additionalProperties": {
         "type": "object",
-        "required": ["name", "kpis"],
         "properties": {
           "name": {
             "type": "string"
           },
           "kpis": {
             "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
             "additionalProperties": {
               "type": "object",
-              "required": ["name", "description", "unit", "targets", "measurement_method"],
               "properties": {
                 "name": {
                   "type": "string"
@@ -43,12 +47,23 @@
                 },
                 "unit": {
                   "type": "string",
-                  "enum": ["milliseconds", "seconds", "minutes", "percent", "count", "boolean", "dollars"]
+                  "enum": [
+                    "milliseconds",
+                    "seconds",
+                    "minutes",
+                    "percent",
+                    "count",
+                    "boolean",
+                    "dollars"
+                  ]
                 },
                 "targets": {
                   "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
                   "additionalProperties": {
-                    "oneOf": [
+                    "anyOf": [
                       {
                         "type": "number"
                       },
@@ -62,12 +77,32 @@
                   "type": "string"
                 },
                 "validation_command": {
-                  "type": ["string", "null"]
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
                 }
-              }
+              },
+              "required": [
+                "name",
+                "description",
+                "unit",
+                "targets",
+                "measurement_method"
+              ],
+              "additionalProperties": false
             }
           }
-        }
+        },
+        "required": [
+          "name",
+          "kpis"
+        ],
+        "additionalProperties": false
       }
     },
     "measurement_schedule": {
@@ -103,7 +138,15 @@
             "type": "string"
           }
         }
-      }
+      },
+      "additionalProperties": false
     }
-  }
+  },
+  "required": [
+    "version",
+    "last_updated",
+    "categories",
+    "measurement_schedule"
+  ],
+  "additionalProperties": false
 }

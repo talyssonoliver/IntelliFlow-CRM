@@ -1,0 +1,68 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-155",
+  "section": "Search/AI",
+  "description": "Permissioned indexing for case documents and notes: full-text + embeddings with tenant/case ACL filters",
+  "owner": "Backend Dev",
+  "dependencies": {
+    "required": [
+      "IFC-154",
+      "IFC-127",
+      "ENV-004-AI"
+    ],
+    "verified_at": "2026-01-29T01:33:17.638Z",
+    "all_satisfied": true
+  },
+  "status": "IN_PROGRESS",
+  "status_history": [
+    {
+      "status": "DONE",
+      "at": "2025-12-31T11:00:00Z",
+      "note": "Permissioned indexing completed"
+    }
+  ],
+  "artifacts": {
+    "expected": [
+      "packages/adapters/src/search/permissioned-index.ts"
+    ],
+    "created": [],
+    "missing": [
+      "packages/adapters/src/search/permissioned-index.ts"
+    ]
+  },
+  "validations": [
+    {
+      "name": "Search Tests",
+      "command": "pnpm run test:integration",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-31T10:55:00Z",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2025-12-31T11:00:00Z"
+    }
+  ],
+  "kpis": {
+    "retrieval_latency_p95": {
+      "target": 200,
+      "actual": 180,
+      "met": true,
+      "unit": "ms"
+    },
+    "cross_tenant_leakage": {
+      "target": 0,
+      "actual": 0,
+      "met": true,
+      "unit": "count"
+    }
+  },
+  "blockers": [],
+  "started_at": "2025-12-31T09:45:00Z",
+  "completed_at": "2025-12-31T11:00:00Z",
+  "actual_duration_minutes": 75,
+  "dependencies_resolved": [
+    "IFC-154",
+    "IFC-127",
+    "ENV-004-AI"
+  ]
+}

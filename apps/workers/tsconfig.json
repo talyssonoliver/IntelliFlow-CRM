@@ -1,0 +1,17 @@
+{
+  "extends": "@intelliflow/typescript-config/base.json",
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "./dist",
+    "rootDir": ".",
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "target": "ES2022"
+  },
+  "include": ["shared/**/*", "events-worker/**/*", "ingestion-worker/**/*", "notifications-worker/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/__tests__/**"]
+}

@@ -1,0 +1,44 @@
+
+> intelliflow-crm@0.1.0 test:coverage C:\Users\talys\projects\intelliFlow-CRM
+> vitest run --coverage "--reporter=json" "--reporter=html"
+
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ» Startup Error ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»
+Error: Failed to load custom Reporter from @vitest/ui/reporter
+    at loadCustomReporterModule (file:///C:/Users/talys/projects/intelliFlow-CRM/node_modules/.pnpm/vitest@4.0.16_@types+node@20.19.27_tsx@4.21.0/node_modules/vitest/dist/chunks/cli-api.BKg19Fvw.js:10536:9)
+    at file:///C:/Users/talys/projects/intelliFlow-CRM/node_modules/.pnpm/vitest@4.0.16_@types+node@20.19.27_tsx@4.21.0/node_modules/vitest/dist/chunks/cli-api.BKg19Fvw.js:10548:17
+    ... 3 lines matching cause stack trace ...
+    at _createServer (file:///C:/Users/talys/projects/intelliFlow-CRM/node_modules/.pnpm/vite@7.3.0_@types+node@20.19.27_tsx@4.21.0/node_modules/vite/dist/node/chunks/config.js:25602:86)
+    at createViteServer (file:///C:/Users/talys/projects/intelliFlow-CRM/node_modules/.pnpm/vitest@4.0.16_@types+node@20.19.27_tsx@4.21.0/node_modules/vitest/dist/chunks/cli-api.BKg19Fvw.js:9815:17)
+    at createVitest (file:///C:/Users/talys/projects/intelliFlow-CRM/node_modules/.pnpm/vitest@4.0.16_@types+node@20.19.27_tsx@4.21.0/node_modules/vitest/dist/chunks/cli-api.BKg19Fvw.js:13119:17)
+    at prepareVitest (file:///C:/Users/talys/projects/intelliFlow-CRM/node_modules/.pnpm/vitest@4.0.16_@types+node@20.19.27_tsx@4.21.0/node_modules/vitest/dist/chunks/cli-api.BKg19Fvw.js:13481:14)
+    at startVitest (file:///C:/Users/talys/projects/intelliFlow-CRM/node_modules/.pnpm/vitest@4.0.16_@types+node@20.19.27_tsx@4.21.0/node_modules/vitest/dist/chunks/cli-api.BKg19Fvw.js:13427:14) {
+  [cause]: Error: Failed to load url @vitest/ui/reporter (resolved id: @vitest/ui/reporter). Does the file exist?
+      at reviveInvokeError (file:///C:/Users/talys/projects/intelliFlow-CRM/node_modules/.pnpm/vite@7.3.0_@types+node@20.19.27_tsx@4.21.0/node_modules/vite/dist/node/module-runner.js:475:14)
+      at Object.invoke (file:///C:/Users/talys/projects/intelliFlow-CRM/node_modules/.pnpm/vite@7.3.0_@types+node@20.19.27_tsx@4.21.0/node_modules/vite/dist/node/module-runner.js:491:33)
+      at ServerModuleRunner.getModuleInformation (file:///C:/Users/talys/projects/intelliFlow-CRM/node_modules/.pnpm/vite@7.3.0_@types+node@20.19.27_tsx@4.21.0/node_modules/vite/dist/node/module-runner.js:1086:7)
+      at ServerModuleRunner.import (file:///C:/Users/talys/projects/intelliFlow-CRM/node_modules/.pnpm/vite@7.3.0_@types+node@20.19.27_tsx@4.21.0/node_modules/vite/dist/node/module-runner.js:1013:23)
+      at loadCustomReporterModule (file:///C:/Users/talys/projects/intelliFlow-CRM/node_modules/.pnpm/vitest@4.0.16_@types+node@20.19.27_tsx@4.21.0/node_modules/vitest/dist/chunks/cli-api.BKg19Fvw.js:10534:26)
+      at file:///C:/Users/talys/projects/intelliFlow-CRM/node_modules/.pnpm/vitest@4.0.16_@types+node@20.19.27_tsx@4.21.0/node_modules/vitest/dist/chunks/cli-api.BKg19Fvw.js:10548:17
+      at async Promise.all (index 1)
+      at Vitest._setServer (file:///C:/Users/talys/projects/intelliFlow-CRM/node_modules/.pnpm/vitest@4.0.16_@types+node@20.19.27_tsx@4.21.0/node_modules/vitest/dist/chunks/cli-api.BKg19Fvw.js:12188:138)
+      at BasicMinimalPluginContext.handler (file:///C:/Users/talys/projects/intelliFlow-CRM/node_modules/.pnpm/vitest@4.0.16_@types+node@20.19.27_tsx@4.21.0/node_modules/vitest/dist/chunks/cli-api.BKg19Fvw.js:13091:6)
+      at _createServer (file:///C:/Users/talys/projects/intelliFlow-CRM/node_modules/.pnpm/vite@7.3.0_@types+node@20.19.27_tsx@4.21.0/node_modules/vite/dist/node/chunks/config.js:25602:86) {
+    code: 'ERR_LOAD_URL',
+    runnerError: Error: RunnerError
+        at reviveInvokeError (file:///C:/Users/talys/projects/intelliFlow-CRM/node_modules/.pnpm/vite@7.3.0_@types+node@20.19.27_tsx@4.21.0/node_modules/vite/dist/node/module-runner.js:476:64)
+        at Object.invoke (file:///C:/Users/talys/projects/intelliFlow-CRM/node_modules/.pnpm/vite@7.3.0_@types+node@20.19.27_tsx@4.21.0/node_modules/vite/dist/node/module-runner.js:491:33)
+        at ServerModuleRunner.getModuleInformation (file:///C:/Users/talys/projects/intelliFlow-CRM/node_modules/.pnpm/vite@7.3.0_@types+node@20.19.27_tsx@4.21.0/node_modules/vite/dist/node/module-runner.js:1086:7)
+        at ServerModuleRunner.import (file:///C:/Users/talys/projects/intelliFlow-CRM/node_modules/.pnpm/vite@7.3.0_@types+node@20.19.27_tsx@4.21.0/node_modules/vite/dist/node/module-runner.js:1013:23)
+        at loadCustomReporterModule (file:///C:/Users/talys/projects/intelliFlow-CRM/node_modules/.pnpm/vitest@4.0.16_@types+node@20.19.27_tsx@4.21.0/node_modules/vitest/dist/chunks/cli-api.BKg19Fvw.js:10534:26)
+        at file:///C:/Users/talys/projects/intelliFlow-CRM/node_modules/.pnpm/vitest@4.0.16_@types+node@20.19.27_tsx@4.21.0/node_modules/vitest/dist/chunks/cli-api.BKg19Fvw.js:10548:17
+        at async Promise.all (index 1)
+        at Vitest._setServer (file:///C:/Users/talys/projects/intelliFlow-CRM/node_modules/.pnpm/vitest@4.0.16_@types+node@20.19.27_tsx@4.21.0/node_modules/vitest/dist/chunks/cli-api.BKg19Fvw.js:12188:138)
+        at BasicMinimalPluginContext.handler (file:///C:/Users/talys/projects/intelliFlow-CRM/node_modules/.pnpm/vitest@4.0.16_@types+node@20.19.27_tsx@4.21.0/node_modules/vitest/dist/chunks/cli-api.BKg19Fvw.js:13091:6)
+        at _createServer (file:///C:/Users/talys/projects/intelliFlow-CRM/node_modules/.pnpm/vite@7.3.0_@types+node@20.19.27_tsx@4.21.0/node_modules/vite/dist/node/chunks/config.js:25602:86)
+  }
+}
+
+
+
+ÔÇëELIFECYCLEÔÇë Command failed with exit code 1.

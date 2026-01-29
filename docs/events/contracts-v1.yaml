@@ -1,0 +1,793 @@
+# Domain Events Contract Catalog v1.0.0
+# IntelliFlow CRM Event-Driven Architecture
+#
+# This catalog defines all domain events with their schemas, versioning,
+# and compatibility rules. Events are organized by aggregate/bounded context.
+#
+# Event Naming Convention: {Aggregate}{Action}Event
+# Example: LeadCreatedEvent, ContactUpdatedEvent, OpportunityClosedEvent
+
+version: "1.0.0"
+metadata:
+  created_at: "2025-12-29T00:00:00Z"
+  last_updated: "2025-12-29T00:00:00Z"
+  schema_registry: "internal"
+  compatibility_mode: "backward" # backward, forward, full, none
+
+# Event Categories
+categories:
+  - name: lead
+    description: Lead management domain events
+    aggregate_root: Lead
+  - name: contact
+    description: Contact management domain events
+    aggregate_root: Contact
+  - name: opportunity
+    description: Sales opportunity domain events
+    aggregate_root: Opportunity
+  - name: account
+    description: Account/company domain events
+    aggregate_root: Account
+  - name: task
+    description: Task and activity domain events
+    aggregate_root: Task
+  - name: ai
+    description: AI/ML processing domain events
+    aggregate_root: AIScoring
+
+# Event Definitions
+events:
+  # ============================================
+  # LEAD AGGREGATE EVENTS
+  # ============================================
+
+  LeadCreated:
+    version: "1.0"
+    category: lead
+    description: Emitted when a new lead is created in the system
+    aggregate_id_field: leadId
+    idempotency_key: "LeadCreated:{leadId}"
+    schema:
+      type: object
+      required:
+        - leadId
+        - email
+        - source
+        - tenantId
+        - createdAt
+      properties:
+        leadId:
+          type: string
+          format: uuid
+          description: Unique identifier for the lead
+        email:
+          type: string
+          format: email
+          description: Lead's email address
+        source:
+          type: string
+          enum: [web_form, api, import, referral, linkedin, advertisement]
+          description: Source of lead acquisition
+        tenantId:
+          type: string
+          format: uuid
+          description: Tenant/organization identifier
+        createdAt:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp of creation
+        firstName:
+          type: string
+          description: Lead's first name (optional)
+        lastName:
+          type: string
+          description: Lead's last name (optional)
+        company:
+          type: string
+          description: Lead's company name (optional)
+        phone:
+          type: string
+          description: Lead's phone number (optional)
+        metadata:
+          type: object
+          description: Additional lead metadata
+    example:
+      leadId: "123e4567-e89b-12d3-a456-426614174000"
+      email: "john.doe@example.com"
+      source: "web_form"
+      tenantId: "tenant-uuid"
+      createdAt: "2025-12-29T10:30:00Z"
+      firstName: "John"
+      lastName: "Doe"
+      company: "Acme Corp"
+
+  LeadScored:
+    version: "1.0"
+    category: lead
+    description: Emitted when a lead receives an AI or manual score
+    aggregate_id_field: leadId
+    idempotency_key: "LeadScored:{leadId}:{scoredAt}"
+    schema:
+      type: object
+      required:
+        - leadId
+        - score
+        - scoredBy
+        - scoredAt
+        - tenantId
+      properties:
+        leadId:
+          type: string
+          format: uuid
+          description: Lead identifier
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Lead score (0-100)
+        previousScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Previous score before update (null if first scoring)
+        scoredBy:
+          type: string
+          enum: [ai, manual, rule_engine]
+          description: Scoring method used
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: AI confidence level (0-1)
+        scoringModel:
+          type: string
+          description: ML model version used for scoring
+        features:
+          type: object
+          description: Features used for scoring
+        tenantId:
+          type: string
+          format: uuid
+        scoredAt:
+          type: string
+          format: date-time
+    example:
+      leadId: "123e4567-e89b-12d3-a456-426614174000"
+      score: 85
+      previousScore: null
+      scoredBy: "ai"
+      confidence: 0.92
+      scoringModel: "v2.1.0"
+      tenantId: "tenant-uuid"
+      scoredAt: "2025-12-29T10:31:00Z"
+
+  LeadQualified:
+    version: "1.0"
+    category: lead
+    description: Emitted when a lead is qualified (meets MQL/SQL criteria)
+    aggregate_id_field: leadId
+    idempotency_key: "LeadQualified:{leadId}:{qualifiedAt}"
+    schema:
+      type: object
+      required:
+        - leadId
+        - qualificationType
+        - qualifiedBy
+        - qualifiedAt
+        - tenantId
+      properties:
+        leadId:
+          type: string
+          format: uuid
+        qualificationType:
+          type: string
+          enum: [MQL, SQL, PQL]
+          description: Marketing/Sales/Product Qualified Lead
+        qualifiedBy:
+          type: string
+          enum: [ai, manual, automation]
+        qualificationScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        criteria:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              met:
+                type: boolean
+              value:
+                type: string
+        tenantId:
+          type: string
+          format: uuid
+        qualifiedAt:
+          type: string
+          format: date-time
+
+  LeadConverted:
+    version: "1.0"
+    category: lead
+    description: Emitted when a lead is converted to a contact/opportunity
+    aggregate_id_field: leadId
+    idempotency_key: "LeadConverted:{leadId}"
+    schema:
+      type: object
+      required:
+        - leadId
+        - contactId
+        - convertedBy
+        - convertedAt
+        - tenantId
+      properties:
+        leadId:
+          type: string
+          format: uuid
+        contactId:
+          type: string
+          format: uuid
+          description: Newly created contact ID
+        accountId:
+          type: string
+          format: uuid
+          description: Associated account ID (if created)
+        opportunityId:
+          type: string
+          format: uuid
+          description: Associated opportunity ID (if created)
+        convertedBy:
+          type: string
+          format: uuid
+          description: User who performed conversion
+        tenantId:
+          type: string
+          format: uuid
+        convertedAt:
+          type: string
+          format: date-time
+
+  LeadStatusChanged:
+    version: "1.0"
+    category: lead
+    description: Emitted when lead status changes
+    aggregate_id_field: leadId
+    idempotency_key: "LeadStatusChanged:{leadId}:{changedAt}"
+    schema:
+      type: object
+      required:
+        - leadId
+        - previousStatus
+        - newStatus
+        - changedAt
+        - tenantId
+      properties:
+        leadId:
+          type: string
+          format: uuid
+        previousStatus:
+          type: string
+          enum: [new, contacted, engaged, qualified, disqualified, converted]
+        newStatus:
+          type: string
+          enum: [new, contacted, engaged, qualified, disqualified, converted]
+        reason:
+          type: string
+          description: Reason for status change
+        changedBy:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        changedAt:
+          type: string
+          format: date-time
+
+  LeadAssigned:
+    version: "1.0"
+    category: lead
+    description: Emitted when a lead is assigned to a user/team
+    aggregate_id_field: leadId
+    idempotency_key: "LeadAssigned:{leadId}:{assignedAt}"
+    schema:
+      type: object
+      required:
+        - leadId
+        - assigneeId
+        - assignedAt
+        - tenantId
+      properties:
+        leadId:
+          type: string
+          format: uuid
+        previousAssigneeId:
+          type: string
+          format: uuid
+        assigneeId:
+          type: string
+          format: uuid
+        assigneeType:
+          type: string
+          enum: [user, team, queue]
+        assignmentReason:
+          type: string
+          enum: [manual, round_robin, territory, workload, ai_recommendation]
+        tenantId:
+          type: string
+          format: uuid
+        assignedAt:
+          type: string
+          format: date-time
+
+  # ============================================
+  # CONTACT AGGREGATE EVENTS
+  # ============================================
+
+  ContactCreated:
+    version: "1.0"
+    category: contact
+    description: Emitted when a new contact is created
+    aggregate_id_field: contactId
+    idempotency_key: "ContactCreated:{contactId}"
+    schema:
+      type: object
+      required:
+        - contactId
+        - email
+        - tenantId
+        - createdAt
+      properties:
+        contactId:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        accountId:
+          type: string
+          format: uuid
+        sourceLeadId:
+          type: string
+          format: uuid
+          description: Original lead ID if converted
+        tenantId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+  ContactUpdated:
+    version: "1.0"
+    category: contact
+    description: Emitted when a contact is updated
+    aggregate_id_field: contactId
+    idempotency_key: "ContactUpdated:{contactId}:{updatedAt}"
+    schema:
+      type: object
+      required:
+        - contactId
+        - changes
+        - updatedAt
+        - tenantId
+      properties:
+        contactId:
+          type: string
+          format: uuid
+        changes:
+          type: object
+          description: Map of field name to {before, after} values
+        updatedBy:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        updatedAt:
+          type: string
+          format: date-time
+
+  # ============================================
+  # OPPORTUNITY AGGREGATE EVENTS
+  # ============================================
+
+  OpportunityCreated:
+    version: "1.0"
+    category: opportunity
+    description: Emitted when a new opportunity is created
+    aggregate_id_field: opportunityId
+    idempotency_key: "OpportunityCreated:{opportunityId}"
+    schema:
+      type: object
+      required:
+        - opportunityId
+        - name
+        - accountId
+        - stage
+        - tenantId
+        - createdAt
+      properties:
+        opportunityId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        accountId:
+          type: string
+          format: uuid
+        contactId:
+          type: string
+          format: uuid
+        stage:
+          type: string
+          enum: [prospecting, qualification, proposal, negotiation, closed_won, closed_lost]
+        amount:
+          type: number
+          minimum: 0
+        currency:
+          type: string
+          pattern: "^[A-Z]{3}$"
+        probability:
+          type: integer
+          minimum: 0
+          maximum: 100
+        expectedCloseDate:
+          type: string
+          format: date
+        tenantId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+  OpportunityStageChanged:
+    version: "1.0"
+    category: opportunity
+    description: Emitted when opportunity stage changes
+    aggregate_id_field: opportunityId
+    idempotency_key: "OpportunityStageChanged:{opportunityId}:{changedAt}"
+    schema:
+      type: object
+      required:
+        - opportunityId
+        - previousStage
+        - newStage
+        - changedAt
+        - tenantId
+      properties:
+        opportunityId:
+          type: string
+          format: uuid
+        previousStage:
+          type: string
+        newStage:
+          type: string
+        probability:
+          type: integer
+          minimum: 0
+          maximum: 100
+        changedBy:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        changedAt:
+          type: string
+          format: date-time
+
+  OpportunityClosed:
+    version: "1.0"
+    category: opportunity
+    description: Emitted when opportunity is won or lost
+    aggregate_id_field: opportunityId
+    idempotency_key: "OpportunityClosed:{opportunityId}"
+    schema:
+      type: object
+      required:
+        - opportunityId
+        - outcome
+        - closedAt
+        - tenantId
+      properties:
+        opportunityId:
+          type: string
+          format: uuid
+        outcome:
+          type: string
+          enum: [won, lost]
+        amount:
+          type: number
+          description: Final deal amount
+        currency:
+          type: string
+        lossReason:
+          type: string
+          description: Reason for loss (if lost)
+        competitorId:
+          type: string
+          description: Competitor who won (if lost)
+        closedBy:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        closedAt:
+          type: string
+          format: date-time
+
+  # ============================================
+  # ACCOUNT AGGREGATE EVENTS
+  # ============================================
+
+  AccountCreated:
+    version: "1.0"
+    category: account
+    description: Emitted when a new account is created
+    aggregate_id_field: accountId
+    idempotency_key: "AccountCreated:{accountId}"
+    schema:
+      type: object
+      required:
+        - accountId
+        - name
+        - tenantId
+        - createdAt
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        industry:
+          type: string
+        website:
+          type: string
+          format: uri
+        employeeCount:
+          type: integer
+        annualRevenue:
+          type: number
+        tenantId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+  # ============================================
+  # TASK AGGREGATE EVENTS
+  # ============================================
+
+  TaskCreated:
+    version: "1.0"
+    category: task
+    description: Emitted when a new task is created
+    aggregate_id_field: taskId
+    idempotency_key: "TaskCreated:{taskId}"
+    schema:
+      type: object
+      required:
+        - taskId
+        - title
+        - assigneeId
+        - dueDate
+        - tenantId
+        - createdAt
+      properties:
+        taskId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        assigneeId:
+          type: string
+          format: uuid
+        relatedEntityType:
+          type: string
+          enum: [lead, contact, opportunity, account]
+        relatedEntityId:
+          type: string
+          format: uuid
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        dueDate:
+          type: string
+          format: date-time
+        tenantId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+  TaskCompleted:
+    version: "1.0"
+    category: task
+    description: Emitted when a task is completed
+    aggregate_id_field: taskId
+    idempotency_key: "TaskCompleted:{taskId}"
+    schema:
+      type: object
+      required:
+        - taskId
+        - completedBy
+        - completedAt
+        - tenantId
+      properties:
+        taskId:
+          type: string
+          format: uuid
+        completedBy:
+          type: string
+          format: uuid
+        outcome:
+          type: string
+        notes:
+          type: string
+        tenantId:
+          type: string
+          format: uuid
+        completedAt:
+          type: string
+          format: date-time
+
+  # ============================================
+  # AI/ML EVENTS
+  # ============================================
+
+  AIAnalysisCompleted:
+    version: "1.0"
+    category: ai
+    description: Emitted when AI analysis completes
+    aggregate_id_field: analysisId
+    idempotency_key: "AIAnalysisCompleted:{analysisId}"
+    schema:
+      type: object
+      required:
+        - analysisId
+        - analysisType
+        - entityType
+        - entityId
+        - result
+        - completedAt
+        - tenantId
+      properties:
+        analysisId:
+          type: string
+          format: uuid
+        analysisType:
+          type: string
+          enum: [lead_scoring, sentiment, intent, churn_prediction, recommendation]
+        entityType:
+          type: string
+        entityId:
+          type: string
+          format: uuid
+        modelVersion:
+          type: string
+        result:
+          type: object
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        latencyMs:
+          type: integer
+          description: Processing time in milliseconds
+        tenantId:
+          type: string
+          format: uuid
+        completedAt:
+          type: string
+          format: date-time
+
+  AIPredictionGenerated:
+    version: "1.0"
+    category: ai
+    description: Emitted when AI generates a prediction
+    aggregate_id_field: predictionId
+    idempotency_key: "AIPredictionGenerated:{predictionId}"
+    schema:
+      type: object
+      required:
+        - predictionId
+        - predictionType
+        - entityId
+        - prediction
+        - confidence
+        - tenantId
+        - generatedAt
+      properties:
+        predictionId:
+          type: string
+          format: uuid
+        predictionType:
+          type: string
+          enum: [conversion_likelihood, optimal_action, deal_outcome, churn_risk]
+        entityType:
+          type: string
+        entityId:
+          type: string
+          format: uuid
+        prediction:
+          type: object
+          description: Prediction result
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        explanation:
+          type: array
+          items:
+            type: object
+            properties:
+              feature:
+                type: string
+              impact:
+                type: number
+        modelId:
+          type: string
+        tenantId:
+          type: string
+          format: uuid
+        generatedAt:
+          type: string
+          format: date-time
+
+# Event Publishing Configuration
+publishing:
+  # Transactional Outbox Pattern Configuration
+  outbox:
+    enabled: true
+    table_name: domain_event_outbox
+    polling_interval_ms: 100
+    batch_size: 100
+    max_retries: 3
+    retry_backoff_ms: [1000, 5000, 30000]
+
+  # Idempotency Configuration
+  idempotency:
+    enabled: true
+    cache_ttl_hours: 24
+    deduplication_window_ms: 60000
+
+  # Dead Letter Queue
+  dlq:
+    enabled: true
+    max_age_hours: 168  # 7 days
+    alert_threshold: 100
+
+# Schema Evolution Rules
+schema_evolution:
+  # Backward compatible changes allowed:
+  #   - Adding optional fields
+  #   - Adding new enum values (at end)
+  #   - Widening numeric ranges
+  #
+  # Breaking changes require version bump:
+  #   - Removing fields
+  #   - Changing field types
+  #   - Adding required fields
+  #   - Removing enum values
+  compatibility_rules:
+    - type: BACKWARD
+      description: New schema can read old data
+    - type: FORWARD
+      description: Old schema can read new data (requires optional new fields)
+
+  version_deprecation:
+    grace_period_days: 90
+    notification_channels: [slack, email]

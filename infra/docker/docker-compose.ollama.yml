@@ -1,0 +1,65 @@
+# Docker Compose configuration for Ollama local AI development
+# IFC-085: Ollama Local Development
+#
+# This configuration provides a local LLM environment for development,
+# reducing AI API costs by 90% while maintaining comparable accuracy.
+#
+# Usage:
+#   docker-compose -f docker-compose.ollama.yml up -d
+#   ollama pull llama3.1:8b
+#   ollama pull mistral:7b
+
+version: '3.8'
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: intelliflow-ollama
+    restart: unless-stopped
+    ports:
+      - '11434:11434'
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_ORIGINS=*
+    # GPU support - uncomment for NVIDIA GPU acceleration
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:11434/api/tags']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Ollama Web UI for model management
+  ollama-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: intelliflow-ollama-ui
+    restart: unless-stopped
+    ports:
+      - '3080:8080'
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - WEBUI_SECRET_KEY=intelliflow-dev-secret
+    volumes:
+      - ollama_webui_data:/app/backend/data
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+volumes:
+  ollama_data:
+    driver: local
+  ollama_webui_data:
+    driver: local
+
+networks:
+  default:
+    name: intelliflow-ai-network

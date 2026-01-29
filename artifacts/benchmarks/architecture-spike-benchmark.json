@@ -1,0 +1,150 @@
+{
+  "timestamp": "2026-01-25T23:14:36.146Z",
+  "environment": {
+    "node": "v25.2.1",
+    "platform": "win32",
+    "arch": "x64",
+    "databaseConnected": true,
+    "trpcAvailable": true
+  },
+  "benchmarks": [
+    {
+      "operation": "Zod schema validation",
+      "runs": 1000,
+      "avgTime": 0.0023481999999997354,
+      "minTime": 0.0008999999999446118,
+      "maxTime": 0.45849999999995816,
+      "p50Time": 0.0013000000000147338,
+      "p95Time": 0.004300000000000637,
+      "p99Time": 0.010199999999997544,
+      "unit": "ms",
+      "isReal": true
+    },
+    {
+      "operation": "JSON serialization",
+      "runs": 1000,
+      "avgTime": 0.0033961000000009563,
+      "minTime": 0.0027999999999792635,
+      "maxTime": 0.04070000000001528,
+      "p50Time": 0.002999999999985903,
+      "p95Time": 0.005200000000002092,
+      "p99Time": 0.0066999999999666215,
+      "unit": "ms",
+      "isReal": true
+    },
+    {
+      "operation": "Database: SELECT 1 (health check)",
+      "runs": 100,
+      "avgTime": 22.76627499999998,
+      "minTime": 20.43640000000005,
+      "maxTime": 26.098600000000033,
+      "p50Time": 22.597800000000007,
+      "p95Time": 24.60050000000001,
+      "p99Time": 26.098600000000033,
+      "unit": "ms",
+      "isReal": true
+    },
+    {
+      "operation": "Database: COUNT(*) on leads",
+      "runs": 100,
+      "avgTime": 23.034214999999982,
+      "minTime": 22.25919999999951,
+      "maxTime": 26.073300000000017,
+      "p50Time": 22.81690000000026,
+      "p95Time": 24.5308,
+      "p99Time": 26.073300000000017,
+      "unit": "ms",
+      "isReal": true
+    },
+    {
+      "operation": "Database: findFirst (indexed)",
+      "runs": 100,
+      "avgTime": 22.886561999999977,
+      "minTime": 21.904999999999745,
+      "maxTime": 25.609800000000178,
+      "p50Time": 22.75799999999981,
+      "p95Time": 23.82459999999992,
+      "p99Time": 25.609800000000178,
+      "unit": "ms",
+      "isReal": true
+    },
+    {
+      "operation": "Database: findMany (limit 20)",
+      "runs": 50,
+      "avgTime": 23.020258000000013,
+      "minTime": 21.640400000000227,
+      "maxTime": 25.012000000000626,
+      "p50Time": 22.998899999999594,
+      "p95Time": 23.721299999999246,
+      "p99Time": 25.012000000000626,
+      "unit": "ms",
+      "isReal": true
+    },
+    {
+      "operation": "Database: findMany with relations",
+      "runs": 50,
+      "avgTime": 22.923039999999784,
+      "minTime": 21.083199999999124,
+      "maxTime": 24.29029999999875,
+      "p50Time": 22.872600000000602,
+      "p95Time": 23.653299999999945,
+      "p99Time": 24.29029999999875,
+      "unit": "ms",
+      "isReal": true
+    },
+    {
+      "operation": "Database: aggregate (avg score)",
+      "runs": 50,
+      "avgTime": 23.01110399999998,
+      "minTime": 21.58009999999922,
+      "maxTime": 25.71179999999913,
+      "p50Time": 22.837799999999334,
+      "p95Time": 24.803899999998976,
+      "p99Time": 25.71179999999913,
+      "unit": "ms",
+      "isReal": true
+    },
+    {
+      "operation": "tRPC: health.ping",
+      "runs": 100,
+      "avgTime": 0.006857000000018161,
+      "minTime": 0.003899999999703141,
+      "maxTime": 0.021600000000034925,
+      "p50Time": 0.006999999999607098,
+      "p95Time": 0.01299999999901047,
+      "p99Time": 0.021600000000034925,
+      "unit": "ms",
+      "isReal": true
+    },
+    {
+      "operation": "tRPC: health.check (with DB)",
+      "runs": 50,
+      "avgTime": 22.95948400000001,
+      "minTime": 22.148800000000847,
+      "maxTime": 25.486799999998766,
+      "p50Time": 22.83430000000044,
+      "p95Time": 23.77980000000025,
+      "p99Time": 25.486799999998766,
+      "unit": "ms",
+      "isReal": true
+    },
+    {
+      "operation": "tRPC: system.info",
+      "runs": 100,
+      "avgTime": 0.008956000000107451,
+      "minTime": 0.006999999999607098,
+      "maxTime": 0.0408000000006723,
+      "p50Time": 0.008900000000721775,
+      "p95Time": 0.011399999999412103,
+      "p99Time": 0.0408000000006723,
+      "unit": "ms",
+      "isReal": true
+    }
+  ],
+  "kpiValidation": {
+    "database_p95_under_20ms": false,
+    "trpc_p95_under_50ms": true,
+    "type_safety_overhead": 0,
+    "all_targets_met": false
+  }
+}

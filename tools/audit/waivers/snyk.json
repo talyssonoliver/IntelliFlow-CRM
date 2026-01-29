@@ -1,0 +1,25 @@
+{
+  "tool_id": "snyk",
+  "waiver_type": "deferred_enablement",
+  "reason": "Snyk requires SNYK_TOKEN environment variable and organization setup. Tool will be enabled once enterprise account is provisioned.",
+  "status": "retired",
+  "created_at": "2025-12-23T22:56:01Z",
+  "created_by": "Tech Lead",
+  "expires_at": "2026-03-23T23:59:59Z",
+  "closed_at": "2025-12-29T12:01:01Z",
+  "closure_notes": "Snyk gate enabled in audit-matrix.yml; waiver retired and debt closed.",
+  "review_cadence": "quarterly",
+  "alternative_controls": [
+    "pnpm-audit-high (enabled, covers npm vulnerabilities)",
+    "gitleaks (enabled, covers secrets scanning)"
+  ],
+  "acceptance_criteria": [
+    "SNYK_TOKEN configured in CI secrets",
+    "Snyk organization created and linked",
+    "Initial baseline scan completed"
+  ],
+  "risk_assessment": {
+    "residual_risk": "low",
+    "justification": "pnpm audit provides equivalent coverage for dependency vulnerabilities"
+  }
+}

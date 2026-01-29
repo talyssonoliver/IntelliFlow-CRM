@@ -1,0 +1,36 @@
+Control ID,Control Name,Requirement,Implementation,Status,Evidence,Last Verified,Notes
+GDPR-001,Lawful Basis,All processing must have lawful basis,"Legal basis tracked in gdpr_metadata table (consent, contract, legal_obligation, vital_interests, public_task, legitimate_interests)",Implemented,infra/supabase/rls-policies-gdpr.sql,2025-12-29,Default: legitimate_interests
+GDPR-002,Purpose Limitation,Data only used for stated purposes,Purpose field in gdpr_metadata tracks intended use,Implemented,infra/supabase/rls-policies-gdpr.sql,2025-12-29,Monitored via audit logs
+GDPR-003,Data Minimisation,Only collect necessary data,"data_minimized flag, anonymize_record() function",Implemented,infra/supabase/rls-policies-gdpr.sql,2025-12-29,Triggered at retention expiry
+GDPR-004,Storage Limitation,Delete data when no longer needed,Automated retention enforcement via schedule_deletion_by_retention(),Implemented,infra/supabase/rls-policies-gdpr.sql,2025-12-29,"PUBLIC: 7yr, INTERNAL: 3yr, CONFIDENTIAL: 10yr"
+GDPR-005,Right to Access,Provide copy of personal data,DSAR workflow supports access requests,Implemented,IFC-140 (DSAR workflow),2025-12-29,30-day SLA tracked
+GDPR-006,Right to Rectification,Allow correction of inaccurate data,Standard CRUD operations with audit trail,Implemented,apps/api (tRPC routers),2025-12-29,All updates logged
+GDPR-007,Right to Erasure,Delete personal data on request,anonymize_record() function implements anonymization,Implemented,infra/supabase/rls-policies-gdpr.sql,2025-12-29,Anonymizes rather than hard delete
+GDPR-008,Right to Restrict Processing,Temporarily halt processing,Legal hold mechanism prevents deletion,Implemented,legal_holds table,2025-12-29,Active holds block anonymization
+GDPR-009,Right to Data Portability,Export data in machine-readable format,DSAR workflow generates JSON/CSV exports,Implemented,IFC-140 (DSAR workflow),2025-12-29,S3 export URL provided
+GDPR-010,Right to Object,Object to processing,Consent withdrawal tracked in consents table,Implemented,consents table,2025-12-29,Consent can be withdrawn
+GDPR-011,Privacy by Design,Embed privacy in system design,RLS policies enforce data isolation,Implemented,infra/supabase/rls-policies.sql,2025-12-29,Database-level enforcement
+GDPR-012,Privacy by Default,Minimal data processing by default,Default data_classification is INTERNAL (restricted),Implemented,gdpr_metadata defaults,2025-12-29,Explicit upgrade required
+GDPR-013,Data Protection Impact Assessment,DPIA for high-risk processing,DPIA documented for AI scoring,Implemented,docs/security/dpia.md,2025-12-29,Reviewed quarterly
+GDPR-014,Records of Processing Activities,Maintain processing register,gdpr_metadata table serves as register,Implemented,gdpr_metadata table,2025-12-29,Queryable via SQL
+GDPR-015,Data Breach Notification,Notify within 72 hours,Incident response plan with breach notification,Implemented,docs/security/incident-response.md,2025-12-29,Sentry alerts configured
+GDPR-016,Data Protection Officer,Appoint DPO,DPO role assigned in RBAC,Implemented,packages/domain/src/shared/Permission.ts,2025-12-29,Access to all GDPR tables
+GDPR-017,International Transfers,Safeguards for data transfers,Data residency tracked in schema,Implemented,IFC-140 (data residency),2025-12-29,EU/UK only by default
+GDPR-018,Consent Management,Valid consent for processing,Consents table tracks consent with audit trail,Implemented,consents table,2025-12-29,IP + user agent captured
+GDPR-019,Children's Data,Special protection for minors,Age verification required for <16,Not Applicable,N/A,2025-12-29,B2B CRM - no minor data
+GDPR-020,Automated Decision Making,Right to human review,AI scores include confidence + human override,Implemented,apps/ai-worker/src/chains/scoring.chain.ts,2025-12-29,Human-in-the-loop pattern
+GDPR-021,Data Subject Identification,Verify identity for requests,DSAR includes verification token,Implemented,data_subject_requests.verification_token,2025-12-29,Email verification required
+GDPR-022,Retention Policies,Document retention periods,"Retention by classification: PUBLIC(7y), INTERNAL(3y), CONFIDENTIAL(10y), PRIVILEGED(permanent)",Implemented,schedule_deletion_by_retention(),2025-12-29,Documented in ADR-007
+GDPR-023,Anonymization Techniques,Effective anonymization,anonymize_record() replaces PII with anonymized values,Implemented,anonymize_record() function,2025-12-29,Irreversible process
+GDPR-024,Audit Trails,Log all data access and changes,audit_logs table tracks all operations,Implemented,packages/db/prisma/schema.prisma,2025-12-29,Immutable audit log
+GDPR-025,Access Controls,Role-based access control,RLS policies + RBAC enforce access,Implemented,infra/supabase/rls-policies.sql,2025-12-29,Tenant isolation
+GDPR-026,Encryption at Rest,Encrypt stored data,Database encryption enabled,Implemented,Supabase (PostgreSQL encryption),2025-12-29,AES-256 encryption
+GDPR-027,Encryption in Transit,TLS for data transmission,HTTPS/TLS enforced,Implemented,Infrastructure (Railway/Vercel),2025-12-29,TLS 1.3
+GDPR-028,Pseudonymization,Separate identifying data,User IDs are UUIDs (non-identifying),Implemented,Database schema,2025-12-29,No PII in IDs
+GDPR-029,Data Quality,Ensure accuracy of data,Validation with Zod schemas,Implemented,packages/validators,2025-12-29,Type-safe validation
+GDPR-030,Transparency,Clear privacy notices,Privacy policy available,Implemented,docs/legal/privacy-policy.md,2025-12-29,Plain language notice
+GDPR-031,SLA Compliance,Respond to requests within 30 days,DSAR table tracks sla_deadline,Implemented,data_subject_requests.sla_deadline,2025-12-29,Auto-calculated on creation
+GDPR-032,Cross-Border Transfers,Document transfer mechanisms,Transfer Impact Assessment performed,Implemented,docs/compliance/transfer-impact-assessment.md,2025-12-29,Standard Contractual Clauses
+GDPR-033,Vendor Management,Ensure processors comply,Data Processing Agreements required,Implemented,docs/legal/dpa-template.md,2025-12-29,OpenAI DPA signed
+GDPR-034,Training & Awareness,Staff training on GDPR,GDPR training completion tracked,Implemented,artifacts/reports/training-completion.csv,2025-12-29,Annual refresher required
+GDPR-035,Compliance Monitoring,Regular compliance audits,Quarterly compliance reviews,Implemented,artifacts/reports/compliance-audit-*.pdf,2025-12-29,Next review: Q1 2026

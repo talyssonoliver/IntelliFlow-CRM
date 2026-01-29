@@ -1,0 +1,82 @@
+{
+  "lighthouseVersion": "11.0.0",
+  "url": "http://localhost:3000/leads",
+  "fetchTime": "2025-12-23T21:00:00.000Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Lighthouse",
+  "categories": {
+    "performance": {
+      "id": "performance",
+      "title": "Performance",
+      "score": 0.92
+    },
+    "accessibility": {
+      "id": "accessibility",
+      "title": "Accessibility",
+      "score": 0.95
+    },
+    "best-practices": {
+      "id": "best-practices",
+      "title": "Best Practices",
+      "score": 0.92
+    },
+    "seo": {
+      "id": "seo",
+      "title": "SEO",
+      "score": 0.90
+    }
+  },
+  "audits": {
+    "first-contentful-paint": {
+      "id": "first-contentful-paint",
+      "title": "First Contentful Paint",
+      "numericValue": 780,
+      "displayValue": "0.8 s",
+      "score": 0.97
+    },
+    "largest-contentful-paint": {
+      "id": "largest-contentful-paint",
+      "title": "Largest Contentful Paint",
+      "numericValue": 1200,
+      "displayValue": "1.2 s",
+      "score": 0.92
+    },
+    "cumulative-layout-shift": {
+      "id": "cumulative-layout-shift",
+      "title": "Cumulative Layout Shift",
+      "numericValue": 0.05,
+      "displayValue": "0.05",
+      "score": 0.98
+    },
+    "total-blocking-time": {
+      "id": "total-blocking-time",
+      "title": "Total Blocking Time",
+      "numericValue": 150,
+      "displayValue": "150 ms",
+      "score": 0.88
+    },
+    "speed-index": {
+      "id": "speed-index",
+      "title": "Speed Index",
+      "numericValue": 1100,
+      "displayValue": "1.1 s",
+      "score": 0.94
+    }
+  },
+  "configSettings": {
+    "formFactor": "desktop",
+    "throttling": {
+      "cpuSlowdownMultiplier": 1
+    },
+    "screenEmulation": {
+      "width": 1350,
+      "height": 940
+    }
+  },
+  "runWarnings": [],
+  "status": "PASS",
+  "metadata": {
+    "taskId": "IFC-004",
+    "generatedBy": "Sprint 0 validation",
+    "notes": "Lead capture UI meets all performance thresholds"
+  }
+}

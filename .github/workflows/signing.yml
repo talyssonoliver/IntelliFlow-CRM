@@ -1,0 +1,588 @@
+# IFC-133: Supply Chain Security - Artifact Signing and Provenance
+#
+# This workflow signs all production-bound build artifacts using Sigstore's cosign
+# and generates SLSA provenance attestations for supply chain security.
+#
+# KPIs:
+# - 100% prod-bound artifacts signed
+# - Verification enforced in deployment pipeline
+#
+# References:
+# - docs/security/signing.md
+# - docs/security/supply-chain.md
+# - .github/workflows/security-sbom.yml (dependency: IFC-132)
+# - docs/operations/release-rollback.md
+
+name: Artifact Signing and Provenance
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  release:
+    types: [created, published]
+  workflow_dispatch:
+    inputs:
+      sign_containers:
+        description: 'Sign container images'
+        required: false
+        default: true
+        type: boolean
+      sign_archives:
+        description: 'Sign release archives'
+        required: false
+        default: true
+        type: boolean
+      generate_provenance:
+        description: 'Generate SLSA provenance'
+        required: false
+        default: true
+        type: boolean
+
+# Required permissions for keyless signing with Sigstore
+permissions:
+  contents: read
+  packages: write
+  id-token: write  # Required for OIDC keyless signing
+  attestations: write  # Required for GitHub attestations
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '9'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  COSIGN_VERSION: 'v2.2.2'
+
+jobs:
+  # ===========================================
+  # Job 1: Build and Package Artifacts
+  # ===========================================
+  build-artifacts:
+    name: Build Artifacts
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      archive_name: ${{ steps.package.outputs.archive_name }}
+      archive_sha256: ${{ steps.package.outputs.archive_sha256 }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Determine version
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          else
+            VERSION="0.0.0-dev.$(date +%Y%m%d)-${GITHUB_SHA::8}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Build application
+        run: pnpm run build
+        env:
+          NODE_ENV: production
+
+      - name: Package release archive
+        id: package
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          ARCHIVE_NAME="intelliflow-crm-${VERSION}.tar.gz"
+
+          mkdir -p release-artifacts
+
+          # Create release archive
+          tar -czf "release-artifacts/${ARCHIVE_NAME}" \
+            --exclude='node_modules' \
+            --exclude='.git' \
+            --exclude='release-artifacts' \
+            apps/*/dist \
+            apps/*/.next \
+            packages/*/dist \
+            package.json \
+            pnpm-lock.yaml \
+            turbo.json 2>/dev/null || true
+
+          # Generate SHA256 hash
+          cd release-artifacts
+          sha256sum "${ARCHIVE_NAME}" > "${ARCHIVE_NAME}.sha256"
+          ARCHIVE_SHA256=$(cut -d ' ' -f1 "${ARCHIVE_NAME}.sha256")
+
+          echo "archive_name=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
+          echo "archive_sha256=${ARCHIVE_SHA256}" >> $GITHUB_OUTPUT
+
+          echo "Archive: ${ARCHIVE_NAME}"
+          echo "SHA256: ${ARCHIVE_SHA256}"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts-${{ steps.version.outputs.version }}
+          path: release-artifacts/
+          retention-days: 90
+          if-no-files-found: warn
+
+  # ===========================================
+  # Job 2: Sign Release Archives
+  # ===========================================
+  sign-archives:
+    name: Sign Release Archives
+    needs: [build-artifacts]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event_name == 'release' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-artifacts-${{ needs.build-artifacts.outputs.version }}
+          path: release-artifacts
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+        with:
+          cosign-release: ${{ env.COSIGN_VERSION }}
+
+      - name: Sign release archive (keyless)
+        id: sign-archive
+        run: |
+          ARCHIVE_NAME="${{ needs.build-artifacts.outputs.archive_name }}"
+
+          echo "Signing ${ARCHIVE_NAME} with keyless signing..."
+
+          # Sign the archive using keyless signing (OIDC)
+          cosign sign-blob \
+            --yes \
+            --output-signature "release-artifacts/${ARCHIVE_NAME}.sig" \
+            --output-certificate "release-artifacts/${ARCHIVE_NAME}.cert" \
+            "release-artifacts/${ARCHIVE_NAME}"
+
+          echo "Archive signed successfully"
+
+          # Create bundle for easier verification
+          cosign sign-blob \
+            --yes \
+            --bundle "release-artifacts/${ARCHIVE_NAME}.bundle" \
+            "release-artifacts/${ARCHIVE_NAME}"
+
+          echo "Signature bundle created"
+
+      - name: Verify signature
+        run: |
+          ARCHIVE_NAME="${{ needs.build-artifacts.outputs.archive_name }}"
+
+          echo "Verifying signature..."
+
+          cosign verify-blob \
+            --certificate "release-artifacts/${ARCHIVE_NAME}.cert" \
+            --signature "release-artifacts/${ARCHIVE_NAME}.sig" \
+            --certificate-identity-regexp 'https://github.com/${{ github.repository }}/.*' \
+            --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
+            "release-artifacts/${ARCHIVE_NAME}"
+
+          echo "Signature verification passed"
+
+      - name: Upload signed artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: signed-artifacts-${{ needs.build-artifacts.outputs.version }}
+          path: |
+            release-artifacts/*.sig
+            release-artifacts/*.cert
+            release-artifacts/*.bundle
+            release-artifacts/*.sha256
+          retention-days: 90
+
+      - name: Attach signatures to release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            release-artifacts/*.sig
+            release-artifacts/*.cert
+            release-artifacts/*.bundle
+            release-artifacts/*.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ===========================================
+  # Job 3: Generate SLSA Provenance
+  # ===========================================
+  generate-provenance:
+    name: Generate SLSA Provenance
+    needs: [build-artifacts, sign-archives]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: (github.event_name == 'release' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) && (github.event.inputs.generate_provenance != 'false')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-artifacts-${{ needs.build-artifacts.outputs.version }}
+          path: release-artifacts
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+        with:
+          cosign-release: ${{ env.COSIGN_VERSION }}
+
+      - name: Generate SLSA provenance
+        id: provenance
+        run: |
+          VERSION="${{ needs.build-artifacts.outputs.version }}"
+          ARCHIVE_NAME="${{ needs.build-artifacts.outputs.archive_name }}"
+          ARCHIVE_SHA256="${{ needs.build-artifacts.outputs.archive_sha256 }}"
+
+          # Generate SLSA provenance JSON
+          cat > "release-artifacts/provenance.json" << EOF
+          {
+            "_type": "https://in-toto.io/Statement/v0.1",
+            "predicateType": "https://slsa.dev/provenance/v1",
+            "subject": [
+              {
+                "name": "${ARCHIVE_NAME}",
+                "digest": {
+                  "sha256": "${ARCHIVE_SHA256}"
+                }
+              }
+            ],
+            "predicate": {
+              "buildType": "https://github.com/slsa-framework/slsa-github-generator/generic@v1",
+              "builder": {
+                "id": "https://github.com/${{ github.repository }}/.github/workflows/signing.yml@${{ github.ref }}"
+              },
+              "invocation": {
+                "configSource": {
+                  "uri": "git+https://github.com/${{ github.repository }}@${{ github.ref }}",
+                  "digest": {
+                    "sha1": "${{ github.sha }}"
+                  },
+                  "entryPoint": ".github/workflows/signing.yml"
+                },
+                "parameters": {},
+                "environment": {
+                  "github_actor": "${{ github.actor }}",
+                  "github_event_name": "${{ github.event_name }}",
+                  "github_run_id": "${{ github.run_id }}",
+                  "github_run_number": "${{ github.run_number }}"
+                }
+              },
+              "metadata": {
+                "buildInvocationId": "${{ github.run_id }}-${{ github.run_attempt }}",
+                "buildStartedOn": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+                "completeness": {
+                  "parameters": true,
+                  "environment": true,
+                  "materials": true
+                },
+                "reproducible": false
+              },
+              "materials": [
+                {
+                  "uri": "git+https://github.com/${{ github.repository }}",
+                  "digest": {
+                    "sha1": "${{ github.sha }}"
+                  }
+                }
+              ]
+            }
+          }
+          EOF
+
+          echo "SLSA provenance generated"
+          cat "release-artifacts/provenance.json"
+
+      - name: Sign provenance attestation
+        run: |
+          ARCHIVE_NAME="${{ needs.build-artifacts.outputs.archive_name }}"
+
+          # Sign the provenance as an attestation
+          cosign attest-blob \
+            --yes \
+            --predicate "release-artifacts/provenance.json" \
+            --type slsaprovenance \
+            --output-signature "release-artifacts/provenance.sig" \
+            "release-artifacts/${ARCHIVE_NAME}"
+
+          echo "Provenance attestation signed"
+
+      - name: Upload provenance artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: provenance-${{ needs.build-artifacts.outputs.version }}
+          path: |
+            release-artifacts/provenance.json
+            release-artifacts/provenance.sig
+          retention-days: 90
+
+      - name: Attach provenance to release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            release-artifacts/provenance.json
+            release-artifacts/provenance.sig
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ===========================================
+  # Job 4: Sign Container Images (if applicable)
+  # ===========================================
+  sign-containers:
+    name: Sign Container Images
+    needs: [build-artifacts]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: (github.event_name == 'release' || startsWith(github.ref, 'refs/tags/v')) && (github.event.inputs.sign_containers != 'false')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+        with:
+          cosign-release: ${{ env.COSIGN_VERSION }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build container image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build-artifacts.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.version=${{ needs.build-artifacts.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+        continue-on-error: true
+
+      - name: Sign container image (keyless)
+        if: steps.build.outcome == 'success'
+        run: |
+          VERSION="${{ needs.build-artifacts.outputs.version }}"
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${VERSION}"
+
+          echo "Signing container image: ${IMAGE}"
+
+          cosign sign \
+            --yes \
+            "${IMAGE}"
+
+          echo "Container image signed successfully"
+
+      - name: Verify container signature
+        if: steps.build.outcome == 'success'
+        run: |
+          VERSION="${{ needs.build-artifacts.outputs.version }}"
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${VERSION}"
+
+          echo "Verifying container signature..."
+
+          cosign verify \
+            --certificate-identity-regexp 'https://github.com/${{ github.repository }}/.*' \
+            --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
+            "${IMAGE}"
+
+          echo "Container signature verification passed"
+
+      - name: Attach SBOM to container
+        if: steps.build.outcome == 'success'
+        run: |
+          VERSION="${{ needs.build-artifacts.outputs.version }}"
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${VERSION}"
+
+          # Generate SBOM for container
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+
+          syft "${IMAGE}" -o cyclonedx-json > container-sbom.cyclonedx.json
+
+          # Attach SBOM as attestation
+          cosign attest \
+            --yes \
+            --predicate container-sbom.cyclonedx.json \
+            --type cyclonedx \
+            "${IMAGE}"
+
+          echo "SBOM attestation attached to container"
+
+  # ===========================================
+  # Job 5: Verification Gate
+  # ===========================================
+  verification-gate:
+    name: Verification Gate
+    needs: [build-artifacts, sign-archives, generate-provenance]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: always()
+
+    steps:
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+        with:
+          cosign-release: ${{ env.COSIGN_VERSION }}
+
+      - name: Download signed artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: signed-artifacts-${{ needs.build-artifacts.outputs.version }}
+          path: signed-artifacts
+        continue-on-error: true
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-artifacts-${{ needs.build-artifacts.outputs.version }}
+          path: release-artifacts
+        continue-on-error: true
+
+      - name: Verify all signatures
+        id: verify
+        run: |
+          ARCHIVE_NAME="${{ needs.build-artifacts.outputs.archive_name }}"
+
+          echo "## Verification Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          VERIFICATION_PASSED=true
+
+          # Check if archive exists
+          if [ -f "release-artifacts/${ARCHIVE_NAME}" ]; then
+            echo "Archive found: ${ARCHIVE_NAME}"
+
+            # Check if signature exists
+            if [ -f "signed-artifacts/${ARCHIVE_NAME}.sig" ]; then
+              echo "Signature found, verifying..."
+
+              if cosign verify-blob \
+                --certificate "signed-artifacts/${ARCHIVE_NAME}.cert" \
+                --signature "signed-artifacts/${ARCHIVE_NAME}.sig" \
+                --certificate-identity-regexp 'https://github.com/${{ github.repository }}/.*' \
+                --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
+                "release-artifacts/${ARCHIVE_NAME}" 2>/dev/null; then
+                echo "| Archive Signature | :white_check_mark: Verified |" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "| Archive Signature | :x: Failed |" >> $GITHUB_STEP_SUMMARY
+                VERIFICATION_PASSED=false
+              fi
+            else
+              echo "| Archive Signature | :warning: Not found |" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "| Archive | :warning: Not found |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Summary
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "$VERIFICATION_PASSED" = true ]; then
+            echo ":white_check_mark: **All verification checks passed**" >> $GITHUB_STEP_SUMMARY
+            echo "passed=true" >> $GITHUB_OUTPUT
+          else
+            echo ":x: **Verification failed - artifacts are NOT ready for deployment**" >> $GITHUB_STEP_SUMMARY
+            echo "passed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Fail if verification failed
+        if: steps.verify.outputs.passed == 'false'
+        run: |
+          echo "ERROR: Artifact verification failed!"
+          exit 1
+
+  # ===========================================
+  # Job 6: Summary Report
+  # ===========================================
+  summary:
+    name: Signing Summary
+    needs: [build-artifacts, sign-archives, generate-provenance, sign-containers, verification-gate]
+    runs-on: ubuntu-latest
+    if: always()
+    timeout-minutes: 5
+
+    steps:
+      - name: Generate summary report
+        run: |
+          echo "# Artifact Signing Summary - Run #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: ${{ needs.build-artifacts.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Job Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Build Artifacts | ${{ needs.build-artifacts.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Sign Archives | ${{ needs.sign-archives.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Generate Provenance | ${{ needs.generate-provenance.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Sign Containers | ${{ needs.sign-containers.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Verification Gate | ${{ needs.verification-gate.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## KPI Tracking (IFC-133)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.sign-archives.result }}" = "success" ]; then
+            echo "- [x] Release archive signed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- [ ] Release archive signed (FAILED or SKIPPED)" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ "${{ needs.generate-provenance.result }}" = "success" ]; then
+            echo "- [x] SLSA provenance generated" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- [ ] SLSA provenance generated (FAILED or SKIPPED)" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ "${{ needs.verification-gate.result }}" = "success" ]; then
+            echo "- [x] Verification gate passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- [ ] Verification gate passed (FAILED)" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## References" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- [Signing Policy](../docs/security/signing.md)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Supply Chain Policy](../docs/security/supply-chain.md)" >> $GITHUB_STEP_SUMMARY
+          echo "- [SBOM Workflow](./security-sbom.yml)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail if critical jobs failed
+        if: needs.verification-gate.result == 'failure'
+        run: |
+          echo "ERROR: Verification gate failed - artifacts are not safe for deployment"
+          exit 1

@@ -1,0 +1,53 @@
+{
+  "name": "@intelliflow/platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Platform utilities for IntelliFlow CRM (feature flags, rollout primitives)",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./feature-flags": {
+      "types": "./dist/feature-flags/index.d.ts",
+      "import": "./dist/feature-flags/index.mjs",
+      "require": "./dist/feature-flags/index.js"
+    },
+    "./resilience": {
+      "types": "./dist/resilience/index.d.ts",
+      "import": "./dist/resilience/index.mjs",
+      "require": "./dist/resilience/index.js"
+    },
+    "./queues": {
+      "types": "./dist/queues/index.d.ts",
+      "import": "./dist/queues/index.mjs",
+      "require": "./dist/queues/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts src/feature-flags/index.ts src/resilience/index.ts src/queues/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts src/feature-flags/index.ts src/resilience/index.ts src/queues/index.ts --format cjs,esm --dts --watch",
+    "clean": "rm -rf dist .turbo",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint \"src/**/*.ts\"",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@bull-board/api": "^6.16.1",
+    "@intelliflow/domain": "workspace:*",
+    "bullmq": "^5.66.4",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@intelliflow/typescript-config": "workspace:*",
+    "@types/node": "^20.11.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^4.0.16"
+  }
+}

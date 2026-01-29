@@ -1,0 +1,4 @@
+Task ID,Section,Description,Owner,Dependencies,CleanDependencies,CrossQuarterDeps,Pre-requisites,Definition of Done,Status,KPIs,Target Sprint,Artifacts To Track,Validation Method
+CYCLE-A,Foundation,Task A,DevOps,CYCLE-B,CYCLE-B,,,Done,Planned,,0,,
+CYCLE-B,Foundation,Task B,DevOps,CYCLE-C,CYCLE-C,,,Done,Planned,,0,,
+CYCLE-C,Foundation,Task C,DevOps,CYCLE-A,CYCLE-A,,,Done,Planned,,0,,

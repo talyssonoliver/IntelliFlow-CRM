@@ -1,0 +1,321 @@
+# Alert Rules for IntelliFlow CRM Observability
+# Prometheus alert rules for system health and performance monitoring
+# File location: artifacts/misc/alert-rules.yml
+
+groups:
+  - name: intelliflow_system_health
+    interval: 30s
+    rules:
+      - alert: ServiceDown
+        expr: up{job=~"intelliflow.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: infrastructure
+        annotations:
+          summary: "Service {{ $labels.service }} is down"
+          description: "{{ $labels.service }} has been unavailable for more than 2 minutes"
+          dashboard: "http://localhost:3000/d/overview"
+
+      - alert: HighErrorRate
+        expr: |
+          (sum(rate(http_requests_total{status=~"5.."}[5m])) by (service) /
+           sum(rate(http_requests_total[5m])) by (service)) > 0.01
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High error rate on {{ $labels.service }}"
+          description: "Error rate is {{ $value | humanizePercentage }} on {{ $labels.service }}"
+          dashboard: "http://localhost:3000/d/api-performance"
+
+      - alert: HighLatencyP95
+        expr: |
+          histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 0.2
+        for: 10m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High API latency (p95) on {{ $labels.service }}"
+          description: "p95 latency is {{ $value | humanizeDuration }} on {{ $labels.service }}"
+          dashboard: "http://localhost:3000/d/api-performance"
+
+      - alert: HighLatencyP99
+        expr: |
+          histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "Critical API latency (p99) on {{ $labels.service }}"
+          description: "p99 latency is {{ $value | humanizeDuration }} on {{ $labels.service }}"
+          runbook: "https://docs.intelliflow.dev/runbooks/high-latency"
+
+  - name: intelliflow_resource_usage
+    interval: 30s
+    rules:
+      - alert: HighCPUUsage
+        expr: |
+          rate(process_cpu_seconds_total[5m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "High CPU usage on {{ $labels.service }}"
+          description: "CPU usage is {{ $value | humanize }}% on {{ $labels.service }}"
+          dashboard: "http://localhost:3000/d/overview"
+
+      - alert: HighMemoryUsage
+        expr: |
+          (process_resident_memory_bytes / process_virtual_memory_max_bytes) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "High memory usage on {{ $labels.service }}"
+          description: "Memory usage is {{ $value | humanizePercentage }} on {{ $labels.service }}"
+          dashboard: "http://localhost:3000/d/overview"
+
+      - alert: MemoryLeak
+        expr: |
+          rate(process_resident_memory_bytes[1h]) > 0
+        for: 30m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "Potential memory leak on {{ $labels.service }}"
+          description: "Memory is steadily increasing on {{ $labels.service }}"
+          runbook: "https://docs.intelliflow.dev/runbooks/memory-leak"
+
+  - name: intelliflow_database
+    interval: 30s
+    rules:
+      - alert: HighDatabaseLatency
+        expr: |
+          histogram_quantile(0.95, rate(db_query_duration_seconds_bucket[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "High database query latency"
+          description: "p95 query latency is {{ $value | humanizeDuration }}"
+          dashboard: "http://localhost:3000/d/overview"
+
+      - alert: HighConnectionPoolUsage
+        expr: |
+          (pg_stat_activity_count / pg_settings_max_connections) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "High connection pool utilization"
+          description: "Using {{ $value | humanizePercentage }} of available connections"
+          runbook: "https://docs.intelliflow.dev/runbooks/connection-pool"
+
+      - alert: SlowQueries
+        expr: |
+          count(rate(slow_query_log_total[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Excessive slow queries detected"
+          description: "{{ $value }} slow queries detected in the last 5 minutes"
+          dashboard: "http://localhost:3000/d/overview"
+
+  - name: intelliflow_ai_performance
+    interval: 1m
+    rules:
+      - alert: AIModelInferenceLatency
+        expr: |
+          histogram_quantile(0.95, rate(lead_scoring_duration_seconds_bucket[5m])) > 5
+        for: 10m
+        labels:
+          severity: warning
+          component: ai
+        annotations:
+          summary: "High AI inference latency"
+          description: "Lead scoring p95 latency is {{ $value | humanizeDuration }}"
+          dashboard: "http://localhost:3000/d/ai-performance"
+
+      - alert: AIModelAccuracyDegraded
+        expr: |
+          ai_model_accuracy < 0.85
+        for: 30m
+        labels:
+          severity: warning
+          component: ai
+        annotations:
+          summary: "AI model accuracy degraded"
+          description: "{{ $labels.model_name }} accuracy is {{ $value | humanizePercentage }}"
+          runbook: "https://docs.intelliflow.dev/runbooks/model-accuracy"
+
+      - alert: HighAICosts
+        expr: |
+          rate(ai_cost_usd_total[1h]) > 100
+        for: 15m
+        labels:
+          severity: warning
+          component: ai
+        annotations:
+          summary: "High AI API costs"
+          description: "Current hourly cost is ${{ $value | humanize }}"
+          dashboard: "http://localhost:3000/d/ai-performance"
+
+      - alert: LLMRateLimitApproaching
+        expr: |
+          (llm_tokens_used_total / llm_tokens_limit_total) > 0.8
+        for: 10m
+        labels:
+          severity: warning
+          component: ai
+        annotations:
+          summary: "LLM token rate limit approaching"
+          description: "Using {{ $value | humanizePercentage }} of daily token limit"
+
+  - name: intelliflow_logs
+    interval: 1m
+    rules:
+      - alert: HighErrorLogRate
+        expr: |
+          sum(rate({level="error"}[5m])) by (service) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: logs
+        annotations:
+          summary: "High error log rate on {{ $labels.service }}"
+          description: "{{ $value }} errors/sec on {{ $labels.service }}"
+          dashboard: "http://localhost:3000/d/logs-dashboard"
+
+      - alert: LokiHighBacklogSize
+        expr: |
+          loki_logs_backlog_size_bytes > 1000000000
+        for: 10m
+        labels:
+          severity: warning
+          component: observability
+        annotations:
+          summary: "Loki backlog is growing"
+          description: "Loki has {{ $value | humanize1024 }}B of unprocessed logs"
+
+  - name: intelliflow_traces
+    interval: 1m
+    rules:
+      - alert: HighTraceDropRate
+        expr: |
+          rate(traces_dropped_total[5m]) > 100
+        for: 5m
+        labels:
+          severity: warning
+          component: observability
+        annotations:
+          summary: "High trace drop rate"
+          description: "Dropping {{ $value }} traces/sec due to limits"
+
+      - alert: TempoHighLatency
+        expr: |
+          histogram_quantile(0.95, tempo_latency_seconds_bucket) > 1
+        for: 10m
+        labels:
+          severity: warning
+          component: observability
+        annotations:
+          summary: "Tempo query latency is high"
+          description: "Tempo p95 query latency is {{ $value | humanizeDuration }}"
+
+  - name: intelliflow_security
+    interval: 30s
+    rules:
+      - alert: HighAuthenticationFailureRate
+        expr: |
+          rate(auth_failures_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "High authentication failure rate"
+          description: "{{ $value }} auth failures/sec detected"
+          dashboard: "http://localhost:3000/d/overview"
+
+      - alert: RateLimitExceeded
+        expr: |
+          sum(increase(rate_limit_exceeded_total[1m])) > 100
+        for: 2m
+        labels:
+          severity: info
+          component: security
+        annotations:
+          summary: "Rate limit exceeded"
+          description: "{{ $value }} rate limit violations in the last minute"
+
+      - alert: SuspiciousActivityDetected
+        expr: |
+          sum(rate(security_violations_total[5m])) > 5
+        for: 5m
+        labels:
+          severity: critical
+          component: security
+        annotations:
+          summary: "Suspicious activity detected"
+          description: "{{ $value }} security violations/sec detected"
+          runbook: "https://docs.intelliflow.dev/runbooks/security-incident"
+
+  - name: intelliflow_slos
+    interval: 1m
+    rules:
+      - alert: SLO_Availability_Breached
+        expr: |
+          (count(up{job=~"intelliflow.*"} == 1) / count(up{job=~"intelliflow.*"})) < 0.9995
+        for: 5m
+        labels:
+          severity: critical
+          component: slo
+        annotations:
+          summary: "SLO availability breached"
+          description: "Service availability is {{ $value | humanizePercentage }}, SLO is 99.95%"
+
+      - alert: SLO_Latency_Breached
+        expr: |
+          histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 0.1
+        for: 15m
+        labels:
+          severity: warning
+          component: slo
+        annotations:
+          summary: "SLO latency target breached"
+          description: "p95 latency is {{ $value | humanizeDuration }}, SLO is 100ms"
+
+  - name: intelliflow_delivery
+    interval: 5m
+    rules:
+      - alert: DeploymentLatency
+        expr: |
+          increase(deployment_duration_seconds[1h]) > 300
+        labels:
+          severity: info
+          component: deployment
+        annotations:
+          summary: "Deployment taking longer than expected"
+          description: "Latest deployment took {{ $value | humanizeDuration }}"
+
+      - alert: BuildFailureRate
+        expr: |
+          (sum(rate(ci_build_failed_total[1h])) / sum(rate(ci_build_total[1h]))) > 0.1
+        for: 30m
+        labels:
+          severity: warning
+          component: ci
+        annotations:
+          summary: "High CI/CD failure rate"
+          description: "Build failure rate is {{ $value | humanizePercentage }}"

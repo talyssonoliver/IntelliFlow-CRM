@@ -1,0 +1,72 @@
+{
+  "sprint": "sprint-10",
+  "name": "Sprint 10",
+  "target_date": null,
+  "started_at": null,
+  "completed_at": null,
+  "phases": [],
+  "task_summary": {
+    "total": 9,
+    "done": 7,
+    "in_progress": 2,
+    "blocked": 0,
+    "not_started": 0,
+    "failed": 0
+  },
+  "completed_tasks": [
+    {
+      "task_id": "IFC-076",
+      "completed_at": "2026-01-29T01:33:17.666Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-099",
+      "completed_at": "2026-01-29T01:33:17.666Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-100",
+      "completed_at": "2026-01-29T01:33:17.666Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-113",
+      "completed_at": "2026-01-29T01:33:17.666Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-121",
+      "completed_at": "2026-01-29T01:33:17.666Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-127",
+      "completed_at": "2026-01-29T01:33:17.666Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-141",
+      "completed_at": "2026-01-29T01:33:17.666Z",
+      "duration_minutes": 15
+    }
+  ],
+  "notes": "7/9 tasks DONE (78%). Last synced: 2026-01-29T01:33:17.666Z",
+  "schedule": {
+    "sprint_start_date": null,
+    "sprint_end_date": null,
+    "working_hours_per_day": 8,
+    "working_days_per_week": 5,
+    "critical_path": {
+      "task_ids": [],
+      "total_duration_minutes": 0,
+      "completion_percentage": 0,
+      "bottleneck_task_id": null
+    },
+    "schedule_variance": {
+      "sv_minutes": -60,
+      "spi": 0.92,
+      "status": "behind"
+    },
+    "calculated_at": "2026-01-29T01:33:17.689Z"
+  }
+}

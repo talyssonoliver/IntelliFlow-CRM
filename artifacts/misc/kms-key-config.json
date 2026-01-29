@@ -1,0 +1,372 @@
+{
+  "kms_configuration": {
+    "version": "1.0",
+    "provider": "aws_kms",
+    "region": "eu-west-1",
+    "key_management_strategy": "per_tenant_encryption",
+    "rotation_enabled": true,
+    "rotation_period_days": 90
+  },
+  "tenant_key_template": {
+    "key_id": "tenant-{tenant_id}-master-key",
+    "alias": "alias/intelliflow/tenant/{tenant_id}",
+    "key_spec": "SYMMETRIC_DEFAULT",
+    "key_usage": "ENCRYPT_DECRYPT",
+    "origin": "AWS_KMS",
+    "multi_region": false,
+    "customer_master_key_spec": "AES_256",
+    "encryption_algorithms": ["SYMMETRIC_DEFAULT"],
+    "key_policy": {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Sid": "Enable IAM User Permissions",
+          "Effect": "Allow",
+          "Principal": {
+            "AWS": "arn:aws:iam::{account_id}:root"
+          },
+          "Action": "kms:*",
+          "Resource": "*"
+        },
+        {
+          "Sid": "Allow use of the key for encryption",
+          "Effect": "Allow",
+          "Principal": {
+            "AWS": "arn:aws:iam::{account_id}:role/IntelliFlowAPIRole"
+          },
+          "Action": [
+            "kms:Encrypt",
+            "kms:Decrypt",
+            "kms:ReEncrypt*",
+            "kms:GenerateDataKey*",
+            "kms:DescribeKey"
+          ],
+          "Resource": "*",
+          "Condition": {
+            "StringEquals": {
+              "kms:EncryptionContext:tenant_id": "{tenant_id}"
+            }
+          }
+        },
+        {
+          "Sid": "Allow attachment of persistent resources",
+          "Effect": "Allow",
+          "Principal": {
+            "AWS": "arn:aws:iam::{account_id}:role/IntelliFlowAPIRole"
+          },
+          "Action": [
+            "kms:CreateGrant",
+            "kms:ListGrants",
+            "kms:RevokeGrant"
+          ],
+          "Resource": "*"
+        }
+      ]
+    },
+    "tags": [
+      {
+        "Key": "Environment",
+        "Value": "production"
+      },
+      {
+        "Key": "Application",
+        "Value": "IntelliFlowCRM"
+      },
+      {
+        "Key": "TenantID",
+        "Value": "{tenant_id}"
+      },
+      {
+        "Key": "DataClassification",
+        "Value": "CONFIDENTIAL"
+      },
+      {
+        "Key": "ComplianceFramework",
+        "Value": "GDPR"
+      }
+    ]
+  },
+  "data_encryption_keys": {
+    "strategy": "envelope_encryption",
+    "data_key_spec": "AES_256",
+    "data_key_caching": {
+      "enabled": true,
+      "max_age_seconds": 300,
+      "max_messages_encrypted": 100
+    },
+    "encryption_context": {
+      "tenant_id": "required",
+      "data_classification": "required",
+      "service": "intelliflow-api",
+      "region": "eu-west-1"
+    }
+  },
+  "key_rotation": {
+    "automatic_rotation": true,
+    "rotation_period_days": 90,
+    "rotation_schedule": "0 2 * * 0",
+    "notification_sns_topic": "arn:aws:sns:eu-west-1:{account_id}:kms-key-rotation",
+    "pre_rotation_checks": [
+      "verify_no_active_encryption_operations",
+      "backup_current_key_metadata",
+      "notify_dpo_and_security_team"
+    ],
+    "post_rotation_actions": [
+      "re_encrypt_recent_data_with_new_key",
+      "audit_key_usage_patterns",
+      "update_key_inventory"
+    ]
+  },
+  "tenant_provisioning": {
+    "auto_provision_key_on_tenant_creation": true,
+    "key_creation_workflow": [
+      {
+        "step": 1,
+        "action": "create_kms_master_key",
+        "parameters": {
+          "description": "Master encryption key for tenant {tenant_id}",
+          "key_usage": "ENCRYPT_DECRYPT",
+          "origin": "AWS_KMS"
+        }
+      },
+      {
+        "step": 2,
+        "action": "create_key_alias",
+        "parameters": {
+          "alias_name": "alias/intelliflow/tenant/{tenant_id}"
+        }
+      },
+      {
+        "step": 3,
+        "action": "enable_key_rotation",
+        "parameters": {
+          "rotation_enabled": true
+        }
+      },
+      {
+        "step": 4,
+        "action": "store_key_metadata",
+        "parameters": {
+          "table": "tenant_encryption_keys",
+          "fields": {
+            "tenant_id": "{tenant_id}",
+            "kms_key_id": "{key_id}",
+            "kms_key_arn": "{key_arn}",
+            "created_at": "{timestamp}",
+            "rotation_enabled": true,
+            "next_rotation_date": "{timestamp + 90 days}"
+          }
+        }
+      },
+      {
+        "step": 5,
+        "action": "audit_log_key_creation",
+        "parameters": {
+          "event": "TENANT_KEY_CREATED",
+          "tenant_id": "{tenant_id}",
+          "key_id": "{key_id}"
+        }
+      }
+    ]
+  },
+  "data_residency_enforcement": {
+    "enabled": true,
+    "rules": [
+      {
+        "tenant_country": "GB",
+        "required_kms_region": "eu-west-2",
+        "description": "UK data must use UK KMS keys (London region)"
+      },
+      {
+        "tenant_country": "EU",
+        "required_kms_region": "eu-west-1",
+        "description": "EU data must use EU KMS keys (Ireland region)"
+      },
+      {
+        "tenant_country": "OTHER",
+        "required_kms_region": "eu-west-1",
+        "description": "Default to EU region for all other countries"
+      }
+    ],
+    "validation": {
+      "check_on_tenant_creation": true,
+      "check_on_key_usage": true,
+      "block_cross_region_encryption": true,
+      "audit_residency_violations": true
+    }
+  },
+  "encryption_in_use": {
+    "database_encryption": {
+      "enabled": true,
+      "method": "field_level_encryption",
+      "encrypted_fields": [
+        "leads.email",
+        "leads.phone",
+        "contacts.email",
+        "contacts.mobile",
+        "accounts.billing_address",
+        "users.two_factor_secret"
+      ],
+      "key_derivation": "kms_data_key_per_record"
+    },
+    "storage_encryption": {
+      "s3_buckets": {
+        "encryption": "SSE-KMS",
+        "kms_key_id": "tenant-specific-key",
+        "bucket_key_enabled": true
+      },
+      "ebs_volumes": {
+        "encryption": "enabled",
+        "kms_key_id": "default-ebs-key"
+      }
+    },
+    "transit_encryption": {
+      "tls_version": "1.3",
+      "cipher_suites": [
+        "TLS_AES_256_GCM_SHA384",
+        "TLS_CHACHA20_POLY1305_SHA256"
+      ]
+    }
+  },
+  "key_inventory": {
+    "tracking_table": "tenant_encryption_keys",
+    "schema": {
+      "tenant_id": "UUID PRIMARY KEY",
+      "kms_key_id": "VARCHAR(255) NOT NULL",
+      "kms_key_arn": "TEXT NOT NULL",
+      "kms_alias": "VARCHAR(255)",
+      "region": "VARCHAR(50) NOT NULL",
+      "created_at": "TIMESTAMPTZ NOT NULL",
+      "rotation_enabled": "BOOLEAN DEFAULT TRUE",
+      "last_rotated_at": "TIMESTAMPTZ",
+      "next_rotation_date": "TIMESTAMPTZ",
+      "status": "VARCHAR(50) DEFAULT 'active'",
+      "data_residency_requirement": "VARCHAR(50)"
+    },
+    "audit_frequency": "monthly",
+    "compliance_checks": [
+      "verify_all_tenants_have_keys",
+      "check_rotation_schedule_compliance",
+      "validate_key_policies",
+      "audit_key_usage_patterns",
+      "verify_residency_compliance"
+    ]
+  },
+  "disaster_recovery": {
+    "key_backup": {
+      "enabled": true,
+      "backup_frequency": "daily",
+      "backup_retention_days": 90,
+      "backup_region": "eu-west-2"
+    },
+    "key_recovery_procedure": [
+      {
+        "step": 1,
+        "action": "identify_affected_tenant",
+        "responsible": "DPO + Security Team"
+      },
+      {
+        "step": 2,
+        "action": "retrieve_key_metadata_from_backup",
+        "location": "secure_backup_vault"
+      },
+      {
+        "step": 3,
+        "action": "recreate_kms_key_if_deleted",
+        "note": "Original key cannot be recovered if deleted, must re-encrypt all data"
+      },
+      {
+        "step": 4,
+        "action": "re_encrypt_tenant_data_with_new_key",
+        "estimated_time": "hours to days depending on data volume"
+      },
+      {
+        "step": 5,
+        "action": "validate_encryption_integrity",
+        "tests": ["sample_decryption", "full_data_scan"]
+      }
+    ],
+    "rpo": "24 hours",
+    "rto": "72 hours"
+  },
+  "compliance_reporting": {
+    "monthly_kms_report": {
+      "contents": [
+        "Total active tenant keys",
+        "Keys due for rotation",
+        "Key usage statistics",
+        "Encryption/decryption error rates",
+        "Residency compliance status",
+        "Key policy violations"
+      ],
+      "recipients": ["DPO", "CISO", "Compliance Officer"],
+      "format": "PDF + JSON"
+    },
+    "annual_audit": {
+      "scope": "Full KMS configuration and usage audit",
+      "auditor": "External security firm",
+      "certification": "ISO 27001, SOC 2 Type II"
+    }
+  },
+  "security_best_practices": {
+    "principle_of_least_privilege": "Only IntelliFlowAPIRole can use tenant keys",
+    "encryption_context_required": "All operations must include tenant_id in context",
+    "key_policy_review": "Quarterly review by Security team",
+    "access_logging": "All key usage logged to CloudTrail",
+    "anomaly_detection": "Alert on unusual encryption/decryption patterns",
+    "key_deletion_protection": "30-day waiting period for key deletion"
+  },
+  "implementation_checklist": [
+    {
+      "task": "Create KMS key creation Lambda function",
+      "status": "TODO",
+      "assigned_to": "Backend Team"
+    },
+    {
+      "task": "Implement tenant provisioning hook to create keys",
+      "status": "TODO",
+      "assigned_to": "Backend Team"
+    },
+    {
+      "task": "Add field-level encryption to Prisma middleware",
+      "status": "TODO",
+      "assigned_to": "Backend Team"
+    },
+    {
+      "task": "Configure S3 bucket policies for SSE-KMS",
+      "status": "TODO",
+      "assigned_to": "DevOps Team"
+    },
+    {
+      "task": "Set up key rotation scheduler (cron job)",
+      "status": "TODO",
+      "assigned_to": "DevOps Team"
+    },
+    {
+      "task": "Create tenant_encryption_keys database table",
+      "status": "TODO",
+      "assigned_to": "Database Team"
+    },
+    {
+      "task": "Implement residency validation checks",
+      "status": "TODO",
+      "assigned_to": "Backend Team"
+    },
+    {
+      "task": "Configure CloudTrail logging for KMS operations",
+      "status": "TODO",
+      "assigned_to": "Security Team"
+    },
+    {
+      "task": "Set up monitoring and alerting for key usage",
+      "status": "TODO",
+      "assigned_to": "SRE Team"
+    },
+    {
+      "task": "Document key recovery procedure",
+      "status": "COMPLETE",
+      "assigned_to": "DPO"
+    }
+  ],
+  "notes": "This configuration provides a comprehensive per-tenant encryption key management system compliant with GDPR Article 32 (Security of Processing) and supports data residency requirements for UK/EU data."
+}

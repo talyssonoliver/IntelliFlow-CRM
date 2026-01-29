@@ -1,0 +1,148 @@
+# IntelliFlow CRM - OpenTelemetry Collector Configuration
+# Central hub for all telemetry from Railway/Vercel/local apps
+#
+# Architecture: Push-based OTLP pipeline
+# - Apps push metrics/logs/traces to this collector via OTLP
+# - Collector routes to appropriate backends (Prometheus, Loki, Tempo)
+# - Railway/Vercel cannot be scraped - they push to us
+#
+# Access: Behind Tailscale or Cloudflare Access (NOT public)
+# Config hash tracked in EP-001-AI.json for audit
+
+receivers:
+  # Primary receiver - apps push OTLP data here
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+        cors:
+          allowed_origins:
+            - 'https://*.intelliflow.dev'
+            - 'https://*.railway.app'
+            - 'https://*.vercel.app'
+            - 'http://localhost:*'
+
+  # Self-scrape for collector health metrics only
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: 'otel-collector'
+          scrape_interval: 30s
+          static_configs:
+            - targets: ['localhost:8888']
+
+processors:
+  # Batch processor - groups data before export (reduces network overhead)
+  batch:
+    timeout: 10s
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+
+  # Memory limiter - prevents OOM issues
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 400
+    spike_limit_mib: 100
+
+  # Resource processor - adds deployment metadata
+  resource:
+    attributes:
+      - key: collector.version
+        value: '0.91.0'
+        action: upsert
+      - key: service.namespace
+        value: intelliflow
+        action: upsert
+
+  # Attributes processor - security filtering
+  attributes:
+    actions:
+      # Remove sensitive headers before storage
+      - key: http.request.header.authorization
+        action: delete
+      - key: http.request.header.cookie
+        action: delete
+      - key: http.request.header.x-api-key
+        action: delete
+
+  # Filter processor - reduce noise
+  filter/traces:
+    traces:
+      span:
+        # Exclude health check traces
+        - 'attributes["http.route"] == "/api/health"'
+        - 'attributes["http.route"] == "/health"'
+        - 'attributes["http.route"] == "/_health"'
+
+exporters:
+  # Metrics -> Prometheus (via remote write)
+  prometheusremotewrite:
+    endpoint: http://prometheus:9090/api/v1/write
+    resource_to_telemetry_conversion:
+      enabled: true
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+
+  # Logs -> Loki
+  loki:
+    endpoint: http://loki:3100/loki/api/v1/push
+
+  # Traces -> Tempo
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+
+  # Debug logging (set OTEL_LOG_LEVEL=warn in production)
+  logging:
+    loglevel: info
+    sampling_initial: 5
+    sampling_thereafter: 200
+
+extensions:
+  # Health check endpoint for EasyPanel/Docker health checks
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+  # Performance profiler (disable in production if not needed)
+  pprof:
+    endpoint: 0.0.0.0:1777
+
+service:
+  extensions: [health_check, pprof]
+
+  telemetry:
+    logs:
+      level: info
+    metrics:
+      level: detailed
+      address: 0.0.0.0:8888
+
+  pipelines:
+    # Metrics pipeline
+    metrics:
+      receivers: [otlp, prometheus]
+      processors: [memory_limiter, resource, attributes, batch]
+      exporters: [prometheusremotewrite]
+
+    # Logs pipeline
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, attributes, batch]
+      exporters: [loki]
+
+    # Traces pipeline
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, attributes, filter/traces, batch]
+      exporters: [otlp/tempo]

@@ -1,0 +1,324 @@
+{
+  "$schema": "../../apps/project-tracker/docs/metrics/schemas/metrics.schema.json",
+  "metadata": {
+    "task_id": "IFC-117",
+    "title": "AI Model Monitoring Metrics",
+    "description": "Performance metrics for AI model monitoring including drift, hallucination, latency, and ROI",
+    "created_at": "2025-12-29T00:00:00Z",
+    "updated_at": "2025-12-29T00:00:00Z",
+    "version": "1.0.0"
+  },
+  "kpis": {
+    "drift_detection": {
+      "name": "Drift Detection Window",
+      "target": "< 1 day",
+      "target_hours": 24,
+      "current_hours": 6,
+      "unit": "hours",
+      "status": "on_target",
+      "description": "Time window for detecting model drift",
+      "measurement_method": "Kolmogorov-Smirnov test + Population Stability Index",
+      "configuration": {
+        "window_size_hours": 6,
+        "sliding_interval_minutes": 30,
+        "p_value_threshold": 0.05,
+        "min_samples_required": 50
+      }
+    },
+    "hallucination_rate": {
+      "name": "Hallucination Rate",
+      "target": "< 5%",
+      "target_percentage": 5,
+      "current_percentage": 0,
+      "unit": "percentage",
+      "status": "on_target",
+      "description": "Percentage of AI outputs containing hallucinations",
+      "measurement_method": "Multi-strategy detection: entity validation, fact checking, logic consistency, claim support, context drift, numerical accuracy",
+      "detection_types": [
+        "factual_error",
+        "fabricated_entity",
+        "inconsistent_logic",
+        "unsupported_claim",
+        "temporal_error",
+        "numerical_error",
+        "attribution_error",
+        "context_drift"
+      ]
+    },
+    "roi_tracking": {
+      "name": "ROI Tracking",
+      "target": "> 200%",
+      "target_percentage": 200,
+      "current_percentage": null,
+      "unit": "percentage",
+      "status": "tracking",
+      "description": "Return on investment for AI operations",
+      "measurement_method": "Cost vs value tracking per operation type",
+      "value_types": [
+        "lead_scored",
+        "lead_qualified",
+        "email_generated",
+        "response_automated",
+        "insight_generated",
+        "document_processed",
+        "task_automated",
+        "prediction_made",
+        "recommendation_made"
+      ]
+    },
+    "latency_slo": {
+      "name": "AI Latency SLO",
+      "target": {
+        "p95": "< 2000ms",
+        "p99": "< 5000ms"
+      },
+      "target_p95_ms": 2000,
+      "target_p99_ms": 5000,
+      "current_p95_ms": null,
+      "current_p99_ms": null,
+      "unit": "milliseconds",
+      "status": "tracking",
+      "description": "Service Level Objective for AI operation latency",
+      "measurement_method": "Histogram percentile calculation with phase breakdown",
+      "phases_tracked": [
+        "queue_wait",
+        "preprocessing",
+        "model_inference",
+        "postprocessing",
+        "total"
+      ]
+    }
+  },
+  "monitoring_components": {
+    "drift_detector": {
+      "file": "apps/ai-worker/src/monitoring/drift-detector.ts",
+      "class": "DriftDetector",
+      "features": [
+        "Statistical drift detection using KS test",
+        "Population Stability Index (PSI) calculation",
+        "Configurable severity thresholds",
+        "Automatic baseline computation",
+        "Per-model and per-metric tracking",
+        "Prometheus metrics export"
+      ],
+      "exports": [
+        "DriftDetector",
+        "driftDetector",
+        "defaultDriftConfig",
+        "getDriftMetrics"
+      ]
+    },
+    "hallucination_checker": {
+      "file": "apps/ai-worker/src/monitoring/hallucination-checker.ts",
+      "class": "HallucinationChecker",
+      "features": [
+        "Multi-strategy hallucination detection",
+        "Entity validation against known database",
+        "Factual accuracy checking",
+        "Logical consistency analysis",
+        "Context drift detection",
+        "Numerical accuracy verification",
+        "KPI compliance tracking",
+        "Prometheus metrics export"
+      ],
+      "exports": [
+        "HallucinationChecker",
+        "hallucinationChecker",
+        "defaultHallucinationConfig",
+        "getHallucinationMetrics"
+      ]
+    },
+    "roi_tracker": {
+      "file": "apps/ai-worker/src/monitoring/roi-tracker.ts",
+      "class": "ROITracker",
+      "features": [
+        "Cost recording per AI operation",
+        "Value estimation by operation type",
+        "Token-based cost calculation",
+        "ROI trend analysis",
+        "Cost and value breakdown reports",
+        "Operation-level ROI calculation",
+        "Prometheus metrics export"
+      ],
+      "exports": [
+        "ROITracker",
+        "roiTracker",
+        "defaultROIConfig",
+        "getROIMetrics"
+      ]
+    },
+    "latency_monitor": {
+      "file": "apps/ai-worker/src/monitoring/latency-monitor.ts",
+      "class": "LatencyMonitor",
+      "features": [
+        "Operation timing with phase breakdown",
+        "Percentile calculation (P50, P75, P90, P95, P99)",
+        "SLO compliance tracking",
+        "Alert generation for violations",
+        "Trend analysis over time",
+        "Per-model and per-operation breakdown",
+        "Async operation wrapper",
+        "Prometheus metrics export"
+      ],
+      "exports": [
+        "LatencyMonitor",
+        "latencyMonitor",
+        "defaultLatencyConfig",
+        "getLatencyMetrics",
+        "withLatencyTracking"
+      ]
+    }
+  },
+  "infrastructure": {
+    "grafana_dashboard": {
+      "file": "infra/monitoring/ai-grafana-dashboard.json",
+      "panels": 19,
+      "refresh_rate": "30s",
+      "features": [
+        "Drift detection status",
+        "Hallucination rate tracking",
+        "ROI visualization",
+        "Latency percentiles",
+        "SLO compliance",
+        "Cost and value breakdown",
+        "Model-specific metrics",
+        "Trend analysis charts"
+      ]
+    },
+    "prometheus_rules": {
+      "file": "infra/monitoring/ai-prometheus-rules.yaml",
+      "rule_groups": [
+        {
+          "name": "intelliflow.ai.drift",
+          "rules": 3,
+          "alerts": ["AIModelDriftDetected", "AIModelDriftHighSeverity", "AIModelDriftScoreCritical"]
+        },
+        {
+          "name": "intelliflow.ai.hallucination",
+          "rules": 4,
+          "alerts": ["AIHallucinationRateHigh", "AIHallucinationKPIViolation", "AIHallucinationRateCritical", "AIHallucinationByTypeSpike"]
+        },
+        {
+          "name": "intelliflow.ai.latency",
+          "rules": 6,
+          "alerts": ["AILatencyP95Exceeded", "AILatencyP99Exceeded", "AISLOViolation", "AILatencyByModelHigh", "AISuccessRateLow", "AISuccessRateCritical"]
+        },
+        {
+          "name": "intelliflow.ai.roi",
+          "rules": 4,
+          "alerts": ["AIROINegative", "AIROIBelowTarget", "AICostSpike", "AICostBudgetWarning"]
+        },
+        {
+          "name": "intelliflow.ai.operations",
+          "rules": 2,
+          "alerts": ["AIOperationsLow", "AIValueNotRecorded"]
+        },
+        {
+          "name": "intelliflow.ai.model-health",
+          "rules": 2,
+          "alerts": ["AIModelHealthDegraded", "AIModelHealthCritical"]
+        }
+      ],
+      "total_alerts": 21
+    }
+  },
+  "prometheus_metrics": [
+    {
+      "name": "intelliflow_ai_drift_detected",
+      "type": "gauge",
+      "description": "Whether drift is detected (1=yes, 0=no)"
+    },
+    {
+      "name": "intelliflow_ai_drift_score",
+      "type": "gauge",
+      "labels": ["metric", "severity"],
+      "description": "Drift score by model and metric"
+    },
+    {
+      "name": "intelliflow_ai_hallucination_rate",
+      "type": "gauge",
+      "description": "Current hallucination rate (0-1)"
+    },
+    {
+      "name": "intelliflow_ai_hallucination_kpi_compliant",
+      "type": "gauge",
+      "description": "Whether rate is below 5% target"
+    },
+    {
+      "name": "intelliflow_ai_hallucination_by_type",
+      "type": "counter",
+      "labels": ["type"],
+      "description": "Hallucinations by type"
+    },
+    {
+      "name": "intelliflow_ai_roi_current",
+      "type": "gauge",
+      "description": "Current ROI percentage"
+    },
+    {
+      "name": "intelliflow_ai_total_cost",
+      "type": "gauge",
+      "description": "Total AI costs in USD"
+    },
+    {
+      "name": "intelliflow_ai_total_value",
+      "type": "gauge",
+      "description": "Total AI value generated in USD"
+    },
+    {
+      "name": "intelliflow_ai_cost_by_model",
+      "type": "gauge",
+      "labels": ["model"],
+      "description": "AI cost by model in USD"
+    },
+    {
+      "name": "intelliflow_ai_latency_seconds",
+      "type": "histogram",
+      "description": "AI operation latency in seconds"
+    },
+    {
+      "name": "intelliflow_ai_latency_p95_ms",
+      "type": "gauge",
+      "description": "P95 latency in milliseconds"
+    },
+    {
+      "name": "intelliflow_ai_latency_p99_ms",
+      "type": "gauge",
+      "description": "P99 latency in milliseconds"
+    },
+    {
+      "name": "intelliflow_ai_slo_compliant",
+      "type": "gauge",
+      "labels": ["slo"],
+      "description": "SLO compliance status (1=compliant, 0=not)"
+    },
+    {
+      "name": "intelliflow_ai_success_rate",
+      "type": "gauge",
+      "description": "AI operation success rate (0-1)"
+    }
+  ],
+  "usage_examples": {
+    "drift_detection": [
+      "driftDetector.recordSample({ value: 0.85, timestamp: new Date(), model: 'gpt-4', metric: 'score_distribution' });",
+      "const result = driftDetector.detectDrift('gpt-4', 'score_distribution');",
+      "const metrics = getDriftMetrics();"
+    ],
+    "hallucination_checking": [
+      "const result = await hallucinationChecker.checkOutput({ id: 'op-1', model: 'gpt-4', inputContext: 'context', output: 'response', groundTruth: ['facts'] });",
+      "const stats = hallucinationChecker.getStats();",
+      "const metrics = getHallucinationMetrics();"
+    ],
+    "roi_tracking": [
+      "roiTracker.recordTokenUsage({ id: 'op-1', model: 'gpt-4', operationType: 'scoring', inputTokens: 100, outputTokens: 50 });",
+      "roiTracker.recordValueByType({ id: 'val-1', valueType: 'lead_scored', relatedCostIds: ['op-1'] });",
+      "const roi = roiTracker.calculateROI();"
+    ],
+    "latency_monitoring": [
+      "latencyMonitor.startOperation('op-1');",
+      "latencyMonitor.markPhase('op-1', 'model_inference');",
+      "latencyMonitor.completeOperation('op-1', { model: 'gpt-4', operationType: 'scoring', success: true });",
+      "const result = await withLatencyTracking('op-1', 'gpt-4', 'scoring', async () => await aiCall());"
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "1.0",
+  "taskId": "ENV-017-AI",
+  "generatedAt": "2025-12-19T00:00:00Z",
+  "description": "Sprint 0 integration test orchestration metadata (placeholder).",
+  "suites": [
+    {
+      "name": "unit",
+      "command": "pnpm run test:unit",
+      "required": true
+    },
+    {
+      "name": "integration",
+      "command": "pnpm run test:integration",
+      "required": false,
+      "notes": "Skips gracefully if services are unavailable."
+    },
+    {
+      "name": "e2e",
+      "command": "pnpm run test:e2e",
+      "required": false,
+      "notes": "Requires Playwright browsers and running web/api."
+    }
+  ]
+}
+

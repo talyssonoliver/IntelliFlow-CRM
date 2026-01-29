@@ -1,0 +1,124 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "IFC-006",
+  "section": "Validation",
+  "description": "PHASE-002: Supabase Integration Test",
+  "owner": "Backend Dev + DevOps (STOA-Automation)",
+  "implements": {
+    "flows": [
+      "FLOW-001"
+    ],
+    "description": "Implements authentication layer for FLOW-001 (Login + MFA)",
+    "verified_at": "2025-12-26T18:00:00Z"
+  },
+  "dependencies": {
+    "required": [
+      "IFC-003"
+    ],
+    "verified_at": "2026-01-29T01:33:17.621Z",
+    "all_satisfied": true,
+    "notes": "IFC-003 (tRPC API Foundation) completed - apps/api/src/trpc.ts exists and passes typecheck"
+  },
+  "status": "DONE",
+  "status_history": [
+    {
+      "status": "PLANNED",
+      "at": "2025-12-01T00:00:00Z"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "at": "2025-12-25T22:54:05Z"
+    },
+    {
+      "status": "DONE",
+      "at": "2025-12-26T14:30:00Z"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "at": "2025-12-26T18:30:00Z",
+      "reason": "Reverted for Sprint 4 flow verification - auth middleware connected to Supabase"
+    },
+    {
+      "status": "DONE",
+      "at": "2025-12-26T19:45:00Z",
+      "reason": "Re-validated: auth connected to Supabase, vector search working, all tests pass"
+    }
+  ],
+  "execution": {
+    "started_at": "2025-12-25T22:54:05Z",
+    "completed_at": "2025-12-26T14:30:00Z",
+    "duration_minutes": 936,
+    "executor": "claude-opus-4.5-matop",
+    "execution_log": "artifacts/reports/system-audit/20251225-225405-0e2cd590/"
+  },
+  "artifacts": {
+    "expected": [
+      "apps/api/src/lib/supabase.ts",
+      "apps/api/src/shared/auth-flow.test.ts",
+      "apps/api/src/shared/vector-search.test.ts"
+    ],
+    "note": "Artifact names updated from original spec to match actual implementation",
+    "created": [
+      "apps/api/src/lib/supabase.ts",
+      "apps/api/src/shared/auth-flow.test.ts",
+      "apps/api/src/shared/vector-search.test.ts"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "executed_at": "2025-12-26T14:25:00Z",
+      "duration_ms": 135880,
+      "passed": true,
+      "command": "pnpm test",
+      "name": "test_suite",
+      "exit_code": 0,
+      "details": {
+        "tests_passed": 2577,
+        "tests_skipped": 23,
+        "tests_failed": 0
+      },
+      "timestamp": "2025-12-26T14:30:00.000Z"
+    },
+    {
+      "executed_at": "2025-12-26T14:20:00Z",
+      "passed": true,
+      "command": "pnpm turbo typecheck",
+      "name": "typecheck",
+      "exit_code": 0,
+      "timestamp": "2025-12-26T14:30:00.000Z"
+    }
+  ],
+  "kpis": {
+    "auth_flow_complete": {
+      "target": true,
+      "actual": true,
+      "met": true,
+      "unit": "boolean",
+      "evidence": "signUp, signIn, signOut, verifyToken, getSession, getUser all implemented"
+    },
+    "vector_search_working": {
+      "target": true,
+      "actual": true,
+      "met": true,
+      "unit": "boolean",
+      "evidence": "searchLeadsByEmbedding, searchContactsByEmbedding implemented with pgvector"
+    }
+  },
+  "context_verification": {
+    "run_id": "20251225-225405-0e2cd590",
+    "context_pack": "artifacts/context/20251225-225405-0e2cd590/IFC-006/context_pack.md",
+    "context_ack": "artifacts/context/20251225-225405-0e2cd590/IFC-006/context_ack.json",
+    "manifest": "artifacts/context/20251225-225405-0e2cd590/IFC-006/context_pack.manifest.json",
+    "verified": true,
+    "hash_match": true
+  },
+  "blockers": [],
+  "notes": "Full Supabase integration completed with auth helpers, real-time subscriptions, vector search, and storage helpers. All 2577 tests pass. pgvector working with 1536-dimension OpenAI embeddings. [2025-12-26 UPDATE] Auth middleware (apps/api/src/middleware/auth.ts) connected to Supabase verifyToken. Next.js 16 proxy (apps/web/proxy.ts) created for route protection.",
+  "completed_at": "2025-12-26T14:30:00.000Z",
+  "started_at": "2025-12-25T22:54:05.000Z",
+  "actual_duration_minutes": 936,
+  "dependencies_resolved": [
+    "IFC-003"
+  ]
+}

@@ -1,6 +1,8 @@
 # Supabase Integration for IntelliFlow CRM
 
-This directory contains all Supabase-related configuration, migrations, RLS policies, storage configuration, and edge functions for the IntelliFlow CRM system.
+This directory contains all Supabase-related configuration, migrations, RLS
+policies, storage configuration, and edge functions for the IntelliFlow CRM
+system.
 
 ## Directory Structure
 
@@ -23,11 +25,13 @@ supabase/
 ## Prerequisites
 
 1. **Supabase CLI**
+
    ```bash
    npm install -g supabase
    ```
 
 2. **Deno Runtime** (for edge functions)
+
    ```bash
    # macOS/Linux
    curl -fsSL https://deno.land/x/install/install.sh | sh
@@ -43,7 +47,8 @@ supabase/
 
 ### 1. Local Development Setup
 
-Start Supabase locally with all services (Postgres, Auth, Storage, Edge Functions):
+Start Supabase locally with all services (Postgres, Auth, Storage, Edge
+Functions):
 
 ```bash
 # From project root
@@ -57,6 +62,7 @@ supabase start
 ```
 
 This will start:
+
 - PostgreSQL database on port `54322`
 - Supabase API on port `54321`
 - Supabase Studio (GUI) on port `54323`
@@ -154,6 +160,7 @@ supabase db execute -f infra/supabase/rls-policies.sql --project-ref YOUR_PROJEC
 ### 5. Configure Storage (Production)
 
 Use Supabase Dashboard:
+
 1. Go to Storage section
 2. Create buckets as defined in `storage-config.json`
 3. Apply RLS policies via SQL editor
@@ -214,6 +221,7 @@ SENDGRID_API_KEY=SG...
 The initial migration (`20250101000000_initial_schema.sql`) creates:
 
 ### Tables
+
 - `users` - System users with RBAC
 - `leads` - Lead management with AI scoring
 - `contacts` - Contact records
@@ -225,27 +233,32 @@ The initial migration (`20250101000000_initial_schema.sql`) creates:
 - `domain_events` - Event sourcing
 
 ### Extensions
+
 - `uuid-ossp` - UUID generation
 - `vector` - pgvector for AI embeddings (1536 dimensions)
 
 ### Key Features
+
 - **Vector Embeddings**: Semantic search for leads and contacts
 - **Automatic Timestamps**: `updatedAt` trigger on all tables
 - **Indexes**: Optimized for common queries
 - **Foreign Keys**: Referential integrity enforced
-- **Search Functions**: `search_leads_by_embedding()`, `search_contacts_by_embedding()`
+- **Search Functions**: `search_leads_by_embedding()`,
+  `search_contacts_by_embedding()`
 
 ## Row Level Security (RLS)
 
 RLS policies implement multi-tenant security with role-based access:
 
 ### Access Rules
+
 - **Users**: Can only view/edit their own data
 - **Managers**: Can view team members' data
 - **Admins**: Full access to all data
 - **Service Role**: Bypasses RLS (backend only)
 
 ### Helper Functions
+
 - `auth.user_id()` - Get current user ID from JWT
 - `auth.user_role()` - Get current user role
 - `auth.is_admin()` - Check if user is admin
@@ -303,22 +316,25 @@ RESET request.jwt.claims;
 // Upload file
 const { data, error } = await supabase.storage
   .from('documents')
-  .upload(`${userId}/contract.pdf`, file)
+  .upload(`${userId}/contract.pdf`, file);
 
 // Get public URL (for public buckets)
-const { data: { publicUrl } } = supabase.storage
-  .from('avatars')
-  .getPublicUrl('user-avatar.jpg')
+const {
+  data: { publicUrl },
+} = supabase.storage.from('avatars').getPublicUrl('user-avatar.jpg');
 
 // Get signed URL (for private buckets)
-const { data: { signedUrl } } = await supabase.storage
+const {
+  data: { signedUrl },
+} = await supabase.storage
   .from('documents')
-  .createSignedUrl('private-doc.pdf', 3600) // 1 hour
+  .createSignedUrl('private-doc.pdf', 3600); // 1 hour
 ```
 
 ## Edge Functions
 
-Edge functions run on Deno Deploy's global network. See `functions/README.md` for details.
+Edge functions run on Deno Deploy's global network. See `functions/README.md`
+for details.
 
 ### Available Functions
 
@@ -359,10 +375,12 @@ supabase db analyze --project-ref YOUR_PROJECT_REF
 ### Supabase Studio
 
 Access the web GUI:
+
 - Local: http://localhost:54323
 - Production: https://app.supabase.com
 
 Features:
+
 - Table editor
 - SQL editor
 - API documentation
@@ -377,16 +395,19 @@ IntelliFlow CRM uses Prisma as the ORM, with Supabase as the database provider.
 ### Workflow
 
 1. **Update Prisma Schema**
+
    ```bash
    # Edit packages/db/prisma/schema.prisma
    ```
 
 2. **Create Migration**
+
    ```bash
    pnpm run db:migrate:create
    ```
 
 3. **Apply to Supabase**
+
    ```bash
    # Local
    supabase db reset
@@ -418,16 +439,16 @@ DIRECT_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT_REF].supabase.co:5432/p
 
 ```typescript
 // ❌ NEVER do this in frontend
-const supabase = createClient(url, SERVICE_ROLE_KEY)
+const supabase = createClient(url, SERVICE_ROLE_KEY);
 
 // ✅ Use anon key in frontend
-const supabase = createClient(url, ANON_KEY)
+const supabase = createClient(url, ANON_KEY);
 
 // ✅ Use service role only in backend/edge functions
 const supabase = createClient(
-  Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-)
+  Deno.env.get('SUPABASE_URL')!,
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+);
 ```
 
 ### 2. Always Enable RLS
@@ -446,27 +467,24 @@ CREATE POLICY "policy_name" ON table_name
 
 ```typescript
 // Use Zod for validation
-import { z } from 'zod'
+import { z } from 'zod';
 
 const schema = z.object({
   email: z.string().email(),
-  name: z.string().min(1)
-})
+  name: z.string().min(1),
+});
 
-const validated = schema.parse(input)
+const validated = schema.parse(input);
 ```
 
 ### 4. Use Prepared Statements
 
 ```typescript
 // ✅ Parameterized query (safe)
-const { data } = await supabase
-  .from('users')
-  .select()
-  .eq('email', userEmail)
+const { data } = await supabase.from('users').select().eq('email', userEmail);
 
 // ❌ String concatenation (vulnerable)
-const query = `SELECT * FROM users WHERE email = '${userEmail}'`
+const query = `SELECT * FROM users WHERE email = '${userEmail}'`;
 ```
 
 ## Backup & Recovery
@@ -474,6 +492,7 @@ const query = `SELECT * FROM users WHERE email = '${userEmail}'`
 ### Automated Backups
 
 Supabase provides daily backups (retention varies by plan):
+
 - Free: None
 - Pro: 7 days
 - Team: 14 days
@@ -498,6 +517,7 @@ Available on Pro plan and above. Access via Supabase Dashboard.
 ### 1. Indexes
 
 All critical queries have indexes (defined in migration):
+
 - Foreign keys
 - Frequently filtered columns
 - Sort columns
@@ -505,6 +525,7 @@ All critical queries have indexes (defined in migration):
 ### 2. Connection Pooling
 
 Use connection pooling for serverless:
+
 ```bash
 DATABASE_URL="...?pgbouncer=true&connection_limit=1"
 ```
@@ -528,14 +549,16 @@ DATABASE_URL="...?pgbouncer=true&connection_limit=1"
 ### 4. Caching
 
 Use Supabase Realtime for reactive caching:
+
 ```typescript
 const channel = supabase
   .channel('db-changes')
-  .on('postgres_changes',
+  .on(
+    'postgres_changes',
     { event: '*', schema: 'public', table: 'leads' },
     (payload) => console.log(payload)
   )
-  .subscribe()
+  .subscribe();
 ```
 
 ## Troubleshooting
@@ -543,6 +566,7 @@ const channel = supabase
 ### Common Issues
 
 **1. Migration Failed**
+
 ```bash
 # Reset database
 supabase db reset
@@ -552,6 +576,7 @@ supabase migration revert
 ```
 
 **2. RLS Blocking Queries**
+
 ```bash
 # Check policies
 SELECT * FROM pg_policies WHERE tablename = 'your_table';
@@ -562,11 +587,13 @@ ALTER TABLE table_name DISABLE ROW LEVEL SECURITY;
 ```
 
 **3. Edge Function Timeout**
+
 - Reduce function complexity
 - Use background jobs for long tasks
 - Check logs for errors
 
 **4. Connection Pool Exhausted**
+
 ```bash
 # Increase pool size in config.toml
 [db.pooler]

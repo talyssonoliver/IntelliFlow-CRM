@@ -1,0 +1,15 @@
+{
+  "run_id": "sprint11-audit-20251231T165719-snukz9",
+  "sprint": 11,
+  "verdict": "PASS",
+  "passed": true,
+  "generated_at": "2025-12-31T16:57:24.269Z",
+  "summary": {
+    "total": 15,
+    "audited": 0,
+    "passed": 0,
+    "failed": 0,
+    "needs_human": 0
+  },
+  "blocking_issues_count": 0
+}

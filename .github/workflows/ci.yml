@@ -41,7 +41,7 @@ jobs:
         run: pnpm run lint
 
       - name: Format check
-        run: pnpm run format --check
+        run: pnpm run format:check
 
   typecheck:
     name: Type Check
@@ -89,13 +89,134 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./artifacts/coverage/coverage-report.json
+          files: ./artifacts/coverage/lcov.info
           fail_ci_if_error: false
+
+  # ==========================================
+  # IFC-131: Architecture Boundary Enforcement
+  # ==========================================
+  architecture:
+    name: Architecture Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install architecture test dependencies
+        run: cd tests/architecture && pnpm install --frozen-lockfile
+        continue-on-error: true
+
+      - name: Run architecture boundary tests
+        run: cd tests/architecture && pnpm test
+        id: arch-tests
+
+      - name: Architecture boundary check summary
+        if: always()
+        run: |
+          echo "## Architecture Boundary Enforcement" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Hexagonal Architecture Rules (IFC-131)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Layer | Can Depend On | Cannot Depend On |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|---------------|------------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Domain | (none) | Application, Adapters, Infrastructure |" >> $GITHUB_STEP_SUMMARY
+          echo "| Application | Domain | Adapters, Infrastructure |" >> $GITHUB_STEP_SUMMARY
+          echo "| Adapters | Domain, Application | (none - outer layer) |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.arch-tests.outcome }}" == "success" ]; then
+            echo ":white_check_mark: **All architecture boundary tests passed**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo ":x: **Architecture boundary violations detected!**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Please review the test output for details on which imports violate hexagonal architecture rules." >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # ==========================================
+  # Integration Tests with Database Services
+  # ==========================================
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [test]
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: intelliflow_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/intelliflow_test
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup database
+        run: |
+          pnpm --filter @intelliflow/db db:push
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/intelliflow_test
+
+      - name: Run integration tests
+        run: pnpm run test:integration
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/intelliflow_test
+          REDIS_URL: redis://localhost:6379
+
+      - name: Upload integration test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: integration-test-report
+          path: |
+            artifacts/coverage/
+            artifacts/reports/
+          retention-days: 7
 
   build:
     name: Build
     runs-on: ubuntu-latest
-    needs: [lint, typecheck, test]
+    needs: [lint, typecheck, test, architecture, integration]
     steps:
       - uses: actions/checkout@v4
 
@@ -151,6 +272,44 @@ jobs:
           path: ./
           base: ${{ github.event.repository.default_branch }}
           extra_args: --only-verified
+
+  plan-lint:
+    name: Sprint Plan Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: tools/plan/pyproject.toml
+
+      - name: Install plan-lint dependencies
+        run: |
+          cd tools/plan
+          pip install -e .
+
+      - name: Run plan linter (Sprint 0)
+        run: |
+          cd tools/plan
+          python -m src.adapters.cli lint --sprint 0 --verbose
+
+      - name: Run plan lint tests
+        run: |
+          cd tools/plan
+          python -m pytest tests/ -v --tb=short
+
+      - name: Upload lint reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: plan-lint-report
+          path: |
+            apps/project-tracker/docs/metrics/review-queue.json
+            artifacts/reports/plan-lint-report.json
+          retention-days: 30
 
   e2e:
     name: E2E Tests

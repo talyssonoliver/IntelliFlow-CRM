@@ -1,0 +1,14 @@
+# Optimization Loop Configuration
+# Created: 2025-12-21T08:36:22.737Z
+
+optimization:
+  enabled: true
+  review_cadence: weekly
+  metrics:
+    - deployment_frequency
+    - lead_time
+    - mttr
+    - change_failure_rate
+  ai_cost:
+    budget_alerts: true
+    optimization_suggestions: true

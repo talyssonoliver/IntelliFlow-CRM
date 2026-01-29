@@ -1,0 +1,447 @@
+{
+  "$schema": ".../schemas/connector-dashboard.schema.json",
+  "version": "1.0.0",
+  "title": "IntelliFlow CRM - Connector Status Dashboard",
+  "description": "Real-time monitoring dashboard for ERP, Payment, Email, and Messaging connectors",
+  "created_at": "2025-12-29T00:00:00.000Z",
+  "updated_at": "2025-12-29T00:00:00.000Z",
+  "refresh_interval_seconds": 30,
+  "connectors": {
+    "erp": {
+      "sap": {
+        "id": "erp-sap",
+        "name": "SAP ERP",
+        "type": "erp",
+        "provider": "sap",
+        "description": "SAP Business Suite integration for customer, order, invoice, and material sync",
+        "adapter_path": "packages/adapters/src/erp/sap/client.ts",
+        "api_base_url": "https://api.sap.com",
+        "documentation_url": "https://api.sap.com/",
+        "capabilities": [
+          "customer_sync",
+          "sales_order_management",
+          "invoice_retrieval",
+          "material_inventory",
+          "bidirectional_sync"
+        ],
+        "health_check": {
+          "enabled": true,
+          "endpoint": "/sap/opu/odata/sap/API_BUSINESS_PARTNER/$metadata",
+          "timeout_ms": 5000,
+          "expected_latency_ms": 1000,
+          "critical": false
+        },
+        "rate_limits": {
+          "requests_per_minute": 60,
+          "requests_per_hour": 1000,
+          "concurrent_connections": 10
+        },
+        "authentication": {
+          "type": "basic_with_csrf",
+          "token_refresh_enabled": true,
+          "session_timeout_minutes": 30
+        },
+        "metrics": {
+          "sync_success_rate": null,
+          "avg_latency_ms": null,
+          "last_sync_at": null,
+          "errors_last_24h": null
+        }
+      }
+    },
+    "payments": {
+      "stripe": {
+        "id": "payment-stripe",
+        "name": "Stripe",
+        "type": "payment",
+        "provider": "stripe",
+        "description": "Stripe payment processing for subscriptions, invoices, and one-time payments",
+        "adapter_path": "packages/adapters/src/payments/stripe/client.ts",
+        "api_base_url": "https://api.stripe.com/v1",
+        "documentation_url": "https://stripe.com/docs/api",
+        "capabilities": [
+          "payment_intents",
+          "subscriptions",
+          "invoicing",
+          "refunds",
+          "customer_management",
+          "webhook_events"
+        ],
+        "health_check": {
+          "enabled": true,
+          "endpoint": "/balance",
+          "timeout_ms": 5000,
+          "expected_latency_ms": 500,
+          "critical": true
+        },
+        "rate_limits": {
+          "requests_per_second": 100,
+          "requests_per_minute": 2500,
+          "concurrent_connections": 25
+        },
+        "authentication": {
+          "type": "api_key",
+          "header": "Authorization",
+          "prefix": "Bearer"
+        },
+        "metrics": {
+          "payment_success_rate": null,
+          "avg_processing_time_ms": null,
+          "daily_volume": null,
+          "refund_rate": null
+        }
+      },
+      "paypal": {
+        "id": "payment-paypal",
+        "name": "PayPal",
+        "type": "payment",
+        "provider": "paypal",
+        "description": "PayPal payment processing for orders, subscriptions, and refunds",
+        "adapter_path": "packages/adapters/src/payments/paypal/client.ts",
+        "api_base_url": "https://api-m.paypal.com",
+        "sandbox_url": "https://api-m.sandbox.paypal.com",
+        "documentation_url": "https://developer.paypal.com/docs/api/overview/",
+        "capabilities": [
+          "order_management",
+          "payment_capture",
+          "authorization",
+          "subscriptions",
+          "refunds",
+          "webhook_events"
+        ],
+        "health_check": {
+          "enabled": true,
+          "endpoint": "/v1/oauth2/token",
+          "timeout_ms": 5000,
+          "expected_latency_ms": 1000,
+          "critical": true
+        },
+        "rate_limits": {
+          "requests_per_second": 50,
+          "requests_per_minute": 1000,
+          "concurrent_connections": 20
+        },
+        "authentication": {
+          "type": "oauth2_client_credentials",
+          "token_endpoint": "/v1/oauth2/token",
+          "token_refresh_enabled": true
+        },
+        "metrics": {
+          "payment_success_rate": null,
+          "avg_processing_time_ms": null,
+          "daily_volume": null,
+          "dispute_rate": null
+        }
+      }
+    },
+    "email": {
+      "gmail": {
+        "id": "email-gmail",
+        "name": "Gmail",
+        "type": "email",
+        "provider": "google",
+        "description": "Gmail integration for sending, receiving, and managing emails",
+        "adapter_path": "packages/adapters/src/email/gmail/client.ts",
+        "api_base_url": "https://gmail.googleapis.com/gmail/v1",
+        "documentation_url": "https://developers.google.com/gmail/api/reference/rest",
+        "capabilities": [
+          "send_email",
+          "read_email",
+          "thread_management",
+          "label_management",
+          "draft_management",
+          "attachment_handling",
+          "search"
+        ],
+        "health_check": {
+          "enabled": true,
+          "endpoint": "/users/me/profile",
+          "timeout_ms": 5000,
+          "expected_latency_ms": 500,
+          "critical": false
+        },
+        "rate_limits": {
+          "requests_per_second": 10,
+          "requests_per_day": 1000000000,
+          "send_per_day": 2000,
+          "concurrent_connections": 10
+        },
+        "authentication": {
+          "type": "oauth2_authorization_code",
+          "scopes": [
+            "https://www.googleapis.com/auth/gmail.readonly",
+            "https://www.googleapis.com/auth/gmail.send",
+            "https://www.googleapis.com/auth/gmail.modify"
+          ],
+          "token_refresh_enabled": true
+        },
+        "metrics": {
+          "emails_sent_today": null,
+          "emails_received_today": null,
+          "avg_response_time_ms": null,
+          "delivery_rate": null
+        }
+      },
+      "outlook": {
+        "id": "email-outlook",
+        "name": "Outlook (Microsoft 365)",
+        "type": "email",
+        "provider": "microsoft",
+        "description": "Outlook/Microsoft 365 email integration via Microsoft Graph API",
+        "adapter_path": "packages/adapters/src/email/outlook/client.ts",
+        "api_base_url": "https://graph.microsoft.com/v1.0",
+        "documentation_url": "https://docs.microsoft.com/en-us/graph/api/overview",
+        "capabilities": [
+          "send_email",
+          "read_email",
+          "folder_management",
+          "category_management",
+          "draft_management",
+          "attachment_handling",
+          "search",
+          "flagging"
+        ],
+        "health_check": {
+          "enabled": true,
+          "endpoint": "/me",
+          "timeout_ms": 5000,
+          "expected_latency_ms": 500,
+          "critical": false
+        },
+        "rate_limits": {
+          "requests_per_second": 10000,
+          "requests_per_minute": 150,
+          "mailbox_concurrent_connections": 4,
+          "concurrent_connections": 20
+        },
+        "authentication": {
+          "type": "oauth2_authorization_code",
+          "scopes": [
+            "https://graph.microsoft.com/Mail.ReadWrite",
+            "https://graph.microsoft.com/Mail.Send"
+          ],
+          "token_refresh_enabled": true
+        },
+        "metrics": {
+          "emails_sent_today": null,
+          "emails_received_today": null,
+          "avg_response_time_ms": null,
+          "delivery_rate": null
+        }
+      }
+    },
+    "messaging": {
+      "slack": {
+        "id": "messaging-slack",
+        "name": "Slack",
+        "type": "messaging",
+        "provider": "slack",
+        "description": "Slack workspace integration for channels, messages, and notifications",
+        "adapter_path": "packages/adapters/src/messaging/slack/client.ts",
+        "api_base_url": "https://slack.com/api",
+        "documentation_url": "https://api.slack.com/web",
+        "capabilities": [
+          "send_message",
+          "channel_management",
+          "user_lookup",
+          "file_upload",
+          "reactions",
+          "threads",
+          "direct_messages",
+          "webhook_events"
+        ],
+        "health_check": {
+          "enabled": true,
+          "endpoint": "/auth.test",
+          "timeout_ms": 5000,
+          "expected_latency_ms": 500,
+          "critical": false
+        },
+        "rate_limits": {
+          "requests_per_minute": 60,
+          "tier1_per_minute": 1,
+          "tier2_per_minute": 20,
+          "tier3_per_minute": 50,
+          "tier4_per_minute": 100
+        },
+        "authentication": {
+          "type": "oauth2_bot_token",
+          "token_type": "xoxb",
+          "webhook_signing": true
+        },
+        "metrics": {
+          "messages_sent_today": null,
+          "channels_active": null,
+          "avg_response_time_ms": null,
+          "webhook_success_rate": null
+        }
+      },
+      "teams": {
+        "id": "messaging-teams",
+        "name": "Microsoft Teams",
+        "type": "messaging",
+        "provider": "microsoft",
+        "description": "Microsoft Teams integration for channels, chats, and team management",
+        "adapter_path": "packages/adapters/src/messaging/teams/client.ts",
+        "api_base_url": "https://graph.microsoft.com/v1.0",
+        "documentation_url": "https://docs.microsoft.com/en-us/graph/api/resources/teams-api-overview",
+        "capabilities": [
+          "send_message",
+          "channel_management",
+          "team_management",
+          "member_management",
+          "chat_management",
+          "file_sharing",
+          "mentions",
+          "reactions"
+        ],
+        "health_check": {
+          "enabled": true,
+          "endpoint": "/me",
+          "timeout_ms": 5000,
+          "expected_latency_ms": 500,
+          "critical": false
+        },
+        "rate_limits": {
+          "requests_per_second": 10000,
+          "requests_per_minute": 30,
+          "concurrent_connections": 20
+        },
+        "authentication": {
+          "type": "oauth2_client_credentials",
+          "scopes": [
+            "https://graph.microsoft.com/Team.ReadBasic.All",
+            "https://graph.microsoft.com/Channel.ReadBasic.All",
+            "https://graph.microsoft.com/ChannelMessage.Send"
+          ],
+          "token_refresh_enabled": true
+        },
+        "metrics": {
+          "messages_sent_today": null,
+          "teams_active": null,
+          "avg_response_time_ms": null,
+          "member_count": null
+        }
+      }
+    }
+  },
+  "dashboard_panels": [
+    {
+      "id": "health-overview",
+      "title": "Connector Health Overview",
+      "type": "status_grid",
+      "position": { "x": 0, "y": 0, "w": 12, "h": 2 },
+      "connectors": ["all"],
+      "display": {
+        "show_latency": true,
+        "show_last_check": true,
+        "show_error_count": true
+      }
+    },
+    {
+      "id": "payment-metrics",
+      "title": "Payment Processing",
+      "type": "metrics_chart",
+      "position": { "x": 0, "y": 2, "w": 6, "h": 3 },
+      "connectors": ["payment-stripe", "payment-paypal"],
+      "metrics": ["payment_success_rate", "daily_volume", "avg_processing_time_ms"],
+      "chart_type": "line",
+      "time_range": "24h"
+    },
+    {
+      "id": "email-metrics",
+      "title": "Email Activity",
+      "type": "metrics_chart",
+      "position": { "x": 6, "y": 2, "w": 6, "h": 3 },
+      "connectors": ["email-gmail", "email-outlook"],
+      "metrics": ["emails_sent_today", "emails_received_today", "delivery_rate"],
+      "chart_type": "bar",
+      "time_range": "24h"
+    },
+    {
+      "id": "messaging-activity",
+      "title": "Messaging Activity",
+      "type": "activity_feed",
+      "position": { "x": 0, "y": 5, "w": 6, "h": 3 },
+      "connectors": ["messaging-slack", "messaging-teams"],
+      "max_items": 10,
+      "show_timestamp": true
+    },
+    {
+      "id": "erp-sync-status",
+      "title": "ERP Sync Status",
+      "type": "sync_status",
+      "position": { "x": 6, "y": 5, "w": 6, "h": 3 },
+      "connectors": ["erp-sap"],
+      "entities": ["customers", "orders", "invoices", "materials"],
+      "show_last_sync": true,
+      "show_pending_count": true
+    },
+    {
+      "id": "rate-limit-monitor",
+      "title": "Rate Limit Usage",
+      "type": "gauge_grid",
+      "position": { "x": 0, "y": 8, "w": 12, "h": 2 },
+      "connectors": ["all"],
+      "metric": "rate_limit_usage_percent",
+      "thresholds": {
+        "warning": 70,
+        "critical": 90
+      }
+    }
+  ],
+  "alerts": [
+    {
+      "id": "connector-down",
+      "name": "Connector Unhealthy",
+      "description": "Alert when any connector health check fails",
+      "condition": {
+        "metric": "health_status",
+        "operator": "equals",
+        "value": "unhealthy"
+      },
+      "severity": "critical",
+      "channels": ["slack", "email"],
+      "cooldown_minutes": 5
+    },
+    {
+      "id": "high-latency",
+      "name": "High Latency",
+      "description": "Alert when connector latency exceeds threshold",
+      "condition": {
+        "metric": "avg_latency_ms",
+        "operator": "greater_than",
+        "value": 2000
+      },
+      "severity": "warning",
+      "channels": ["slack"],
+      "cooldown_minutes": 10
+    },
+    {
+      "id": "rate-limit-warning",
+      "name": "Rate Limit Warning",
+      "description": "Alert when approaching rate limits",
+      "condition": {
+        "metric": "rate_limit_usage_percent",
+        "operator": "greater_than",
+        "value": 80
+      },
+      "severity": "warning",
+      "channels": ["slack"],
+      "cooldown_minutes": 15
+    },
+    {
+      "id": "payment-failure-spike",
+      "name": "Payment Failure Spike",
+      "description": "Alert when payment failure rate increases",
+      "condition": {
+        "metric": "payment_failure_rate",
+        "operator": "greater_than",
+        "value": 5
+      },
+      "severity": "critical",
+      "channels": ["slack", "email", "pagerduty"],
+      "cooldown_minutes": 5
+    }
+  ]
+}

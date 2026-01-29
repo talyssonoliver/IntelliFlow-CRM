@@ -1,0 +1,3177 @@
+{
+  "counts": {
+    "by_status": {
+      "Backlog": 194,
+      "Completed": 119,
+      "Planned": 3
+    },
+    "total": 316
+  },
+  "generated_at": "2025-12-29T12:59:46+00:00",
+  "source": {
+    "path": "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv",
+    "type": "csv"
+  },
+  "tasks": [
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/command-test-results.csv;EVIDENCE:artifacts/attestations/AI-SETUP-001/context_ack.json",
+      "description": "Configure Claude Code with Custom Commands and Hooks",
+      "owner": "AI Specialist (STOA-Intelligence)",
+      "section": "AI Foundation",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "AI-SETUP-001",
+      "validation_method": "AUDIT:manual-review;VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/shared/copilot-instructions.md;ARTIFACT:artifacts/misc/team-licenses.csv;ARTIFACT:artifacts/misc/workflow-automation.yaml;EVIDENCE:artifacts/attestations/AI-SETUP-002/context_ack.json",
+      "description": "GitHub Copilot Enterprise Automation Setup",
+      "owner": "AI Specialist (STOA-Intelligence)",
+      "section": "AI Foundation",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "AI-SETUP-002",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/sandbox-security.json;ARTIFACT:artifacts/metrics/response-metrics.csv;ARTIFACT:apps/ai-worker/src/agents/base.agent.ts;ARTIFACT:apps/ai-worker/src/agents/base.agent.test.ts;ARTIFACT:apps/ai-worker/src/agents/crew.ts;ARTIFACT:apps/ai-worker/src/agents/crew.test.ts;ARTIFACT:apps/ai-worker/src/agents/qualification.agent.ts;ARTIFACT:apps/ai-worker/src/agents/qualification.agent.test.ts;ARTIFACT:apps/ai-worker/src/chains/embedding.chain.ts;ARTIFACT:apps/ai-worker/src/chains/embedding.chain.test.ts;ARTIFACT:apps/ai-worker/README.md;ARTIFACT:apps/ai-worker/QUICKSTART.md;ARTIFACT:apps/ai-worker/STRUCTURE.txt;EVIDENCE:artifacts/attestations/AI-SETUP-003/context_ack.json",
+      "description": "External AI Tools Integration (Codex, Jules)",
+      "owner": "AI Specialist (STOA-Intelligence)",
+      "section": "AI Foundation",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "AI-SETUP-003",
+      "validation_method": "VALIDATE:pnpm test;VALIDATE:pnpm test:integration;GATE:security-scan-pass"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/analytics/rfm-abc-spec.md; docs/analytics/event-taxonomy.md; docs/analytics/dashboards-requirements.md;EVIDENCE:artifacts/attestations/ANALYTICS-001/context_ack.json",
+      "description": "Customer Segmentation Spec (RFM + ABC) + Event Taxonomy",
+      "owner": "PM + DA (STOA-Foundation)",
+      "section": "Analytics & Segmentation",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "ANALYTICS-001",
+      "validation_method": "VALIDATE:pnpm lint"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/orchestration-config.yaml;ARTIFACT:artifacts/metrics/handoff-metrics.json;ARTIFACT:artifacts/logs/quality-gates.log;EVIDENCE:artifacts/attestations/AUTOMATION-001/context_ack.json",
+      "description": "Continuous AI Agent Coordination System",
+      "owner": "AI Specialist (STOA-Intelligence)",
+      "section": "AI Foundation",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "AUTOMATION-001",
+      "validation_method": "GATE:coverage-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/optimization-loop.yaml;ARTIFACT:artifacts/misc/roi-tracking.csv;ARTIFACT:artifacts/metrics/metrics-realtime.json;EVIDENCE:artifacts/attestations/AUTOMATION-002/context_ack.json",
+      "description": "AI Performance Dashboard and Optimization Loop",
+      "owner": "AI Specialist + Backend Dev (STOA-Intelligence)",
+      "section": "AI Foundation",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "AUTOMATION-002",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/company/brand/visual-identity.md; docs/company/brand/palette.tokens.json; docs/company/brand/typography.tokens.json; docs/company/brand/spacing.tokens.json;EVIDENCE:artifacts/attestations/BRAND-001/context_ack.json",
+      "description": "Visual Identity System (palette, typography, spacing, logo usage)",
+      "owner": "UX Designer + Frontend Dev (STOA-Domain)",
+      "section": "Brand & Design",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "BRAND-001",
+      "validation_method": "VALIDATE:pnpm lint;AUDIT:design-review;AUDIT:code-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/design-system/token-mapping.md; docs/design-system/theme-reference-spec.md; docs/design-system/token-naming.md;EVIDENCE:artifacts/attestations/BRAND-002/context_ack.json",
+      "description": "Design Tokens Integration Plan (Tailwind/shadcn theme mapping)",
+      "owner": "Frontend Dev + UX Designer (STOA-Domain)",
+      "section": "Design System",
+      "status": "Completed",
+      "target_sprint": "1",
+      "task_id": "BRAND-002",
+      "validation_method": "VALIDATE:pnpm lint"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/company/master-brief.md; docs/company/product/product-vision.md; docs/company/go-to-market/icp-personas.md; docs/company/messaging/tone-of-voice.md; docs/company/brand/visual-identity.md;EVIDENCE:artifacts/attestations/DOC-001/context_ack.json",
+      "description": "Company & Product Master Brief (single source of truth)",
+      "owner": "CEO + All Leads (STOA-Leadership)",
+      "section": "Strategy & Documentation",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "DOC-001",
+      "validation_method": "VALIDATE:pnpm lint"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/operations/engineering-playbook.md; docs/operations/quality-gates.md; docs/operations/pr-checklist.md; docs/operations/release-rollback.md;EVIDENCE:artifacts/attestations/ENG-OPS-001/context_ack.json",
+      "description": "Engineering Playbook (SDLC, PR rules, quality gates, release/rollback)",
+      "owner": "Tech Lead + DevOps + QA Lead (STOA-Quality)",
+      "section": "Engineering Operations",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "ENG-OPS-001",
+      "validation_method": "VALIDATE:pnpm lint"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:turbo.json;ARTIFACT:pnpm-workspace.yaml;ARTIFACT:apps/ai-worker/package.json;ARTIFACT:apps/ai-worker/tsconfig.json;ARTIFACT:apps/ai-worker/vitest.config.ts;ARTIFACT:apps/ai-worker/.env.example;ARTIFACT:apps/ai-worker/.eslintrc.js;ARTIFACT:apps/ai-worker/.gitignore;ARTIFACT:apps/api/package.json;ARTIFACT:apps/api/src/index.ts;ARTIFACT:apps/api/src/context.ts;EVIDENCE:artifacts/attestations/ENV-001-AI/context_ack.json",
+      "description": "Automated Monorepo Creation",
+      "owner": "Tech Lead + Claude Code (STOA-Automation)",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "ENV-001-AI",
+      "validation_method": "VALIDATE:pnpm build"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:.eslintrc.js;ARTIFACT:.prettierrc;ARTIFACT:artifacts/misc/commitlint.config.js;ARTIFACT:artifacts/misc/lint-results.json;EVIDENCE:artifacts/attestations/ENV-002-AI/context_ack.json",
+      "description": "Automated Development Tools Configuration",
+      "owner": "Backend Dev + AI Specialist (STOA-Intelligence)",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "ENV-002-AI",
+      "validation_method": "VALIDATE:pnpm lint"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docker-compose.yml;ARTIFACT:artifacts/misc/health-check.yaml;EVIDENCE:artifacts/attestations/ENV-003-AI/context_ack.json",
+      "description": "Docker Environment with Optimized Configuration",
+      "owner": "DevOps + Claude Code (STOA-Automation)",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "ENV-003-AI",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:supabase/config.toml;ARTIFACT:supabase/.gitignore;EVIDENCE:artifacts/attestations/ENV-004-AI/context_ack.json",
+      "description": "Supabase Integration with Automated Schema Design",
+      "owner": "Backend Dev + AI Agents (STOA-Intelligence)",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "ENV-004-AI",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:.github/workflows/ci.yml;ARTIFACT:.github/workflows/cd.yml;EVIDENCE:artifacts/attestations/ENV-005-AI/context_ack.json",
+      "description": "CI/CD Pipeline with Predictive Optimization",
+      "owner": "DevOps + Claude Code (STOA-Automation)",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "ENV-005-AI",
+      "validation_method": "AUDIT:manual-review;AUDIT:security-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:packages/db/prisma/schema.prisma;ARTIFACT:packages/db/prisma/seed.ts;EVIDENCE:artifacts/attestations/ENV-006-AI/context_ack.json",
+      "description": "Prisma Schema with Generated Optimizations",
+      "owner": "Backend Dev + Copilot (STOA-Automation)",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "ENV-006-AI",
+      "validation_method": "AUDIT:manual-review;VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/api/src/router.ts;ARTIFACT:apps/web/src/lib/trpc.ts;EVIDENCE:artifacts/attestations/ENV-007-AI/context_ack.json",
+      "description": "tRPC Setup with Automated Type Generation",
+      "owner": "Tech Lead + Claude Code (STOA-Automation)",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "ENV-007-AI",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/otel-config.yaml;ARTIFACT:artifacts/misc/anomaly-detection.json;ARTIFACT:artifacts/misc/self-healing-rules.yaml;EVIDENCE:artifacts/attestations/ENV-008-AI/context_ack.json",
+      "description": "Automated Observability with Predictive Monitoring",
+      "owner": "Backend Dev + AI Specialist (STOA-Intelligence)",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "ENV-008-AI",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "EVIDENCE:artifacts/attestations/ENV-009-AI/context_ack.json",
+      "description": "Frontend with Generated Components and Optimization",
+      "owner": "Frontend Dev + Claude Code (STOA-Automation)",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "ENV-009-AI",
+      "validation_method": "GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/coverage/index.html;EVIDENCE:artifacts/attestations/ENV-010-AI/context_ack.json",
+      "description": "Automated Test Generation and Automation",
+      "owner": "QA Lead + AI Testing Suite (STOA-Quality)",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "ENV-010-AI",
+      "validation_method": "VALIDATE:pnpm test;GATE:coverage-gte-90"
+    },
+    {
+      "artifacts_to_track": "EVIDENCE:artifacts/attestations/ENV-011-AI/context_ack.json",
+      "description": "LangChain Integration with Optimized Chains",
+      "owner": "AI Specialist + Claude Code (STOA-Intelligence)",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "ENV-011-AI",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/docusaurus.config.js;EVIDENCE:artifacts/attestations/ENV-012-AI/context_ack.json",
+      "description": "Documentation with Auto-Generation",
+      "owner": "Tech Writer + AI Agents (STOA-Intelligence)",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "ENV-012-AI",
+      "validation_method": "GATE:coverage-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/security-scan-results.json;ARTIFACT:artifacts/reports/compliance-report.md;ARTIFACT:artifacts/logs/patch-log.csv;EVIDENCE:artifacts/attestations/ENV-013-AI/context_ack.json",
+      "description": "Automated Security Implementation",
+      "owner": "Security Eng + AI Security Tools (STOA-Security)",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "ENV-013-AI",
+      "validation_method": "AUDIT:manual-review;AUDIT:security-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/profiling-results.json;ARTIFACT:artifacts/logs/optimization-log.csv;ARTIFACT:artifacts/misc/cache-config.yaml;EVIDENCE:artifacts/attestations/ENV-014-AI/context_ack.json",
+      "description": "Performance Optimization with AI Profiling",
+      "owner": "Performance Eng + AI Tools (STOA-Quality)",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "ENV-014-AI",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/rollout-config.json;ARTIFACT:artifacts/misc/ab-test-results.csv;ARTIFACT:artifacts/metrics/prediction-accuracy.json;EVIDENCE:artifacts/attestations/ENV-015-AI/context_ack.json",
+      "description": "AI-Managed Feature Flags with Predictive Rollout",
+      "owner": "Backend Dev + AI Agents (STOA-Intelligence)",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "ENV-015-AI",
+      "validation_method": "AUDIT:manual-review;VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/privacy-config.json;ARTIFACT:artifacts/metrics/insights-accuracy.csv;ARTIFACT:artifacts/reports/gdpr-compliance.md;EVIDENCE:artifacts/attestations/ENV-016-AI/context_ack.json",
+      "description": "Privacy-First Analytics with AI Insights",
+      "owner": "Frontend Dev + AI Analytics (STOA-Intelligence)",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "ENV-016-AI",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/test-orchestration.json;ARTIFACT:artifacts/logs/bug-fixes.log;ARTIFACT:artifacts/metrics/confidence-metrics.csv;EVIDENCE:artifacts/attestations/ENV-017-AI/context_ack.json",
+      "description": "Automated Integration Testing",
+      "owner": "All Teams + AI Orchestrator (STOA-Intelligence)",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "1",
+      "task_id": "ENV-017-AI",
+      "validation_method": "VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/velocity-prediction.json;ARTIFACT:artifacts/misc/capacity-model.csv;ARTIFACT:artifacts/reports/risk-matrix.md;EVIDENCE:artifacts/attestations/ENV-018-AI/context_ack.json",
+      "description": "Sprint Planning and Velocity Prediction",
+      "owner": "PM + AI Planning Tools (STOA-Intelligence)",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "1",
+      "task_id": "ENV-018-AI",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:infra/monitoring/otel-collector.yaml;ARTIFACT:infra/monitoring/tempo-config.yml;ARTIFACT:infra/monitoring/docker-compose.monitoring.yml;ARTIFACT:infra/monitoring/prometheus.yml;ARTIFACT:infra/monitoring/loki-config.yml;ARTIFACT:artifacts/monitoring-config-hashes.txt;ARTIFACT:docs/operations/monitoring-runbook.md;EVIDENCE:artifacts/attestations/EP-001-AI/context_ack.json",
+      "description": "EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline)",
+      "owner": "DevOps + Claude Code (STOA-Automation)",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "EP-001-AI",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/agent/setup-complete-checklist.md;ARTIFACT:artifacts/metrics/automation-metrics.json;ARTIFACT:artifacts/misc/pipeline-status.yaml;EVIDENCE:artifacts/attestations/EXC-INIT-001/context_ack.json",
+      "description": "Sprint 0 - Environment Setup with Agent Ecosystem",
+      "owner": "Tech Lead (STOA-Foundation)",
+      "section": "AI Foundation",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "EXC-INIT-001",
+      "validation_method": "VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/vault-config.yaml;EVIDENCE:artifacts/attestations/EXC-SEC-001/context_ack.json",
+      "description": "Implement Secrets Management (e.g., HashiCorp Vault) for API Keys (OpenAI, etc.).",
+      "owner": "Security Eng + DevOps (STOA-Security)",
+      "section": "AI Foundation",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "EXC-SEC-001",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/architecture/adr/000-template.md; docs/architecture/arp/000-template.md; docs/architecture/decision-workflow.md; docs/architecture/diagrams/README.md; docs/architecture/flowcharts/README.md;EVIDENCE:artifacts/attestations/GOV-001/context_ack.json",
+      "description": "Architecture Governance Pack (ADR + ARP templates, decision workflow, flowcharts)",
+      "owner": "Backend Dev + Architect (STOA-Domain)",
+      "section": "Architecture Governance",
+      "status": "Completed",
+      "target_sprint": "1",
+      "task_id": "GOV-001",
+      "validation_method": "VALIDATE:pnpm lint"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/company/go-to-market/icp.md; docs/company/go-to-market/personas.md; docs/company/go-to-market/objections.md;EVIDENCE:artifacts/attestations/GTM-001/context_ack.json",
+      "description": "ICP & Personas Pack (target customers, job stories, objections)",
+      "owner": "PM + Marketing (STOA-Foundation)",
+      "section": "Go-to-Market",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "GTM-001",
+      "validation_method": "VALIDATE:pnpm lint"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/company/messaging/positioning.md; docs/company/messaging/value-props.md; docs/company/messaging/copy-blocks.md; docs/company/messaging/cta-library.md;EVIDENCE:artifacts/attestations/GTM-002/context_ack.json",
+      "description": "Messaging Framework (positioning, value props, copy blocks)",
+      "owner": "PM + Marketing (STOA-Foundation)",
+      "section": "Go-to-Market",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "GTM-002",
+      "validation_method": "VALIDATE:pnpm lint;AUDIT:security-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/reports/business-case.md;ARTIFACT:artifacts/reports/swot-analysis.md;ARTIFACT:artifacts/reports/financial-model.md;ARTIFACT:docs/planning/ADR-000-feasibility.md;EVIDENCE:artifacts/attestations/IFC-000/context_ack.json",
+      "description": "IntelliFlow CRM Feasibility Assessment",
+      "owner": "CEO + CTO + CFO (STOA-Leadership)",
+      "section": "Planning",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "IFC-000",
+      "validation_method": "AUDIT:code-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/planning/adr/ADR-001-modern-stack.md;ARTIFACT:docs/planning/adr/ADR-001-modern-stack.md;ARTIFACT:artifacts/benchmarks/performance-benchmark.json;ARTIFACT:apps/project-tracker/docs/metrics/_global/flows/FLOW-001.md;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-001-validation.md;EVIDENCE:artifacts/attestations/IFC-001/context_ack.json",
+      "description": "PHASE-001: Technical Architecture Spike - Modern Stack",
+      "owner": "CTO + Tech Lead (STOA-Foundation)",
+      "section": "Validation",
+      "status": "Completed",
+      "target_sprint": "1",
+      "task_id": "IFC-001",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:packages/db/prisma/schema.prisma;ARTIFACT:docs/planning/DDD-context-map.puml;ARTIFACT:apps/project-tracker/docs/metrics/_global/flows/FLOW-001.md;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-001-validation.md;EVIDENCE:artifacts/attestations/IFC-002/context_ack.json",
+      "description": "PHASE-001: Domain Model Design (DDD)",
+      "owner": "Tech Lead + DA (STOA-Foundation)",
+      "section": "Validation",
+      "status": "Completed",
+      "target_sprint": "1",
+      "task_id": "IFC-002",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/api/src/trpc.ts;ARTIFACT:apps/api/src/shared/e2e-type-safety-test.ts;ARTIFACT:apps/api/src/shared/subscription-demo.ts;ARTIFACT:apps/api/README.md;ARTIFACT:apps/project-tracker/docs/metrics/_global/flows/FLOW-001.md;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-001-validation.md;EVIDENCE:artifacts/attestations/IFC-003/context_ack.json",
+      "description": "PHASE-001: tRPC API Foundation",
+      "owner": "DevOps + Backend Dev (STOA-Automation)",
+      "section": "Validation",
+      "status": "Completed",
+      "target_sprint": "1",
+      "task_id": "IFC-003",
+      "validation_method": "AUDIT:manual-review;VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/src/app/leads/(list)/new/page.tsx;ARTIFACT:artifacts/lighthouse/lighthouse-report.json;ARTIFACT:apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md;ARTIFACT:apps/project-tracker/docs/metrics/_global/flows/FLOW-003.md;EVIDENCE:artifacts/attestations/IFC-004/context_ack.json",
+      "description": "PHASE-002: Next.js 16.0.10 Lead Capture UI",
+      "owner": "Frontend Dev + UX (STOA-Domain)",
+      "section": "Validation",
+      "status": "Completed",
+      "target_sprint": "2",
+      "task_id": "IFC-004",
+      "validation_method": "VALIDATE:pnpm test;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/ai-worker/src/chains/scoring.chain.ts;ARTIFACT:apps/ai-worker/src/chains/scoring.chain.test.ts;ARTIFACT:apps/ai-worker/src/config/ai.config.ts;ARTIFACT:apps/ai-worker/src/prompts/index.ts;ARTIFACT:apps/ai-worker/src/prompts/scoring-system.txt;ARTIFACT:apps/ai-worker/src/prompts/scoring-user.txt;ARTIFACT:apps/ai-worker/src/types/index.ts;ARTIFACT:apps/ai-worker/src/utils/cost-tracker.ts;ARTIFACT:apps/ai-worker/src/utils/cost-tracker.test.ts;ARTIFACT:apps/ai-worker/src/utils/logger.ts;ARTIFACT:apps/ai-worker/src/utils/logger.test.ts;ARTIFACT:apps/ai-worker/src/utils/retry.ts;ARTIFACT:apps/ai-worker/src/utils/retry.test.ts;ARTIFACT:apps/ai-worker/src/index.ts;ARTIFACT:apps/ai-worker/src/examples/usage.ts;ARTIFACT:apps/api/src/shared/scoring-output-schema.zod.ts;ARTIFACT:apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md;EVIDENCE:artifacts/attestations/IFC-005/context_ack.json",
+      "description": "FLOW-002, FLOW-011: LangChain AI Scoring Prototype",
+      "owner": "AI Specialist + Backend Dev (STOA-Intelligence)",
+      "section": "Validation",
+      "status": "Completed",
+      "target_sprint": "2",
+      "task_id": "IFC-005",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/api/src/lib/supabase.ts;ARTIFACT:apps/api/src/shared/auth-flow.test.ts;ARTIFACT:apps/api/src/shared/vector-search.test.ts;ARTIFACT:apps/web/proxy.ts;ARTIFACT:apps/web/src/lib/session.ts;ARTIFACT:apps/api/src/middleware/auth.ts;ARTIFACT:apps/project-tracker/docs/metrics/_global/flows/FLOW-001.md;EVIDENCE:artifacts/attestations/IFC-006/context_ack.json",
+      "description": "PHASE-002: Supabase Integration Test",
+      "owner": "Backend Dev + DevOps (STOA-Automation)",
+      "section": "Validation",
+      "status": "Completed",
+      "target_sprint": "3",
+      "task_id": "IFC-006",
+      "validation_method": "VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/k6/scripts/load-test.js;ARTIFACT:artifacts/benchmarks/performance-report.html;ARTIFACT:artifacts/misc/grafana-dashboard.json;ARTIFACT:artifacts/metrics/baseline-metrics.csv;ARTIFACT:apps/ai-worker/src/scripts/benchmark.ts;ARTIFACT:apps/project-tracker/docs/metrics/_global/flows/FLOW-003.md;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-003-validation.md;EVIDENCE:artifacts/attestations/IFC-007/context_ack.json",
+      "description": "PHASE-003: Performance Benchmarks - Modern Stack",
+      "owner": "Performance Eng + DevOps (STOA-Quality)",
+      "section": "Validation",
+      "status": "Completed",
+      "target_sprint": "3",
+      "task_id": "IFC-007",
+      "validation_method": "VALIDATE:pnpm test;GATE:p99-latency-check"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/reports/compliance-report.md;ARTIFACT:docs/security/owasp-checklist.md;ARTIFACT:docs/planning/iso42001-gap-analysis.md;ARTIFACT:artifacts/reports/zap-scan-report.json;ARTIFACT:apps/project-tracker/docs/metrics/_global/flows/FLOW-003.md;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-003-validation.md;EVIDENCE:artifacts/attestations/IFC-008/context_ack.json",
+      "description": "PHASE-003: Security Assessment - OWASP + ISO 42001 Prep",
+      "owner": "Security Eng + CTO (STOA-Security)",
+      "section": "Validation",
+      "status": "Completed",
+      "target_sprint": "2",
+      "task_id": "IFC-008",
+      "validation_method": "GATE:security-scan-pass"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/reports/team-skills-matrix.csv;ARTIFACT:docs/planning/training-plan.md;ARTIFACT:artifacts/misc/competency-test-results.csv;ARTIFACT:artifacts/reports/confidence-survey.md;ARTIFACT:apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md;EVIDENCE:artifacts/attestations/IFC-009/context_ack.json",
+      "description": "PHASE-002: Team Capability Assessment - Modern Stack (Next.js 16.0.10 App Router, Turbopack FS caching, Cache Components, proxy replacing middleware)",
+      "owner": "PM + Tech Lead (STOA-Foundation)",
+      "section": "Validation",
+      "status": "Completed",
+      "target_sprint": "4",
+      "task_id": "IFC-009",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/decision-gate-1.md;ARTIFACT:artifacts/reports/risk-assessment.csv;ARTIFACT:artifacts/reports/go-decision-minutes.md;ARTIFACT:artifacts/reports/budget-approval.md;EVIDENCE:artifacts/attestations/IFC-010/context_ack.json",
+      "description": "PHASE-001: Phase 1 Go/No-Go Decision",
+      "owner": "CEO + Leadership (STOA-Leadership)",
+      "section": "Decision Gate",
+      "status": "Completed",
+      "target_sprint": "6",
+      "task_id": "IFC-010",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/reports/supabase-usage-report.json;ARTIFACT:artifacts/reports/cost-projection.json;ARTIFACT:docs/shared/optimization-guide.md;ARTIFACT:artifacts/misc/upgrade-triggers.yaml;ARTIFACT:apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md;EVIDENCE:artifacts/attestations/IFC-011/context_ack.json",
+      "description": "PHASE-002: Supabase Free Tier Optimization",
+      "owner": "DevOps + PM (STOA-Automation)",
+      "section": "Parallel Track",
+      "status": "Completed",
+      "target_sprint": "3",
+      "task_id": "IFC-011",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/turbo.json;ARTIFACT:.github/workflows/ci.yml;ARTIFACT:artifacts/misc/pnpm-workspace.yaml;EVIDENCE:artifacts/attestations/IFC-012/context_ack.json",
+      "description": "PHASE-002: Turborepo Monorepo Setup",
+      "owner": "Tech Lead + Backend Dev (STOA-Domain)",
+      "section": "MVP Week 1",
+      "status": "Completed",
+      "target_sprint": "6",
+      "task_id": "IFC-012",
+      "validation_method": "VALIDATE:pnpm build"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/api/src/modules/lead/lead.router.ts;ARTIFACT:artifacts/misc/coverage/lcov-report/index.html;ARTIFACT:apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md;EVIDENCE:artifacts/attestations/IFC-013/context_ack.json",
+      "description": "PHASE-002: tRPC Router Implementation",
+      "owner": "Backend Dev + Tech Lead (STOA-Domain)",
+      "section": "MVP Week 1",
+      "status": "Completed",
+      "target_sprint": "6",
+      "task_id": "IFC-013",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/reports/web-vitals-report.json;ARTIFACT:artifacts/misc/axe-audit-results.json;ARTIFACT:apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md;EVIDENCE:artifacts/attestations/IFC-014/context_ack.json",
+      "description": "PHASE-002: Next.js 16.0.10 App Router UI",
+      "owner": "Frontend Dev + UX (STOA-Domain)",
+      "section": "MVP Week 1",
+      "status": "Completed",
+      "target_sprint": "7",
+      "task_id": "IFC-014",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/bull-board-screenshot.png;ARTIFACT:artifacts/metrics/job-metrics.json;ARTIFACT:packages/platform/src/queues/queue-factory.ts;ARTIFACT:packages/platform/src/queues/retry-strategy.ts;EVIDENCE:artifacts/attestations/IFC-015/context_ack.json",
+      "description": "PHASE-002: BullMQ Job Queue Setup",
+      "owner": "Backend Dev + DevOps (STOA-Automation)",
+      "section": "MVP Week 1",
+      "status": "Completed",
+      "target_sprint": "7",
+      "task_id": "IFC-015",
+      "validation_method": "VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/hooks/use-subscription.ts;ARTIFACT:apps/web/hooks/use-subscription.test.ts;ARTIFACT:artifacts/misc/websocket-test-results.json;EVIDENCE:artifacts/attestations/IFC-016/context_ack.json",
+      "description": "PHASE-002: Real-time Subscriptions",
+      "owner": "Frontend Dev + Backend Dev (STOA-Domain)",
+      "section": "MVP Week 1",
+      "status": "Completed",
+      "target_sprint": "7",
+      "task_id": "IFC-016",
+      "validation_method": "VALIDATE:pnpm test;GATE:latency-check"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:packages/db/src/client.ts;ARTIFACT:artifacts/benchmarks/query-performance.csv;ARTIFACT:artifacts/misc/pgvector-test.sql;ARTIFACT:apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md;EVIDENCE:artifacts/attestations/IFC-017/context_ack.json",
+      "description": "PHASE-002: Prisma + Supabase Data Layer",
+      "owner": "Backend Dev + DA (STOA-Domain)",
+      "section": "MVP Week 1",
+      "status": "Completed",
+      "target_sprint": "6",
+      "task_id": "IFC-017",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:vitest.config.ts;ARTIFACT:artifacts/misc/coverage/coverage-summary.json;ARTIFACT:artifacts/reports/test-report.html;ARTIFACT:artifacts/misc/ci-test-results.xml;EVIDENCE:artifacts/attestations/IFC-018/context_ack.json",
+      "description": "PHASE-002: Vitest Testing Suite",
+      "owner": "QA + Whole Team (STOA-Quality)",
+      "section": "MVP Week 1",
+      "status": "Completed",
+      "target_sprint": "7",
+      "task_id": "IFC-018",
+      "validation_method": "VALIDATE:pnpm test;GATE:coverage-gte-80;GATE:coverage-gte-90"
+    },
+    {
+      "artifacts_to_track": "SPEC:.specify/specifications/IFC-019.md;PLAN:.specify/planning/IFC-019.md;ARTIFACT:artifacts/misc/investment-gate-1-deck.md;ARTIFACT:artifacts/metrics/week-1-metrics.csv;ARTIFACT:artifacts/reports/roi-projection.md;ARTIFACT:artifacts/misc/cfo-approval.md;EVIDENCE:artifacts/attestations/IFC-019/context_ack.json",
+      "description": "PHASE-001: Gate 1 Review - \u00a3500 Investment",
+      "owner": "CFO + CEO (STOA-Leadership)",
+      "section": "Investment Gate",
+      "status": "Completed",
+      "target_sprint": "8",
+      "task_id": "IFC-019",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/ai-architecture.md;ARTIFACT:artifacts/misc/langchain-flow-diagram.mermaid;EVIDENCE:artifacts/attestations/IFC-020/context_ack.json",
+      "description": "PHASE-011: LangChain Pipeline Design",
+      "owner": "AI Specialist + Data Scientist (STOA-Intelligence)",
+      "section": "Intelligence",
+      "status": "Backlog",
+      "target_sprint": "12",
+      "task_id": "IFC-020",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/crew-config.yaml;ARTIFACT:artifacts/logs/agent-interaction-logs.json;ARTIFACT:apps/api/src/agent/orchestration-test.ts;EVIDENCE:artifacts/attestations/IFC-021/context_ack.json",
+      "description": "PHASE-011: CrewAI Agent Framework",
+      "owner": "Backend Dev + AI Specialist (STOA-Intelligence)",
+      "section": "Intelligence",
+      "status": "Backlog",
+      "target_sprint": "13",
+      "task_id": "IFC-021",
+      "validation_method": "VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/api/src/shared/output-validation-test.ts;ARTIFACT:artifacts/misc/confidence-calibration.json;EVIDENCE:artifacts/attestations/IFC-022/context_ack.json",
+      "description": "PHASE-011: Structured AI Output Implementation",
+      "owner": "AI Specialist + Backend Dev (STOA-Intelligence)",
+      "section": "Intelligence",
+      "status": "Backlog",
+      "target_sprint": "13",
+      "task_id": "IFC-022",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/reports/user-test-results.pdf;EVIDENCE:artifacts/attestations/IFC-023/context_ack.json",
+      "description": "PHASE-011: AI Explainability UI",
+      "owner": "Frontend Dev + UX (STOA-Domain)",
+      "section": "Intelligence",
+      "status": "Backlog",
+      "target_sprint": "13",
+      "task_id": "IFC-023",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/feedback-analytics.json;EVIDENCE:artifacts/attestations/IFC-024/context_ack.json",
+      "description": "PHASE-011: Human-in-the-Loop Feedback",
+      "owner": "Full Stack Dev (STOA-Foundation)",
+      "section": "Intelligence",
+      "status": "Backlog",
+      "target_sprint": "14",
+      "task_id": "IFC-024",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/ab-test-config.json;ARTIFACT:artifacts/misc/statistical-analysis.ipynb;ARTIFACT:artifacts/misc/experiment-dashboard.png;EVIDENCE:artifacts/attestations/IFC-025/context_ack.json",
+      "description": "PHASE-011: A/B Testing Framework",
+      "owner": "Data Scientist + Backend Dev (STOA-Intelligence)",
+      "section": "Intelligence",
+      "status": "Backlog",
+      "target_sprint": "14",
+      "task_id": "IFC-025",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/playwright-report/index.html;EVIDENCE:artifacts/attestations/IFC-026/context_ack.json",
+      "description": "PHASE-011: Playwright E2E Testing",
+      "owner": "QA + AI Specialist (STOA-Quality)",
+      "section": "Intelligence",
+      "status": "Backlog",
+      "target_sprint": "15",
+      "task_id": "IFC-026",
+      "validation_method": "VALIDATE:pnpm test:e2e"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/reports/investment-gate-2-analysis.xlsx;ARTIFACT:artifacts/reports/ai-roi-report.pdf;ARTIFACT:artifacts/misc/customer-feedback.docx;ARTIFACT:artifacts/misc/board-presentation.pptx;EVIDENCE:artifacts/attestations/IFC-027/context_ack.json",
+      "description": "PHASE-001: Gate 2 Review - \u00a32000 Investment",
+      "owner": "CFO + CEO (STOA-Leadership)",
+      "section": "Investment Gate",
+      "status": "Backlog",
+      "target_sprint": "15",
+      "task_id": "IFC-027",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/api/src/workflow/state-machine-tests.ts;ARTIFACT:artifacts/misc/workflow-ui-demo.mp4;EVIDENCE:artifacts/attestations/IFC-028/context_ack.json",
+      "description": "PHASE-005: Workflow Engine with LangGraph",
+      "owner": "Backend Dev + Architect (STOA-Domain)",
+      "section": "Automation",
+      "status": "Backlog",
+      "target_sprint": "16",
+      "task_id": "IFC-028",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/approval-workflow.bpmn;ARTIFACT:artifacts/metrics/response-quality-metrics.json;EVIDENCE:artifacts/attestations/IFC-029/context_ack.json",
+      "description": "PHASE-005: Auto-Response with Approval Gate",
+      "owner": "Backend Dev + AI Specialist (STOA-Intelligence)",
+      "section": "Automation",
+      "status": "Backlog",
+      "target_sprint": "16",
+      "task_id": "IFC-029",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/routing-rules-config.yaml;ARTIFACT:artifacts/misc/routing-simulation-results.csv;ARTIFACT:artifacts/reports/sla-compliance.pdf;EVIDENCE:artifacts/attestations/IFC-030/context_ack.json",
+      "description": "PHASE-005: Smart Lead Routing",
+      "owner": "Backend Dev + Sales Ops (STOA-Domain)",
+      "section": "Automation",
+      "status": "Backlog",
+      "target_sprint": "17",
+      "task_id": "IFC-030",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/usability-test-video.mp4;EVIDENCE:artifacts/attestations/IFC-031/context_ack.json",
+      "description": "PHASE-005: Workflow Builder UI (React Flow)",
+      "owner": "Frontend Dev + UX (STOA-Domain)",
+      "section": "Automation",
+      "status": "Backlog",
+      "target_sprint": "17",
+      "task_id": "IFC-031",
+      "validation_method": "VALIDATE:pnpm build"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/otel-collector-config.yaml;ARTIFACT:artifacts/misc/trace-examples.json;EVIDENCE:artifacts/attestations/IFC-032/context_ack.json",
+      "description": "PHASE-005: OpenTelemetry Monitoring",
+      "owner": "DevOps + SRE (STOA-Automation)",
+      "section": "Automation",
+      "status": "Backlog",
+      "target_sprint": "18",
+      "task_id": "IFC-032",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/reports/load-test-report.html;ARTIFACT:docs/shared/bottleneck-analysis.md;ARTIFACT:artifacts/misc/grafana-load-test.png;EVIDENCE:artifacts/attestations/IFC-033/context_ack.json",
+      "description": "PHASE-005: Load Testing with k6",
+      "owner": "Performance Eng + DevOps (STOA-Quality)",
+      "section": "Automation",
+      "status": "Backlog",
+      "target_sprint": "19",
+      "task_id": "IFC-033",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/reports/automation-roi-analysis.xlsx;ARTIFACT:artifacts/reports/stability-report.pdf;ARTIFACT:artifacts/misc/scale-plan.pptx;ARTIFACT:artifacts/misc/investment-recommendation.docx;EVIDENCE:artifacts/attestations/IFC-034/context_ack.json",
+      "description": "PHASE-001: Gate 3 Review - \u00a33000 Investment",
+      "owner": "CFO + CEO (STOA-Leadership)",
+      "section": "Investment Gate",
+      "status": "Backlog",
+      "target_sprint": "19",
+      "task_id": "IFC-034",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/shared/whatsapp-api-research.md;ARTIFACT:docs/shared/integration-design.puml;ARTIFACT:artifacts/reports/cost-analysis.xlsx;ARTIFACT:artifacts/misc/poc-results.json;EVIDENCE:artifacts/attestations/IFC-035/context_ack.json",
+      "description": "PHASE-006: WhatsApp Business API Research",
+      "owner": "Integration Eng + PM (STOA-Foundation)",
+      "section": "Enhancement",
+      "status": "Backlog",
+      "target_sprint": "20",
+      "task_id": "IFC-035",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/webhook-test-results.json;ARTIFACT:docs/shared/message-flow-diagram.svg;EVIDENCE:artifacts/attestations/IFC-036/context_ack.json",
+      "description": "PHASE-006: WhatsApp + tRPC Integration",
+      "owner": "Backend Dev + Integration Eng (STOA-Domain)",
+      "section": "Enhancement",
+      "status": "Backlog",
+      "target_sprint": "21",
+      "task_id": "IFC-036",
+      "validation_method": "VALIDATE:pnpm test;GATE:latency-check"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/figma-dashboard-designs.url;ARTIFACT:artifacts/misc/kpi-definitions.yaml;ARTIFACT:docs/dashboard/user-feedback-notes.md;ARTIFACT:artifacts/misc/design-tokens.json;EVIDENCE:artifacts/attestations/IFC-037/context_ack.json",
+      "description": "PHASE-005: Analytics Dashboard Design",
+      "owner": "Data Analyst + UX (STOA-Foundation)",
+      "section": "Enhancement",
+      "status": "Backlog",
+      "target_sprint": "21",
+      "task_id": "IFC-037",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/real-time-test-video.mp4;EVIDENCE:artifacts/attestations/IFC-038/context_ack.json",
+      "description": "Analytics Implementation",
+      "owner": "Frontend Dev + Data Eng (STOA-Domain)",
+      "section": "Enhancement",
+      "status": "Backlog",
+      "target_sprint": "22",
+      "task_id": "IFC-038",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/embeddings-quality-test.json;ARTIFACT:artifacts/metrics/sentiment-accuracy.csv;ARTIFACT:artifacts/misc/nba-demo.mp4;EVIDENCE:artifacts/attestations/IFC-039/context_ack.json",
+      "description": "Advanced AI Features (RAG)",
+      "owner": "AI Specialist + Full Team (STOA-Intelligence)",
+      "section": "Enhancement",
+      "status": "Backlog",
+      "target_sprint": "23",
+      "task_id": "IFC-039",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/shared/production-checklist.md;ARTIFACT:artifacts/reports/security-scan-final.pdf;ARTIFACT:artifacts/benchmarks/performance-baseline.json;ARTIFACT:docs/shared/monitoring-runbook.md;EVIDENCE:artifacts/attestations/IFC-040/context_ack.json",
+      "description": "Production Hardening",
+      "owner": "DevOps + Security (STOA-Security)",
+      "section": "Enhancement",
+      "status": "Backlog",
+      "target_sprint": "25",
+      "task_id": "IFC-040",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/codesandbox-examples.json;ARTIFACT:artifacts/coverage/feature-coverage-matrix.xlsx;EVIDENCE:artifacts/attestations/IFC-041/context_ack.json",
+      "description": "User Manual with Interactive Examples",
+      "owner": "Tech Writer + PM (STOA-Foundation)",
+      "section": "Documentation",
+      "status": "Backlog",
+      "target_sprint": "22",
+      "task_id": "IFC-041",
+      "validation_method": "GATE:coverage-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:packages/sdk/README.md;ARTIFACT:artifacts/misc/npm-publish-log.txt;ARTIFACT:artifacts/misc/autocomplete-demo.gif;ARTIFACT:apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md;EVIDENCE:artifacts/attestations/IFC-042/context_ack.json",
+      "description": "tRPC API Client SDK Docs",
+      "owner": "Backend Dev + Tech Writer (STOA-Domain)",
+      "section": "Documentation",
+      "status": "Backlog",
+      "target_sprint": "12",
+      "task_id": "IFC-042",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/operations/incident-response-flowchart.svg;ARTIFACT:docs/operations/deployment-checklist.md;ARTIFACT:artifacts/logs/rollback-test.log;EVIDENCE:artifacts/attestations/IFC-043/context_ack.json",
+      "description": "Operational runbooks (deploy, rollback, incident response, backup/restore, access requests)",
+      "owner": "DevOps + Tech Lead (STOA-Automation)",
+      "section": "Documentation",
+      "status": "Backlog",
+      "target_sprint": "25",
+      "task_id": "IFC-043",
+      "validation_method": "VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/coverage/index.html;ARTIFACT:artifacts/logs/test-execution-time.log;ARTIFACT:artifacts/metrics/tdd-compliance.csv;ARTIFACT:artifacts/reports/mutation-test.json;EVIDENCE:artifacts/attestations/IFC-044/context_ack.json",
+      "description": "Unit Tests (Vitest + TDD)",
+      "owner": "All Developers (STOA-Foundation)",
+      "section": "Testing",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "IFC-044",
+      "validation_method": "VALIDATE:pnpm test;GATE:coverage-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/coverage/integration-coverage.json;EVIDENCE:artifacts/attestations/IFC-045/context_ack.json",
+      "description": "Integration Tests (Vitest + MSW)",
+      "owner": "QA + Backend Dev (STOA-Quality)",
+      "section": "Testing",
+      "status": "Backlog",
+      "target_sprint": "14",
+      "task_id": "IFC-045",
+      "validation_method": "VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:.github/workflows/security.yml;ARTIFACT:artifacts/misc/zap-report.xml;ARTIFACT:artifacts/reports/snyk-report.json;ARTIFACT:docs/security/security-baseline.md;EVIDENCE:artifacts/attestations/IFC-046/context_ack.json",
+      "description": "Security Tests (OWASP ZAP + Snyk)",
+      "owner": "Security Eng + QA (STOA-Security)",
+      "section": "Testing",
+      "status": "Backlog",
+      "target_sprint": "23",
+      "task_id": "IFC-046",
+      "validation_method": "AUDIT:manual-review;AUDIT:security-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:.lighthouserc.js;ARTIFACT:artifacts/benchmarks/performance-budgets.json;ARTIFACT:artifacts/misc/regression-alerts.yaml;EVIDENCE:artifacts/attestations/IFC-047/context_ack.json",
+      "description": "Performance Tests (k6 + Lighthouse)",
+      "owner": "Performance Eng (STOA-Quality)",
+      "section": "Testing",
+      "status": "Backlog",
+      "target_sprint": "22",
+      "task_id": "IFC-047",
+      "validation_method": "GATE:p99-latency-check"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/reports/uat-test-scenarios.xlsx;ARTIFACT:artifacts/misc/uat-results.csv;ARTIFACT:docs/shared/feedback-action-items.md;EVIDENCE:artifacts/attestations/IFC-048/context_ack.json",
+      "description": "User Acceptance Testing",
+      "owner": "PM + Sales Team (STOA-Foundation)",
+      "section": "Testing",
+      "status": "Backlog",
+      "target_sprint": "25",
+      "task_id": "IFC-048",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/final-investment-review.pptx;ARTIFACT:artifacts/reports/market-validation.pdf;ARTIFACT:artifacts/reports/product-roadmap-2025.xlsx;ARTIFACT:artifacts/reports/board-resolution.pdf;EVIDENCE:artifacts/attestations/IFC-049/context_ack.json",
+      "description": "Gate 4 Review - \u00a35000 Investment",
+      "owner": "CEO + Board (STOA-Leadership)",
+      "section": "Investment Gate",
+      "status": "Backlog",
+      "target_sprint": "26",
+      "task_id": "IFC-049",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/team-quiz-results.csv;ARTIFACT:docs/shared/onboarding-checklist.md;ARTIFACT:artifacts/reports/launch-readiness.pdf;EVIDENCE:artifacts/attestations/IFC-050/context_ack.json",
+      "description": "Internal Launch Preparation",
+      "owner": "PM + Marketing (STOA-Foundation)",
+      "section": "Launch",
+      "status": "Backlog",
+      "target_sprint": "26",
+      "task_id": "IFC-050",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/shared/pilot-customer-criteria.md;ARTIFACT:artifacts/reports/expectations-matrix.xlsx;EVIDENCE:artifacts/attestations/IFC-051/context_ack.json",
+      "description": "Pilot Customer Selection",
+      "owner": "Sales + CEO (STOA-Leadership)",
+      "section": "Launch",
+      "status": "Backlog",
+      "target_sprint": "27",
+      "task_id": "IFC-051",
+      "validation_method": "AUDIT:manual-review;VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/deployment-log.txt;ARTIFACT:artifacts/misc/feature-flags-config.json;ARTIFACT:artifacts/misc/monitoring-dashboard.url;ARTIFACT:artifacts/logs/rollback-test.log;EVIDENCE:artifacts/attestations/IFC-052/context_ack.json",
+      "description": "Production Deployment",
+      "owner": "DevOps + Whole Team (STOA-Automation)",
+      "section": "Launch",
+      "status": "Backlog",
+      "target_sprint": "27",
+      "task_id": "IFC-052",
+      "validation_method": "VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/reports/hypercare-schedule.xlsx;ARTIFACT:artifacts/logs/incident-log.csv;ARTIFACT:artifacts/reports/response-time-report.pdf;ARTIFACT:artifacts/misc/uptime-dashboard.png;EVIDENCE:artifacts/attestations/IFC-053/context_ack.json",
+      "description": "Hypercare Period",
+      "owner": "Support Team + DevOps (STOA-Automation)",
+      "section": "Launch",
+      "status": "Backlog",
+      "target_sprint": "28",
+      "task_id": "IFC-053",
+      "validation_method": "GATE:response-time-check"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/metrics/complexity-metrics.json;ARTIFACT:docs/shared/refactoring-backlog.md;ARTIFACT:artifacts/misc/team-velocity.csv;EVIDENCE:artifacts/attestations/IFC-054/context_ack.json",
+      "description": "Technical Complexity Monitoring",
+      "owner": "CTO + Tech Lead (STOA-Foundation)",
+      "section": "Risk Mgmt",
+      "status": "Completed",
+      "target_sprint": "7",
+      "task_id": "IFC-054",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "SPEC:.specify/specifications/IFC-055.md;PLAN:.specify/planning/IFC-055.md;EVIDENCE:artifacts/attestations/IFC-055/context_pack.md;EVIDENCE:artifacts/attestations/IFC-055/context_ack.json;ARTIFACT:artifacts/reports/weekly-cost-report.csv;ARTIFACT:artifacts/misc/usage-alerts-config.yaml;ARTIFACT:docs/shared/cost-optimization-actions.md;ARTIFACT:artifacts/misc/invoice-tracker.csv",
+      "description": "Budget Tracking with FinOps",
+      "owner": "CFO + PM (STOA-Leadership)",
+      "section": "Risk Mgmt",
+      "status": "Completed",
+      "target_sprint": "8",
+      "task_id": "IFC-055",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/skill-assessment-results.csv;ARTIFACT:artifacts/reports/training-completion.csv;ARTIFACT:artifacts/reports/confidence-survey.md;EVIDENCE:artifacts/attestations/IFC-056/context_ack.json",
+      "description": "Team Upskilling Program",
+      "owner": "HR + Tech Lead (STOA-Foundation)",
+      "section": "Risk Mgmt",
+      "status": "Completed",
+      "target_sprint": "9",
+      "task_id": "IFC-056",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/shared/vendor-abstraction-layers.md;ARTIFACT:artifacts/misc/migration-test-plan.yaml;ARTIFACT:artifacts/logs/portability-test.log;ARTIFACT:artifacts/reports/alternatives.csv;EVIDENCE:artifacts/attestations/IFC-057/context_ack.json",
+      "description": "Vendor Lock-in Mitigation",
+      "owner": "PM + Tech Lead (STOA-Foundation)",
+      "section": "Risk Mgmt",
+      "status": "Completed",
+      "target_sprint": "9",
+      "task_id": "IFC-057",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/reports/gdpr-compliance-checklist.xlsx;ARTIFACT:artifacts/misc/audit-trail-test.json;EVIDENCE:artifacts/attestations/IFC-058/context_ack.json",
+      "description": "GDPR baseline controls: Supabase RLS policies, data minimisation, retention hooks",
+      "owner": "DPO + Legal (STOA-Foundation)",
+      "section": "Compliance",
+      "status": "Backlog",
+      "target_sprint": "11",
+      "task_id": "IFC-058",
+      "validation_method": "AUDIT:manual-review;AUDIT:security-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/reports/iso42001-assessment.pdf;ARTIFACT:docs/shared/ai-governance-framework.md;ARTIFACT:artifacts/misc/certification-roadmap.gantt;ARTIFACT:artifacts/reports/gap-remediation.xlsx;EVIDENCE:artifacts/attestations/IFC-059/context_ack.json",
+      "description": "ISO 42001 Readiness Assessment",
+      "owner": "External Auditor + CTO (STOA-Foundation)",
+      "section": "Compliance",
+      "status": "Backlog",
+      "target_sprint": "25",
+      "task_id": "IFC-059",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/metrics/success-metrics-dashboard.pdf;ARTIFACT:artifacts/reports/roi-calculation.xlsx;ARTIFACT:artifacts/misc/phase-2-proposal.pptx;ARTIFACT:docs/shared/lessons-learned.md;EVIDENCE:artifacts/attestations/IFC-060/context_ack.json",
+      "description": "Success Metrics Review",
+      "owner": "CEO + All Leads (STOA-Leadership)",
+      "section": "Success",
+      "status": "Backlog",
+      "target_sprint": "28",
+      "task_id": "IFC-060",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/reports/data-validation-report.csv;ARTIFACT:artifacts/misc/migration-log.txt;ARTIFACT:docs/shared/rollback-procedure.md;EVIDENCE:artifacts/attestations/IFC-070/context_ack.json",
+      "description": "Data Migration from Legacy",
+      "owner": "DA + DevOps (STOA-Automation)",
+      "section": "Migration",
+      "status": "Backlog",
+      "target_sprint": "18",
+      "task_id": "IFC-070",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/shared/multi-region-architecture.puml;ARTIFACT:artifacts/metrics/replication-lag-metrics.json;ARTIFACT:artifacts/reports/cost-comparison.xlsx;EVIDENCE:artifacts/attestations/IFC-071/context_ack.json",
+      "description": "Multi-Region Setup",
+      "owner": "DevOps + DBA (STOA-Automation)",
+      "section": "Resilience",
+      "status": "Backlog",
+      "target_sprint": "25",
+      "task_id": "IFC-071",
+      "validation_method": "VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/security/zero-trust-design.md;ARTIFACT:docs/security/pentest-summary.md;EVIDENCE:artifacts/attestations/IFC-072/context_ack.json",
+      "description": "PHASE-040: Zero Trust Security Model",
+      "owner": "Security Eng + CTO (STOA-Security)",
+      "section": "Security",
+      "status": "Completed",
+      "target_sprint": "2",
+      "task_id": "IFC-072",
+      "validation_method": "VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/reports/gdpr-compliance.md;ARTIFACT:artifacts/reports/risk-matrix.md;EVIDENCE:artifacts/attestations/IFC-073/context_ack.json",
+      "description": "PHASE-040: Privacy Impact Assessment",
+      "owner": "DPO + Legal (STOA-Foundation)",
+      "section": "Compliance",
+      "status": "Completed",
+      "target_sprint": "2",
+      "task_id": "IFC-073",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/sentry-project-config.json;ARTIFACT:artifacts/misc/correlation-test.csv;ARTIFACT:artifacts/misc/mttr-baseline.json;EVIDENCE:artifacts/attestations/IFC-074/context_ack.json",
+      "description": "PHASE-040: Full Stack Observability",
+      "owner": "SRE Lead + DevOps (STOA-Automation)",
+      "section": "Observability",
+      "status": "Completed",
+      "target_sprint": "1",
+      "task_id": "IFC-074",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:infra/terraform/modules/supabase/main.tf;ARTIFACT:artifacts/misc/drift-detection-config.yaml;ARTIFACT:artifacts/logs/destroy-rebuild-test.log;EVIDENCE:artifacts/attestations/IFC-075/context_ack.json",
+      "description": "IaC with Terraform",
+      "owner": "DevOps (STOA-Automation)",
+      "section": "Infrastructure",
+      "status": "Completed",
+      "target_sprint": "1",
+      "task_id": "IFC-075",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "SPEC:.specify/specifications/IFC-076.md;PLAN:.specify/planning/IFC-076.md;EVIDENCE:artifacts/attestations/IFC-076/context_pack.md;EVIDENCE:artifacts/attestations/IFC-076/context_ack.json;ARTIFACT:artifacts/misc/accessibility-audit.json;ARTIFACT:artifacts/misc/component-usage.csv",
+      "description": "Component Library (shadcn/ui)",
+      "owner": "Frontend Dev + UX (STOA-Domain)",
+      "section": "Quality",
+      "status": "Planned",
+      "target_sprint": "10",
+      "task_id": "IFC-076",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/api/src/middleware/rate-limit.ts;ARTIFACT:artifacts/misc/rate-limit-config.yaml;ARTIFACT:artifacts/misc/load-test-with-limits.json;ARTIFACT:artifacts/misc/false-positive.csv;ARTIFACT:apps/project-tracker/docs/metrics/_global/flows/FLOW-035.md;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-035-validation.md;EVIDENCE:artifacts/attestations/IFC-077/context_ack.json",
+      "description": "PHASE-035: API Rate Limiting (tRPC + Upstash)",
+      "owner": "Backend Dev + Security Eng (STOA-Security)",
+      "section": "Security",
+      "status": "Completed",
+      "target_sprint": "8",
+      "task_id": "IFC-077",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/metrics/self-service-metrics.json;ARTIFACT:artifacts/reports/satisfaction-survey.pdf;EVIDENCE:artifacts/attestations/IFC-078/context_ack.json",
+      "description": "Platform Engineering Foundation",
+      "owner": "DevOps + Tech Lead (STOA-Automation)",
+      "section": "Platform",
+      "status": "Backlog",
+      "target_sprint": "18",
+      "task_id": "IFC-078",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/docusaurus.config.js;ARTIFACT:docs/sidebars.js;ARTIFACT:.github/workflows/ci.yml;ARTIFACT:docs/search-index.json;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-041-validation.md;EVIDENCE:artifacts/attestations/IFC-079/context_ack.json",
+      "description": "PHASE-041: Docusaurus Setup",
+      "owner": "Tech Writer + DevOps (STOA-Automation)",
+      "section": "Documentation",
+      "status": "Completed",
+      "target_sprint": "7",
+      "task_id": "IFC-079",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/glossary.md;ARTIFACT:docs/templates/chunking-strategy.md;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-041-validation.md;EVIDENCE:artifacts/attestations/IFC-080/context_ack.json",
+      "description": "PHASE-041: LLM-Friendly Documentation Templates",
+      "owner": "Tech Writer + AI Specialist (STOA-Intelligence)",
+      "section": "Documentation",
+      "status": "Completed",
+      "target_sprint": "7",
+      "task_id": "IFC-080",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/api/openapi.json;ARTIFACT:artifacts/misc/postman-collection.json;ARTIFACT:apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md;EVIDENCE:artifacts/attestations/IFC-081/context_ack.json",
+      "description": "API Documentation (tRPC + OpenAPI)",
+      "owner": "Backend Dev + Tech Writer (STOA-Domain)",
+      "section": "Documentation",
+      "status": "Backlog",
+      "target_sprint": "12",
+      "task_id": "IFC-081",
+      "validation_method": "VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/knowledge-graph.json;ARTIFACT:docs/shared/context-map.puml;EVIDENCE:artifacts/attestations/IFC-082/context_ack.json",
+      "description": "Domain Knowledge Base",
+      "owner": "Tech Lead + Team (STOA-Foundation)",
+      "section": "Documentation",
+      "status": "Completed",
+      "target_sprint": "7",
+      "task_id": "IFC-082",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/rag-test-questions.json;ARTIFACT:artifacts/metrics/accuracy-evaluation.csv;ARTIFACT:artifacts/misc/response-time.png;EVIDENCE:artifacts/attestations/IFC-083/context_ack.json",
+      "description": "RAG Integration for Docs",
+      "owner": "AI Specialist + Tech Writer (STOA-Intelligence)",
+      "section": "Documentation",
+      "status": "Backlog",
+      "target_sprint": "23",
+      "task_id": "IFC-083",
+      "validation_method": "GATE:response-time-check"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/video-links.json;ARTIFACT:artifacts/misc/viewer-analytics.csv;ARTIFACT:docs/shared/feedback-summary.md;EVIDENCE:artifacts/attestations/IFC-084/context_ack.json",
+      "description": "Video Tutorials & Demos",
+      "owner": "Tech Writer + Marketing (STOA-Foundation)",
+      "section": "Documentation",
+      "status": "Backlog",
+      "target_sprint": "27",
+      "task_id": "IFC-084",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/ollama-setup.sh;ARTIFACT:artifacts/misc/model-comparison.csv;ARTIFACT:artifacts/reports/cost-savings-report.json;ARTIFACT:artifacts/benchmarks/accuracy-benchmarks.json;EVIDENCE:artifacts/attestations/IFC-085/context_ack.json",
+      "description": "PHASE-040: Ollama Local Development",
+      "owner": "AI Specialist + DevOps (STOA-Intelligence)",
+      "section": "AI/ML",
+      "status": "Completed",
+      "target_sprint": "2",
+      "task_id": "IFC-085",
+      "validation_method": "AUDIT:manual-review;VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/prompt-versions.json;ARTIFACT:artifacts/logs/rollback-test.log;ARTIFACT:artifacts/misc/ab-test-config.yaml;EVIDENCE:artifacts/attestations/IFC-086/context_ack.json",
+      "description": "Model Versioning with Zep",
+      "owner": "AI Specialist + Backend Dev (STOA-Intelligence)",
+      "section": "AI/ML",
+      "status": "Backlog",
+      "target_sprint": "14",
+      "task_id": "IFC-086",
+      "validation_method": "VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/benchmarks/edge-performance-map.json;ARTIFACT:artifacts/reports/cost-analysis-edge.xlsx;ARTIFACT:artifacts/misc/global-latency.csv;EVIDENCE:artifacts/attestations/IFC-087/context_ack.json",
+      "description": "Edge Functions Optimization",
+      "owner": "Frontend Dev + DevOps (STOA-Automation)",
+      "section": "Performance",
+      "status": "Backlog",
+      "target_sprint": "20",
+      "task_id": "IFC-087",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/sonarqube-project.properties;ARTIFACT:artifacts/misc/quality-gate-config.json;ARTIFACT:artifacts/reports/debt-trending.pdf;ARTIFACT:docs/shared/action-items.md;EVIDENCE:artifacts/attestations/IFC-088/context_ack.json",
+      "description": "Continuous Quality Metrics",
+      "owner": "QA Lead + PM (STOA-Quality)",
+      "section": "Quality",
+      "status": "Backlog",
+      "target_sprint": "14",
+      "task_id": "IFC-088",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/api/src/modules/contact/contact.router.ts;EVIDENCE:artifacts/attestations/IFC-089/context_ack.json",
+      "description": "FLOW-005-A, FLOW-006, FLOW-014, FLOW-010-A: Contacts Module - Create/Edit/Search",
+      "owner": "Frontend Dev + Backend Dev (STOA-Domain)",
+      "section": "Core CRM",
+      "status": "Completed",
+      "target_sprint": "5",
+      "task_id": "IFC-089",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/lighthouse/lighthouse-360-report.html;EVIDENCE:artifacts/attestations/IFC-090/context_ack.json",
+      "description": "Contact 360 Page - Full Detail View",
+      "owner": "Frontend Dev + UX Designer (STOA-Domain)",
+      "section": "Core CRM",
+      "status": "Completed",
+      "target_sprint": "6",
+      "task_id": "IFC-090",
+      "validation_method": "GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/api/src/modules/opportunity/opportunity.router.ts;EVIDENCE:artifacts/attestations/IFC-091/context_ack.json",
+      "description": "Deals Pipeline - Kanban Board",
+      "owner": "Frontend Dev + Backend Dev (STOA-Domain)",
+      "section": "Core CRM",
+      "status": "Completed",
+      "target_sprint": "6",
+      "task_id": "IFC-091",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/api/src/shared/forecast-algorithm.test.ts;ARTIFACT:artifacts/metrics/accuracy-backtest.csv;EVIDENCE:artifacts/attestations/IFC-092/context_ack.json",
+      "description": "Deal Forecasting & Reporting",
+      "owner": "Data Eng + Backend Dev (STOA-Domain)",
+      "section": "Core CRM",
+      "status": "Completed",
+      "target_sprint": "7",
+      "task_id": "IFC-092",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/lib/tickets/index.ts;ARTIFACT:apps/web/lib/tickets/sla-service.ts;ARTIFACT:apps/web/lib/tickets/sla-badge.tsx;ARTIFACT:apps/web/lib/tickets/sla-notifications.ts;ARTIFACT:apps/web/lib/tickets/sla-notification-test.ts;EVIDENCE:artifacts/attestations/IFC-093/context_ack.json",
+      "description": "Tickets Module - SLA Tracking",
+      "owner": "Backend Dev + Frontend Dev (STOA-Domain)",
+      "section": "Core CRM",
+      "status": "Completed",
+      "target_sprint": "7",
+      "task_id": "IFC-093",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "SPEC:.specify/specifications/IFC-094.md;PLAN:.specify/planning/IFC-094.md;EVIDENCE:artifacts/attestations/IFC-094/context_pack.md;EVIDENCE:artifacts/attestations/IFC-094/context_ack.json;ARTIFACT:artifacts/reports/e-signature-test.pdf",
+      "description": "Documents Management - Upload & Sign",
+      "owner": "Backend Dev + Integrations Eng (STOA-Domain)",
+      "section": "Core CRM",
+      "status": "Completed",
+      "target_sprint": "8",
+      "task_id": "IFC-094",
+      "validation_method": "AUDIT:code-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/model-evaluation.ipynb;EVIDENCE:artifacts/attestations/IFC-095/context_ack.json",
+      "description": "Churn Risk & Next Best Action",
+      "owner": "AI Specialist + Backend Dev (STOA-Intelligence)",
+      "section": "AI Insights",
+      "status": "Completed",
+      "target_sprint": "8",
+      "task_id": "IFC-095",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "EVIDENCE:artifacts/attestations/IFC-096/context_ack.json",
+      "description": "Custom Reports & Dashboards",
+      "owner": "Frontend Dev + Data Eng (STOA-Domain)",
+      "section": "Reports",
+      "status": "Completed",
+      "target_sprint": "9",
+      "task_id": "IFC-096",
+      "validation_method": "VALIDATE:pnpm build"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/coverage/trace-coverage-report.json;ARTIFACT:docs/shared/dashboard-catalog.md;EVIDENCE:artifacts/attestations/IFC-097/context_ack.json",
+      "description": "Distributed Tracing & Logging",
+      "owner": "DevOps + SRE (STOA-Automation)",
+      "section": "Ops & Observability",
+      "status": "Completed",
+      "target_sprint": "9",
+      "task_id": "IFC-097",
+      "validation_method": "GATE:coverage-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:packages/db/prisma/schema-audit.prisma;ARTIFACT:apps/api/src/security/index.ts;ARTIFACT:apps/api/src/security/audit-coverage-test.ts;EVIDENCE:artifacts/attestations/IFC-098/context_ack.json",
+      "description": "RBAC/ABAC & Audit Trail",
+      "owner": "Security Eng + Backend Dev (STOA-Security)",
+      "section": "Security",
+      "status": "Completed",
+      "target_sprint": "5",
+      "task_id": "IFC-098",
+      "validation_method": "VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/connector-status-dashboard.json;EVIDENCE:artifacts/attestations/IFC-099/context_ack.json",
+      "description": "ERP/Payment/Email Connectors",
+      "owner": "Integrations Eng + Backend Dev (STOA-Domain)",
+      "section": "Integrations",
+      "status": "Backlog",
+      "target_sprint": "10",
+      "task_id": "IFC-099",
+      "validation_method": "VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/shared/adr-index.md;ARTIFACT:artifacts/misc/compliance-dashboard-mockup.png;EVIDENCE:artifacts/attestations/IFC-100/context_ack.json",
+      "description": "ADR Registry & Compliance Reporting",
+      "owner": "PM + CTO (STOA-Foundation)",
+      "section": "Governance",
+      "status": "Backlog",
+      "target_sprint": "10",
+      "task_id": "IFC-100",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:packages/adapters/src/repositories/PrismaLeadRepository.ts;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-039-validation.md;EVIDENCE:artifacts/attestations/IFC-101/context_ack.json",
+      "description": "PHASE-039: Lead Aggregate and Value Objects",
+      "owner": "Backend Dev + Tech Lead (STOA-Domain)",
+      "section": "Validation",
+      "status": "Completed",
+      "target_sprint": "2",
+      "task_id": "IFC-101",
+      "validation_method": "VALIDATE:pnpm test;VALIDATE:pnpm test:integration;AUDIT:design-review;AUDIT:code-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:packages/adapters/src/repositories/PrismaContactRepository.ts;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-039-validation.md;EVIDENCE:artifacts/attestations/IFC-102/context_ack.json",
+      "description": "PHASE-039: Contact Aggregate and Value Objects",
+      "owner": "Backend Dev + Tech Lead (STOA-Domain)",
+      "section": "Validation",
+      "status": "Completed",
+      "target_sprint": "2",
+      "task_id": "IFC-102",
+      "validation_method": "VALIDATE:pnpm test;AUDIT:design-review;AUDIT:code-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:packages/adapters/src/repositories/PrismaAccountRepository.ts;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-039-validation.md;EVIDENCE:artifacts/attestations/IFC-103/context_ack.json",
+      "description": "PHASE-039: Account Aggregate and Value Objects",
+      "owner": "Backend Dev + Tech Lead (STOA-Domain)",
+      "section": "Validation",
+      "status": "Completed",
+      "target_sprint": "2",
+      "task_id": "IFC-103",
+      "validation_method": "VALIDATE:pnpm test;AUDIT:design-review;AUDIT:code-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:packages/adapters/src/repositories/PrismaOpportunityRepository.ts;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-039-validation.md;EVIDENCE:artifacts/attestations/IFC-104/context_ack.json",
+      "description": "PHASE-039: Opportunity Aggregate and Value Objects",
+      "owner": "Backend Dev + Tech Lead (STOA-Domain)",
+      "section": "Validation",
+      "status": "Completed",
+      "target_sprint": "3",
+      "task_id": "IFC-104",
+      "validation_method": "VALIDATE:pnpm test;AUDIT:design-review;AUDIT:code-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:packages/adapters/src/repositories/PrismaTaskRepository.ts;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-039-validation.md;EVIDENCE:artifacts/attestations/IFC-105/context_ack.json",
+      "description": "PHASE-039: Task Aggregate and Value Objects",
+      "owner": "Backend Dev + Tech Lead (STOA-Domain)",
+      "section": "Validation",
+      "status": "Completed",
+      "target_sprint": "3",
+      "task_id": "IFC-105",
+      "validation_method": "VALIDATE:pnpm test;AUDIT:design-review;AUDIT:code-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/architecture/hex-boundaries.md;ARTIFACT:docs/architecture/repo-layout.md;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-039-validation.md;EVIDENCE:artifacts/attestations/IFC-106/context_ack.json",
+      "description": "PHASE-039: Define Hexagonal module boundaries + create canonical packages/application + packages/adapters skeleton",
+      "owner": "Tech Lead + Backend Dev (STOA-Domain)",
+      "section": "Architecture",
+      "status": "Completed",
+      "target_sprint": "1",
+      "task_id": "IFC-106",
+      "validation_method": "VALIDATE:pnpm test;AUDIT:code-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-039-validation.md;EVIDENCE:artifacts/attestations/IFC-107/context_ack.json",
+      "description": "PHASE-039: Implement Repositories and Factories",
+      "owner": "Backend Dev (STOA-Domain)",
+      "section": "Infrastructure",
+      "status": "Completed",
+      "target_sprint": "3",
+      "task_id": "IFC-107",
+      "validation_method": "VALIDATE:pnpm test;VALIDATE:pnpm test:unit;GATE:coverage-gte-90"
+    },
+    {
+      "artifacts_to_track": "EVIDENCE:artifacts/attestations/IFC-108/context_ack.json",
+      "description": "Implement Domain Services & Business Logic",
+      "owner": "Backend Dev (STOA-Domain)",
+      "section": "Validation",
+      "status": "Completed",
+      "target_sprint": "4",
+      "task_id": "IFC-108",
+      "validation_method": "VALIDATE:pnpm test;VALIDATE:pnpm test:integration"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/tdd-guidelines.md;ARTIFACT:artifacts/misc/ci-coverage-config.yml;ARTIFACT:docs/shared/review-checklist.md;EVIDENCE:artifacts/attestations/IFC-109/context_ack.json",
+      "description": "Define TDD Process, Coverage & Review Checklist",
+      "owner": "QA Lead + Tech Lead (STOA-Quality)",
+      "section": "Testing",
+      "status": "Completed",
+      "target_sprint": "2",
+      "task_id": "IFC-109",
+      "validation_method": "GATE:coverage-gte-90;VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "EVIDENCE:artifacts/attestations/IFC-110/context_ack.json",
+      "description": "Write Unit & Integration Tests for Domain Entities",
+      "owner": "QA + Backend Dev (STOA-Quality)",
+      "section": "Testing",
+      "status": "Completed",
+      "target_sprint": "4",
+      "task_id": "IFC-110",
+      "validation_method": "VALIDATE:pnpm test;GATE:coverage-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/sonar-project.properties;ARTIFACT:artifacts/misc/ci-sonar.yml;ARTIFACT:docs/shared/sonar-dashboard.md;EVIDENCE:artifacts/attestations/IFC-111/context_ack.json",
+      "description": "Set up SonarQube and integrate static analysis into CI/CD",
+      "owner": "DevOps + QA Lead (STOA-Quality)",
+      "section": "Quality",
+      "status": "Completed",
+      "target_sprint": "5",
+      "task_id": "IFC-111",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/metrics/blue-green-metrics.csv;EVIDENCE:artifacts/attestations/IFC-112/context_ack.json",
+      "description": "Implement blue/green deployment and rollback strategy",
+      "owner": "DevOps (STOA-Automation)",
+      "section": "Infrastructure",
+      "status": "Completed",
+      "target_sprint": "5",
+      "task_id": "IFC-112",
+      "validation_method": "VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/vault-config.yml;ARTIFACT:docs/security/encryption-tests.md;EVIDENCE:artifacts/attestations/IFC-113/context_ack.json",
+      "description": "Implement secrets management and encryption at rest and in transit",
+      "owner": "Security Eng + DevOps (STOA-Security)",
+      "section": "Security",
+      "status": "Backlog",
+      "target_sprint": "10",
+      "task_id": "IFC-113",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/api/src/middleware/rate-limit.ts;ARTIFACT:artifacts/misc/waf-config.json;ARTIFACT:artifacts/misc/ddos-test-report.txt;EVIDENCE:artifacts/attestations/IFC-114/context_ack.json",
+      "description": "Implement API rate limiting and DDoS protection",
+      "owner": "Backend Dev + DevOps (STOA-Automation)",
+      "section": "Security",
+      "status": "Completed",
+      "target_sprint": "7",
+      "task_id": "IFC-114",
+      "validation_method": "VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/backup-scripts.sh;ARTIFACT:docs/shared/dr-plan.md;ARTIFACT:artifacts/reports/restore-test-report.csv;EVIDENCE:artifacts/attestations/IFC-115/context_ack.json",
+      "description": "Setup backups and disaster recovery plan",
+      "owner": "DevOps + DBA (STOA-Automation)",
+      "section": "Resilience",
+      "status": "Backlog",
+      "target_sprint": "25",
+      "task_id": "IFC-115",
+      "validation_method": "AUDIT:manual-review;VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/otel-config.yaml;ARTIFACT:docs/security/log-schema.md;ARTIFACT:artifacts/misc/dashboards.json;ARTIFACT:artifacts/misc/alert-rules.yml;EVIDENCE:artifacts/attestations/IFC-116/context_ack.json",
+      "description": "Instrument application with OpenTelemetry, unify logs, metrics and traces",
+      "owner": "DevOps + SRE (STOA-Automation)",
+      "section": "Observability",
+      "status": "Completed",
+      "target_sprint": "9",
+      "task_id": "IFC-116",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/metrics/ai-metrics.json;ARTIFACT:artifacts/misc/drift-dashboard.png;ARTIFACT:artifacts/misc/alert-config.yml;EVIDENCE:artifacts/attestations/IFC-117/context_ack.json",
+      "description": "Monitor AI models for drift, latency, hallucination and ROI",
+      "owner": "AI Specialist + SRE (STOA-Intelligence)",
+      "section": "AI Insights",
+      "status": "Backlog",
+      "target_sprint": "10",
+      "task_id": "IFC-117",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/reports/risk-register.xlsx;ARTIFACT:docs/shared/risk-mitigation-plan.md;ARTIFACT:docs/shared/risk-review-agenda.md;EVIDENCE:artifacts/attestations/IFC-118/context_ack.json",
+      "description": "Establish and maintain a risk register with mitigation actions",
+      "owner": "PM + Tech Lead (STOA-Foundation)",
+      "section": "Risk Mgmt",
+      "status": "Completed",
+      "target_sprint": "8",
+      "task_id": "IFC-118",
+      "validation_method": "AUDIT:code-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/ceremony-calendar.ics;ARTIFACT:artifacts/reports/retro-action-items.md;EVIDENCE:artifacts/attestations/IFC-119/context_ack.json",
+      "description": "Define recurring backlog refinement, sprint planning, review and retrospective ceremonies",
+      "owner": "Scrum Master + PM (STOA-Foundation)",
+      "section": "Planning",
+      "status": "Completed",
+      "target_sprint": "1",
+      "task_id": "IFC-119",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(auth)/reset/page.tsx;ARTIFACT:artifacts/misc/api/auth/reset.ts;ARTIFACT:artifacts/misc/email-templates/reset.html;ARTIFACT:apps/web/lib/shared/verification-mailer.ts;EVIDENCE:artifacts/attestations/IFC-120/context_ack.json",
+      "description": "Implement password reset and email verification flows",
+      "owner": "Frontend Dev + Backend Dev (STOA-Domain)",
+      "section": "Auth Pages",
+      "status": "Backlog",
+      "target_sprint": "14",
+      "task_id": "IFC-120",
+      "validation_method": "VALIDATE:pnpm test;VALIDATE:pnpm test:e2e"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/rotation-schedule.yaml;ARTIFACT:docs/security/dependency-scan-report.md;EVIDENCE:artifacts/attestations/IFC-121/context_ack.json",
+      "description": "Schedule periodic secret rotation and dependency vulnerability updates",
+      "owner": "DevOps + Security (STOA-Security)",
+      "section": "Security",
+      "status": "Backlog",
+      "target_sprint": "10",
+      "task_id": "IFC-121",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:packages/platform/src/resilience/circuit-breaker.ts;ARTIFACT:apps/api/src/shared/retry-policy.ts;ARTIFACT:tests/circuit-breaker.spec.ts;EVIDENCE:artifacts/attestations/IFC-122/context_ack.json",
+      "description": "Implement circuit breaker and retry policies for external service calls",
+      "owner": "Backend Dev (STOA-Domain)",
+      "section": "Resilience",
+      "status": "Completed",
+      "target_sprint": "7",
+      "task_id": "IFC-122",
+      "validation_method": "VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/api/src/shared/cache-config.ts;ARTIFACT:artifacts/benchmarks/performance-benchmarks.csv;ARTIFACT:docs/shared/cache-invalidation.md;EVIDENCE:artifacts/attestations/IFC-123/context_ack.json",
+      "description": "Design caching strategy (Redis/CDN) and tune Prisma queries",
+      "owner": "Backend Dev + SRE (STOA-Domain)",
+      "section": "Performance",
+      "status": "Backlog",
+      "target_sprint": "21",
+      "task_id": "IFC-123",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/api/src/shared/audit-encryption-module.ts;ARTIFACT:docs/shared/retention-policy.md;EVIDENCE:artifacts/attestations/IFC-124/context_ack.json",
+      "description": "Encrypt and aggregate audit logs; automate compliance reporting",
+      "owner": "Security Eng + Compliance (STOA-Security)",
+      "section": "Compliance",
+      "status": "Completed",
+      "target_sprint": "9",
+      "task_id": "IFC-124",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/api/src/shared/prompt-sanitizer.ts;ARTIFACT:artifacts/metrics/bias-metrics.csv;ARTIFACT:docs/shared/ai-guardrails-report.md;EVIDENCE:artifacts/attestations/IFC-125/context_ack.json",
+      "description": "Implement guardrails for prompt injection, data leakage, and monitor AI bias",
+      "owner": "AI Specialist + Security (STOA-Security)",
+      "section": "AI Foundation",
+      "status": "Backlog",
+      "target_sprint": "11",
+      "task_id": "IFC-125",
+      "validation_method": "VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/dev-guide.md;ARTIFACT:artifacts/misc/adr-index.csv;EVIDENCE:artifacts/attestations/IFC-126/context_ack.json",
+      "description": "Continuously maintain ADR registry and developer guide updates",
+      "owner": "Tech Writer + PM (STOA-Foundation)",
+      "section": "Documentation",
+      "status": "Backlog",
+      "target_sprint": "12",
+      "task_id": "IFC-126",
+      "validation_method": "AUDIT:code-review;GATE:coverage-gte-80"
+    },
+    {
+      "artifacts_to_track": "SPEC:.specify/specifications/IFC-127.md;PLAN:.specify/planning/IFC-127.md;EVIDENCE:artifacts/attestations/IFC-127/context_pack.md;EVIDENCE:artifacts/attestations/IFC-127/context_ack.json;ARTIFACT:infra/supabase/rls-policies.sql;ARTIFACT:apps/api/src/security/tenant-context.ts",
+      "description": "Implement tenant isolation at database and application layers",
+      "owner": "Backend Dev (STOA-Domain)",
+      "section": "Security",
+      "status": "Planned",
+      "target_sprint": "10",
+      "task_id": "IFC-127",
+      "validation_method": "VALIDATE:pnpm test;AUDIT:security-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/shared/ai-review-checklist.md;ARTIFACT:docs/shared/fallback-procedure.md;EVIDENCE:artifacts/attestations/IFC-128/context_ack.json",
+      "description": "Establish AI output review and manual fallback processes",
+      "owner": "QA Lead + Tech Lead (STOA-Quality)",
+      "section": "AI Foundation",
+      "status": "Completed",
+      "target_sprint": "3",
+      "task_id": "IFC-128",
+      "validation_method": "AUDIT:code-review;VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/coverage-reports/ui-coverage.html;EVIDENCE:artifacts/attestations/IFC-129/context_ack.json",
+      "description": "Write UI and contract tests for core pages and tRPC endpoints",
+      "owner": "QA + Frontend Dev (STOA-Quality)",
+      "section": "Testing",
+      "status": "Completed",
+      "target_sprint": "6",
+      "task_id": "IFC-129",
+      "validation_method": "VALIDATE:pnpm test;GATE:coverage-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/release/promotion-policy.md;ARTIFACT:.github/workflows/release.yml;ARTIFACT:docs/operations/runbooks/release-checklist.md;EVIDENCE:artifacts/attestations/IFC-130/context_ack.json",
+      "description": "Release governance: staging auto-deploy, promotion policy, quality/security gates, rollback criteria",
+      "owner": "DevOps Lead (STOA-Automation)",
+      "section": "Validation",
+      "status": "Completed",
+      "target_sprint": "5",
+      "task_id": "IFC-130",
+      "validation_method": "AUDIT:code-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/architecture/hex-boundaries.md;ARTIFACT:docs/planning/adr/ADR-010-architecture-boundary-enforcement.md;EVIDENCE:artifacts/attestations/IFC-131/context_ack.json",
+      "description": "Architecture boundary enforcement: domain/infrastructure dependency rules + architecture tests in CI",
+      "owner": "Tech Lead (STOA-Foundation)",
+      "section": "Foundation Setup",
+      "status": "Completed",
+      "target_sprint": "4",
+      "task_id": "IFC-131",
+      "validation_method": "AUDIT:code-review;VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:.github/workflows/security-sbom.yml;ARTIFACT:docs/security/supply-chain.md;EVIDENCE:artifacts/attestations/IFC-132/context_ack.json",
+      "description": "Supply chain security: dependency pinning + SBOM generation in CI (npm/pnpm + container)",
+      "owner": "Security Engineer + Backend Dev (STOA-Security)",
+      "section": "Security",
+      "status": "Completed",
+      "target_sprint": "6",
+      "task_id": "IFC-132",
+      "validation_method": "AUDIT:code-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/security/signing.md;ARTIFACT:.github/workflows/signing.yml;EVIDENCE:artifacts/attestations/IFC-133/context_ack.json",
+      "description": "Supply chain security: artifact signing + provenance for build outputs (images + releases)",
+      "owner": "Backend Dev (STOA-Domain)",
+      "section": "Security",
+      "status": "Completed",
+      "target_sprint": "7",
+      "task_id": "IFC-133",
+      "validation_method": "VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/security/image-scanning.md;ARTIFACT:.github/workflows/image-scan.yml;EVIDENCE:artifacts/attestations/IFC-134/context_ack.json",
+      "description": "Container/image scanning in CI and registry with fail-on-critical policy",
+      "owner": "Security Engineer (STOA-Security)",
+      "section": "Security",
+      "status": "Completed",
+      "target_sprint": "7",
+      "task_id": "IFC-134",
+      "validation_method": "AUDIT:manual-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/planning/adr/ADR-004-multi-tenancy.md;ARTIFACT:docs/planning/adr/ADR-005-workflow-engine.md;ARTIFACT:docs/planning/adr/ADR-006-agent-tools.md;ARTIFACT:docs/planning/adr/ADR-007-data-governance.md;ARTIFACT:docs/planning/adr/ADR-008-audit-logging.md;ARTIFACT:artifacts/misc/adr-index.csv;EVIDENCE:artifacts/attestations/IFC-135/context_ack.json",
+      "description": "Create ADR pack for multi-tenancy; workflow engine choice; agent tool-calling; data classification & retention; audit logging",
+      "owner": "Tech Lead + Architect (STOA-Foundation)",
+      "section": "Architecture",
+      "status": "Completed",
+      "target_sprint": "1",
+      "task_id": "IFC-135",
+      "validation_method": "AUDIT:code-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:packages/domain/src/legal/cases/Case.ts;ARTIFACT:packages/domain/src/legal/cases/CaseTask.ts;ARTIFACT:packages/db/prisma/migrations/case.sql;ARTIFACT:apps/api/src/modules/legal/cases.router.ts;EVIDENCE:artifacts/attestations/IFC-136/context_ack.json",
+      "description": "Implement Case/Matter aggregate root with tasks; deadlines; parties; lawyer assignments",
+      "owner": "Backend Dev + Domain Architect (STOA-Intelligence)",
+      "section": "Domain",
+      "status": "Completed",
+      "target_sprint": "3",
+      "task_id": "IFC-136",
+      "validation_method": "VALIDATE:pnpm test;VALIDATE:pnpm test:integration;AUDIT:code-review;GATE:coverage-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:packages/domain/src/legal/appointments/Appointment.ts;ARTIFACT:packages/application/src/usecases/scheduling/index.ts;ARTIFACT:apps/api/src/modules/legal/appointments.router.ts;EVIDENCE:artifacts/attestations/IFC-137/context_ack.json",
+      "description": "Develop Appointment aggregate with conflict detection; buffers; recurrence; linkage to cases and calendars",
+      "owner": "Backend Dev + Calendar Specialist (STOA-Domain)",
+      "section": "Scheduling",
+      "status": "Completed",
+      "target_sprint": "4",
+      "task_id": "IFC-137",
+      "validation_method": "VALIDATE:pnpm test;GATE:latency-check;GATE:coverage-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:packages/adapters/src/calendar/google/client.ts;ARTIFACT:packages/adapters/src/calendar/microsoft/client.ts;ARTIFACT:packages/adapters/src/calendar/shared/index.ts;ARTIFACT:artifacts/misc/webhooks-config.yaml;EVIDENCE:artifacts/attestations/IFC-138/context_ack.json",
+      "description": "Integrate external calendar providers (Google/Microsoft) with bidirectional sync; webhook handling; idempotency; reconciliation",
+      "owner": "Backend Dev + DevOps (STOA-Automation)",
+      "section": "Integration",
+      "status": "Completed",
+      "target_sprint": "5",
+      "task_id": "IFC-138",
+      "validation_method": "AUDIT:manual-review;VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/logs/agent-actions.log;ARTIFACT:apps/api/src/agent/approval-workflow.ts;ARTIFACT:apps/api/src/agent/authorization.ts;ARTIFACT:apps/api/src/agent/index.ts;ARTIFACT:apps/api/src/agent/logger.ts;ARTIFACT:apps/api/src/agent/types.ts;ARTIFACT:apps/api/src/agent/tools/create.ts;ARTIFACT:apps/api/src/agent/tools/draft-message.ts;ARTIFACT:apps/api/src/agent/tools/index.ts;ARTIFACT:apps/api/src/agent/tools/search.ts;ARTIFACT:apps/api/src/agent/tools/update.ts;ARTIFACT:apps/api/src/agent/__tests__/approval-workflow.test.ts;ARTIFACT:apps/api/src/agent/__tests__/authorization.test.ts;ARTIFACT:apps/api/src/agent/__tests__/logger.test.ts;ARTIFACT:apps/api/src/agent/__tests__/tools.test.ts;EVIDENCE:artifacts/attestations/IFC-139/context_ack.json",
+      "description": "Expose application services as agent tools and implement human approval flows with preview and rollback for high-risk actions",
+      "owner": "AI Specialist + Backend Dev (STOA-Intelligence)",
+      "section": "AI Assistant",
+      "status": "Completed",
+      "target_sprint": "6",
+      "task_id": "IFC-139",
+      "validation_method": "VALIDATE:pnpm test;AUDIT:manual-review;AUDIT:code-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/data-governance/dsar-process.md;ARTIFACT:docs/data-governance/retention-policy.md;ARTIFACT:artifacts/misc/kms-key-config.json;ARTIFACT:apps/api/src/workflow/dsar-workflow.ts;ARTIFACT:artifacts/misc/compliance-tests/data-governance.spec.ts;EVIDENCE:artifacts/attestations/IFC-140/context_ack.json",
+      "description": "Implement data governance workflows: DSAR requests; retention & legal hold policies; tenant-specific encryption key management; data residency compliance",
+      "owner": "Legal Ops + Security Eng (STOA-Security)",
+      "section": "Compliance",
+      "status": "Backlog",
+      "target_sprint": "11",
+      "task_id": "IFC-140",
+      "validation_method": "AUDIT:manual-review;VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "SPEC:.specify/specifications/IFC-141.md;PLAN:.specify/planning/IFC-141.md;EVIDENCE:artifacts/attestations/IFC-141/context_pack.md;EVIDENCE:artifacts/attestations/IFC-141/context_ack.json;ARTIFACT:docs/adr/adr-workflow-decision.md;ARTIFACT:artifacts/misc/events-spec.yaml",
+      "description": "Evaluate n8n; custom engine; and Temporal; document decision via ADR; build event-driven minimal rules engine and integrate selected workflow engine",
+      "owner": "Tech Lead + Backend Dev + Product Manager (STOA-Domain)",
+      "section": "Workflow",
+      "status": "Planned",
+      "target_sprint": "10",
+      "task_id": "IFC-141",
+      "validation_method": "VALIDATE:pnpm test;AUDIT:code-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/operations/slo-definitions.md;ARTIFACT:artifacts/misc/alerts-config.yaml;ARTIFACT:artifacts/misc/oncall-schedule.json;ARTIFACT:docs/operations/incident-runbook.md;ARTIFACT:docs/operations/restore-drill-report.md;ARTIFACT:artifacts/reports/cost-budget.xlsx;EVIDENCE:artifacts/attestations/IFC-142/context_ack.json",
+      "description": "Define SLOs/SLIs and alerting; establish on-call and incident management process; conduct restore drills; create capacity and cost budgets for AI inference and search",
+      "owner": "SRE Lead + DevOps + Finance (STOA-Automation)",
+      "section": "Operations",
+      "status": "Completed",
+      "target_sprint": "8",
+      "task_id": "IFC-142",
+      "validation_method": "AUDIT:code-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/security/threat-model.puml;ARTIFACT:docs/security/abuse-cases.md;ARTIFACT:artifacts/reports/pen-test-report.pdf;ARTIFACT:artifacts/logs/mitigation-backlog.csv;ARTIFACT:artifacts/misc/cookie-consent-component.tsx;EVIDENCE:artifacts/attestations/IFC-143/context_ack.json",
+      "description": "Perform threat modeling and abuse-case analysis for multi-tenancy and agent tool-calling; design mitigations; schedule penetration test; implement cookie consent mechanism",
+      "owner": "Security Lead + AI Specialist (STOA-Security)",
+      "section": "Security",
+      "status": "Backlog",
+      "target_sprint": "11",
+      "task_id": "IFC-143",
+      "validation_method": "VALIDATE:pnpm test;AUDIT:code-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:packages/adapters/src/messaging/email/outbound.ts;ARTIFACT:packages/adapters/src/messaging/email/inbound.ts;ARTIFACT:artifacts/misc/webhooks/framework.ts;ARTIFACT:artifacts/misc/api-spec/openapi-v1.yaml;EVIDENCE:artifacts/attestations/IFC-144/context_ack.json",
+      "description": "Design and implement inbound/outbound email flows: SPF/DKIM/DMARC; inbound parsing; attachments; implement general webhook handling with idempotency and retries; publish public API specification (OpenAPI) with versioning; baseline inbound email feature delivered",
+      "owner": "Integration Lead + Backend Dev (STOA-Domain)",
+      "section": "Integration",
+      "status": "Backlog",
+      "target_sprint": "10",
+      "task_id": "IFC-144",
+      "validation_method": "VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:scripts/migration/mapping.csv;ARTIFACT:scripts/migration/rehearsal-report.md;ARTIFACT:scripts/migration/cutover-plan.md;ARTIFACT:artifacts/misc/reconciliation-results.csv;EVIDENCE:artifacts/attestations/IFC-145/context_ack.json",
+      "description": "Plan and execute legacy system migration: discover and map data; assess data quality; design migration scripts; run rehearsals and reconciliation reporting; finalize cutover with rollback plan",
+      "owner": "Data Engineer + DBA + PM (STOA-Foundation)",
+      "section": "Migration",
+      "status": "Completed",
+      "target_sprint": "9",
+      "task_id": "IFC-145",
+      "validation_method": "VALIDATE:pnpm test;AUDIT:code-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/planning/prd-template.md;ARTIFACT:docs/planning/user-journey-template.md;ARTIFACT:docs/planning/definition-of-ready.md;ARTIFACT:artifacts/reports/traceability-matrix.md;ARTIFACT:artifacts/logs/backlog-updates-log.csv;EVIDENCE:artifacts/attestations/IFC-146/context_ack.json",
+      "description": "Define PRD and user journey templates; create Definition of Ready criteria; develop traceability matrix linking capabilities to domain services; APIs; UIs; and tests",
+      "owner": "Product Manager + Tech Lead (STOA-Foundation)",
+      "section": "Planning",
+      "status": "Completed",
+      "target_sprint": "2",
+      "task_id": "IFC-146",
+      "validation_method": "AUDIT:code-review;GATE:coverage-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/src/app/cases/timeline/page.tsx;ARTIFACT:packages/domain/src/legal/deadlines/deadline-engine.ts;ARTIFACT:apps/web/lib/cases/reminders-service.ts;EVIDENCE:artifacts/attestations/IFC-147/context_ack.json",
+      "description": "Develop Case timeline UI with deadline engine: display tasks; deadlines; events; implement deadline engine to compute legal deadlines and reminders; integrate with scheduling",
+      "owner": "Frontend Dev + Backend Dev (STOA-Domain)",
+      "section": "UI/Domain",
+      "status": "Completed",
+      "target_sprint": "5",
+      "task_id": "IFC-147",
+      "validation_method": "VALIDATE:pnpm test;AUDIT:code-review;GATE:coverage-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:packages/db/prisma/conversation.sql;ARTIFACT:apps/api/src/modules/conversation.ts;ARTIFACT:artifacts/misc/search/conversation-index.ts;ARTIFACT:artifacts/misc/data-retention-config.yaml;EVIDENCE:artifacts/attestations/IFC-148/context_ack.json",
+      "description": "Implement conversation record entity: store chat transcripts; tool calls; actions per case; enable search and retrieval; integrate audit logging and data retention policies",
+      "owner": "Backend Dev + AI Specialist (STOA-Intelligence)",
+      "section": "AI Assistant",
+      "status": "Backlog",
+      "target_sprint": "12",
+      "task_id": "IFC-148",
+      "validation_method": "VALIDATE:pnpm test;VALIDATE:pnpm test:integration"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/src/app/agent-approvals/preview/page.tsx;ARTIFACT:apps/web/src/lib/agent/index.ts;ARTIFACT:apps/web/src/lib/agent/rollback-service.ts;ARTIFACT:artifacts/misc/analytics/approvals-metrics.csv;EVIDENCE:artifacts/attestations/IFC-149/context_ack.json",
+      "description": "Implement action preview and rollback UI for agent-initiated changes; integrated with approval flows",
+      "owner": "Frontend Dev + AI Specialist (STOA-Intelligence)",
+      "section": "AI Assistant",
+      "status": "Completed",
+      "target_sprint": "6",
+      "task_id": "IFC-149",
+      "validation_method": "VALIDATE:pnpm test;AUDIT:code-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/events/contracts-v1.yaml;ARTIFACT:docs/shared/ADR-###-events.md;EVIDENCE:artifacts/attestations/IFC-150/context_ack.json",
+      "description": "Domain events infrastructure: event contracts + versioning + outbox pattern + idempotent publishing",
+      "owner": "Backend Dev + Architect (STOA-Domain)",
+      "section": "Platform",
+      "status": "Completed",
+      "target_sprint": "8",
+      "task_id": "IFC-150",
+      "validation_method": "VALIDATE:pnpm test;VALIDATE:pnpm test:integration"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/operations/runbooks/dlq-triage.md;EVIDENCE:artifacts/attestations/IFC-151/context_ack.json",
+      "description": "Event consumers framework: retries + DLQ + backoff + observability; standard webhook/idempotency utilities",
+      "owner": "Backend Dev + SRE (STOA-Domain)",
+      "section": "Platform",
+      "status": "Completed",
+      "target_sprint": "9",
+      "task_id": "IFC-151",
+      "validation_method": "VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:packages/domain/src/legal/cases/case-document.ts;ARTIFACT:packages/db/prisma/case-document.sql;ARTIFACT:apps/api/src/modules/crm/documents.router.ts;EVIDENCE:artifacts/attestations/IFC-152/context_ack.json",
+      "description": "Case document model: storage metadata, versioning, ACL mapping (tenant + case + role), and audit hooks",
+      "owner": "Backend Dev + Domain Architect (STOA-Intelligence)",
+      "section": "Case Docs",
+      "status": "Backlog",
+      "target_sprint": "11",
+      "task_id": "IFC-152",
+      "validation_method": "VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/operations/runbooks/ingestion.md;EVIDENCE:artifacts/attestations/IFC-153/context_ack.json",
+      "description": "Ingestion pipeline for case files: upload/email attachment intake, antivirus scan, metadata extraction, storage, and indexing triggers",
+      "owner": "Backend Dev + Integration Eng (STOA-Domain)",
+      "section": "Case Docs",
+      "status": "Backlog",
+      "target_sprint": "12",
+      "task_id": "IFC-153",
+      "validation_method": "VALIDATE:pnpm test:e2e"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/benchmarks/ocr-quality-benchmarks.csv;ARTIFACT:artifacts/misc/extracted-text-schema.json;EVIDENCE:artifacts/attestations/IFC-154/context_ack.json",
+      "description": "OCR + text extraction worker for scanned PDFs/images; normalized text artifacts stored for search and RAG",
+      "owner": "Backend Dev + AI Specialist (STOA-Intelligence)",
+      "section": "Case Docs",
+      "status": "Backlog",
+      "target_sprint": "12",
+      "task_id": "IFC-154",
+      "validation_method": "AUDIT:manual-review;VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:packages/search/retrieval.ts;ARTIFACT:artifacts/misc/relevance-eval.json;EVIDENCE:artifacts/attestations/IFC-155/context_ack.json",
+      "description": "Permissioned indexing for case documents and notes: full-text + embeddings with tenant/case ACL filters",
+      "owner": "Backend Dev + AI Specialist (STOA-Intelligence)",
+      "section": "Search/AI",
+      "status": "Backlog",
+      "target_sprint": "12",
+      "task_id": "IFC-155",
+      "validation_method": "VALIDATE:pnpm test;GATE:latency-check"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:packages/ai/tools/retrieve-case-context.ts;ARTIFACT:docs/agent/case-rag.md;EVIDENCE:artifacts/attestations/IFC-156/context_ack.json",
+      "description": "Case RAG tool: agent retrieval tool constrained by tenant/case permissions; citations + source trace; prompt-injection hardening for retrieved content",
+      "owner": "AI Specialist + Security (STOA-Security)",
+      "section": "AI Assistant",
+      "status": "Backlog",
+      "target_sprint": "13",
+      "task_id": "IFC-156",
+      "validation_method": "AUDIT:manual-review;VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/operations/runbooks/notifications.md;EVIDENCE:artifacts/attestations/IFC-157/context_ack.json",
+      "description": "Notification service MVP: unified delivery (in-app + email) with preference model (backend), templates, and audit logging",
+      "owner": "Backend Dev + SRE (STOA-Domain)",
+      "section": "Notifications",
+      "status": "Backlog",
+      "target_sprint": "11",
+      "task_id": "IFC-157",
+      "validation_method": "VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "EVIDENCE:artifacts/attestations/IFC-158/context_ack.json",
+      "description": "Scheduling communications: ICS invites, reschedule/cancel flows, reminders; integrated with notification service and calendar sync",
+      "owner": "Backend Dev + Calendar Specialist (STOA-Domain)",
+      "section": "Scheduling",
+      "status": "Backlog",
+      "target_sprint": "11",
+      "task_id": "IFC-158",
+      "validation_method": "VALIDATE:pnpm test:e2e"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/api/src/modules/misc/timeline.ts;ARTIFACT:apps/web/lib/documents/timeline-event-model.ts;EVIDENCE:artifacts/attestations/IFC-159/context_ack.json",
+      "description": "Case timeline enrichment: include documents/versions, communications (email/WhatsApp), and agent actions/approvals as timeline events",
+      "owner": "Frontend Dev + Backend Dev (STOA-Domain)",
+      "section": "UI/Domain",
+      "status": "Backlog",
+      "target_sprint": "13",
+      "task_id": "IFC-159",
+      "validation_method": "VALIDATE:pnpm test;VALIDATE:pnpm test:e2e"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/architecture/repo-layout.md;ARTIFACT:docs/architecture/artifact-conventions.md;ARTIFACT:tools/lint/artifact-paths.ts;ARTIFACT:.github/workflows/artifact-lint.yml;ARTIFACT:scripts/migration/artifact-move-map.csv;EVIDENCE:artifacts/attestations/IFC-160/context_ack.json",
+      "description": "Artifact path conventions + CI lint to prevent repo drift",
+      "owner": "Tech Lead + DevOps (STOA-Automation)",
+      "section": "Planning",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "IFC-160",
+      "validation_method": "VALIDATE:pnpm lint;AUDIT:code-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/workers/events-worker/src/main.ts;ARTIFACT:apps/workers/events-worker/src/outbox/pollOutbox.ts;ARTIFACT:apps/workers/ingestion-worker/src/main.ts;ARTIFACT:apps/workers/ingestion-worker/src/jobs/extractText.job.ts;ARTIFACT:apps/workers/notifications-worker/src/main.ts;ARTIFACT:apps/workers/notifications-worker/src/channels/email.ts;ARTIFACT:infra/monitoring/dashboards/workers.json;ARTIFACT:docs/operations/workers-runbook.md;EVIDENCE:artifacts/attestations/IFC-163/context_ack.json",
+      "description": "Standardize worker runtime under apps/workers (events, ingestion, notifications) with shared job framework, metrics, and deployment packaging",
+      "owner": "SRE Lead + Backend Dev (STOA-Domain)",
+      "section": "Platform",
+      "status": "Backlog",
+      "target_sprint": "13",
+      "task_id": "IFC-163",
+      "validation_method": "VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(public)/page.tsx;ARTIFACT:apps/web/app/(public)/loading.tsx;ARTIFACT:apps/web/app/(public)/error.tsx;ARTIFACT:artifacts/misc/seo-meta.json;EVIDENCE:artifacts/attestations/PG-001/context_ack.json",
+      "description": "Home Page",
+      "owner": "Growth FE (STOA-Foundation)",
+      "section": "Public Pages",
+      "status": "Backlog",
+      "target_sprint": "11",
+      "task_id": "PG-001",
+      "validation_method": "GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(public)/features/page.tsx;ARTIFACT:artifacts/misc/features-content.json;ARTIFACT:artifacts/misc/conversion-tracking.js;EVIDENCE:artifacts/attestations/PG-002/context_ack.json",
+      "description": "Features Page",
+      "owner": "Growth FE (STOA-Foundation)",
+      "section": "Public Pages",
+      "status": "Backlog",
+      "target_sprint": "11",
+      "task_id": "PG-002",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(public)/pricing/page.tsx;ARTIFACT:apps/web/components/pricing/pricing-calculator.tsx;ARTIFACT:apps/web/lib/pricing/stripe-integration.ts;EVIDENCE:artifacts/attestations/PG-003/context_ack.json",
+      "description": "Pricing Page",
+      "owner": "Growth FE (STOA-Foundation)",
+      "section": "Public Pages",
+      "status": "Backlog",
+      "target_sprint": "11",
+      "task_id": "PG-003",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(public)/about/page.tsx;ARTIFACT:artifacts/misc/team-data.json;ARTIFACT:docs/about/about-content.md;EVIDENCE:artifacts/attestations/PG-004/context_ack.json",
+      "description": "About Page",
+      "owner": "Growth FE (STOA-Foundation)",
+      "section": "Public Pages",
+      "status": "Backlog",
+      "target_sprint": "11",
+      "task_id": "PG-004",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(public)/contact/page.tsx;ARTIFACT:apps/web/components/shared/contact-form.tsx;ARTIFACT:apps/web/lib/shared/email-handler.ts;EVIDENCE:artifacts/attestations/PG-005/context_ack.json",
+      "description": "Contact Page",
+      "owner": "Growth FE (STOA-Foundation)",
+      "section": "Public Pages",
+      "status": "Backlog",
+      "target_sprint": "11",
+      "task_id": "PG-005",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(public)/partners/page.tsx;ARTIFACT:artifacts/misc/partner-benefits.json;EVIDENCE:artifacts/attestations/PG-006/context_ack.json",
+      "description": "Partners Page",
+      "owner": "Growth FE (STOA-Foundation)",
+      "section": "Public Pages",
+      "status": "Backlog",
+      "target_sprint": "11",
+      "task_id": "PG-006",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(public)/press/page.tsx;ARTIFACT:artifacts/misc/media-kit.zip;EVIDENCE:artifacts/attestations/PG-007/context_ack.json",
+      "description": "Press Page",
+      "owner": "Growth FE (STOA-Foundation)",
+      "section": "Public Pages",
+      "status": "Backlog",
+      "target_sprint": "11",
+      "task_id": "PG-007",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(public)/security/page.tsx;ARTIFACT:artifacts/misc/security-features.json;EVIDENCE:artifacts/attestations/PG-008/context_ack.json",
+      "description": "Security Page",
+      "owner": "Growth FE (STOA-Foundation)",
+      "section": "Public Pages",
+      "status": "Backlog",
+      "target_sprint": "11",
+      "task_id": "PG-008",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(public)/blog/page.tsx;ARTIFACT:apps/web/components/blog/blog-pagination.tsx;ARTIFACT:artifacts/logs/blog-categories.json;EVIDENCE:artifacts/attestations/PG-009/context_ack.json",
+      "description": "Blog Index",
+      "owner": "Growth FE (STOA-Foundation)",
+      "section": "Public Pages",
+      "status": "Backlog",
+      "target_sprint": "12",
+      "task_id": "PG-009",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(public)/blog/[slug]/page.tsx;ARTIFACT:apps/web/components/blog/markdown-renderer.tsx;ARTIFACT:apps/web/components/blog/comments-widget.tsx;EVIDENCE:artifacts/attestations/PG-010/context_ack.json",
+      "description": "Blog Post",
+      "owner": "Growth FE (STOA-Foundation)",
+      "section": "Public Pages",
+      "status": "Backlog",
+      "target_sprint": "12",
+      "task_id": "PG-010",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(public)/careers/page.tsx;ARTIFACT:artifacts/misc/job-listings.json;ARTIFACT:apps/web/components/shared/application-form.tsx;EVIDENCE:artifacts/attestations/PG-011/context_ack.json",
+      "description": "Careers Page",
+      "owner": "Growth FE (STOA-Foundation)",
+      "section": "Public Pages",
+      "status": "Backlog",
+      "target_sprint": "12",
+      "task_id": "PG-011",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(public)/careers/[id]/page.tsx;ARTIFACT:apps/web/components/shared/job-detail-template.tsx;ARTIFACT:apps/web/components/shared/apply-button.tsx;EVIDENCE:artifacts/attestations/PG-012/context_ack.json",
+      "description": "Career Detail",
+      "owner": "Growth FE (STOA-Foundation)",
+      "section": "Public Pages",
+      "status": "Backlog",
+      "target_sprint": "12",
+      "task_id": "PG-012",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(public)/lp/[slug]/page.tsx;ARTIFACT:apps/web/components/shared/landing-builder.tsx;ARTIFACT:apps/web/lib/shared/ab-test-framework.ts;EVIDENCE:artifacts/attestations/PG-013/context_ack.json",
+      "description": "Landing Page Template",
+      "owner": "Growth FE (STOA-Foundation)",
+      "section": "Marketing Pages",
+      "status": "Backlog",
+      "target_sprint": "12",
+      "task_id": "PG-013",
+      "validation_method": "VALIDATE:pnpm test;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(public)/status/page.tsx;ARTIFACT:apps/web/components/status/status-monitor.tsx;ARTIFACT:apps/web/lib/status/incident-tracker.ts;EVIDENCE:artifacts/attestations/PG-014/context_ack.json",
+      "description": "Status Page",
+      "owner": "Growth FE (STOA-Foundation)",
+      "section": "Public Pages",
+      "status": "Backlog",
+      "target_sprint": "12",
+      "task_id": "PG-014",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(auth)/login/page.tsx;ARTIFACT:apps/web/components/shared/auth-providers.tsx;ARTIFACT:apps/web/lib/shared/login-security.ts;EVIDENCE:artifacts/attestations/PG-015/context_ack.json",
+      "description": "Sign In",
+      "owner": "Platform FE (STOA-Foundation)",
+      "section": "Auth Pages",
+      "status": "Backlog",
+      "target_sprint": "13",
+      "task_id": "PG-015",
+      "validation_method": "VALIDATE:pnpm test;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(auth)/signup/page.tsx;ARTIFACT:apps/web/components/shared/registration-form.tsx;ARTIFACT:apps/web/lib/shared/welcome-email.ts;EVIDENCE:artifacts/attestations/PG-016/context_ack.json",
+      "description": "Sign Up",
+      "owner": "Platform FE (STOA-Foundation)",
+      "section": "Auth Pages",
+      "status": "Backlog",
+      "target_sprint": "13",
+      "task_id": "PG-016",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(auth)/signup/success/page.tsx;ARTIFACT:apps/web/components/shared/onboarding-flow.tsx;ARTIFACT:apps/web/lib/shared/tracking-pixel.ts;EVIDENCE:artifacts/attestations/PG-017/context_ack.json",
+      "description": "Sign Up Success",
+      "owner": "Platform FE (STOA-Foundation)",
+      "section": "Auth Pages",
+      "status": "Backlog",
+      "target_sprint": "13",
+      "task_id": "PG-017",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(auth)/logout/page.tsx;ARTIFACT:apps/web/lib/shared/session-cleanup.ts;ARTIFACT:apps/web/lib/shared/logout-redirect.ts;EVIDENCE:artifacts/attestations/PG-018/context_ack.json",
+      "description": "Logout",
+      "owner": "Platform FE (STOA-Foundation)",
+      "section": "Auth Pages",
+      "status": "Backlog",
+      "target_sprint": "13",
+      "task_id": "PG-018",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(auth)/forgot-password/page.tsx;ARTIFACT:apps/web/components/shared/reset-email.tsx;ARTIFACT:apps/web/lib/shared/reset-token.ts;EVIDENCE:artifacts/attestations/PG-019/context_ack.json",
+      "description": "Forgot Password",
+      "owner": "Platform FE (STOA-Foundation)",
+      "section": "Auth Pages",
+      "status": "Backlog",
+      "target_sprint": "13",
+      "task_id": "PG-019",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(auth)/reset-password/[token]/page.tsx;ARTIFACT:apps/web/components/shared/password-reset.tsx;ARTIFACT:apps/web/lib/shared/password-validation.ts;EVIDENCE:artifacts/attestations/PG-020/context_ack.json",
+      "description": "Reset Password",
+      "owner": "Platform FE (STOA-Foundation)",
+      "section": "Auth Pages",
+      "status": "Backlog",
+      "target_sprint": "13",
+      "task_id": "PG-020",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(auth)/mfa/setup/page.tsx;ARTIFACT:apps/web/components/shared/mfa-qr-generator.tsx;ARTIFACT:apps/web/lib/shared/backup-codes.ts;EVIDENCE:artifacts/attestations/PG-021/context_ack.json",
+      "description": "MFA Setup",
+      "owner": "Platform FE (STOA-Foundation)",
+      "section": "Auth Pages",
+      "status": "Backlog",
+      "target_sprint": "13",
+      "task_id": "PG-021",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(auth)/mfa/verify/page.tsx;ARTIFACT:apps/web/components/shared/mfa-verification.tsx;ARTIFACT:apps/web/lib/shared/code-validator.ts;EVIDENCE:artifacts/attestations/PG-022/context_ack.json",
+      "description": "MFA Verify",
+      "owner": "Platform FE (STOA-Foundation)",
+      "section": "Auth Pages",
+      "status": "Backlog",
+      "target_sprint": "13",
+      "task_id": "PG-022",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(auth)/verify-email/[token]/page.tsx;ARTIFACT:apps/web/components/shared/email-verification.tsx;ARTIFACT:apps/web/lib/shared/account-activation.ts;EVIDENCE:artifacts/attestations/PG-023/context_ack.json",
+      "description": "Email Verification",
+      "owner": "Platform FE (STOA-Foundation)",
+      "section": "Auth Pages",
+      "status": "Backlog",
+      "target_sprint": "13",
+      "task_id": "PG-023",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(auth)/auth/callback/page.tsx;ARTIFACT:apps/web/components/shared/oauth-callback.tsx;ARTIFACT:apps/web/lib/shared/token-exchange.ts;EVIDENCE:artifacts/attestations/PG-024/context_ack.json",
+      "description": "SSO Callback",
+      "owner": "Platform FE (STOA-Foundation)",
+      "section": "Auth Pages",
+      "status": "Backlog",
+      "target_sprint": "13",
+      "task_id": "PG-024",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(billing)/billing/page.tsx;ARTIFACT:apps/web/components/billing/billing-portal.tsx;ARTIFACT:apps/web/lib/billing/stripe-portal.ts;EVIDENCE:artifacts/attestations/PG-025/context_ack.json",
+      "description": "Billing Portal",
+      "owner": "Platform BE (STOA-Foundation)",
+      "section": "Billing Pages",
+      "status": "Backlog",
+      "target_sprint": "14",
+      "task_id": "PG-025",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(billing)/billing/checkout/page.tsx;ARTIFACT:apps/web/components/billing/checkout-form.tsx;ARTIFACT:apps/web/lib/billing/payment-processor.ts;EVIDENCE:artifacts/attestations/PG-026/context_ack.json",
+      "description": "Checkout",
+      "owner": "Platform BE (STOA-Foundation)",
+      "section": "Billing Pages",
+      "status": "Backlog",
+      "target_sprint": "14",
+      "task_id": "PG-026",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(billing)/billing/invoices/page.tsx;ARTIFACT:apps/web/components/billing/invoice-list.tsx;ARTIFACT:apps/web/lib/billing/pdf-generator.ts;EVIDENCE:artifacts/attestations/PG-027/context_ack.json",
+      "description": "Invoices",
+      "owner": "Platform BE (STOA-Foundation)",
+      "section": "Billing Pages",
+      "status": "Backlog",
+      "target_sprint": "14",
+      "task_id": "PG-027",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(billing)/billing/invoices/[id]/page.tsx;ARTIFACT:apps/web/components/billing/invoice-detail.tsx;ARTIFACT:apps/web/lib/billing/invoice-actions.ts;EVIDENCE:artifacts/attestations/PG-028/context_ack.json",
+      "description": "Invoice Detail",
+      "owner": "Platform BE (STOA-Foundation)",
+      "section": "Billing Pages",
+      "status": "Backlog",
+      "target_sprint": "14",
+      "task_id": "PG-028",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(billing)/billing/settings/page.tsx;ARTIFACT:apps/web/components/billing/payment-methods.tsx;ARTIFACT:apps/web/lib/billing/card-manager.ts;EVIDENCE:artifacts/attestations/PG-029/context_ack.json",
+      "description": "Payment Methods",
+      "owner": "Platform BE (STOA-Foundation)",
+      "section": "Billing Pages",
+      "status": "Backlog",
+      "target_sprint": "14",
+      "task_id": "PG-029",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(billing)/billing/subscriptions/page.tsx;ARTIFACT:apps/web/components/billing/subscription-manager.tsx;ARTIFACT:apps/web/lib/billing/plan-changes.ts;EVIDENCE:artifacts/attestations/PG-030/context_ack.json",
+      "description": "Subscriptions",
+      "owner": "Platform BE (STOA-Foundation)",
+      "section": "Billing Pages",
+      "status": "Backlog",
+      "target_sprint": "14",
+      "task_id": "PG-030",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(billing)/billing/receipts/page.tsx;ARTIFACT:apps/web/components/billing/receipt-list.tsx;ARTIFACT:apps/web/lib/billing/receipt-emailer.ts;EVIDENCE:artifacts/attestations/PG-031/context_ack.json",
+      "description": "Receipts",
+      "owner": "Platform BE (STOA-Foundation)",
+      "section": "Billing Pages",
+      "status": "Backlog",
+      "target_sprint": "14",
+      "task_id": "PG-031",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(developer)/docs/page.tsx;ARTIFACT:apps/web/components/shared/docs-search.tsx;ARTIFACT:apps/web/components/shared/docs-navigation.tsx;EVIDENCE:artifacts/attestations/PG-032/context_ack.json",
+      "description": "Docs Index",
+      "owner": "DevRel (STOA-Foundation)",
+      "section": "Developer Pages",
+      "status": "Backlog",
+      "target_sprint": "15",
+      "task_id": "PG-032",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(developer)/docs/api/page.tsx;ARTIFACT:apps/web/components/shared/api-reference.tsx;ARTIFACT:apps/web/components/shared/api-playground.tsx;EVIDENCE:artifacts/attestations/PG-033/context_ack.json",
+      "description": "API Docs",
+      "owner": "DevRel (STOA-Foundation)",
+      "section": "Developer Pages",
+      "status": "Backlog",
+      "target_sprint": "15",
+      "task_id": "PG-033",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(developer)/docs/webhooks/page.tsx;ARTIFACT:apps/web/components/shared/webhook-docs.tsx;ARTIFACT:apps/web/components/shared/webhook-tester.tsx;EVIDENCE:artifacts/attestations/PG-034/context_ack.json",
+      "description": "Webhooks Docs",
+      "owner": "DevRel (STOA-Foundation)",
+      "section": "Developer Pages",
+      "status": "Backlog",
+      "target_sprint": "15",
+      "task_id": "PG-034",
+      "validation_method": "VALIDATE:pnpm test;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(developer)/docs/changelog/page.tsx;ARTIFACT:apps/web/components/shared/changelog-display.tsx;ARTIFACT:apps/web/lib/shared/rss-feed.ts;EVIDENCE:artifacts/attestations/PG-035/context_ack.json",
+      "description": "Changelog",
+      "owner": "DevRel (STOA-Foundation)",
+      "section": "Developer Pages",
+      "status": "Backlog",
+      "target_sprint": "15",
+      "task_id": "PG-035",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(developer)/docs/sdk/page.tsx;ARTIFACT:apps/web/components/shared/sdk-guides.tsx;ARTIFACT:apps/web/lib/shared/sdk-downloads.ts;EVIDENCE:artifacts/attestations/PG-036/context_ack.json",
+      "description": "SDK Guides",
+      "owner": "DevRel (STOA-Foundation)",
+      "section": "Developer Pages",
+      "status": "Backlog",
+      "target_sprint": "15",
+      "task_id": "PG-036",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(developer)/docs/cli/page.tsx;ARTIFACT:apps/web/components/shared/cli-docs.tsx;ARTIFACT:apps/web/components/shared/cli-examples.tsx;EVIDENCE:artifacts/attestations/PG-037/context_ack.json",
+      "description": "CLI Docs",
+      "owner": "DevRel (STOA-Foundation)",
+      "section": "Developer Pages",
+      "status": "Backlog",
+      "target_sprint": "15",
+      "task_id": "PG-037",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(developer)/docs/auth/page.tsx;ARTIFACT:apps/web/components/shared/auth-guides.tsx;ARTIFACT:apps/web/components/shared/auth-examples.tsx;EVIDENCE:artifacts/attestations/PG-038/context_ack.json",
+      "description": "Auth Guides",
+      "owner": "DevRel (STOA-Foundation)",
+      "section": "Developer Pages",
+      "status": "Backlog",
+      "target_sprint": "15",
+      "task_id": "PG-038",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(developer)/developers/apps/page.tsx;ARTIFACT:apps/web/components/shared/app-list.tsx;ARTIFACT:apps/web/lib/shared/api-key-generator.ts;EVIDENCE:artifacts/attestations/PG-039/context_ack.json",
+      "description": "Dev Apps",
+      "owner": "DevRel (STOA-Foundation)",
+      "section": "Developer Pages",
+      "status": "Backlog",
+      "target_sprint": "15",
+      "task_id": "PG-039",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(developer)/developers/apps/new/page.tsx;ARTIFACT:apps/web/components/shared/app-creator.tsx;ARTIFACT:apps/web/lib/shared/oauth-setup.ts;EVIDENCE:artifacts/attestations/PG-040/context_ack.json",
+      "description": "New Dev App",
+      "owner": "DevRel (STOA-Foundation)",
+      "section": "Developer Pages",
+      "status": "Backlog",
+      "target_sprint": "15",
+      "task_id": "PG-040",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(developer)/developers/apps/[id]/page.tsx;ARTIFACT:apps/web/components/shared/app-dashboard.tsx;ARTIFACT:apps/web/components/shared/app-metrics.tsx;EVIDENCE:artifacts/attestations/PG-041/context_ack.json",
+      "description": "Dev App Detail",
+      "owner": "DevRel (STOA-Foundation)",
+      "section": "Developer Pages",
+      "status": "Backlog",
+      "target_sprint": "15",
+      "task_id": "PG-041",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(developer)/developers/apps/[id]/edit/page.tsx;ARTIFACT:apps/web/components/shared/app-editor.tsx;ARTIFACT:apps/web/components/shared/webhook-config.tsx;EVIDENCE:artifacts/attestations/PG-042/context_ack.json",
+      "description": "Dev App Edit",
+      "owner": "DevRel (STOA-Foundation)",
+      "section": "Developer Pages",
+      "status": "Backlog",
+      "target_sprint": "15",
+      "task_id": "PG-042",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(support)/help-center/page.tsx;ARTIFACT:apps/web/components/shared/help-categories.tsx;ARTIFACT:apps/web/components/shared/help-search.tsx;EVIDENCE:artifacts/attestations/PG-043/context_ack.json",
+      "description": "Help Center Index",
+      "owner": "Support Eng (STOA-Domain)",
+      "section": "Support Pages",
+      "status": "Backlog",
+      "target_sprint": "16",
+      "task_id": "PG-043",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(support)/help-center/search/page.tsx;ARTIFACT:apps/web/components/shared/search-algorithm.tsx;ARTIFACT:apps/web/components/shared/search-filters.tsx;EVIDENCE:artifacts/attestations/PG-044/context_ack.json",
+      "description": "Help Search",
+      "owner": "Support Eng (STOA-Domain)",
+      "section": "Support Pages",
+      "status": "Backlog",
+      "target_sprint": "16",
+      "task_id": "PG-044",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(support)/help-center/[article]/page.tsx;ARTIFACT:apps/web/components/shared/article-renderer.tsx;ARTIFACT:apps/web/components/shared/feedback-widget.tsx;EVIDENCE:artifacts/attestations/PG-045/context_ack.json",
+      "description": "Help Article",
+      "owner": "Support Eng (STOA-Domain)",
+      "section": "Support Pages",
+      "status": "Backlog",
+      "target_sprint": "16",
+      "task_id": "PG-045",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(support)/support/tickets/page.tsx;ARTIFACT:apps/web/components/tickets/ticket-list.tsx;ARTIFACT:apps/web/components/tickets/sla-display.tsx;EVIDENCE:artifacts/attestations/PG-046/context_ack.json",
+      "description": "Support Tickets",
+      "owner": "Support Eng (STOA-Domain)",
+      "section": "Support Pages",
+      "status": "Backlog",
+      "target_sprint": "16",
+      "task_id": "PG-046",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(support)/support/tickets/new/page.tsx;ARTIFACT:apps/web/components/shared/ticket-form.tsx;ARTIFACT:apps/web/components/shared/file-uploader.tsx;EVIDENCE:artifacts/attestations/PG-047/context_ack.json",
+      "description": "New Ticket",
+      "owner": "Support Eng (STOA-Domain)",
+      "section": "Support Pages",
+      "status": "Backlog",
+      "target_sprint": "16",
+      "task_id": "PG-047",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(support)/support/tickets/[id]/page.tsx;ARTIFACT:apps/web/components/shared/ticket-thread.tsx;ARTIFACT:apps/web/components/shared/status-updater.tsx;EVIDENCE:artifacts/attestations/PG-048/context_ack.json",
+      "description": "Ticket Detail",
+      "owner": "Support Eng (STOA-Domain)",
+      "section": "Support Pages",
+      "status": "Backlog",
+      "target_sprint": "16",
+      "task_id": "PG-048",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(support)/support/chat/page.tsx;ARTIFACT:apps/web/components/shared/chat-widget.tsx;ARTIFACT:apps/web/lib/shared/agent-router.ts;EVIDENCE:artifacts/attestations/PG-049/context_ack.json",
+      "description": "Support Chat",
+      "owner": "Support Eng (STOA-Domain)",
+      "section": "Support Pages",
+      "status": "Backlog",
+      "target_sprint": "22",
+      "task_id": "PG-049",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(legal)/privacy/page.tsx;ARTIFACT:docs/shared/privacy-content.md;ARTIFACT:apps/web/lib/shared/consent-tracker.ts;EVIDENCE:artifacts/attestations/PG-050/context_ack.json",
+      "description": "Privacy Policy",
+      "owner": "Legal Counsel (STOA-Foundation)",
+      "section": "Legal Pages",
+      "status": "Backlog",
+      "target_sprint": "17",
+      "task_id": "PG-050",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(legal)/terms/page.tsx;ARTIFACT:docs/shared/terms-content.md;ARTIFACT:apps/web/lib/shared/acceptance-tracker.ts;EVIDENCE:artifacts/attestations/PG-051/context_ack.json",
+      "description": "Terms of Service",
+      "owner": "Legal Counsel (STOA-Foundation)",
+      "section": "Legal Pages",
+      "status": "Backlog",
+      "target_sprint": "17",
+      "task_id": "PG-051",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(legal)/cookie-policy/page.tsx;ARTIFACT:docs/shared/cookie-content.md;ARTIFACT:apps/web/components/shared/cookie-banner.tsx;EVIDENCE:artifacts/attestations/PG-052/context_ack.json",
+      "description": "Cookie Policy",
+      "owner": "Legal Counsel (STOA-Foundation)",
+      "section": "Legal Pages",
+      "status": "Backlog",
+      "target_sprint": "17",
+      "task_id": "PG-052",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(legal)/dpa/page.tsx;ARTIFACT:artifacts/reports/dpa-template.pdf;ARTIFACT:apps/web/lib/shared/signature-handler.ts;EVIDENCE:artifacts/attestations/PG-053/context_ack.json",
+      "description": "Data Processing Addendum",
+      "owner": "Legal Counsel (STOA-Foundation)",
+      "section": "Legal Pages",
+      "status": "Backlog",
+      "target_sprint": "17",
+      "task_id": "PG-053",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(legal)/aup/page.tsx;ARTIFACT:docs/shared/aup-content.md;ARTIFACT:apps/web/lib/shared/violation-tracker.ts;EVIDENCE:artifacts/attestations/PG-054/context_ack.json",
+      "description": "Acceptable Use Policy",
+      "owner": "Legal Counsel (STOA-Foundation)",
+      "section": "Legal Pages",
+      "status": "Backlog",
+      "target_sprint": "17",
+      "task_id": "PG-054",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(system)/404/page.tsx;ARTIFACT:apps/web/components/shared/search-suggestions.tsx;ARTIFACT:apps/web/lib/shared/error-analytics.ts;EVIDENCE:artifacts/attestations/PG-055/context_ack.json",
+      "description": "404 Not Found",
+      "owner": "SRE (STOA-Foundation)",
+      "section": "System Pages",
+      "status": "Backlog",
+      "target_sprint": "17",
+      "task_id": "PG-055",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(system)/500/page.tsx;ARTIFACT:apps/web/lib/shared/incident-creator.ts;ARTIFACT:apps/web/lib/shared/error-notifier.ts;EVIDENCE:artifacts/attestations/PG-056/context_ack.json",
+      "description": "500 Error",
+      "owner": "SRE (STOA-Foundation)",
+      "section": "System Pages",
+      "status": "Backlog",
+      "target_sprint": "17",
+      "task_id": "PG-056",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(system)/maintenance/page.tsx;ARTIFACT:apps/web/lib/shared/maintenance-mode.ts;ARTIFACT:apps/web/lib/shared/status-updater.ts;EVIDENCE:artifacts/attestations/PG-057/context_ack.json",
+      "description": "Maintenance",
+      "owner": "SRE (STOA-Foundation)",
+      "section": "System Pages",
+      "status": "Backlog",
+      "target_sprint": "17",
+      "task_id": "PG-057",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(dashboard)/dashboard/page.tsx;ARTIFACT:apps/web/lib/dashboard/kpi-calculator.ts;EVIDENCE:artifacts/attestations/PG-058/context_ack.json",
+      "description": "Dashboard",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "18",
+      "task_id": "PG-058",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/leads/page.tsx;ARTIFACT:apps/web/components/leads/lead-list.tsx;ARTIFACT:apps/web/lib/leads/bulk-actions.ts;EVIDENCE:artifacts/attestations/PG-059/context_ack.json",
+      "description": "Leads List",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "18",
+      "task_id": "PG-059",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/leads/new/page.tsx;ARTIFACT:apps/web/lib/shared/lead-enrichment.ts;EVIDENCE:artifacts/attestations/PG-060/context_ack.json",
+      "description": "New Lead",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "18",
+      "task_id": "PG-060",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/leads/[id]/page.tsx;ARTIFACT:apps/web/components/shared/lead-detail.tsx;ARTIFACT:apps/web/components/shared/lead-timeline.tsx;EVIDENCE:artifacts/attestations/PG-061/context_ack.json",
+      "description": "Lead Detail",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "18",
+      "task_id": "PG-061",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/leads/[id]/edit/page.tsx;ARTIFACT:apps/web/components/shared/lead-editor.tsx;ARTIFACT:apps/web/lib/shared/change-tracker.ts;EVIDENCE:artifacts/attestations/PG-062/context_ack.json",
+      "description": "Edit Lead",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "18",
+      "task_id": "PG-062",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/leads/import/page.tsx;ARTIFACT:apps/web/components/leads/csv-importer.tsx;ARTIFACT:apps/web/lib/leads/field-mapper.ts;EVIDENCE:artifacts/attestations/PG-063/context_ack.json",
+      "description": "Import Leads",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "18",
+      "task_id": "PG-063",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/contacts/page.tsx;ARTIFACT:apps/web/components/contacts/contact-list.tsx;ARTIFACT:apps/web/lib/contacts/contact-search.ts;EVIDENCE:artifacts/attestations/PG-064/context_ack.json",
+      "description": "Contacts List",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "19",
+      "task_id": "PG-064",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/contacts/[id]/page.tsx;ARTIFACT:apps/web/components/shared/contact-360.tsx;ARTIFACT:apps/web/components/shared/contact-insights.tsx;EVIDENCE:artifacts/attestations/PG-065/context_ack.json",
+      "description": "Contact 360",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "19",
+      "task_id": "PG-065",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/contacts/[id]/edit/page.tsx;ARTIFACT:apps/web/components/shared/contact-editor.tsx;ARTIFACT:apps/web/lib/shared/duplicate-detector.ts;EVIDENCE:artifacts/attestations/PG-066/context_ack.json",
+      "description": "Edit Contact",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "19",
+      "task_id": "PG-066",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/contacts/import/page.tsx;ARTIFACT:apps/web/components/contacts/contact-importer.tsx;ARTIFACT:apps/web/lib/contacts/deduplicator.ts;EVIDENCE:artifacts/attestations/PG-067/context_ack.json",
+      "description": "Import Contacts",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "19",
+      "task_id": "PG-067",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/contacts/merge/page.tsx;ARTIFACT:apps/web/components/contacts/merge-wizard.tsx;ARTIFACT:apps/web/lib/contacts/conflict-resolver.ts;EVIDENCE:artifacts/attestations/PG-068/context_ack.json",
+      "description": "Merge Contacts",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "19",
+      "task_id": "PG-068",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/accounts/page.tsx;ARTIFACT:apps/web/components/shared/account-list.tsx;ARTIFACT:apps/web/components/shared/hierarchy-view.tsx;EVIDENCE:artifacts/attestations/PG-069/context_ack.json",
+      "description": "Accounts List",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "19",
+      "task_id": "PG-069",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/accounts/[id]/page.tsx;ARTIFACT:apps/web/components/shared/account-detail.tsx;ARTIFACT:apps/web/components/shared/subsidiary-list.tsx;EVIDENCE:artifacts/attestations/PG-070/context_ack.json",
+      "description": "Account Detail",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "20",
+      "task_id": "PG-070",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/accounts/[id]/edit/page.tsx;ARTIFACT:apps/web/components/shared/account-editor.tsx;ARTIFACT:apps/web/components/shared/parent-selector.tsx;EVIDENCE:artifacts/attestations/PG-071/context_ack.json",
+      "description": "Edit Account",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "20",
+      "task_id": "PG-071",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/accounts/import/page.tsx;ARTIFACT:apps/web/components/shared/account-importer.tsx;ARTIFACT:apps/web/lib/shared/hierarchy-mapper.ts;EVIDENCE:artifacts/attestations/PG-072/context_ack.json",
+      "description": "Import Accounts",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "20",
+      "task_id": "PG-072",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/opportunities/page.tsx;ARTIFACT:apps/web/components/shared/opportunity-list.tsx;ARTIFACT:apps/web/components/shared/pipeline-view.tsx;EVIDENCE:artifacts/attestations/PG-073/context_ack.json",
+      "description": "Opportunities List",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "20",
+      "task_id": "PG-073",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/opportunities/[id]/page.tsx;ARTIFACT:apps/web/components/shared/opportunity-detail.tsx;ARTIFACT:apps/web/components/shared/product-list.tsx;EVIDENCE:artifacts/attestations/PG-074/context_ack.json",
+      "description": "Opportunity Detail",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "20",
+      "task_id": "PG-074",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/opportunities/[id]/edit/page.tsx;ARTIFACT:apps/web/components/shared/opportunity-editor.tsx;ARTIFACT:apps/web/lib/shared/probability-calc.ts;EVIDENCE:artifacts/attestations/PG-075/context_ack.json",
+      "description": "Edit Opportunity",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "20",
+      "task_id": "PG-075",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/pipeline/page.tsx;ARTIFACT:apps/web/components/pipeline/pipeline-board.tsx;ARTIFACT:apps/web/lib/pipeline/drag-drop-handler.ts;EVIDENCE:artifacts/attestations/PG-076/context_ack.json",
+      "description": "Pipeline Board",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "21",
+      "task_id": "PG-076",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/pipeline/stages/page.tsx;ARTIFACT:apps/web/components/pipeline/stage-config.tsx;ARTIFACT:apps/web/lib/pipeline/conversion-calculator.ts;EVIDENCE:artifacts/attestations/PG-077/context_ack.json",
+      "description": "Pipeline Stages",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "21",
+      "task_id": "PG-077",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/pipeline/stages/[id]/page.tsx;ARTIFACT:apps/web/components/shared/stage-analytics.tsx;ARTIFACT:apps/web/lib/shared/bottleneck-analyzer.ts;EVIDENCE:artifacts/attestations/PG-078/context_ack.json",
+      "description": "Stage Detail",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "21",
+      "task_id": "PG-078",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/forecasts/page.tsx;ARTIFACT:apps/web/components/shared/forecast-display.tsx;ARTIFACT:apps/web/lib/shared/accuracy-tracker.ts;EVIDENCE:artifacts/attestations/PG-079/context_ack.json",
+      "description": "Forecasts",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "21",
+      "task_id": "PG-079",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/activities/page.tsx;ARTIFACT:apps/web/components/shared/activity-timeline.tsx;ARTIFACT:apps/web/components/shared/activity-filters.tsx;EVIDENCE:artifacts/attestations/PG-080/context_ack.json",
+      "description": "Activities",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "21",
+      "task_id": "PG-080",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/tasks/page.tsx;ARTIFACT:apps/web/components/shared/task-manager.tsx;ARTIFACT:apps/web/lib/shared/task-reminder.ts;EVIDENCE:artifacts/attestations/PG-081/context_ack.json",
+      "description": "Tasks",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "21",
+      "task_id": "PG-081",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/tasks/[id]/page.tsx;ARTIFACT:apps/web/components/shared/task-detail.tsx;ARTIFACT:apps/web/components/shared/task-comments.tsx;EVIDENCE:artifacts/attestations/PG-082/context_ack.json",
+      "description": "Task Detail",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "22",
+      "task_id": "PG-082",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/calendar/page.tsx;ARTIFACT:apps/web/components/calendar/calendar-view.tsx;ARTIFACT:apps/web/lib/calendar/event-scheduler.ts;EVIDENCE:artifacts/attestations/PG-083/context_ack.json",
+      "description": "Calendar",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "22",
+      "task_id": "PG-083",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/emails/page.tsx;ARTIFACT:apps/web/components/shared/email-client.tsx;ARTIFACT:apps/web/lib/shared/email-tracker.ts;EVIDENCE:artifacts/attestations/PG-084/context_ack.json",
+      "description": "Emails",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "22",
+      "task_id": "PG-084",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/templates/email/page.tsx;ARTIFACT:apps/web/components/templates/template-builder.tsx;ARTIFACT:apps/web/lib/templates/personalization.ts;EVIDENCE:artifacts/attestations/PG-085/context_ack.json",
+      "description": "Email Templates",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "22",
+      "task_id": "PG-085",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/templates/sms/page.tsx;ARTIFACT:apps/web/components/templates/sms-builder.tsx;ARTIFACT:apps/web/lib/templates/compliance-checker.ts;EVIDENCE:artifacts/attestations/PG-086/context_ack.json",
+      "description": "SMS Templates",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "22",
+      "task_id": "PG-086",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/calls/page.tsx;ARTIFACT:apps/web/components/shared/call-logger.tsx;ARTIFACT:apps/web/components/shared/recording-player.tsx;EVIDENCE:artifacts/attestations/PG-087/context_ack.json",
+      "description": "Calls",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "22",
+      "task_id": "PG-087",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/notes/page.tsx;ARTIFACT:apps/web/components/shared/note-editor.tsx;ARTIFACT:apps/web/lib/shared/mention-handler.ts;EVIDENCE:artifacts/attestations/PG-088/context_ack.json",
+      "description": "Notes",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "23",
+      "task_id": "PG-088",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/files/page.tsx;ARTIFACT:apps/web/components/shared/file-manager.tsx;ARTIFACT:apps/web/lib/shared/version-control.ts;EVIDENCE:artifacts/attestations/PG-089/context_ack.json",
+      "description": "Files",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "23",
+      "task_id": "PG-089",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/files/[id]/page.tsx;ARTIFACT:apps/web/components/shared/file-preview.tsx;ARTIFACT:apps/web/lib/shared/file-sharer.ts;EVIDENCE:artifacts/attestations/PG-090/context_ack.json",
+      "description": "File Detail",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "23",
+      "task_id": "PG-090",
+      "validation_method": "AUDIT:code-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/products/page.tsx;ARTIFACT:apps/web/components/shared/product-catalog.tsx;ARTIFACT:apps/web/lib/shared/product-search.ts;EVIDENCE:artifacts/attestations/PG-091/context_ack.json",
+      "description": "Products",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "23",
+      "task_id": "PG-091",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/products/[id]/page.tsx;ARTIFACT:apps/web/components/shared/product-detail.tsx;ARTIFACT:apps/web/lib/shared/availability-checker.ts;EVIDENCE:artifacts/attestations/PG-092/context_ack.json",
+      "description": "Product Detail",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "23",
+      "task_id": "PG-092",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/price-books/page.tsx;ARTIFACT:apps/web/components/shared/price-book-manager.tsx;ARTIFACT:apps/web/lib/shared/discount-engine.ts;EVIDENCE:artifacts/attestations/PG-093/context_ack.json",
+      "description": "Price Books",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "23",
+      "task_id": "PG-093",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/price-books/[id]/page.tsx;ARTIFACT:apps/web/components/shared/price-book-detail.tsx;ARTIFACT:apps/web/lib/shared/price-history.ts;EVIDENCE:artifacts/attestations/PG-094/context_ack.json",
+      "description": "Price Book Detail",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "24",
+      "task_id": "PG-094",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/quotes/page.tsx;ARTIFACT:apps/web/components/shared/quote-list.tsx;ARTIFACT:apps/web/lib/shared/quote-generator.ts;EVIDENCE:artifacts/attestations/PG-095/context_ack.json",
+      "description": "Quotes",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "24",
+      "task_id": "PG-095",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/quotes/new/page.tsx;ARTIFACT:apps/web/components/shared/quote-builder.tsx;ARTIFACT:apps/web/lib/shared/quote-calculator.ts;EVIDENCE:artifacts/attestations/PG-096/context_ack.json",
+      "description": "New Quote",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "24",
+      "task_id": "PG-096",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/quotes/[id]/page.tsx;ARTIFACT:apps/web/components/shared/quote-detail.tsx;ARTIFACT:apps/web/components/shared/quote-versions.tsx;EVIDENCE:artifacts/attestations/PG-097/context_ack.json",
+      "description": "Quote Detail",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "24",
+      "task_id": "PG-097",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/quotes/[id]/edit/page.tsx;ARTIFACT:apps/web/components/shared/quote-editor.tsx;ARTIFACT:apps/web/lib/shared/recalculator.ts;EVIDENCE:artifacts/attestations/PG-098/context_ack.json",
+      "description": "Edit Quote",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "24",
+      "task_id": "PG-098",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/orders/page.tsx;ARTIFACT:apps/web/components/shared/order-list.tsx;ARTIFACT:apps/web/lib/shared/fulfillment-tracker.ts;EVIDENCE:artifacts/attestations/PG-099/context_ack.json",
+      "description": "Orders",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "24",
+      "task_id": "PG-099",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/orders/[id]/page.tsx;ARTIFACT:apps/web/components/shared/order-detail.tsx;ARTIFACT:apps/web/lib/shared/shipment-tracker.ts;EVIDENCE:artifacts/attestations/PG-100/context_ack.json",
+      "description": "Order Detail",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "25",
+      "task_id": "PG-100",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/reports/page.tsx;ARTIFACT:apps/web/components/reports/report-library.tsx;ARTIFACT:apps/web/lib/reports/report-favorites.ts;EVIDENCE:artifacts/attestations/PG-101/context_ack.json",
+      "description": "Reports",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "25",
+      "task_id": "PG-101",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/reports/custom/page.tsx;ARTIFACT:apps/web/components/reports/report-builder.tsx;ARTIFACT:apps/web/lib/reports/visualization-engine.ts;EVIDENCE:artifacts/attestations/PG-102/context_ack.json",
+      "description": "Custom Reports",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "25",
+      "task_id": "PG-102",
+      "validation_method": "VALIDATE:pnpm build;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(crm)/reports/schedules/page.tsx;ARTIFACT:apps/web/components/shared/schedule-manager.tsx;ARTIFACT:apps/web/lib/shared/distribution-engine.ts;EVIDENCE:artifacts/attestations/PG-103/context_ack.json",
+      "description": "Report Schedules",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "target_sprint": "25",
+      "task_id": "PG-103",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(settings)/settings/page.tsx;ARTIFACT:apps/web/components/shared/settings-nav.tsx;ARTIFACT:apps/web/lib/shared/settings-search.ts;EVIDENCE:artifacts/attestations/PG-104/context_ack.json",
+      "description": "Settings Home",
+      "owner": "Platform FE+BE (STOA-Foundation)",
+      "section": "Settings",
+      "status": "Backlog",
+      "target_sprint": "25",
+      "task_id": "PG-104",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(settings)/settings/profile/page.tsx;ARTIFACT:apps/web/components/shared/profile-editor.tsx;ARTIFACT:apps/web/lib/shared/avatar-uploader.ts;EVIDENCE:artifacts/attestations/PG-105/context_ack.json",
+      "description": "Profile Settings",
+      "owner": "Platform FE+BE (STOA-Foundation)",
+      "section": "Settings",
+      "status": "Backlog",
+      "target_sprint": "25",
+      "task_id": "PG-105",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(settings)/settings/account/page.tsx;ARTIFACT:apps/web/components/shared/account-manager.tsx;ARTIFACT:apps/web/lib/shared/account-export.ts;EVIDENCE:artifacts/attestations/PG-106/context_ack.json",
+      "description": "Account Settings",
+      "owner": "Platform FE+BE (STOA-Foundation)",
+      "section": "Settings",
+      "status": "Backlog",
+      "target_sprint": "26",
+      "task_id": "PG-106",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(settings)/settings/organization/page.tsx;ARTIFACT:apps/web/components/shared/org-config.tsx;ARTIFACT:apps/web/lib/shared/branding-manager.ts;EVIDENCE:artifacts/attestations/PG-107/context_ack.json",
+      "description": "Organization Settings",
+      "owner": "Platform FE+BE (STOA-Foundation)",
+      "section": "Settings",
+      "status": "Backlog",
+      "target_sprint": "26",
+      "task_id": "PG-107",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(settings)/settings/users/page.tsx;ARTIFACT:apps/web/components/shared/user-manager.tsx;ARTIFACT:apps/web/lib/shared/invite-sender.ts;EVIDENCE:artifacts/attestations/PG-108/context_ack.json",
+      "description": "Users",
+      "owner": "Platform FE+BE (STOA-Foundation)",
+      "section": "Settings",
+      "status": "Backlog",
+      "target_sprint": "26",
+      "task_id": "PG-108",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(settings)/settings/roles/page.tsx;ARTIFACT:apps/web/components/shared/role-editor.tsx;ARTIFACT:apps/web/lib/shared/permission-manager.ts;EVIDENCE:artifacts/attestations/PG-109/context_ack.json",
+      "description": "Roles",
+      "owner": "Platform FE+BE (STOA-Foundation)",
+      "section": "Settings",
+      "status": "Backlog",
+      "target_sprint": "26",
+      "task_id": "PG-109",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(settings)/settings/permissions/page.tsx;ARTIFACT:apps/web/components/shared/permission-matrix.tsx;ARTIFACT:apps/web/lib/shared/permission-tester.ts;EVIDENCE:artifacts/attestations/PG-110/context_ack.json",
+      "description": "Permissions",
+      "owner": "Platform FE+BE (STOA-Foundation)",
+      "section": "Settings",
+      "status": "Backlog",
+      "target_sprint": "26",
+      "task_id": "PG-110",
+      "validation_method": "VALIDATE:pnpm test;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(settings)/settings/teams/page.tsx;ARTIFACT:apps/web/components/shared/team-manager.tsx;ARTIFACT:apps/web/lib/shared/hierarchy-builder.ts;EVIDENCE:artifacts/attestations/PG-111/context_ack.json",
+      "description": "Teams",
+      "owner": "Platform FE+BE (STOA-Foundation)",
+      "section": "Settings",
+      "status": "Backlog",
+      "target_sprint": "26",
+      "task_id": "PG-111",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(settings)/settings/audit-log/page.tsx;ARTIFACT:apps/web/components/shared/audit-viewer.tsx;ARTIFACT:apps/web/lib/shared/log-exporter.ts;EVIDENCE:artifacts/attestations/PG-112/context_ack.json",
+      "description": "Audit Log",
+      "owner": "Platform FE+BE (STOA-Foundation)",
+      "section": "Settings",
+      "status": "Backlog",
+      "target_sprint": "27",
+      "task_id": "PG-112",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(settings)/settings/api-keys/page.tsx;ARTIFACT:apps/web/components/shared/key-generator.tsx;ARTIFACT:apps/web/lib/shared/scope-manager.ts;EVIDENCE:artifacts/attestations/PG-113/context_ack.json",
+      "description": "API Keys",
+      "owner": "Platform FE+BE (STOA-Foundation)",
+      "section": "Settings",
+      "status": "Backlog",
+      "target_sprint": "27",
+      "task_id": "PG-113",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(settings)/settings/webhooks/page.tsx;ARTIFACT:apps/web/components/shared/webhook-config.tsx;ARTIFACT:apps/web/lib/shared/webhook-tester.ts;EVIDENCE:artifacts/attestations/PG-114/context_ack.json",
+      "description": "Webhooks",
+      "owner": "Platform FE+BE (STOA-Foundation)",
+      "section": "Settings",
+      "status": "Backlog",
+      "target_sprint": "27",
+      "task_id": "PG-114",
+      "validation_method": "VALIDATE:pnpm test;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(settings)/settings/integrations/page.tsx;ARTIFACT:apps/web/components/shared/integration-catalog.tsx;ARTIFACT:apps/web/lib/shared/oauth-handler.ts;EVIDENCE:artifacts/attestations/PG-115/context_ack.json",
+      "description": "Integrations",
+      "owner": "Platform FE+BE (STOA-Foundation)",
+      "section": "Settings",
+      "status": "Backlog",
+      "target_sprint": "27",
+      "task_id": "PG-115",
+      "validation_method": "VALIDATE:pnpm test:integration;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(settings)/settings/notifications/page.tsx;ARTIFACT:apps/web/components/notifications/notification-prefs.tsx;ARTIFACT:apps/web/lib/notifications/channel-config.ts;EVIDENCE:artifacts/attestations/PG-116/context_ack.json",
+      "description": "Notifications",
+      "owner": "Platform FE+BE (STOA-Foundation)",
+      "section": "Settings",
+      "status": "Backlog",
+      "target_sprint": "27",
+      "task_id": "PG-116",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(settings)/settings/localization/page.tsx;ARTIFACT:apps/web/components/shared/language-selector.tsx;ARTIFACT:apps/web/lib/shared/translation-manager.ts;EVIDENCE:artifacts/attestations/PG-117/context_ack.json",
+      "description": "Localization",
+      "owner": "Platform FE+BE (STOA-Foundation)",
+      "section": "Settings",
+      "status": "Backlog",
+      "target_sprint": "27",
+      "task_id": "PG-117",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(settings)/settings/data-retention/page.tsx;ARTIFACT:apps/web/components/shared/retention-policy.tsx;ARTIFACT:apps/web/lib/shared/data-purger.ts;EVIDENCE:artifacts/attestations/PG-118/context_ack.json",
+      "description": "Data Retention",
+      "owner": "Platform FE+BE (STOA-Foundation)",
+      "section": "Settings",
+      "status": "Backlog",
+      "target_sprint": "28",
+      "task_id": "PG-118",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(settings)/settings/compliance/page.tsx;ARTIFACT:apps/web/components/shared/compliance-dashboard.tsx;ARTIFACT:apps/web/lib/shared/audit-reporter.ts;EVIDENCE:artifacts/attestations/PG-119/context_ack.json",
+      "description": "Compliance",
+      "owner": "Platform FE+BE (STOA-Foundation)",
+      "section": "Settings",
+      "status": "Backlog",
+      "target_sprint": "28",
+      "task_id": "PG-119",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(settings)/settings/security/page.tsx;ARTIFACT:apps/web/components/security/security-config.tsx;ARTIFACT:apps/web/lib/security/2fa-manager.ts;EVIDENCE:artifacts/attestations/PG-120/context_ack.json",
+      "description": "Security",
+      "owner": "Platform FE+BE (STOA-Foundation)",
+      "section": "Settings",
+      "status": "Backlog",
+      "target_sprint": "28",
+      "task_id": "PG-120",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90;AUDIT:security-review"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(settings)/settings/import-export/page.tsx;ARTIFACT:apps/web/components/shared/data-importer.tsx;ARTIFACT:apps/web/lib/shared/data-exporter.ts;EVIDENCE:artifacts/attestations/PG-121/context_ack.json",
+      "description": "Import/Export",
+      "owner": "Platform FE+BE (STOA-Foundation)",
+      "section": "Settings",
+      "status": "Backlog",
+      "target_sprint": "28",
+      "task_id": "PG-121",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(settings)/settings/privacy/export/page.tsx;ARTIFACT:apps/web/components/shared/privacy-exporter.tsx;ARTIFACT:apps/web/lib/shared/gdpr-packager.ts;EVIDENCE:artifacts/attestations/PG-122/context_ack.json",
+      "description": "Privacy Export",
+      "owner": "Platform FE+BE (STOA-Foundation)",
+      "section": "Settings",
+      "status": "Backlog",
+      "target_sprint": "28",
+      "task_id": "PG-122",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(settings)/settings/privacy/delete/page.tsx;ARTIFACT:apps/web/components/shared/data-eraser.tsx;ARTIFACT:apps/web/lib/shared/deletion-audit.ts;EVIDENCE:artifacts/attestations/PG-123/context_ack.json",
+      "description": "Privacy Delete",
+      "owner": "Platform FE+BE (STOA-Foundation)",
+      "section": "Settings",
+      "status": "Backlog",
+      "target_sprint": "28",
+      "task_id": "PG-123",
+      "validation_method": "AUDIT:manual-review;GATE:lighthouse-gte-90"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(auth)/sso/page.tsx;ARTIFACT:apps/web/lib/shared/sso-handler.ts;ARTIFACT:artifacts/misc/provider-config.json;EVIDENCE:artifacts/attestations/PG-124/context_ack.json",
+      "description": "Implement SSO (SAML/OAuth) and social login providers",
+      "owner": "Frontend Dev + Backend Dev (STOA-Domain)",
+      "section": "Auth Pages",
+      "status": "Backlog",
+      "target_sprint": "15",
+      "task_id": "PG-124",
+      "validation_method": "VALIDATE:pnpm test;VALIDATE:pnpm test:e2e"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:apps/web/app/(auth)/mfa/page.tsx;ARTIFACT:apps/web/lib/security/mfa-service.ts;ARTIFACT:apps/web/lib/security/backup-codes.ts;ARTIFACT:tests/mfa.spec.ts;EVIDENCE:artifacts/attestations/PG-125/context_ack.json",
+      "description": "Add MFA using TOTP or SMS and allow users to enable/disable from security settings",
+      "owner": "Frontend Dev + Backend Dev (STOA-Domain)",
+      "section": "Auth Pages",
+      "status": "Backlog",
+      "target_sprint": "16",
+      "task_id": "PG-125",
+      "validation_method": "VALIDATE:pnpm test;VALIDATE:pnpm test:e2e"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:artifacts/misc/onboarding-config.json;ARTIFACT:apps/web/components/shared/tour-components.tsx;ARTIFACT:apps/web/lib/shared/feedback-service.ts;EVIDENCE:artifacts/attestations/PG-126/context_ack.json",
+      "description": "Add in\u2011app onboarding, guided product tours and feedback collection",
+      "owner": "UX Designer + Frontend Dev (STOA-Domain)",
+      "section": "Public Pages",
+      "status": "Backlog",
+      "target_sprint": "17",
+      "task_id": "PG-126",
+      "validation_method": "VALIDATE:pnpm test"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/operations/project-playbook.md; docs/operations/wip-policy.md; docs/operations/ticket-sizing.md; docs/operations/abc-classification.md; docs/operations/raci.md;EVIDENCE:artifacts/attestations/PM-OPS-001/context_ack.json",
+      "description": "Project Operating Model & Delivery Playbook (cadence, WIP, ticket sizing, ABC)",
+      "owner": "Tech Lead + DevOps + Product Manager (STOA-Automation)",
+      "section": "Project Operations",
+      "status": "Completed",
+      "target_sprint": "0",
+      "task_id": "PM-OPS-001",
+      "validation_method": "VALIDATE:pnpm lint"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/sales/pitch-deck-outline.md; docs/sales/one-pager.md; artifacts/misc/sales/pitch-deck-source-link.txt;EVIDENCE:artifacts/attestations/SALES-001/context_ack.json",
+      "description": "Commercial Narrative + Pitch Deck Outline + One-Pager",
+      "owner": "PM + Sales Team (STOA-Foundation)",
+      "section": "Commercial Assets",
+      "status": "Completed",
+      "target_sprint": "1",
+      "task_id": "SALES-001",
+      "validation_method": "VALIDATE:pnpm lint"
+    },
+    {
+      "artifacts_to_track": "ARTIFACT:docs/sales/sales-motion-playbook.md; docs/sales/discovery-script.md; docs/sales/demo-script.md; docs/sales/outreach-sequences.md;EVIDENCE:artifacts/attestations/SALES-002/context_ack.json",
+      "description": "Sales Motion Playbook (outreach sequences, discovery + demo scripts)",
+      "owner": "Sales + CEO (STOA-Leadership)",
+      "section": "Commercial Assets",
+      "status": "Completed",
+      "target_sprint": "2",
+      "task_id": "SALES-002",
+      "validation_method": "VALIDATE:pnpm lint;AUDIT:code-review"
+    }
+  ]
+}

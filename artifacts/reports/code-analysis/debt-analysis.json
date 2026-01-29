@@ -1,0 +1,665 @@
+{
+  "timestamp": "2026-01-06T18:38:35.075Z",
+  "status": "critical",
+  "healthScore": 5,
+  "summary": {
+    "total": 32,
+    "open": 31,
+    "inProgress": 1,
+    "resolved": 0,
+    "critical": 17,
+    "overdue": 1,
+    "expiringSoon": 24
+  },
+  "bySeverity": {
+    "critical": 17,
+    "high": 0,
+    "medium": 8,
+    "low": 7
+  },
+  "byOwner": {
+    "AI Specialist": {
+      "critical": 3,
+      "high": 0,
+      "medium": 3,
+      "low": 1,
+      "total": 7
+    },
+    "DevOps Engineer": {
+      "critical": 0,
+      "high": 0,
+      "medium": 1,
+      "low": 1,
+      "total": 2
+    },
+    "QA Lead": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 1,
+      "total": 1
+    },
+    "Tech Writer": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 1,
+      "total": 1
+    },
+    "Performance Engineer": {
+      "critical": 0,
+      "high": 0,
+      "medium": 1,
+      "low": 0,
+      "total": 1
+    },
+    "Backend Dev": {
+      "critical": 2,
+      "high": 0,
+      "medium": 0,
+      "low": 1,
+      "total": 3
+    },
+    "Frontend Dev": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 1,
+      "total": 1
+    },
+    "Tech Lead": {
+      "critical": 12,
+      "high": 0,
+      "medium": 3,
+      "low": 0,
+      "total": 15
+    },
+    "PM": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 1,
+      "total": 1
+    }
+  },
+  "criticalItems": [
+    {
+      "id": "MISS-IFC-096-001",
+      "description": "Task IFC-096 has no verified artifacts",
+      "owner": "Tech Lead",
+      "expiry": "2026-01-28",
+      "origin": "IFC-096"
+    },
+    {
+      "id": "FAIL-IFC-096-002",
+      "description": "Validation failed: pnpm build (exit code: 124)",
+      "owner": "Tech Lead",
+      "expiry": "2026-01-28",
+      "origin": "IFC-096"
+    },
+    {
+      "id": "MISS-IFC-108-001",
+      "description": "Task IFC-108 has no verified artifacts",
+      "owner": "Tech Lead",
+      "expiry": "2026-01-28",
+      "origin": "IFC-108"
+    },
+    {
+      "id": "MISS-IFC-110-001",
+      "description": "Task IFC-110 has no verified artifacts",
+      "owner": "Tech Lead",
+      "expiry": "2026-01-28",
+      "origin": "IFC-110"
+    },
+    {
+      "id": "FAIL-IFC-145-001",
+      "description": "Validation failed: pnpm test (exit code: 124)",
+      "owner": "Tech Lead",
+      "expiry": "2026-01-28",
+      "origin": "IFC-145"
+    },
+    {
+      "id": "FAIL-IFC-151-001",
+      "description": "Validation failed: pnpm test (exit code: 124)",
+      "owner": "Tech Lead",
+      "expiry": "2026-01-28",
+      "origin": "IFC-151"
+    },
+    {
+      "id": "MISS-PG-003-001",
+      "description": "Task PG-003 has no verified artifacts",
+      "owner": "Tech Lead",
+      "expiry": "2026-01-30",
+      "origin": "PG-003"
+    },
+    {
+      "id": "MISS-PG-005-001",
+      "description": "Task PG-005 has no verified artifacts",
+      "owner": "Tech Lead",
+      "expiry": "2026-01-30",
+      "origin": "PG-005"
+    },
+    {
+      "id": "FAIL-IFC-125-001",
+      "description": "Validation failed: pnpm test (exit code: 124)",
+      "owner": "Tech Lead",
+      "expiry": "2026-01-30",
+      "origin": "IFC-125"
+    },
+    {
+      "id": "FAIL-IFC-140-001",
+      "description": "Validation failed: pnpm test (exit code: 124)",
+      "owner": "AI Specialist",
+      "expiry": "2026-01-30",
+      "origin": "IFC-140"
+    },
+    {
+      "id": "FAIL-IFC-143-001",
+      "description": "Validation failed: pnpm test (exit code: 124)",
+      "owner": "Backend Dev",
+      "expiry": "2026-01-30",
+      "origin": "IFC-143"
+    },
+    {
+      "id": "FAIL-IFC-152-001",
+      "description": "Validation failed: pnpm test (exit code: 124)",
+      "owner": "Backend Dev",
+      "expiry": "2026-01-30",
+      "origin": "IFC-152"
+    },
+    {
+      "id": "MISS-IFC-157-001",
+      "description": "Task IFC-157 has no verified artifacts",
+      "owner": "AI Specialist",
+      "expiry": "2026-01-30",
+      "origin": "IFC-157"
+    },
+    {
+      "id": "FAIL-IFC-157-002",
+      "description": "Validation failed: pnpm test (exit code: 124)",
+      "owner": "AI Specialist",
+      "expiry": "2026-01-30",
+      "origin": "IFC-157"
+    },
+    {
+      "id": "MISS-IFC-158-001",
+      "description": "Task IFC-158 has no verified artifacts",
+      "owner": "Tech Lead",
+      "expiry": "2026-01-30",
+      "origin": "IFC-158"
+    },
+    {
+      "id": "FAIL-IFC-158-002",
+      "description": "Validation failed: pnpm test:e2e (exit code: 1)",
+      "owner": "Tech Lead",
+      "expiry": "2026-01-30",
+      "origin": "IFC-158"
+    },
+    {
+      "id": "DEBT-SPRINT12-GOV-001",
+      "description": "16 tasks marked complete without MATOP execution.",
+      "owner": "Tech Lead",
+      "expiry": "2026-01-03",
+      "origin": "SPRINT-12"
+    }
+  ],
+  "overdueItems": [
+    {
+      "id": "DEBT-SPRINT12-GOV-001",
+      "origin_task": "SPRINT-12",
+      "owner": "Tech Lead",
+      "severity": "critical",
+      "description": "16 tasks marked complete without MATOP execution.\nValidation commands (typecheck, build, test, lint) not run.\nAttestations created with placeholder SHA256 hashes (all zeros).\nTasks affected: IFC-020, IFC-042, IFC-081, PG-009, PG-010, PG-011,\nPG-012, PG-013, PG-014, IFC-126, IFC-148, IFC-153, IFC-154, IFC-155,\nEXP-PLATFORM-001, EXP-SCRIPTS-001.\n",
+      "created_at": "2025-12-31T17:45:00.000Z",
+      "expiry_date": "2026-01-03",
+      "remediation_plan": "1. Run full validation suite (typecheck, build, test, lint)\n2. Fix any validation failures discovered\n3. Regenerate all attestations with real SHA256 hashes\n4. Run MATOP for each task to verify completion properly\n5. Update Sprint_plan.csv with accurate status based on MATOP verdicts\n6. Implement CI enforcement to prevent future governance bypass\n",
+      "remediation_sprint": 12,
+      "status": "in_progress",
+      "escalate_to": "CTO",
+      "notes": "This is a governance violation discovered during Sprint 12 audit.\nBuild initially failed due to Server Component issue (onClick handler).\nTests have infrastructure issues (ResizeObserver mock).\nIFC-042 attestation updated with real SHA256 hashes as remediation example.\nPlan-linter errors fixed by adding 9 missing task overrides.\n",
+      "daysOverdue": 3
+    }
+  ],
+  "expiringSoonItems": [
+    {
+      "id": "DEBT-009",
+      "origin_task": "ENV-017-AI",
+      "owner": "Tech Lead",
+      "severity": "medium",
+      "description": "Full integration testing with IFC-001 (Architecture Spike) deferred.\nStub contract in place for Sprint 0, full integration in Sprint 1+.\n",
+      "created_at": "2025-12-17",
+      "expiry_date": "2026-01-15",
+      "remediation_plan": "1. Complete IFC-001 in Sprint 1\n2. Integrate ENV-017-AI with architecture decisions\n3. Run full integration test suite\n4. Remove stub contract exception\n",
+      "remediation_sprint": 1,
+      "status": "open",
+      "notes": "Cross-sprint dependency resolved via stub_contract. See PLAN-FIX-001.",
+      "daysUntilExpiry": 9
+    },
+    {
+      "id": "MISS-IFC-096-001",
+      "origin_task": "IFC-096",
+      "owner": "Tech Lead",
+      "severity": "critical",
+      "description": "Task IFC-096 has no verified artifacts",
+      "created_at": "2025-12-29T14:34:38.107Z",
+      "expiry_date": "2026-01-28",
+      "remediation_plan": "Create all required artifacts listed in Sprint_plan.csv",
+      "remediation_sprint": 0,
+      "status": "open",
+      "daysUntilExpiry": 22
+    },
+    {
+      "id": "FAIL-IFC-096-002",
+      "origin_task": "IFC-096",
+      "owner": "Tech Lead",
+      "severity": "critical",
+      "description": "Validation failed: pnpm build (exit code: 124)",
+      "created_at": "2025-12-29T14:34:38.107Z",
+      "expiry_date": "2026-01-28",
+      "remediation_plan": "Fix issues causing \"pnpm build\" to fail",
+      "remediation_sprint": 0,
+      "status": "open",
+      "daysUntilExpiry": 22
+    },
+    {
+      "id": "MISS-IFC-108-001",
+      "origin_task": "IFC-108",
+      "owner": "Tech Lead",
+      "severity": "critical",
+      "description": "Task IFC-108 has no verified artifacts",
+      "created_at": "2025-12-29T15:07:49.648Z",
+      "expiry_date": "2026-01-28",
+      "remediation_plan": "Create all required artifacts listed in Sprint_plan.csv",
+      "remediation_sprint": 0,
+      "status": "open",
+      "daysUntilExpiry": 22
+    },
+    {
+      "id": "MISS-IFC-110-001",
+      "origin_task": "IFC-110",
+      "owner": "Tech Lead",
+      "severity": "critical",
+      "description": "Task IFC-110 has no verified artifacts",
+      "created_at": "2025-12-29T15:07:53.355Z",
+      "expiry_date": "2026-01-28",
+      "remediation_plan": "Create all required artifacts listed in Sprint_plan.csv",
+      "remediation_sprint": 0,
+      "status": "open",
+      "daysUntilExpiry": 22
+    },
+    {
+      "id": "FAIL-IFC-145-001",
+      "origin_task": "IFC-145",
+      "owner": "Tech Lead",
+      "severity": "critical",
+      "description": "Validation failed: pnpm test (exit code: 124)",
+      "created_at": "2025-12-29T15:27:16.023Z",
+      "expiry_date": "2026-01-28",
+      "remediation_plan": "Fix issues causing \"pnpm test\" to fail",
+      "remediation_sprint": 0,
+      "status": "open",
+      "daysUntilExpiry": 22
+    },
+    {
+      "id": "FAIL-IFC-151-001",
+      "origin_task": "IFC-151",
+      "owner": "Tech Lead",
+      "severity": "critical",
+      "description": "Validation failed: pnpm test (exit code: 124)",
+      "created_at": "2025-12-29T15:33:37.120Z",
+      "expiry_date": "2026-01-28",
+      "remediation_plan": "Fix issues causing \"pnpm test\" to fail",
+      "remediation_sprint": 0,
+      "status": "open",
+      "daysUntilExpiry": 22
+    },
+    {
+      "id": "MISS-PG-003-001",
+      "origin_task": "PG-003",
+      "owner": "Tech Lead",
+      "severity": "critical",
+      "description": "Task PG-003 has no verified artifacts",
+      "created_at": "2025-12-31T13:35:28.196Z",
+      "expiry_date": "2026-01-30",
+      "remediation_plan": "Create all required artifacts listed in Sprint_plan.csv",
+      "remediation_sprint": 0,
+      "status": "open",
+      "daysUntilExpiry": 24
+    },
+    {
+      "id": "MISS-PG-005-001",
+      "origin_task": "PG-005",
+      "owner": "Tech Lead",
+      "severity": "critical",
+      "description": "Task PG-005 has no verified artifacts",
+      "created_at": "2025-12-31T13:35:28.315Z",
+      "expiry_date": "2026-01-30",
+      "remediation_plan": "Create all required artifacts listed in Sprint_plan.csv",
+      "remediation_sprint": 0,
+      "status": "open",
+      "daysUntilExpiry": 24
+    },
+    {
+      "id": "FAIL-IFC-125-001",
+      "origin_task": "IFC-125",
+      "owner": "Tech Lead",
+      "severity": "critical",
+      "description": "Validation failed: pnpm test (exit code: 124)",
+      "created_at": "2025-12-31T13:36:29.284Z",
+      "expiry_date": "2026-01-30",
+      "remediation_plan": "Fix issues causing \"pnpm test\" to fail",
+      "remediation_sprint": 0,
+      "status": "open",
+      "daysUntilExpiry": 24
+    },
+    {
+      "id": "FAIL-IFC-140-001",
+      "origin_task": "IFC-140",
+      "owner": "AI Specialist",
+      "severity": "critical",
+      "description": "Validation failed: pnpm test (exit code: 124)",
+      "created_at": "2025-12-31T13:37:30.489Z",
+      "expiry_date": "2026-01-30",
+      "remediation_plan": "Fix issues causing \"pnpm test\" to fail",
+      "remediation_sprint": 0,
+      "status": "open",
+      "daysUntilExpiry": 24
+    },
+    {
+      "id": "PLCH-IFC-140-002",
+      "origin_task": "IFC-140",
+      "owner": "AI Specialist",
+      "severity": "medium",
+      "description": "1 placeholder(s) found in task artifacts",
+      "created_at": "2025-12-31T13:37:30.489Z",
+      "expiry_date": "2026-01-30",
+      "remediation_plan": "Remove TODO, FIXME, STUB comments and implement placeholder code",
+      "remediation_sprint": 0,
+      "status": "open",
+      "daysUntilExpiry": 24
+    },
+    {
+      "id": "FAIL-IFC-143-001",
+      "origin_task": "IFC-143",
+      "owner": "Backend Dev",
+      "severity": "critical",
+      "description": "Validation failed: pnpm test (exit code: 124)",
+      "created_at": "2025-12-31T13:38:32.027Z",
+      "expiry_date": "2026-01-30",
+      "remediation_plan": "Fix issues causing \"pnpm test\" to fail",
+      "remediation_sprint": 0,
+      "status": "open",
+      "daysUntilExpiry": 24
+    },
+    {
+      "id": "FAIL-IFC-152-001",
+      "origin_task": "IFC-152",
+      "owner": "Backend Dev",
+      "severity": "critical",
+      "description": "Validation failed: pnpm test (exit code: 124)",
+      "created_at": "2025-12-31T13:39:33.589Z",
+      "expiry_date": "2026-01-30",
+      "remediation_plan": "Fix issues causing \"pnpm test\" to fail",
+      "remediation_sprint": 0,
+      "status": "open",
+      "daysUntilExpiry": 24
+    },
+    {
+      "id": "MISS-IFC-157-001",
+      "origin_task": "IFC-157",
+      "owner": "AI Specialist",
+      "severity": "critical",
+      "description": "Task IFC-157 has no verified artifacts",
+      "created_at": "2025-12-31T13:40:34.763Z",
+      "expiry_date": "2026-01-30",
+      "remediation_plan": "Create all required artifacts listed in Sprint_plan.csv",
+      "remediation_sprint": 0,
+      "status": "open",
+      "daysUntilExpiry": 24
+    },
+    {
+      "id": "FAIL-IFC-157-002",
+      "origin_task": "IFC-157",
+      "owner": "AI Specialist",
+      "severity": "critical",
+      "description": "Validation failed: pnpm test (exit code: 124)",
+      "created_at": "2025-12-31T13:40:34.763Z",
+      "expiry_date": "2026-01-30",
+      "remediation_plan": "Fix issues causing \"pnpm test\" to fail",
+      "remediation_sprint": 0,
+      "status": "open",
+      "daysUntilExpiry": 24
+    },
+    {
+      "id": "MISS-IFC-158-001",
+      "origin_task": "IFC-158",
+      "owner": "Tech Lead",
+      "severity": "critical",
+      "description": "Task IFC-158 has no verified artifacts",
+      "created_at": "2025-12-31T13:40:58.397Z",
+      "expiry_date": "2026-01-30",
+      "remediation_plan": "Create all required artifacts listed in Sprint_plan.csv",
+      "remediation_sprint": 0,
+      "status": "open",
+      "daysUntilExpiry": 24
+    },
+    {
+      "id": "FAIL-IFC-158-002",
+      "origin_task": "IFC-158",
+      "owner": "Tech Lead",
+      "severity": "critical",
+      "description": "Validation failed: pnpm test:e2e (exit code: 1)",
+      "created_at": "2025-12-31T13:40:58.397Z",
+      "expiry_date": "2026-01-30",
+      "remediation_plan": "Fix issues causing \"pnpm test:e2e\" to fail",
+      "remediation_sprint": 0,
+      "status": "open",
+      "daysUntilExpiry": 24
+    },
+    {
+      "id": "PLCH-PG-003-001",
+      "origin_task": "PG-003",
+      "owner": "Tech Lead",
+      "severity": "medium",
+      "description": "6 placeholder(s) found in task artifacts",
+      "created_at": "2025-12-31T13:55:27.695Z",
+      "expiry_date": "2026-01-30",
+      "remediation_plan": "Remove TODO, FIXME, STUB comments and implement placeholder code",
+      "remediation_sprint": 0,
+      "status": "open",
+      "daysUntilExpiry": 24
+    },
+    {
+      "id": "PLCH-PG-005-001",
+      "origin_task": "PG-005",
+      "owner": "Tech Lead",
+      "severity": "medium",
+      "description": "14 placeholder(s) found in task artifacts",
+      "created_at": "2025-12-31T13:55:27.785Z",
+      "expiry_date": "2026-01-30",
+      "remediation_plan": "Remove TODO, FIXME, STUB comments and implement placeholder code",
+      "remediation_sprint": 0,
+      "status": "open",
+      "daysUntilExpiry": 24
+    },
+    {
+      "id": "DEBT-001",
+      "origin_task": "AI-SETUP-003",
+      "owner": "AI Specialist",
+      "severity": "medium",
+      "description": "External AI tools (Codex, Jules) integration deferred full security audit.\nSandbox security validated but comprehensive penetration testing pending.\n",
+      "created_at": "2025-12-17",
+      "expiry_date": "2026-01-31",
+      "remediation_plan": "1. Complete security audit of Codex integration\n2. Complete security audit of Jules integration\n3. Run penetration tests on sandbox environment\n4. Document security findings and mitigations\n",
+      "remediation_sprint": 2,
+      "status": "open",
+      "notes": "Sandbox security.json created. Full audit in Sprint 2.",
+      "daysUntilExpiry": 25
+    },
+    {
+      "id": "DEBT-003",
+      "origin_task": "ENV-010-AI",
+      "owner": "QA Lead",
+      "severity": "low",
+      "description": "AI-generated tests coverage target (>95%) not fully met.\nManual test writing required to reach target.\n",
+      "created_at": "2025-12-17",
+      "expiry_date": "2026-01-31",
+      "remediation_plan": "1. Review AI-generated test quality\n2. Add manual tests for edge cases\n3. Reach 95% coverage target\n4. Document test generation patterns\n",
+      "remediation_sprint": 2,
+      "status": "open",
+      "notes": "Current coverage may be lower. AI test generation is MVP.",
+      "daysUntilExpiry": 25
+    },
+    {
+      "id": "DEBT-004",
+      "origin_task": "ENV-011-AI",
+      "owner": "AI Specialist",
+      "severity": "low",
+      "description": "LangChain cost optimization and predictive scaling deferred.\nBasic rate limiting in place, advanced optimization pending.\n",
+      "created_at": "2025-12-17",
+      "expiry_date": "2026-01-31",
+      "remediation_plan": "1. Implement cost prediction model\n2. Configure auto-scaling rules\n3. Set up cost alerting\n4. Optimize chain execution paths\n",
+      "remediation_sprint": 2,
+      "status": "open",
+      "notes": "Basic cost logging enabled. Optimization is post-MVP.",
+      "daysUntilExpiry": 25
+    },
+    {
+      "id": "DEBT-010",
+      "origin_task": "ENV-018-AI",
+      "owner": "PM",
+      "severity": "low",
+      "description": "AI-driven velocity prediction and capacity optimization deferred.\nBasic sprint metrics in place.\n",
+      "created_at": "2025-12-17",
+      "expiry_date": "2026-01-31",
+      "remediation_plan": "1. Implement velocity prediction model\n2. Configure capacity optimization\n3. Set up risk identification alerts\n4. Document planning automation\n",
+      "remediation_sprint": 2,
+      "status": "open",
+      "notes": "Basic metrics sufficient. AI prediction is post-Sprint 0.",
+      "daysUntilExpiry": 25
+    }
+  ],
+  "actionItems": {
+    "immediate": [
+      {
+        "priority": "critical",
+        "task": "Resolve overdue debt: DEBT-SPRINT12-GOV-001",
+        "description": "16 tasks marked complete without MATOP execution.",
+        "owner": "Tech Lead",
+        "daysOverdue": 3
+      },
+      {
+        "priority": "high",
+        "task": "Address critical debt: MISS-IFC-096-001",
+        "description": "Task IFC-096 has no verified artifacts",
+        "owner": "Tech Lead",
+        "expiry": "2026-01-28"
+      },
+      {
+        "priority": "high",
+        "task": "Address critical debt: FAIL-IFC-096-002",
+        "description": "Validation failed: pnpm build (exit code: 124)",
+        "owner": "Tech Lead",
+        "expiry": "2026-01-28"
+      },
+      {
+        "priority": "high",
+        "task": "Address critical debt: MISS-IFC-108-001",
+        "description": "Task IFC-108 has no verified artifacts",
+        "owner": "Tech Lead",
+        "expiry": "2026-01-28"
+      },
+      {
+        "priority": "high",
+        "task": "Address critical debt: MISS-IFC-110-001",
+        "description": "Task IFC-110 has no verified artifacts",
+        "owner": "Tech Lead",
+        "expiry": "2026-01-28"
+      },
+      {
+        "priority": "high",
+        "task": "Address critical debt: FAIL-IFC-145-001",
+        "description": "Validation failed: pnpm test (exit code: 124)",
+        "owner": "Tech Lead",
+        "expiry": "2026-01-28"
+      }
+    ],
+    "shortTerm": [
+      {
+        "priority": "medium",
+        "task": "Resolve before expiry: DEBT-009",
+        "description": "Full integration testing with IFC-001 (Architecture Spike) deferred.",
+        "owner": "Tech Lead",
+        "daysUntilExpiry": 9
+      },
+      {
+        "priority": "medium",
+        "task": "Resolve before expiry: MISS-IFC-096-001",
+        "description": "Task IFC-096 has no verified artifacts",
+        "owner": "Tech Lead",
+        "daysUntilExpiry": 22
+      },
+      {
+        "priority": "medium",
+        "task": "Resolve before expiry: FAIL-IFC-096-002",
+        "description": "Validation failed: pnpm build (exit code: 124)",
+        "owner": "Tech Lead",
+        "daysUntilExpiry": 22
+      },
+      {
+        "priority": "medium",
+        "task": "Resolve before expiry: MISS-IFC-108-001",
+        "description": "Task IFC-108 has no verified artifacts",
+        "owner": "Tech Lead",
+        "daysUntilExpiry": 22
+      },
+      {
+        "priority": "medium",
+        "task": "Resolve before expiry: MISS-IFC-110-001",
+        "description": "Task IFC-110 has no verified artifacts",
+        "owner": "Tech Lead",
+        "daysUntilExpiry": 22
+      }
+    ],
+    "longTerm": [
+      {
+        "priority": "low",
+        "task": "Schedule fix: DEBT-001",
+        "description": "External AI tools (Codex, Jules) integration deferred full security audit.",
+        "owner": "AI Specialist"
+      },
+      {
+        "priority": "low",
+        "task": "Schedule fix: DEBT-002",
+        "description": "Predictive monitoring and self-healing features deferred.",
+        "owner": "DevOps Engineer"
+      },
+      {
+        "priority": "low",
+        "task": "Schedule fix: DEBT-006",
+        "description": "AI-driven performance profiling and predictive caching deferred.",
+        "owner": "Performance Engineer"
+      },
+      {
+        "priority": "low",
+        "task": "Schedule fix: DEBT-009",
+        "description": "Full integration testing with IFC-001 (Architecture Spike) deferred.",
+        "owner": "Tech Lead"
+      },
+      {
+        "priority": "low",
+        "task": "Schedule fix: DEBT-011",
+        "description": "Full multi-agent orchestration and autonomous task handoff deferred.",
+        "owner": "AI Specialist"
+      }
+    ]
+  },
+  "trending": {
+    "trend": "stable",
+    "change": 0,
+    "history": []
+  },
+  "generatedAt": "2026-01-06T18:38:35.089Z",
+  "source": "debt-analyzer",
+  "version": "1.0.0"
+}

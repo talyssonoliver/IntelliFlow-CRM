@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "1.0",
+  "taskId": "ENV-008-AI",
+  "description": "Baseline anomaly detection configuration for Sprint 0 (heuristic thresholds; no external ML).",
+  "generatedAt": "2025-12-19T00:00:00Z",
+  "sources": [
+    "infra/monitoring/otel-config.yaml",
+    "infra/monitoring/performance-budgets.json",
+    "infra/monitoring/alerts/intelliflow-alerts.yaml"
+  ],
+  "mode": "heuristic",
+  "rules": [
+    {
+      "id": "latency_p99_budget",
+      "signal": "http_request_duration_seconds",
+      "aggregation": "p99",
+      "window": "5m",
+      "threshold": {
+        "operator": ">",
+        "value": 0.2,
+        "unit": "seconds"
+      },
+      "action": "raise_alert",
+      "severity": "high"
+    },
+    {
+      "id": "error_rate_budget",
+      "signal": "http_requests_total",
+      "aggregation": "error_rate",
+      "window": "5m",
+      "threshold": {
+        "operator": ">",
+        "value": 0.02,
+        "unit": "ratio"
+      },
+      "action": "raise_alert",
+      "severity": "high"
+    },
+    {
+      "id": "ai_cost_spike",
+      "signal": "ai_cost_usd",
+      "aggregation": "rate",
+      "window": "15m",
+      "threshold": {
+        "operator": ">",
+        "value": 2.0,
+        "unit": "usd_per_minute"
+      },
+      "action": "raise_alert",
+      "severity": "medium",
+      "notes": "Requires application metric emission; placeholder for Sprint 0."
+    }
+  ],
+  "manualVerification": [
+    "Confirm alert rules are wired into your chosen alerting backend.",
+    "Run a synthetic load test and validate that the latency_p99_budget rule would trigger above threshold."
+  ],
+  "deferred": {
+    "predictiveModels": "Post-Sprint 0 (see artifacts/debt-ledger.* origin_task=ENV-008-AI)",
+    "automatedRemediation": "Post-Sprint 0; Sprint 0 only documents self-healing playbooks."
+  }
+}
+

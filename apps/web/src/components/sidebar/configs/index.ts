@@ -1,0 +1,11 @@
+export { leadsSidebarConfig } from './leads';
+export { contactsSidebarConfig } from './contacts';
+export { documentsSidebarConfig } from './documents';
+export { dealsSidebarConfig } from './deals';
+export { ticketsSidebarConfig } from './tickets';
+export { analyticsSidebarConfig } from './analytics';
+export { agentApprovalsSidebarConfig } from './agent-approvals';
+export { notificationsSidebarConfig } from './notifications';
+export { governanceSidebarConfig } from './governance';
+export { settingsSidebarConfig } from './settings';
+export { billingSidebarConfig } from './billing';

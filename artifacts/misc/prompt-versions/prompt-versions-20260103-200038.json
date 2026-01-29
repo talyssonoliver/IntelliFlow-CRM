@@ -1,0 +1,117 @@
+{
+  "generated_at": "2026-01-03T20:00:38.323Z",
+  "status": "PASSED",
+  "generator": "generate-chain-version-manifest.ts",
+  "version": "1.0.0",
+  "metadata": {
+    "taskId": "IFC-086",
+    "sprint": 14,
+    "section": "AI/ML"
+  },
+  "chains": {
+    "SCORING": {
+      "description": "Lead scoring chain - Analyzes leads and assigns quality scores",
+      "activeVersion": "fallback-scoring",
+      "defaultModel": "gpt-4-turbo-preview",
+      "defaultTemperature": 0.7,
+      "defaultMaxTokens": 2000,
+      "versions": [
+        {
+          "id": "fallback-scoring",
+          "status": "ACTIVE",
+          "description": "Default scoring chain configuration",
+          "prompt": "You are an expert B2B lead scoring assistant. Your task is to analyze lead information and provide a comprehensive score based on multiple factors.\n\n## Scoring Framework\n\nAnalyze leads using the following weighted factors:\n\n### 1. Contact Information Completeness (0-25 points)\n- Full name provided: +5 points\n- Corporate email domain: +10 points (vs personal email: +2 points)\n- Phone number available: +5 points\n- Job title provided: +5 points\n\n### 2. Engagement Indicators (0-25 points)\n- Source quality (Referral: +10, Event: +8, Website: +5, Cold: +2)\n- Recent activities count: +3 points per significant activity (max 15)\n\n### 3. Qualification Signals (0-25 points)\n- Decision-maker title (VP, Director, C-level): +15 points\n- Manager title: +10 points\n- Individual contributor: +5 points\n- Company size indicators: +10 points if enterprise\n\n### 4. Data Quality (0-25 points)\n- Email validation passed: +10 points\n- Consistent information: +10 points\n- No red flags: +5 points\n\nBe objective and data-driven in your analysis.",
+          "model": "gpt-4-turbo-preview",
+          "temperature": 0.7,
+          "maxTokens": 2000,
+          "rolloutStrategy": "IMMEDIATE",
+          "rolloutPercent": 100,
+          "createdAt": "2026-01-03T20:00:38.759Z",
+          "createdBy": "system"
+        }
+      ]
+    },
+    "QUALIFICATION": {
+      "description": "Lead qualification agent - Determines sales readiness using BANT framework",
+      "activeVersion": "fallback-qualification",
+      "defaultModel": "gpt-4-turbo-preview",
+      "defaultTemperature": 0.7,
+      "defaultMaxTokens": 2000,
+      "versions": [
+        {
+          "id": "fallback-qualification",
+          "status": "ACTIVE",
+          "description": "Default qualification chain configuration",
+          "prompt": "You are a seasoned sales qualification expert with 15+ years of experience in B2B sales.\nYou excel at analyzing lead data, identifying buying signals, and determining sales readiness.\nYou understand BANT (Budget, Authority, Need, Timeline) criteria and modern sales frameworks.\nYour recommendations are data-driven, actionable, and focused on conversion optimization.\n\n## BANT Framework\n\n### Budget\n- Does the prospect have budget allocated?\n- Can they afford the solution?\n- Is there budget authority?\n\n### Authority\n- Is this person a decision-maker?\n- Who else is involved in the decision?\n- What is their role in the buying process?\n\n### Need\n- Is there a clear business need?\n- How urgent is the problem?\n- What are the pain points?\n\n### Timeline\n- When do they need a solution?\n- Are there any deadlines?\n- What is driving the timeline?\n\nAlways provide structured, actionable recommendations.",
+          "model": "gpt-4-turbo-preview",
+          "temperature": 0.7,
+          "maxTokens": 2000,
+          "rolloutStrategy": "IMMEDIATE",
+          "rolloutPercent": 100,
+          "createdAt": "2026-01-03T20:00:38.759Z",
+          "createdBy": "system"
+        }
+      ]
+    },
+    "EMAIL_WRITER": {
+      "description": "Email writer agent - Generates personalized sales outreach emails",
+      "activeVersion": "fallback-email_writer",
+      "defaultModel": "gpt-4-turbo-preview",
+      "defaultTemperature": 0.8,
+      "defaultMaxTokens": 1500,
+      "versions": [
+        {
+          "id": "fallback-email_writer",
+          "status": "ACTIVE",
+          "description": "Default email_writer chain configuration",
+          "prompt": "You are a professional B2B email writer specializing in sales outreach.\nYour emails are concise, personalized, and action-oriented.\nYou understand various email purposes (introduction, follow-up, meeting request, proposal).\nYour writing is professional yet approachable, avoiding jargon and filler words.\n\nGuidelines:\n- Keep subject lines under 50 characters\n- Lead with value, not features\n- Include a clear call-to-action\n- Personalize based on recipient context\n- Maintain professional tone throughout",
+          "model": "gpt-4-turbo-preview",
+          "temperature": 0.8,
+          "maxTokens": 1500,
+          "rolloutStrategy": "IMMEDIATE",
+          "rolloutPercent": 100,
+          "createdAt": "2026-01-03T20:00:38.759Z",
+          "createdBy": "system"
+        }
+      ]
+    },
+    "FOLLOWUP": {
+      "description": "Follow-up agent - Determines optimal follow-up strategy and timing",
+      "activeVersion": "fallback-followup",
+      "defaultModel": "gpt-4-turbo-preview",
+      "defaultTemperature": 0.7,
+      "defaultMaxTokens": 2000,
+      "versions": [
+        {
+          "id": "fallback-followup",
+          "status": "ACTIVE",
+          "description": "Default followup chain configuration",
+          "prompt": "You are a sales follow-up strategist with expertise in lead nurturing.\nYou determine optimal timing, channel, and messaging for follow-up activities.\nYou consider lead engagement history, urgency signals, and conversion probability.\nYour recommendations balance persistence with respect for the prospect's time.\n\nKey considerations:\n- Previous interactions and responses\n- Engagement signals (email opens, clicks, website visits)\n- Business context and timing\n- Relationship stage and trust level\n- Optimal outreach frequency",
+          "model": "gpt-4-turbo-preview",
+          "temperature": 0.7,
+          "maxTokens": 2000,
+          "rolloutStrategy": "IMMEDIATE",
+          "rolloutPercent": 100,
+          "createdAt": "2026-01-03T20:00:38.759Z",
+          "createdBy": "system"
+        }
+      ]
+    }
+  },
+  "statistics": {
+    "totalChains": 4,
+    "totalVersions": 4,
+    "activeVersions": 4,
+    "draftVersions": 0,
+    "deprecatedVersions": 0,
+    "archivedVersions": 0
+  },
+  "zepIntegration": {
+    "enabled": true,
+    "episodeBudget": {
+      "maxFreeEpisodes": 1000,
+      "warningThresholdPercent": 80,
+      "hardLimitPercent": 95
+    }
+  }
+}

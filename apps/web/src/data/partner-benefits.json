@@ -1,0 +1,325 @@
+{
+  "partners": [
+    {
+      "id": "slack",
+      "name": "Slack",
+      "category": "communication",
+      "description": "Team communication and collaboration",
+      "website": "https://slack.com"
+    },
+    {
+      "id": "gmail",
+      "name": "Gmail",
+      "category": "email",
+      "description": "Email integration and sync",
+      "website": "https://gmail.com"
+    },
+    {
+      "id": "google-calendar",
+      "name": "Google Calendar",
+      "category": "calendar",
+      "description": "Schedule meetings and sync events",
+      "website": "https://calendar.google.com"
+    },
+    {
+      "id": "hubspot",
+      "name": "HubSpot",
+      "category": "marketing",
+      "description": "Marketing automation platform",
+      "website": "https://hubspot.com"
+    },
+    {
+      "id": "salesforce",
+      "name": "Salesforce",
+      "category": "crm",
+      "description": "CRM data migration and sync",
+      "website": "https://salesforce.com"
+    },
+    {
+      "id": "stripe",
+      "name": "Stripe",
+      "category": "payments",
+      "description": "Payment processing and billing",
+      "website": "https://stripe.com"
+    },
+    {
+      "id": "zendesk",
+      "name": "Zendesk",
+      "category": "support",
+      "description": "Customer support ticketing",
+      "website": "https://zendesk.com"
+    },
+    {
+      "id": "intercom",
+      "name": "Intercom",
+      "category": "support",
+      "description": "Live chat and customer messaging",
+      "website": "https://intercom.com"
+    },
+    {
+      "id": "zapier",
+      "name": "Zapier",
+      "category": "automation",
+      "description": "Workflow automation",
+      "website": "https://zapier.com"
+    },
+    {
+      "id": "segment",
+      "name": "Segment",
+      "category": "analytics",
+      "description": "Customer data platform",
+      "website": "https://segment.com"
+    },
+    {
+      "id": "mixpanel",
+      "name": "Mixpanel",
+      "category": "analytics",
+      "description": "Product analytics",
+      "website": "https://mixpanel.com"
+    },
+    {
+      "id": "docusign",
+      "name": "DocuSign",
+      "category": "documents",
+      "description": "Electronic signature",
+      "website": "https://docusign.com"
+    }
+  ],
+  "benefits": {
+    "technology": [
+      {
+        "title": "API Access & Documentation",
+        "description": "Full access to our REST API with comprehensive documentation and SDKs.",
+        "icon": "api"
+      },
+      {
+        "title": "Co-Marketing Opportunities",
+        "description": "Joint webinars, case studies, and marketing campaigns to reach new audiences.",
+        "icon": "campaign"
+      },
+      {
+        "title": "Revenue Share Program",
+        "description": "Earn recurring revenue for every customer using your integration.",
+        "icon": "attach_money"
+      },
+      {
+        "title": "Technical Support",
+        "description": "Dedicated partner engineering team to help build and maintain integrations.",
+        "icon": "support_agent"
+      },
+      {
+        "title": "Featured Placement",
+        "description": "Showcase your integration in our marketplace and partner directory.",
+        "icon": "star"
+      },
+      {
+        "title": "Early Access",
+        "description": "Get early access to new features and APIs before public release.",
+        "icon": "preview"
+      }
+    ],
+    "reseller": [
+      {
+        "title": "Competitive Margins",
+        "description": "Attractive margin structure with volume-based incentives.",
+        "icon": "trending_up"
+      },
+      {
+        "title": "Sales Enablement",
+        "description": "Training materials, demos, and sales playbooks to help you close deals.",
+        "icon": "school"
+      },
+      {
+        "title": "Deal Registration",
+        "description": "Protected deals and pipeline visibility through our partner portal.",
+        "icon": "verified"
+      },
+      {
+        "title": "Co-Selling Support",
+        "description": "Our sales team works with you on strategic opportunities.",
+        "icon": "handshake"
+      },
+      {
+        "title": "Marketing Development Funds",
+        "description": "MDF programs to support your marketing and demand generation.",
+        "icon": "payments"
+      },
+      {
+        "title": "Partner Portal Access",
+        "description": "Manage deals, track commissions, and access resources in one place.",
+        "icon": "dashboard"
+      }
+    ],
+    "consultant": [
+      {
+        "title": "Certification Program",
+        "description": "Become a certified IntelliFlow CRM consultant with our training program.",
+        "icon": "workspace_premium"
+      },
+      {
+        "title": "Referral Fees",
+        "description": "Earn fees for every successful client referral and implementation.",
+        "icon": "currency_exchange"
+      },
+      {
+        "title": "Client Success Tools",
+        "description": "Access to implementation guides, templates, and best practices.",
+        "icon": "checklist"
+      },
+      {
+        "title": "Partner Directory Listing",
+        "description": "Get listed in our consultant directory for increased visibility.",
+        "icon": "business"
+      },
+      {
+        "title": "Dedicated Partner Manager",
+        "description": "Your point of contact for support, training, and resources.",
+        "icon": "person"
+      },
+      {
+        "title": "Exclusive Events",
+        "description": "Invitations to partner summits, training sessions, and networking events.",
+        "icon": "event"
+      }
+    ]
+  },
+  "integration_categories": [
+    {
+      "id": "communication",
+      "name": "Communication",
+      "description": "Connect your team communication tools",
+      "icon": "chat",
+      "color": "#137fec"
+    },
+    {
+      "id": "email",
+      "name": "Email",
+      "description": "Sync emails and automate outreach",
+      "icon": "mail",
+      "color": "#22c55e"
+    },
+    {
+      "id": "calendar",
+      "name": "Calendar",
+      "description": "Schedule meetings and sync events",
+      "icon": "calendar_today",
+      "color": "#f59e0b"
+    },
+    {
+      "id": "marketing",
+      "name": "Marketing",
+      "description": "Marketing automation and campaigns",
+      "icon": "campaign",
+      "color": "#ef4444"
+    },
+    {
+      "id": "support",
+      "name": "Support",
+      "description": "Customer support and ticketing",
+      "icon": "support_agent",
+      "color": "#6366f1"
+    },
+    {
+      "id": "analytics",
+      "name": "Analytics",
+      "description": "Data and analytics platforms",
+      "icon": "analytics",
+      "color": "#8b5cf6"
+    },
+    {
+      "id": "payments",
+      "name": "Payments",
+      "description": "Payment processing and billing",
+      "icon": "payment",
+      "color": "#10b981"
+    },
+    {
+      "id": "automation",
+      "name": "Automation",
+      "description": "Workflow automation tools",
+      "icon": "auto_awesome",
+      "color": "#f97316"
+    }
+  ],
+  "partnership_tiers": [
+    {
+      "tier": "Certified",
+      "description": "Official integration partner with marketplace listing",
+      "requirements": [
+        "Active integration in production",
+        "Technical documentation complete",
+        "Support SLA established"
+      ]
+    },
+    {
+      "tier": "Premier",
+      "description": "Strategic partner with co-marketing and revenue share",
+      "requirements": [
+        "Certified tier prerequisites",
+        "100+ active customers using integration",
+        "Joint marketing commitment"
+      ]
+    },
+    {
+      "tier": "Elite",
+      "description": "Top-tier strategic partner with executive sponsorship",
+      "requirements": [
+        "Premier tier prerequisites",
+        "500+ active customers",
+        "Dedicated partner success manager"
+      ]
+    }
+  ],
+  "application_process": [
+    {
+      "step": 1,
+      "title": "Submit Application",
+      "description": "Fill out our partner application form with your company details and integration plans.",
+      "duration": "5 minutes"
+    },
+    {
+      "step": 2,
+      "title": "Initial Review",
+      "description": "Our partnerships team reviews your application and schedules a discovery call.",
+      "duration": "2-3 business days"
+    },
+    {
+      "step": 3,
+      "title": "Technical Assessment",
+      "description": "We evaluate technical fit, integration scope, and support requirements.",
+      "duration": "1 week"
+    },
+    {
+      "step": 4,
+      "title": "Agreement & Onboarding",
+      "description": "Sign partnership agreement and get access to API, documentation, and support.",
+      "duration": "1-2 weeks"
+    }
+  ],
+  "faqs": [
+    {
+      "question": "What are the costs to become a partner?",
+      "answer": "There are no upfront fees to join our partner program. Technology partners get free API access, and resellers/consultants have no program fees. We only succeed when you succeed."
+    },
+    {
+      "question": "How long does the application process take?",
+      "answer": "The typical application process takes 2-4 weeks from submission to approval, depending on integration complexity and review cycles."
+    },
+    {
+      "question": "Do you provide technical support for integration development?",
+      "answer": "Yes! All technology partners get access to our dedicated partner engineering team for integration support, code reviews, and troubleshooting."
+    },
+    {
+      "question": "Can I resell IntelliFlow CRM under my own brand?",
+      "answer": "We offer white-label options for select premier and elite partners. Contact our partnerships team to discuss your requirements."
+    },
+    {
+      "question": "What kind of marketing support do partners receive?",
+      "answer": "Partners get access to co-branded marketing materials, joint webinars, case study development, and MDF (Marketing Development Funds) for qualified opportunities."
+    },
+    {
+      "question": "Is there a minimum commitment period?",
+      "answer": "No minimum commitment is required. Partnerships are month-to-month with 30-day notice for cancellation, though we encourage long-term collaboration."
+    }
+  ]
+}

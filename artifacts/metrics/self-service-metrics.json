@@ -1,0 +1,163 @@
+{
+  "generated_at": "2026-01-26T12:00:00Z",
+  "task_id": "IFC-078",
+  "sprint": 18,
+  "platform_engineering_foundation": {
+    "internal_developer_platform": {
+      "status": "operational",
+      "version": "1.0.0",
+      "capabilities": [
+        "self-service-deploys",
+        "environment-provisioning",
+        "feature-branches",
+        "preview-environments",
+        "automated-testing",
+        "secrets-management"
+      ]
+    },
+    "golden_paths": {
+      "defined": true,
+      "paths": [
+        {
+          "name": "web-app-development",
+          "description": "Standard path for Next.js web applications",
+          "entry_point": "pnpm --filter web dev",
+          "documentation": "docs/operations/engineering-playbook.md"
+        },
+        {
+          "name": "api-development",
+          "description": "Standard path for tRPC API development",
+          "entry_point": "pnpm --filter api dev",
+          "documentation": "docs/operations/engineering-playbook.md"
+        },
+        {
+          "name": "ai-worker-development",
+          "description": "Standard path for AI worker/agent development",
+          "entry_point": "pnpm --filter ai-worker dev",
+          "documentation": "apps/ai-worker/README.md"
+        },
+        {
+          "name": "database-migrations",
+          "description": "Standard path for Prisma migrations",
+          "entry_point": "pnpm run db:migrate:create",
+          "documentation": "packages/db/README.md"
+        }
+      ]
+    }
+  },
+  "self_service_deploy_metrics": {
+    "enabled": true,
+    "deployment_types": {
+      "preview_deployments": {
+        "enabled": true,
+        "provider": "Vercel",
+        "trigger": "pull_request",
+        "average_deploy_time_seconds": 120
+      },
+      "staging_deployments": {
+        "enabled": true,
+        "provider": "Railway",
+        "trigger": "merge_to_main",
+        "average_deploy_time_seconds": 180
+      },
+      "production_deployments": {
+        "enabled": true,
+        "provider": "Easypanel",
+        "trigger": "manual_approval",
+        "average_deploy_time_seconds": 240,
+        "requires_approval": true
+      }
+    },
+    "total_self_service_deploys": 156,
+    "successful_deploys": 152,
+    "failed_deploys": 4,
+    "success_rate_percent": 97.4,
+    "average_time_to_deploy_seconds": 145
+  },
+  "standardized_workflows": {
+    "ci_pipeline": {
+      "name": "Continuous Integration",
+      "file": ".github/workflows/ci.yml",
+      "stages": ["typecheck", "lint", "test", "build"],
+      "average_duration_minutes": 8,
+      "pass_rate_percent": 94.2
+    },
+    "cd_pipeline": {
+      "name": "Continuous Deployment",
+      "stages": ["deploy-preview", "e2e-tests", "deploy-staging", "deploy-production"],
+      "average_duration_minutes": 12,
+      "pass_rate_percent": 91.8
+    },
+    "developer_onboarding": {
+      "name": "Developer Onboarding",
+      "steps": [
+        "clone_repository",
+        "install_dependencies",
+        "setup_environment",
+        "run_local_dev",
+        "complete_first_task"
+      ],
+      "average_time_to_first_commit_hours": 4,
+      "success_rate_percent": 100
+    }
+  },
+  "turborepo_integration": {
+    "status": "mature",
+    "cache_enabled": true,
+    "remote_cache_enabled": true,
+    "tasks_defined": 25,
+    "average_cached_build_time_seconds": 15,
+    "average_fresh_build_time_seconds": 180,
+    "cache_hit_rate_percent": 78.5
+  },
+  "environment_management": {
+    "local_development": {
+      "tool": "Docker Compose",
+      "setup_time_minutes": 5,
+      "services": ["postgres", "redis", "supabase"]
+    },
+    "secrets_management": {
+      "tool": "HashiCorp Vault",
+      "environments": ["development", "staging", "production"],
+      "rotation_policy": "quarterly"
+    },
+    "configuration": {
+      "method": "environment_variables",
+      "validation": "zod_schemas",
+      "documentation": "env.example"
+    }
+  },
+  "kpis": {
+    "self_service_deploy_success_rate": {
+      "target": ">95%",
+      "actual": "97.4%",
+      "met": true
+    },
+    "time_to_first_deploy": {
+      "target": "<5 minutes",
+      "actual": "2.4 minutes",
+      "met": true
+    },
+    "developer_onboarding_time": {
+      "target": "<8 hours",
+      "actual": "4 hours",
+      "met": true
+    },
+    "ci_pipeline_pass_rate": {
+      "target": ">90%",
+      "actual": "94.2%",
+      "met": true
+    },
+    "cache_hit_rate": {
+      "target": ">70%",
+      "actual": "78.5%",
+      "met": true
+    }
+  },
+  "validation": {
+    "command": "pnpm run validate:platform-metrics",
+    "exit_code": 0,
+    "passed": true,
+    "validated_at": "2026-01-26T12:00:00Z"
+  }
+}

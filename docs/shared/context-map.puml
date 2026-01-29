@@ -1,0 +1,399 @@
+@startuml IntelliFlow-CRM-Domain-Knowledge-Map
+
+!define CORE_STYLE #LightGreen
+!define SUPPORTING_STYLE #LightBlue
+!define GENERIC_STYLE #LightGray
+!define INTELLIGENCE_STYLE #LightYellow
+
+title IntelliFlow CRM - Domain Knowledge Map\n(IFC-082: Domain Knowledge Base)
+
+' ============================================================
+' BOUNDED CONTEXTS
+' ============================================================
+
+package "CRM Context (Core Domain)" as CRM CORE_STYLE {
+
+  rectangle "Lead Management" as LeadBC {
+    entity "<<Aggregate Root>>\nLead" as Lead {
+      + LeadId: UUID
+      --
+      - email: Email (VO)
+      - score: LeadScore (VO)
+      - status: LeadStatus
+      - source: String
+      - ownerId: UserId
+      ==
+      + create()
+      + score(score: LeadScore)
+      + qualify()
+      + convert()
+    }
+
+    class "LeadScore (VO)" as LeadScore {
+      + value: 0-100
+      + confidence: 0-1
+      + tier: HOT|WARM|COLD
+    }
+
+    class "Email (VO)" as Email {
+      + value: String
+      + validate()
+    }
+  }
+
+  rectangle "Contact Management" as ContactBC {
+    entity "<<Aggregate Root>>\nContact" as Contact {
+      + ContactId: UUID
+      --
+      - email: Email (VO)
+      - firstName: String
+      - lastName: String
+      - accountId: AccountId?
+      - ownerId: UserId
+      ==
+      + create()
+      + associateAccount()
+      + disassociateAccount()
+    }
+  }
+
+  rectangle "Account Management" as AccountBC {
+    entity "<<Aggregate Root>>\nAccount" as Account {
+      + AccountId: UUID
+      --
+      - name: String
+      - industry: String
+      - revenue: Money?
+      - ownerId: UserId
+      ==
+      + create()
+      + updateRevenue()
+      + categorize()
+    }
+  }
+
+  rectangle "Opportunity Management" as OpportunityBC {
+    entity "<<Aggregate Root>>\nOpportunity" as Opportunity {
+      + OpportunityId: UUID
+      --
+      - name: String
+      - value: Money
+      - stage: OpportunityStage
+      - probability: 0-100
+      - expectedCloseDate: Date
+      - accountId: AccountId
+      - ownerId: UserId
+      ==
+      + create()
+      + advanceStage()
+      + win()
+      + lose()
+      + reopen()
+    }
+  }
+
+  rectangle "Task Management" as TaskBC {
+    entity "<<Aggregate Root>>\nTask" as Task {
+      + TaskId: UUID
+      --
+      - title: String
+      - status: TaskStatus
+      - priority: TaskPriority
+      - dueDate: Date?
+      - relatedEntity: EntityRef
+      - ownerId: UserId
+      ==
+      + create()
+      + start()
+      + complete()
+      + cancel()
+      + changePriority()
+    }
+  }
+}
+
+package "Legal Context (Core Domain)" as Legal CORE_STYLE {
+
+  rectangle "Case Management" as CaseBC {
+    entity "<<Aggregate Root>>\nCase" as Case {
+      + CaseId: UUID
+      --
+      - title: String
+      - status: CaseStatus
+      - priority: CasePriority
+      - clientId: ContactId
+      - assignedTo: UserId
+      - tasks: CaseTask[]
+      ==
+      + create()
+      + addTask()
+      + completeTask()
+      + close()
+    }
+
+    entity "<<Child Entity>>\nCaseTask" as CaseTask {
+      + CaseTaskId: UUID
+      --
+      - title: String
+      - status: TaskStatus
+      - dueDate: Date?
+    }
+  }
+
+  rectangle "Appointment Management" as AppointmentBC {
+    entity "<<Aggregate Root>>\nAppointment" as Appointment {
+      + AppointmentId: UUID
+      --
+      - title: String
+      - timeSlot: TimeSlot (VO)
+      - type: AppointmentType
+      - status: AppointmentStatus
+      - caseId: CaseId?
+      - attendeeIds: UserId[]
+      ==
+      + schedule()
+      + reschedule()
+      + confirm()
+      + cancel()
+      + complete()
+    }
+
+    class "TimeSlot (VO)" as TimeSlot {
+      + startTime: DateTime
+      + endTime: DateTime
+      + duration: Duration
+    }
+
+    class "<<Domain Service>>\nConflictDetector" as ConflictDetector {
+      + detectConflicts()
+      + findAvailableSlots()
+    }
+  }
+
+  rectangle "Deadline Management" as DeadlineBC {
+    entity "<<Aggregate Root>>\nDeadline" as Deadline {
+      + DeadlineId: UUID
+      --
+      - title: String
+      - dueDate: Date
+      - status: DeadlineStatus
+      - priority: DeadlinePriority
+      - caseId: CaseId
+      ==
+      + create()
+      + checkStatus()
+      + complete()
+      + waive()
+      + extend()
+    }
+
+    class "DeadlineRule (VO)" as DeadlineRule {
+      + ruleType: String
+      + daysOffset: Int
+      + excludeWeekends: Boolean
+      + excludeHolidays: Boolean
+    }
+
+    class "<<Domain Service>>\nDeadlineEngine" as DeadlineEngine {
+      + calculateDueDate()
+      + checkApproaching()
+      + checkOverdue()
+    }
+  }
+}
+
+package "Intelligence Context (Core Domain)" as Intelligence INTELLIGENCE_STYLE {
+
+  rectangle "AI Services" as AIBC {
+    interface "<<Port>>\nAIServicePort" as AIPort {
+      + scoreLead()
+      + qualifyLead()
+      + generateEmail()
+    }
+
+    class "Scoring Service" as ScoringService {
+      + scoreLead(input)
+      + getModelVersion()
+    }
+
+    class "Prediction Engine" as PredictionEngine {
+      + predictConversion()
+      + predictWinProbability()
+    }
+
+    class "Recommendation Engine" as RecommendationEngine {
+      + suggestNextAction()
+      + prioritizeTasks()
+    }
+  }
+}
+
+package "Platform Context (Supporting)" as Platform SUPPORTING_STYLE {
+
+  rectangle "Authentication" as AuthBC {
+    entity "User" as User
+    class "Session" as Session
+    class "Permissions" as Permissions
+  }
+
+  rectangle "Notifications" as NotificationBC {
+    class "NotificationService" as NotificationService
+    class "EmailService" as EmailService
+    class "SMSService" as SMSService
+  }
+
+  rectangle "Audit" as AuditBC {
+    class "AuditLog" as AuditLog
+    class "EventStore" as EventStore
+  }
+}
+
+package "Integration Context (Generic)" as Integration GENERIC_STYLE {
+
+  rectangle "External APIs" as ExternalBC {
+    interface "<<ACL>>\nEmailProvider" as EmailProvider
+    interface "<<ACL>>\nCalendarSync" as CalendarSync
+    interface "<<ACL>>\nDataEnrichment" as DataEnrichment
+  }
+}
+
+' ============================================================
+' RELATIONSHIPS BETWEEN CONTEXTS
+' ============================================================
+
+' CRM Internal Relationships
+Lead -[#green,bold]-> Contact : <<converts to>>\n(Conformist)
+Contact -[#blue]-> Account : <<belongs to>>\n(Customer-Supplier)
+Opportunity -[#blue]-> Account : <<belongs to>>\n(Customer-Supplier)
+Opportunity -[#blue,dashed]-> Contact : <<associated with>>\n(Customer-Supplier)
+Task -[#orange,dashed]-> Lead : <<relates to>>\n(Shared Kernel)
+Task -[#orange,dashed]-> Contact : <<relates to>>\n(Shared Kernel)
+Task -[#orange,dashed]-> Opportunity : <<relates to>>\n(Shared Kernel)
+
+' Legal Internal Relationships
+CaseTask -[#gray]-> Case : <<child of>>
+Deadline -[#blue]-> Case : <<belongs to>>\n(Customer-Supplier)
+Appointment -[#blue,dashed]-> Case : <<linked to>>\n(Customer-Supplier)
+
+' Intelligence to CRM
+AIPort -[#purple,bold]-> Lead : <<scores>>\n(Customer-Supplier)
+PredictionEngine -[#purple,dashed]-> Opportunity : <<predicts>>\n(Customer-Supplier)
+RecommendationEngine -[#purple,dashed]-> Task : <<suggests>>\n(Customer-Supplier)
+
+' Platform to All (Shared Kernel for Auth)
+AuthBC -[#gray,dotted]-> CRM : <<authenticates>>
+NotificationBC -[#gray,dotted]-> CRM : <<notifies>>\n(Published Language)
+NotificationBC -[#gray,dotted]-> Legal : <<notifies>>\n(Published Language)
+AuditBC -[#gray,dotted]-> CRM : <<audits>>\n(Published Language)
+AuditBC -[#gray,dotted]-> Legal : <<audits>>\n(Published Language)
+
+' Integration (Anti-Corruption Layer)
+DataEnrichment -[#red,dashed]-> Contact : <<enriches>>\n(ACL)
+DataEnrichment -[#red,dashed]-> Account : <<enriches>>\n(ACL)
+CalendarSync -[#red,dashed]-> Appointment : <<syncs>>\n(ACL)
+
+' ============================================================
+' DOMAIN EVENTS FLOW
+' ============================================================
+
+note bottom of LeadBC
+  **Domain Events:**
+  - LeadCreatedEvent
+  - LeadScoredEvent
+  - LeadQualifiedEvent
+  - LeadConvertedEvent
+  - LeadStatusChangedEvent
+end note
+
+note bottom of ContactBC
+  **Domain Events:**
+  - ContactCreatedEvent
+  - ContactUpdatedEvent
+  - ContactAccountAssociatedEvent
+  - ContactConvertedFromLeadEvent
+end note
+
+note bottom of OpportunityBC
+  **Domain Events:**
+  - OpportunityCreatedEvent
+  - OpportunityStageChangedEvent
+  - OpportunityWonEvent
+  - OpportunityLostEvent
+  - OpportunityValueUpdatedEvent
+  - OpportunityReopenedEvent
+end note
+
+note bottom of CaseBC
+  **Domain Events:**
+  - CaseCreatedEvent
+  - CaseStatusChangedEvent
+  - CaseTaskAddedEvent
+  - CaseTaskCompletedEvent
+  - CaseClosedEvent
+end note
+
+note bottom of AppointmentBC
+  **Domain Events:**
+  - AppointmentCreatedEvent
+  - AppointmentRescheduledEvent
+  - AppointmentConfirmedEvent
+  - AppointmentCancelledEvent
+  - AppointmentConflictDetectedEvent
+end note
+
+note bottom of DeadlineBC
+  **Domain Events:**
+  - DeadlineCreatedEvent
+  - DeadlineApproachingEvent
+  - DeadlineDueTodayEvent
+  - DeadlineOverdueEvent
+  - DeadlineCompletedEvent
+end note
+
+' ============================================================
+' LEGEND
+' ============================================================
+
+legend right
+  |= Pattern |= Description |
+  | Shared Kernel | Shared domain concepts (User, ownerId) |
+  | Customer-Supplier | Downstream depends on upstream APIs |
+  | Conformist | Downstream conforms to upstream model |
+  | Published Language | Event-based integration |
+  | Anti-Corruption Layer (ACL) | Protects domain from external systems |
+  |= Color |= Meaning |
+  | <back:LightGreen>Green</back> | Core Domain |
+  | <back:LightYellow>Yellow</back> | Intelligence Domain |
+  | <back:LightBlue>Blue</back> | Supporting Subdomain |
+  | <back:LightGray>Gray</back> | Generic Subdomain |
+endlegend
+
+' ============================================================
+' ARCHITECTURE LAYERS NOTE
+' ============================================================
+
+note as ArchNote
+  **Hexagonal Architecture Layers:**
+
+  **Domain Layer** (packages/domain)
+  - Entities, Value Objects, Aggregates
+  - Domain Events, Domain Services
+  - NO external dependencies
+
+  **Application Layer** (packages/application)
+  - Use Cases, Application Services
+  - Port Interfaces (Repository, External)
+  - Depends only on Domain
+
+  **Adapters Layer** (packages/adapters)
+  - Prisma/In-Memory Repositories
+  - External API Clients
+  - Implements Application Ports
+
+  **Apps Layer** (apps/*)
+  - Composition Root
+  - tRPC Routers, Next.js Pages
+  - Wires all layers together
+end note
+
+@enduml

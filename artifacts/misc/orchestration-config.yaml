@@ -1,0 +1,11 @@
+# Orchestration Configuration
+# Created: 2025-12-21T08:36:22.737Z
+
+orchestration:
+  mode: multi-agent
+  quality_gates:
+    enabled: true
+    auto_retry: true
+  task_routing:
+    strategy: capability-based
+    fallback: round-robin

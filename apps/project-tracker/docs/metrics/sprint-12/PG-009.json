@@ -1,0 +1,61 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "PG-009",
+  "section": "Public Pages",
+  "description": "Blog Index",
+  "owner": "Frontend Dev",
+  "dependencies": {
+    "required": [
+      "PG-001",
+      "GTM-002",
+      "BRAND-001"
+    ],
+    "verified_at": "2026-01-29T01:33:17.630Z",
+    "all_satisfied": true
+  },
+  "status": "DONE",
+  "status_history": [
+    {
+      "status": "DONE",
+      "at": "2025-12-31T07:00:00Z",
+      "note": "Blog index page completed"
+    }
+  ],
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/(public)/blog/page.tsx"
+    ],
+    "created": [
+      "apps/web/src/app/(public)/blog/page.tsx"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "Web Build",
+      "command": "pnpm --filter web build",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-31T06:55:00Z",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2025-12-31T07:00:00Z"
+    }
+  ],
+  "kpis": {
+    "page_live": {
+      "target": true,
+      "actual": true,
+      "met": true
+    }
+  },
+  "blockers": [],
+  "started_at": "2025-12-31T06:00:00Z",
+  "completed_at": "2025-12-31T07:00:00Z",
+  "actual_duration_minutes": 60,
+  "dependencies_resolved": [
+    "PG-001",
+    "GTM-002",
+    "BRAND-001"
+  ]
+}

@@ -1,0 +1,97 @@
+# Example Terraform Variables
+# Copy this file to terraform.tfvars and fill in your values
+# NEVER commit terraform.tfvars to git!
+
+# Global Configuration
+environment  = "dev"
+project_name = "intelliflow-crm"
+region       = "us-east-1"
+
+# Tags
+tags = {
+  Project     = "IntelliFlow-CRM"
+  ManagedBy   = "Terraform"
+  Repository  = "intelliflow/intelliflow-crm"
+  Team        = "Engineering"
+  CostCenter  = "Engineering"
+}
+
+# Supabase Configuration
+supabase_access_token  = "env:SUPABASE_ACCESS_TOKEN"  # Or set directly
+supabase_project_name  = "intelliflow-crm-dev"
+supabase_region        = "us-east-1"
+supabase_db_password   = "env:DB_PASSWORD"
+supabase_plan          = "free"
+
+# Vercel Configuration
+vercel_api_token    = "env:VERCEL_API_TOKEN"
+vercel_project_name = "intelliflow-crm-dev"
+vercel_framework    = "nextjs"
+
+vercel_git_repo = {
+  type = "github"
+  repo = "intelliflow/intelliflow-crm"
+}
+
+vercel_domains = []  # Add custom domains: ["intelliflow-crm.com", "www.intelliflow-crm.com"]
+
+# Railway Configuration
+railway_token        = "env:RAILWAY_TOKEN"
+railway_project_name = "intelliflow-crm-dev"
+
+railway_services = {
+  api = {
+    image    = "ghcr.io/intelliflow/api:latest"
+    replicas = 1
+    memory   = "512Mi"
+    cpu      = "0.5"
+    env_vars = {
+      PORT = "3001"
+    }
+  }
+  ai-worker = {
+    image    = "ghcr.io/intelliflow/ai-worker:latest"
+    replicas = 1
+    memory   = "1Gi"
+    cpu      = "1"
+    env_vars = {
+      WORKER_CONCURRENCY = "5"
+    }
+  }
+}
+
+# Database Extensions
+enable_pgvector = true
+enable_realtime = true
+
+# Authentication
+auth_site_url   = "http://localhost:3000"
+auth_jwt_expiry = 3600
+
+# Storage Buckets
+storage_buckets = {
+  documents = {
+    public             = false
+    file_size_limit    = "50MiB"
+    allowed_mime_types = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
+  }
+  images = {
+    public             = true
+    file_size_limit    = "10MiB"
+    allowed_mime_types = ["image/png", "image/jpeg", "image/webp", "image/gif"]
+  }
+  avatars = {
+    public             = true
+    file_size_limit    = "5MiB"
+    allowed_mime_types = ["image/png", "image/jpeg", "image/webp"]
+  }
+}
+
+# Monitoring
+enable_monitoring      = true
+enable_drift_detection = true
+drift_check_schedule   = "0 8 * * *"  # Daily at 8 AM UTC
+
+# Cost Management
+enable_cost_alerts    = true
+cost_alert_threshold  = 100  # USD per month

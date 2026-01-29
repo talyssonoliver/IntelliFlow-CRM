@@ -1,0 +1,218 @@
+# Webhooks Configuration
+# IFC-138: External calendar providers integration with bidirectional sync
+#
+# This file defines webhook configurations for external calendar integrations
+# including Google Calendar and Microsoft Graph API
+
+version: "1.0"
+generated_at: "2027-12-27T00:00:00Z"
+
+# Global webhook settings
+global:
+  # Base URL for webhook callbacks (set via environment variable)
+  callback_base_url: "${WEBHOOKS_CALLBACK_BASE_URL:-https://api.intelliflow.com}"
+
+  # Retry configuration
+  retry:
+    max_attempts: 3
+    initial_delay_ms: 1000
+    max_delay_ms: 30000
+    backoff_multiplier: 2
+
+  # Idempotency settings
+  idempotency:
+    enabled: true
+    ttl_minutes: 60
+    store: "redis"  # redis | memory
+
+  # Security settings
+  security:
+    # Verify webhook signatures
+    signature_verification: true
+    # IP allowlisting (provider-specific)
+    ip_allowlist_enabled: true
+    # Rate limiting for incoming webhooks
+    rate_limit:
+      enabled: true
+      requests_per_minute: 1000
+
+# Provider-specific configurations
+providers:
+  google:
+    enabled: true
+    name: "Google Calendar"
+    api_version: "v3"
+
+    # OAuth2 settings
+    oauth:
+      authorization_url: "https://accounts.google.com/o/oauth2/v2/auth"
+      token_url: "https://oauth2.googleapis.com/token"
+      scopes:
+        - "https://www.googleapis.com/auth/calendar"
+        - "https://www.googleapis.com/auth/calendar.events"
+        - "https://www.googleapis.com/auth/calendar.readonly"
+
+    # Webhook (Push Notifications) settings
+    webhook:
+      endpoint_path: "/webhooks/google/calendar"
+      # Maximum expiration for Google Calendar push notifications
+      max_expiration_days: 30
+      # Renewal buffer (renew X days before expiration)
+      renewal_buffer_days: 3
+      # Events to subscribe to
+      change_types:
+        - "sync"     # Initial sync notification
+        - "exists"   # Resource created/updated
+        - "not_exists"  # Resource deleted
+
+    # Rate limiting for outbound requests
+    rate_limit:
+      requests_per_100_seconds: 900  # Google allows ~1000/100s
+
+    # Sync settings
+    sync:
+      batch_size: 250
+      # Delta sync token expiry (Google: 7 days typical)
+      sync_token_ttl_hours: 168
+
+  microsoft:
+    enabled: true
+    name: "Microsoft Graph Calendar"
+    api_version: "v1.0"
+
+    # OAuth2 settings
+    oauth:
+      # Multi-tenant by default, can be overridden per-tenant
+      tenant_id: "common"
+      authorization_url: "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/authorize"
+      token_url: "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
+      scopes:
+        - "Calendars.ReadWrite"
+        - "User.Read"
+        - "offline_access"
+
+    # Webhook (Subscriptions) settings
+    webhook:
+      endpoint_path: "/webhooks/microsoft/calendar"
+      # Microsoft Graph subscriptions max lifetime
+      max_expiration_minutes: 4230  # ~3 days
+      # Renewal buffer
+      renewal_buffer_minutes: 1440  # 1 day before expiration
+      # Events to subscribe to
+      change_types:
+        - "created"
+        - "updated"
+        - "deleted"
+      # Client state for validation
+      use_client_state: true
+
+    # Rate limiting for outbound requests
+    rate_limit:
+      requests_per_10_minutes: 9000  # Microsoft allows ~10000/10min
+
+    # Sync settings
+    sync:
+      batch_size: 50
+      # Delta link handling
+      use_delta_query: true
+
+# Webhook endpoint definitions
+endpoints:
+  google_calendar:
+    path: "/api/webhooks/google/calendar"
+    methods: ["POST"]
+    authentication:
+      type: "header"
+      # Google sends channel ID and resource ID in headers
+      headers:
+        - "X-Goog-Channel-ID"
+        - "X-Goog-Resource-ID"
+        - "X-Goog-Resource-State"
+        - "X-Goog-Message-Number"
+    validation:
+      # Validate channel ID matches registered subscription
+      validate_channel: true
+    processing:
+      # Queue for async processing
+      queue: "calendar-sync"
+      # Processing timeout
+      timeout_ms: 30000
+
+  microsoft_calendar:
+    path: "/api/webhooks/microsoft/calendar"
+    methods: ["POST"]
+    authentication:
+      type: "query_and_body"
+      # Microsoft validation token for subscription creation
+      query_params:
+        - "validationToken"
+      # Client state in body for event notifications
+      body_fields:
+        - "clientState"
+    validation:
+      # Validate client state matches
+      validate_client_state: true
+    processing:
+      queue: "calendar-sync"
+      timeout_ms: 30000
+
+# Event processing pipeline
+processing:
+  # Dead letter queue for failed events
+  dlq:
+    enabled: true
+    max_retries: 5
+    ttl_days: 7
+
+  # Conflict resolution strategy
+  conflict_resolution:
+    strategy: "last_write_wins"
+    # Use etag/changeKey for optimistic locking
+    use_etag: true
+    # On conflict, prefer local or external
+    preference: "external"
+
+  # Event deduplication
+  deduplication:
+    enabled: true
+    window_minutes: 5
+    # Hash fields for dedup key
+    hash_fields:
+      - "externalId"
+      - "changeType"
+      - "provider"
+
+# Monitoring and alerting
+monitoring:
+  metrics:
+    enabled: true
+    # Metrics to track
+    track:
+      - "webhook_received_total"
+      - "webhook_processed_total"
+      - "webhook_failed_total"
+      - "webhook_processing_duration_ms"
+      - "sync_events_created"
+      - "sync_events_updated"
+      - "sync_events_deleted"
+      - "sync_conflicts_total"
+
+  alerting:
+    # Alert on high failure rate
+    failure_rate_threshold: 0.05  # 5%
+    # Alert on processing latency
+    latency_p99_threshold_ms: 5000
+    # Alert on DLQ backlog
+    dlq_backlog_threshold: 100
+
+# Logging
+logging:
+  # Log level for webhook processing
+  level: "info"
+  # Include request/response bodies in debug mode
+  include_body: false
+  # Mask sensitive fields
+  mask_fields:
+    - "accessToken"
+    - "refreshToken"
+    - "clientSecret"

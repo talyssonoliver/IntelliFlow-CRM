@@ -1,0 +1,1225 @@
+{
+  "$schema": "../schemas/sprint-audit-report.schema.json",
+  "schema_version": "1.0.0",
+  "run_id": "sprint9-audit-20251229T204101.864Z-618284c8",
+  "sprint": 9,
+  "generated_at": "2025-12-29T20:44:31.310Z",
+  "attestor": "sprint-completion-auditor",
+  "verdict": "FAIL",
+  "config": {
+    "strictMode": true,
+    "skipValidations": false
+  },
+  "summary": {
+    "totalTasks": 8,
+    "completedTasks": 8,
+    "auditedTasks": 8,
+    "passedTasks": 0,
+    "failedTasks": 8,
+    "needsHumanTasks": 0
+  },
+  "attestation_summary": {
+    "by_verdict": {
+      "complete": 0,
+      "incomplete": 8,
+      "partial": 0,
+      "blocked": 0,
+      "needs_human": 0,
+      "missing": 0
+    },
+    "debt_items_created": 8,
+    "review_queue_items": 0
+  },
+  "evidence_summary": {
+    "artifactsVerified": 19,
+    "artifactsMissing": 9,
+    "artifactsEmpty": 0,
+    "validationsPassed": 0,
+    "validationsFailed": 3,
+    "kpisMet": 0,
+    "kpisMissed": 0,
+    "placeholdersFound": 0,
+    "totalCodebasePlaceholders": 431
+  },
+  "artifact_hashes": {
+    "artifacts/misc/skill-assessment-results.csv": "8223b96232c8b62269161c7a290338e9ffd7e17ee1904a991f06bc09267afb70",
+    "artifacts/reports/training-completion.csv": "1ddbc4796011793a13205559e587e3de83583527d6ea98907cc6df55ca9031a4",
+    "artifacts/reports/confidence-survey.md": "11602fd704fde03f57a49f4e20e5874dc8d03150b490217c9b64d78d36489c43",
+    "docs/shared/vendor-abstraction-layers.md": "3f60ea6d36a8ff27e73229be748519d8148a8a591fd07f9054d74ce8bbdca637",
+    "artifacts/misc/migration-test-plan.yaml": "54e8a234083386d97691dc1e851b31e0660fb77a1182e43703bad9594f457a1b",
+    "artifacts/logs/portability-test.log": "1a8446e499c97039ebb8a6e0be9053de122cffc62276b3faead7c40e419d3edc",
+    "artifacts/reports/alternatives.csv": "0bed450ca9a43561801f8aa59d9b92f0631859bcf8ef607d66ecbfe4173fef66",
+    "docs/shared/dashboard-catalog.md": "9e521e28e28797fee878f2729f5f9c1494811ede9ff42cf7eddbf2477c5f8e8c",
+    "artifacts/misc/otel-config.yaml": "a711147b6f4b1896dce083ed2d8af58b742ce209cc2f91908623a3da77ac3c17",
+    "docs/security/log-schema.md": "a42372506834e0f82a02cff342d6ed60e69459730ffe20bf31b92e0d4eaf11bc",
+    "artifacts/misc/dashboards.json": "440c2e09f8fcf8f7d9453a89bf22f93b68d7823eb7eb95542c2da438901ac008",
+    "artifacts/misc/alert-rules.yml": "fa3ff2dc7b75e6ec817ca915cb7210d7911cf9d7f5fae9e032b116115d273f77",
+    "apps/api/src/shared/audit-encryption-module.ts": "a70f74064f8d8147598b9a224099625fb5dc5485f8685b5006052d837fc041c9",
+    "docs/shared/retention-policy.md": "507d79013ffc945a44645d4a2bce2fb94bdb3812e00dc62bb175a9ae0cbc720b",
+    "scripts/migration/mapping.csv": "9d46d43b574cf57d7b1b1fec8dc07f927be601f040da6878b057df42be7919eb",
+    "scripts/migration/rehearsal-report.md": "9c430572e59a0b2228e5a737c77c9d70be6d2cc47e585fc27f59ab69d272c923",
+    "scripts/migration/cutover-plan.md": "d4b8f0dadd5d0996250f0ec3980c00305dcf3ec665db086fadf490752007e720",
+    "artifacts/misc/reconciliation-results.csv": "044703797fbebf3caf46c21a45124f6f6cef5904691c16954cdcdb458c019c7c",
+    "docs/operations/runbooks/dlq-triage.md": "82ddbacc6df924547a752a2ae1c9bb43d041b85f8369631ac794c017f34fe655"
+  },
+  "task_results": [
+    {
+      "taskId": "IFC-056",
+      "description": "Team Upskilling Program",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "artifacts/misc/skill-assessment-results.csv",
+          "expectedBy": "IFC-056",
+          "status": "found",
+          "size": 281,
+          "sha256": "8223b96232c8b62269161c7a290338e9ffd7e17ee1904a991f06bc09267afb70",
+          "issues": []
+        },
+        {
+          "path": "artifacts/reports/training-completion.csv",
+          "expectedBy": "IFC-056",
+          "status": "found",
+          "size": 878,
+          "sha256": "1ddbc4796011793a13205559e587e3de83583527d6ea98907cc6df55ca9031a4",
+          "issues": []
+        },
+        {
+          "path": "artifacts/reports/confidence-survey.md",
+          "expectedBy": "IFC-056",
+          "status": "found",
+          "size": 4651,
+          "sha256": "11602fd704fde03f57a49f4e20e5874dc8d03150b490217c9b64d78d36489c43",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:artifacts/attestations/IFC-056/context_ack.json",
+          "expectedBy": "IFC-056",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/IFC-056/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Team velocity increasing",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "confidence >4/5 (actual: 3.7/5)",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-056",
+        "dependencies": [
+          "IFC-009"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-009"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Continuous learning: tRPC",
+          "Next.js 16.0.10 (Turbopack FS caching",
+          "Cache Components",
+          "proxy replacing middleware)",
+          "LangChain"
+        ],
+        "verified": 0,
+        "unverified": 5,
+        "details": [
+          {
+            "criterion": "Continuous learning: tRPC",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Next.js 16.0.10 (Turbopack FS caching",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Cache Components",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "proxy replacing middleware)",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "LangChain",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/IFC-056/context_ack.json",
+        "5 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete"
+      ]
+    },
+    {
+      "taskId": "IFC-057",
+      "description": "Vendor Lock-in Mitigation",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "docs/shared/vendor-abstraction-layers.md",
+          "expectedBy": "IFC-057",
+          "status": "found",
+          "size": 14828,
+          "sha256": "3f60ea6d36a8ff27e73229be748519d8148a8a591fd07f9054d74ce8bbdca637",
+          "issues": []
+        },
+        {
+          "path": "artifacts/misc/migration-test-plan.yaml",
+          "expectedBy": "IFC-057",
+          "status": "found",
+          "size": 18415,
+          "sha256": "54e8a234083386d97691dc1e851b31e0660fb77a1182e43703bad9594f457a1b",
+          "issues": []
+        },
+        {
+          "path": "artifacts/logs/portability-test.log",
+          "expectedBy": "IFC-057",
+          "status": "found",
+          "size": 15180,
+          "sha256": "1a8446e499c97039ebb8a6e0be9053de122cffc62276b3faead7c40e419d3edc",
+          "issues": []
+        },
+        {
+          "path": "artifacts/reports/alternatives.csv",
+          "expectedBy": "IFC-057",
+          "status": "found",
+          "size": 5222,
+          "sha256": "0bed450ca9a43561801f8aa59d9b92f0631859bcf8ef607d66ecbfe4173fef66",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:artifacts/attestations/IFC-057/context_ack.json",
+          "expectedBy": "IFC-057",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/IFC-057/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Migration tested",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "<1 week effort (actual: 3-5 days)",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-057",
+        "dependencies": [
+          "IFC-011"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-011"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Can migrate from Supabase/Vercel if needed",
+          "artifacts: vendor-abstraction-layers.md",
+          "migration-test-plan.yaml",
+          "portability-test.log"
+        ],
+        "verified": 2,
+        "unverified": 2,
+        "details": [
+          {
+            "criterion": "Can migrate from Supabase/Vercel if needed",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: vendor-abstraction-layers.md",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "migration-test-plan.yaml",
+            "verified": true,
+            "evidence": "All 0 validations passed"
+          },
+          {
+            "criterion": "portability-test.log",
+            "verified": true,
+            "evidence": "All 0 validations passed"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/IFC-057/context_ack.json",
+        "2 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete"
+      ]
+    },
+    {
+      "taskId": "IFC-096",
+      "description": "Custom Reports & Dashboards",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "EVIDENCE:artifacts/attestations/IFC-096/context_ack.json",
+          "expectedBy": "IFC-096",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/IFC-096/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [
+        {
+          "taskId": "IFC-096",
+          "command": "pnpm build",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 62138,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts\\reports\\sprint-audit\\sprint9-audit-20251229T204101.864Z-618284c8\\evidence\\validation-logs\\IFC-096_1767040884697.log",
+          "timestamp": "2025-12-29T20:41:24.697Z",
+          "error": "Command timed out after 60000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "Custom dashboards created",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "export functional",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-096",
+        "dependencies": [
+          "IFC-091",
+          "IFC-092"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-091",
+          "IFC-092"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Custom dashboards created",
+          "export functional",
+          "artifacts: context_ack.json",
+          "verified by: pnpm build"
+        ],
+        "verified": 0,
+        "unverified": 4,
+        "details": [
+          {
+            "criterion": "Custom dashboards created",
+            "verified": false,
+            "evidence": "Missing artifacts: 1"
+          },
+          {
+            "criterion": "export functional",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: context_ack.json",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "verified by: pnpm build",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/IFC-096/context_ack.json",
+        "Validation(s) failed: pnpm build",
+        "4 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete",
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "IFC-097",
+      "description": "Distributed Tracing & Logging",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "artifacts/coverage/trace-coverage-report.json",
+          "expectedBy": "IFC-097",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: artifacts/coverage/trace-coverage-report.json"
+          ]
+        },
+        {
+          "path": "docs/shared/dashboard-catalog.md",
+          "expectedBy": "IFC-097",
+          "status": "found",
+          "size": 17430,
+          "sha256": "9e521e28e28797fee878f2729f5f9c1494811ede9ff42cf7eddbf2477c5f8e8c",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:artifacts/attestations/IFC-097/context_ack.json",
+          "expectedBy": "IFC-097",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/IFC-097/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "99% of requests traced (actual: 99.0%)",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "dashboards available (20 documented)",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-097",
+        "dependencies": [
+          "IFC-007"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-007"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "99% of requests traced",
+          "dashboards available",
+          "artifacts: trace-coverage-report.json",
+          "dashboard-catalog.md",
+          "context_ack.json",
+          "gates: coverage-gte-90"
+        ],
+        "verified": 0,
+        "unverified": 6,
+        "details": [
+          {
+            "criterion": "99% of requests traced",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "dashboards available",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: trace-coverage-report.json",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "dashboard-catalog.md",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "context_ack.json",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "gates: coverage-gte-90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: artifacts/coverage/trace-coverage-report.json, EVIDENCE:artifacts/attestations/IFC-097/context_ack.json",
+        "6 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete"
+      ]
+    },
+    {
+      "taskId": "IFC-116",
+      "description": "Instrument application with OpenTelemetry, unify logs, metrics and traces",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "artifacts/misc/otel-config.yaml",
+          "expectedBy": "IFC-116",
+          "status": "found",
+          "size": 7344,
+          "sha256": "a711147b6f4b1896dce083ed2d8af58b742ce209cc2f91908623a3da77ac3c17",
+          "issues": []
+        },
+        {
+          "path": "docs/security/log-schema.md",
+          "expectedBy": "IFC-116",
+          "status": "found",
+          "size": 7383,
+          "sha256": "a42372506834e0f82a02cff342d6ed60e69459730ffe20bf31b92e0d4eaf11bc",
+          "issues": []
+        },
+        {
+          "path": "artifacts/misc/dashboards.json",
+          "expectedBy": "IFC-116",
+          "status": "found",
+          "size": 10667,
+          "sha256": "440c2e09f8fcf8f7d9453a89bf22f93b68d7823eb7eb95542c2da438901ac008",
+          "issues": []
+        },
+        {
+          "path": "artifacts/misc/alert-rules.yml",
+          "expectedBy": "IFC-116",
+          "status": "found",
+          "size": 10907,
+          "sha256": "fa3ff2dc7b75e6ec817ca915cb7210d7911cf9d7f5fae9e032b116115d273f77",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:artifacts/attestations/IFC-116/context_ack.json",
+          "expectedBy": "IFC-116",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/IFC-116/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "MTTD <2min (actual: 1.2min)",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "100% services instrumented",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-116",
+        "dependencies": [
+          "IFC-074"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-074"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "All services emit structured logs",
+          "traces and metrics",
+          "dashboards and alerts created",
+          "SLOs defined",
+          "targets: >=100%",
+          "<2min"
+        ],
+        "verified": 0,
+        "unverified": 6,
+        "details": [
+          {
+            "criterion": "All services emit structured logs",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "traces and metrics",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "dashboards and alerts created",
+            "verified": false,
+            "evidence": "Missing artifacts: 1"
+          },
+          {
+            "criterion": "SLOs defined",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "targets: >=100%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "<2min",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/IFC-116/context_ack.json",
+        "6 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete"
+      ]
+    },
+    {
+      "taskId": "IFC-124",
+      "description": "Encrypt and aggregate audit logs; automate compliance reporting",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/api/src/shared/audit-encryption-module.ts",
+          "expectedBy": "IFC-124",
+          "status": "found",
+          "size": 9138,
+          "sha256": "a70f74064f8d8147598b9a224099625fb5dc5485f8685b5006052d837fc041c9",
+          "issues": []
+        },
+        {
+          "path": "docs/shared/retention-policy.md",
+          "expectedBy": "IFC-124",
+          "status": "found",
+          "size": 18383,
+          "sha256": "507d79013ffc945a44645d4a2bce2fb94bdb3812e00dc62bb175a9ae0cbc720b",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:artifacts/attestations/IFC-124/context_ack.json",
+          "expectedBy": "IFC-124",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/IFC-124/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Audit retention meets regulatory needs (GDPR",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "SOC2",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "ISO 27001)",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "report generation automated",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-124",
+        "dependencies": [
+          "IFC-098"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-098"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Audit logs encrypted and stored centrally",
+          "scheduled exports for compliance frameworks",
+          "data minimization applied",
+          "artifacts: audit-encryption-module.ts",
+          "retention-policy.md",
+          "context_ack.json"
+        ],
+        "verified": 0,
+        "unverified": 6,
+        "details": [
+          {
+            "criterion": "Audit logs encrypted and stored centrally",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "scheduled exports for compliance frameworks",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "data minimization applied",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: audit-encryption-module.ts",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "retention-policy.md",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "context_ack.json",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/IFC-124/context_ack.json",
+        "6 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete"
+      ]
+    },
+    {
+      "taskId": "IFC-145",
+      "description": "Plan and execute legacy system migration: discover and map data; assess data quality; design migration scripts; run rehearsals and reconciliation reporting; finalize cutover with rollback plan",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "scripts/migration/mapping.csv",
+          "expectedBy": "IFC-145",
+          "status": "found",
+          "size": 9211,
+          "sha256": "9d46d43b574cf57d7b1b1fec8dc07f927be601f040da6878b057df42be7919eb",
+          "issues": []
+        },
+        {
+          "path": "scripts/migration/rehearsal-report.md",
+          "expectedBy": "IFC-145",
+          "status": "found",
+          "size": 10467,
+          "sha256": "9c430572e59a0b2228e5a737c77c9d70be6d2cc47e585fc27f59ab69d272c923",
+          "issues": []
+        },
+        {
+          "path": "scripts/migration/cutover-plan.md",
+          "expectedBy": "IFC-145",
+          "status": "found",
+          "size": 25800,
+          "sha256": "d4b8f0dadd5d0996250f0ec3980c00305dcf3ec665db086fadf490752007e720",
+          "issues": []
+        },
+        {
+          "path": "artifacts/misc/reconciliation-results.csv",
+          "expectedBy": "IFC-145",
+          "status": "found",
+          "size": 9415,
+          "sha256": "044703797fbebf3caf46c21a45124f6f6cef5904691c16954cdcdb458c019c7c",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:artifacts/attestations/IFC-145/context_ack.json",
+          "expectedBy": "IFC-145",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/IFC-145/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [
+        {
+          "taskId": "IFC-145",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 61735,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts\\reports\\sprint-audit\\sprint9-audit-20251229T204101.864Z-618284c8\\evidence\\validation-logs\\IFC-145_1767040947376.log",
+          "timestamp": "2025-12-29T20:42:27.376Z",
+          "error": "Command timed out after 60000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "Data completeness 99.94% (target >=99%)",
+          "target": ">= 99%",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "zero critical data loss",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "migration time 2.8h (target <4h)",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-145",
+        "dependencies": [
+          "IFC-002",
+          "IFC-136"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-002",
+          "IFC-136"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Data mapping documents created",
+          "migration scripts developed and tested",
+          "rehearsal migration executed with reconciliation reports",
+          "cutover plan created with rollback procedure",
+          "final migration executed with acceptance of accuracy and completeness",
+          "targets: >=99%"
+        ],
+        "verified": 0,
+        "unverified": 6,
+        "details": [
+          {
+            "criterion": "Data mapping documents created",
+            "verified": false,
+            "evidence": "Missing artifacts: 1"
+          },
+          {
+            "criterion": "migration scripts developed and tested",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          },
+          {
+            "criterion": "rehearsal migration executed with reconciliation reports",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "cutover plan created with rollback procedure",
+            "verified": false,
+            "evidence": "Missing artifacts: 1"
+          },
+          {
+            "criterion": "final migration executed with acceptance of accuracy and completeness",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "targets: >=99%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/IFC-145/context_ack.json",
+        "Validation(s) failed: pnpm test",
+        "6 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete",
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "IFC-151",
+      "description": "Event consumers framework: retries + DLQ + backoff + observability; standard webhook/idempotency utilities",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "docs/operations/runbooks/dlq-triage.md",
+          "expectedBy": "IFC-151",
+          "status": "found",
+          "size": 15519,
+          "sha256": "82ddbacc6df924547a752a2ae1c9bb43d041b85f8369631ac794c017f34fe655",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:artifacts/attestations/IFC-151/context_ack.json",
+          "expectedBy": "IFC-151",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:artifacts/attestations/IFC-151/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [
+        {
+          "taskId": "IFC-151",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 62043,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts\\reports\\sprint-audit\\sprint9-audit-20251229T204101.864Z-618284c8\\evidence\\validation-logs\\IFC-151_1767041009214.log",
+          "timestamp": "2025-12-29T20:43:29.214Z",
+          "error": "Command timed out after 60000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "DLQ drain success >95%",
+          "target": "> 95%",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "retry success >90%",
+          "target": "> 90%",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "MTTR <30 min (comprehensive runbook created)",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-151",
+        "dependencies": [
+          "IFC-150",
+          "ENV-008-AI"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "ENV-008-AI"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Consumer SDK supports retries/backoff",
+          "DLQ storage/triage workflow",
+          "idempotent handlers",
+          "poison-message handling",
+          "metrics and alerts",
+          "chaos tests",
+          "artifacts: dlq-triage.md",
+          "context_ack.json",
+          "targets: >=95%",
+          ">=90%",
+          "<30 min"
+        ],
+        "verified": 0,
+        "unverified": 11,
+        "details": [
+          {
+            "criterion": "Consumer SDK supports retries/backoff",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "DLQ storage/triage workflow",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "idempotent handlers",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "poison-message handling",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "metrics and alerts",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "chaos tests",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          },
+          {
+            "criterion": "artifacts: dlq-triage.md",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "context_ack.json",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "targets: >=95%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": ">=90%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "<30 min",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/IFC-151/context_ack.json",
+        "Validation(s) failed: pnpm test",
+        "11 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete",
+        "Fix failing validations before marking complete"
+      ]
+    }
+  ],
+  "blocking_issues": [
+    {
+      "taskId": "IFC-056",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/IFC-056/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-056",
+      "severity": "high",
+      "issue": "5 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-057",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/IFC-057/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-057",
+      "severity": "high",
+      "issue": "2 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-096",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/IFC-096/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-096",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm build",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-096",
+      "severity": "high",
+      "issue": "4 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-097",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: artifacts/coverage/trace-coverage-report.json, EVIDENCE:artifacts/attestations/IFC-097/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-097",
+      "severity": "high",
+      "issue": "6 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-116",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/IFC-116/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-116",
+      "severity": "high",
+      "issue": "6 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-124",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/IFC-124/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-124",
+      "severity": "high",
+      "issue": "6 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-145",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/IFC-145/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-145",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-145",
+      "severity": "high",
+      "issue": "6 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-151",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:artifacts/attestations/IFC-151/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-151",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-151",
+      "severity": "high",
+      "issue": "11 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    }
+  ],
+  "duration_seconds": 199.422
+}

@@ -1,0 +1,62 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-126",
+  "section": "Documentation",
+  "description": "Continuously maintain ADR registry and developer guide updates",
+  "owner": "Tech Lead",
+  "dependencies": {
+    "required": [
+      "IFC-100",
+      "GOV-001"
+    ],
+    "verified_at": "2026-01-29T01:33:17.635Z",
+    "all_satisfied": true
+  },
+  "status": "DONE",
+  "status_history": [
+    {
+      "status": "DONE",
+      "at": "2025-12-31T07:00:00Z",
+      "note": "ADR registry and dev guide updated"
+    }
+  ],
+  "artifacts": {
+    "expected": [
+      "docs/dev-guide.md",
+      "artifacts/misc/adr-index.csv"
+    ],
+    "created": [
+      "docs/dev-guide.md",
+      "artifacts/misc/adr-index.csv"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "Documentation Review",
+      "command": "code-review",
+      "type": "manual",
+      "required": true,
+      "executed_at": "2025-12-31T06:55:00Z",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2025-12-31T07:00:00Z"
+    }
+  ],
+  "kpis": {
+    "adr_coverage": {
+      "target": 100,
+      "actual": 100,
+      "met": true,
+      "unit": "percent"
+    }
+  },
+  "blockers": [],
+  "started_at": "2025-12-31T06:30:00Z",
+  "completed_at": "2025-12-31T07:00:00Z",
+  "actual_duration_minutes": 30,
+  "dependencies_resolved": [
+    "IFC-100",
+    "GOV-001"
+  ]
+}

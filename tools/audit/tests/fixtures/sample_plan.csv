@@ -1,0 +1,5 @@
+"Task ID","Section","Description","Owner","Dependencies","CleanDependencies","CrossQuarterDeps","Pre-requisites","Definition of Done","Status","KPIs","Target Sprint","Artifacts To Track","Validation Method"
+"A-001","Foundation","Do thing A","Alice","","","False","","","Completed","","0",".specify/specifications/A-001.md, .specify/planning/A-001.md",""
+"B-001","Foundation","Do thing B","Bob","","","False","","","In Progress","","0",".specify/specifications/B-001.md, .specify/planning/B-001.md",""
+"C-001","Foundation","Do thing C","Carol","","","False","","","Completed","","1",".specify/specifications/C-001.md, .specify/planning/C-001.md",""
+

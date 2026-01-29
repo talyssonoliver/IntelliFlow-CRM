@@ -1,0 +1,133 @@
+IntelliFlow CRM - Validation Output (sanitized)
+Generated: 2025-12-19T21:04:38.908Z
+Repo: C:\taly\intelliFlow-CRM
+
+=== pnpm run validate:sprint0 ===
+Exit code: 0
+
+
+> intelliflow-crm@0.1.0 validate:sprint0 C:\taly\intelliFlow-CRM
+> tsx tools/scripts/sprint0-validation.ts
+
+======================================================================
+IntelliFlow CRM - Sprint 0 Validation
+======================================================================
+
+Validating Monorepo Structure...
+[PASS] Root package.json: Root package.json exists
+[PASS] pnpm-workspace.yaml: pnpm workspace configuration exists
+[PASS] turbo.json: Turbo configuration exists
+[PASS] Apps directory: Apps directory exists
+[PASS] Packages directory: Packages directory exists
+[PASS] Tests directory: Tests directory exists
+
+Validating Configuration Files...
+[PASS] tsconfig.json: tsconfig.json exists
+[PASS] vitest.config.ts: vitest.config.ts exists
+[PASS] playwright.config.ts: playwright.config.ts exists
+[PASS] .eslintrc.js: .eslintrc.js exists
+[PASS] .prettierrc: .prettierrc exists
+[PASS] .gitignore: .gitignore exists
+[PASS] .env.example: .env.example exists
+
+Validating Test Infrastructure...
+[PASS] Unit test setup: Unit test setup file exists
+[PASS] Integration test setup: Integration test setup file exists
+[PASS] Integration API tests: API integration tests exist
+[PASS] Integration DB tests: Database integration tests exist
+[PASS] E2E smoke tests: E2E smoke tests exist
+[PASS] E2E global setup: E2E global setup exists
+[PASS] Vitest dependency: Vitest is installed
+[PASS] Playwright dependency: Playwright is installed
+
+Validating Artifact Directories...
+[PASS] artifacts: artifacts directory exists
+[PASS] artifacts/benchmarks: artifacts/benchmarks directory exists
+[PASS] artifacts/coverage: artifacts/coverage directory exists
+[PASS] artifacts/lighthouse: artifacts/lighthouse directory exists
+[PASS] artifacts/logs: artifacts/logs directory exists
+[PASS] artifacts/metrics: artifacts/metrics directory exists
+[PASS] artifacts/misc: artifacts/misc directory exists
+[PASS] artifacts/reports: artifacts/reports directory exists
+[PASS] artifacts/test-results: artifacts/test-results directory exists
+
+Validating Package Structure...
+[PASS] packages/domain: packages/domain exists
+[PASS] packages/domain/package.json: packages/domain/package.json exists
+[PASS] packages/validators: packages/validators exists
+[PASS] packages/validators/package.json: packages/validators/package.json exists
+[PASS] packages/db: packages/db exists
+[PASS] packages/db/package.json: packages/db/package.json exists
+[PASS] packages/observability: packages/observability exists
+[PASS] packages/observability/package.json: packages/observability/package.json exists
+
+Validating Documentation...
+[PASS] README.md: README.md exists
+[PASS] CLAUDE.md: CLAUDE.md exists
+[PASS] Sprint_plan.csv: Sprint_plan.csv exists in correct location
+[PASS] Docs directory: docs/ directory exists
+
+Validating Scripts...
+[PASS] Script: dev: dev script defined
+[PASS] Script: build: build script defined
+[PASS] Script: test: test script defined
+[PASS] Script: test:unit: test:unit script defined
+[PASS] Script: test:integration: test:integration script defined
+[PASS] Script: test:e2e: test:e2e script defined
+[PASS] Script: lint: lint script defined
+[PASS] Script: typecheck: typecheck script defined
+
+Validating Git Setup...
+[PASS] .git directory: Git repository initialized
+[PASS] .gitignore: .gitignore exists
+
+Validating TypeScript Configuration...
+[PASS] Root tsconfig.json: Root tsconfig.json exists
+[PASS] TypeScript dependency: TypeScript is installed
+
+Validating Task Metrics...
+[PASS] Project tracker app: Project tracker app exists
+[PASS] Sprint 0 metrics directory: Sprint 0 metrics directory exists
+[PASS] ENV-017-AI metrics: ENV-017-AI metrics file exists
+[PASS] ENV-018-AI metrics: ENV-018-AI metrics file exists
+
+======================================================================
+Sprint 0 Validation Summary
+======================================================================
+
+[PASS] MONOREPO: 6/6 passed
+[PASS] CONFIG: 7/7 passed
+[PASS] TESTING: 8/8 passed
+[PASS] ARTIFACTS: 9/9 passed
+[PASS] PACKAGES: 8/8 passed
+[PASS] DOCS: 4/4 passed
+[PASS] SCRIPTS: 8/8 passed
+[PASS] GIT: 2/2 passed
+[PASS] TYPESCRIPT: 2/2 passed
+[PASS] METRICS: 4/4 passed
+
+----------------------------------------------------------------------
+Total: 58/58 validations passed (100.0%)
+----------------------------------------------------------------------
+
+[OK] Sprint 0 is complete! All validations passed.
+
+=== pnpm run validate:sprint-data ===
+Exit code: 0
+
+
+> intelliflow-crm@0.1.0 validate:sprint-data C:\taly\intelliFlow-CRM
+> tsx tools/scripts/validate-sprint-data.ts
+
+ Starting Sprint Data Validation...
+
+ Validating 304 tasks from CSV...
+ Found 27 Sprint 0 tasks
+   [PASS] Completed: 27
+    In Progress: 0
+    Planned: 0
+    Backlog: 0
+    Blocked: 0
+ Found 27 task JSON files
+
+[PASS] All Sprint data validations passed!

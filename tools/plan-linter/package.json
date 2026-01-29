@@ -1,0 +1,24 @@
+{
+  "name": "@intelliflow/plan-linter",
+  "version": "1.0.0",
+  "description": "Sprint plan validation and governance tool",
+  "main": "index.js",
+  "scripts": {
+    "lint": "node index.js",
+    "lint:verbose": "node index.js --verbose",
+    "lint:all": "node index.js --sprint=all",
+    "lint:sprint0": "node index.js --sprint=0"
+  },
+  "keywords": [
+    "sprint",
+    "plan",
+    "linter",
+    "validation",
+    "governance"
+  ],
+  "author": "IntelliFlow CRM Team",
+  "license": "MIT",
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  }
+}

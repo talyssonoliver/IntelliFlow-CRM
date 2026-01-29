@@ -12,6 +12,35 @@ coverage/
 test-results/
 playwright-report/
 
+# Keep Sprint artifact outputs under artifacts/
+!artifacts/coverage/
+!artifacts/test-results/
+artifacts/coverage/.tmp/
+
+# Playwright auto-generated outputs (ephemeral - not tracked in Sprint Plan)
+# These are regenerated on each test run and should not pollute git history
+artifacts/test-results/playwright-results.json
+artifacts/test-results/playwright-junit.xml
+
+# Playwright output (consolidated under artifacts/misc/)
+# - playwright-output/: screenshots, videos, traces (ephemeral)
+# - playwright-report/data/: report assets (ephemeral)
+# - playwright-report/index.html: kept as required artifact for IFC-026
+artifacts/misc/playwright-output/
+artifacts/misc/playwright-report/data/
+!artifacts/misc/playwright-report/index.html
+
+# Coverage: keep only data files, ignore generated HTML reports
+artifacts/coverage/**/*.html
+artifacts/coverage/**/*.css
+artifacts/coverage/**/*.js
+artifacts/coverage/**/*.png
+artifacts/coverage/**/
+!artifacts/coverage/
+!artifacts/coverage/*.json
+!artifacts/coverage/*.info
+!artifacts/coverage/lcov-report/
+
 # next.js
 /.next/
 /out/
@@ -28,6 +57,10 @@ dist/
 
 # turbo
 .turbo/
+
+# SonarQube / scanner outputs
+.scannerwork/
+sonar-reports/
 
 # misc
 .DS_Store
@@ -57,6 +90,11 @@ pnpm-debug.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+
 # IDE
 .vscode/
 .idea/
@@ -64,9 +102,17 @@ next-env.d.ts
 *.swo
 *~
 
+# Claude AI
+.claude/commands/
+.claude/skills/
+tmpclaude-*-cwd
+tmpclaude-*-cwd/
+
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
+nul
 
 # Prisma
 prisma/migrations/**/migration.sql.backup
@@ -79,3 +125,170 @@ tmp/
 # logs
 logs/
 *.log
+
+# Keep artifacts/logs/ directory (but do not commit *.log files)
+!artifacts/logs/
+artifacts/logs/execution-*.log
+artifacts/logs/swarm/
+
+# Tooling scratch space
+.specify/
+artifacts/misc/.locks/
+apps/tree_intelliflow.txt
+
+# Project tracker docs artifacts (runtime; keep folders, ignore contents)
+apps/project-tracker/docs/artifacts/**
+!apps/project-tracker/docs/artifacts/**/
+!apps/project-tracker/docs/artifacts/**/.gitkeep
+
+# Project tracker generated backups/artifacts
+apps/project-tracker/docs/metrics/backups/
+apps/project-tracker/docs/metrics/artifacts/
+apps/project-tracker/docs/metrics/_global/*.tmp
+
+# Sprint plan split files (derived from Sprint_plan.csv - regenerated locally)
+apps/project-tracker/docs/metrics/_global/Sprint_plan_[A-Z].csv
+
+# ============================================
+# Runtime Artifacts - Sprint 0 Remediation
+# ============================================
+
+# Legacy runtime locations (block new files - migration in progress)
+apps/project-tracker/docs/metrics/.locks/
+apps/project-tracker/docs/metrics/.status/
+apps/project-tracker/docs/metrics/logs/
+
+# Swarm runtime state files
+**/swarm-health.json
+**/*.lock
+**/*.heartbeat
+**/*.input
+
+# Canonical backup location (runtime, not source)
+artifacts/backups/**
+!artifacts/backups/**/
+!artifacts/backups/.gitkeep
+
+# Execution and validation logs
+**/execution-*.log
+**/validation-*.log
+
+# Generated run outputs (do not commit)
+artifacts/reports/system-audit/*/
+artifacts/reports/sprint-runs/
+
+# Security scan reports (contain git author emails)
+artifacts/reports/security/gitleaks-report.json
+
+# Code analysis reports (generated, do not commit)
+artifacts/reports/code-analysis/knip-report.json
+artifacts/reports/code-analysis/latest.json
+artifacts/reports/code-analysis/depcheck-report.json
+
+# Temporary and backup files
+**/*.tmp
+**/*.bak
+*.old
+build_output.txt
+test-results.json
+Tree_unified.txt
+
+# ============================================
+# Drift Prevention - Added 2025-12-21
+# ============================================
+
+# Tree generation temp files
+tree_temp.txt
+**/tree_temp.txt
+
+# Attestation timestamped outputs (keep only -latest symlink)
+artifacts/reports/attestation/sprint-*T*.json
+artifacts/reports/attestation/sprint-*T*.md
+
+# Sprint run timestamped outputs
+artifacts/reports/sprint-runs/*.json
+artifacts/reports/sprint-runs/*.md
+
+# ============================================
+# Scope Control - Added 2025-12-21
+# ============================================
+
+# Python bytecode (redundant but explicit)
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# Sprint patches (intermediate build artifacts)
+artifacts/sprint*/codex-run/patches/
+
+# Task context files - now use timestamped structure under artifacts/context/{timestamp}/
+# Legacy artifacts/contexts/ directory was removed (superseded by new structure)
+# Context files are tracked in git for audit trail
+
+# All logs under artifacts
+artifacts/logs/**/*.log
+!artifacts/logs/.gitkeep
+
+# Supabase temp files
+supabase/.temp/
+
+# ============================================
+# Terraform - Added 2025-12-23
+# ============================================
+
+# Terraform state files (contain secrets - NEVER commit)
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# ============================================
+# Package-level Build Artifacts - Added 2025-12-31
+# ============================================
+
+# Package-level coverage artifacts (regenerated during tests)
+packages/*/artifacts/coverage/
+packages/*/coverage/
+apps/*/coverage-output.txt
+apps/*/coverage-report.json
+apps/*/coverage-results.json
+
+# Vitest cache files
+packages/*/node_modules/.vite/
+apps/api/.env
+
+# ============================================
+# Runtime Artifacts - Added 2026-01-03
+# ============================================
+
+# Ignore artifacts/logs/ to reduce git status noise
+artifacts/logs/
+
+# ============================================
+# DEPRECATED Paths - Added 2026-01-25
+# ============================================
+# These paths are deprecated. Use .specify/sprints/sprint-{N}/attestations/{taskId}/ instead.
+# CI lint rules in tools/lint/artifact-paths.ts will fail if files are written here.
+
+# DEPRECATED: Use .specify/sprints/sprint-{N}/attestations/{taskId}/ instead
+artifacts/attestations/
+
+# DEPRECATED: Use .specify/sprints/sprint-{N}/context/{taskId}/ instead
+artifacts/context/
+
+# DEPRECATED: Use .specify/memory/ for docs and .specify/sprints/sprint-0/planning/ for plans
+artifacts/sprint0/
+
+# HTML reports
+Executive_Sumary.html
+ARCHITECTURE_ANALYSIS_SINGLE_SOURCE_OF_TRUTH.md
+
+# Runtime schemas (generated)
+artifacts/schemas/
+apps/project-tracker/docs/metrics/schemas/

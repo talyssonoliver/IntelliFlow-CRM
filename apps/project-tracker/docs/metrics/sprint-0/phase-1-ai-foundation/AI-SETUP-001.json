@@ -7,9 +7,13 @@
   "sprint": "sprint-0",
   "phase": "phase-1-ai-foundation",
   "stream": null,
-  "dependencies": [
-    "EXC-INIT-001"
-  ],
+  "dependencies": {
+    "all_satisfied": true,
+    "verified_at": "2026-01-29T01:33:17.550Z",
+    "required": [
+      "EXC-INIT-001"
+    ]
+  },
   "dependencies_resolved": [
     "EXC-INIT-001"
   ],
@@ -20,21 +24,66 @@
   "kpis": {
     "commands_functional": {
       "target": 100,
-      "actual": null,
-      "unit": "percent"
+      "actual": "N/A",
+      "unit": "percent",
+      "met": false
     },
     "hook_trigger_time": {
       "target": 100,
-      "actual": null,
-      "unit": "milliseconds"
+      "actual": "N/A",
+      "unit": "milliseconds",
+      "met": false
     },
     "github_integration_verified": {
       "target": true,
-      "actual": null,
-      "unit": "boolean"
+      "actual": "N/A",
+      "unit": "boolean",
+      "met": false
     }
   },
-  "artifacts": [],
-  "validations": [],
-  "blockers": []
+  "artifacts": {
+    "expected": [],
+    "created": [],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "Count Claude commands (>0)",
+      "command": "ls -la .claude/commands/*.sh | wc -l | grep -v '^0$'",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-21T08:36:22.638Z",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_hash": "sha256:QUktU0VUVVAtMDAxLUNvdW50IENsYXVk",
+      "notes": "Validation passed",
+      "timestamp": "2025-12-14T20:20:00Z"
+    },
+    {
+      "name": "Command test results",
+      "command": "test -f artifacts/misc/command-test-results.csv",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-21T08:36:22.638Z",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_hash": "sha256:QUktU0VUVVAtMDAxLUNvbW1hbmQgdGVz",
+      "notes": "Validation passed",
+      "timestamp": "2025-12-14T20:20:00Z"
+    }
+  ],
+  "blockers": [],
+  "section": "AI Integration",
+  "status_history": [
+    {
+      "status": "IN_PROGRESS",
+      "note": "Execution started",
+      "at": "2025-12-14T20:05:00Z"
+    },
+    {
+      "status": "DONE",
+      "note": "Task completed successfully",
+      "at": "2025-12-14T20:20:00Z"
+    }
+  ]
 }

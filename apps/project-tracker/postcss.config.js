@@ -1,6 +1,6 @@
+const resolveFromHere = (moduleName) =>
+  require(require.resolve(moduleName, { paths: [__dirname] }));
+
 module.exports = {
-  plugins: {
-    tailwindcss: {},
-    autoprefixer: {},
-  },
-}
+  plugins: [resolveFromHere('tailwindcss')(), resolveFromHere('autoprefixer')()],
+};

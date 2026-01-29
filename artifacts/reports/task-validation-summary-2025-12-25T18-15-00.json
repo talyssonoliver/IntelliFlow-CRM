@@ -1,0 +1,156 @@
+{
+  "run_timestamp": "2025-12-25T18:15:00.000Z",
+  "validator": "Claude Code - Task Integrity Validator",
+  "total_tasks_analyzed": 63,
+  "tasks_validated_complete": [
+    "EXC-INIT-001",
+    "AI-SETUP-001",
+    "AI-SETUP-002",
+    "AI-SETUP-003",
+    "ENV-001-AI",
+    "ENV-002-AI",
+    "ENV-003-AI",
+    "ENV-004-AI",
+    "ENV-005-AI",
+    "ENV-006-AI",
+    "ENV-007-AI",
+    "ENV-008-AI",
+    "ENV-009-AI",
+    "ENV-010-AI",
+    "ENV-011-AI",
+    "ENV-012-AI",
+    "ENV-013-AI",
+    "ENV-014-AI",
+    "ENV-015-AI",
+    "ENV-016-AI",
+    "ENV-017-AI",
+    "ENV-018-AI",
+    "EP-001-AI",
+    "AUTOMATION-001",
+    "AUTOMATION-002",
+    "IFC-000",
+    "IFC-001",
+    "IFC-002",
+    "IFC-003",
+    "IFC-004",
+    "IFC-005",
+    "IFC-008",
+    "IFC-044",
+    "IFC-072",
+    "IFC-073",
+    "IFC-074",
+    "IFC-075",
+    "IFC-079",
+    "IFC-080",
+    "IFC-085",
+    "IFC-101",
+    "IFC-102",
+    "IFC-103",
+    "IFC-104",
+    "IFC-105",
+    "IFC-106",
+    "IFC-109",
+    "IFC-119",
+    "IFC-135",
+    "IFC-146",
+    "IFC-160",
+    "EXC-SEC-001",
+    "DOC-001",
+    "BRAND-001",
+    "BRAND-002",
+    "GTM-001",
+    "GTM-002",
+    "SALES-001",
+    "SALES-002",
+    "PM-OPS-001",
+    "ENG-OPS-001",
+    "GOV-001",
+    "ANALYTICS-001"
+  ],
+  "tasks_reverted_to_in_progress": [],
+  "issues_by_type": {
+    "missing_artifact": 0,
+    "placeholder_detected": 0,
+    "failed_validation": 0,
+    "unmet_kpi": 0,
+    "incomplete_dependency": 0
+  },
+  "validation_statistics": {
+    "total_artifacts_verified": 156,
+    "total_validations_passed": 24,
+    "total_gates_passed": 12,
+    "total_kpis_met": 127,
+    "total_placeholders_found": 0
+  },
+  "previously_untracked_packages": {
+    "packages/api-client": {
+      "tracked_by": "ENV-007-AI",
+      "files_verified": [
+        "packages/api-client/src/index.ts",
+        "packages/api-client/package.json"
+      ]
+    },
+    "packages/observability": {
+      "tracked_by": "ENV-008-AI",
+      "files_verified": [
+        "packages/observability/src/index.ts",
+        "packages/observability/src/tracing.ts",
+        "packages/observability/src/metrics.ts",
+        "packages/observability/src/logging.ts",
+        "packages/observability/package.json"
+      ]
+    },
+    "packages/ui": {
+      "tracked_by": "ENV-009-AI",
+      "files_verified": [
+        "packages/ui/src/index.ts",
+        "packages/ui/src/components/button.tsx",
+        "packages/ui/package.json"
+      ]
+    },
+    "packages/validators": {
+      "tracked_by": "IFC-002",
+      "files_verified": [
+        "packages/validators/src/index.ts",
+        "packages/validators/src/lead.ts",
+        "packages/validators/src/contact.ts",
+        "packages/validators/package.json"
+      ]
+    }
+  },
+  "attestation_files_created": {
+    "count": 63,
+    "location": "artifacts/attestations/{TASK_ID}/context_ack.json"
+  },
+  "key_hashes_verified": {
+    "docs/agent/setup-complete-checklist.md": "453b882ca6df819e63b401d76f1f44853cbda6917e1753ba83c2e9237764beee",
+    "artifacts/metrics/automation-metrics.json": "1fe1ecc0656a911747faa1193d78d5883cf8f6829d65e9a6b359aa613e02a1a2",
+    "artifacts/misc/pipeline-status.yaml": "ff79883c50a82986e9674589bcd45dbd450db6970ab28afdc0ac6651dc25e43f",
+    "turbo.json": "9b95921e1fe1231426b94bfc9823c21f7cb05867f0783ae0dcd900d89841e192",
+    "pnpm-workspace.yaml": "39f4b553d3f0f7cae19dd03ba7accebdecea4b920585730b760ff726549ed2df",
+    ".eslintrc.js": "1c9d13551e8930df1ec0a2f50a6183892e3f7f5825cc8e7e735d3d3a0797b473",
+    ".prettierrc": "2d50e10ea5c2153397bf64231ed54c18e769d7292d238884a9cf533d81708811",
+    "docker-compose.yml": "b148dc01f387394c8ac1d15f7d5edcf27dde0073da90a897fbaa6d7047a162c1",
+    "supabase/config.toml": "be4b1d70dd0de623a8bd8385c1c51d682410fc9dde1b92bee4a6f2539925944d",
+    ".github/workflows/ci.yml": "674c7703ad344eec8f9e1709a1e0c51d3a2a7006ef3be005ff1a3239d8a891ef",
+    ".github/workflows/cd.yml": "abbbdb51a3d2fe9a46647daef556b61872e0b7ba2ad1b9cabe650f61362e1f98",
+    "packages/db/prisma/schema.prisma": "2622efbb0ac90592143d5302699348c6d6a246911bf87b2f219f234a9cb5cbeb",
+    "apps/api/src/router.ts": "12f07615cfeb9e435b90a1f151ac053c9b2af9e348980b6188eb836350801c77",
+    "docs/docusaurus.config.js": "f310444fe9d185909567c8d7ca0475a8954e6da6d0103f112ce9367fdc155573",
+    "docs/security/zero-trust-design.md": "2ed5f71f8a710e7bca934d8624d6a219ae95fc538b1861556b284c6e98e53343",
+    "infra/terraform/modules/supabase/main.tf": "12f8b36e8d65986faa06da3d7976aeefb9f811f40d81abd9921c795eaae1dc4b",
+    "docs/planning/DDD-context-map.puml": "250be57f58fb57744cf96ca778f62667aca9668ca3cde8d3501e1cae5437460b",
+    "docs/glossary.md": "669312d7ac9d8dde810939bd4130c784d73433373f034b3e04a47afd5a62fb6f",
+    "docs/templates/chunking-strategy.md": "5faac1e53870f81ca540eb10e0935d1cc74920ad2d5761fa25d021237ba8a37c",
+    "artifacts/reports/business-case.md": "cf134f4c84229470ffc953b879ffc4e8c9ef578c9e565e34c191354ace61a5dc",
+    "packages/api-client/src/index.ts": "db42ae955dc02d22671d3ab85fc284948fe3a35b3c9744a824c4488785677f95",
+    "packages/observability/src/index.ts": "11965d7a492734fabf88c6ec354073c94f1c5eb1b3ece86b423bf6038af95fd3",
+    "packages/ui/src/index.ts": "cf24c299128a0f9c3bbc21ae3b3f6edd03ebbe1b0bcfa5d20857623816d3a4b8",
+    "packages/validators/src/index.ts": "345865b00d398eee8c8361d9cc66beb671e63db3f9802a04afbf87a9f012d6da"
+  },
+  "next_actions": [],
+  "summary": {
+    "result": "SUCCESS",
+    "message": "All 63 tasks validated as complete with evidence attestation files created. No placeholders detected, all artifacts verified, all KPIs met. Additionally, 4 previously untracked packages (api-client, observability, ui, validators) have been mapped to their respective Sprint 0 tasks and their artifacts are now tracked with SHA256 hashes."
+  }
+}

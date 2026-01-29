@@ -396,15 +396,11 @@ export function MeasureTime(histogram: Histogram | null, attributes?: Record<str
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: any[]) {
-      return measureTime(
-        histogram,
-        () => originalMethod.apply(this, args),
-        {
-          ...attributes,
-          method: propertyKey,
-          class: target.constructor.name,
-        }
-      );
+      return measureTime(histogram, () => originalMethod.apply(this, args), {
+        ...attributes,
+        method: propertyKey,
+        class: target.constructor.name,
+      });
     };
 
     return descriptor;
@@ -492,12 +488,7 @@ export const metricHelpers = {
   /**
    * Record AI inference
    */
-  recordAiInference: (
-    model: string,
-    latency: number,
-    cost: number,
-    confidence?: number
-  ) => {
+  recordAiInference: (model: string, latency: number, cost: number, confidence?: number) => {
     incrementCounter(metrics.aiInferenceCount, 1, { model });
     recordHistogram(metrics.aiInferenceLatency, latency, { model });
     recordHistogram(metrics.aiInferenceCost, cost, { model });

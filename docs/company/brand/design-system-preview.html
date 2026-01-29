@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IntelliFlow Design System Preview</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL@24,400,0" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'primary': '#137fec',
+            'primary-hover': '#0e6ac7',
+            'background-light': '#f6f7f8',
+            'background-dark': '#101922',
+            'surface-light': '#ffffff',
+            'surface-dark': '#1e2936',
+            'border-light': '#e2e8f0',
+            'border-dark': '#334155',
+          },
+          fontFamily: {
+            'display': ['Inter', 'system-ui', 'sans-serif'],
+          },
+          borderRadius: {
+            'DEFAULT': '0.25rem',
+            'lg': '0.5rem',
+            'xl': '0.75rem',
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white transition-colors">
+  <!-- Header -->
+  <header class="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+    <div class=" mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-white font-bold text-lg">iF</div>
+        <span class="text-xl font-bold">Design System</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <nav class="hidden md:flex gap-6 text-sm">
+          <a href="#colors" class="text-slate-600 dark:text-slate-400 hover:text-primary">Colors</a>
+          <a href="#typography" class="text-slate-600 dark:text-slate-400 hover:text-primary">Typography</a>
+          <a href="#spacing" class="text-slate-600 dark:text-slate-400 hover:text-primary">Spacing</a>
+          <a href="#components" class="text-slate-600 dark:text-slate-400 hover:text-primary">Components</a>
+          <a href="#icons" class="text-slate-600 dark:text-slate-400 hover:text-primary">Icons</a>
+        </nav>
+        <button onclick="document.documentElement.classList.toggle('dark')" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+          <span class="material-symbols-outlined dark:hidden">dark_mode</span>
+          <span class="material-symbols-outlined hidden dark:inline">light_mode</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class=" mx-auto px-6 py-12 space-y-16">
+    <!-- Color Palette -->
+    <section id="colors">
+      <h2 class="text-3xl font-bold mb-8">Color Palette</h2>
+
+      <!-- Brand Colors -->
+      <div class="mb-12">
+        <h3 class="text-xl font-semibold mb-4">Brand Colors</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="space-y-2">
+            <div class="h-24 rounded-lg bg-primary flex items-end p-3">
+              <span class="text-white text-sm font-medium">Primary</span>
+            </div>
+            <div class="text-sm">
+              <p class="font-mono text-slate-600 dark:text-slate-400">#137fec</p>
+              <p class="text-slate-500">Main brand color</p>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <div class="h-24 rounded-lg bg-primary-hover flex items-end p-3">
+              <span class="text-white text-sm font-medium">Primary Hover</span>
+            </div>
+            <div class="text-sm">
+              <p class="font-mono text-slate-600 dark:text-slate-400">#0e6ac7</p>
+              <p class="text-slate-500">Hover state</p>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <div class="h-24 rounded-lg bg-primary/10 border border-slate-200 dark:border-slate-700 flex items-end p-3">
+              <span class="text-primary text-sm font-medium">Primary Muted</span>
+            </div>
+            <div class="text-sm">
+              <p class="font-mono text-slate-600 dark:text-slate-400">#137fec1a</p>
+              <p class="text-slate-500">10% opacity</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Background Colors -->
+      <div class="mb-12">
+        <h3 class="text-xl font-semibold mb-4">Background & Surface</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="space-y-2">
+            <div class="h-24 rounded-lg bg-[#f6f7f8] border border-slate-200 flex items-end p-3">
+              <span class="text-slate-700 text-sm font-medium">Background Light</span>
+            </div>
+            <p class="font-mono text-sm text-slate-600">#f6f7f8</p>
+          </div>
+          <div class="space-y-2">
+            <div class="h-24 rounded-lg bg-[#101922] flex items-end p-3">
+              <span class="text-white text-sm font-medium">Background Dark</span>
+            </div>
+            <p class="font-mono text-sm text-slate-600">#101922</p>
+          </div>
+          <div class="space-y-2">
+            <div class="h-24 rounded-lg bg-white border border-slate-200 flex items-end p-3">
+              <span class="text-slate-700 text-sm font-medium">Surface Light</span>
+            </div>
+            <p class="font-mono text-sm text-slate-600">#ffffff</p>
+          </div>
+          <div class="space-y-2">
+            <div class="h-24 rounded-lg bg-[#1e2936] flex items-end p-3">
+              <span class="text-white text-sm font-medium">Surface Dark</span>
+            </div>
+            <p class="font-mono text-sm text-slate-600">#1e2936</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status Colors -->
+      <div class="mb-12">
+        <h3 class="text-xl font-semibold mb-4">Status Colors</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="space-y-2">
+            <div class="h-20 rounded-lg bg-green-500 flex items-center justify-center">
+              <span class="text-white font-medium">Success</span>
+            </div>
+            <div class="flex gap-2">
+              <div class="flex-1 h-8 rounded bg-green-100 border border-green-200"></div>
+              <div class="flex-1 h-8 rounded bg-green-800 text-white text-xs flex items-center justify-center">Text</div>
+            </div>
+            <p class="font-mono text-sm text-slate-600">#22c55e</p>
+          </div>
+          <div class="space-y-2">
+            <div class="h-20 rounded-lg bg-amber-500 flex items-center justify-center">
+              <span class="text-white font-medium">Warning</span>
+            </div>
+            <div class="flex gap-2">
+              <div class="flex-1 h-8 rounded bg-amber-100 border border-amber-200"></div>
+              <div class="flex-1 h-8 rounded bg-amber-800 text-white text-xs flex items-center justify-center">Text</div>
+            </div>
+            <p class="font-mono text-sm text-slate-600">#f59e0b</p>
+          </div>
+          <div class="space-y-2">
+            <div class="h-20 rounded-lg bg-red-500 flex items-center justify-center">
+              <span class="text-white font-medium">Danger</span>
+            </div>
+            <div class="flex gap-2">
+              <div class="flex-1 h-8 rounded bg-red-100 border border-red-200"></div>
+              <div class="flex-1 h-8 rounded bg-red-800 text-white text-xs flex items-center justify-center">Text</div>
+            </div>
+            <p class="font-mono text-sm text-slate-600">#ef4444</p>
+          </div>
+          <div class="space-y-2">
+            <div class="h-20 rounded-lg bg-primary flex items-center justify-center">
+              <span class="text-white font-medium">Info</span>
+            </div>
+            <div class="flex gap-2">
+              <div class="flex-1 h-8 rounded bg-blue-100 border border-blue-200"></div>
+              <div class="flex-1 h-8 rounded bg-blue-800 text-white text-xs flex items-center justify-center">Text</div>
+            </div>
+            <p class="font-mono text-sm text-slate-600">#137fec</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pipeline Colors -->
+      <div class="mb-12">
+        <h3 class="text-xl font-semibold mb-4">Pipeline Stage Colors</h3>
+        <div class="flex flex-wrap gap-3">
+          <span class="px-4 py-2 rounded-lg bg-primary text-white font-medium">Qualification</span>
+          <span class="px-4 py-2 rounded-lg bg-indigo-500 text-white font-medium">Proposal</span>
+          <span class="px-4 py-2 rounded-lg bg-amber-500 text-white font-medium">Negotiation</span>
+          <span class="px-4 py-2 rounded-lg bg-green-500 text-white font-medium">Closed Won</span>
+          <span class="px-4 py-2 rounded-lg bg-red-500 text-white font-medium">Closed Lost</span>
+        </div>
+      </div>
+
+      <!-- Chart Colors -->
+      <div>
+        <h3 class="text-xl font-semibold mb-4">Chart Colors</h3>
+        <div class="flex flex-wrap gap-2">
+          <div class="w-12 h-12 rounded-lg bg-[#137fec]" title="#137fec"></div>
+          <div class="w-12 h-12 rounded-lg bg-[#6366f1]" title="#6366f1"></div>
+          <div class="w-12 h-12 rounded-lg bg-[#a855f7]" title="#a855f7"></div>
+          <div class="w-12 h-12 rounded-lg bg-[#ec4899]" title="#ec4899"></div>
+          <div class="w-12 h-12 rounded-lg bg-[#f43f5e]" title="#f43f5e"></div>
+          <div class="w-12 h-12 rounded-lg bg-[#f97316]" title="#f97316"></div>
+          <div class="w-12 h-12 rounded-lg bg-[#f59e0b]" title="#f59e0b"></div>
+          <div class="w-12 h-12 rounded-lg bg-[#10b981]" title="#10b981"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Typography -->
+    <section id="typography">
+      <h2 class="text-3xl font-bold mb-8">Typography</h2>
+
+      <!-- Font Family -->
+      <div class="mb-12 p-6 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+        <h3 class="text-xl font-semibold mb-4">Font Family: Inter</h3>
+        <p class="text-4xl mb-4">The quick brown fox jumps over the lazy dog</p>
+        <p class="text-slate-500">ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789</p>
+      </div>
+
+      <!-- Font Weights -->
+      <div class="mb-12">
+        <h3 class="text-xl font-semibold mb-4">Font Weights</h3>
+        <div class="space-y-4 p-6 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+          <p class="text-2xl font-light">Light (300) - The quick brown fox</p>
+          <p class="text-2xl font-normal">Regular (400) - The quick brown fox</p>
+          <p class="text-2xl font-medium">Medium (500) - The quick brown fox</p>
+          <p class="text-2xl font-semibold">Semibold (600) - The quick brown fox</p>
+          <p class="text-2xl font-bold">Bold (700) - The quick brown fox</p>
+          <p class="text-2xl font-extrabold">Extrabold (800) - The quick brown fox</p>
+          <p class="text-2xl font-black">Black (900) - The quick brown fox</p>
+        </div>
+      </div>
+
+      <!-- Type Scale -->
+      <div class="mb-12">
+        <h3 class="text-xl font-semibold mb-4">Type Scale</h3>
+        <div class="space-y-4 p-6 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+          <div class="flex items-baseline gap-4">
+            <span class="text-xs text-slate-500 w-20">6xl (60px)</span>
+            <p class="text-6xl font-bold">Heading</p>
+          </div>
+          <div class="flex items-baseline gap-4">
+            <span class="text-xs text-slate-500 w-20">5xl (48px)</span>
+            <p class="text-5xl font-bold">Heading</p>
+          </div>
+          <div class="flex items-baseline gap-4">
+            <span class="text-xs text-slate-500 w-20">4xl (36px)</span>
+            <p class="text-4xl font-bold">Heading</p>
+          </div>
+          <div class="flex items-baseline gap-4">
+            <span class="text-xs text-slate-500 w-20">3xl (30px)</span>
+            <p class="text-3xl font-semibold">Heading</p>
+          </div>
+          <div class="flex items-baseline gap-4">
+            <span class="text-xs text-slate-500 w-20">2xl (24px)</span>
+            <p class="text-2xl font-semibold">Heading</p>
+          </div>
+          <div class="flex items-baseline gap-4">
+            <span class="text-xs text-slate-500 w-20">xl (20px)</span>
+            <p class="text-xl font-medium">Heading</p>
+          </div>
+          <div class="flex items-baseline gap-4">
+            <span class="text-xs text-slate-500 w-20">lg (18px)</span>
+            <p class="text-lg">Body large</p>
+          </div>
+          <div class="flex items-baseline gap-4">
+            <span class="text-xs text-slate-500 w-20">base (16px)</span>
+            <p class="text-base">Body text</p>
+          </div>
+          <div class="flex items-baseline gap-4">
+            <span class="text-xs text-slate-500 w-20">sm (14px)</span>
+            <p class="text-sm">Small text</p>
+          </div>
+          <div class="flex items-baseline gap-4">
+            <span class="text-xs text-slate-500 w-20">xs (12px)</span>
+            <p class="text-xs">Caption text</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Spacing -->
+    <section id="spacing">
+      <h2 class="text-3xl font-bold mb-8">Spacing Scale</h2>
+
+      <div class="p-6 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+        <div class="space-y-3">
+          <div class="flex items-center gap-4">
+            <span class="text-xs text-slate-500 w-16">1 (4px)</span>
+            <div class="h-4 w-1 bg-primary rounded"></div>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="text-xs text-slate-500 w-16">2 (8px)</span>
+            <div class="h-4 w-2 bg-primary rounded"></div>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="text-xs text-slate-500 w-16">3 (12px)</span>
+            <div class="h-4 w-3 bg-primary rounded"></div>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="text-xs text-slate-500 w-16">4 (16px)</span>
+            <div class="h-4 w-4 bg-primary rounded"></div>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="text-xs text-slate-500 w-16">6 (24px)</span>
+            <div class="h-4 w-6 bg-primary rounded"></div>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="text-xs text-slate-500 w-16">8 (32px)</span>
+            <div class="h-4 w-8 bg-primary rounded"></div>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="text-xs text-slate-500 w-16">12 (48px)</span>
+            <div class="h-4 w-12 bg-primary rounded"></div>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="text-xs text-slate-500 w-16">16 (64px)</span>
+            <div class="h-4 w-16 bg-primary rounded"></div>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="text-xs text-slate-500 w-16">24 (96px)</span>
+            <div class="h-4 w-24 bg-primary rounded"></div>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="text-xs text-slate-500 w-16">32 (128px)</span>
+            <div class="h-4 w-32 bg-primary rounded"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Border Radius -->
+      <div class="mt-12">
+        <h3 class="text-xl font-semibold mb-4">Border Radius</h3>
+        <div class="flex flex-wrap gap-6 p-6 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+          <div class="text-center">
+            <div class="w-16 h-16 bg-primary rounded-none mb-2"></div>
+            <p class="text-xs text-slate-500">none</p>
+          </div>
+          <div class="text-center">
+            <div class="w-16 h-16 bg-primary rounded-sm mb-2"></div>
+            <p class="text-xs text-slate-500">sm (2px)</p>
+          </div>
+          <div class="text-center">
+            <div class="w-16 h-16 bg-primary rounded mb-2"></div>
+            <p class="text-xs text-slate-500">default (4px)</p>
+          </div>
+          <div class="text-center">
+            <div class="w-16 h-16 bg-primary rounded-md mb-2"></div>
+            <p class="text-xs text-slate-500">md (6px)</p>
+          </div>
+          <div class="text-center">
+            <div class="w-16 h-16 bg-primary rounded-lg mb-2"></div>
+            <p class="text-xs text-slate-500">lg (8px)</p>
+          </div>
+          <div class="text-center">
+            <div class="w-16 h-16 bg-primary rounded-xl mb-2"></div>
+            <p class="text-xs text-slate-500">xl (12px)</p>
+          </div>
+          <div class="text-center">
+            <div class="w-16 h-16 bg-primary rounded-2xl mb-2"></div>
+            <p class="text-xs text-slate-500">2xl (16px)</p>
+          </div>
+          <div class="text-center">
+            <div class="w-16 h-16 bg-primary rounded-full mb-2"></div>
+            <p class="text-xs text-slate-500">full</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shadows -->
+      <div class="mt-12">
+        <h3 class="text-xl font-semibold mb-4">Shadows</h3>
+        <div class="flex flex-wrap gap-6 p-6 bg-slate-100 dark:bg-slate-800 rounded-xl">
+          <div class="text-center">
+            <div class="w-20 h-20 bg-white dark:bg-slate-900 rounded-lg shadow-sm mb-2"></div>
+            <p class="text-xs text-slate-500">shadow-sm</p>
+          </div>
+          <div class="text-center">
+            <div class="w-20 h-20 bg-white dark:bg-slate-900 rounded-lg shadow mb-2"></div>
+            <p class="text-xs text-slate-500">shadow</p>
+          </div>
+          <div class="text-center">
+            <div class="w-20 h-20 bg-white dark:bg-slate-900 rounded-lg shadow-md mb-2"></div>
+            <p class="text-xs text-slate-500">shadow-md</p>
+          </div>
+          <div class="text-center">
+            <div class="w-20 h-20 bg-white dark:bg-slate-900 rounded-lg shadow-lg mb-2"></div>
+            <p class="text-xs text-slate-500">shadow-lg</p>
+          </div>
+          <div class="text-center">
+            <div class="w-20 h-20 bg-white dark:bg-slate-900 rounded-lg shadow-xl mb-2"></div>
+            <p class="text-xs text-slate-500">shadow-xl</p>
+          </div>
+          <div class="text-center">
+            <div class="w-20 h-20 bg-white dark:bg-slate-900 rounded-lg shadow-2xl mb-2"></div>
+            <p class="text-xs text-slate-500">shadow-2xl</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Components -->
+    <section id="components">
+      <h2 class="text-3xl font-bold mb-8">Components</h2>
+
+      <!-- Buttons -->
+      <div class="mb-12">
+        <h3 class="text-xl font-semibold mb-4">Buttons</h3>
+        <div class="p-6 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 space-y-6">
+          <div class="flex flex-wrap gap-4">
+            <button class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white font-medium text-sm rounded hover:bg-primary-hover transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+              <span class="material-symbols-outlined text-lg">add</span>
+              Primary Button
+            </button>
+            <button class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium text-sm rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+              Secondary Button
+            </button>
+            <button class="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-medium text-sm rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+              Outline Button
+            </button>
+            <button class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white font-medium text-sm rounded hover:bg-red-700 transition-colors">
+              <span class="material-symbols-outlined text-lg">delete</span>
+              Danger Button
+            </button>
+          </div>
+          <div class="flex flex-wrap gap-4">
+            <button class="px-3 py-1.5 bg-primary text-white font-medium text-xs rounded">Small</button>
+            <button class="px-4 py-2 bg-primary text-white font-medium text-sm rounded">Medium</button>
+            <button class="px-6 py-3 bg-primary text-white font-medium text-base rounded">Large</button>
+            <button class="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
+              <span class="material-symbols-outlined">more_vert</span>
+            </button>
+            <button disabled class="px-4 py-2 bg-primary/50 text-white font-medium text-sm rounded cursor-not-allowed">Disabled</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Badges -->
+      <div class="mb-12">
+        <h3 class="text-xl font-semibold mb-4">Badges</h3>
+        <div class="p-6 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 space-y-4">
+          <div class="flex flex-wrap gap-3">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Active</span>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">Pending</span>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">Overdue</span>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">New</span>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300">Default</span>
+          </div>
+          <div class="flex flex-wrap gap-3">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+              High Priority
+            </span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+              Medium Priority
+            </span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+              Low Priority
+            </span>
+          </div>
+          <div class="flex flex-wrap gap-3">
+            <span class="px-2.5 py-1 rounded text-xs font-medium bg-primary/10 text-primary">Qualification</span>
+            <span class="px-2.5 py-1 rounded text-xs font-medium bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400">Proposal</span>
+            <span class="px-2.5 py-1 rounded text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Negotiation</span>
+            <span class="px-2.5 py-1 rounded text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Closed Won</span>
+            <span class="px-2.5 py-1 rounded text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">Closed Lost</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Elements -->
+      <div class="mb-12">
+        <h3 class="text-xl font-semibold mb-4">Form Elements</h3>
+        <div class="p-6 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+          <div class="grid md:grid-cols-2 gap-6">
+            <div class="space-y-1.5">
+              <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Text Input</label>
+              <input type="text" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-white dark:bg-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter text...">
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Input with Error</label>
+              <input type="text" class="w-full px-3 py-2 border border-red-500 rounded-lg text-slate-900 dark:text-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500" value="Invalid value">
+              <p class="text-sm text-red-600">This field has an error</p>
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Select</label>
+              <select class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-white bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-primary">
+                <option>Option 1</option>
+                <option>Option 2</option>
+                <option>Option 3</option>
+              </select>
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Search Input</label>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                  <span class="material-symbols-outlined">search</span>
+                </span>
+                <input type="search" class="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-white dark:bg-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Search...">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cards -->
+      <div class="mb-12">
+        <h3 class="text-xl font-semibold mb-4">Cards</h3>
+        <div class="grid md:grid-cols-3 gap-6">
+          <div class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-6">
+            <h4 class="text-lg font-semibold mb-2">Card Title</h4>
+            <p class="text-slate-600 dark:text-slate-400 text-sm">This is a basic card with a border.</p>
+          </div>
+          <div class="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6">
+            <h4 class="text-lg font-semibold mb-2">Elevated Card</h4>
+            <p class="text-slate-600 dark:text-slate-400 text-sm">This card uses a shadow instead of border.</p>
+          </div>
+          <div class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-6">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <span class="material-symbols-outlined text-primary">attach_money</span>
+              </div>
+              <span class="text-sm text-slate-500">Total Revenue</span>
+            </div>
+            <div class="text-3xl font-bold">$234,567</div>
+            <div class="flex items-center gap-1 mt-2 text-sm text-green-600">
+              <span class="material-symbols-outlined text-sm">trending_up</span>
+              +12.5%
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alerts -->
+      <div class="mb-12">
+        <h3 class="text-xl font-semibold mb-4">Alerts</h3>
+        <div class="space-y-4">
+          <div class="flex items-start gap-3 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <span class="material-symbols-outlined text-green-600">check_circle</span>
+            <div>
+              <p class="font-medium text-green-800 dark:text-green-300">Success</p>
+              <p class="text-sm text-green-700 dark:text-green-400">Your changes have been saved.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+            <span class="material-symbols-outlined text-amber-600">warning</span>
+            <div>
+              <p class="font-medium text-amber-800 dark:text-amber-300">Warning</p>
+              <p class="text-sm text-amber-700 dark:text-amber-400">Please review before proceeding.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <span class="material-symbols-outlined text-red-600">error</span>
+            <div>
+              <p class="font-medium text-red-800 dark:text-red-300">Error</p>
+              <p class="text-sm text-red-700 dark:text-red-400">Something went wrong. Please try again.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <span class="material-symbols-outlined text-primary">info</span>
+            <div>
+              <p class="font-medium text-blue-800 dark:text-blue-300">Info</p>
+              <p class="text-sm text-blue-700 dark:text-blue-400">Here's some helpful information.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Avatars -->
+      <div class="mb-12">
+        <h3 class="text-xl font-semibold mb-4">Avatars</h3>
+        <div class="p-6 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+          <div class="flex items-end gap-4">
+            <div class="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-medium text-slate-600 dark:text-slate-300">JD</div>
+            <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-sm font-medium text-slate-600 dark:text-slate-300">JD</div>
+            <div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-base font-medium text-slate-600 dark:text-slate-300">JD</div>
+            <div class="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-lg font-medium text-slate-600 dark:text-slate-300">JD</div>
+            <div class="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center text-xl font-medium">JD</div>
+          </div>
+          <div class="flex -space-x-2 mt-6">
+            <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-medium border-2 border-white dark:border-slate-900">A</div>
+            <div class="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs font-medium border-2 border-white dark:border-slate-900">B</div>
+            <div class="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-medium border-2 border-white dark:border-slate-900">C</div>
+            <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-medium border-2 border-white dark:border-slate-900">+5</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Icons -->
+    <section id="icons">
+      <h2 class="text-3xl font-bold mb-8">Icons</h2>
+      <div class="p-6 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+        <p class="text-sm text-slate-500 mb-6">Using Material Symbols Outlined</p>
+        <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-4">
+          <div class="flex flex-col items-center gap-1">
+            <span class="material-symbols-outlined text-2xl">dashboard</span>
+            <span class="text-xs text-slate-500">dashboard</span>
+          </div>
+          <div class="flex flex-col items-center gap-1">
+            <span class="material-symbols-outlined text-2xl">person</span>
+            <span class="text-xs text-slate-500">person</span>
+          </div>
+          <div class="flex flex-col items-center gap-1">
+            <span class="material-symbols-outlined text-2xl">business</span>
+            <span class="text-xs text-slate-500">business</span>
+          </div>
+          <div class="flex flex-col items-center gap-1">
+            <span class="material-symbols-outlined text-2xl">handshake</span>
+            <span class="text-xs text-slate-500">handshake</span>
+          </div>
+          <div class="flex flex-col items-center gap-1">
+            <span class="material-symbols-outlined text-2xl">task</span>
+            <span class="text-xs text-slate-500">task</span>
+          </div>
+          <div class="flex flex-col items-center gap-1">
+            <span class="material-symbols-outlined text-2xl">mail</span>
+            <span class="text-xs text-slate-500">mail</span>
+          </div>
+          <div class="flex flex-col items-center gap-1">
+            <span class="material-symbols-outlined text-2xl">phone</span>
+            <span class="text-xs text-slate-500">phone</span>
+          </div>
+          <div class="flex flex-col items-center gap-1">
+            <span class="material-symbols-outlined text-2xl">calendar_today</span>
+            <span class="text-xs text-slate-500">calendar</span>
+          </div>
+          <div class="flex flex-col items-center gap-1">
+            <span class="material-symbols-outlined text-2xl">bar_chart</span>
+            <span class="text-xs text-slate-500">bar_chart</span>
+          </div>
+          <div class="flex flex-col items-center gap-1">
+            <span class="material-symbols-outlined text-2xl">settings</span>
+            <span class="text-xs text-slate-500">settings</span>
+          </div>
+          <div class="flex flex-col items-center gap-1">
+            <span class="material-symbols-outlined text-2xl">add</span>
+            <span class="text-xs text-slate-500">add</span>
+          </div>
+          <div class="flex flex-col items-center gap-1">
+            <span class="material-symbols-outlined text-2xl">edit</span>
+            <span class="text-xs text-slate-500">edit</span>
+          </div>
+          <div class="flex flex-col items-center gap-1">
+            <span class="material-symbols-outlined text-2xl">delete</span>
+            <span class="text-xs text-slate-500">delete</span>
+          </div>
+          <div class="flex flex-col items-center gap-1">
+            <span class="material-symbols-outlined text-2xl">search</span>
+            <span class="text-xs text-slate-500">search</span>
+          </div>
+          <div class="flex flex-col items-center gap-1">
+            <span class="material-symbols-outlined text-2xl">filter_list</span>
+            <span class="text-xs text-slate-500">filter</span>
+          </div>
+          <div class="flex flex-col items-center gap-1">
+            <span class="material-symbols-outlined text-2xl">check_circle</span>
+            <span class="text-xs text-slate-500">success</span>
+          </div>
+          <div class="flex flex-col items-center gap-1">
+            <span class="material-symbols-outlined text-2xl">warning</span>
+            <span class="text-xs text-slate-500">warning</span>
+          </div>
+          <div class="flex flex-col items-center gap-1">
+            <span class="material-symbols-outlined text-2xl">error</span>
+            <span class="text-xs text-slate-500">error</span>
+          </div>
+          <div class="flex flex-col items-center gap-1">
+            <span class="material-symbols-outlined text-2xl">info</span>
+            <span class="text-xs text-slate-500">info</span>
+          </div>
+          <div class="flex flex-col items-center gap-1">
+            <span class="material-symbols-outlined text-2xl">auto_awesome</span>
+            <span class="text-xs text-slate-500">AI</span>
+          </div>
+        </div>
+        <div class="mt-8">
+          <h4 class="font-medium mb-4">Icon Sizes</h4>
+          <div class="flex items-end gap-6">
+            <div class="text-center">
+              <span class="material-symbols-outlined" style="font-size: 16px;">dashboard</span>
+              <p class="text-xs text-slate-500 mt-1">16px</p>
+            </div>
+            <div class="text-center">
+              <span class="material-symbols-outlined" style="font-size: 20px;">dashboard</span>
+              <p class="text-xs text-slate-500 mt-1">20px</p>
+            </div>
+            <div class="text-center">
+              <span class="material-symbols-outlined" style="font-size: 24px;">dashboard</span>
+              <p class="text-xs text-slate-500 mt-1">24px</p>
+            </div>
+            <div class="text-center">
+              <span class="material-symbols-outlined" style="font-size: 32px;">dashboard</span>
+              <p class="text-xs text-slate-500 mt-1">32px</p>
+            </div>
+            <div class="text-center">
+              <span class="material-symbols-outlined" style="font-size: 48px;">dashboard</span>
+              <p class="text-xs text-slate-500 mt-1">48px</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-200 dark:border-slate-800 mt-16">
+    <div class=" mx-auto px-6 py-8 text-center text-sm text-slate-500">
+      <p>IntelliFlow CRM Design System v1.0</p>
+      <p class="mt-2">Open this file in a browser to preview all design tokens and components.</p>
+    </div>
+  </footer>
+</body>
+</html>

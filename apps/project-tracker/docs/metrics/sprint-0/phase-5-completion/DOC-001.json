@@ -1,0 +1,50 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "DOC-001",
+  "description": "Company & Product Master Brief (single source of truth)",
+  "owner": "CEO + All Leads",
+  "status": "DONE",
+  "sprint": "sprint-0",
+  "phase": "phase-5-completion",
+  "stream": null,
+  "dependencies": {
+    "all_satisfied": true,
+    "verified_at": "2026-01-29T01:33:17.577Z",
+    "required": []
+  },
+  "dependencies_resolved": [],
+  "started_at": "2025-12-21T07:06:10.526Z",
+  "completed_at": "2025-12-21T07:21:10.526Z",
+  "target_duration_minutes": null,
+  "actual_duration_minutes": 15,
+  "artifacts": {
+    "expected": [
+      "docs/company/master-brief.md",
+      "docs/company/product/product-vision.md",
+      "docs/company/go-to-market/icp-personas.md",
+      "docs/company/messaging/tone-of-voice.md",
+      "docs/company/brand/visual-identity.md"
+    ],
+    "created": [
+      "docs/company/master-brief.md",
+      "docs/company/product/product-vision.md",
+      "docs/company/go-to-market/icp-personas.md",
+      "docs/company/messaging/tone-of-voice.md",
+      "docs/company/brand/visual-identity.md"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "Docs Created",
+      "command": "verify docs/company/* and docs/company/** exist",
+      "executed_at": "2025-12-20T00:00:00Z",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2025-12-21T07:21:10.526Z"
+    }
+  ],
+  "blockers": [],
+  "section": "Strategy & Documentation",
+  "status_history": []
+}

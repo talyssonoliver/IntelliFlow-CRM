@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
+import { PATHS } from '@/lib/paths';
 
 // Disable caching for this route
 export const dynamic = 'force-dynamic';
@@ -9,18 +9,18 @@ export const revalidate = 0;
 
 export async function GET() {
   try {
-    // Sprint_plan.csv is now in the metrics _global folder
-    const csvPath = join(process.cwd(), 'docs', 'metrics', '_global', 'Sprint_plan.csv');
-    
+    // Use centralized path configuration
+    const csvPath = PATHS.sprintTracking.SPRINT_PLAN_CSV;
+
     // Debug logging
     console.log('Looking for CSV at:', csvPath);
     console.log('File exists:', existsSync(csvPath));
     console.log('Current working directory:', process.cwd());
-    
+
     if (!existsSync(csvPath)) {
       throw new Error(`File not found at: ${csvPath}`);
     }
-    
+
     const csvContent = await readFile(csvPath, 'utf-8');
 
     return new NextResponse(csvContent, {
@@ -28,8 +28,8 @@ export async function GET() {
         'Content-Type': 'text/csv',
         'Content-Disposition': 'inline; filename="Sprint_plan.csv"',
         'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-        'Pragma': 'no-cache',
-        'Expires': '0',
+        Pragma: 'no-cache',
+        Expires: '0',
       },
     });
   } catch (error) {

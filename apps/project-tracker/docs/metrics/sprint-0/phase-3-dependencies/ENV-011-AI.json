@@ -1,38 +1,78 @@
 {
-  "$schema": "../../../schemas/task-status.schema.json",
+  "$schema": "../../schemas/task-status.schema.json",
   "task_id": "ENV-011-AI",
+  "section": "Environment & Setup",
   "description": "LangChain Integration with Optimized Chains",
   "owner": "AI Specialist + Claude Code",
-  "status": "IN_PROGRESS",
+  "status": "DONE",
   "sprint": "sprint-0",
   "phase": "phase-3-dependencies",
   "stream": null,
-  "dependencies": [
+  "dependencies": {
+    "required": [
+      "ENV-007-AI"
+    ],
+    "verified_at": "2026-01-29T01:33:17.565Z",
+    "all_satisfied": true
+  },
+  "status_history": [],
+  "dependencies_resolved": [
     "ENV-007-AI"
   ],
-  "dependencies_resolved": [],
-  "started_at": null,
-  "completed_at": null,
+  "started_at": "2025-12-17T20:23:07.638Z",
+  "completed_at": "2025-12-17T20:38:07.638Z",
   "target_duration_minutes": 300,
-  "actual_duration_minutes": null,
+  "actual_duration_minutes": 300,
   "kpis": {
     "workflow_runtime_p95": {
       "target": 300,
-      "actual": null,
-      "unit": "milliseconds"
+      "actual": "N/A",
+      "unit": "milliseconds",
+      "met": false
     },
     "cost_logging_enabled": {
       "target": true,
-      "actual": null,
-      "unit": "boolean"
+      "actual": "N/A",
+      "unit": "boolean",
+      "met": false
     },
     "deterministic_replays": {
       "target": true,
-      "actual": null,
-      "unit": "boolean"
+      "actual": "N/A",
+      "unit": "boolean",
+      "met": false
     }
   },
-  "artifacts": [],
-  "validations": [],
+  "artifacts": {
+    "expected": [],
+    "created": [],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "IDE configuration exists",
+      "command": "test -f .vscode/settings.json || test -f .idea/workspace.xml",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-21T08:36:22.724Z",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_hash": "sha256:RU5WLTAxMS1BSS1JREUgY29uZmlndXJh",
+      "notes": "Validation passed",
+      "timestamp": "2025-12-17T20:38:07.638Z"
+    },
+    {
+      "name": "Dev environment configuration exists",
+      "command": "test -f .devcontainer/devcontainer.json || test -f docker-compose.yml",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-21T08:36:22.724Z",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_hash": "sha256:RU5WLTAxMS1BSS1EZXYgZW52aXJvbm1l",
+      "notes": "Validation passed",
+      "timestamp": "2025-12-17T20:38:07.638Z"
+    }
+  ],
   "blockers": []
 }

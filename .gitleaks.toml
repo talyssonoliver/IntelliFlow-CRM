@@ -1,0 +1,33 @@
+# Gitleaks configuration
+# https://github.com/gitleaks/gitleaks
+
+title = "IntelliFlow CRM Gitleaks Config"
+
+[allowlist]
+description = "Allowlist for known false positives and test/example files"
+
+# Allow test and example environment files
+paths = [
+    '''\.env\.development$''',
+    '''\.env\.test$''',
+    '''\.env\.example$''',
+    '''\.env\.local\.example$''',
+    '''docs/setup/.*\.md$''',
+]
+
+# Allow specific test file patterns
+regexTarget = "match"
+regexes = [
+    '''your-jwt-secret''',
+    '''your-.*-key''',
+    '''placeholder''',
+    '''test-api-key''',
+    '''example\.com''',
+    '''your-project\.supabase\.co''',
+]
+
+# Specific commits to ignore (initial commit with test data)
+commits = [
+    "a3de61298d87e819a7de40dbe5624ae50a98101a",
+    "048bf728c286e1487efcc18bf2c120432f03b518",
+]

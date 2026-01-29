@@ -1,148 +1,7277 @@
 {
   "$schema": "../schemas/dependency-graph.schema.json",
   "version": "1.0.0",
-  "last_updated": "2025-12-14T22:05:00Z",
+  "last_updated": "2026-01-29T01:33:17.671Z",
   "description": "Cross-sprint dependency tracking for all tasks",
-  
   "nodes": {
-    "ENV-004-AI": {
-      "task_id": "ENV-004-AI",
+    "EXC-INIT-001": {
+      "task_id": "EXC-INIT-001",
       "sprint": 0,
       "status": "DONE",
-      "dependencies": ["ENV-003-AI"],
-      "dependents": ["ENV-006-AI", "IFC-155"]
+      "dependencies": [],
+      "dependents": [
+        "AI-SETUP-001",
+        "EXP-SCRIPTS-001"
+      ]
     },
-    "EXC-SEC-001": {
-      "task_id": "EXC-SEC-001",
+    "AI-SETUP-001": {
+      "task_id": "AI-SETUP-001",
       "sprint": 0,
       "status": "DONE",
-      "dependencies": ["ENV-013-AI"],
+      "dependencies": [
+        "EXC-INIT-001"
+      ],
+      "dependents": [
+        "AI-SETUP-002",
+        "AI-SETUP-003",
+        "ENV-001-AI",
+        "AUTOMATION-001"
+      ]
+    },
+    "AI-SETUP-002": {
+      "task_id": "AI-SETUP-002",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": [
+        "AI-SETUP-001"
+      ],
+      "dependents": [
+        "AUTOMATION-001"
+      ]
+    },
+    "AI-SETUP-003": {
+      "task_id": "AI-SETUP-003",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": [
+        "AI-SETUP-001"
+      ],
       "dependents": []
     },
     "ENV-001-AI": {
       "task_id": "ENV-001-AI",
       "sprint": 0,
       "status": "DONE",
-      "dependencies": [],
-      "dependents": ["ENV-002-AI", "ENV-005-AI"]
+      "dependencies": [
+        "AI-SETUP-001"
+      ],
+      "dependents": [
+        "ENV-002-AI",
+        "ENV-003-AI",
+        "ENV-009-AI",
+        "ENV-012-AI",
+        "ENV-017-AI",
+        "IFC-160",
+        "EXP-PLATFORM-001"
+      ]
     },
     "ENV-002-AI": {
       "task_id": "ENV-002-AI",
       "sprint": 0,
       "status": "DONE",
-      "dependencies": ["ENV-001-AI"],
-      "dependents": ["ENV-005-AI"]
+      "dependencies": [
+        "ENV-001-AI"
+      ],
+      "dependents": [
+        "ENV-005-AI",
+        "BRAND-002",
+        "ENG-OPS-001",
+        "IFC-160"
+      ]
     },
     "ENV-003-AI": {
       "task_id": "ENV-003-AI",
       "sprint": 0,
-      "status": "IN_PROGRESS",
-      "dependencies": ["ENV-001-AI"],
-      "dependents": ["ENV-004-AI"]
+      "status": "DONE",
+      "dependencies": [
+        "ENV-001-AI"
+      ],
+      "dependents": [
+        "ENV-004-AI",
+        "ENV-017-AI",
+        "EP-001-AI",
+        "IFC-134"
+      ]
     },
-    "EXC-INIT-001": {
-      "task_id": "EXC-INIT-001",
+    "ENV-004-AI": {
+      "task_id": "ENV-004-AI",
       "sprint": 0,
       "status": "DONE",
-      "dependencies": [],
-      "dependents": ["AI-SETUP-001"]
+      "dependencies": [
+        "ENV-003-AI"
+      ],
+      "dependents": [
+        "ENV-006-AI",
+        "IFC-155"
+      ]
     },
-    "AI-SETUP-001": {
-      "task_id": "AI-SETUP-001",
+    "ENV-005-AI": {
+      "task_id": "ENV-005-AI",
       "sprint": 0,
       "status": "DONE",
-      "dependencies": ["EXC-INIT-001"],
-      "dependents": ["AI-SETUP-002", "AI-SETUP-003", "ENV-001-AI"]
+      "dependencies": [
+        "ENV-002-AI"
+      ],
+      "dependents": [
+        "ENV-008-AI",
+        "ENV-013-AI",
+        "ENV-017-AI",
+        "AUTOMATION-001",
+        "PM-OPS-001",
+        "ENG-OPS-001",
+        "IFC-111",
+        "IFC-112",
+        "IFC-130",
+        "IFC-132",
+        "IFC-134",
+        "TRACK-006",
+        "IFC-165"
+      ]
     },
-    "AI-SETUP-002": {
-      "task_id": "AI-SETUP-002",
+    "ENV-006-AI": {
+      "task_id": "ENV-006-AI",
       "sprint": 0,
       "status": "DONE",
-      "dependencies": ["AI-SETUP-001"],
-      "dependents": []
+      "dependencies": [
+        "ENV-004-AI"
+      ],
+      "dependents": [
+        "ENV-007-AI"
+      ]
     },
-    "AI-SETUP-003": {
-      "task_id": "AI-SETUP-003",
+    "ENV-007-AI": {
+      "task_id": "ENV-007-AI",
       "sprint": 0,
       "status": "DONE",
-      "dependencies": ["AI-SETUP-001"],
-      "dependents": []
+      "dependencies": [
+        "ENV-006-AI"
+      ],
+      "dependents": [
+        "ENV-010-AI",
+        "ENV-011-AI",
+        "ENV-013-AI",
+        "ENV-015-AI"
+      ]
+    },
+    "ENV-008-AI": {
+      "task_id": "ENV-008-AI",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": [
+        "ENV-005-AI"
+      ],
+      "dependents": [
+        "EP-001-AI",
+        "AUTOMATION-001",
+        "IFC-043",
+        "IFC-142",
+        "IFC-151"
+      ]
     },
     "ENV-009-AI": {
       "task_id": "ENV-009-AI",
       "sprint": 0,
+      "status": "DONE",
+      "dependencies": [
+        "ENV-001-AI"
+      ],
+      "dependents": [
+        "ENV-010-AI",
+        "ENV-013-AI",
+        "ENV-014-AI",
+        "ENV-016-AI"
+      ]
+    },
+    "ENV-010-AI": {
+      "task_id": "ENV-010-AI",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": [
+        "ENV-007-AI",
+        "ENV-009-AI"
+      ],
+      "dependents": [
+        "ENV-017-AI",
+        "AUTOMATION-001",
+        "IFC-044",
+        "ENG-OPS-001"
+      ]
+    },
+    "ENV-011-AI": {
+      "task_id": "ENV-011-AI",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": [
+        "ENV-007-AI"
+      ],
+      "dependents": []
+    },
+    "ENV-012-AI": {
+      "task_id": "ENV-012-AI",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": [
+        "ENV-001-AI"
+      ],
+      "dependents": []
+    },
+    "ENV-013-AI": {
+      "task_id": "ENV-013-AI",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": [
+        "ENV-005-AI",
+        "ENV-007-AI",
+        "ENV-009-AI"
+      ],
+      "dependents": [
+        "EXC-SEC-001"
+      ]
+    },
+    "ENV-014-AI": {
+      "task_id": "ENV-014-AI",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": [
+        "ENV-009-AI"
+      ],
+      "dependents": []
+    },
+    "ENV-015-AI": {
+      "task_id": "ENV-015-AI",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": [
+        "ENV-007-AI"
+      ],
+      "dependents": [
+        "IFC-165"
+      ]
+    },
+    "ENV-016-AI": {
+      "task_id": "ENV-016-AI",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": [
+        "ENV-009-AI",
+        "ANALYTICS-001"
+      ],
+      "dependents": []
+    },
+    "ENV-017-AI": {
+      "task_id": "ENV-017-AI",
+      "sprint": 1,
+      "status": "DONE",
+      "dependencies": [
+        "ENV-001-AI",
+        "ENV-003-AI",
+        "ENV-005-AI",
+        "ENV-010-AI",
+        "IFC-001"
+      ],
+      "dependents": [
+        "ENV-018-AI",
+        "IFC-128"
+      ]
+    },
+    "ENV-018-AI": {
+      "task_id": "ENV-018-AI",
+      "sprint": 1,
+      "status": "DONE",
+      "dependencies": [
+        "ENV-017-AI"
+      ],
+      "dependents": [
+        "IFC-146"
+      ]
+    },
+    "EP-001-AI": {
+      "task_id": "EP-001-AI",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": [
+        "ENV-003-AI",
+        "ENV-008-AI"
+      ],
+      "dependents": []
+    },
+    "AUTOMATION-001": {
+      "task_id": "AUTOMATION-001",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": [
+        "AI-SETUP-001",
+        "AI-SETUP-002",
+        "ENV-005-AI",
+        "ENV-008-AI",
+        "ENV-010-AI"
+      ],
+      "dependents": [
+        "AUTOMATION-002",
+        "PM-OPS-001"
+      ]
+    },
+    "AUTOMATION-002": {
+      "task_id": "AUTOMATION-002",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": [
+        "AUTOMATION-001"
+      ],
+      "dependents": [
+        "IFC-117",
+        "TRACK-004"
+      ]
+    },
+    "IFC-000": {
+      "task_id": "IFC-000",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": [],
+      "dependents": [
+        "IFC-001",
+        "IFC-002",
+        "IFC-011",
+        "IFC-146"
+      ]
+    },
+    "IFC-001": {
+      "task_id": "IFC-001",
+      "sprint": 1,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-000"
+      ],
+      "dependents": [
+        "ENV-017-AI",
+        "IFC-008",
+        "IFC-009",
+        "IFC-010",
+        "IFC-072",
+        "IFC-075"
+      ]
+    },
+    "IFC-002": {
+      "task_id": "IFC-002",
+      "sprint": 1,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-000"
+      ],
+      "dependents": [
+        "IFC-003",
+        "IFC-010",
+        "IFC-089",
+        "IFC-091",
+        "IFC-093",
+        "IFC-101",
+        "IFC-102",
+        "IFC-103",
+        "IFC-104",
+        "IFC-105",
+        "IFC-106",
+        "IFC-109",
+        "IFC-135",
+        "IFC-136",
+        "IFC-145",
+        "IFC-150"
+      ]
+    },
+    "IFC-003": {
+      "task_id": "IFC-003",
+      "sprint": 1,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-002"
+      ],
+      "dependents": [
+        "IFC-004",
+        "IFC-006",
+        "IFC-010",
+        "IFC-074",
+        "IFC-114",
+        "IFC-136",
+        "IFC-137",
+        "IFC-139",
+        "IFC-144",
+        "IFC-165"
+      ]
+    },
+    "IFC-004": {
+      "task_id": "IFC-004",
+      "sprint": 2,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-003"
+      ],
+      "dependents": [
+        "IFC-005",
+        "IFC-007",
+        "IFC-010",
+        "IFC-089",
+        "IFC-091",
+        "IFC-093"
+      ]
+    },
+    "IFC-005": {
+      "task_id": "IFC-005",
+      "sprint": 2,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-004"
+      ],
+      "dependents": [
+        "IFC-007",
+        "IFC-009",
+        "IFC-010",
+        "IFC-085",
+        "IFC-095",
+        "IFC-117",
+        "IFC-125",
+        "IFC-164",
+        "IFC-168"
+      ]
+    },
+    "IFC-006": {
+      "task_id": "IFC-006",
+      "sprint": 3,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-003"
+      ],
+      "dependents": [
+        "IFC-010",
+        "IFC-099",
+        "PG-015",
+        "PG-016",
+        "PG-018",
+        "PG-019",
+        "PG-021",
+        "PG-023",
+        "PG-024",
+        "IFC-120",
+        "PG-124",
+        "PG-125",
+        "IFC-169"
+      ]
+    },
+    "IFC-007": {
+      "task_id": "IFC-007",
+      "sprint": 3,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-004",
+        "IFC-005"
+      ],
+      "dependents": [
+        "IFC-010",
+        "IFC-047",
+        "IFC-097",
+        "IFC-123"
+      ]
+    },
+    "IFC-008": {
+      "task_id": "IFC-008",
+      "sprint": 2,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-001"
+      ],
+      "dependents": [
+        "IFC-010",
+        "IFC-046",
+        "IFC-058",
+        "IFC-072",
+        "IFC-098",
+        "IFC-100",
+        "IFC-125"
+      ]
+    },
+    "IFC-009": {
+      "task_id": "IFC-009",
+      "sprint": 4,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-001",
+        "IFC-005"
+      ],
+      "dependents": [
+        "IFC-010",
+        "IFC-056"
+      ]
+    },
+    "IFC-010": {
+      "task_id": "IFC-010",
+      "sprint": 6,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-001",
+        "IFC-002",
+        "IFC-003",
+        "IFC-004",
+        "IFC-005",
+        "IFC-006",
+        "IFC-007",
+        "IFC-008",
+        "IFC-009",
+        "IFC-089",
+        "IFC-098",
+        "IFC-112"
+      ],
+      "dependents": [
+        "IFC-012",
+        "IFC-118"
+      ]
+    },
+    "IFC-011": {
+      "task_id": "IFC-011",
+      "sprint": 3,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-000"
+      ],
+      "dependents": [
+        "IFC-057"
+      ]
+    },
+    "IFC-012": {
+      "task_id": "IFC-012",
+      "sprint": 6,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-010"
+      ],
+      "dependents": [
+        "IFC-013",
+        "IFC-017",
+        "IFC-078",
+        "IFC-079"
+      ]
+    },
+    "IFC-013": {
+      "task_id": "IFC-013",
+      "sprint": 6,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-012"
+      ],
+      "dependents": [
+        "IFC-014",
+        "IFC-015",
+        "IFC-017",
+        "IFC-042",
+        "IFC-077",
+        "IFC-081"
+      ]
+    },
+    "IFC-014": {
+      "task_id": "IFC-014",
+      "sprint": 7,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-013"
+      ],
+      "dependents": [
+        "IFC-016",
+        "IFC-018",
+        "IFC-076",
+        "IFC-087"
+      ]
+    },
+    "IFC-015": {
+      "task_id": "IFC-015",
+      "sprint": 7,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-013"
+      ],
+      "dependents": [
+        "IFC-018"
+      ]
+    },
+    "IFC-016": {
+      "task_id": "IFC-016",
+      "sprint": 7,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-014"
+      ],
+      "dependents": [
+        "IFC-018"
+      ]
+    },
+    "IFC-017": {
+      "task_id": "IFC-017",
+      "sprint": 6,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-012",
+        "IFC-013"
+      ],
+      "dependents": [
+        "IFC-058",
+        "IFC-070"
+      ]
+    },
+    "IFC-018": {
+      "task_id": "IFC-018",
+      "sprint": 7,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-014",
+        "IFC-015",
+        "IFC-016"
+      ],
+      "dependents": [
+        "IFC-019",
+        "IFC-041"
+      ]
+    },
+    "IFC-019": {
+      "task_id": "IFC-019",
+      "sprint": 8,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-018"
+      ],
+      "dependents": [
+        "IFC-020"
+      ]
+    },
+    "IFC-020": {
+      "task_id": "IFC-020",
+      "sprint": 12,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-019"
+      ],
+      "dependents": [
+        "IFC-021",
+        "IFC-086"
+      ]
+    },
+    "IFC-021": {
+      "task_id": "IFC-021",
+      "sprint": 13,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-020"
+      ],
+      "dependents": [
+        "IFC-022"
+      ]
+    },
+    "IFC-022": {
+      "task_id": "IFC-022",
+      "sprint": 13,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-021"
+      ],
+      "dependents": [
+        "IFC-023",
+        "IFC-025",
+        "IFC-026"
+      ]
+    },
+    "IFC-023": {
+      "task_id": "IFC-023",
+      "sprint": 13,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-022"
+      ],
+      "dependents": [
+        "IFC-024"
+      ]
+    },
+    "IFC-024": {
+      "task_id": "IFC-024",
+      "sprint": 14,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-023"
+      ],
+      "dependents": [
+        "IFC-026"
+      ]
+    },
+    "IFC-025": {
+      "task_id": "IFC-025",
+      "sprint": 14,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-022"
+      ],
+      "dependents": [
+        "IFC-039"
+      ]
+    },
+    "IFC-026": {
+      "task_id": "IFC-026",
+      "sprint": 15,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-022",
+        "IFC-024"
+      ],
+      "dependents": [
+        "IFC-027",
+        "IFC-041"
+      ]
+    },
+    "IFC-027": {
+      "task_id": "IFC-027",
+      "sprint": 15,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-026"
+      ],
+      "dependents": [
+        "IFC-028"
+      ]
+    },
+    "IFC-028": {
+      "task_id": "IFC-028",
+      "sprint": 16,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-027"
+      ],
+      "dependents": [
+        "IFC-029",
+        "IFC-031"
+      ]
+    },
+    "IFC-029": {
+      "task_id": "IFC-029",
+      "sprint": 16,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-028"
+      ],
+      "dependents": [
+        "IFC-030"
+      ]
+    },
+    "IFC-030": {
+      "task_id": "IFC-030",
+      "sprint": 17,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-029"
+      ],
+      "dependents": [
+        "IFC-032",
+        "IFC-033"
+      ]
+    },
+    "IFC-031": {
+      "task_id": "IFC-031",
+      "sprint": 17,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-028"
+      ],
+      "dependents": []
+    },
+    "IFC-032": {
+      "task_id": "IFC-032",
+      "sprint": 18,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-030"
+      ],
+      "dependents": [
+        "IFC-033",
+        "IFC-037"
+      ]
+    },
+    "IFC-033": {
+      "task_id": "IFC-033",
+      "sprint": 19,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-030",
+        "IFC-032"
+      ],
+      "dependents": [
+        "IFC-034",
+        "IFC-040",
+        "IFC-041"
+      ]
+    },
+    "IFC-034": {
+      "task_id": "IFC-034",
+      "sprint": 19,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-033"
+      ],
+      "dependents": [
+        "IFC-035"
+      ]
+    },
+    "IFC-035": {
+      "task_id": "IFC-035",
+      "sprint": 20,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-034"
+      ],
+      "dependents": [
+        "IFC-036"
+      ]
+    },
+    "IFC-036": {
+      "task_id": "IFC-036",
+      "sprint": 21,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-035",
+        "IFC-106"
+      ],
+      "dependents": [
+        "PG-049"
+      ]
+    },
+    "IFC-037": {
+      "task_id": "IFC-037",
+      "sprint": 21,
+      "status": "BACKLOG",
+      "dependencies": [
+        "ANALYTICS-001",
+        "IFC-032"
+      ],
+      "dependents": [
+        "IFC-038"
+      ]
+    },
+    "IFC-038": {
+      "task_id": "IFC-038",
+      "sprint": 22,
+      "status": "BACKLOG",
+      "dependencies": [
+        "ANALYTICS-001",
+        "IFC-037"
+      ],
+      "dependents": []
+    },
+    "IFC-039": {
+      "task_id": "IFC-039",
+      "sprint": 23,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-025"
+      ],
+      "dependents": [
+        "IFC-048",
+        "IFC-083",
+        "IFC-166",
+        "IFC-175"
+      ]
+    },
+    "IFC-040": {
+      "task_id": "IFC-040",
+      "sprint": 25,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-033",
+        "IFC-043",
+        "IFC-046",
+        "IFC-111",
+        "IFC-112",
+        "IFC-113",
+        "IFC-115",
+        "IFC-122",
+        "IFC-127",
+        "IFC-130",
+        "IFC-132",
+        "IFC-133",
+        "IFC-134"
+      ],
+      "dependents": [
+        "IFC-052",
+        "IFC-059",
+        "IFC-071"
+      ]
+    },
+    "IFC-041": {
+      "task_id": "IFC-041",
+      "sprint": 22,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-018",
+        "IFC-026",
+        "IFC-033"
+      ],
+      "dependents": []
+    },
+    "IFC-042": {
+      "task_id": "IFC-042",
+      "sprint": 12,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-013"
+      ],
+      "dependents": []
+    },
+    "IFC-043": {
+      "task_id": "IFC-043",
+      "sprint": 25,
+      "status": "BACKLOG",
+      "dependencies": [
+        "ENV-008-AI",
+        "IFC-112",
+        "IFC-113",
+        "IFC-115",
+        "IFC-130"
+      ],
+      "dependents": [
+        "IFC-040"
+      ]
+    },
+    "IFC-044": {
+      "task_id": "IFC-044",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": [
+        "ENV-010-AI"
+      ],
+      "dependents": [
+        "IFC-045",
+        "IFC-088"
+      ]
+    },
+    "IFC-045": {
+      "task_id": "IFC-045",
+      "sprint": 14,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-044"
+      ],
+      "dependents": []
+    },
+    "IFC-046": {
+      "task_id": "IFC-046",
+      "sprint": 23,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-008"
+      ],
+      "dependents": [
+        "IFC-040"
+      ]
+    },
+    "IFC-047": {
+      "task_id": "IFC-047",
+      "sprint": 22,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-007"
+      ],
+      "dependents": []
+    },
+    "IFC-048": {
+      "task_id": "IFC-048",
+      "sprint": 25,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-039"
+      ],
+      "dependents": [
+        "IFC-049",
+        "IFC-050"
+      ]
+    },
+    "IFC-049": {
+      "task_id": "IFC-049",
+      "sprint": 26,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-048"
+      ],
+      "dependents": [
+        "IFC-051"
+      ]
+    },
+    "IFC-050": {
+      "task_id": "IFC-050",
+      "sprint": 26,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-048"
+      ],
+      "dependents": [
+        "IFC-052",
+        "IFC-084"
+      ]
+    },
+    "IFC-051": {
+      "task_id": "IFC-051",
+      "sprint": 27,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-049"
+      ],
+      "dependents": []
+    },
+    "IFC-052": {
+      "task_id": "IFC-052",
+      "sprint": 27,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-040",
+        "IFC-050"
+      ],
+      "dependents": [
+        "IFC-053",
+        "IFC-060"
+      ]
+    },
+    "IFC-053": {
+      "task_id": "IFC-053",
+      "sprint": 28,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-052"
+      ],
+      "dependents": []
+    },
+    "IFC-054": {
+      "task_id": "IFC-054",
+      "sprint": 7,
+      "status": "DONE",
+      "dependencies": [],
+      "dependents": [
+        "IFC-118"
+      ]
+    },
+    "IFC-055": {
+      "task_id": "IFC-055",
+      "sprint": 8,
+      "status": "DONE",
+      "dependencies": [],
+      "dependents": []
+    },
+    "IFC-056": {
+      "task_id": "IFC-056",
+      "sprint": 9,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-009"
+      ],
+      "dependents": []
+    },
+    "IFC-057": {
+      "task_id": "IFC-057",
+      "sprint": 9,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-011"
+      ],
+      "dependents": []
+    },
+    "IFC-058": {
+      "task_id": "IFC-058",
+      "sprint": 11,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-017",
+        "IFC-127",
+        "IFC-008"
+      ],
+      "dependents": [
+        "PG-050",
+        "PG-118",
+        "PG-119",
+        "PG-122",
+        "PG-123"
+      ]
+    },
+    "IFC-059": {
+      "task_id": "IFC-059",
+      "sprint": 25,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-040"
+      ],
+      "dependents": []
+    },
+    "IFC-060": {
+      "task_id": "IFC-060",
+      "sprint": 28,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-052"
+      ],
+      "dependents": []
+    },
+    "IFC-061": {
+      "task_id": "IFC-061",
+      "sprint": 14,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-089",
+        "IFC-101",
+        "IFC-102"
+      ],
+      "dependents": [
+        "IFC-062"
+      ]
+    },
+    "IFC-062": {
+      "task_id": "IFC-062",
+      "sprint": 14,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-061",
+        "IFC-104"
+      ],
+      "dependents": []
+    },
+    "IFC-063": {
+      "task_id": "IFC-063",
+      "sprint": 14,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-091",
+        "IFC-104"
+      ],
+      "dependents": [
+        "IFC-064"
+      ]
+    },
+    "IFC-064": {
+      "task_id": "IFC-064",
+      "sprint": 14,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-063",
+        "IFC-091"
+      ],
+      "dependents": []
+    },
+    "IFC-065": {
+      "task_id": "IFC-065",
+      "sprint": 14,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-091",
+        "IFC-092"
+      ],
+      "dependents": []
+    },
+    "IFC-066": {
+      "task_id": "IFC-066",
+      "sprint": 14,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-091",
+        "IFC-092"
+      ],
+      "dependents": []
+    },
+    "IFC-067": {
+      "task_id": "IFC-067",
+      "sprint": 14,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-093",
+        "IFC-095"
+      ],
+      "dependents": []
+    },
+    "IFC-068": {
+      "task_id": "IFC-068",
+      "sprint": 14,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-090",
+        "IFC-096"
+      ],
+      "dependents": []
+    },
+    "IFC-069": {
+      "task_id": "IFC-069",
+      "sprint": 14,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-089",
+        "IFC-091",
+        "IFC-093",
+        "IFC-109"
+      ],
+      "dependents": []
+    },
+    "IFC-070": {
+      "task_id": "IFC-070",
+      "sprint": 18,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-017"
+      ],
+      "dependents": [
+        "PG-121"
+      ]
+    },
+    "IFC-071": {
+      "task_id": "IFC-071",
+      "sprint": 25,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-040"
+      ],
+      "dependents": [
+        "IFC-115"
+      ]
+    },
+    "IFC-072": {
+      "task_id": "IFC-072",
+      "sprint": 2,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-001",
+        "IFC-008"
+      ],
+      "dependents": [
+        "IFC-073",
+        "PG-120",
+        "IFC-113",
+        "IFC-114",
+        "IFC-127"
+      ]
+    },
+    "IFC-073": {
+      "task_id": "IFC-073",
+      "sprint": 2,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-072"
+      ],
+      "dependents": []
+    },
+    "IFC-074": {
+      "task_id": "IFC-074",
+      "sprint": 1,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-003"
+      ],
+      "dependents": [
+        "IFC-116"
+      ]
+    },
+    "IFC-075": {
+      "task_id": "IFC-075",
+      "sprint": 1,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-001"
+      ],
+      "dependents": []
+    },
+    "IFC-076": {
+      "task_id": "IFC-076",
+      "sprint": 10,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-014",
+        "BRAND-002"
+      ],
+      "dependents": [
+        "PG-001",
+        "PG-015",
+        "PG-043",
+        "PG-055",
+        "PG-104"
+      ]
+    },
+    "IFC-077": {
+      "task_id": "IFC-077",
+      "sprint": 8,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-013"
+      ],
+      "dependents": []
+    },
+    "IFC-078": {
+      "task_id": "IFC-078",
+      "sprint": 18,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-012"
+      ],
+      "dependents": []
+    },
+    "IFC-079": {
+      "task_id": "IFC-079",
+      "sprint": 7,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-012"
+      ],
+      "dependents": [
+        "IFC-080",
+        "PG-032"
+      ]
+    },
+    "IFC-080": {
+      "task_id": "IFC-080",
+      "sprint": 7,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-079"
+      ],
+      "dependents": [
+        "IFC-082"
+      ]
+    },
+    "IFC-081": {
+      "task_id": "IFC-081",
+      "sprint": 12,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-013"
+      ],
+      "dependents": []
+    },
+    "IFC-082": {
+      "task_id": "IFC-082",
+      "sprint": 7,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-080"
+      ],
+      "dependents": [
+        "IFC-083"
+      ]
+    },
+    "IFC-083": {
+      "task_id": "IFC-083",
+      "sprint": 23,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-039",
+        "IFC-082"
+      ],
+      "dependents": []
+    },
+    "IFC-084": {
+      "task_id": "IFC-084",
+      "sprint": 27,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-050",
+        "SALES-002"
+      ],
+      "dependents": []
+    },
+    "IFC-085": {
+      "task_id": "IFC-085",
+      "sprint": 2,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-005"
+      ],
+      "dependents": [
+        "IFC-168",
+        "IFC-174"
+      ]
+    },
+    "IFC-086": {
+      "task_id": "IFC-086",
+      "sprint": 14,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-020"
+      ],
+      "dependents": [
+        "IFC-164",
+        "PG-128"
+      ]
+    },
+    "IFC-087": {
+      "task_id": "IFC-087",
+      "sprint": 20,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-014"
+      ],
+      "dependents": [
+        "IFC-123"
+      ]
+    },
+    "IFC-088": {
+      "task_id": "IFC-088",
+      "sprint": 14,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-044"
+      ],
+      "dependents": [
+        "TRACK-002"
+      ]
+    },
+    "IFC-089": {
+      "task_id": "IFC-089",
+      "sprint": 5,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-002",
+        "IFC-004"
+      ],
+      "dependents": [
+        "IFC-010",
+        "IFC-061",
+        "IFC-069",
+        "IFC-090",
+        "PG-058",
+        "PG-059",
+        "PG-064",
+        "PG-069",
+        "PG-080",
+        "PG-091"
+      ]
+    },
+    "IFC-090": {
+      "task_id": "IFC-090",
+      "sprint": 6,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-089"
+      ],
+      "dependents": [
+        "IFC-068",
+        "IFC-094",
+        "IFC-095",
+        "PG-065"
+      ]
+    },
+    "IFC-091": {
+      "task_id": "IFC-091",
+      "sprint": 6,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-002",
+        "IFC-004"
+      ],
+      "dependents": [
+        "IFC-063",
+        "IFC-064",
+        "IFC-065",
+        "IFC-066",
+        "IFC-069",
+        "IFC-092",
+        "IFC-096",
+        "PG-058",
+        "PG-073",
+        "PG-076"
+      ]
+    },
+    "IFC-092": {
+      "task_id": "IFC-092",
+      "sprint": 7,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-091"
+      ],
+      "dependents": [
+        "IFC-065",
+        "IFC-066",
+        "IFC-096",
+        "PG-079"
+      ]
+    },
+    "IFC-093": {
+      "task_id": "IFC-093",
+      "sprint": 7,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-002",
+        "IFC-004"
+      ],
+      "dependents": [
+        "IFC-067",
+        "IFC-069",
+        "PG-046"
+      ]
+    },
+    "IFC-094": {
+      "task_id": "IFC-094",
+      "sprint": 8,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-090",
+        "IFC-106"
+      ],
+      "dependents": [
+        "PG-089",
+        "IFC-152"
+      ]
+    },
+    "IFC-095": {
+      "task_id": "IFC-095",
+      "sprint": 8,
       "status": "IN_PROGRESS",
-      "dependencies": ["ENV-001-AI"],
+      "dependencies": [
+        "IFC-005",
+        "IFC-090"
+      ],
+      "dependents": [
+        "IFC-067",
+        "PG-058",
+        "IFC-164"
+      ]
+    },
+    "IFC-096": {
+      "task_id": "IFC-096",
+      "sprint": 9,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-091",
+        "IFC-092"
+      ],
+      "dependents": [
+        "IFC-068",
+        "PG-101",
+        "PG-102"
+      ]
+    },
+    "IFC-097": {
+      "task_id": "IFC-097",
+      "sprint": 9,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-007"
+      ],
+      "dependents": []
+    },
+    "IFC-098": {
+      "task_id": "IFC-098",
+      "sprint": 5,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-008"
+      ],
+      "dependents": [
+        "IFC-010",
+        "PG-015",
+        "PG-021",
+        "PG-108",
+        "PG-109",
+        "PG-112",
+        "IFC-113",
+        "IFC-124",
+        "IFC-127",
+        "IFC-140",
+        "IFC-150",
+        "IFC-157"
+      ]
+    },
+    "IFC-099": {
+      "task_id": "IFC-099",
+      "sprint": 10,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-006",
+        "IFC-106"
+      ],
+      "dependents": [
+        "PG-025",
+        "PG-084",
+        "PG-087",
+        "PG-114",
+        "PG-115"
+      ]
+    },
+    "IFC-100": {
+      "task_id": "IFC-100",
+      "sprint": 10,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-008",
+        "GOV-001"
+      ],
+      "dependents": [
+        "IFC-126"
+      ]
+    },
+    "PG-001": {
+      "task_id": "PG-001",
+      "sprint": 11,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-076",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "dependents": [
+        "PG-002",
+        "PG-003",
+        "PG-004",
+        "PG-005",
+        "PG-006",
+        "PG-007",
+        "PG-008",
+        "PG-009",
+        "PG-011",
+        "PG-013",
+        "PG-014",
+        "PG-126"
+      ]
+    },
+    "PG-002": {
+      "task_id": "PG-002",
+      "sprint": 11,
+      "status": "DONE",
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "dependents": [
+        "PG-126"
+      ]
+    },
+    "PG-003": {
+      "task_id": "PG-003",
+      "sprint": 11,
+      "status": "DONE",
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "dependents": []
+    },
+    "PG-004": {
+      "task_id": "PG-004",
+      "sprint": 11,
+      "status": "DONE",
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "dependents": []
+    },
+    "PG-005": {
+      "task_id": "PG-005",
+      "sprint": 11,
+      "status": "DONE",
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "dependents": [
+        "PG-127"
+      ]
+    },
+    "PG-006": {
+      "task_id": "PG-006",
+      "sprint": 11,
+      "status": "DONE",
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "dependents": [
+        "PG-127"
+      ]
+    },
+    "PG-007": {
+      "task_id": "PG-007",
+      "sprint": 11,
+      "status": "DONE",
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "dependents": []
+    },
+    "PG-008": {
+      "task_id": "PG-008",
+      "sprint": 11,
+      "status": "DONE",
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "dependents": []
+    },
+    "PG-009": {
+      "task_id": "PG-009",
+      "sprint": 12,
+      "status": "DONE",
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "dependents": [
+        "PG-010"
+      ]
+    },
+    "PG-010": {
+      "task_id": "PG-010",
+      "sprint": 12,
+      "status": "DONE",
+      "dependencies": [
+        "PG-009",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "dependents": []
+    },
+    "PG-011": {
+      "task_id": "PG-011",
+      "sprint": 12,
+      "status": "DONE",
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "dependents": [
+        "PG-012"
+      ]
+    },
+    "PG-012": {
+      "task_id": "PG-012",
+      "sprint": 12,
+      "status": "DONE",
+      "dependencies": [
+        "PG-011",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "dependents": []
+    },
+    "PG-013": {
+      "task_id": "PG-013",
+      "sprint": 12,
+      "status": "DONE",
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "dependents": []
+    },
+    "PG-014": {
+      "task_id": "PG-014",
+      "sprint": 12,
+      "status": "DONE",
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "dependents": []
+    },
+    "PG-015": {
+      "task_id": "PG-015",
+      "sprint": 13,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-006",
+        "IFC-076",
+        "IFC-098"
+      ],
+      "dependents": [
+        "PG-016",
+        "PG-018",
+        "PG-019",
+        "PG-021",
+        "PG-022",
+        "PG-024",
+        "PG-124"
+      ]
+    },
+    "PG-016": {
+      "task_id": "PG-016",
+      "sprint": 13,
+      "status": "DONE",
+      "dependencies": [
+        "PG-015",
+        "IFC-006"
+      ],
+      "dependents": [
+        "PG-017",
+        "PG-023"
+      ]
+    },
+    "PG-017": {
+      "task_id": "PG-017",
+      "sprint": 13,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-016"
+      ],
+      "dependents": []
+    },
+    "PG-018": {
+      "task_id": "PG-018",
+      "sprint": 13,
+      "status": "DONE",
+      "dependencies": [
+        "PG-015",
+        "IFC-006"
+      ],
+      "dependents": []
+    },
+    "PG-019": {
+      "task_id": "PG-019",
+      "sprint": 13,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-006",
+        "PG-015"
+      ],
+      "dependents": [
+        "PG-020",
+        "IFC-120"
+      ]
+    },
+    "PG-020": {
+      "task_id": "PG-020",
+      "sprint": 13,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-019"
+      ],
+      "dependents": [
+        "IFC-120"
+      ]
+    },
+    "PG-021": {
+      "task_id": "PG-021",
+      "sprint": 13,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-006",
+        "IFC-098",
+        "PG-015"
+      ],
+      "dependents": [
+        "PG-022",
+        "PG-125"
+      ]
+    },
+    "PG-022": {
+      "task_id": "PG-022",
+      "sprint": 13,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-015",
+        "PG-021"
+      ],
+      "dependents": [
+        "PG-125"
+      ]
+    },
+    "PG-023": {
+      "task_id": "PG-023",
+      "sprint": 13,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-006",
+        "PG-016"
+      ],
+      "dependents": [
+        "IFC-120"
+      ]
+    },
+    "PG-024": {
+      "task_id": "PG-024",
+      "sprint": 13,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-006",
+        "PG-015"
+      ],
+      "dependents": [
+        "PG-124"
+      ]
+    },
+    "PG-025": {
+      "task_id": "PG-025",
+      "sprint": 14,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-099"
+      ],
+      "dependents": [
+        "PG-026",
+        "PG-027",
+        "PG-029",
+        "PG-030",
+        "PG-031"
+      ]
+    },
+    "PG-026": {
+      "task_id": "PG-026",
+      "sprint": 14,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-025"
+      ],
+      "dependents": []
+    },
+    "PG-027": {
+      "task_id": "PG-027",
+      "sprint": 14,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-025"
+      ],
+      "dependents": [
+        "PG-028"
+      ]
+    },
+    "PG-028": {
+      "task_id": "PG-028",
+      "sprint": 14,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-027"
+      ],
+      "dependents": []
+    },
+    "PG-029": {
+      "task_id": "PG-029",
+      "sprint": 14,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-025"
+      ],
+      "dependents": []
+    },
+    "PG-030": {
+      "task_id": "PG-030",
+      "sprint": 14,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-025"
+      ],
+      "dependents": []
+    },
+    "PG-031": {
+      "task_id": "PG-031",
+      "sprint": 14,
+      "status": "DONE",
+      "dependencies": [
+        "PG-025"
+      ],
+      "dependents": []
+    },
+    "PG-032": {
+      "task_id": "PG-032",
+      "sprint": 15,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-079"
+      ],
+      "dependents": [
+        "PG-033",
+        "PG-034",
+        "PG-035",
+        "PG-036",
+        "PG-037",
+        "PG-038",
+        "PG-039"
+      ]
+    },
+    "PG-033": {
+      "task_id": "PG-033",
+      "sprint": 15,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-032"
+      ],
+      "dependents": []
+    },
+    "PG-034": {
+      "task_id": "PG-034",
+      "sprint": 15,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-032"
+      ],
+      "dependents": []
+    },
+    "PG-035": {
+      "task_id": "PG-035",
+      "sprint": 15,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-032"
+      ],
+      "dependents": []
+    },
+    "PG-036": {
+      "task_id": "PG-036",
+      "sprint": 15,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-032"
+      ],
+      "dependents": []
+    },
+    "PG-037": {
+      "task_id": "PG-037",
+      "sprint": 15,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-032"
+      ],
+      "dependents": []
+    },
+    "PG-038": {
+      "task_id": "PG-038",
+      "sprint": 15,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-032"
+      ],
+      "dependents": []
+    },
+    "PG-039": {
+      "task_id": "PG-039",
+      "sprint": 15,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-032"
+      ],
+      "dependents": [
+        "PG-040",
+        "PG-041"
+      ]
+    },
+    "PG-040": {
+      "task_id": "PG-040",
+      "sprint": 15,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-039"
+      ],
+      "dependents": []
+    },
+    "PG-041": {
+      "task_id": "PG-041",
+      "sprint": 15,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-039"
+      ],
+      "dependents": [
+        "PG-042"
+      ]
+    },
+    "PG-042": {
+      "task_id": "PG-042",
+      "sprint": 15,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-041"
+      ],
+      "dependents": []
+    },
+    "PG-043": {
+      "task_id": "PG-043",
+      "sprint": 16,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-076"
+      ],
+      "dependents": [
+        "PG-044",
+        "PG-045"
+      ]
+    },
+    "PG-044": {
+      "task_id": "PG-044",
+      "sprint": 16,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-043"
+      ],
+      "dependents": []
+    },
+    "PG-045": {
+      "task_id": "PG-045",
+      "sprint": 16,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-043"
+      ],
+      "dependents": []
+    },
+    "PG-046": {
+      "task_id": "PG-046",
+      "sprint": 16,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-093"
+      ],
+      "dependents": [
+        "PG-047",
+        "PG-048"
+      ]
+    },
+    "PG-047": {
+      "task_id": "PG-047",
+      "sprint": 16,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-046"
+      ],
+      "dependents": []
+    },
+    "PG-048": {
+      "task_id": "PG-048",
+      "sprint": 16,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-046"
+      ],
+      "dependents": []
+    },
+    "PG-049": {
+      "task_id": "PG-049",
+      "sprint": 22,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-036"
+      ],
+      "dependents": []
+    },
+    "PG-050": {
+      "task_id": "PG-050",
+      "sprint": 17,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-058"
+      ],
+      "dependents": [
+        "PG-051",
+        "PG-052",
+        "PG-053",
+        "PG-054"
+      ]
+    },
+    "PG-051": {
+      "task_id": "PG-051",
+      "sprint": 17,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-050"
+      ],
+      "dependents": []
+    },
+    "PG-052": {
+      "task_id": "PG-052",
+      "sprint": 17,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-050"
+      ],
+      "dependents": []
+    },
+    "PG-053": {
+      "task_id": "PG-053",
+      "sprint": 17,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-050"
+      ],
+      "dependents": []
+    },
+    "PG-054": {
+      "task_id": "PG-054",
+      "sprint": 17,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-050"
+      ],
+      "dependents": []
+    },
+    "PG-055": {
+      "task_id": "PG-055",
+      "sprint": 17,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-076"
+      ],
+      "dependents": [
+        "PG-056",
+        "PG-057"
+      ]
+    },
+    "PG-056": {
+      "task_id": "PG-056",
+      "sprint": 17,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-055"
+      ],
+      "dependents": []
+    },
+    "PG-057": {
+      "task_id": "PG-057",
+      "sprint": 17,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-055"
+      ],
+      "dependents": []
+    },
+    "PG-058": {
+      "task_id": "PG-058",
+      "sprint": 18,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-089",
+        "IFC-091",
+        "IFC-095"
+      ],
+      "dependents": []
+    },
+    "PG-059": {
+      "task_id": "PG-059",
+      "sprint": 18,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-089"
+      ],
+      "dependents": [
+        "PG-060",
+        "PG-061",
+        "PG-063"
+      ]
+    },
+    "PG-060": {
+      "task_id": "PG-060",
+      "sprint": 18,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-059"
+      ],
+      "dependents": []
+    },
+    "PG-061": {
+      "task_id": "PG-061",
+      "sprint": 18,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-059"
+      ],
+      "dependents": [
+        "PG-062"
+      ]
+    },
+    "PG-062": {
+      "task_id": "PG-062",
+      "sprint": 18,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-061"
+      ],
+      "dependents": []
+    },
+    "PG-063": {
+      "task_id": "PG-063",
+      "sprint": 18,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-059"
+      ],
+      "dependents": []
+    },
+    "PG-064": {
+      "task_id": "PG-064",
+      "sprint": 19,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-089"
+      ],
+      "dependents": [
+        "PG-067",
+        "PG-068"
+      ]
+    },
+    "PG-065": {
+      "task_id": "PG-065",
+      "sprint": 19,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-090"
+      ],
+      "dependents": [
+        "PG-066"
+      ]
+    },
+    "PG-066": {
+      "task_id": "PG-066",
+      "sprint": 19,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-065"
+      ],
+      "dependents": []
+    },
+    "PG-067": {
+      "task_id": "PG-067",
+      "sprint": 19,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-064"
+      ],
+      "dependents": []
+    },
+    "PG-068": {
+      "task_id": "PG-068",
+      "sprint": 19,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-064"
+      ],
+      "dependents": []
+    },
+    "PG-069": {
+      "task_id": "PG-069",
+      "sprint": 19,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-089"
+      ],
+      "dependents": [
+        "PG-070",
+        "PG-072"
+      ]
+    },
+    "PG-070": {
+      "task_id": "PG-070",
+      "sprint": 20,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-069"
+      ],
+      "dependents": [
+        "PG-071"
+      ]
+    },
+    "PG-071": {
+      "task_id": "PG-071",
+      "sprint": 20,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-070"
+      ],
+      "dependents": []
+    },
+    "PG-072": {
+      "task_id": "PG-072",
+      "sprint": 20,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-069"
+      ],
+      "dependents": []
+    },
+    "PG-073": {
+      "task_id": "PG-073",
+      "sprint": 20,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-091"
+      ],
+      "dependents": [
+        "PG-074"
+      ]
+    },
+    "PG-074": {
+      "task_id": "PG-074",
+      "sprint": 20,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-073"
+      ],
+      "dependents": [
+        "PG-075"
+      ]
+    },
+    "PG-075": {
+      "task_id": "PG-075",
+      "sprint": 20,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-074"
+      ],
+      "dependents": []
+    },
+    "PG-076": {
+      "task_id": "PG-076",
+      "sprint": 21,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-091"
+      ],
+      "dependents": [
+        "PG-077"
+      ]
+    },
+    "PG-077": {
+      "task_id": "PG-077",
+      "sprint": 21,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-076"
+      ],
+      "dependents": [
+        "PG-078"
+      ]
+    },
+    "PG-078": {
+      "task_id": "PG-078",
+      "sprint": 21,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-077"
+      ],
+      "dependents": []
+    },
+    "PG-079": {
+      "task_id": "PG-079",
+      "sprint": 21,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-092"
+      ],
+      "dependents": []
+    },
+    "PG-080": {
+      "task_id": "PG-080",
+      "sprint": 21,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-089"
+      ],
+      "dependents": [
+        "PG-081",
+        "PG-083",
+        "PG-088"
+      ]
+    },
+    "PG-081": {
+      "task_id": "PG-081",
+      "sprint": 21,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-080"
+      ],
+      "dependents": [
+        "PG-082"
+      ]
+    },
+    "PG-082": {
+      "task_id": "PG-082",
+      "sprint": 22,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-081"
+      ],
+      "dependents": []
+    },
+    "DOC-001": {
+      "task_id": "DOC-001",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": [],
+      "dependents": [
+        "BRAND-001",
+        "GTM-001",
+        "ANALYTICS-001"
+      ]
+    },
+    "BRAND-001": {
+      "task_id": "BRAND-001",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": [
+        "DOC-001"
+      ],
+      "dependents": [
+        "PG-001",
+        "PG-002",
+        "PG-003",
+        "PG-004",
+        "PG-005",
+        "PG-006",
+        "PG-007",
+        "PG-008",
+        "PG-009",
+        "PG-010",
+        "PG-011",
+        "PG-012",
+        "PG-013",
+        "PG-014",
+        "BRAND-002",
+        "GTM-002",
+        "SALES-001"
+      ]
+    },
+    "BRAND-002": {
+      "task_id": "BRAND-002",
+      "sprint": 1,
+      "status": "DONE",
+      "dependencies": [
+        "BRAND-001",
+        "ENV-002-AI"
+      ],
+      "dependents": [
+        "IFC-076"
+      ]
+    },
+    "GTM-001": {
+      "task_id": "GTM-001",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": [
+        "DOC-001"
+      ],
+      "dependents": [
+        "GTM-002",
+        "ANALYTICS-001"
+      ]
+    },
+    "GTM-002": {
+      "task_id": "GTM-002",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": [
+        "GTM-001",
+        "BRAND-001"
+      ],
+      "dependents": [
+        "PG-001",
+        "PG-002",
+        "PG-003",
+        "PG-004",
+        "PG-005",
+        "PG-006",
+        "PG-007",
+        "PG-008",
+        "PG-009",
+        "PG-010",
+        "PG-011",
+        "PG-012",
+        "PG-013",
+        "PG-014",
+        "SALES-001",
+        "SALES-002",
+        "PG-127"
+      ]
+    },
+    "SALES-001": {
+      "task_id": "SALES-001",
+      "sprint": 1,
+      "status": "DONE",
+      "dependencies": [
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "dependents": [
+        "SALES-002"
+      ]
+    },
+    "SALES-002": {
+      "task_id": "SALES-002",
+      "sprint": 2,
+      "status": "DONE",
+      "dependencies": [
+        "SALES-001",
+        "GTM-002"
+      ],
+      "dependents": [
+        "IFC-084"
+      ]
+    },
+    "PM-OPS-001": {
+      "task_id": "PM-OPS-001",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": [
+        "AUTOMATION-001",
+        "ENV-005-AI"
+      ],
+      "dependents": []
+    },
+    "ENG-OPS-001": {
+      "task_id": "ENG-OPS-001",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": [
+        "ENV-002-AI",
+        "ENV-005-AI",
+        "ENV-010-AI"
+      ],
+      "dependents": [
+        "GOV-001"
+      ]
+    },
+    "GOV-001": {
+      "task_id": "GOV-001",
+      "sprint": 1,
+      "status": "DONE",
+      "dependencies": [
+        "ENG-OPS-001"
+      ],
+      "dependents": [
+        "IFC-100",
+        "IFC-126",
+        "IFC-135"
+      ]
+    },
+    "ANALYTICS-001": {
+      "task_id": "ANALYTICS-001",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": [
+        "DOC-001",
+        "GTM-001"
+      ],
+      "dependents": [
+        "ENV-016-AI",
+        "IFC-037",
+        "IFC-038"
+      ]
+    },
+    "PG-083": {
+      "task_id": "PG-083",
+      "sprint": 22,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-080"
+      ],
+      "dependents": []
+    },
+    "PG-084": {
+      "task_id": "PG-084",
+      "sprint": 22,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-099"
+      ],
+      "dependents": [
+        "PG-085"
+      ]
+    },
+    "PG-085": {
+      "task_id": "PG-085",
+      "sprint": 22,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-084"
+      ],
+      "dependents": [
+        "PG-086"
+      ]
+    },
+    "PG-086": {
+      "task_id": "PG-086",
+      "sprint": 22,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-085"
+      ],
+      "dependents": []
+    },
+    "PG-087": {
+      "task_id": "PG-087",
+      "sprint": 22,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-099"
+      ],
+      "dependents": []
+    },
+    "PG-088": {
+      "task_id": "PG-088",
+      "sprint": 23,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-080"
+      ],
+      "dependents": []
+    },
+    "PG-089": {
+      "task_id": "PG-089",
+      "sprint": 23,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-094"
+      ],
+      "dependents": [
+        "PG-090"
+      ]
+    },
+    "PG-090": {
+      "task_id": "PG-090",
+      "sprint": 23,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-089"
+      ],
+      "dependents": []
+    },
+    "PG-091": {
+      "task_id": "PG-091",
+      "sprint": 23,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-089"
+      ],
+      "dependents": [
+        "PG-092",
+        "PG-093"
+      ]
+    },
+    "PG-092": {
+      "task_id": "PG-092",
+      "sprint": 23,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-091"
+      ],
+      "dependents": []
+    },
+    "PG-093": {
+      "task_id": "PG-093",
+      "sprint": 23,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-091"
+      ],
+      "dependents": [
+        "PG-094",
+        "PG-095"
+      ]
+    },
+    "PG-094": {
+      "task_id": "PG-094",
+      "sprint": 24,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-093"
+      ],
+      "dependents": []
+    },
+    "PG-095": {
+      "task_id": "PG-095",
+      "sprint": 24,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-093"
+      ],
+      "dependents": [
+        "PG-096",
+        "PG-097",
+        "PG-099"
+      ]
+    },
+    "PG-096": {
+      "task_id": "PG-096",
+      "sprint": 24,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-095"
+      ],
+      "dependents": []
+    },
+    "PG-097": {
+      "task_id": "PG-097",
+      "sprint": 24,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-095"
+      ],
+      "dependents": [
+        "PG-098"
+      ]
+    },
+    "PG-098": {
+      "task_id": "PG-098",
+      "sprint": 24,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-097"
+      ],
+      "dependents": []
+    },
+    "PG-099": {
+      "task_id": "PG-099",
+      "sprint": 24,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-095"
+      ],
+      "dependents": [
+        "PG-100"
+      ]
+    },
+    "PG-100": {
+      "task_id": "PG-100",
+      "sprint": 25,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-099"
+      ],
+      "dependents": []
+    },
+    "PG-101": {
+      "task_id": "PG-101",
+      "sprint": 25,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-096"
+      ],
+      "dependents": []
+    },
+    "PG-102": {
+      "task_id": "PG-102",
+      "sprint": 25,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-096"
+      ],
+      "dependents": [
+        "PG-103"
+      ]
+    },
+    "PG-103": {
+      "task_id": "PG-103",
+      "sprint": 25,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-102"
+      ],
+      "dependents": []
+    },
+    "PG-104": {
+      "task_id": "PG-104",
+      "sprint": 25,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-076"
+      ],
+      "dependents": [
+        "PG-105",
+        "PG-106",
+        "PG-107",
+        "PG-113",
+        "PG-116",
+        "PG-117",
+        "PG-128"
+      ]
+    },
+    "PG-105": {
+      "task_id": "PG-105",
+      "sprint": 25,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-104"
+      ],
+      "dependents": []
+    },
+    "PG-106": {
+      "task_id": "PG-106",
+      "sprint": 26,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-104"
+      ],
+      "dependents": []
+    },
+    "PG-107": {
+      "task_id": "PG-107",
+      "sprint": 26,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-104"
+      ],
+      "dependents": []
+    },
+    "PG-108": {
+      "task_id": "PG-108",
+      "sprint": 26,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-098"
+      ],
+      "dependents": [
+        "PG-111"
+      ]
+    },
+    "PG-109": {
+      "task_id": "PG-109",
+      "sprint": 26,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-098"
+      ],
+      "dependents": [
+        "PG-110"
+      ]
+    },
+    "PG-110": {
+      "task_id": "PG-110",
+      "sprint": 26,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-109"
+      ],
+      "dependents": []
+    },
+    "PG-111": {
+      "task_id": "PG-111",
+      "sprint": 26,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-108"
+      ],
+      "dependents": []
+    },
+    "PG-112": {
+      "task_id": "PG-112",
+      "sprint": 27,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-098",
+        "IFC-124"
+      ],
+      "dependents": []
+    },
+    "PG-113": {
+      "task_id": "PG-113",
+      "sprint": 27,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-104"
+      ],
+      "dependents": []
+    },
+    "PG-114": {
+      "task_id": "PG-114",
+      "sprint": 27,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-099"
+      ],
+      "dependents": []
+    },
+    "PG-115": {
+      "task_id": "PG-115",
+      "sprint": 27,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-099"
+      ],
+      "dependents": []
+    },
+    "PG-116": {
+      "task_id": "PG-116",
+      "sprint": 27,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-104"
+      ],
+      "dependents": []
+    },
+    "PG-117": {
+      "task_id": "PG-117",
+      "sprint": 27,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-104"
+      ],
+      "dependents": []
+    },
+    "PG-118": {
+      "task_id": "PG-118",
+      "sprint": 28,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-058"
+      ],
+      "dependents": []
+    },
+    "PG-119": {
+      "task_id": "PG-119",
+      "sprint": 28,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-058"
+      ],
+      "dependents": []
+    },
+    "PG-120": {
+      "task_id": "PG-120",
+      "sprint": 28,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-072"
+      ],
+      "dependents": []
+    },
+    "PG-121": {
+      "task_id": "PG-121",
+      "sprint": 28,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-070"
+      ],
+      "dependents": []
+    },
+    "PG-122": {
+      "task_id": "PG-122",
+      "sprint": 28,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-058"
+      ],
+      "dependents": []
+    },
+    "PG-123": {
+      "task_id": "PG-123",
+      "sprint": 28,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-058"
+      ],
+      "dependents": []
+    },
+    "IFC-101": {
+      "task_id": "IFC-101",
+      "sprint": 2,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-002"
+      ],
+      "dependents": [
+        "IFC-061",
+        "IFC-107",
+        "IFC-110"
+      ]
+    },
+    "IFC-102": {
+      "task_id": "IFC-102",
+      "sprint": 2,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-002"
+      ],
+      "dependents": [
+        "IFC-061",
+        "IFC-107",
+        "IFC-110"
+      ]
+    },
+    "IFC-103": {
+      "task_id": "IFC-103",
+      "sprint": 2,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-002"
+      ],
+      "dependents": [
+        "IFC-107",
+        "IFC-110"
+      ]
+    },
+    "IFC-104": {
+      "task_id": "IFC-104",
+      "sprint": 3,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-002"
+      ],
+      "dependents": [
+        "IFC-062",
+        "IFC-063",
+        "IFC-107",
+        "IFC-110"
+      ]
+    },
+    "IFC-105": {
+      "task_id": "IFC-105",
+      "sprint": 3,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-002"
+      ],
+      "dependents": [
+        "IFC-107",
+        "IFC-110"
+      ]
+    },
+    "IFC-106": {
+      "task_id": "IFC-106",
+      "sprint": 1,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-002"
+      ],
+      "dependents": [
+        "IFC-036",
+        "IFC-094",
+        "IFC-099",
+        "IFC-122",
+        "IFC-131",
+        "IFC-138",
+        "IFC-144",
+        "IFC-150",
+        "IFC-153",
+        "IFC-163"
+      ]
+    },
+    "IFC-107": {
+      "task_id": "IFC-107",
+      "sprint": 3,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-101",
+        "IFC-102",
+        "IFC-103",
+        "IFC-104",
+        "IFC-105"
+      ],
+      "dependents": [
+        "IFC-108",
+        "IFC-122"
+      ]
+    },
+    "IFC-108": {
+      "task_id": "IFC-108",
+      "sprint": 4,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-107"
+      ],
+      "dependents": []
+    },
+    "IFC-109": {
+      "task_id": "IFC-109",
+      "sprint": 2,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-002"
+      ],
+      "dependents": [
+        "IFC-069"
+      ]
+    },
+    "IFC-110": {
+      "task_id": "IFC-110",
+      "sprint": 4,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-101",
+        "IFC-102",
+        "IFC-103",
+        "IFC-104",
+        "IFC-105"
+      ],
+      "dependents": [
+        "IFC-129"
+      ]
+    },
+    "IFC-111": {
+      "task_id": "IFC-111",
+      "sprint": 5,
+      "status": "DONE",
+      "dependencies": [
+        "ENV-005-AI"
+      ],
+      "dependents": [
+        "IFC-040",
+        "IFC-130"
+      ]
+    },
+    "IFC-112": {
+      "task_id": "IFC-112",
+      "sprint": 5,
+      "status": "DONE",
+      "dependencies": [
+        "ENV-005-AI"
+      ],
+      "dependents": [
+        "IFC-010",
+        "IFC-040",
+        "IFC-043"
+      ]
+    },
+    "IFC-113": {
+      "task_id": "IFC-113",
+      "sprint": 10,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-072",
+        "IFC-098"
+      ],
+      "dependents": [
+        "IFC-040",
+        "IFC-043",
+        "IFC-121"
+      ]
+    },
+    "IFC-114": {
+      "task_id": "IFC-114",
+      "sprint": 7,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-003",
+        "IFC-072"
+      ],
+      "dependents": []
+    },
+    "IFC-115": {
+      "task_id": "IFC-115",
+      "sprint": 25,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-071"
+      ],
+      "dependents": [
+        "IFC-040",
+        "IFC-043"
+      ]
+    },
+    "IFC-116": {
+      "task_id": "IFC-116",
+      "sprint": 9,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-074"
+      ],
+      "dependents": []
+    },
+    "IFC-117": {
+      "task_id": "IFC-117",
+      "sprint": 10,
+      "status": "IN_PROGRESS",
+      "dependencies": [
+        "AUTOMATION-002",
+        "IFC-005"
+      ],
+      "dependents": [
+        "TRACK-004"
+      ]
+    },
+    "IFC-118": {
+      "task_id": "IFC-118",
+      "sprint": 8,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-010",
+        "IFC-054"
+      ],
+      "dependents": [
+        "TRACK-003"
+      ]
+    },
+    "IFC-119": {
+      "task_id": "IFC-119",
+      "sprint": 1,
+      "status": "DONE",
+      "dependencies": [],
+      "dependents": []
+    },
+    "IFC-120": {
+      "task_id": "IFC-120",
+      "sprint": 14,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-006",
+        "PG-019",
+        "PG-020",
+        "PG-023"
+      ],
+      "dependents": []
+    },
+    "PG-124": {
+      "task_id": "PG-124",
+      "sprint": 15,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-006",
+        "PG-015",
+        "PG-024"
+      ],
+      "dependents": []
+    },
+    "PG-125": {
+      "task_id": "PG-125",
+      "sprint": 16,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-006",
+        "PG-021",
+        "PG-022"
+      ],
+      "dependents": []
+    },
+    "IFC-121": {
+      "task_id": "IFC-121",
+      "sprint": 10,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-113"
+      ],
+      "dependents": [
+        "TRACK-005"
+      ]
+    },
+    "IFC-122": {
+      "task_id": "IFC-122",
+      "sprint": 7,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-106",
+        "IFC-107"
+      ],
+      "dependents": [
+        "IFC-040"
+      ]
+    },
+    "IFC-123": {
+      "task_id": "IFC-123",
+      "sprint": 21,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-007",
+        "IFC-087"
+      ],
+      "dependents": []
+    },
+    "IFC-124": {
+      "task_id": "IFC-124",
+      "sprint": 9,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-098"
+      ],
+      "dependents": [
+        "PG-112"
+      ]
+    },
+    "PG-126": {
+      "task_id": "PG-126",
+      "sprint": 17,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-001",
+        "PG-002"
+      ],
+      "dependents": []
+    },
+    "PG-127": {
+      "task_id": "PG-127",
+      "sprint": 20,
+      "status": "BACKLOG",
+      "dependencies": [
+        "GTM-002",
+        "PG-005",
+        "PG-006"
+      ],
+      "dependents": []
+    },
+    "IFC-125": {
+      "task_id": "IFC-125",
+      "sprint": 11,
+      "status": "IN_PROGRESS",
+      "dependencies": [
+        "IFC-005",
+        "IFC-008"
+      ],
+      "dependents": [
+        "IFC-143",
+        "IFC-156"
+      ]
+    },
+    "IFC-126": {
+      "task_id": "IFC-126",
+      "sprint": 12,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-100",
+        "GOV-001"
+      ],
+      "dependents": [
+        "IFC-148"
+      ]
+    },
+    "IFC-127": {
+      "task_id": "IFC-127",
+      "sprint": 10,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-098",
+        "IFC-072"
+      ],
+      "dependents": [
+        "IFC-040",
+        "IFC-058",
+        "IFC-140",
+        "IFC-152",
+        "IFC-155"
+      ]
+    },
+    "IFC-128": {
+      "task_id": "IFC-128",
+      "sprint": 3,
+      "status": "IN_PROGRESS",
+      "dependencies": [
+        "ENV-017-AI"
+      ],
+      "dependents": [
+        "IFC-139"
+      ]
+    },
+    "IFC-129": {
+      "task_id": "IFC-129",
+      "sprint": 6,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-110"
+      ],
+      "dependents": []
+    },
+    "IFC-130": {
+      "task_id": "IFC-130",
+      "sprint": 5,
+      "status": "DONE",
+      "dependencies": [
+        "ENV-005-AI",
+        "IFC-111"
+      ],
+      "dependents": [
+        "IFC-040",
+        "IFC-043"
+      ]
+    },
+    "IFC-131": {
+      "task_id": "IFC-131",
+      "sprint": 4,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-106"
+      ],
+      "dependents": []
+    },
+    "IFC-132": {
+      "task_id": "IFC-132",
+      "sprint": 6,
+      "status": "DONE",
+      "dependencies": [
+        "ENV-005-AI"
+      ],
+      "dependents": [
+        "IFC-040",
+        "IFC-133"
+      ]
+    },
+    "IFC-133": {
+      "task_id": "IFC-133",
+      "sprint": 7,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-132"
+      ],
+      "dependents": [
+        "IFC-040"
+      ]
+    },
+    "IFC-134": {
+      "task_id": "IFC-134",
+      "sprint": 7,
+      "status": "DONE",
+      "dependencies": [
+        "ENV-003-AI",
+        "ENV-005-AI"
+      ],
+      "dependents": [
+        "IFC-040"
+      ]
+    },
+    "IFC-135": {
+      "task_id": "IFC-135",
+      "sprint": 1,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-002",
+        "GOV-001"
+      ],
+      "dependents": [
+        "IFC-141"
+      ]
+    },
+    "IFC-136": {
+      "task_id": "IFC-136",
+      "sprint": 3,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-002",
+        "IFC-003"
+      ],
+      "dependents": [
+        "IFC-137",
+        "IFC-139",
+        "IFC-141",
+        "IFC-143",
+        "IFC-145",
+        "IFC-147",
+        "IFC-152"
+      ]
+    },
+    "IFC-137": {
+      "task_id": "IFC-137",
+      "sprint": 4,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-136",
+        "IFC-003"
+      ],
+      "dependents": [
+        "IFC-138",
+        "IFC-139",
+        "IFC-141",
+        "IFC-144",
+        "IFC-147",
+        "IFC-158"
+      ]
+    },
+    "IFC-138": {
+      "task_id": "IFC-138",
+      "sprint": 5,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-137",
+        "IFC-106"
+      ],
+      "dependents": [
+        "IFC-158",
+        "IFC-172"
+      ]
+    },
+    "IFC-139": {
+      "task_id": "IFC-139",
+      "sprint": 6,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-136",
+        "IFC-137",
+        "IFC-003",
+        "IFC-128"
+      ],
+      "dependents": [
+        "IFC-143",
+        "IFC-148",
+        "IFC-149",
+        "IFC-156"
+      ]
+    },
+    "IFC-140": {
+      "task_id": "IFC-140",
+      "sprint": 11,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-098",
+        "IFC-127"
+      ],
+      "dependents": []
+    },
+    "IFC-141": {
+      "task_id": "IFC-141",
+      "sprint": 10,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-136",
+        "IFC-137",
+        "IFC-135",
+        "IFC-150",
+        "IFC-151"
+      ],
+      "dependents": []
+    },
+    "IFC-142": {
+      "task_id": "IFC-142",
+      "sprint": 8,
+      "status": "DONE",
+      "dependencies": [
+        "ENV-008-AI"
+      ],
+      "dependents": []
+    },
+    "IFC-143": {
+      "task_id": "IFC-143",
+      "sprint": 11,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-125",
+        "IFC-136",
+        "IFC-139"
+      ],
+      "dependents": []
+    },
+    "IFC-144": {
+      "task_id": "IFC-144",
+      "sprint": 10,
+      "status": "IN_PROGRESS",
+      "dependencies": [
+        "IFC-003",
+        "IFC-106",
+        "IFC-137",
+        "IFC-150",
+        "IFC-151"
+      ],
+      "dependents": [
+        "IFC-153",
+        "IFC-157",
+        "IFC-159",
+        "IFC-173"
+      ]
+    },
+    "IFC-145": {
+      "task_id": "IFC-145",
+      "sprint": 9,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-002",
+        "IFC-136"
+      ],
+      "dependents": []
+    },
+    "IFC-146": {
+      "task_id": "IFC-146",
+      "sprint": 2,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-000",
+        "ENV-018-AI"
+      ],
+      "dependents": []
+    },
+    "IFC-147": {
+      "task_id": "IFC-147",
+      "sprint": 5,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-136",
+        "IFC-137"
+      ],
+      "dependents": [
+        "IFC-149",
+        "IFC-159"
+      ]
+    },
+    "IFC-148": {
+      "task_id": "IFC-148",
+      "sprint": 12,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-139",
+        "IFC-126"
+      ],
+      "dependents": [
+        "IFC-159"
+      ]
+    },
+    "IFC-149": {
+      "task_id": "IFC-149",
+      "sprint": 6,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-139",
+        "IFC-147"
+      ],
+      "dependents": [
+        "IFC-159"
+      ]
+    },
+    "EXC-SEC-001": {
+      "task_id": "EXC-SEC-001",
+      "sprint": 0,
+      "status": "DONE",
+      "dependencies": [
+        "ENV-013-AI"
+      ],
+      "dependents": [
+        "TRACK-005"
+      ]
+    },
+    "IFC-150": {
+      "task_id": "IFC-150",
+      "sprint": 8,
+      "status": "IN_PROGRESS",
+      "dependencies": [
+        "IFC-002",
+        "IFC-098",
+        "IFC-106"
+      ],
+      "dependents": [
+        "IFC-141",
+        "IFC-144",
+        "IFC-151",
+        "IFC-163"
+      ]
+    },
+    "IFC-151": {
+      "task_id": "IFC-151",
+      "sprint": 9,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-150",
+        "ENV-008-AI"
+      ],
+      "dependents": [
+        "IFC-141",
+        "IFC-144",
+        "IFC-153",
+        "IFC-157",
+        "IFC-163"
+      ]
+    },
+    "IFC-152": {
+      "task_id": "IFC-152",
+      "sprint": 11,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-136",
+        "IFC-127",
+        "IFC-094"
+      ],
+      "dependents": [
+        "IFC-153"
+      ]
+    },
+    "IFC-153": {
+      "task_id": "IFC-153",
+      "sprint": 12,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-152",
+        "IFC-144",
+        "IFC-151",
+        "IFC-106"
+      ],
+      "dependents": [
+        "IFC-154",
+        "IFC-159",
+        "IFC-163"
+      ]
+    },
+    "IFC-154": {
+      "task_id": "IFC-154",
+      "sprint": 12,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-153"
+      ],
+      "dependents": [
+        "IFC-155"
+      ]
+    },
+    "IFC-155": {
+      "task_id": "IFC-155",
+      "sprint": 12,
+      "status": "IN_PROGRESS",
+      "dependencies": [
+        "ENV-004-AI",
+        "IFC-127",
+        "IFC-154"
+      ],
+      "dependents": [
+        "IFC-156"
+      ]
+    },
+    "IFC-156": {
+      "task_id": "IFC-156",
+      "sprint": 13,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-155",
+        "IFC-139",
+        "IFC-125"
+      ],
+      "dependents": []
+    },
+    "IFC-157": {
+      "task_id": "IFC-157",
+      "sprint": 11,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-144",
+        "IFC-098",
+        "IFC-151"
+      ],
+      "dependents": [
+        "IFC-158",
+        "IFC-163",
+        "IFC-170",
+        "IFC-171"
+      ]
+    },
+    "IFC-158": {
+      "task_id": "IFC-158",
+      "sprint": 11,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-138",
+        "IFC-157",
+        "IFC-137"
+      ],
+      "dependents": []
+    },
+    "IFC-159": {
+      "task_id": "IFC-159",
+      "sprint": 13,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-147",
+        "IFC-153",
+        "IFC-144",
+        "IFC-149",
+        "IFC-148"
+      ],
       "dependents": []
     },
     "IFC-160": {
       "task_id": "IFC-160",
       "sprint": 0,
-      "status": "IN_PROGRESS",
+      "status": "DONE",
+      "dependencies": [
+        "ENV-001-AI",
+        "ENV-002-AI"
+      ],
+      "dependents": []
+    },
+    "IFC-163": {
+      "task_id": "IFC-163",
+      "sprint": 13,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-150",
+        "IFC-151",
+        "IFC-153",
+        "IFC-157",
+        "IFC-106"
+      ],
+      "dependents": [
+        "IFC-167",
+        "IFC-168"
+      ]
+    },
+    "EXP-PLATFORM-001": {
+      "task_id": "EXP-PLATFORM-001",
+      "sprint": 12,
+      "status": "DONE",
+      "dependencies": [
+        "ENV-001-AI"
+      ],
+      "dependents": []
+    },
+    "EXP-SCRIPTS-001": {
+      "task_id": "EXP-SCRIPTS-001",
+      "sprint": 12,
+      "status": "DONE",
+      "dependencies": [
+        "EXC-INIT-001"
+      ],
+      "dependents": []
+    },
+    "EXP-ARTIFACTS-002": {
+      "task_id": "EXP-ARTIFACTS-002",
+      "sprint": 14,
+      "status": "DONE",
       "dependencies": [],
+      "dependents": []
+    },
+    "EXP-ARTIFACTS-003": {
+      "task_id": "EXP-ARTIFACTS-003",
+      "sprint": 14,
+      "status": "DONE",
+      "dependencies": [],
+      "dependents": []
+    },
+    "EXP-REPORTS-001": {
+      "task_id": "EXP-REPORTS-001",
+      "sprint": -1,
+      "status": "DONE",
+      "dependencies": [],
+      "dependents": [
+        "TRACK-001"
+      ]
+    },
+    "EXP-REPORTS-002": {
+      "task_id": "EXP-REPORTS-002",
+      "sprint": -1,
+      "status": "DONE",
+      "dependencies": [],
+      "dependents": [
+        "TRACK-002"
+      ]
+    },
+    "EXP-REPORTS-003": {
+      "task_id": "EXP-REPORTS-003",
+      "sprint": -1,
+      "status": "DONE",
+      "dependencies": [],
+      "dependents": [
+        "TRACK-003"
+      ]
+    },
+    "EXP-REPORTS-004": {
+      "task_id": "EXP-REPORTS-004",
+      "sprint": -1,
+      "status": "DONE",
+      "dependencies": [],
+      "dependents": []
+    },
+    "EXP-REPORTS-005": {
+      "task_id": "EXP-REPORTS-005",
+      "sprint": -1,
+      "status": "DONE",
+      "dependencies": [],
+      "dependents": [
+        "TRACK-006"
+      ]
+    },
+    "TRACK-001": {
+      "task_id": "TRACK-001",
+      "sprint": 14,
+      "status": "BACKLOG",
+      "dependencies": [
+        "EXP-REPORTS-001"
+      ],
+      "dependents": []
+    },
+    "TRACK-002": {
+      "task_id": "TRACK-002",
+      "sprint": 14,
+      "status": "BACKLOG",
+      "dependencies": [
+        "EXP-REPORTS-002",
+        "IFC-088"
+      ],
+      "dependents": []
+    },
+    "TRACK-003": {
+      "task_id": "TRACK-003",
+      "sprint": 14,
+      "status": "BACKLOG",
+      "dependencies": [
+        "EXP-REPORTS-003",
+        "IFC-118"
+      ],
+      "dependents": []
+    },
+    "TRACK-004": {
+      "task_id": "TRACK-004",
+      "sprint": 14,
+      "status": "BACKLOG",
+      "dependencies": [
+        "AUTOMATION-002",
+        "IFC-117"
+      ],
+      "dependents": []
+    },
+    "TRACK-005": {
+      "task_id": "TRACK-005",
+      "sprint": 14,
+      "status": "BACKLOG",
+      "dependencies": [
+        "EXC-SEC-001",
+        "IFC-121"
+      ],
+      "dependents": []
+    },
+    "TRACK-006": {
+      "task_id": "TRACK-006",
+      "sprint": 14,
+      "status": "BACKLOG",
+      "dependencies": [
+        "ENV-005-AI",
+        "EXP-REPORTS-005"
+      ],
+      "dependents": []
+    },
+    "IFC-164": {
+      "task_id": "IFC-164",
+      "sprint": 20,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-005",
+        "IFC-086",
+        "IFC-095"
+      ],
+      "dependents": []
+    },
+    "IFC-165": {
+      "task_id": "IFC-165",
+      "sprint": 20,
+      "status": "BACKLOG",
+      "dependencies": [
+        "ENV-005-AI",
+        "ENV-015-AI",
+        "IFC-003"
+      ],
+      "dependents": []
+    },
+    "IFC-166": {
+      "task_id": "IFC-166",
+      "sprint": 24,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-039"
+      ],
+      "dependents": []
+    },
+    "IFC-175": {
+      "task_id": "IFC-175",
+      "sprint": 24,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-039"
+      ],
+      "dependents": []
+    },
+    "IFC-167": {
+      "task_id": "IFC-167",
+      "sprint": 14,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-163"
+      ],
+      "dependents": []
+    },
+    "IFC-168": {
+      "task_id": "IFC-168",
+      "sprint": 14,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-005",
+        "IFC-085",
+        "IFC-163"
+      ],
+      "dependents": [
+        "IFC-174"
+      ]
+    },
+    "IFC-169": {
+      "task_id": "IFC-169",
+      "sprint": 12,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-006"
+      ],
+      "dependents": []
+    },
+    "IFC-170": {
+      "task_id": "IFC-170",
+      "sprint": 12,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-157"
+      ],
+      "dependents": []
+    },
+    "IFC-171": {
+      "task_id": "IFC-171",
+      "sprint": 12,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-157"
+      ],
+      "dependents": []
+    },
+    "IFC-172": {
+      "task_id": "IFC-172",
+      "sprint": 13,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-138"
+      ],
+      "dependents": []
+    },
+    "IFC-173": {
+      "task_id": "IFC-173",
+      "sprint": 13,
+      "status": "DONE",
+      "dependencies": [
+        "IFC-144"
+      ],
+      "dependents": []
+    },
+    "IFC-174": {
+      "task_id": "IFC-174",
+      "sprint": 14,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-085",
+        "IFC-168"
+      ],
+      "dependents": []
+    },
+    "PG-128": {
+      "task_id": "PG-128",
+      "sprint": 14,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-086",
+        "PG-104"
+      ],
       "dependents": []
     }
   },
-  
   "critical_paths": [
     {
-      "name": "Database Setup Path",
-      "tasks": ["ENV-001-AI", "ENV-003-AI", "ENV-004-AI", "ENV-006-AI"],
-      "total_duration_estimate_minutes": 60,
-      "completion_percentage": 75,
-      "blocking_status": "ENV-003-AI"
+      "name": "Path to IFC-031",
+      "tasks": [
+        "IFC-000",
+        "IFC-001",
+        "IFC-010",
+        "IFC-012",
+        "IFC-013",
+        "IFC-014",
+        "IFC-018",
+        "IFC-019",
+        "IFC-020",
+        "IFC-021",
+        "IFC-022",
+        "IFC-026",
+        "IFC-027",
+        "IFC-028",
+        "IFC-031"
+      ],
+      "total_duration_estimate_minutes": 225,
+      "completion_percentage": 86.7,
+      "blocking_status": "IFC-027"
     },
     {
-      "name": "CI/CD Pipeline Path",
-      "tasks": ["ENV-001-AI", "ENV-002-AI", "ENV-005-AI"],
+      "name": "Path to IFC-038",
+      "tasks": [
+        "DOC-001",
+        "ANALYTICS-001",
+        "IFC-038"
+      ],
       "total_duration_estimate_minutes": 45,
       "completion_percentage": 66.7,
-      "blocking_status": "ENV-005-AI"
+      "blocking_status": "IFC-038"
     },
     {
-      "name": "Security Foundation Path",
-      "tasks": ["ENV-013-AI", "EXC-SEC-001"],
-      "total_duration_estimate_minutes": 30,
-      "completion_percentage": 50,
-      "blocking_status": "ENV-013-AI"
+      "name": "Path to IFC-041",
+      "tasks": [
+        "IFC-000",
+        "IFC-001",
+        "IFC-010",
+        "IFC-012",
+        "IFC-013",
+        "IFC-014",
+        "IFC-018",
+        "IFC-041"
+      ],
+      "total_duration_estimate_minutes": 120,
+      "completion_percentage": 87.5,
+      "blocking_status": "IFC-041"
+    },
+    {
+      "name": "Path to IFC-047",
+      "tasks": [
+        "IFC-000",
+        "IFC-002",
+        "IFC-003",
+        "IFC-004",
+        "IFC-007",
+        "IFC-047"
+      ],
+      "total_duration_estimate_minutes": 90,
+      "completion_percentage": 83.3,
+      "blocking_status": "IFC-047"
+    },
+    {
+      "name": "Path to IFC-051",
+      "tasks": [
+        "IFC-000",
+        "IFC-001",
+        "IFC-010",
+        "IFC-012",
+        "IFC-013",
+        "IFC-014",
+        "IFC-018",
+        "IFC-019",
+        "IFC-020",
+        "IFC-021",
+        "IFC-022",
+        "IFC-025",
+        "IFC-039",
+        "IFC-048",
+        "IFC-049",
+        "IFC-051"
+      ],
+      "total_duration_estimate_minutes": 240,
+      "completion_percentage": 81.3,
+      "blocking_status": "IFC-048"
     }
   ],
-  
   "cross_sprint_dependencies": [
+    {
+      "from_task": "ENV-001-AI",
+      "to_task": "ENV-017-AI",
+      "from_sprint": 0,
+      "to_sprint": 1,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "ENV-003-AI",
+      "to_task": "ENV-017-AI",
+      "from_sprint": 0,
+      "to_sprint": 1,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "ENV-005-AI",
+      "to_task": "ENV-017-AI",
+      "from_sprint": 0,
+      "to_sprint": 1,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "ENV-010-AI",
+      "to_task": "ENV-017-AI",
+      "from_sprint": 0,
+      "to_sprint": 1,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-000",
+      "to_task": "IFC-001",
+      "from_sprint": 0,
+      "to_sprint": 1,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-000",
+      "to_task": "IFC-002",
+      "from_sprint": 0,
+      "to_sprint": 1,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-003",
+      "to_task": "IFC-004",
+      "from_sprint": 1,
+      "to_sprint": 2,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-003",
+      "to_task": "IFC-006",
+      "from_sprint": 1,
+      "to_sprint": 3,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-004",
+      "to_task": "IFC-007",
+      "from_sprint": 2,
+      "to_sprint": 3,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-005",
+      "to_task": "IFC-007",
+      "from_sprint": 2,
+      "to_sprint": 3,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-001",
+      "to_task": "IFC-008",
+      "from_sprint": 1,
+      "to_sprint": 2,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-001",
+      "to_task": "IFC-009",
+      "from_sprint": 1,
+      "to_sprint": 4,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-005",
+      "to_task": "IFC-009",
+      "from_sprint": 2,
+      "to_sprint": 4,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-001",
+      "to_task": "IFC-010",
+      "from_sprint": 1,
+      "to_sprint": 6,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-002",
+      "to_task": "IFC-010",
+      "from_sprint": 1,
+      "to_sprint": 6,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-003",
+      "to_task": "IFC-010",
+      "from_sprint": 1,
+      "to_sprint": 6,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-004",
+      "to_task": "IFC-010",
+      "from_sprint": 2,
+      "to_sprint": 6,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-005",
+      "to_task": "IFC-010",
+      "from_sprint": 2,
+      "to_sprint": 6,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-006",
+      "to_task": "IFC-010",
+      "from_sprint": 3,
+      "to_sprint": 6,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-007",
+      "to_task": "IFC-010",
+      "from_sprint": 3,
+      "to_sprint": 6,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-008",
+      "to_task": "IFC-010",
+      "from_sprint": 2,
+      "to_sprint": 6,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-009",
+      "to_task": "IFC-010",
+      "from_sprint": 4,
+      "to_sprint": 6,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-089",
+      "to_task": "IFC-010",
+      "from_sprint": 5,
+      "to_sprint": 6,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-098",
+      "to_task": "IFC-010",
+      "from_sprint": 5,
+      "to_sprint": 6,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-112",
+      "to_task": "IFC-010",
+      "from_sprint": 5,
+      "to_sprint": 6,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-000",
+      "to_task": "IFC-011",
+      "from_sprint": 0,
+      "to_sprint": 3,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-013",
+      "to_task": "IFC-014",
+      "from_sprint": 6,
+      "to_sprint": 7,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-013",
+      "to_task": "IFC-015",
+      "from_sprint": 6,
+      "to_sprint": 7,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-018",
+      "to_task": "IFC-019",
+      "from_sprint": 7,
+      "to_sprint": 8,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-019",
+      "to_task": "IFC-020",
+      "from_sprint": 8,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-020",
+      "to_task": "IFC-021",
+      "from_sprint": 12,
+      "to_sprint": 13,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-023",
+      "to_task": "IFC-024",
+      "from_sprint": 13,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-022",
+      "to_task": "IFC-025",
+      "from_sprint": 13,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-022",
+      "to_task": "IFC-026",
+      "from_sprint": 13,
+      "to_sprint": 15,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-024",
+      "to_task": "IFC-026",
+      "from_sprint": 14,
+      "to_sprint": 15,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-027",
+      "to_task": "IFC-028",
+      "from_sprint": 15,
+      "to_sprint": 16,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-029",
+      "to_task": "IFC-030",
+      "from_sprint": 16,
+      "to_sprint": 17,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-028",
+      "to_task": "IFC-031",
+      "from_sprint": 16,
+      "to_sprint": 17,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-030",
+      "to_task": "IFC-032",
+      "from_sprint": 17,
+      "to_sprint": 18,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-030",
+      "to_task": "IFC-033",
+      "from_sprint": 17,
+      "to_sprint": 19,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-032",
+      "to_task": "IFC-033",
+      "from_sprint": 18,
+      "to_sprint": 19,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-034",
+      "to_task": "IFC-035",
+      "from_sprint": 19,
+      "to_sprint": 20,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-035",
+      "to_task": "IFC-036",
+      "from_sprint": 20,
+      "to_sprint": 21,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-106",
+      "to_task": "IFC-036",
+      "from_sprint": 1,
+      "to_sprint": 21,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-032",
+      "to_task": "IFC-037",
+      "from_sprint": 18,
+      "to_sprint": 21,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "ANALYTICS-001",
+      "to_task": "IFC-037",
+      "from_sprint": 0,
+      "to_sprint": 21,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-037",
+      "to_task": "IFC-038",
+      "from_sprint": 21,
+      "to_sprint": 22,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "ANALYTICS-001",
+      "to_task": "IFC-038",
+      "from_sprint": 0,
+      "to_sprint": 22,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-025",
+      "to_task": "IFC-039",
+      "from_sprint": 14,
+      "to_sprint": 23,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-046",
+      "to_task": "IFC-040",
+      "from_sprint": 23,
+      "to_sprint": 25,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-111",
+      "to_task": "IFC-040",
+      "from_sprint": 5,
+      "to_sprint": 25,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-112",
+      "to_task": "IFC-040",
+      "from_sprint": 5,
+      "to_sprint": 25,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-113",
+      "to_task": "IFC-040",
+      "from_sprint": 10,
+      "to_sprint": 25,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-122",
+      "to_task": "IFC-040",
+      "from_sprint": 7,
+      "to_sprint": 25,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-127",
+      "to_task": "IFC-040",
+      "from_sprint": 10,
+      "to_sprint": 25,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-033",
+      "to_task": "IFC-040",
+      "from_sprint": 19,
+      "to_sprint": 25,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-130",
+      "to_task": "IFC-040",
+      "from_sprint": 5,
+      "to_sprint": 25,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-132",
+      "to_task": "IFC-040",
+      "from_sprint": 6,
+      "to_sprint": 25,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-133",
+      "to_task": "IFC-040",
+      "from_sprint": 7,
+      "to_sprint": 25,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-134",
+      "to_task": "IFC-040",
+      "from_sprint": 7,
+      "to_sprint": 25,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-018",
+      "to_task": "IFC-041",
+      "from_sprint": 7,
+      "to_sprint": 22,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-026",
+      "to_task": "IFC-041",
+      "from_sprint": 15,
+      "to_sprint": 22,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-033",
+      "to_task": "IFC-041",
+      "from_sprint": 19,
+      "to_sprint": 22,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-013",
+      "to_task": "IFC-042",
+      "from_sprint": 6,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "ENV-008-AI",
+      "to_task": "IFC-043",
+      "from_sprint": 0,
+      "to_sprint": 25,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-112",
+      "to_task": "IFC-043",
+      "from_sprint": 5,
+      "to_sprint": 25,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-113",
+      "to_task": "IFC-043",
+      "from_sprint": 10,
+      "to_sprint": 25,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-130",
+      "to_task": "IFC-043",
+      "from_sprint": 5,
+      "to_sprint": 25,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-044",
+      "to_task": "IFC-045",
+      "from_sprint": 0,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-008",
+      "to_task": "IFC-046",
+      "from_sprint": 2,
+      "to_sprint": 23,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-007",
+      "to_task": "IFC-047",
+      "from_sprint": 3,
+      "to_sprint": 22,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-039",
+      "to_task": "IFC-048",
+      "from_sprint": 23,
+      "to_sprint": 25,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-048",
+      "to_task": "IFC-049",
+      "from_sprint": 25,
+      "to_sprint": 26,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-048",
+      "to_task": "IFC-050",
+      "from_sprint": 25,
+      "to_sprint": 26,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-049",
+      "to_task": "IFC-051",
+      "from_sprint": 26,
+      "to_sprint": 27,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-040",
+      "to_task": "IFC-052",
+      "from_sprint": 25,
+      "to_sprint": 27,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-050",
+      "to_task": "IFC-052",
+      "from_sprint": 26,
+      "to_sprint": 27,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-052",
+      "to_task": "IFC-053",
+      "from_sprint": 27,
+      "to_sprint": 28,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-009",
+      "to_task": "IFC-056",
+      "from_sprint": 4,
+      "to_sprint": 9,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-011",
+      "to_task": "IFC-057",
+      "from_sprint": 3,
+      "to_sprint": 9,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-017",
+      "to_task": "IFC-058",
+      "from_sprint": 6,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-127",
+      "to_task": "IFC-058",
+      "from_sprint": 10,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-008",
+      "to_task": "IFC-058",
+      "from_sprint": 2,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-052",
+      "to_task": "IFC-060",
+      "from_sprint": 27,
+      "to_sprint": 28,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-089",
+      "to_task": "IFC-061",
+      "from_sprint": 5,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-101",
+      "to_task": "IFC-061",
+      "from_sprint": 2,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-102",
+      "to_task": "IFC-061",
+      "from_sprint": 2,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-104",
+      "to_task": "IFC-062",
+      "from_sprint": 3,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-091",
+      "to_task": "IFC-063",
+      "from_sprint": 6,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-104",
+      "to_task": "IFC-063",
+      "from_sprint": 3,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-091",
+      "to_task": "IFC-064",
+      "from_sprint": 6,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-091",
+      "to_task": "IFC-065",
+      "from_sprint": 6,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-092",
+      "to_task": "IFC-065",
+      "from_sprint": 7,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-091",
+      "to_task": "IFC-066",
+      "from_sprint": 6,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-092",
+      "to_task": "IFC-066",
+      "from_sprint": 7,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-093",
+      "to_task": "IFC-067",
+      "from_sprint": 7,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-095",
+      "to_task": "IFC-067",
+      "from_sprint": 8,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-090",
+      "to_task": "IFC-068",
+      "from_sprint": 6,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-096",
+      "to_task": "IFC-068",
+      "from_sprint": 9,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-089",
+      "to_task": "IFC-069",
+      "from_sprint": 5,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-091",
+      "to_task": "IFC-069",
+      "from_sprint": 6,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-093",
+      "to_task": "IFC-069",
+      "from_sprint": 7,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-109",
+      "to_task": "IFC-069",
+      "from_sprint": 2,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-017",
+      "to_task": "IFC-070",
+      "from_sprint": 6,
+      "to_sprint": 18,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-001",
+      "to_task": "IFC-072",
+      "from_sprint": 1,
+      "to_sprint": 2,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-014",
+      "to_task": "IFC-076",
+      "from_sprint": 7,
+      "to_sprint": 10,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "BRAND-002",
+      "to_task": "IFC-076",
+      "from_sprint": 1,
+      "to_sprint": 10,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-013",
+      "to_task": "IFC-077",
+      "from_sprint": 6,
+      "to_sprint": 8,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-012",
+      "to_task": "IFC-078",
+      "from_sprint": 6,
+      "to_sprint": 18,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-012",
+      "to_task": "IFC-079",
+      "from_sprint": 6,
+      "to_sprint": 7,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-013",
+      "to_task": "IFC-081",
+      "from_sprint": 6,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-082",
+      "to_task": "IFC-083",
+      "from_sprint": 7,
+      "to_sprint": 23,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-050",
+      "to_task": "IFC-084",
+      "from_sprint": 26,
+      "to_sprint": 27,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "SALES-002",
+      "to_task": "IFC-084",
+      "from_sprint": 2,
+      "to_sprint": 27,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-020",
+      "to_task": "IFC-086",
+      "from_sprint": 12,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-014",
+      "to_task": "IFC-087",
+      "from_sprint": 7,
+      "to_sprint": 20,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-044",
+      "to_task": "IFC-088",
+      "from_sprint": 0,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-002",
+      "to_task": "IFC-089",
+      "from_sprint": 1,
+      "to_sprint": 5,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-004",
+      "to_task": "IFC-089",
+      "from_sprint": 2,
+      "to_sprint": 5,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-089",
+      "to_task": "IFC-090",
+      "from_sprint": 5,
+      "to_sprint": 6,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-002",
+      "to_task": "IFC-091",
+      "from_sprint": 1,
+      "to_sprint": 6,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-004",
+      "to_task": "IFC-091",
+      "from_sprint": 2,
+      "to_sprint": 6,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-091",
+      "to_task": "IFC-092",
+      "from_sprint": 6,
+      "to_sprint": 7,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-002",
+      "to_task": "IFC-093",
+      "from_sprint": 1,
+      "to_sprint": 7,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-004",
+      "to_task": "IFC-093",
+      "from_sprint": 2,
+      "to_sprint": 7,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-090",
+      "to_task": "IFC-094",
+      "from_sprint": 6,
+      "to_sprint": 8,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-106",
+      "to_task": "IFC-094",
+      "from_sprint": 1,
+      "to_sprint": 8,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-005",
+      "to_task": "IFC-095",
+      "from_sprint": 2,
+      "to_sprint": 8,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-090",
+      "to_task": "IFC-095",
+      "from_sprint": 6,
+      "to_sprint": 8,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-091",
+      "to_task": "IFC-096",
+      "from_sprint": 6,
+      "to_sprint": 9,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-092",
+      "to_task": "IFC-096",
+      "from_sprint": 7,
+      "to_sprint": 9,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-007",
+      "to_task": "IFC-097",
+      "from_sprint": 3,
+      "to_sprint": 9,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-008",
+      "to_task": "IFC-098",
+      "from_sprint": 2,
+      "to_sprint": 5,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-006",
+      "to_task": "IFC-099",
+      "from_sprint": 3,
+      "to_sprint": 10,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-106",
+      "to_task": "IFC-099",
+      "from_sprint": 1,
+      "to_sprint": 10,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-008",
+      "to_task": "IFC-100",
+      "from_sprint": 2,
+      "to_sprint": 10,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "GOV-001",
+      "to_task": "IFC-100",
+      "from_sprint": 1,
+      "to_sprint": 10,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-076",
+      "to_task": "PG-001",
+      "from_sprint": 10,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "GTM-002",
+      "to_task": "PG-001",
+      "from_sprint": 0,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "BRAND-001",
+      "to_task": "PG-001",
+      "from_sprint": 0,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "GTM-002",
+      "to_task": "PG-002",
+      "from_sprint": 0,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "BRAND-001",
+      "to_task": "PG-002",
+      "from_sprint": 0,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "GTM-002",
+      "to_task": "PG-003",
+      "from_sprint": 0,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "BRAND-001",
+      "to_task": "PG-003",
+      "from_sprint": 0,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "GTM-002",
+      "to_task": "PG-004",
+      "from_sprint": 0,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "BRAND-001",
+      "to_task": "PG-004",
+      "from_sprint": 0,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "GTM-002",
+      "to_task": "PG-005",
+      "from_sprint": 0,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "BRAND-001",
+      "to_task": "PG-005",
+      "from_sprint": 0,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "GTM-002",
+      "to_task": "PG-006",
+      "from_sprint": 0,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "BRAND-001",
+      "to_task": "PG-006",
+      "from_sprint": 0,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "GTM-002",
+      "to_task": "PG-007",
+      "from_sprint": 0,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "BRAND-001",
+      "to_task": "PG-007",
+      "from_sprint": 0,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "GTM-002",
+      "to_task": "PG-008",
+      "from_sprint": 0,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "BRAND-001",
+      "to_task": "PG-008",
+      "from_sprint": 0,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-001",
+      "to_task": "PG-009",
+      "from_sprint": 11,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "GTM-002",
+      "to_task": "PG-009",
+      "from_sprint": 0,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "BRAND-001",
+      "to_task": "PG-009",
+      "from_sprint": 0,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "GTM-002",
+      "to_task": "PG-010",
+      "from_sprint": 0,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "BRAND-001",
+      "to_task": "PG-010",
+      "from_sprint": 0,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-001",
+      "to_task": "PG-011",
+      "from_sprint": 11,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "GTM-002",
+      "to_task": "PG-011",
+      "from_sprint": 0,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "BRAND-001",
+      "to_task": "PG-011",
+      "from_sprint": 0,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "GTM-002",
+      "to_task": "PG-012",
+      "from_sprint": 0,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "BRAND-001",
+      "to_task": "PG-012",
+      "from_sprint": 0,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-001",
+      "to_task": "PG-013",
+      "from_sprint": 11,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "GTM-002",
+      "to_task": "PG-013",
+      "from_sprint": 0,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "BRAND-001",
+      "to_task": "PG-013",
+      "from_sprint": 0,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-001",
+      "to_task": "PG-014",
+      "from_sprint": 11,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "GTM-002",
+      "to_task": "PG-014",
+      "from_sprint": 0,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "BRAND-001",
+      "to_task": "PG-014",
+      "from_sprint": 0,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-006",
+      "to_task": "PG-015",
+      "from_sprint": 3,
+      "to_sprint": 13,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-076",
+      "to_task": "PG-015",
+      "from_sprint": 10,
+      "to_sprint": 13,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-098",
+      "to_task": "PG-015",
+      "from_sprint": 5,
+      "to_sprint": 13,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-006",
+      "to_task": "PG-016",
+      "from_sprint": 3,
+      "to_sprint": 13,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-006",
+      "to_task": "PG-018",
+      "from_sprint": 3,
+      "to_sprint": 13,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-006",
+      "to_task": "PG-019",
+      "from_sprint": 3,
+      "to_sprint": 13,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-006",
+      "to_task": "PG-021",
+      "from_sprint": 3,
+      "to_sprint": 13,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-098",
+      "to_task": "PG-021",
+      "from_sprint": 5,
+      "to_sprint": 13,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-006",
+      "to_task": "PG-023",
+      "from_sprint": 3,
+      "to_sprint": 13,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-006",
+      "to_task": "PG-024",
+      "from_sprint": 3,
+      "to_sprint": 13,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-099",
+      "to_task": "PG-025",
+      "from_sprint": 10,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-079",
+      "to_task": "PG-032",
+      "from_sprint": 7,
+      "to_sprint": 15,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-076",
+      "to_task": "PG-043",
+      "from_sprint": 10,
+      "to_sprint": 16,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-093",
+      "to_task": "PG-046",
+      "from_sprint": 7,
+      "to_sprint": 16,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-036",
+      "to_task": "PG-049",
+      "from_sprint": 21,
+      "to_sprint": 22,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-058",
+      "to_task": "PG-050",
+      "from_sprint": 11,
+      "to_sprint": 17,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-076",
+      "to_task": "PG-055",
+      "from_sprint": 10,
+      "to_sprint": 17,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-089",
+      "to_task": "PG-058",
+      "from_sprint": 5,
+      "to_sprint": 18,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-091",
+      "to_task": "PG-058",
+      "from_sprint": 6,
+      "to_sprint": 18,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-095",
+      "to_task": "PG-058",
+      "from_sprint": 8,
+      "to_sprint": 18,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-089",
+      "to_task": "PG-059",
+      "from_sprint": 5,
+      "to_sprint": 18,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-089",
+      "to_task": "PG-064",
+      "from_sprint": 5,
+      "to_sprint": 19,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-090",
+      "to_task": "PG-065",
+      "from_sprint": 6,
+      "to_sprint": 19,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-089",
+      "to_task": "PG-069",
+      "from_sprint": 5,
+      "to_sprint": 19,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-069",
+      "to_task": "PG-070",
+      "from_sprint": 19,
+      "to_sprint": 20,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-069",
+      "to_task": "PG-072",
+      "from_sprint": 19,
+      "to_sprint": 20,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-091",
+      "to_task": "PG-073",
+      "from_sprint": 6,
+      "to_sprint": 20,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-091",
+      "to_task": "PG-076",
+      "from_sprint": 6,
+      "to_sprint": 21,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-092",
+      "to_task": "PG-079",
+      "from_sprint": 7,
+      "to_sprint": 21,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-089",
+      "to_task": "PG-080",
+      "from_sprint": 5,
+      "to_sprint": 21,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-081",
+      "to_task": "PG-082",
+      "from_sprint": 21,
+      "to_sprint": 22,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "BRAND-001",
+      "to_task": "BRAND-002",
+      "from_sprint": 0,
+      "to_sprint": 1,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "ENV-002-AI",
+      "to_task": "BRAND-002",
+      "from_sprint": 0,
+      "to_sprint": 1,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "GTM-002",
+      "to_task": "SALES-001",
+      "from_sprint": 0,
+      "to_sprint": 1,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "BRAND-001",
+      "to_task": "SALES-001",
+      "from_sprint": 0,
+      "to_sprint": 1,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "SALES-001",
+      "to_task": "SALES-002",
+      "from_sprint": 1,
+      "to_sprint": 2,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "GTM-002",
+      "to_task": "SALES-002",
+      "from_sprint": 0,
+      "to_sprint": 2,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "ENG-OPS-001",
+      "to_task": "GOV-001",
+      "from_sprint": 0,
+      "to_sprint": 1,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-080",
+      "to_task": "PG-083",
+      "from_sprint": 21,
+      "to_sprint": 22,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-099",
+      "to_task": "PG-084",
+      "from_sprint": 10,
+      "to_sprint": 22,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-099",
+      "to_task": "PG-087",
+      "from_sprint": 10,
+      "to_sprint": 22,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-080",
+      "to_task": "PG-088",
+      "from_sprint": 21,
+      "to_sprint": 23,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-094",
+      "to_task": "PG-089",
+      "from_sprint": 8,
+      "to_sprint": 23,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-089",
+      "to_task": "PG-091",
+      "from_sprint": 5,
+      "to_sprint": 23,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-093",
+      "to_task": "PG-094",
+      "from_sprint": 23,
+      "to_sprint": 24,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-093",
+      "to_task": "PG-095",
+      "from_sprint": 23,
+      "to_sprint": 24,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-099",
+      "to_task": "PG-100",
+      "from_sprint": 24,
+      "to_sprint": 25,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-096",
+      "to_task": "PG-101",
+      "from_sprint": 9,
+      "to_sprint": 25,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-096",
+      "to_task": "PG-102",
+      "from_sprint": 9,
+      "to_sprint": 25,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-076",
+      "to_task": "PG-104",
+      "from_sprint": 10,
+      "to_sprint": 25,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-104",
+      "to_task": "PG-106",
+      "from_sprint": 25,
+      "to_sprint": 26,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-104",
+      "to_task": "PG-107",
+      "from_sprint": 25,
+      "to_sprint": 26,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-098",
+      "to_task": "PG-108",
+      "from_sprint": 5,
+      "to_sprint": 26,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-098",
+      "to_task": "PG-109",
+      "from_sprint": 5,
+      "to_sprint": 26,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-098",
+      "to_task": "PG-112",
+      "from_sprint": 5,
+      "to_sprint": 27,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-124",
+      "to_task": "PG-112",
+      "from_sprint": 9,
+      "to_sprint": 27,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-104",
+      "to_task": "PG-113",
+      "from_sprint": 25,
+      "to_sprint": 27,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-099",
+      "to_task": "PG-114",
+      "from_sprint": 10,
+      "to_sprint": 27,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-099",
+      "to_task": "PG-115",
+      "from_sprint": 10,
+      "to_sprint": 27,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-104",
+      "to_task": "PG-116",
+      "from_sprint": 25,
+      "to_sprint": 27,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-104",
+      "to_task": "PG-117",
+      "from_sprint": 25,
+      "to_sprint": 27,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-058",
+      "to_task": "PG-118",
+      "from_sprint": 11,
+      "to_sprint": 28,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-058",
+      "to_task": "PG-119",
+      "from_sprint": 11,
+      "to_sprint": 28,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-072",
+      "to_task": "PG-120",
+      "from_sprint": 2,
+      "to_sprint": 28,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-070",
+      "to_task": "PG-121",
+      "from_sprint": 18,
+      "to_sprint": 28,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-058",
+      "to_task": "PG-122",
+      "from_sprint": 11,
+      "to_sprint": 28,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-058",
+      "to_task": "PG-123",
+      "from_sprint": 11,
+      "to_sprint": 28,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-002",
+      "to_task": "IFC-101",
+      "from_sprint": 1,
+      "to_sprint": 2,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-002",
+      "to_task": "IFC-102",
+      "from_sprint": 1,
+      "to_sprint": 2,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-002",
+      "to_task": "IFC-103",
+      "from_sprint": 1,
+      "to_sprint": 2,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-002",
+      "to_task": "IFC-104",
+      "from_sprint": 1,
+      "to_sprint": 3,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-002",
+      "to_task": "IFC-105",
+      "from_sprint": 1,
+      "to_sprint": 3,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-101",
+      "to_task": "IFC-107",
+      "from_sprint": 2,
+      "to_sprint": 3,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-102",
+      "to_task": "IFC-107",
+      "from_sprint": 2,
+      "to_sprint": 3,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-103",
+      "to_task": "IFC-107",
+      "from_sprint": 2,
+      "to_sprint": 3,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-107",
+      "to_task": "IFC-108",
+      "from_sprint": 3,
+      "to_sprint": 4,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-002",
+      "to_task": "IFC-109",
+      "from_sprint": 1,
+      "to_sprint": 2,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-101",
+      "to_task": "IFC-110",
+      "from_sprint": 2,
+      "to_sprint": 4,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-102",
+      "to_task": "IFC-110",
+      "from_sprint": 2,
+      "to_sprint": 4,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-103",
+      "to_task": "IFC-110",
+      "from_sprint": 2,
+      "to_sprint": 4,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-104",
+      "to_task": "IFC-110",
+      "from_sprint": 3,
+      "to_sprint": 4,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-105",
+      "to_task": "IFC-110",
+      "from_sprint": 3,
+      "to_sprint": 4,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "ENV-005-AI",
+      "to_task": "IFC-111",
+      "from_sprint": 0,
+      "to_sprint": 5,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "ENV-005-AI",
+      "to_task": "IFC-112",
+      "from_sprint": 0,
+      "to_sprint": 5,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-072",
+      "to_task": "IFC-113",
+      "from_sprint": 2,
+      "to_sprint": 10,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-098",
+      "to_task": "IFC-113",
+      "from_sprint": 5,
+      "to_sprint": 10,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-003",
+      "to_task": "IFC-114",
+      "from_sprint": 1,
+      "to_sprint": 7,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-072",
+      "to_task": "IFC-114",
+      "from_sprint": 2,
+      "to_sprint": 7,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-074",
+      "to_task": "IFC-116",
+      "from_sprint": 1,
+      "to_sprint": 9,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-005",
+      "to_task": "IFC-117",
+      "from_sprint": 2,
+      "to_sprint": 10,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "AUTOMATION-002",
+      "to_task": "IFC-117",
+      "from_sprint": 0,
+      "to_sprint": 10,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-010",
+      "to_task": "IFC-118",
+      "from_sprint": 6,
+      "to_sprint": 8,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-054",
+      "to_task": "IFC-118",
+      "from_sprint": 7,
+      "to_sprint": 8,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-019",
+      "to_task": "IFC-120",
+      "from_sprint": 13,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-020",
+      "to_task": "IFC-120",
+      "from_sprint": 13,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-023",
+      "to_task": "IFC-120",
+      "from_sprint": 13,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-006",
+      "to_task": "IFC-120",
+      "from_sprint": 3,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-015",
+      "to_task": "PG-124",
+      "from_sprint": 13,
+      "to_sprint": 15,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-024",
+      "to_task": "PG-124",
+      "from_sprint": 13,
+      "to_sprint": 15,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-006",
+      "to_task": "PG-124",
+      "from_sprint": 3,
+      "to_sprint": 15,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-021",
+      "to_task": "PG-125",
+      "from_sprint": 13,
+      "to_sprint": 16,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-022",
+      "to_task": "PG-125",
+      "from_sprint": 13,
+      "to_sprint": 16,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-006",
+      "to_task": "PG-125",
+      "from_sprint": 3,
+      "to_sprint": 16,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-106",
+      "to_task": "IFC-122",
+      "from_sprint": 1,
+      "to_sprint": 7,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-107",
+      "to_task": "IFC-122",
+      "from_sprint": 3,
+      "to_sprint": 7,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-007",
+      "to_task": "IFC-123",
+      "from_sprint": 3,
+      "to_sprint": 21,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-087",
+      "to_task": "IFC-123",
+      "from_sprint": 20,
+      "to_sprint": 21,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-098",
+      "to_task": "IFC-124",
+      "from_sprint": 5,
+      "to_sprint": 9,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-001",
+      "to_task": "PG-126",
+      "from_sprint": 11,
+      "to_sprint": 17,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-002",
+      "to_task": "PG-126",
+      "from_sprint": 11,
+      "to_sprint": 17,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-006",
+      "to_task": "PG-127",
+      "from_sprint": 11,
+      "to_sprint": 20,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-005",
+      "to_task": "PG-127",
+      "from_sprint": 11,
+      "to_sprint": 20,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "GTM-002",
+      "to_task": "PG-127",
+      "from_sprint": 0,
+      "to_sprint": 20,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-005",
+      "to_task": "IFC-125",
+      "from_sprint": 2,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-008",
+      "to_task": "IFC-125",
+      "from_sprint": 2,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-100",
+      "to_task": "IFC-126",
+      "from_sprint": 10,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "GOV-001",
+      "to_task": "IFC-126",
+      "from_sprint": 1,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-098",
+      "to_task": "IFC-127",
+      "from_sprint": 5,
+      "to_sprint": 10,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-072",
+      "to_task": "IFC-127",
+      "from_sprint": 2,
+      "to_sprint": 10,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "ENV-017-AI",
+      "to_task": "IFC-128",
+      "from_sprint": 1,
+      "to_sprint": 3,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-110",
+      "to_task": "IFC-129",
+      "from_sprint": 4,
+      "to_sprint": 6,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "ENV-005-AI",
+      "to_task": "IFC-130",
+      "from_sprint": 0,
+      "to_sprint": 5,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-106",
+      "to_task": "IFC-131",
+      "from_sprint": 1,
+      "to_sprint": 4,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "ENV-005-AI",
+      "to_task": "IFC-132",
+      "from_sprint": 0,
+      "to_sprint": 6,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-132",
+      "to_task": "IFC-133",
+      "from_sprint": 6,
+      "to_sprint": 7,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "ENV-003-AI",
+      "to_task": "IFC-134",
+      "from_sprint": 0,
+      "to_sprint": 7,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "ENV-005-AI",
+      "to_task": "IFC-134",
+      "from_sprint": 0,
+      "to_sprint": 7,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-002",
+      "to_task": "IFC-136",
+      "from_sprint": 1,
+      "to_sprint": 3,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-003",
+      "to_task": "IFC-136",
+      "from_sprint": 1,
+      "to_sprint": 3,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-136",
+      "to_task": "IFC-137",
+      "from_sprint": 3,
+      "to_sprint": 4,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-003",
+      "to_task": "IFC-137",
+      "from_sprint": 1,
+      "to_sprint": 4,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-137",
+      "to_task": "IFC-138",
+      "from_sprint": 4,
+      "to_sprint": 5,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-106",
+      "to_task": "IFC-138",
+      "from_sprint": 1,
+      "to_sprint": 5,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-136",
+      "to_task": "IFC-139",
+      "from_sprint": 3,
+      "to_sprint": 6,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-137",
+      "to_task": "IFC-139",
+      "from_sprint": 4,
+      "to_sprint": 6,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-003",
+      "to_task": "IFC-139",
+      "from_sprint": 1,
+      "to_sprint": 6,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-128",
+      "to_task": "IFC-139",
+      "from_sprint": 3,
+      "to_sprint": 6,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-098",
+      "to_task": "IFC-140",
+      "from_sprint": 5,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-127",
+      "to_task": "IFC-140",
+      "from_sprint": 10,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-136",
+      "to_task": "IFC-141",
+      "from_sprint": 3,
+      "to_sprint": 10,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-137",
+      "to_task": "IFC-141",
+      "from_sprint": 4,
+      "to_sprint": 10,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-135",
+      "to_task": "IFC-141",
+      "from_sprint": 1,
+      "to_sprint": 10,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-150",
+      "to_task": "IFC-141",
+      "from_sprint": 8,
+      "to_sprint": 10,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-151",
+      "to_task": "IFC-141",
+      "from_sprint": 9,
+      "to_sprint": 10,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "ENV-008-AI",
+      "to_task": "IFC-142",
+      "from_sprint": 0,
+      "to_sprint": 8,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-136",
+      "to_task": "IFC-143",
+      "from_sprint": 3,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-139",
+      "to_task": "IFC-143",
+      "from_sprint": 6,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-137",
+      "to_task": "IFC-144",
+      "from_sprint": 4,
+      "to_sprint": 10,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-003",
+      "to_task": "IFC-144",
+      "from_sprint": 1,
+      "to_sprint": 10,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-150",
+      "to_task": "IFC-144",
+      "from_sprint": 8,
+      "to_sprint": 10,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-151",
+      "to_task": "IFC-144",
+      "from_sprint": 9,
+      "to_sprint": 10,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-106",
+      "to_task": "IFC-144",
+      "from_sprint": 1,
+      "to_sprint": 10,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-002",
+      "to_task": "IFC-145",
+      "from_sprint": 1,
+      "to_sprint": 9,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-136",
+      "to_task": "IFC-145",
+      "from_sprint": 3,
+      "to_sprint": 9,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-000",
+      "to_task": "IFC-146",
+      "from_sprint": 0,
+      "to_sprint": 2,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "ENV-018-AI",
+      "to_task": "IFC-146",
+      "from_sprint": 1,
+      "to_sprint": 2,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-136",
+      "to_task": "IFC-147",
+      "from_sprint": 3,
+      "to_sprint": 5,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-137",
+      "to_task": "IFC-147",
+      "from_sprint": 4,
+      "to_sprint": 5,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-139",
+      "to_task": "IFC-148",
+      "from_sprint": 6,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-147",
+      "to_task": "IFC-149",
+      "from_sprint": 5,
+      "to_sprint": 6,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-002",
+      "to_task": "IFC-150",
+      "from_sprint": 1,
+      "to_sprint": 8,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-106",
+      "to_task": "IFC-150",
+      "from_sprint": 1,
+      "to_sprint": 8,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-098",
+      "to_task": "IFC-150",
+      "from_sprint": 5,
+      "to_sprint": 8,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-150",
+      "to_task": "IFC-151",
+      "from_sprint": 8,
+      "to_sprint": 9,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "ENV-008-AI",
+      "to_task": "IFC-151",
+      "from_sprint": 0,
+      "to_sprint": 9,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-136",
+      "to_task": "IFC-152",
+      "from_sprint": 3,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-127",
+      "to_task": "IFC-152",
+      "from_sprint": 10,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-094",
+      "to_task": "IFC-152",
+      "from_sprint": 8,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-152",
+      "to_task": "IFC-153",
+      "from_sprint": 11,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-144",
+      "to_task": "IFC-153",
+      "from_sprint": 10,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-151",
+      "to_task": "IFC-153",
+      "from_sprint": 9,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-106",
+      "to_task": "IFC-153",
+      "from_sprint": 1,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-127",
+      "to_task": "IFC-155",
+      "from_sprint": 10,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
     {
       "from_task": "ENV-004-AI",
       "to_task": "IFC-155",
       "from_sprint": 0,
-      "to_sprint": 8,
-      "dependency_type": "REQUIRED",
-      "description": "IFC-155 requires pgvector enabled in Supabase"
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
     },
     {
-      "from_task": "ENV-007-AI",
-      "to_task": "IFC-003",
+      "from_task": "IFC-155",
+      "to_task": "IFC-156",
+      "from_sprint": 12,
+      "to_sprint": 13,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-139",
+      "to_task": "IFC-156",
+      "from_sprint": 6,
+      "to_sprint": 13,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-125",
+      "to_task": "IFC-156",
+      "from_sprint": 11,
+      "to_sprint": 13,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-144",
+      "to_task": "IFC-157",
+      "from_sprint": 10,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-098",
+      "to_task": "IFC-157",
+      "from_sprint": 5,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-151",
+      "to_task": "IFC-157",
+      "from_sprint": 9,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-138",
+      "to_task": "IFC-158",
+      "from_sprint": 5,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-137",
+      "to_task": "IFC-158",
+      "from_sprint": 4,
+      "to_sprint": 11,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-147",
+      "to_task": "IFC-159",
+      "from_sprint": 5,
+      "to_sprint": 13,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-153",
+      "to_task": "IFC-159",
+      "from_sprint": 12,
+      "to_sprint": 13,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-144",
+      "to_task": "IFC-159",
+      "from_sprint": 10,
+      "to_sprint": 13,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-149",
+      "to_task": "IFC-159",
+      "from_sprint": 6,
+      "to_sprint": 13,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-148",
+      "to_task": "IFC-159",
+      "from_sprint": 12,
+      "to_sprint": 13,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-150",
+      "to_task": "IFC-163",
+      "from_sprint": 8,
+      "to_sprint": 13,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-151",
+      "to_task": "IFC-163",
+      "from_sprint": 9,
+      "to_sprint": 13,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-153",
+      "to_task": "IFC-163",
+      "from_sprint": 12,
+      "to_sprint": 13,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-157",
+      "to_task": "IFC-163",
+      "from_sprint": 11,
+      "to_sprint": 13,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-106",
+      "to_task": "IFC-163",
+      "from_sprint": 1,
+      "to_sprint": 13,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "ENV-001-AI",
+      "to_task": "EXP-PLATFORM-001",
       "from_sprint": 0,
-      "to_sprint": 1,
-      "dependency_type": "REQUIRED",
-      "description": "tRPC API foundation requires completed setup"
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "EXC-INIT-001",
+      "to_task": "EXP-SCRIPTS-001",
+      "from_sprint": 0,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-118",
+      "to_task": "TRACK-003",
+      "from_sprint": 8,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-117",
+      "to_task": "TRACK-004",
+      "from_sprint": 10,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "AUTOMATION-002",
+      "to_task": "TRACK-004",
+      "from_sprint": 0,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "EXC-SEC-001",
+      "to_task": "TRACK-005",
+      "from_sprint": 0,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-121",
+      "to_task": "TRACK-005",
+      "from_sprint": 10,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "ENV-005-AI",
+      "to_task": "TRACK-006",
+      "from_sprint": 0,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-005",
+      "to_task": "IFC-164",
+      "from_sprint": 2,
+      "to_sprint": 20,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-086",
+      "to_task": "IFC-164",
+      "from_sprint": 14,
+      "to_sprint": 20,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-095",
+      "to_task": "IFC-164",
+      "from_sprint": 8,
+      "to_sprint": 20,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "ENV-015-AI",
+      "to_task": "IFC-165",
+      "from_sprint": 0,
+      "to_sprint": 20,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-003",
+      "to_task": "IFC-165",
+      "from_sprint": 1,
+      "to_sprint": 20,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "ENV-005-AI",
+      "to_task": "IFC-165",
+      "from_sprint": 0,
+      "to_sprint": 20,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-039",
+      "to_task": "IFC-166",
+      "from_sprint": 23,
+      "to_sprint": 24,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-039",
+      "to_task": "IFC-175",
+      "from_sprint": 23,
+      "to_sprint": 24,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-163",
+      "to_task": "IFC-167",
+      "from_sprint": 13,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-005",
+      "to_task": "IFC-168",
+      "from_sprint": 2,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-085",
+      "to_task": "IFC-168",
+      "from_sprint": 2,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-163",
+      "to_task": "IFC-168",
+      "from_sprint": 13,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-006",
+      "to_task": "IFC-169",
+      "from_sprint": 3,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-157",
+      "to_task": "IFC-170",
+      "from_sprint": 11,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-157",
+      "to_task": "IFC-171",
+      "from_sprint": 11,
+      "to_sprint": 12,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-138",
+      "to_task": "IFC-172",
+      "from_sprint": 5,
+      "to_sprint": 13,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-144",
+      "to_task": "IFC-173",
+      "from_sprint": 10,
+      "to_sprint": 13,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-085",
+      "to_task": "IFC-174",
+      "from_sprint": 2,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-104",
+      "to_task": "PG-128",
+      "from_sprint": 25,
+      "to_sprint": 14,
+      "dependency_type": "REQUIRED"
     }
   ],
-  
-  "blocked_tasks": [],
-  
-  "ready_to_start": [
-    "ENV-005-AI",
-    "ENV-007-AI",
-    "ENV-010-AI",
-    "ENV-012-AI"
+  "blocked_tasks": [
+    "PG-020",
+    "PG-022",
+    "IFC-067",
+    "PG-026",
+    "PG-027",
+    "PG-028",
+    "PG-029",
+    "PG-030",
+    "IFC-120",
+    "TRACK-004",
+    "PG-128",
+    "PG-033",
+    "PG-034",
+    "PG-035",
+    "PG-036",
+    "PG-037",
+    "PG-038",
+    "PG-039",
+    "PG-040",
+    "PG-041",
+    "PG-042",
+    "PG-124",
+    "PG-044",
+    "PG-045",
+    "PG-047",
+    "PG-048",
+    "PG-125",
+    "IFC-030",
+    "PG-051",
+    "PG-052",
+    "PG-053",
+    "PG-054",
+    "PG-056",
+    "PG-057",
+    "IFC-032",
+    "PG-058",
+    "PG-060",
+    "PG-061",
+    "PG-062",
+    "PG-063",
+    "IFC-033",
+    "IFC-034",
+    "PG-066",
+    "PG-067",
+    "PG-068",
+    "IFC-035",
+    "PG-070",
+    "PG-071",
+    "PG-072",
+    "PG-074",
+    "PG-075",
+    "IFC-164",
+    "IFC-036",
+    "IFC-037",
+    "PG-077",
+    "PG-078",
+    "PG-081",
+    "IFC-123",
+    "IFC-038",
+    "IFC-041",
+    "PG-049",
+    "PG-082",
+    "PG-083",
+    "PG-085",
+    "PG-086",
+    "PG-088",
+    "PG-090",
+    "PG-092",
+    "PG-093",
+    "PG-094",
+    "PG-095",
+    "PG-096",
+    "PG-097",
+    "PG-098",
+    "PG-099",
+    "IFC-040",
+    "IFC-043",
+    "IFC-059",
+    "IFC-071",
+    "PG-100",
+    "PG-103",
+    "PG-105",
+    "IFC-115",
+    "IFC-049",
+    "IFC-050",
+    "PG-106",
+    "PG-107",
+    "PG-110",
+    "PG-111",
+    "IFC-051",
+    "IFC-052",
+    "IFC-084",
+    "PG-113",
+    "PG-116",
+    "PG-117",
+    "IFC-053",
+    "IFC-060",
+    "PG-121"
   ],
-  
+  "ready_to_start": [
+    "PG-017",
+    "PG-019",
+    "PG-021",
+    "PG-023",
+    "PG-024",
+    "IFC-062",
+    "IFC-064",
+    "IFC-065",
+    "IFC-066",
+    "IFC-068",
+    "IFC-069",
+    "PG-025",
+    "TRACK-001",
+    "TRACK-002",
+    "TRACK-003",
+    "TRACK-005",
+    "TRACK-006",
+    "IFC-174",
+    "IFC-027",
+    "PG-032",
+    "IFC-029",
+    "PG-043",
+    "PG-046",
+    "IFC-031",
+    "PG-050",
+    "PG-055",
+    "PG-126",
+    "IFC-070",
+    "PG-059",
+    "PG-064",
+    "PG-065",
+    "PG-069",
+    "IFC-087",
+    "PG-073",
+    "PG-127",
+    "IFC-165",
+    "PG-076",
+    "PG-079",
+    "PG-080",
+    "IFC-047",
+    "PG-084",
+    "PG-087",
+    "IFC-046",
+    "IFC-083",
+    "PG-089",
+    "PG-091",
+    "IFC-166",
+    "IFC-175",
+    "IFC-048",
+    "PG-101",
+    "PG-102",
+    "PG-104",
+    "PG-108",
+    "PG-109",
+    "PG-112",
+    "PG-114",
+    "PG-115",
+    "PG-118",
+    "PG-119",
+    "PG-120",
+    "PG-122",
+    "PG-123"
+  ],
   "dependency_violations": [],
-  
   "parallel_execution_groups": {
-    "phase-2-parallel": {
-      "parallel-a": ["AI-SETUP-002", "AI-SETUP-003"],
-      "parallel-b": ["ENV-001-AI", "ENV-002-AI", "ENV-003-AI", "ENV-009-AI", "ENV-012-AI"],
-      "parallel-c": ["EXC-SEC-001", "IFC-160"]
+    "sprint-13": {
+      "group-1": [
+        "PG-019",
+        "PG-024"
+      ]
+    },
+    "sprint-14": {
+      "group-1": [
+        "IFC-065",
+        "IFC-066"
+      ],
+      "group-2": [
+        "PG-026",
+        "PG-027",
+        "PG-029",
+        "PG-030"
+      ]
+    },
+    "sprint-15": {
+      "group-1": [
+        "PG-033",
+        "PG-034",
+        "PG-035",
+        "PG-036",
+        "PG-037",
+        "PG-038",
+        "PG-039"
+      ],
+      "group-2": [
+        "PG-040",
+        "PG-041"
+      ]
+    },
+    "sprint-16": {
+      "group-1": [
+        "PG-044",
+        "PG-045"
+      ],
+      "group-2": [
+        "PG-047",
+        "PG-048"
+      ]
+    },
+    "sprint-17": {
+      "group-1": [
+        "PG-051",
+        "PG-052",
+        "PG-053",
+        "PG-054"
+      ],
+      "group-2": [
+        "PG-056",
+        "PG-057"
+      ]
+    },
+    "sprint-18": {
+      "group-1": [
+        "PG-060",
+        "PG-061",
+        "PG-063"
+      ]
+    },
+    "sprint-19": {
+      "group-1": [
+        "PG-064",
+        "PG-069"
+      ],
+      "group-2": [
+        "PG-067",
+        "PG-068"
+      ]
+    },
+    "sprint-20": {
+      "group-1": [
+        "PG-070",
+        "PG-072"
+      ]
+    },
+    "sprint-22": {
+      "group-1": [
+        "PG-084",
+        "PG-087"
+      ]
+    },
+    "sprint-23": {
+      "group-1": [
+        "PG-092",
+        "PG-093"
+      ]
+    },
+    "sprint-24": {
+      "group-1": [
+        "PG-094",
+        "PG-095"
+      ],
+      "group-2": [
+        "PG-096",
+        "PG-097",
+        "PG-099"
+      ],
+      "group-3": [
+        "IFC-166",
+        "IFC-175"
+      ]
+    },
+    "sprint-25": {
+      "group-1": [
+        "IFC-059",
+        "IFC-071"
+      ],
+      "group-2": [
+        "PG-101",
+        "PG-102"
+      ]
+    },
+    "sprint-26": {
+      "group-1": [
+        "IFC-049",
+        "IFC-050"
+      ],
+      "group-2": [
+        "PG-106",
+        "PG-107"
+      ],
+      "group-3": [
+        "PG-108",
+        "PG-109"
+      ]
+    },
+    "sprint-27": {
+      "group-1": [
+        "PG-113",
+        "PG-116",
+        "PG-117"
+      ],
+      "group-2": [
+        "PG-114",
+        "PG-115"
+      ]
+    },
+    "sprint-28": {
+      "group-1": [
+        "IFC-053",
+        "IFC-060"
+      ],
+      "group-2": [
+        "PG-118",
+        "PG-119",
+        "PG-122",
+        "PG-123"
+      ]
     }
   }
 }

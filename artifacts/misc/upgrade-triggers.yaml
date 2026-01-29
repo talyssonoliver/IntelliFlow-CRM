@@ -1,0 +1,451 @@
+# Supabase Free Tier Upgrade Triggers Configuration
+# Task ID: IFC-011
+# Version: 1.0.0
+# Last Updated: 2025-12-26
+
+metadata:
+  task_id: IFC-011
+  description: Automated alerts and thresholds for Supabase tier upgrade decisions
+  project: IntelliFlow CRM
+  environment: production
+
+# =============================================================================
+# THRESHOLD DEFINITIONS
+# =============================================================================
+
+thresholds:
+  database:
+    storage:
+      warning_percent: 70
+      critical_percent: 85
+      upgrade_percent: 90
+      limit_mb: 500
+      unit: MB
+
+  file_storage:
+    storage:
+      warning_percent: 70
+      critical_percent: 85
+      upgrade_percent: 90
+      limit_gb: 1
+      unit: GB
+
+  bandwidth:
+    monthly:
+      warning_percent: 60
+      critical_percent: 80
+      upgrade_percent: 90
+      limit_gb: 2
+      unit: GB
+      reset_period: monthly
+
+  realtime:
+    connections:
+      warning_count: 150
+      critical_count: 175
+      upgrade_count: 190
+      limit_count: 200
+      unit: concurrent_connections
+
+  edge_functions:
+    invocations:
+      warning_percent: 70
+      critical_percent: 85
+      upgrade_percent: 90
+      limit_monthly: 500000
+      unit: invocations
+
+  auth:
+    mau:
+      warning_percent: 80
+      critical_percent: 90
+      upgrade_percent: 95
+      limit_monthly: 50000
+      unit: monthly_active_users
+
+# =============================================================================
+# ALERT CONFIGURATION
+# =============================================================================
+
+alerts:
+  # Database Storage Alerts
+  - id: db-storage-warning
+    name: Database Storage Warning
+    resource: database.storage
+    condition: usage_percent >= thresholds.database.storage.warning_percent
+    severity: warning
+    message: "Database storage at {usage_percent}% ({used_mb}MB / 500MB)"
+    actions:
+      - type: slack
+        channel: "#infrastructure"
+      - type: email
+        recipients:
+          - engineering@intelliflow.io
+    cooldown_minutes: 60
+    enabled: true
+
+  - id: db-storage-critical
+    name: Database Storage Critical
+    resource: database.storage
+    condition: usage_percent >= thresholds.database.storage.critical_percent
+    severity: critical
+    message: "CRITICAL: Database storage at {usage_percent}% - immediate action required"
+    actions:
+      - type: slack
+        channel: "#infrastructure"
+        mention: "@oncall"
+      - type: pagerduty
+        service_id: ${PAGERDUTY_DB_SERVICE_ID}
+      - type: email
+        recipients:
+          - engineering@intelliflow.io
+          - ops@intelliflow.io
+    recommended_actions:
+      - "Run VACUUM FULL on large tables"
+      - "Archive leads older than 12 months"
+      - "Review and delete orphaned records"
+      - "Consider upgrading to Pro tier ($25/month)"
+    cooldown_minutes: 30
+    enabled: true
+
+  - id: db-storage-upgrade
+    name: Database Storage Upgrade Required
+    resource: database.storage
+    condition: usage_percent >= thresholds.database.storage.upgrade_percent
+    severity: emergency
+    message: "EMERGENCY: Database at {usage_percent}% - upgrade to Pro tier immediately"
+    actions:
+      - type: slack
+        channel: "#infrastructure"
+        mention: "@engineering-lead"
+      - type: pagerduty
+        service_id: ${PAGERDUTY_DB_SERVICE_ID}
+        priority: P1
+      - type: create_ticket
+        system: jira
+        project: INFRA
+        issue_type: Incident
+        priority: Highest
+    escalation_path:
+      - after_minutes: 0
+        notify: engineering-lead
+      - after_minutes: 15
+        notify: cto
+      - after_minutes: 30
+        notify: ceo
+    cooldown_minutes: 15
+    enabled: true
+
+  # File Storage Alerts
+  - id: storage-warning
+    name: File Storage Warning
+    resource: file_storage.storage
+    condition: usage_percent >= thresholds.file_storage.storage.warning_percent
+    severity: warning
+    message: "File storage at {usage_percent}% ({used_gb}GB / 1GB)"
+    actions:
+      - type: slack
+        channel: "#infrastructure"
+    recommended_actions:
+      - "Run cleanup script for temp-uploads bucket"
+      - "Compress unoptimized images"
+      - "Review storage usage by bucket"
+    cooldown_minutes: 120
+    enabled: true
+
+  - id: storage-critical
+    name: File Storage Critical
+    resource: file_storage.storage
+    condition: usage_percent >= thresholds.file_storage.storage.critical_percent
+    severity: critical
+    message: "File storage at {usage_percent}% - cleanup required"
+    actions:
+      - type: slack
+        channel: "#infrastructure"
+        mention: "@oncall"
+      - type: email
+        recipients:
+          - engineering@intelliflow.io
+    cooldown_minutes: 60
+    enabled: true
+
+  # Bandwidth Alerts
+  - id: bandwidth-warning
+    name: Monthly Bandwidth Warning
+    resource: bandwidth.monthly
+    condition: usage_percent >= thresholds.bandwidth.monthly.warning_percent
+    severity: warning
+    message: "Monthly bandwidth at {usage_percent}% ({used_gb}GB / 2GB) with {days_remaining} days left"
+    actions:
+      - type: slack
+        channel: "#infrastructure"
+    recommended_actions:
+      - "Enable Cloudflare CDN for static assets"
+      - "Review API response sizes"
+      - "Implement response compression"
+    cooldown_minutes: 240
+    enabled: true
+
+  - id: bandwidth-critical
+    name: Monthly Bandwidth Critical
+    resource: bandwidth.monthly
+    condition: usage_percent >= thresholds.bandwidth.monthly.critical_percent
+    severity: critical
+    message: "CRITICAL: Bandwidth at {usage_percent}% - will exceed limit before month end"
+    actions:
+      - type: slack
+        channel: "#infrastructure"
+        mention: "@oncall"
+      - type: pagerduty
+        service_id: ${PAGERDUTY_INFRA_SERVICE_ID}
+    recommended_actions:
+      - "Immediately enable CDN if not active"
+      - "Increase cache TTLs"
+      - "Consider upgrading to Pro tier ($25/month for 250GB)"
+    cooldown_minutes: 60
+    enabled: true
+
+  # Realtime Connection Alerts
+  - id: realtime-warning
+    name: Realtime Connections Warning
+    resource: realtime.connections
+    condition: current_count >= thresholds.realtime.connections.warning_count
+    severity: warning
+    message: "Realtime connections at {current_count}/200"
+    actions:
+      - type: slack
+        channel: "#infrastructure"
+    recommended_actions:
+      - "Review subscription patterns"
+      - "Implement connection pooling in frontend"
+      - "Add unsubscribe on component unmount"
+    cooldown_minutes: 30
+    enabled: true
+
+  - id: realtime-critical
+    name: Realtime Connections Critical
+    resource: realtime.connections
+    condition: current_count >= thresholds.realtime.connections.critical_count
+    severity: critical
+    message: "CRITICAL: Realtime at {current_count}/200 - new connections may fail"
+    actions:
+      - type: slack
+        channel: "#infrastructure"
+        mention: "@oncall"
+      - type: pagerduty
+        service_id: ${PAGERDUTY_INFRA_SERVICE_ID}
+    cooldown_minutes: 15
+    enabled: true
+
+  # Edge Function Alerts
+  - id: edge-warning
+    name: Edge Function Invocations Warning
+    resource: edge_functions.invocations
+    condition: usage_percent >= thresholds.edge_functions.invocations.warning_percent
+    severity: warning
+    message: "Edge function invocations at {usage_percent}% ({used_count}/500K) for this month"
+    actions:
+      - type: slack
+        channel: "#infrastructure"
+    recommended_actions:
+      - "Review function call patterns"
+      - "Implement client-side caching"
+      - "Batch multiple operations"
+    cooldown_minutes: 240
+    enabled: true
+
+# =============================================================================
+# ESCALATION PATHS
+# =============================================================================
+
+escalation_paths:
+  database:
+    - level: 1
+      name: Engineering Lead
+      contact: engineering-lead@intelliflow.io
+      methods: [slack, email]
+      response_sla_minutes: 15
+
+    - level: 2
+      name: CTO
+      contact: cto@intelliflow.io
+      methods: [email, phone]
+      response_sla_minutes: 30
+      escalate_after_minutes: 30
+
+    - level: 3
+      name: CEO
+      contact: ceo@intelliflow.io
+      methods: [phone, sms]
+      response_sla_minutes: 60
+      escalate_after_minutes: 60
+
+  general:
+    - level: 1
+      name: On-Call Engineer
+      contact: oncall@intelliflow.io
+      methods: [slack, pagerduty]
+      response_sla_minutes: 15
+
+    - level: 2
+      name: Engineering Lead
+      contact: engineering-lead@intelliflow.io
+      methods: [slack, email, phone]
+      response_sla_minutes: 30
+      escalate_after_minutes: 30
+
+# =============================================================================
+# BUSINESS TRIGGER RULES
+# =============================================================================
+
+business_triggers:
+  - id: first-paying-customer
+    name: First Paying Customer Trigger
+    description: Upgrade to Pro for backups and support when first customer pays
+    conditions:
+      - paying_customers >= 1
+    recommended_tier: pro
+    rationale:
+      - "Daily automated backups protect customer data"
+      - "Point-in-time recovery enables quick incident response"
+      - "Email support provides SLA-backed assistance"
+    priority: high
+    auto_upgrade: false
+    notify:
+      - cto@intelliflow.io
+      - finance@intelliflow.io
+
+  - id: enterprise-sso-requirement
+    name: Enterprise SSO Requirement
+    description: Upgrade to Team when enterprise customer requires SSO
+    conditions:
+      - customer_requires_sso == true
+    recommended_tier: team
+    rationale:
+      - "SAML 2.0 SSO only available in Team tier"
+      - "Required for enterprise security compliance"
+      - "Often a deal-breaker for large organizations"
+    priority: critical
+    auto_upgrade: false
+    notify:
+      - cto@intelliflow.io
+      - sales@intelliflow.io
+
+  - id: sla-requirement
+    name: SLA Requirement Trigger
+    description: Upgrade to Team when customer contract requires SLA
+    conditions:
+      - contract_requires_sla == true
+    recommended_tier: team
+    rationale:
+      - "99.9% SLA only available in Team tier"
+      - "Required for enterprise contracts"
+      - "Provides legal protection and customer confidence"
+    priority: critical
+    auto_upgrade: false
+    notify:
+      - legal@intelliflow.io
+      - cto@intelliflow.io
+
+  - id: growth-trajectory
+    name: Growth Trajectory Trigger
+    description: Preemptive upgrade based on growth rate
+    conditions:
+      - growth_rate_percent >= 50
+      - projected_usage_30d_percent >= 80
+    recommended_tier: pro
+    rationale:
+      - "Proactive upgrade prevents service disruption"
+      - "Growth trajectory indicates imminent limit breach"
+      - "Better to upgrade before hitting limits"
+    priority: medium
+    auto_upgrade: false
+    notify:
+      - engineering@intelliflow.io
+
+# =============================================================================
+# MONITORING CONFIGURATION
+# =============================================================================
+
+monitoring:
+  check_interval_seconds: 60
+  metrics_retention_days: 90
+
+  data_sources:
+    - name: supabase_dashboard
+      type: api
+      endpoint: ${SUPABASE_MANAGEMENT_API}
+      auth: service_role_key
+      metrics:
+        - database_size_mb
+        - storage_size_gb
+        - bandwidth_used_gb
+        - realtime_connections
+        - edge_invocations
+        - mau_count
+
+    - name: custom_metrics
+      type: prometheus
+      endpoint: ${PROMETHEUS_URL}
+      metrics:
+        - intelliflow_api_requests_total
+        - intelliflow_realtime_subscriptions
+        - intelliflow_storage_uploads
+
+  dashboards:
+    - name: Supabase Usage Dashboard
+      url: ${GRAFANA_URL}/d/supabase-usage
+      panels:
+        - database_storage_gauge
+        - bandwidth_timeline
+        - realtime_connections_chart
+        - edge_invocations_chart
+
+# =============================================================================
+# OPTIMIZATION AUTOMATION
+# =============================================================================
+
+automations:
+  - id: auto-vacuum
+    name: Automatic Database Vacuum
+    trigger:
+      condition: database.storage.usage_percent >= 70
+      cooldown_hours: 24
+    action:
+      type: sql
+      command: "VACUUM ANALYZE;"
+    enabled: true
+
+  - id: temp-cleanup
+    name: Temporary Files Cleanup
+    trigger:
+      schedule: "0 2 * * *"  # Daily at 2 AM
+    action:
+      type: script
+      path: tools/scripts/cleanup-temp-storage.ts
+    enabled: true
+
+  - id: archive-old-data
+    name: Archive Old Data
+    trigger:
+      condition: database.storage.usage_percent >= 75
+      cooldown_hours: 168  # Weekly
+    action:
+      type: script
+      path: tools/scripts/archive-old-records.ts
+      params:
+        age_months: 12
+        tables: [leads, interactions, audit_logs]
+    enabled: true
+
+  - id: image-recompression
+    name: Recompress Large Images
+    trigger:
+      condition: file_storage.storage.usage_percent >= 80
+    action:
+      type: script
+      path: tools/scripts/recompress-images.ts
+      params:
+        quality: 75
+        max_dimension: 1200
+    enabled: true

@@ -1,12 +1,13 @@
 # Repository Layout Documentation
 
-**Version:** 1.0.0
-**Last Updated:** 2025-12-14
-**Maintainers:** DevOps Team, Architecture Team
+**Version:** 1.0.0 **Last Updated:** 2025-12-14 **Maintainers:** DevOps Team,
+Architecture Team
 
 ## Overview
 
-IntelliFlow CRM follows a **monorepo architecture** using Turborepo and pnpm workspaces. This document provides a comprehensive guide to the repository structure, directory conventions, and organizational principles.
+IntelliFlow CRM follows a **monorepo architecture** using Turborepo and pnpm
+workspaces. This document provides a comprehensive guide to the repository
+structure, directory conventions, and organizational principles.
 
 ## Directory Structure
 
@@ -168,6 +169,7 @@ intelliFlow-CRM/
 **Purpose:** Contains independently deployable applications.
 
 **Conventions:**
+
 - Each app is a self-contained workspace
 - Must have its own `package.json` with dependencies
 - Should use shared packages from `packages/` directory
@@ -175,6 +177,7 @@ intelliFlow-CRM/
 - Configuration files (`.env.local`, etc.) never committed
 
 **Naming:**
+
 - Use lowercase with hyphens: `ai-worker`, `web`, `api`
 - Descriptive names indicating purpose
 
@@ -183,6 +186,7 @@ intelliFlow-CRM/
 **Purpose:** Contains shared libraries and utilities used across applications.
 
 **Conventions:**
+
 - Each package is a workspace that can be imported by apps
 - Must export clear public API via `index.ts`
 - Should be framework-agnostic when possible
@@ -190,6 +194,7 @@ intelliFlow-CRM/
 - Include comprehensive tests with >90% coverage
 
 **Types of Packages:**
+
 - **Domain:** Pure business logic (no external dependencies)
 - **Infrastructure:** External integrations (database, APIs)
 - **UI:** Reusable UI components
@@ -200,6 +205,7 @@ intelliFlow-CRM/
 **Purpose:** Infrastructure-as-Code and deployment configurations.
 
 **Conventions:**
+
 - Docker configurations for local development
 - Kubernetes manifests for production deployment
 - Environment-specific configurations in subdirectories
@@ -211,6 +217,7 @@ intelliFlow-CRM/
 **Purpose:** Comprehensive project documentation.
 
 **Conventions:**
+
 - Use Markdown format for all documentation
 - Include diagrams in `diagrams/` subdirectory
 - Keep Architecture Decision Records (ADRs) in `architecture/ADR/`
@@ -222,6 +229,7 @@ intelliFlow-CRM/
 **Purpose:** Build outputs, logs, reports, and generated files.
 
 **Conventions:**
+
 - **Never commit to version control** (in `.gitignore`)
 - Organized by type: `logs/`, `reports/`, `metrics/`
 - Include timestamps in generated files
@@ -229,6 +237,7 @@ intelliFlow-CRM/
 - CI/CD writes here for analysis
 
 **Subdirectory Structure:**
+
 ```
 artifacts/
 ├── logs/           # All log files
@@ -242,6 +251,7 @@ artifacts/
 **Purpose:** Shared test utilities and fixtures.
 
 **Conventions:**
+
 - Application-specific tests live in `apps/*/tests/`
 - Package-specific tests live in `packages/*/tests/`
 - Shared test utilities here at root level
@@ -253,6 +263,7 @@ artifacts/
 **Purpose:** Development tools, scripts, and generators.
 
 **Conventions:**
+
 - Organized by purpose: `scripts/`, `generators/`, `lint/`
 - Must be executable via `pnpm` scripts
 - Include help documentation
@@ -334,11 +345,11 @@ Use TypeScript path aliases for cleaner imports:
 
 ```typescript
 // ✅ Good
-import { Lead } from '@/domain/entities/Lead'
-import { LeadRepository } from '@/repositories/LeadRepository'
+import { Lead } from '@/domain/entities/Lead';
+import { LeadRepository } from '@/repositories/LeadRepository';
 
 // ❌ Bad
-import { Lead } from '../../../domain/entities/Lead'
+import { Lead } from '../../../domain/entities/Lead';
 ```
 
 ### Package Imports
@@ -347,11 +358,11 @@ Use package names with `@intelliflow/` scope:
 
 ```typescript
 // ✅ Good
-import { db } from '@intelliflow/db'
-import { LeadSchema } from '@intelliflow/validators'
+import { db } from '@intelliflow/db';
+import { LeadSchema } from '@intelliflow/validators';
 
 // ❌ Bad
-import { db } from '../../packages/db'
+import { db } from '../../packages/db';
 ```
 
 ## Git Ignore Patterns
@@ -430,6 +441,6 @@ Thumbs.db
 
 ## Change Log
 
-| Date       | Version | Changes                           | Author      |
-|------------|---------|-----------------------------------|-------------|
+| Date       | Version | Changes                                 | Author      |
+| ---------- | ------- | --------------------------------------- | ----------- |
 | 2025-12-14 | 1.0.0   | Initial repository layout documentation | DevOps Team |

@@ -1,0 +1,42 @@
+{
+  "sprint": "sprint-15",
+  "name": "Sprint 15",
+  "target_date": null,
+  "started_at": null,
+  "completed_at": null,
+  "phases": [],
+  "task_summary": {
+    "total": 14,
+    "done": 1,
+    "in_progress": 0,
+    "blocked": 0,
+    "not_started": 13,
+    "failed": 0
+  },
+  "completed_tasks": [
+    {
+      "task_id": "IFC-026",
+      "completed_at": "2026-01-29T01:33:17.648Z",
+      "duration_minutes": 15
+    }
+  ],
+  "notes": "1/14 tasks DONE (7%). Last synced: 2026-01-29T01:33:17.648Z",
+  "schedule": {
+    "sprint_start_date": null,
+    "sprint_end_date": null,
+    "working_hours_per_day": 8,
+    "working_days_per_week": 5,
+    "critical_path": {
+      "task_ids": [],
+      "total_duration_minutes": 0,
+      "completion_percentage": 0,
+      "bottleneck_task_id": null
+    },
+    "schedule_variance": {
+      "sv_minutes": -840,
+      "spi": 0.19,
+      "status": "critical"
+    },
+    "calculated_at": "2026-01-29T01:33:17.680Z"
+  }
+}

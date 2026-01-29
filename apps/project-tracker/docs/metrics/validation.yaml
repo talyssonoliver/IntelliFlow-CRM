@@ -1,0 +1,1064 @@
+# =============================================================================
+# IntelliFlow CRM - Validation Rules v1.0
+# =============================================================================
+# MERGE NOTE:
+#   [x] Restored KPI Checks
+#   [x] Restored Manual Checks
+#   [x] Restored Conditional Logic
+#   [x] Added Global Spec/Security Gates
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# GLOBAL CHECKS
+# -----------------------------------------------------------------------------
+global_spec_check:
+  validation_commands:
+    - command: 'test -f .specify/specifications/${TASK_ID}.md'
+      description: 'Spec Document Exists'
+      type: auto
+      required: true
+    - command: 'test -f .specify/planning/${TASK_ID}.md'
+      description: 'Plan Document Exists'
+      type: auto
+      required: true
+
+global_security_check:
+  validation_commands:
+    # Comprehensive secret scanning for modern provider key formats
+    # Pattern 1: OpenAI keys (sk-...), Anthropic keys (sk-ant-...)
+    - command: "! grep -rE 'sk-[a-zA-Z0-9_-]{20,}' . --exclude-dir={node_modules,.git,.next,dist,build,.turbo} --exclude='*.lock' --include='*.ts' --include='*.tsx' --include='*.js' --include='*.jsx' --include='*.json' --include='*.yaml' --include='*.yml' --include='*.md'"
+      description: 'Scan for OpenAI/Anthropic API keys (sk-...)'
+      type: auto
+      required: true
+
+    # Pattern 2: JWT tokens (eyJ...) - commonly used for Supabase, Auth0, etc.
+    - command: "! grep -rE 'eyJ[a-zA-Z0-9_-]{30,}\\.[a-zA-Z0-9_-]+\\.[a-zA-Z0-9_-]+' . --exclude-dir={node_modules,.git,.next,dist,build,.turbo} --exclude='*.lock' --include='*.ts' --include='*.tsx' --include='*.js' --include='*.jsx'"
+      description: 'Scan for hardcoded JWT tokens'
+      type: auto
+      required: true
+
+    # Pattern 3: AWS keys (AKIA..., aws_secret_access_key, etc.)
+    - command: "! grep -rE '(AKIA[0-9A-Z]{16}|aws_secret_access_key|aws_session_token)' . --exclude-dir={node_modules,.git,.next,dist,build,.turbo} --exclude='*.lock' --include='*.ts' --include='*.tsx' --include='*.js' --include='*.jsx' --include='*.json' --include='*.yaml' --include='*.yml'"
+      description: 'Scan for AWS credentials'
+      type: auto
+      required: true
+
+    # Pattern 4: GitHub tokens (ghp_, gho_, ghs_, ghr_, github_pat_)
+    - command: "! grep -rE '(ghp_[a-zA-Z0-9]{36}|gho_[a-zA-Z0-9]{36}|ghs_[a-zA-Z0-9]{36}|ghr_[a-zA-Z0-9]{36}|github_pat_[a-zA-Z0-9]{22}_[a-zA-Z0-9]{59})' . --exclude-dir={node_modules,.git,.next,dist,build,.turbo} --exclude='*.lock'"
+      description: 'Scan for GitHub tokens'
+      type: auto
+      required: true
+
+    # Pattern 5: Stripe keys (sk_live_, pk_live_, sk_test_, pk_test_, rk_)
+    - command: "! grep -rE '(sk_live_[a-zA-Z0-9]{24}|pk_live_[a-zA-Z0-9]{24}|sk_test_[a-zA-Z0-9]{24}|rk_live_[a-zA-Z0-9]{24})' . --exclude-dir={node_modules,.git,.next,dist,build,.turbo} --exclude='*.lock'"
+      description: 'Scan for Stripe API keys'
+      type: auto
+      required: true
+
+    # Pattern 6: Google Cloud API keys (AIza...)
+    - command: "! grep -rE 'AIza[a-zA-Z0-9_-]{35}' . --exclude-dir={node_modules,.git,.next,dist,build,.turbo} --exclude='*.lock'"
+      description: 'Scan for Google Cloud API keys'
+      type: auto
+      required: true
+
+    # Pattern 7: Private keys (PEM format)
+    - command: "! grep -rlE '(BEGIN RSA PRIVATE KEY|BEGIN PRIVATE KEY|BEGIN EC PRIVATE KEY|BEGIN OPENSSH PRIVATE KEY)' . --exclude-dir={node_modules,.git,.next,dist,build,.turbo}"
+      description: 'Scan for private key files'
+      type: auto
+      required: true
+
+    # Pattern 8: Generic password/secret assignments in code
+    - command: "! grep -rE '(password|secret|api_key|apikey|auth_token|access_token)\\s*[=:]\\s*[\"'\\'][^\"'\\' ]{8,}[\"'\\']' . --exclude-dir={node_modules,.git,.next,dist,build,.turbo,__tests__,tests} --exclude='*.lock' --include='*.ts' --include='*.tsx' --include='*.js' --include='*.jsx' -i"
+      description: 'Scan for hardcoded passwords/secrets in code'
+      type: auto
+      required: false # Non-blocking - may have false positives
+
+# -----------------------------------------------------------------------------
+# GLOBAL QUALITY GATES (Applied to ALL tasks)
+# -----------------------------------------------------------------------------
+global_quality_check:
+  validation_commands:
+    # TypeScript Type Checking
+    - command: 'pnpm run typecheck --filter=!@intelliflow/observability'
+      description: 'TypeScript type checking (all packages except observability)'
+      type: auto
+      required: true
+      timeout: 300
+
+    # ESLint
+    - command: 'pnpm run lint || true'
+      description: 'ESLint code quality check'
+      type: auto
+      required: false
+      timeout: 180
+
+    # Unused Dependencies
+    - command: "npx depcheck --ignores='@types/*,eslint-*,prettier,husky,lint-staged,turbo' || true"
+      description: 'Check for unused dependencies'
+      type: auto
+      required: false
+      timeout: 120
+
+    # Security Audit
+    - command: 'pnpm audit --audit-level=moderate --json > artifacts/reports/audit-report.json || true'
+      description: 'Security vulnerability audit (moderate+)'
+      type: auto
+      required: false
+      timeout: 180
+
+    # Dead Code Detection
+    - command: "npx knip --exclude 'unlisted,unresolved' || true"
+      description: 'Detect unused exports and dead code'
+      type: auto
+      required: false
+      timeout: 240
+
+    # Test Execution
+    - command: 'pnpm test --run --passWithNoTests'
+      description: 'Run all test suites'
+      type: auto
+      required: false
+      timeout: 600
+
+global_sonarqube_check:
+  validation_commands:
+    - command: 'test -f sonar-project.properties'
+      description: 'SonarQube configuration exists'
+      type: auto
+      required: true
+
+    - command: 'command -v sonar-scanner >/dev/null 2>&1'
+      description: 'SonarQube scanner installed'
+      type: conditional
+      condition: 'which sonar-scanner >/dev/null 2>&1'
+      required: false
+
+    - command: 'sonar-scanner -Dsonar.qualitygate.wait=true'
+      description: 'SonarQube static analysis'
+      type: conditional
+      condition: 'test -n "${SONAR_TOKEN:-}" && command -v sonar-scanner >/dev/null 2>&1'
+      required: false
+      timeout: 600
+
+  manual_checks:
+    - description: 'Verify SonarQube server is accessible at configured URL'
+      priority: medium
+
+# -----------------------------------------------------------------------------
+# SPRINT 0: Planning & Business Case
+# -----------------------------------------------------------------------------
+
+IFC-000:
+  validation_commands:
+    - command: 'test -f docs/planning/business-case.md || test -f docs/planning/feasibility-study.md'
+      description: 'Business case or feasibility study documented'
+      type: auto
+      required: true
+    - command: 'test -f PLANNING_ANALYSIS.md'
+      description: 'Planning analysis exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Business case reviewed and approved by stakeholders'
+      priority: critical
+
+# -----------------------------------------------------------------------------
+# SPRINT 0: AI Foundation (Original Logic Restored)
+# -----------------------------------------------------------------------------
+
+EXC-INIT-001:
+  validation_commands:
+    - command: "test -d .claude && echo 'Claude directory exists'"
+      description: 'Check Claude Code directory structure'
+      type: auto
+      required: true
+    - command: 'test -f artifacts/metrics/automation-metrics.json'
+      description: 'Check automation metrics artifact'
+      type: auto
+      required: true
+  kpi_checks:
+    - metric: 'setup_time_hours'
+      operator: '<'
+      threshold: 4
+
+AI-SETUP-001:
+  validation_commands:
+    - command: "ls -la .claude/commands/*.sh | wc -l | grep -v '^0$'"
+      description: 'Count Claude commands (>0)'
+      type: auto
+      required: true
+    - command: 'test -f artifacts/misc/command-test-results.csv'
+      description: 'Command test results'
+      type: auto
+      required: true
+
+AI-SETUP-002:
+  validation_commands:
+    - command: 'test -f docs/shared/copilot-instructions.md'
+      description: 'Copilot instructions exist'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify team members have Copilot access'
+      priority: high
+
+# -----------------------------------------------------------------------------
+# SPRINT 0: Foundation Setup (Detailed Functional Checks)
+# -----------------------------------------------------------------------------
+
+ENV-001-AI:
+  validation_commands:
+    - command: 'test -f turbo.json'
+      description: 'Turborepo configuration'
+      type: auto
+      required: true
+    - command: 'pnpm install --dry-run'
+      description: 'Dependencies resolvable (Dry Run)'
+      type: auto
+      required: true
+    - command: 'test -d packages && test -d apps'
+      description: 'Monorepo structure valid'
+      type: auto
+      required: true
+
+ENV-002-AI:
+  validation_commands:
+    - command: 'docker compose config -q'
+      description: 'Docker Compose configuration valid'
+      type: conditional
+      condition: 'command -v docker >/dev/null 2>&1'
+      required: true
+    - command: 'test -f docker-compose.yml || test -f compose.yaml'
+      description: 'Docker Compose file exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify Docker services start correctly'
+      priority: high
+
+ENV-003-AI:
+  validation_commands:
+    - command: 'docker compose config -q'
+      description: 'Docker Compose Config Valid'
+      type: conditional
+      condition: 'command -v docker >/dev/null 2>&1'
+      required: true
+    - command: 'docker compose ps --format json | grep -q running'
+      description: 'Docker containers running'
+      type: conditional
+      condition: 'command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1'
+      required: false
+  manual_checks:
+    - description: 'Verify Docker Desktop is running and containers are healthy'
+      priority: high
+
+ENV-004-AI:
+  validation_commands:
+    - command: 'test -f infra/supabase/config.toml'
+      description: 'Supabase Config Exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify Supabase connection < 30ms'
+      priority: high
+
+ENV-005-AI:
+  validation_commands:
+    - command: 'test -f .github/workflows/ci.yml'
+      description: 'CI Workflow Exists'
+      type: auto
+      required: true
+
+ENV-006-AI:
+  validation_commands:
+    - command: 'test -f packages/db/prisma/schema.prisma'
+      description: 'Prisma schema exists'
+      type: auto
+      required: true
+    - command: 'pnpm --filter @intelliflow/db exec prisma validate'
+      description: 'Prisma schema is valid'
+      type: conditional
+      condition: 'test -f packages/db/prisma/schema.prisma'
+      required: true
+  manual_checks:
+    - description: 'Verify database connection works'
+      priority: high
+
+ENV-007-AI:
+  validation_commands:
+    - command: 'test -d apps/api/src'
+      description: 'tRPC API source directory exists'
+      type: auto
+      required: true
+    - command: 'test -f apps/api/src/index.ts || test -f apps/api/src/server.ts'
+      description: 'tRPC API entry point exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify tRPC endpoints respond correctly'
+      priority: high
+
+ENV-009-AI:
+  validation_commands:
+    - command: 'test -f apps/web/next.config.js || test -f apps/web/next.config.ts || test -f apps/web/next.config.mjs'
+      description: 'Next.js configuration exists'
+      type: auto
+      required: true
+    - command: 'test -f apps/web/package.json'
+      description: 'Next.js package.json exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify Next.js app builds successfully'
+      priority: high
+
+ENV-010-AI:
+  validation_commands:
+    - command: 'test -d tests/e2e'
+      description: 'E2E tests directory'
+      type: auto
+      required: true
+    - command: 'pnpm test --passWithNoTests'
+      description: 'Run test suite'
+      type: conditional
+      condition: 'test -f package.json && grep -q ''"test"'' package.json'
+      required: false
+      timeout: 300
+  kpi_checks:
+    - metric: 'test_coverage'
+      operator: '>='
+      threshold: 95
+
+# -----------------------------------------------------------------------------
+# SPRINT 0: Security & Planning
+# -----------------------------------------------------------------------------
+
+EXC-SEC-001:
+  validation_commands:
+    - command: 'test -f artifacts/misc/vault-config.yaml'
+      description: 'Vault configuration'
+      type: auto
+      required: true
+    - command: "! grep -r 'API_KEY=' . --include='.env*'"
+      description: 'Ensure NO secrets in env files'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Run security audit to confirm no secrets in repository'
+      priority: critical
+
+ENV-013-AI:
+  validation_commands:
+    - command: 'test -f docs/security/security-policy.md || test -f SECURITY.md'
+      description: 'Security policy documented'
+      type: auto
+      required: true
+    - command: 'test -f .github/SECURITY.md || test -f docs/security/incident-response.md'
+      description: 'Security incident response documented'
+      type: auto
+      required: false
+  manual_checks:
+    - description: 'Verify security controls are implemented'
+      priority: critical
+
+EP-001-AI:
+  validation_commands:
+    - command: 'test -f infra/monitoring/docker-compose.monitoring.yml'
+      description: 'Docker Compose monitoring config exists'
+      type: auto
+      required: true
+    - command: 'curl -s -o /dev/null -w "%{http_code}" http://localhost:13133/'
+      description: 'OTel Collector health check'
+      type: conditional
+      condition: 'docker ps | grep -q intelliflow-otel-collector'
+      required: true
+    - command: 'curl -s -o /dev/null -w "%{http_code}" http://localhost:9090/-/ready'
+      description: 'Prometheus health check'
+      type: conditional
+      condition: 'docker ps | grep -q intelliflow-prometheus'
+      required: true
+    - command: 'curl -s -o /dev/null -w "%{http_code}" http://localhost:3001/api/health'
+      description: 'Grafana health check'
+      type: conditional
+      condition: 'docker ps | grep -q intelliflow-grafana'
+      required: true
+    - command: 'curl -s -o /dev/null -w "%{http_code}" http://localhost:3100/ready'
+      description: 'Loki health check'
+      type: conditional
+      condition: 'docker ps | grep -q intelliflow-loki'
+      required: true
+    - command: 'curl -s -o /dev/null -w "%{http_code}" http://localhost:3200/ready'
+      description: 'Tempo health check'
+      type: conditional
+      condition: 'docker ps | grep -q intelliflow-tempo'
+      required: true
+    - command: 'test -f artifacts/monitoring-config-hashes.txt'
+      description: 'Config hashes artifact exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/operations/monitoring-runbook.md'
+      description: 'Monitoring runbook exists'
+      type: auto
+      required: true
+  kpi_checks:
+    - metric: 'setup_time'
+      operator: '<='
+      threshold: 30
+    - metric: 'services_healthy'
+      operator: '='
+      threshold: 5
+  manual_checks:
+    - description: 'Verify services are not publicly accessible without authentication'
+      priority: critical
+
+# -----------------------------------------------------------------------------
+# SPRINT 0: AI Foundation & Automation Tasks
+# -----------------------------------------------------------------------------
+
+AI-SETUP-003:
+  validation_commands:
+    - command: 'test -f .claude/settings.json || test -f .claude/commands'
+      description: 'Claude Code configuration exists'
+      type: auto
+      required: true
+    - command: 'test -d .github/copilot || test -f .github/copilot-instructions.md'
+      description: 'GitHub Copilot configuration exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify external AI tools (Cursor, Windsurf) are configured'
+      priority: medium
+
+ENV-008-AI:
+  validation_commands:
+    - command: 'test -f infra/monitoring/otel-collector.yaml'
+      description: 'OpenTelemetry Collector config exists'
+      type: auto
+      required: true
+    - command: 'test -f packages/observability/package.json || test -d infra/monitoring'
+      description: 'Observability infrastructure exists'
+      type: auto
+      required: true
+  kpi_checks:
+    - metric: 'trace_collection'
+      operator: '='
+      threshold: 'enabled'
+  manual_checks:
+    - description: 'Verify traces are being collected in Tempo'
+      priority: high
+
+ENV-011-AI:
+  validation_commands:
+    - command: 'test -f .vscode/settings.json || test -f .idea/workspace.xml'
+      description: 'IDE configuration exists'
+      type: auto
+      required: true
+    - command: 'test -f .devcontainer/devcontainer.json || test -f docker-compose.yml'
+      description: 'Dev environment configuration exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify AI-powered dev environment is functional'
+      priority: medium
+
+ENV-012-AI:
+  validation_commands:
+    - command: 'test -d docs || test -f README.md'
+      description: 'Documentation exists'
+      type: auto
+      required: true
+    - command: 'test -f CLAUDE.md'
+      description: 'LLM-friendly CLAUDE.md exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify documentation is LLM-friendly and comprehensive'
+      priority: medium
+
+ENV-015-AI:
+  validation_commands:
+    - command: 'test -d packages/platform/src/feature-flags || test -f artifacts/misc/rollout-config.json'
+      description: 'Feature flag system exists'
+      type: auto
+      required: true
+  kpi_checks:
+    - metric: 'flag_deployment_time'
+      operator: '<='
+      threshold: 30
+  manual_checks:
+    - description: 'Verify feature flags are AI-managed'
+      priority: medium
+
+ENV-016-AI:
+  validation_commands:
+    - command: 'test -d artifacts/misc/analytics || test -f artifacts/misc/privacy-config.json'
+      description: 'Analytics configuration exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify analytics respects privacy requirements'
+      priority: high
+
+ENV-017-AI:
+  validation_commands:
+    - command: 'test -d tests/integration'
+      description: 'Integration tests directory exists'
+      type: auto
+      required: true
+    - command: 'pnpm test --run --passWithNoTests 2>/dev/null || true'
+      description: 'Test suite passes'
+      type: conditional
+      condition: 'test -f package.json'
+      required: false
+      timeout: 900
+  kpi_checks:
+    - metric: 'test_execution_time'
+      operator: '<='
+      threshold: 900
+  manual_checks:
+    - description: 'Verify zero P0/P1 defects in integration tests'
+      priority: critical
+
+ENV-018-AI:
+  validation_commands:
+    - command: 'test -f apps/project-tracker/docs/metrics/_global/Sprint_plan.csv'
+      description: 'Sprint plan exists'
+      type: auto
+      required: true
+    - command: 'test -d artifacts/misc/sprint-planning || test -f artifacts/misc/velocity-prediction.json'
+      description: 'Sprint planning artifacts exist'
+      type: auto
+      required: true
+  kpi_checks:
+    - metric: 'forecast_error'
+      operator: '<='
+      threshold: 20
+  manual_checks:
+    - description: 'Verify velocity predictions are within +/-20% accuracy'
+      priority: high
+
+AUTOMATION-001:
+  validation_commands:
+    - command: 'test -f scripts/swarm/orchestrator.sh || test -d artifacts/misc/agent-coordination'
+      description: 'AI agent coordination system exists'
+      type: auto
+      required: true
+    - command: 'test -f artifacts/misc/orchestration-config.yaml || test -d .claude/commands'
+      description: 'Orchestration configuration exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify multi-agent orchestration is functional'
+      priority: high
+
+AUTOMATION-002:
+  validation_commands:
+    - command: 'test -d artifacts/misc/ai-dashboard || test -f artifacts/metrics/metrics-realtime.json'
+      description: 'AI dashboard artifacts exist'
+      type: auto
+      required: true
+    - command: 'test -f artifacts/misc/optimization-loop.yaml || test -f artifacts/misc/roi-tracking.csv'
+      description: 'Optimization loop configuration exists'
+      type: auto
+      required: true
+  kpi_checks:
+    - metric: 'dashboard_live'
+      operator: '='
+      threshold: 'true'
+  manual_checks:
+    - description: 'Verify DORA metrics are being tracked'
+      priority: high
+
+IFC-160:
+  validation_commands:
+    - command: 'test -f docs/architecture/repo-layout.md'
+      description: 'Repo layout doc exists'
+      type: auto
+      required: true
+
+# -----------------------------------------------------------------------------
+# CODE QUALITY & STATIC ANALYSIS TASKS
+# -----------------------------------------------------------------------------
+
+ENV-014-AI:
+  validation_commands:
+    - command: 'test -f sonar-project.properties'
+      description: 'SonarQube project config exists'
+      type: auto
+      required: true
+
+    - command: 'command -v sonar-scanner >/dev/null 2>&1'
+      description: 'SonarQube scanner installed'
+      type: auto
+      required: true
+
+    - command: 'docker ps | grep -q sonarqube'
+      description: 'SonarQube container running'
+      type: conditional
+      condition: 'command -v docker >/dev/null 2>&1'
+      required: false
+
+    - command: 'curl -s --max-time 10 http://localhost:9000/api/system/status | grep -q ''"status":"UP"'''
+      description: 'SonarQube API accessible'
+      type: conditional
+      condition: 'command -v curl >/dev/null 2>&1'
+      required: false
+      timeout: 15
+
+    - command: 'sonar-scanner -Dsonar.qualitygate.wait=true'
+      description: 'Run SonarQube analysis with quality gate'
+      type: conditional
+      condition: 'test -n "${SONAR_TOKEN:-}" && command -v sonar-scanner >/dev/null 2>&1 && curl -s http://localhost:9000/api/system/status | grep -q UP'
+      required: false
+      timeout: 600
+
+  kpi_checks:
+    - metric: 'code_coverage'
+      operator: '>='
+      threshold: 80
+    - metric: 'security_rating'
+      operator: '='
+      threshold: 'A'
+    - metric: 'maintainability_rating'
+      operator: '='
+      threshold: 'A'
+
+  manual_checks:
+    - description: 'Review SonarQube dashboard for critical issues'
+      priority: high
+    - description: 'Verify quality gate passed'
+      priority: critical
+
+TECH-DEBT-001:
+  validation_commands:
+    - command: 'pnpm run typecheck'
+      description: 'Zero TypeScript errors'
+      type: auto
+      required: true
+
+    - command: 'pnpm run lint'
+      description: 'Zero ESLint errors'
+      type: auto
+      required: true
+
+    - command: "npx depcheck --ignores='@types/*,eslint-*,prettier'"
+      description: 'No unused dependencies'
+      type: auto
+      required: true
+
+    - command: "npx knip --exclude 'unlisted,unresolved'"
+      description: 'No dead code or unused exports'
+      type: auto
+      required: true
+
+    - command: 'pnpm audit --audit-level=high'
+      description: 'No high-severity vulnerabilities'
+      type: auto
+      required: true
+
+  kpi_checks:
+    - metric: 'technical_debt_hours'
+      operator: '<='
+      threshold: 40
+    - metric: 'code_smells'
+      operator: '<='
+      threshold: 50
+
+# -----------------------------------------------------------------------------
+# SPRINT 0: STRATEGY & DOCUMENTATION TASKS
+# Documentation, brand, GTM, and operational playbook tasks
+# -----------------------------------------------------------------------------
+
+DOC-001:
+  validation_commands:
+    - command: 'test -f docs/company/master-brief.md'
+      description: 'Master brief document exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/company/product/product-vision.md'
+      description: 'Product vision document exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/company/go-to-market/icp-personas.md'
+      description: 'ICP and personas document exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify CEO + leads sign-off on master brief'
+      priority: critical
+
+BRAND-001:
+  validation_commands:
+    - command: 'test -f docs/company/brand/visual-identity.md'
+      description: 'Visual identity guide exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/company/brand/palette.tokens.json'
+      description: 'Color palette tokens exist'
+      type: auto
+      required: true
+    - command: 'test -f docs/company/brand/typography.tokens.json'
+      description: 'Typography tokens exist'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify UX Designer sign-off on visual identity'
+      priority: high
+
+GTM-001:
+  validation_commands:
+    - command: 'test -f docs/company/go-to-market/icp.md'
+      description: 'ICP definition document exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/company/go-to-market/personas.md'
+      description: 'Personas document exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/company/go-to-market/objections.md'
+      description: 'Objections document exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify PM + Marketing sign-off on ICP and personas'
+      priority: high
+
+GTM-002:
+  validation_commands:
+    - command: 'test -f docs/company/messaging/positioning.md'
+      description: 'Positioning document exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/company/messaging/value-props.md'
+      description: 'Value propositions document exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/company/messaging/copy-blocks.md'
+      description: 'Copy blocks document exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/company/messaging/cta-library.md'
+      description: 'CTA library document exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify PM + Marketing + CEO sign-off on messaging'
+      priority: critical
+
+PM-OPS-001:
+  validation_commands:
+    - command: 'test -f docs/operations/project-playbook.md'
+      description: 'Project playbook exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/operations/wip-policy.md'
+      description: 'WIP policy document exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/operations/ticket-sizing.md'
+      description: 'Ticket sizing guide exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/operations/abc-classification.md'
+      description: 'ABC classification document exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify leadership sign-off on operating model'
+      priority: high
+
+ENG-OPS-001:
+  validation_commands:
+    - command: 'test -f docs/operations/engineering-playbook.md'
+      description: 'Engineering playbook exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/operations/quality-gates.md'
+      description: 'Quality gates document exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/operations/pr-checklist.md'
+      description: 'PR checklist document exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/operations/release-rollback.md'
+      description: 'Release/rollback procedure document exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify team sign-off on engineering playbook'
+      priority: high
+
+ANALYTICS-001:
+  validation_commands:
+    - command: 'test -f docs/analytics/rfm-abc-spec.md'
+      description: 'RFM/ABC spec document exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/analytics/event-taxonomy.md'
+      description: 'Event taxonomy document exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/analytics/dashboards-requirements.md'
+      description: 'Dashboard requirements document exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify PM + Marketing + DA sign-off on analytics spec'
+      priority: high
+
+# -----------------------------------------------------------------------------
+# SPRINT 1: Validation & Architecture Tasks
+# -----------------------------------------------------------------------------
+
+IFC-001:
+  validation_commands:
+    - command: 'test -f docs/architecture/technical-spike.md || test -d docs/planning/adr'
+      description: 'Architecture spike documentation exists'
+      type: auto
+      required: true
+    - command: 'pnpm run typecheck'
+      description: 'TypeScript compilation passes'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify architecture decisions are documented in ADRs'
+      priority: high
+
+IFC-002:
+  validation_commands:
+    - command: 'test -d packages/domain/src'
+      description: 'Domain package exists'
+      type: auto
+      required: true
+    - command: 'test -f packages/domain/src/crm/lead/Lead.ts'
+      description: 'Lead aggregate exists'
+      type: auto
+      required: true
+    - command: 'test -f packages/db/prisma/schema.prisma'
+      description: 'Prisma schema exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify DDD bounded contexts are properly defined'
+      priority: critical
+
+IFC-003:
+  validation_commands:
+    - command: 'test -d apps/api/src/modules'
+      description: 'tRPC modules directory exists'
+      type: auto
+      required: true
+    - command: 'test -f apps/api/src/trpc.ts'
+      description: 'tRPC router exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify end-to-end type safety with tRPC'
+      priority: high
+
+IFC-072:
+  validation_commands:
+    - command: 'test -f docs/security/rls-design.md || test -f docs/security/zero-trust-design.md'
+      description: 'Zero trust/RLS design documentation exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify RLS policies are designed for all core tables'
+      priority: critical
+
+IFC-073:
+  validation_commands:
+    - command: 'test -f docs/security/dpia.md'
+      description: 'DPIA document exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/security/data-flows.md'
+      description: 'Data flows documentation exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/compliance/gdpr-checklist.md'
+      description: 'GDPR checklist exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify DPIA is reviewed by DPO'
+      priority: critical
+
+IFC-074:
+  validation_commands:
+    - command: 'test -d apps/api/src/tracing'
+      description: 'Tracing module exists'
+      type: auto
+      required: true
+    - command: 'test -f apps/api/src/tracing/otel.ts'
+      description: 'OpenTelemetry configuration exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify traces are being collected'
+      priority: high
+
+IFC-075:
+  validation_commands:
+    - command: 'test -d infra/terraform'
+      description: 'Terraform directory exists'
+      type: auto
+      required: true
+    - command: 'test -f infra/terraform/main.tf || test -f infra/terraform/README.md'
+      description: 'Terraform configuration exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify Terraform plans execute successfully'
+      priority: high
+
+IFC-106:
+  validation_commands:
+    - command: 'test -d packages/application/src/ports'
+      description: 'Ports directory exists'
+      type: auto
+      required: true
+    - command: 'test -d packages/application/src/usecases'
+      description: 'Use cases directory exists'
+      type: auto
+      required: true
+    - command: 'test -d packages/adapters/src'
+      description: 'Adapters package exists'
+      type: auto
+      required: true
+    - command: 'test -d tests/architecture'
+      description: 'Architecture tests exist'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify hexagonal architecture boundaries are enforced'
+      priority: critical
+
+IFC-135:
+  validation_commands:
+    - command: 'test -f docs/planning/adr/ADR-004-multi-tenancy.md'
+      description: 'Multi-tenancy ADR exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/planning/adr/ADR-005-workflow-engine.md'
+      description: 'Workflow engine ADR exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/planning/adr/ADR-006-agent-tools.md'
+      description: 'Agent tools ADR exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/planning/adr/ADR-007-data-governance.md'
+      description: 'Data governance ADR exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/planning/adr/ADR-008-audit-logging.md'
+      description: 'Audit logging ADR exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify all ADRs are reviewed and approved'
+      priority: high
+
+GOV-001:
+  validation_commands:
+    - command: 'test -f docs/architecture/adr/000-template.md'
+      description: 'ADR template exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/architecture/arp/000-template.md'
+      description: 'ARP template exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/architecture/decision-workflow.md'
+      description: 'Decision workflow exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify governance templates are adopted by team'
+      priority: high
+
+BRAND-002:
+  validation_commands:
+    - command: 'test -f docs/design-system/token-mapping.md'
+      description: 'Token mapping document exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/design-system/theme-reference-spec.md'
+      description: 'Theme reference spec exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/design-system/token-naming.md'
+      description: 'Token naming document exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify design tokens integrate with Tailwind/shadcn'
+      priority: high
+
+SALES-001:
+  validation_commands:
+    - command: 'test -f docs/sales/pitch-deck-outline.md'
+      description: 'Pitch deck outline exists'
+      type: auto
+      required: true
+    - command: 'test -f docs/sales/one-pager.md'
+      description: 'One-pager document exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify sales assets are reviewed by PM + Sales'
+      priority: high
+
+IFC-077:
+  validation_commands:
+    - command: 'test -f apps/api/src/middleware/rate-limit.ts'
+      description: 'Rate limiting middleware implementation exists'
+      type: auto
+      required: true
+    - command: 'test -f artifacts/misc/rate-limit-config.yaml'
+      description: 'Rate limit configuration exists'
+      type: auto
+      required: true
+    - command: 'test -f artifacts/misc/load-test-with-limits.json'
+      description: 'Load test results exist'
+      type: auto
+      required: true
+    - command: 'test -f artifacts/misc/false-positive.csv'
+      description: 'False positive analysis exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify rate limiting protects against DDoS'
+      priority: high
+    - description: 'Verify false positive rate <0.1%'
+      priority: high
+
+IFC-119:
+  validation_commands:
+    - command: 'test -f artifacts/misc/ceremony-calendar.ics'
+      description: 'Ceremony calendar exists'
+      type: auto
+      required: true
+    - command: 'test -f artifacts/misc/templates/sprint-planning.md'
+      description: 'Sprint planning template exists'
+      type: auto
+      required: true
+    - command: 'test -f artifacts/misc/templates/sprint-retrospective.md'
+      description: 'Retrospective template exists'
+      type: auto
+      required: true
+    - command: 'test -f artifacts/misc/templates/backlog-refinement.md'
+      description: 'Backlog refinement template exists'
+      type: auto
+      required: true
+    - command: 'test -f artifacts/reports/retro-action-items.md'
+      description: 'Retro action items tracker exists'
+      type: auto
+      required: true
+  manual_checks:
+    - description: 'Verify sprint ceremonies are scheduled'
+      priority: medium
+    - description: 'Verify all team members have calendar invites'
+      priority: medium

@@ -1,0 +1,149 @@
+{
+  "sprint": "sprint-2",
+  "name": "Core Domain & Documentation",
+  "target_date": "2025-02-07",
+  "started_at": "2025-12-22T20:00:00Z",
+  "completed_at": null,
+  "phases": [
+    {
+      "id": "phase-1-validation",
+      "status": "IN_PROGRESS",
+      "started_at": "2025-12-22T20:00:00Z",
+      "completed_at": null
+    },
+    {
+      "id": "phase-2-domain",
+      "status": "NOT_STARTED",
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "id": "phase-3-documentation",
+      "status": "IN_PROGRESS",
+      "started_at": "2025-12-22T21:00:00Z",
+      "completed_at": null
+    }
+  ],
+  "task_summary": {
+    "total": 12,
+    "done": 12,
+    "in_progress": 0,
+    "blocked": 0,
+    "not_started": 0,
+    "failed": 0
+  },
+  "kpi_summary": {
+    "tasks_completed": {
+      "target": 13,
+      "actual": 8,
+      "status": "MEASURING",
+      "unit": "count"
+    },
+    "automation_percentage": {
+      "target": 80,
+      "actual": 61.5,
+      "status": "MEASURING",
+      "unit": "percent"
+    }
+  },
+  "blockers": [],
+  "completed_tasks": [
+    {
+      "task_id": "IFC-008",
+      "completed_at": "2025-12-21T12:00:00Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-101",
+      "completed_at": "2025-12-22T16:00:00Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-102",
+      "completed_at": "2025-12-22T17:30:00Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-103",
+      "completed_at": "2025-12-22T18:30:00Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-004",
+      "completed_at": "2025-12-22T20:28:00Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-005",
+      "completed_at": "2025-12-22T20:40:00Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-109",
+      "completed_at": "2025-12-22T20:55:00Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-146",
+      "completed_at": "2025-12-22T21:05:00Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "SALES-002",
+      "completed_at": "2025-12-22T21:15:00Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-072",
+      "completed_at": "2025-12-27T11:33:39.450Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-073",
+      "completed_at": "2025-12-27T11:33:39.467Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-085",
+      "completed_at": "2026-01-26T23:27:00.000Z",
+      "duration_minutes": 15
+    }
+  ],
+  "notes": "12/12 tasks DONE (100%). Last synced: 2026-01-29T01:33:17.620Z",
+  "section": "Core Domain & Documentation",
+  "dependencies": {
+    "all_satisfied": true,
+    "verified_at": "2025-12-22T20:00:00Z",
+    "required": []
+  },
+  "status_history": [
+    {
+      "status": "IN_PROGRESS",
+      "note": "Sprint 2 execution started",
+      "at": "2025-12-22T20:00:00Z"
+    }
+  ],
+  "artifacts": {
+    "expected": [],
+    "created": [],
+    "missing": []
+  },
+  "schedule": {
+    "sprint_start_date": null,
+    "sprint_end_date": "2025-02-07",
+    "working_hours_per_day": 8,
+    "working_days_per_week": 5,
+    "critical_path": {
+      "task_ids": [],
+      "total_duration_minutes": 0,
+      "completion_percentage": 0,
+      "bottleneck_task_id": null
+    },
+    "schedule_variance": {
+      "sv_minutes": 0,
+      "spi": 1,
+      "status": "on_track"
+    },
+    "calculated_at": "2026-01-29T01:33:17.674Z"
+  }
+}

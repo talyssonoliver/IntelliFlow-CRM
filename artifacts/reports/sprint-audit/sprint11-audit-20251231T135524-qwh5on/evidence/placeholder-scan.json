@@ -1,0 +1,187 @@
+{
+  "generated_at": "2025-12-31T13:55:28.055Z",
+  "run_id": "sprint11-audit-20251231T135524-qwh5on",
+  "total_placeholders": 20,
+  "findings": [
+    {
+      "taskId": "PG-003",
+      "file": "apps\\web\\src\\lib\\pricing\\stripe-integration.ts",
+      "line": 7,
+      "column": 14,
+      "pattern": "STUB",
+      "content": "* This is a stub implementation for Sprint 11. Full Stripe integration",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-003",
+      "file": "apps\\web\\src\\lib\\pricing\\stripe-integration.ts",
+      "line": 35,
+      "column": 6,
+      "pattern": "TODO",
+      "content": "// TODO: Implement actual Stripe checkout session creation",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-003",
+      "file": "apps\\web\\src\\lib\\pricing\\stripe-integration.ts",
+      "line": 58,
+      "column": 6,
+      "pattern": "TODO",
+      "content": "// TODO: Implement actual Stripe subscription retrieval",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-003",
+      "file": "apps\\web\\src\\lib\\pricing\\stripe-integration.ts",
+      "line": 75,
+      "column": 6,
+      "pattern": "TODO",
+      "content": "// TODO: Implement actual Stripe subscription cancellation",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-003",
+      "file": "apps\\web\\src\\lib\\pricing\\stripe-integration.ts",
+      "line": 92,
+      "column": 6,
+      "pattern": "TODO",
+      "content": "// TODO: Implement actual Stripe subscription update",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-003",
+      "file": "apps\\web\\src\\lib\\pricing\\stripe-integration.ts",
+      "line": 113,
+      "column": 6,
+      "pattern": "TODO",
+      "content": "// TODO: Implement actual webhook signature validation",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-005",
+      "file": "apps\\web\\src\\lib\\shared\\email-handler.ts",
+      "line": 201,
+      "column": 11,
+      "pattern": "TODO",
+      "content": "// 3. TODO: Rate limiting check",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-005",
+      "file": "apps\\web\\src\\lib\\shared\\email-handler.ts",
+      "line": 218,
+      "column": 11,
+      "pattern": "TODO",
+      "content": "// 4. TODO: Send email via email service (Resend, SendGrid, etc.)",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-005",
+      "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+      "line": 157,
+      "column": 46,
+      "pattern": "PLACEHOLDER",
+      "content": "text-slate-900 dark:text-white placeholder-slate-400",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-005",
+      "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+      "line": 161,
+      "column": 13,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"John Doe\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-005",
+      "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+      "line": 196,
+      "column": 46,
+      "pattern": "PLACEHOLDER",
+      "content": "text-slate-900 dark:text-white placeholder-slate-400",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-005",
+      "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+      "line": 200,
+      "column": 13,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"you@example.com\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-005",
+      "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+      "line": 229,
+      "column": 46,
+      "pattern": "PLACEHOLDER",
+      "content": "text-slate-900 dark:text-white placeholder-slate-400",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-005",
+      "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+      "line": 233,
+      "column": 13,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"+1 (555) 123-4567\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-005",
+      "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+      "line": 261,
+      "column": 46,
+      "pattern": "PLACEHOLDER",
+      "content": "text-slate-900 dark:text-white placeholder-slate-400",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-005",
+      "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+      "line": 265,
+      "column": 13,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"Acme Corporation\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-005",
+      "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+      "line": 285,
+      "column": 44,
+      "pattern": "PLACEHOLDER",
+      "content": "text-slate-900 dark:text-white placeholder-slate-400",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-005",
+      "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+      "line": 289,
+      "column": 11,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"Interested in IntelliFlow CRM\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-005",
+      "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+      "line": 315,
+      "column": 44,
+      "pattern": "PLACEHOLDER",
+      "content": "text-slate-900 dark:text-white placeholder-slate-400",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-005",
+      "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+      "line": 319,
+      "column": 11,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"Tell us about your needs...\"",
+      "linkedTaskId": null
+    }
+  ]
+}

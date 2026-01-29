@@ -1,54 +1,42 @@
 import { z } from 'zod';
-import { emailSchema, phoneSchema, idSchema, paginationSchema } from './common';
+import { emailSchema, phoneSchema, idSchema, paginationSchema, nameSchema } from './common';
+import { LEAD_STATUSES, LEAD_SOURCES } from '@intelliflow/domain';
 
-// Enums
-export const leadSourceSchema = z.enum([
-  'WEBSITE',
-  'REFERRAL',
-  'SOCIAL',
-  'EMAIL',
-  'COLD_CALL',
-  'EVENT',
-  'OTHER',
-]);
+// Re-export common schemas used by API routers
+export { idSchema } from './common';
 
-export const leadStatusSchema = z.enum([
-  'NEW',
-  'CONTACTED',
-  'QUALIFIED',
-  'UNQUALIFIED',
-  'CONVERTED',
-  'LOST',
-]);
+// Enums - derived from domain constants (single source of truth)
+export const leadSourceSchema = z.enum(LEAD_SOURCES);
+export const leadStatusSchema = z.enum(LEAD_STATUSES);
 
 export type LeadSource = z.infer<typeof leadSourceSchema>;
 export type LeadStatus = z.infer<typeof leadStatusSchema>;
 
-// Create Lead Schema
-export const createLeadSchema = z.object({
+// Base lead fields schema (DRY - used by create and update)
+const baseLeadFieldsSchema = z.object({
   email: emailSchema,
-  firstName: z.string().min(1).max(100).optional(),
-  lastName: z.string().min(1).max(100).optional(),
-  company: z.string().min(1).max(200).optional(),
-  title: z.string().max(100).optional(),
+  firstName: nameSchema.optional(),
+  lastName: nameSchema.optional(),
+  company: z.string().min(1).max(200).transform(val => val.trim()).optional(),
+  title: nameSchema.optional(),
   phone: phoneSchema,
+  source: leadSourceSchema,
+});
+
+// Create Lead Schema - uses base fields with source default
+export const createLeadSchema = baseLeadFieldsSchema.extend({
   source: leadSourceSchema.default('WEBSITE'),
 });
 
 export type CreateLeadInput = z.infer<typeof createLeadSchema>;
 
-// Update Lead Schema
-export const updateLeadSchema = z.object({
-  id: idSchema,
-  email: emailSchema.optional(),
-  firstName: z.string().min(1).max(100).optional(),
-  lastName: z.string().min(1).max(100).optional(),
-  company: z.string().min(1).max(200).optional(),
-  title: z.string().max(100).optional(),
-  phone: phoneSchema,
-  source: leadSourceSchema.optional(),
-  status: leadStatusSchema.optional(),
-});
+// Update Lead Schema - extends base with id and status, all fields optional
+export const updateLeadSchema = baseLeadFieldsSchema
+  .partial()
+  .extend({
+    id: idSchema,
+    status: leadStatusSchema.optional(),
+  });
 
 export type UpdateLeadInput = z.infer<typeof updateLeadSchema>;
 
@@ -56,11 +44,13 @@ export type UpdateLeadInput = z.infer<typeof updateLeadSchema>;
 export const leadScoreSchema = z.object({
   score: z.number().int().min(0).max(100),
   confidence: z.number().min(0).max(1),
-  factors: z.array(z.object({
-    name: z.string(),
-    impact: z.number(),
-    reasoning: z.string(),
-  })),
+  factors: z.array(
+    z.object({
+      name: z.string(),
+      impact: z.number(),
+      reasoning: z.string(),
+    })
+  ),
   modelVersion: z.string(),
 });
 
@@ -109,14 +99,15 @@ export const leadQuerySchema = paginationSchema.extend({
 export type LeadQueryInput = z.infer<typeof leadQuerySchema>;
 
 // Lead Response Schema (for API responses)
+// Uses Value Object transformers for type-safe domain objects
 export const leadResponseSchema = z.object({
   id: idSchema,
-  email: z.string().email(),
-  firstName: z.string().nullable(),
-  lastName: z.string().nullable(),
+  email: emailSchema,
+  firstName: nameSchema.nullable(),
+  lastName: nameSchema.nullable(),
   company: z.string().nullable(),
-  title: z.string().nullable(),
-  phone: z.string().nullable(),
+  title: nameSchema.nullable(),
+  phone: phoneSchema, // Uses PhoneNumber Value Object transformer
   source: leadSourceSchema,
   status: leadStatusSchema,
   score: z.number().int().min(0).max(100),
@@ -127,12 +118,12 @@ export const leadResponseSchema = z.object({
 
 export type LeadResponse = z.infer<typeof leadResponseSchema>;
 
-// Lead List Response Schema
+// Lead List Response Schema - uses paginatedResponseSchema pattern
 export const leadListResponseSchema = z.object({
-  leads: z.array(leadResponseSchema),
+  data: z.array(leadResponseSchema), // Renamed from 'leads' to 'data' for consistency
   total: z.number().int().nonnegative(),
   page: z.number().int().positive(),
-  limit: z.number().int().positive(),
+  limit: z.number().int().positive().max(100),
   hasMore: z.boolean(),
 });
 

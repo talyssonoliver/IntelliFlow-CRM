@@ -1,0 +1,61 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "PG-012",
+  "section": "Public Pages",
+  "description": "Career Detail",
+  "owner": "Frontend Dev",
+  "dependencies": {
+    "required": [
+      "PG-011",
+      "GTM-002",
+      "BRAND-001"
+    ],
+    "verified_at": "2026-01-29T01:33:17.633Z",
+    "all_satisfied": true
+  },
+  "status": "DONE",
+  "status_history": [
+    {
+      "status": "DONE",
+      "at": "2025-12-31T09:00:00Z",
+      "note": "Career detail page completed"
+    }
+  ],
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/(public)/careers/[id]/page.tsx"
+    ],
+    "created": [
+      "apps/web/src/app/(public)/careers/[id]/page.tsx"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "Web Build",
+      "command": "pnpm --filter web build",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-31T08:55:00Z",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2025-12-31T09:00:00Z"
+    }
+  ],
+  "kpis": {
+    "apply_working": {
+      "target": true,
+      "actual": true,
+      "met": true
+    }
+  },
+  "blockers": [],
+  "started_at": "2025-12-31T08:15:00Z",
+  "completed_at": "2025-12-31T09:00:00Z",
+  "actual_duration_minutes": 45,
+  "dependencies_resolved": [
+    "PG-011",
+    "GTM-002",
+    "BRAND-001"
+  ]
+}

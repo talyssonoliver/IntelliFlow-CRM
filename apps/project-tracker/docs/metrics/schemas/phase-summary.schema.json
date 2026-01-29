@@ -1,107 +1,197 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://intelliflow-crm.com/schemas/phase-summary.schema.json",
+  "$id": "phase-summary.schema.json",
   "title": "Phase Summary Schema",
   "description": "Schema for aggregating metrics across a sprint phase",
   "type": "object",
+  "properties": {
+    "phase": {
+      "description": "Phase identifier (e.g., phase-2-parallel)",
+      "type": "string",
+      "pattern": "^phase-[0-9]+-[a-z-]+$"
+    },
+    "sprint": {
+      "description": "Sprint identifier",
+      "type": "string",
+      "pattern": "^sprint-[0-9]+$"
+    },
+    "description": {
+      "description": "Phase description",
+      "type": "string"
+    },
+    "streams": {
+      "description": "Parallel execution streams within this phase",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "Parallel stream name (e.g., parallel-a)",
+            "type": "string"
+          },
+          "tasks": {
+            "description": "Task IDs in this stream",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "NOT_STARTED",
+              "IN_PROGRESS",
+              "DONE",
+              "BLOCKED"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "tasks",
+          "status"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "aggregated_metrics": {
+      "type": "object",
+      "properties": {
+        "total_tasks": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "done": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "in_progress": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "blocked": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "not_started": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "failed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "total_tasks",
+        "done",
+        "in_progress",
+        "blocked",
+        "not_started"
+      ],
+      "additionalProperties": false
+    },
+    "started_at": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "completed_at": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "target_duration_minutes": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "actual_duration_minutes": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "kpis": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
+          },
+          "actual": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
+          },
+          "met": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
   "required": [
     "phase",
     "sprint",
     "description",
     "aggregated_metrics"
   ],
-  "properties": {
-    "phase": {
-      "type": "string",
-      "pattern": "^phase-[0-9]+-[a-z-]+$",
-      "description": "Phase identifier (e.g., phase-2-parallel)"
-    },
-    "sprint": {
-      "type": "string",
-      "pattern": "^sprint-[0-9]+$",
-      "description": "Sprint identifier"
-    },
-    "description": {
-      "type": "string",
-      "description": "Phase description"
-    },
-    "streams": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": ["name", "tasks", "status"],
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "Parallel stream name (e.g., parallel-a)"
-          },
-          "tasks": {
-            "type": "array",
-            "items": {"type": "string"},
-            "description": "Task IDs in this stream"
-          },
-          "status": {
-            "type": "string",
-            "enum": ["NOT_STARTED", "IN_PROGRESS", "DONE", "BLOCKED"]
-          }
-        }
-      },
-      "description": "Parallel execution streams within this phase"
-    },
-    "aggregated_metrics": {
-      "type": "object",
-      "required": ["total_tasks", "done", "in_progress", "blocked", "not_started"],
-      "properties": {
-        "total_tasks": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "done": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "in_progress": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "blocked": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "not_started": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "failed": {
-          "type": "integer",
-          "minimum": 0
-        }
-      }
-    },
-    "started_at": {
-      "type": ["string", "null"],
-      "format": "date-time"
-    },
-    "completed_at": {
-      "type": ["string", "null"],
-      "format": "date-time"
-    },
-    "target_duration_minutes": {
-      "type": ["integer", "null"]
-    },
-    "actual_duration_minutes": {
-      "type": ["integer", "null"]
-    },
-    "kpis": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "object",
-        "properties": {
-          "target": {},
-          "actual": {},
-          "met": {"type": "boolean"}
-        }
-      }
-    }
-  }
+  "additionalProperties": false
 }

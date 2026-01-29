@@ -7,9 +7,13 @@
   "sprint": "sprint-0",
   "phase": "phase-2-parallel",
   "stream": "parallel-a",
-  "dependencies": [
-    "AI-SETUP-001"
-  ],
+  "dependencies": {
+    "all_satisfied": true,
+    "verified_at": "2026-01-29T01:33:17.551Z",
+    "required": [
+      "AI-SETUP-001"
+    ]
+  },
   "dependencies_resolved": [
     "AI-SETUP-001"
   ],
@@ -21,20 +25,52 @@
     "copilot_response_time": {
       "target": 2,
       "actual": null,
-      "unit": "seconds"
+      "unit": "seconds",
+      "met": false
     },
     "team_access": {
       "target": 100,
       "actual": null,
-      "unit": "percent"
+      "unit": "percent",
+      "met": false
     },
     "automation_workflows_active": {
       "target": true,
       "actual": null,
-      "unit": "boolean"
+      "unit": "boolean",
+      "met": false
     }
   },
-  "artifacts": [],
-  "validations": [],
-  "blockers": []
+  "artifacts": {
+    "expected": [],
+    "created": [],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "Copilot instructions exist",
+      "command": "test -f docs/shared/copilot-instructions.md",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-21T08:36:22.641Z",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_hash": "sha256:QUktU0VUVVAtMDAyLUNvcGlsb3QgaW5z",
+      "notes": "Validation passed"
+    }
+  ],
+  "blockers": [],
+  "section": "AI Integration",
+  "status_history": [
+    {
+      "status": "IN_PROGRESS",
+      "note": "Execution started",
+      "at": "2025-12-14T20:20:00Z"
+    },
+    {
+      "status": "DONE",
+      "note": "Task completed successfully",
+      "at": "2025-12-14T20:35:00Z"
+    }
+  ]
 }

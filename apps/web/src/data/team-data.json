@@ -1,0 +1,53 @@
+{
+  "metadata": {
+    "lastUpdated": "2025-12-30",
+    "totalMembers": 4,
+    "version": "1.0"
+  },
+  "members": [
+    {
+      "id": "alex-chen",
+      "name": "Alex Chen",
+      "role": "CEO & Co-Founder",
+      "bio": "Former enterprise sales leader with 10+ years building and scaling B2B teams. Passionate about making CRM actually usable.",
+      "photo": "https://ui-avatars.com/api/?name=Alex+Chen&size=256&background=137fec&color=fff&bold=true",
+      "socialLinks": {
+        "linkedin": "https://linkedin.com/in/alexchen",
+        "twitter": "https://twitter.com/alexchen"
+      }
+    },
+    {
+      "id": "jordan-smith",
+      "name": "Jordan Smith",
+      "role": "CTO & Co-Founder",
+      "bio": "Previously led AI/ML teams at tech companies. Believer in automation that augments, not replaces, human expertise.",
+      "photo": "https://ui-avatars.com/api/?name=Jordan+Smith&size=256&background=137fec&color=fff&bold=true",
+      "socialLinks": {
+        "linkedin": "https://linkedin.com/in/jordansmith",
+        "twitter": "https://twitter.com/jordansmith"
+      }
+    },
+    {
+      "id": "riley-patel",
+      "name": "Riley Patel",
+      "role": "Head of Product",
+      "bio": "15 years designing enterprise software. Obsessed with building tools that teams love, not tolerate.",
+      "photo": "https://ui-avatars.com/api/?name=Riley+Patel&size=256&background=137fec&color=fff&bold=true",
+      "socialLinks": {
+        "linkedin": "https://linkedin.com/in/rileypatel",
+        "twitter": "https://twitter.com/rileypatel"
+      }
+    },
+    {
+      "id": "taylor-kim",
+      "name": "Taylor Kim",
+      "role": "VP of Customer Success",
+      "bio": "Career spent helping teams adopt new technology. Advocate for CRM that fits how teams actually work.",
+      "photo": "https://ui-avatars.com/api/?name=Taylor+Kim&size=256&background=137fec&color=fff&bold=true",
+      "socialLinks": {
+        "linkedin": "https://linkedin.com/in/taylorkim",
+        "twitter": "https://twitter.com/taylorkim"
+      }
+    }
+  ]
+}

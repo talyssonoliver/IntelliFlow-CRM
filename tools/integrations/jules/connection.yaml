@@ -9,10 +9,10 @@ project: intelliflow-crm
 connection:
   base_url: https://api.jules.dev/v1
   api_version: v1
-  timeout: 60000  # 60 seconds
+  timeout: 60000 # 60 seconds
   retry_policy:
     max_retries: 3
-    retry_delay: 2000  # 2 seconds
+    retry_delay: 2000 # 2 seconds
     backoff_multiplier: 2
     retry_on:
       - network_error
@@ -23,7 +23,7 @@ connection:
 # Authentication
 auth:
   type: bearer_token
-  token_source: environment  # JULES_API_TOKEN
+  token_source: environment # JULES_API_TOKEN
   workspace_id: ${JULES_WORKSPACE_ID}
   refresh_token: ${JULES_REFRESH_TOKEN}
   auto_refresh: true
@@ -32,8 +32,8 @@ auth:
 pool:
   min_connections: 2
   max_connections: 10
-  idle_timeout: 300000  # 5 minutes
-  connection_timeout: 10000  # 10 seconds
+  idle_timeout: 300000 # 5 minutes
+  connection_timeout: 10000 # 10 seconds
   keep_alive: true
 
 # Request Configuration
@@ -54,13 +54,13 @@ requests:
   compression:
     enabled: true
     algorithms: [gzip, deflate]
-    min_size: 1024  # bytes
+    min_size: 1024 # bytes
 
 # Response Handling
 responses:
   parse_json: true
   validate_schema: true
-  max_response_size: 10485760  # 10MB
+  max_response_size: 10485760 # 10MB
 
   # Error handling
   error_handling:
@@ -87,7 +87,7 @@ webhooks:
 # SSL/TLS Configuration
 ssl:
   verify: true
-  cert_path: null  # Use system certificates
+  cert_path: null # Use system certificates
   key_path: null
   ca_bundle: null
 
@@ -103,8 +103,8 @@ logging:
   enabled: true
   level: info
   log_requests: true
-  log_responses: false  # Avoid logging large responses
-  log_headers: false  # Security: don't log auth headers
+  log_responses: false # Avoid logging large responses
+  log_headers: false # Security: don't log auth headers
   output: artifacts/logs/jules-connection.log
   rotation: daily
   max_files: 30
@@ -129,16 +129,16 @@ cache:
     host: ${REDIS_HOST:-localhost}
     port: ${REDIS_PORT:-6379}
     password: ${REDIS_PASSWORD}
-    db: 2  # Use separate DB for Jules cache
-  ttl: 3600  # 1 hour
-  key_prefix: jules:
+    db: 2 # Use separate DB for Jules cache
+  ttl: 3600 # 1 hour
+  key_prefix: 'jules:'
 
 # Health Checks
 health_check:
   enabled: true
   endpoint: /health
-  interval: 60000  # 1 minute
-  timeout: 5000  # 5 seconds
+  interval: 60000 # 1 minute
+  timeout: 5000 # 5 seconds
   unhealthy_threshold: 3
   healthy_threshold: 2
 
@@ -153,7 +153,7 @@ circuit_breaker:
   enabled: true
   failure_threshold: 5
   success_threshold: 2
-  timeout: 60000  # 1 minute
+  timeout: 60000 # 1 minute
   half_open_max_requests: 3
 
   on_open:
@@ -174,7 +174,7 @@ features:
 workflows:
   base_path: tools/integrations/jules/workflows
   auto_load: true
-  default_timeout: 300000  # 5 minutes
+  default_timeout: 300000 # 5 minutes
 
   available:
     - name: code-analysis
@@ -201,20 +201,20 @@ workflows:
 privacy:
   anonymize_data: true
   exclude_patterns:
-    - "**/*.env"
-    - "**/secrets/**"
-    - "**/*.pem"
-    - "**/*.key"
-    - "**/credentials.json"
+    - '**/*.env'
+    - '**/secrets/**'
+    - '**/*.pem'
+    - '**/*.key'
+    - '**/credentials.json'
 
   pii_detection: true
   gdpr_compliant: true
-  data_retention: 90  # days
+  data_retention: 90 # days
 
 # Cost Management
 cost:
   budget:
-    monthly_limit: 300  # USD
+    monthly_limit: 300 # USD
     alert_threshold: 0.8
     hard_limit: true
 
@@ -250,7 +250,7 @@ notifications:
     slack:
       enabled: true
       webhook_url: ${SLACK_WEBHOOK_URL}
-      channel: "#intelliflow-alerts"
+      channel: '#intelliflow-alerts'
       events: [error, warning, critical]
 
     email:
@@ -271,8 +271,8 @@ maintenance:
   auto_retry_during_maintenance: true
   maintenance_window:
     - day: sunday
-      start: "02:00"
-      end: "04:00"
+      start: '02:00'
+      end: '04:00'
       timezone: UTC
 
 # Compliance
@@ -285,13 +285,13 @@ compliance:
   audit_logging:
     enabled: true
     output: artifacts/logs/jules-audit.log
-    retention: 365  # days
+    retention: 365 # days
 
 # Backup and Recovery
 backup:
   enabled: true
   frequency: daily
-  retention: 30  # days
+  retention: 30 # days
   location: s3://intelliflow-backups/jules/
 
 # Testing
@@ -304,7 +304,7 @@ testing:
 
 # Advanced Configuration
 advanced:
-  keep_alive_timeout: 120000  # 2 minutes
+  keep_alive_timeout: 120000 # 2 minutes
   max_redirects: 5
   follow_redirects: true
   decode_content: true

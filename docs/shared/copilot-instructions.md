@@ -1,16 +1,19 @@
 # GitHub Copilot Instructions for IntelliFlow CRM
 
-This document provides context and instructions for GitHub Copilot when working with the IntelliFlow CRM codebase.
+This document provides context and instructions for GitHub Copilot when working
+with the IntelliFlow CRM codebase.
 
 ## Project Overview
 
-IntelliFlow CRM is an AI-powered Customer Relationship Management system built with a modern TypeScript stack. The project follows Domain-Driven Design (DDD) principles and uses a monorepo structure managed by Turborepo.
+IntelliFlow CRM is an AI-powered Customer Relationship Management system built
+with a modern TypeScript stack. The project follows Domain-Driven Design (DDD)
+principles and uses a monorepo structure managed by Turborepo.
 
 ### Technology Stack
 
 - **Monorepo**: Turborepo with pnpm workspaces
 - **Backend**: tRPC (type-safe APIs), Prisma ORM, PostgreSQL
-- **Frontend**: Next.js 14 (App Router), React, Tailwind CSS, shadcn/ui
+- **Frontend**: Next.js 16 (App Router), React, Tailwind CSS, shadcn/ui
 - **Database**: Supabase (PostgreSQL with pgvector)
 - **AI/LLM**: LangChain, CrewAI, OpenAI API, Ollama
 - **Testing**: Vitest (unit/integration), Playwright (E2E)
@@ -28,17 +31,16 @@ export const leadRouter = t.router({
   getById: t.procedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
-      return ctx.db.lead.findUnique({ where: { id: input.id } })
+      return ctx.db.lead.findUnique({ where: { id: input.id } });
     }),
-})
+});
 
 // ❌ BAD: Any types or missing validation
 export const leadRouter = t.router({
-  getById: t.procedure
-    .query(async ({ input }: any) => {
-      return db.lead.findUnique({ where: { id: input.id } })
-    }),
-})
+  getById: t.procedure.query(async ({ input }: any) => {
+    return db.lead.findUnique({ where: { id: input.id } });
+  }),
+});
 ```
 
 ### Domain-Driven Design Patterns
@@ -50,44 +52,44 @@ export const leadRouter = t.router({
 export class LeadScore extends ValueObject {
   private constructor(private readonly value: number) {
     if (value < 0 || value > 100) {
-      throw new InvalidLeadScoreError(value)
+      throw new InvalidLeadScoreError(value);
     }
   }
 
   static create(value: number): Result<LeadScore> {
     try {
-      return Result.ok(new LeadScore(value))
+      return Result.ok(new LeadScore(value));
     } catch (error) {
-      return Result.fail(error.message)
+      return Result.fail(error.message);
     }
   }
 
   getValue(): number {
-    return this.value
+    return this.value;
   }
 
   equals(other: LeadScore): boolean {
-    return this.value === other.value
+    return this.value === other.value;
   }
 }
 
 // Entity - Has identity, mutable state
 export class Lead extends AggregateRoot<LeadProps> {
   private constructor(props: LeadProps, id?: LeadId) {
-    super(props, id)
+    super(props, id);
   }
 
   static create(props: LeadProps, id?: LeadId): Result<Lead> {
-    const lead = new Lead(props, id)
+    const lead = new Lead(props, id);
     if (!id) {
-      lead.addDomainEvent(new LeadCreatedEvent(lead))
+      lead.addDomainEvent(new LeadCreatedEvent(lead));
     }
-    return Result.ok(lead)
+    return Result.ok(lead);
   }
 
   updateScore(newScore: LeadScore): void {
-    this.props.score = newScore
-    this.addDomainEvent(new LeadScoredEvent(this.id, newScore))
+    this.props.score = newScore;
+    this.addDomainEvent(new LeadScoredEvent(this.id, newScore));
   }
 }
 ```
@@ -97,9 +99,9 @@ export class Lead extends AggregateRoot<LeadProps> {
 ```typescript
 // Domain defines interface (in packages/domain/)
 export interface LeadRepository {
-  save(lead: Lead): Promise<Result<void>>
-  findById(id: LeadId): Promise<Result<Lead | null>>
-  findByEmail(email: Email): Promise<Result<Lead | null>>
+  save(lead: Lead): Promise<Result<void>>;
+  findById(id: LeadId): Promise<Result<Lead | null>>;
+  findByEmail(email: Email): Promise<Result<Lead | null>>;
 }
 
 // Infrastructure implements (in packages/adapters/)
@@ -112,10 +114,10 @@ export class PrismaLeadRepository implements LeadRepository {
         where: { id: lead.id.getValue() },
         create: this.toPrisma(lead),
         update: this.toPrisma(lead),
-      })
-      return Result.ok()
+      });
+      return Result.ok();
     } catch (error) {
-      return Result.fail(error.message)
+      return Result.fail(error.message);
     }
   }
 
@@ -136,11 +138,14 @@ export const createLeadSchema = z.object({
   lastName: z.string().min(1).max(100),
   email: z.string().email(),
   company: z.string().min(1).max(200).optional(),
-  phone: z.string().regex(/^\+?[1-9]\d{1,14}$/).optional(),
+  phone: z
+    .string()
+    .regex(/^\+?[1-9]\d{1,14}$/)
+    .optional(),
   source: z.enum(['website', 'referral', 'event', 'cold_outreach']),
-})
+});
 
-export type CreateLeadInput = z.infer<typeof createLeadSchema>
+export type CreateLeadInput = z.infer<typeof createLeadSchema>;
 
 // Use in tRPC router
 export const leadRouter = t.router({
@@ -148,10 +153,10 @@ export const leadRouter = t.router({
     .input(createLeadSchema)
     .mutation(async ({ input, ctx }) => {
       // Input is fully typed and validated
-      const result = await ctx.services.leadService.create(input)
-      return result
+      const result = await ctx.services.leadService.create(input);
+      return result;
     }),
-})
+});
 ```
 
 ### Testing Standards
@@ -162,30 +167,30 @@ All code must include comprehensive tests with >90% coverage:
 // Unit test for domain logic
 describe('LeadScore', () => {
   it('should create valid score', () => {
-    const result = LeadScore.create(75)
-    expect(result.isSuccess).toBe(true)
-    expect(result.getValue().getValue()).toBe(75)
-  })
+    const result = LeadScore.create(75);
+    expect(result.isSuccess).toBe(true);
+    expect(result.getValue().getValue()).toBe(75);
+  });
 
   it('should reject invalid scores', () => {
-    expect(LeadScore.create(-1).isFailure).toBe(true)
-    expect(LeadScore.create(101).isFailure).toBe(true)
-  })
-})
+    expect(LeadScore.create(-1).isFailure).toBe(true);
+    expect(LeadScore.create(101).isFailure).toBe(true);
+  });
+});
 
 // Integration test for API
 describe('leadRouter', () => {
   it('should create lead with valid data', async () => {
-    const caller = router.createCaller(mockContext)
+    const caller = router.createCaller(mockContext);
     const result = await caller.lead.create({
       firstName: 'John',
       lastName: 'Doe',
       email: 'john@example.com',
       source: 'website',
-    })
-    expect(result.id).toBeDefined()
-  })
-})
+    });
+    expect(result.id).toBeDefined();
+  });
+});
 ```
 
 ### AI Integration Patterns
@@ -197,33 +202,35 @@ When generating AI-related code:
 export const leadScoringOutputSchema = z.object({
   score: z.number().min(0).max(100),
   confidence: z.number().min(0).max(1),
-  factors: z.array(z.object({
-    name: z.string(),
-    impact: z.number(),
-    reasoning: z.string(),
-  })),
+  factors: z.array(
+    z.object({
+      name: z.string(),
+      impact: z.number(),
+      reasoning: z.string(),
+    })
+  ),
   recommendations: z.array(z.string()),
-})
+});
 
-export type LeadScoringOutput = z.infer<typeof leadScoringOutputSchema>
+export type LeadScoringOutput = z.infer<typeof leadScoringOutputSchema>;
 
 // LangChain chain with structured output
 export const createLeadScoringChain = (llm: ChatOpenAI) => {
-  const parser = StructuredOutputParser.fromZodSchema(leadScoringOutputSchema)
+  const parser = StructuredOutputParser.fromZodSchema(leadScoringOutputSchema);
 
   const chain = RunnableSequence.from([
     PromptTemplate.fromTemplate(LEAD_SCORING_PROMPT),
     llm,
     parser,
-  ])
+  ]);
 
-  return chain
-}
+  return chain;
+};
 
 // Always include human-in-the-loop for critical decisions
 export class LeadQualificationAgent {
   async qualify(lead: Lead): Promise<QualificationResult> {
-    const aiResult = await this.aiScore(lead)
+    const aiResult = await this.aiScore(lead);
 
     // If confidence is low, require human review
     if (aiResult.confidence < 0.7) {
@@ -231,14 +238,14 @@ export class LeadQualificationAgent {
         status: 'pending_review',
         aiSuggestion: aiResult,
         requiresHumanApproval: true,
-      }
+      };
     }
 
     return {
       status: 'auto_qualified',
       result: aiResult,
       requiresHumanApproval: false,
-    }
+    };
   }
 }
 ```
@@ -301,30 +308,30 @@ export class Result<T> {
   ) {}
 
   static ok<U>(value?: U): Result<U> {
-    return new Result<U>(true, value)
+    return new Result<U>(true, value);
   }
 
   static fail<U>(error: string): Result<U> {
-    return new Result<U>(false, undefined, error)
+    return new Result<U>(false, undefined, error);
   }
 
   get isSuccess(): boolean {
-    return this._isSuccess
+    return this._isSuccess;
   }
 
   get isFailure(): boolean {
-    return !this._isSuccess
+    return !this._isSuccess;
   }
 
   getValue(): T {
     if (!this._isSuccess) {
-      throw new Error('Cannot get value from failed result')
+      throw new Error('Cannot get value from failed result');
     }
-    return this._value!
+    return this._value!;
   }
 
   getError(): string {
-    return this._error || ''
+    return this._error || '';
   }
 }
 ```
@@ -333,12 +340,12 @@ export class Result<T> {
 
 ```typescript
 export abstract class DomainEvent {
-  public readonly occurredAt: Date
-  public readonly eventId: string
+  public readonly occurredAt: Date;
+  public readonly eventId: string;
 
   constructor() {
-    this.occurredAt = new Date()
-    this.eventId = crypto.randomUUID()
+    this.occurredAt = new Date();
+    this.eventId = crypto.randomUUID();
   }
 }
 
@@ -348,24 +355,24 @@ export class LeadCreatedEvent extends DomainEvent {
     public readonly email: string,
     public readonly source: string
   ) {
-    super()
+    super();
   }
 }
 
 // Aggregate root collects events
 export abstract class AggregateRoot<T> extends Entity<T> {
-  private _domainEvents: DomainEvent[] = []
+  private _domainEvents: DomainEvent[] = [];
 
   get domainEvents(): DomainEvent[] {
-    return this._domainEvents
+    return this._domainEvents;
   }
 
   protected addDomainEvent(event: DomainEvent): void {
-    this._domainEvents.push(event)
+    this._domainEvents.push(event);
   }
 
   clearEvents(): void {
-    this._domainEvents = []
+    this._domainEvents = [];
   }
 }
 ```
@@ -407,7 +414,8 @@ export function LeadForm() {
 
 1. **Never commit secrets**: Use environment variables
 2. **Validate all inputs**: Use Zod schemas before processing
-3. **Sanitize AI outputs**: Never render AI-generated content without sanitization
+3. **Sanitize AI outputs**: Never render AI-generated content without
+   sanitization
 4. **Use RLS**: Enable Row Level Security in Supabase
 5. **Rate limiting**: Implement rate limiting on all public endpoints
 
@@ -415,7 +423,8 @@ export function LeadForm() {
 
 - **Database queries**: Use Prisma's select to fetch only needed fields
 - **AI calls**: Implement caching and rate limiting
-- **Next.js**: Use Server Components by default, Client Components only when needed
+- **Next.js**: Use Server Components by default, Client Components only when
+  needed
 - **Build optimization**: Keep bundle size minimal, use dynamic imports
 
 ## Code Review Checklist
@@ -452,6 +461,7 @@ Before suggesting code, ensure:
 ## Questions or Issues?
 
 If you're unsure about a pattern or approach, refer to:
+
 - Existing code in the same module for consistency
 - Architecture Decision Records (ADRs) in `/docs/planning/adr/`
 - The project CLAUDE.md for detailed guidelines

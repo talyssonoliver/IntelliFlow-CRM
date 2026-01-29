@@ -1,0 +1,303 @@
+{
+  "tiers": [
+    {
+      "id": "starter",
+      "name": "Starter",
+      "description": "Perfect for small teams getting started with AI-powered CRM",
+      "price": {
+        "monthly": 29,
+        "annual": 24
+      },
+      "features": [
+        "Up to 5 users",
+        "Core CRM features",
+        "Basic AI lead scoring",
+        "1,000 AI predictions/month",
+        "Email support",
+        "1 year data retention",
+        "Mobile apps (iOS & Android)"
+      ],
+      "cta": "Start Free Trial",
+      "ctaLink": "/sign-up?plan=starter",
+      "mostPopular": false,
+      "icon": "rocket_launch"
+    },
+    {
+      "id": "professional",
+      "name": "Professional",
+      "description": "For growing teams that need advanced AI and automation",
+      "price": {
+        "monthly": 79,
+        "annual": 65
+      },
+      "features": [
+        "Up to 20 users",
+        "Everything in Starter",
+        "Advanced AI insights",
+        "10,000 AI predictions/month",
+        "Workflow automation",
+        "AI explainability dashboard",
+        "Priority support (4h response)",
+        "3 years data retention",
+        "API access",
+        "Custom reports"
+      ],
+      "cta": "Start Free Trial",
+      "ctaLink": "/sign-up?plan=professional",
+      "mostPopular": true,
+      "icon": "workspace_premium"
+    },
+    {
+      "id": "enterprise",
+      "name": "Enterprise",
+      "description": "For large teams with advanced security and compliance needs",
+      "price": {
+        "monthly": 199,
+        "annual": 165
+      },
+      "features": [
+        "Unlimited users",
+        "Everything in Professional",
+        "Unlimited AI predictions",
+        "Custom AI model training",
+        "Multi-region deployment",
+        "SSO & advanced security",
+        "99.9% SLA guarantee",
+        "Dedicated account manager",
+        "Unlimited data retention",
+        "White-label options",
+        "Priority phone support",
+        "Custom contracts"
+      ],
+      "cta": "Contact Sales",
+      "ctaLink": "/contact?plan=enterprise",
+      "mostPopular": false,
+      "icon": "shield"
+    },
+    {
+      "id": "custom",
+      "name": "Custom",
+      "description": "Tailored solutions for unique enterprise requirements",
+      "price": {
+        "monthly": null,
+        "annual": null,
+        "custom": true,
+        "label": "Contact Sales"
+      },
+      "features": [
+        "Custom user limits",
+        "On-premise deployment",
+        "Dedicated infrastructure",
+        "Custom integrations",
+        "Legal review & contracts",
+        "24/7 phone support",
+        "Custom SLA",
+        "Data residency options"
+      ],
+      "cta": "Contact Sales",
+      "ctaLink": "/contact?plan=custom",
+      "mostPopular": false,
+      "icon": "handshake"
+    }
+  ],
+  "comparisonFeatures": [
+    {
+      "category": "Core CRM",
+      "features": [
+        {
+          "name": "Contacts & Companies",
+          "starter": true,
+          "professional": true,
+          "enterprise": true,
+          "custom": true
+        },
+        {
+          "name": "Deals & Pipeline",
+          "starter": true,
+          "professional": true,
+          "enterprise": true,
+          "custom": true
+        },
+        {
+          "name": "Tasks & Reminders",
+          "starter": true,
+          "professional": true,
+          "enterprise": true,
+          "custom": true
+        },
+        {
+          "name": "Email Integration",
+          "starter": true,
+          "professional": true,
+          "enterprise": true,
+          "custom": true
+        },
+        {
+          "name": "Mobile Apps",
+          "starter": true,
+          "professional": true,
+          "enterprise": true,
+          "custom": true
+        }
+      ]
+    },
+    {
+      "category": "AI & Automation",
+      "features": [
+        {
+          "name": "AI Lead Scoring",
+          "starter": "Basic",
+          "professional": "Advanced",
+          "enterprise": "Custom",
+          "custom": "Custom"
+        },
+        {
+          "name": "AI Predictions/month",
+          "starter": "1,000",
+          "professional": "10,000",
+          "enterprise": "Unlimited",
+          "custom": "Custom"
+        },
+        {
+          "name": "Workflow Automation",
+          "starter": false,
+          "professional": true,
+          "enterprise": true,
+          "custom": true
+        },
+        {
+          "name": "AI Explainability",
+          "starter": false,
+          "professional": true,
+          "enterprise": true,
+          "custom": true
+        },
+        {
+          "name": "Custom AI Models",
+          "starter": false,
+          "professional": false,
+          "enterprise": true,
+          "custom": true
+        }
+      ]
+    },
+    {
+      "category": "Security & Compliance",
+      "features": [
+        {
+          "name": "Data Encryption",
+          "starter": true,
+          "professional": true,
+          "enterprise": true,
+          "custom": true
+        },
+        {
+          "name": "SSO (Single Sign-On)",
+          "starter": false,
+          "professional": false,
+          "enterprise": true,
+          "custom": true
+        },
+        {
+          "name": "Audit Logs",
+          "starter": "Basic",
+          "professional": "Advanced",
+          "enterprise": "Complete",
+          "custom": "Custom"
+        },
+        {
+          "name": "SLA Guarantee",
+          "starter": false,
+          "professional": false,
+          "enterprise": "99.9%",
+          "custom": "Custom"
+        },
+        {
+          "name": "Data Residency",
+          "starter": false,
+          "professional": false,
+          "enterprise": false,
+          "custom": true
+        }
+      ]
+    },
+    {
+      "category": "Support & Services",
+      "features": [
+        {
+          "name": "Support Channel",
+          "starter": "Email",
+          "professional": "Email + Chat",
+          "enterprise": "Email + Chat + Phone",
+          "custom": "24/7 Phone"
+        },
+        {
+          "name": "Response Time",
+          "starter": "24 hours",
+          "professional": "4 hours",
+          "enterprise": "1 hour",
+          "custom": "Custom SLA"
+        },
+        {
+          "name": "Account Manager",
+          "starter": false,
+          "professional": false,
+          "enterprise": true,
+          "custom": true
+        },
+        {
+          "name": "Onboarding",
+          "starter": "Self-service",
+          "professional": "Guided",
+          "enterprise": "White-glove",
+          "custom": "Custom"
+        }
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "question": "Can I change plans later?",
+      "answer": "Yes! You can upgrade or downgrade your plan at any time. Upgrades take effect immediately, while downgrades take effect at the end of your current billing cycle to ensure you get the full value of your current plan."
+    },
+    {
+      "question": "What payment methods do you accept?",
+      "answer": "We accept all major credit cards (Visa, Mastercard, American Express) and bank transfers for annual plans. Enterprise customers can arrange custom payment terms including invoicing."
+    },
+    {
+      "question": "Is there a free trial?",
+      "answer": "Yes! All paid plans come with a 14-day free trial. No credit card required to start. You'll have full access to all features during the trial period."
+    },
+    {
+      "question": "Do you offer discounts for nonprofits or education?",
+      "answer": "Yes, we offer a 20% discount for registered nonprofits and educational institutions. Contact our sales team with your organization details to apply for the discount."
+    },
+    {
+      "question": "What's included in support?",
+      "answer": "Starter plans include email support with 24-hour response time. Professional plans get priority email and chat support with 4-hour response. Enterprise customers receive email, chat, and phone support with 1-hour SLA, plus a dedicated account manager."
+    },
+    {
+      "question": "Can I get a refund if I'm not satisfied?",
+      "answer": "Yes, we offer a 30-day money-back guarantee on all annual plans. If you're not satisfied within the first 30 days, we'll provide a full refund, no questions asked."
+    },
+    {
+      "question": "What happens to my data if I cancel?",
+      "answer": "You can export all your data at any time. After cancellation, your data is retained for 30 days, giving you time to export it. After 30 days, all data is permanently deleted according to our data retention policy."
+    },
+    {
+      "question": "Do prices include VAT?",
+      "answer": "Prices shown are exclusive of VAT. VAT will be added at checkout based on your location and business status. EU businesses can provide a valid VAT number for B2B reverse charge."
+    }
+  ],
+  "metadata": {
+    "currency": "GBP",
+    "currencySymbol": "£",
+    "annualDiscountPercent": 17,
+    "freeTrialDays": 14,
+    "moneyBackGuaranteeDays": 30,
+    "lastUpdated": "2025-12-30",
+    "version": "1.0.0",
+    "schema_version": "1.0",
+    "created_by": "PG-003 Implementation"
+  }
+}

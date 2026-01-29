@@ -56,7 +56,10 @@ export function getCompletionColor(rate: number): string {
  */
 export function parseDependencies(deps: string): string[] {
   if (!deps || deps.trim() === '') return [];
-  return deps.split(',').map((d) => d.trim()).filter(Boolean);
+  return deps
+    .split(',')
+    .map((d) => d.trim())
+    .filter(Boolean);
 }
 
 /**
@@ -64,7 +67,10 @@ export function parseDependencies(deps: string): string[] {
  */
 export function parseArtifacts(artifacts: string): string[] {
   if (!artifacts || artifacts.trim() === '') return [];
-  return artifacts.split(',').map((a) => a.trim()).filter(Boolean);
+  return artifacts
+    .split(',')
+    .map((a) => a.trim())
+    .filter(Boolean);
 }
 
 /**
@@ -119,14 +125,17 @@ export function truncate(text: string, length: number): string {
  * Group array by key
  */
 export function groupBy<T>(array: T[], key: keyof T): Record<string, T[]> {
-  return array.reduce((result, item) => {
-    const group = String(item[key]);
-    if (!result[group]) {
-      result[group] = [];
-    }
-    result[group].push(item);
-    return result;
-  }, {} as Record<string, T[]>);
+  return array.reduce(
+    (result, item) => {
+      const group = String(item[key]);
+      if (!result[group]) {
+        result[group] = [];
+      }
+      result[group].push(item);
+      return result;
+    },
+    {} as Record<string, T[]>
+  );
 }
 
 /**

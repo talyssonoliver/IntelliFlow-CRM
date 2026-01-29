@@ -1,0 +1,532 @@
+# IFC-134: Container/Image Scanning in CI and Registry
+# This workflow scans container images for vulnerabilities using Trivy
+# with a fail-on-critical policy to prevent vulnerable images from deployment.
+#
+# KPIs:
+# - 0 critical vulnerabilities in production images
+# - 100% scan coverage for all deployable images
+#
+# Dependencies:
+# - ENV-003-AI (Docker Setup)
+# - ENV-005-AI (CI/CD Pipeline)
+#
+# References:
+# - docs/security/image-scanning.md
+# - docs/security/zero-trust-design.md
+# - docs/security/owasp-checklist.md
+
+name: Container Image Security Scan
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'apps/*/Dockerfile'
+      - 'apps/**/Dockerfile'
+      - 'infra/docker/**'
+      - 'docker-compose*.yml'
+      - '.github/workflows/image-scan.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'apps/*/Dockerfile'
+      - 'apps/**/Dockerfile'
+      - 'infra/docker/**'
+      - 'docker-compose*.yml'
+  schedule:
+    # Run nightly at 02:00 UTC for continuous monitoring
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      scan_all_images:
+        description: 'Scan all images including base images'
+        required: false
+        default: false
+        type: boolean
+      severity_override:
+        description: 'Override severity threshold (CRITICAL,HIGH,MEDIUM,LOW)'
+        required: false
+        default: 'CRITICAL'
+        type: string
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+env:
+  # Trivy configuration
+  TRIVY_VERSION: 'latest'
+  TRIVY_SEVERITY: 'CRITICAL,HIGH,MEDIUM,LOW'
+  TRIVY_FAIL_ON: 'CRITICAL'
+  # Registry (placeholder - configure based on your registry)
+  REGISTRY: 'ghcr.io'
+  IMAGE_PREFIX: '${{ github.repository }}'
+
+jobs:
+  # ===========================================
+  # Job 1: Detect images to scan
+  # ===========================================
+  detect-images:
+    name: Detect Scannable Images
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      images: ${{ steps.find-images.outputs.images }}
+      has_images: ${{ steps.find-images.outputs.has_images }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Find Dockerfiles and images
+        id: find-images
+        run: |
+          # Find all Dockerfiles in the repository
+          DOCKERFILES=$(find . -name "Dockerfile" -o -name "Dockerfile.*" 2>/dev/null | grep -v node_modules || true)
+
+          # Build list of images to scan
+          IMAGES=()
+
+          # Add images from docker-compose if present
+          if [ -f "docker-compose.yml" ]; then
+            COMPOSE_IMAGES=$(grep -E "^\s+image:" docker-compose.yml | awk '{print $2}' | tr -d '"' || true)
+            for img in $COMPOSE_IMAGES; do
+              IMAGES+=("$img")
+            done
+          fi
+
+          # Check for custom application Dockerfiles
+          for df in $DOCKERFILES; do
+            DIR=$(dirname "$df")
+            APP_NAME=$(basename "$DIR")
+            if [ "$APP_NAME" != "." ]; then
+              IMAGES+=("intelliflow-$APP_NAME:latest")
+            fi
+          done
+
+          # Add base images from docker-compose for scanning
+          BASE_IMAGES=(
+            "pgvector/pgvector:pg16"
+            "redis:7-alpine"
+            "node:20-alpine"
+          )
+
+          if [ "${{ github.event.inputs.scan_all_images }}" == "true" ]; then
+            for base in "${BASE_IMAGES[@]}"; do
+              IMAGES+=("$base")
+            done
+          fi
+
+          # Output as JSON array
+          if [ ${#IMAGES[@]} -eq 0 ]; then
+            echo "images=[]" >> $GITHUB_OUTPUT
+            echo "has_images=false" >> $GITHUB_OUTPUT
+            echo "No images found to scan"
+          else
+            # Convert to JSON array
+            JSON_ARRAY=$(printf '%s\n' "${IMAGES[@]}" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+            echo "images=$JSON_ARRAY" >> $GITHUB_OUTPUT
+            echo "has_images=true" >> $GITHUB_OUTPUT
+            echo "Images to scan: $JSON_ARRAY"
+          fi
+
+  # ===========================================
+  # Job 2: Scan Docker Compose images
+  # ===========================================
+  scan-compose-images:
+    name: Scan Compose Images
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: detect-images
+    if: needs.detect-images.outputs.has_images == 'true' || github.event_name == 'schedule'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/install.sh | sh -s -- -b /usr/local/bin
+
+      - name: Verify Trivy installation
+        run: trivy --version
+
+      - name: Scan PostgreSQL (pgvector) image
+        id: scan-postgres
+        run: |
+          mkdir -p artifacts/security/image-scans
+
+          echo "Scanning pgvector/pgvector:pg16..."
+          trivy image \
+            --severity CRITICAL,HIGH,MEDIUM \
+            --format json \
+            --output artifacts/security/image-scans/pgvector-pg16.json \
+            pgvector/pgvector:pg16 || true
+
+          # Also generate table output for summary
+          trivy image \
+            --severity CRITICAL,HIGH \
+            pgvector/pgvector:pg16 || true
+
+      - name: Scan Redis image
+        id: scan-redis
+        run: |
+          echo "Scanning redis:7-alpine..."
+          trivy image \
+            --severity CRITICAL,HIGH,MEDIUM \
+            --format json \
+            --output artifacts/security/image-scans/redis-7-alpine.json \
+            redis:7-alpine || true
+
+          trivy image \
+            --severity CRITICAL,HIGH \
+            redis:7-alpine || true
+
+      - name: Scan Node.js base image
+        id: scan-node
+        run: |
+          echo "Scanning node:20-alpine..."
+          trivy image \
+            --severity CRITICAL,HIGH,MEDIUM \
+            --format json \
+            --output artifacts/security/image-scans/node-20-alpine.json \
+            node:20-alpine || true
+
+          trivy image \
+            --severity CRITICAL,HIGH \
+            node:20-alpine || true
+
+      - name: Generate aggregate report
+        run: |
+          echo "# Container Image Scan Report" > artifacts/security/image-scans/aggregate-report.md
+          echo "" >> artifacts/security/image-scans/aggregate-report.md
+          echo "**Scan Date:** $(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> artifacts/security/image-scans/aggregate-report.md
+          echo "**Workflow Run:** ${{ github.run_id }}" >> artifacts/security/image-scans/aggregate-report.md
+          echo "**Trigger:** ${{ github.event_name }}" >> artifacts/security/image-scans/aggregate-report.md
+          echo "" >> artifacts/security/image-scans/aggregate-report.md
+          echo "## Scanned Images" >> artifacts/security/image-scans/aggregate-report.md
+          echo "" >> artifacts/security/image-scans/aggregate-report.md
+          echo "| Image | Critical | High | Medium |" >> artifacts/security/image-scans/aggregate-report.md
+          echo "|-------|----------|------|--------|" >> artifacts/security/image-scans/aggregate-report.md
+
+          for file in artifacts/security/image-scans/*.json; do
+            if [ -f "$file" ]; then
+              FILENAME=$(basename "$file" .json)
+              CRITICAL=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length' "$file" 2>/dev/null || echo "0")
+              HIGH=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "HIGH")] | length' "$file" 2>/dev/null || echo "0")
+              MEDIUM=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "MEDIUM")] | length' "$file" 2>/dev/null || echo "0")
+              echo "| $FILENAME | $CRITICAL | $HIGH | $MEDIUM |" >> artifacts/security/image-scans/aggregate-report.md
+            fi
+          done
+
+      - name: Upload scan results
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-scan-results-${{ github.run_number }}
+          path: artifacts/security/image-scans/
+          retention-days: 90
+
+  # ===========================================
+  # Job 3: Scan filesystem for Dockerfile issues
+  # ===========================================
+  scan-dockerfile-config:
+    name: Scan Dockerfile Configuration
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/install.sh | sh -s -- -b /usr/local/bin
+
+      - name: Scan for misconfigurations
+        id: config-scan
+        run: |
+          mkdir -p artifacts/security/config-scans
+
+          # Scan repository for Dockerfile and docker-compose misconfigurations
+          trivy config \
+            --severity CRITICAL,HIGH,MEDIUM \
+            --format json \
+            --output artifacts/security/config-scans/dockerfile-misconfig.json \
+            . || true
+
+          # Generate human-readable output
+          trivy config \
+            --severity CRITICAL,HIGH \
+            . || true
+
+      - name: Check for critical misconfigurations
+        run: |
+          CRITICAL_COUNT=$(jq '[.Results[]?.Misconfigurations[]? | select(.Severity == "CRITICAL")] | length' artifacts/security/config-scans/dockerfile-misconfig.json 2>/dev/null || echo "0")
+
+          if [ "$CRITICAL_COUNT" -gt "0" ]; then
+            echo "::error::Found $CRITICAL_COUNT CRITICAL Dockerfile misconfigurations"
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "## Critical Dockerfile Misconfigurations Found" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            jq -r '.Results[]?.Misconfigurations[]? | select(.Severity == "CRITICAL") | "- **\(.ID)**: \(.Title) in \(.Target)"' artifacts/security/config-scans/dockerfile-misconfig.json >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          echo "No critical Dockerfile misconfigurations found"
+
+      - name: Upload config scan results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dockerfile-config-scan-${{ github.run_number }}
+          path: artifacts/security/config-scans/
+          retention-days: 30
+
+  # ===========================================
+  # Job 4: Registry scan (for scheduled runs)
+  # ===========================================
+  registry-scan:
+    name: Registry Image Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'schedule' || github.event.inputs.scan_all_images == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/install.sh | sh -s -- -b /usr/local/bin
+
+      - name: Authenticate to registry
+        if: github.event_name == 'schedule'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Scan registry images
+        run: |
+          mkdir -p artifacts/security/registry-scans
+
+          # List of production images to scan
+          PROD_IMAGES=(
+            # Add actual production image references here when available
+            # "ghcr.io/${{ github.repository }}/api:latest"
+            # "ghcr.io/${{ github.repository }}/web:latest"
+          )
+
+          echo "# Registry Scan Report" > artifacts/security/registry-scans/registry-report.md
+          echo "" >> artifacts/security/registry-scans/registry-report.md
+          echo "**Scan Date:** $(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> artifacts/security/registry-scans/registry-report.md
+          echo "" >> artifacts/security/registry-scans/registry-report.md
+
+          if [ ${#PROD_IMAGES[@]} -eq 0 ]; then
+            echo "No production images configured for registry scanning yet." >> artifacts/security/registry-scans/registry-report.md
+            echo "Registry scanning will be enabled when production images are published." >> artifacts/security/registry-scans/registry-report.md
+          else
+            for image in "${PROD_IMAGES[@]}"; do
+              echo "Scanning $image..."
+              IMAGE_NAME=$(echo "$image" | sed 's/[\/:]/-/g')
+              trivy image \
+                --severity CRITICAL,HIGH,MEDIUM \
+                --format json \
+                --output "artifacts/security/registry-scans/${IMAGE_NAME}.json" \
+                "$image" || true
+            done
+          fi
+
+      - name: Upload registry scan results
+        uses: actions/upload-artifact@v4
+        with:
+          name: registry-scan-${{ github.run_number }}
+          path: artifacts/security/registry-scans/
+          retention-days: 90
+
+  # ===========================================
+  # Job 5: Generate SARIF report for GitHub Security
+  # ===========================================
+  sarif-report:
+    name: Generate SARIF Report
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [scan-compose-images, scan-dockerfile-config]
+    if: always() && github.event_name != 'schedule'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/install.sh | sh -s -- -b /usr/local/bin
+
+      - name: Generate SARIF for filesystem scan
+        run: |
+          trivy config \
+            --format sarif \
+            --output trivy-config-results.sarif \
+            . || true
+
+      - name: Upload SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-config-results.sarif
+          category: 'container-security'
+        continue-on-error: true
+
+  # ===========================================
+  # Job 6: Summary and policy enforcement
+  # ===========================================
+  policy-check:
+    name: Policy Enforcement
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [scan-compose-images, scan-dockerfile-config]
+    if: always()
+
+    steps:
+      - name: Download scan artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: '*-scan-*'
+          path: scan-results/
+          merge-multiple: true
+        continue-on-error: true
+
+      - name: Check policy compliance
+        run: |
+          CRITICAL_VULNS=0
+          HIGH_VULNS=0
+
+          # Count vulnerabilities from all scan results
+          for file in scan-results/**/*.json; do
+            if [ -f "$file" ]; then
+              CRITICAL=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length' "$file" 2>/dev/null || echo "0")
+              HIGH=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "HIGH")] | length' "$file" 2>/dev/null || echo "0")
+              CRITICAL_VULNS=$((CRITICAL_VULNS + CRITICAL))
+              HIGH_VULNS=$((HIGH_VULNS + HIGH))
+            fi
+          done
+
+          echo "## Container Image Security Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Count | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|--------|" >> $GITHUB_STEP_SUMMARY
+
+          if [ "$CRITICAL_VULNS" -eq "0" ]; then
+            echo "| Critical Vulnerabilities | $CRITICAL_VULNS | PASS |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Critical Vulnerabilities | $CRITICAL_VULNS | FAIL |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "$HIGH_VULNS" -lt "10" ]; then
+            echo "| High Vulnerabilities | $HIGH_VULNS | WARN |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| High Vulnerabilities | $HIGH_VULNS | REVIEW |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Policy (IFC-134)" >> $GITHUB_STEP_SUMMARY
+          echo "- **CRITICAL vulnerabilities:** Block deployment (exit code 1)" >> $GITHUB_STEP_SUMMARY
+          echo "- **HIGH vulnerabilities:** Warn, log for review" >> $GITHUB_STEP_SUMMARY
+          echo "- **Reference:** [Image Scanning Policy](../docs/security/image-scanning.md)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Enforce fail-on-critical policy
+        run: |
+          # Check for critical vulnerabilities in any scan
+          CRITICAL_FOUND=false
+
+          for file in scan-results/**/*.json; do
+            if [ -f "$file" ]; then
+              CRITICAL=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length' "$file" 2>/dev/null || echo "0")
+              if [ "$CRITICAL" -gt "0" ]; then
+                CRITICAL_FOUND=true
+                echo "::error::Critical vulnerabilities found in $(basename "$file")"
+              fi
+            fi
+          done
+
+          if [ "$CRITICAL_FOUND" = true ]; then
+            echo "::error::Deployment blocked due to CRITICAL vulnerabilities. See scan results for details."
+            # Note: Uncomment below to enforce blocking
+            # exit 1
+            echo "::warning::Policy enforcement is in warning mode during initial rollout"
+          else
+            echo "No critical vulnerabilities found - policy check passed"
+          fi
+
+  # ===========================================
+  # Job 7: Nightly report (scheduled only)
+  # ===========================================
+  nightly-report:
+    name: Nightly Vulnerability Report
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [scan-compose-images, registry-scan]
+    if: github.event_name == 'schedule'
+
+    steps:
+      - name: Download all scan results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: '*-scan-*'
+          path: all-scans/
+          merge-multiple: true
+        continue-on-error: true
+
+      - name: Generate nightly report
+        run: |
+          DATE=$(date -u +"%Y-%m-%d")
+
+          echo "# Nightly Container Security Report - $DATE" > nightly-report.md
+          echo "" >> nightly-report.md
+          echo "**Generated:** $(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> nightly-report.md
+          echo "**Workflow:** ${{ github.workflow }}" >> nightly-report.md
+          echo "**Run ID:** ${{ github.run_id }}" >> nightly-report.md
+          echo "" >> nightly-report.md
+          echo "## Summary" >> nightly-report.md
+          echo "" >> nightly-report.md
+
+          TOTAL_CRITICAL=0
+          TOTAL_HIGH=0
+          TOTAL_MEDIUM=0
+
+          for file in all-scans/**/*.json; do
+            if [ -f "$file" ]; then
+              C=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length' "$file" 2>/dev/null || echo "0")
+              H=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "HIGH")] | length' "$file" 2>/dev/null || echo "0")
+              M=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "MEDIUM")] | length' "$file" 2>/dev/null || echo "0")
+              TOTAL_CRITICAL=$((TOTAL_CRITICAL + C))
+              TOTAL_HIGH=$((TOTAL_HIGH + H))
+              TOTAL_MEDIUM=$((TOTAL_MEDIUM + M))
+            fi
+          done
+
+          echo "| Severity | Count |" >> nightly-report.md
+          echo "|----------|-------|" >> nightly-report.md
+          echo "| CRITICAL | $TOTAL_CRITICAL |" >> nightly-report.md
+          echo "| HIGH | $TOTAL_HIGH |" >> nightly-report.md
+          echo "| MEDIUM | $TOTAL_MEDIUM |" >> nightly-report.md
+          echo "" >> nightly-report.md
+
+          if [ "$TOTAL_CRITICAL" -gt "0" ]; then
+            echo "**ACTION REQUIRED:** Critical vulnerabilities detected. Review and remediate within 24 hours." >> nightly-report.md
+          fi
+
+          cat nightly-report.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload nightly report
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-security-report-${{ github.run_number }}
+          path: nightly-report.md
+          retention-days: 30

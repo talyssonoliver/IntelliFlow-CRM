@@ -1,0 +1,45 @@
+Category,Vendor,Product,Type,Pricing Model,Monthly Cost (10K Users),Setup Time (Days),Migration Effort (Weeks),Data Residency,Uptime SLA,Notes
+Database,Current,Supabase PostgreSQL,PostgreSQL,Pay-as-you-go,450,0,0,US/EU,99.5%,Current choice - well-integrated
+Database,Alternative 1,AWS RDS PostgreSQL,PostgreSQL,Reserved/On-Demand,320,2,1,Multi-region,99.95%,Cost-effective for scale
+Database,Alternative 2,Google Cloud SQL,PostgreSQL,Commitment/On-Demand,380,2,1,Multi-region,99.5%,Excellent integration with GCP
+Database,Alternative 3,Azure Database,PostgreSQL,Pay-as-you-go,400,2,1,Multi-region,99.95%,Strong RBAC integration
+Database,Alternative 4,PlanetScale,MySQL,Pay-as-you-go,380,1,2,US,99.95%,Modern MySQL with sharding
+Database,Alternative 5,MongoDB Atlas,MongoDB,Pay-as-you-go,520,1,4,Multi-region,99.95%,NoSQL - requires schema redesign
+Database,Alternative 6,CockroachDB,PostgreSQL,Enterprise,450,2,2,Multi-region,99.99%,Distributed SQL - complex setup
+Database,Alternative 7,Self-Hosted (EC2),PostgreSQL,Infrastructure,250,3,2,Custom,Variable,Operational overhead required
+Authentication,Current,Supabase Auth,OAuth2/SAML,Included in Supabase,0,0,0,US/EU,99.5%,Current choice - native integration
+Authentication,Alternative 1,Auth0,OAuth2/OIDC,Per monthly actives,150,1,1,Multi-region,99.95%,Industry standard - excellent UX
+Authentication,Alternative 2,Keycloak,OAuth2/OIDC,Open Source,0,3,2,Self-hosted,Variable,Self-managed deployment
+Authentication,Alternative 3,Okta,OAuth2/SAML,Subscription,300,2,2,Multi-region,99.99%,Enterprise-grade IAM
+Authentication,Alternative 4,AWS Cognito,OAuth2/OIDC,Pay-per-user,80,2,2,Multi-region,99.99%,Good for AWS-native stacks
+Authentication,Alternative 5,Azure AD,OAuth2/OIDC,Included,0,2,2,Multi-region,99.9%,Best for Microsoft ecosystem
+Authentication,Alternative 6,Firebase Auth,OAuth2/Custom,Included,0,1,3,Multi-region,99.9%,Firebase ecosystem required
+Authentication,Alternative 7,Clerk,OAuth2/OIDC,Per monthly actives,120,1,1,Multi-region,99.95%,Modern alternative to Auth0
+Hosting,Current,Vercel,Serverless (Node.js),Pay-as-you-go,200,0,0,Global CDN,99.95%,Current choice - excellent DX
+Hosting,Alternative 1,Railway,Container Platform,Monthly Plan,100,1,1,US,99.9%,Simple deployment - good for MVP
+Hosting,Alternative 2,Render,Container Platform,Monthly Plan,120,1,1,US,99.99%,Similar to Railway - excellent DX
+Hosting,Alternative 3,DigitalOcean App,Container Platform,Monthly Plan,150,1,1,US/EU,99.99%,Cost-effective for stable traffic
+Hosting,Alternative 4,AWS Lambda,Serverless,Pay-per-invocation,180,3,2,Multi-region,99.99%,Pay-as-you-go for variable load
+Hosting,Alternative 5,Google Cloud Run,Serverless,Pay-per-request,170,3,2,Multi-region,99.95%,Good containerization support
+Hosting,Alternative 6,Azure Container,Serverless,Pay-per-invocation,160,3,2,Multi-region,99.99%,Strong enterprise integration
+Hosting,Alternative 7,Self-Hosted K8s,On-Premise,Infrastructure,300,10,3,Custom,Variable,Maximum control - operational overhead
+Hosting,Alternative 8,AWS EC2,Traditional VMs,On-Demand,280,4,3,Multi-region,99.99%,Traditional approach - mature
+Observability,Current,Sentry + OpenTelemetry,Monitoring,Pay-per-event,100,1,0,US/EU,99.99%,Current choice - comprehensive
+Observability,Alternative 1,Datadog,Monitoring,Pay-per-host,200,1,1,Multi-region,99.99%,Industry leader - full-stack
+Observability,Alternative 2,New Relic,Monitoring,Ingestion-based,180,1,1,Multi-region,99.95%,Strong APM capabilities
+Observability,Alternative 3,Grafana Cloud,Monitoring,Usage-based,120,1,1,Multi-region,99.9%,Open source foundation
+Observability,Alternative 4,Honeycomb,Observability,Events-based,140,1,1,Multi-region,99.99%,Modern observability approach
+CDN,Current,Vercel CDN,Global CDN,Included,0,0,0,Global,99.95%,Integrated with Vercel hosting
+CDN,Alternative 1,Cloudflare,Global CDN,Flexible Pricing,50,1,0,Global,99.99%,Excellent DDoS protection
+CDN,Alternative 2,AWS CloudFront,Global CDN,Pay-per-GB,80,1,0,Multi-region,99.99%,AWS-native option
+CDN,Alternative 3,Akamai,Global CDN,Enterprise,500,2,1,Global,99.99%,Enterprise-grade - expensive
+CDN,Alternative 4,Fastly,Global CDN,Pay-per-usage,60,1,0,Global,99.99%,Developer-friendly API
+Storage,Current,Supabase Storage,Object Storage,Pay-per-GB,0.025,0,0,US,99.5%,Integrated with Supabase
+Storage,Alternative 1,AWS S3,Object Storage,Pay-per-GB,0.023,1,1,Multi-region,99.99%,Most reliable - lowest cost
+Storage,Alternative 2,Google Cloud Storage,Object Storage,Pay-per-GB,0.020,1,1,Multi-region,99.99%,Competitive pricing
+Storage,Alternative 3,Azure Blob,Object Storage,Pay-per-GB,0.018,1,1,Multi-region,99.99%,Lowest cost for storage
+Storage,Alternative 4,Cloudflare R2,Object Storage,Pay-per-GB,0.015,1,1,Global,99.99%,No egress fees - lowest TCO
+Caching,Current,Redis (Upstash),In-memory Cache,Serverless Model,50,0,0,Global,99.9%,Integrated with Vercel eco
+Caching,Alternative 1,ElastiCache,In-memory Cache,Monthly Commitment,80,2,1,Multi-region,99.99%,AWS-native option
+Caching,Alternative 2,Memcachier,Managed Cache,Pay-per-MB,60,1,1,Multi-region,99.95%,Heroku-friendly alternative
+Caching,Alternative 3,AWS MemoryDB,In-memory,Monthly Commitment,120,2,1,Multi-region,99.99%,Redis-compatible newer service

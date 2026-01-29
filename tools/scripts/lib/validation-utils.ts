@@ -1,0 +1,940 @@
+/**
+ * Shared Validation Utilities for IntelliFlow CRM
+ *
+ * Provides:
+ * - Strict mode handling (--strict flag, VALIDATION_STRICT env)
+ * - Consistent logging with severity levels
+ * - CSV parsing and path resolution
+ * - Git-based hygiene checks
+ * - Cross-platform shell execution
+ *
+ * @module tools/scripts/lib/validation-utils
+ */
+
+import { existsSync, readFileSync } from 'node:fs';
+import * as childProcess from 'node:child_process';
+import type { ExecSyncOptionsWithStringEncoding } from 'node:child_process';
+import { resolve, join } from 'node:path';
+
+// ============================================================================
+// Types
+// ============================================================================
+
+export type Severity = 'PASS' | 'WARN' | 'FAIL' | 'INFO' | 'SKIP';
+
+export interface GateResult {
+  name: string;
+  severity: Severity;
+  message: string;
+  details?: string[];
+}
+
+export interface ValidationSummary {
+  gates: GateResult[];
+  passCount: number;
+  warnCount: number;
+  failCount: number;
+  skipCount: number;
+}
+
+export interface SprintTask {
+  'Task ID': string;
+  Status: string;
+  Description: string;
+  'Target Sprint': string;
+  Section?: string;
+  [key: string]: string | undefined;
+}
+
+// ============================================================================
+// ANSI Colors
+// ============================================================================
+
+const COLORS = {
+  reset: '\x1b[0m',
+  bold: '\x1b[1m',
+  red: '\x1b[31m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  cyan: '\x1b[36m',
+  gray: '\x1b[90m',
+} as const;
+
+const useColors =
+  process.stdout.isTTY &&
+  process.env.NO_COLOR === undefined &&
+  process.env.FORCE_COLOR !== '0' &&
+  process.env.TERM !== 'dumb';
+
+function colorize(text: string, color: keyof typeof COLORS): string {
+  if (!useColors) return text;
+  return `${COLORS[color]}${text}${COLORS.reset}`;
+}
+
+// ============================================================================
+// Strict Mode
+// ============================================================================
+
+/**
+ * Determine if strict mode is enabled via CLI flag or environment variable.
+ */
+export function isStrictMode(): boolean {
+  const args = process.argv.slice(2);
+  const hasFlag = args.includes('--strict') || args.includes('-s');
+  const hasEnv = process.env.VALIDATION_STRICT === '1' || process.env.VALIDATION_STRICT === 'true';
+  return hasFlag || hasEnv;
+}
+
+/**
+ * In strict mode, WARN becomes FAIL. Otherwise, WARN stays WARN.
+ */
+export function effectiveSeverity(severity: Severity): Severity {
+  if (severity === 'WARN' && isStrictMode()) {
+    return 'FAIL';
+  }
+  return severity;
+}
+
+// ============================================================================
+// Logging
+// ============================================================================
+
+const SEVERITY_TOKENS: Record<Severity, string> = {
+  PASS: '[PASS]',
+  WARN: '[WARN]',
+  FAIL: '[FAIL]',
+  INFO: '[INFO]',
+  SKIP: '[SKIP]',
+};
+
+const SEVERITY_COLORS: Record<Severity, keyof typeof COLORS> = {
+  PASS: 'green',
+  WARN: 'yellow',
+  FAIL: 'red',
+  INFO: 'blue',
+  SKIP: 'gray',
+};
+
+export function log(message: string, color: keyof typeof COLORS = 'reset'): void {
+  console.log(colorize(message, color));
+}
+
+export function logGate(result: GateResult): void {
+  const effective = effectiveSeverity(result.severity);
+  const token = SEVERITY_TOKENS[effective];
+  const color = SEVERITY_COLORS[effective];
+  log(`${token} ${result.name}: ${result.message}`, color);
+
+  if (result.details && result.details.length > 0) {
+    for (const detail of result.details.slice(0, 10)) {
+      log(`       ${detail}`, 'gray');
+    }
+    if (result.details.length > 10) {
+      log(`       ... and ${result.details.length - 10} more`, 'gray');
+    }
+  }
+}
+
+export function logSection(title: string): void {
+  log(`\n${colorize(title, 'cyan')}`);
+}
+
+export function logHeader(title: string): void {
+  const line = '='.repeat(70);
+  log(colorize(line, 'bold'));
+  log(colorize(title, 'bold'));
+  log(colorize(line, 'bold'));
+}
+
+// ============================================================================
+// Shell / Git helpers
+// ============================================================================
+
+function splitLines(output: string): string[] {
+  return output
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function formatExecError(error: unknown): string {
+  if (!(error instanceof Error)) return String(error);
+
+  const maybe = error as Error & {
+    status?: number;
+    stderr?: Buffer | string;
+  };
+
+  const status = typeof maybe.status === 'number' ? `exit ${maybe.status}` : null;
+  const stderr =
+    typeof maybe.stderr === 'string'
+      ? maybe.stderr.trim()
+      : Buffer.isBuffer(maybe.stderr)
+        ? maybe.stderr.toString('utf-8').trim()
+        : null;
+
+  return [maybe.message, status, stderr].filter(Boolean).join(' | ');
+}
+
+export type ExecSyncFn = (command: string, options: ExecSyncOptionsWithStringEncoding) => string;
+
+function execCommand(
+  repoRoot: string,
+  cmd: string,
+  execSyncFn: ExecSyncFn = childProcess.execSync as ExecSyncFn
+): { stdout: string; error?: string } {
+  try {
+    const stdout = execSyncFn(cmd, {
+      cwd: repoRoot,
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    return { stdout: stdout.trim() };
+  } catch (error) {
+    return { stdout: '', error: formatExecError(error) };
+  }
+}
+
+function normalizeRepoPath(filePath: string): string {
+  return filePath.replace(/\\/g, '/').trim();
+}
+
+export function listGitTrackedFiles(repoRoot: string): { files: string[]; error?: string } {
+  const result = execCommand(repoRoot, 'git ls-files');
+  if (result.error) return { files: [], error: result.error };
+  return { files: splitLines(result.stdout).map(normalizeRepoPath) };
+}
+
+export function listGitTrackedFilesInPath(
+  repoRoot: string,
+  searchPath: string,
+  execSyncFn?: ExecSyncFn
+): { files: string[]; error?: string } {
+  const result = execCommand(repoRoot, `git ls-files "${searchPath}"`, execSyncFn);
+  if (result.error) return { files: [], error: result.error };
+  if (!result.stdout) return { files: [] };
+  return { files: splitLines(result.stdout).map(normalizeRepoPath) };
+}
+
+export function listGitIgnoredFiles(
+  repoRoot: string,
+  searchPath: string,
+  execSyncFn?: ExecSyncFn
+): { files: string[]; error?: string } {
+  const result = execCommand(
+    repoRoot,
+    `git ls-files -o -i --exclude-standard "${searchPath}"`,
+    execSyncFn
+  );
+  if (result.error) return { files: [], error: result.error };
+  if (!result.stdout) return { files: [] };
+  return { files: splitLines(result.stdout).map(normalizeRepoPath) };
+}
+
+export function listGitUntrackedFiles(
+  repoRoot: string,
+  searchPath: string,
+  execSyncFn?: ExecSyncFn
+): { files: string[]; error?: string } {
+  const result = execCommand(
+    repoRoot,
+    `git ls-files -o --exclude-standard "${searchPath}"`,
+    execSyncFn
+  );
+  if (result.error) return { files: [], error: result.error };
+  if (!result.stdout) return { files: [] };
+  return { files: splitLines(result.stdout).map(normalizeRepoPath) };
+}
+
+export function listGitIgnoredOrUntrackedFiles(
+  repoRoot: string,
+  searchPath: string,
+  execSyncFn?: ExecSyncFn
+): { files: string[]; error?: string } {
+  const ignored = listGitIgnoredFiles(repoRoot, searchPath, execSyncFn);
+  if (ignored.error) return { files: [], error: ignored.error };
+
+  const untracked = listGitUntrackedFiles(repoRoot, searchPath, execSyncFn);
+  if (untracked.error) return { files: [], error: untracked.error };
+
+  const merged = [...ignored.files, ...untracked.files];
+  const uniq = Array.from(new Set(merged.map(normalizeRepoPath))).sort();
+  return { files: uniq };
+}
+
+// ============================================================================
+// CSV Path Resolution
+// ============================================================================
+
+const CANONICAL_CSV_PATH = 'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv';
+const FALLBACK_CSV_PATH = 'Sprint_plan.csv';
+
+/**
+ * Resolve the canonical Sprint_plan.csv path.
+ *
+ * Priority:
+ * 1) SPRINT_PLAN_PATH env variable (absolute or repo-relative)
+ * 2) apps/project-tracker/docs/metrics/_global/Sprint_plan.csv
+ * 3) Sprint_plan.csv at repo root
+ * 4) null if none found
+ */
+export function resolveSprintPlanPath(repoRoot: string): string | null {
+  // Priority 1: Environment variable
+  const envPath = process.env.SPRINT_PLAN_PATH;
+  if (envPath) {
+    const resolved = resolve(repoRoot, envPath);
+    if (existsSync(resolved)) {
+      return resolved;
+    }
+    log(`[WARN] SPRINT_PLAN_PATH="${envPath}" does not exist`, 'yellow');
+  }
+
+  // Priority 2: Canonical location
+  const canonicalPath = join(repoRoot, CANONICAL_CSV_PATH);
+  if (existsSync(canonicalPath)) {
+    return canonicalPath;
+  }
+
+  // Priority 3: Root fallback
+  const fallbackPath = join(repoRoot, FALLBACK_CSV_PATH);
+  if (existsSync(fallbackPath)) {
+    return fallbackPath;
+  }
+
+  return null;
+}
+
+/**
+ * Get the metrics directory path.
+ */
+export function getMetricsDir(repoRoot: string): string {
+  return join(repoRoot, 'apps/project-tracker/docs/metrics');
+}
+
+// ============================================================================
+// CSV Parsing
+// ============================================================================
+
+/**
+ * Parse CSV content into task objects.
+ * Returns tasks and any parse errors.
+ */
+export function parseSprintCsv(csvContent: string): { tasks: SprintTask[]; errors: string[] } {
+  const errors: string[] = [];
+  const lines = csvContent.split(/\r?\n/).filter((line) => line.trim());
+
+  if (lines.length === 0) {
+    errors.push('CSV file is empty');
+    return { tasks: [], errors };
+  }
+
+  // Parse header - handle BOM
+  const headerLine = lines[0].replace(/^\uFEFF/, '');
+  const headers = parseCSVLine(headerLine);
+
+  // Required headers
+  const requiredHeaders = ['Task ID', 'Status', 'Target Sprint'];
+  for (const req of requiredHeaders) {
+    if (!headers.includes(req)) {
+      errors.push(`Missing required CSV header: "${req}"`);
+    }
+  }
+
+  if (errors.length > 0) {
+    return { tasks: [], errors };
+  }
+
+  // Parse data rows
+  const tasks: SprintTask[] = [];
+  for (let i = 1; i < lines.length; i++) {
+    const values = parseCSVLine(lines[i]);
+    if (values.length === 0 || (values.length === 1 && values[0] === '')) continue;
+
+    const task: SprintTask = {
+      'Task ID': '',
+      Status: '',
+      Description: '',
+      'Target Sprint': '',
+    };
+
+    for (let j = 0; j < headers.length; j++) {
+      task[headers[j]] = values[j] || '';
+    }
+
+    if (task['Task ID']) {
+      tasks.push(task);
+    }
+  }
+
+  return { tasks, errors };
+}
+
+/**
+ * Simple CSV line parser that handles quoted fields.
+ */
+function parseCSVLine(line: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+
+  result.push(current.trim());
+  return result;
+}
+
+// ============================================================================
+// Sprint Completion Check
+// ============================================================================
+
+const COMPLETED_STATUSES = ['Done', 'Completed'];
+
+export interface CompletionResult {
+  isComplete: boolean;
+  totalTasks: number;
+  completedTasks: number;
+  incompleteTasks: SprintTask[];
+}
+
+/**
+ * Check if a sprint is complete (all tasks Done/Completed).
+ */
+export function checkSprintCompletion(tasks: SprintTask[], targetSprint: string): CompletionResult {
+  const sprintTasks = tasks.filter((t) => String(t['Target Sprint']) === targetSprint);
+  const completedTasks = sprintTasks.filter((t) => COMPLETED_STATUSES.includes(t.Status));
+  const incompleteTasks = sprintTasks.filter((t) => !COMPLETED_STATUSES.includes(t.Status));
+
+  return {
+    isComplete: incompleteTasks.length === 0 && sprintTasks.length > 0,
+    totalTasks: sprintTasks.length,
+    completedTasks: completedTasks.length,
+    incompleteTasks,
+  };
+}
+
+// ============================================================================
+// Hygiene Checks (Git-based)
+// ============================================================================
+
+const DEFAULT_HYGIENE_ALLOWLIST = ['apps/project-tracker/docs/.specify/'];
+const HYGIENE_ALLOWLIST_CONFIG_PATH = 'tools/scripts/hygiene-allowlist.json';
+
+/**
+ * Load hygiene allowlist entries from an optional config file, extending defaults.
+ * Supports JSON array (`string[]`) or `{ "allowlist": string[] }`.
+ */
+export function getHygieneAllowlist(repoRoot: string): string[] {
+  const configPath = join(repoRoot, HYGIENE_ALLOWLIST_CONFIG_PATH);
+  if (!existsSync(configPath)) return DEFAULT_HYGIENE_ALLOWLIST;
+
+  try {
+    const raw = readFileSync(configPath, 'utf-8');
+    const parsed: unknown = JSON.parse(raw.replace(/^\uFEFF/, ''));
+
+    const entries = Array.isArray(parsed)
+      ? parsed
+      : parsed && typeof parsed === 'object' && 'allowlist' in (parsed as Record<string, unknown>)
+        ? (parsed as { allowlist: unknown }).allowlist
+        : null;
+
+    if (!Array.isArray(entries)) {
+      log(
+        `[WARN] Hygiene allowlist config has invalid shape: ${HYGIENE_ALLOWLIST_CONFIG_PATH}`,
+        'yellow'
+      );
+      return DEFAULT_HYGIENE_ALLOWLIST;
+    }
+
+    const extra = entries.filter((v): v is string => typeof v === 'string' && v.trim().length > 0);
+    return [...DEFAULT_HYGIENE_ALLOWLIST, ...extra];
+  } catch (error) {
+    log(
+      `[WARN] Could not parse hygiene allowlist config: ${HYGIENE_ALLOWLIST_CONFIG_PATH} (${formatExecError(error)})`,
+      'yellow'
+    );
+    return DEFAULT_HYGIENE_ALLOWLIST;
+  }
+}
+
+export function matchForbiddenDocsRuntimeArtifacts(
+  repoRelativePaths: string[],
+  forbiddenPatterns: string[] = ['.locks', '.status', 'logs', 'backups', 'artifacts']
+): string[] {
+  const forbiddenSegments = forbiddenPatterns
+    .map((p) => p.replace(/^\/+|\/+$/g, ''))
+    .filter(Boolean);
+  const forbiddenMetricsFileSuffixes = ['.lock', '.log', '.tmp', '.bak', '.heartbeat', '.input'];
+
+  return repoRelativePaths.map(normalizeRepoPath).filter((file) => {
+    if (file.startsWith('apps/project-tracker/docs/artifacts/')) {
+      // Allow gitkeep placeholders; everything else under docs/artifacts is treated as runtime output.
+      if (file.endsWith('/.gitkeep')) return false;
+      return true;
+    }
+
+    if (file.startsWith('apps/project-tracker/docs/metrics/')) {
+      if (forbiddenSegments.some((segment) => file.includes(`/${segment}/`))) return true;
+      return forbiddenMetricsFileSuffixes.some((suffix) => file.toLowerCase().endsWith(suffix));
+    }
+
+    return false;
+  });
+}
+
+/**
+ * Find forbidden docs runtime artifacts using git ls-files.
+ *
+ * Includes:
+ * - tracked files under the path (catches repo contamination)
+ * - ignored files under the path (catches runtime outputs hidden by .gitignore)
+ * - untracked files under the path (catches local-only runtime outputs)
+ */
+export function findIgnoredRuntimeArtifacts(
+  repoRoot: string,
+  searchPath: string,
+  forbiddenPatterns: string[] = ['.locks', '.status', 'logs', 'backups', 'artifacts'],
+  execSyncFn?: ExecSyncFn
+): { files: string[]; error?: string } {
+  const tracked = listGitTrackedFilesInPath(repoRoot, searchPath, execSyncFn);
+  if (tracked.error) return { files: [], error: tracked.error };
+
+  const notTracked = listGitIgnoredOrUntrackedFiles(repoRoot, searchPath, execSyncFn);
+  if (notTracked.error) return { files: [], error: notTracked.error };
+
+  const all = [...tracked.files, ...notTracked.files];
+  const matches = matchForbiddenDocsRuntimeArtifacts(all, forbiddenPatterns);
+  const uniq = Array.from(new Set(matches.map(normalizeRepoPath))).sort();
+  return { files: uniq };
+}
+
+/**
+ * Allowlist patterns for hygiene check.
+ */
+/**
+ * Check if a path is allowed by the hygiene allowlist.
+ */
+export function isAllowedByHygieneAllowlist(
+  filePath: string,
+  allowlist: string[] = DEFAULT_HYGIENE_ALLOWLIST
+): boolean {
+  const normalized = filePath.replace(/\\/g, '/');
+  return allowlist.some((pattern) => normalized.startsWith(pattern));
+}
+
+// ============================================================================
+// Uniqueness Checks
+// ============================================================================
+
+const CANONICAL_ARTIFACTS = [
+  'Sprint_plan.csv',
+  'Sprint_plan.json',
+  'task-registry.json',
+  'dependency-graph.json',
+];
+
+export function evaluateCanonicalUniqueness(
+  trackedFiles: string[],
+  artifacts: string[] = CANONICAL_ARTIFACTS
+): GateResult[] {
+  const normalized = trackedFiles.map(normalizeRepoPath);
+
+  return artifacts.map((artifact) => {
+    const matches = normalized.filter((f) => f.endsWith(`/${artifact}`) || f === artifact);
+    const details = matches.length > 0 ? matches : undefined;
+
+    if (matches.length === 1) {
+      return {
+        name: `Uniqueness: ${artifact}`,
+        severity: 'PASS',
+        message: 'Exactly one tracked copy found',
+        details,
+      };
+    }
+
+    return {
+      name: `Uniqueness: ${artifact}`,
+      severity: 'FAIL',
+      message: `Found ${matches.length} tracked copies (expected exactly 1)`,
+      details,
+    };
+  });
+}
+
+/**
+ * Check that canonical source-of-truth files exist exactly once in tracked files.
+ */
+export function checkCanonicalUniqueness(repoRoot: string): GateResult[] {
+  const tracked = listGitTrackedFiles(repoRoot);
+  if (tracked.error) {
+    return [
+      {
+        name: 'Canonical Uniqueness',
+        severity: 'FAIL',
+        message: 'git ls-files failed; cannot verify tracked canonical artifacts',
+        details: [tracked.error],
+      },
+    ];
+  }
+
+  return evaluateCanonicalUniqueness(tracked.files);
+}
+
+// ============================================================================
+// Summary and Exit
+// ============================================================================
+
+/**
+ * Create a validation summary from gate results.
+ */
+export function createSummary(gates: GateResult[]): ValidationSummary {
+  let passCount = 0;
+  let warnCount = 0;
+  let failCount = 0;
+  let skipCount = 0;
+
+  for (const gate of gates) {
+    const effective = effectiveSeverity(gate.severity);
+    switch (effective) {
+      case 'PASS':
+        passCount++;
+        break;
+      case 'WARN':
+        warnCount++;
+        break;
+      case 'FAIL':
+        failCount++;
+        break;
+      case 'SKIP':
+        skipCount++;
+        break;
+    }
+  }
+
+  return { gates, passCount, warnCount, failCount, skipCount };
+}
+
+/**
+ * Print validation summary.
+ */
+export function printSummary(summary: ValidationSummary): void {
+  const line = '-'.repeat(70);
+  log(`\n${colorize(line, 'bold')}`);
+  log(colorize('Validation Summary', 'bold'));
+  log(colorize(line, 'bold'));
+
+  const mode = isStrictMode() ? 'STRICT' : 'DEFAULT';
+  log(`Mode: ${colorize(mode, isStrictMode() ? 'yellow' : 'blue')}`);
+  log(`PASS: ${colorize(String(summary.passCount), 'green')}`);
+  log(`WARN: ${colorize(String(summary.warnCount), 'yellow')}`);
+  log(`FAIL: ${colorize(String(summary.failCount), 'red')}`);
+  if (summary.skipCount > 0) {
+    log(`SKIP: ${colorize(String(summary.skipCount), 'gray')}`);
+  }
+
+  log(colorize(line, 'bold'));
+}
+
+/**
+ * Determine exit code based on summary.
+ * FAIL always exits 1.
+ * WARN exits 1 in strict mode, 0 otherwise.
+ */
+export function getExitCode(summary: ValidationSummary): number {
+  if (summary.failCount > 0) return 1;
+  if (summary.warnCount > 0 && isStrictMode()) return 1;
+  return 0;
+}
+
+// ============================================================================
+// Repository Root Detection
+// ============================================================================
+
+/**
+ * Find the repository root by looking for turbo.json or .git.
+ */
+export function findRepoRoot(startDir: string = process.cwd()): string {
+  let dir = startDir;
+  while (dir !== resolve(dir, '..')) {
+    if (existsSync(join(dir, 'turbo.json')) || existsSync(join(dir, '.git'))) {
+      return dir;
+    }
+    dir = resolve(dir, '..');
+  }
+  return startDir;
+}
+
+// ============================================================================
+// Sprint Start Gate
+// ============================================================================
+
+export interface SprintStartGateResult {
+  targetSprint: number;
+  prerequisiteSprints: number[];
+  allPrerequisitesComplete: boolean;
+  incompletePrerequisites: Array<{
+    sprint: number;
+    total: number;
+    completed: number;
+    incomplete: number;
+    incompleteTasks: string[];
+  }>;
+  gateResult: GateResult;
+}
+
+/**
+ * Check if all prior sprints are complete before allowing current sprint to start.
+ * This is the Sprint Start Gate that prevents premature sprint progression.
+ */
+export function checkSprintStartGate(
+  tasks: SprintTask[],
+  targetSprint: number
+): SprintStartGateResult {
+  const prerequisiteSprints = Array.from({ length: targetSprint }, (_, i) => i);
+  const incompletePrerequisites: SprintStartGateResult['incompletePrerequisites'] = [];
+
+  for (const sprint of prerequisiteSprints) {
+    const completion = checkSprintCompletion(tasks, String(sprint));
+    if (!completion.isComplete && completion.totalTasks > 0) {
+      incompletePrerequisites.push({
+        sprint,
+        total: completion.totalTasks,
+        completed: completion.completedTasks,
+        incomplete: completion.incompleteTasks.length,
+        incompleteTasks: completion.incompleteTasks.map((t) => t['Task ID']),
+      });
+    }
+  }
+
+  const allPrerequisitesComplete = incompletePrerequisites.length === 0;
+
+  let gateResult: GateResult;
+  if (targetSprint === 0) {
+    gateResult = {
+      name: 'Sprint Start Gate',
+      severity: 'PASS',
+      message: 'Sprint 0 has no prerequisites',
+    };
+  } else if (allPrerequisitesComplete) {
+    gateResult = {
+      name: 'Sprint Start Gate',
+      severity: 'PASS',
+      message: `All ${prerequisiteSprints.length} prerequisite sprint(s) are complete`,
+      details: prerequisiteSprints.map((s) => `Sprint ${s}: Complete`),
+    };
+  } else {
+    const details: string[] = [];
+    for (const prereq of incompletePrerequisites) {
+      details.push(`Sprint ${prereq.sprint}: ${prereq.incomplete}/${prereq.total} incomplete`);
+      for (const taskId of prereq.incompleteTasks.slice(0, 3)) {
+        details.push(`  - ${taskId}`);
+      }
+      if (prereq.incompleteTasks.length > 3) {
+        details.push(`  ... and ${prereq.incompleteTasks.length - 3} more`);
+      }
+    }
+
+    gateResult = {
+      name: 'Sprint Start Gate',
+      severity: 'WARN', // WARN in default mode, FAIL in strict
+      message: `${incompletePrerequisites.length} prerequisite sprint(s) have incomplete tasks`,
+      details,
+    };
+  }
+
+  return {
+    targetSprint,
+    prerequisiteSprints,
+    allPrerequisitesComplete,
+    incompletePrerequisites,
+    gateResult,
+  };
+}
+
+// ============================================================================
+// Audit Matrix Waiver Enforcement
+// ============================================================================
+
+export interface AuditTool {
+  id: string;
+  tier: number;
+  enabled: boolean;
+  required: boolean;
+  owner: string;
+  command: string | null;
+  requires_env?: string[];
+}
+
+export interface AuditMatrixResult {
+  tools: AuditTool[];
+  disabledButRequired: AuditTool[];
+  missingWaivers: string[];
+  gateResult: GateResult;
+}
+
+/**
+ * Parse audit-matrix.yml and check for disabled but required tools.
+ * Returns a gate result that WARN/FAILs if required tools are disabled without waivers.
+ */
+export function checkAuditMatrixWaivers(repoRoot: string): AuditMatrixResult {
+  const matrixPath = join(repoRoot, 'audit-matrix.yml');
+
+  if (!existsSync(matrixPath)) {
+    return {
+      tools: [],
+      disabledButRequired: [],
+      missingWaivers: [],
+      gateResult: {
+        name: 'Audit Matrix Waivers',
+        severity: 'SKIP',
+        message: 'audit-matrix.yml not found',
+      },
+    };
+  }
+
+  try {
+    const content = readFileSync(matrixPath, 'utf-8');
+
+    // Simple YAML parsing for tool entries
+    const tools: AuditTool[] = [];
+    const lines = content.split(/\r?\n/);
+    let currentTool: Partial<AuditTool> | null = null;
+
+    for (const line of lines) {
+      // Match tool entry start: "  - id: <tool-id>"
+      const idMatch = line.match(/^\s+-\s+id:\s*['"]?([^'"]+)['"]?\s*$/);
+      if (idMatch) {
+        if (currentTool && currentTool.id) {
+          tools.push(currentTool as AuditTool);
+        }
+        currentTool = { id: idMatch[1] };
+        continue;
+      }
+
+      if (!currentTool) continue;
+
+      // Parse tool properties
+      const tierMatch = line.match(/^\s+tier:\s*(\d+)\s*$/);
+      if (tierMatch) {
+        currentTool.tier = parseInt(tierMatch[1], 10);
+        continue;
+      }
+
+      const enabledMatch = line.match(/^\s+enabled:\s*(true|false)\s*$/);
+      if (enabledMatch) {
+        currentTool.enabled = enabledMatch[1] === 'true';
+        continue;
+      }
+
+      const requiredMatch = line.match(/^\s+required:\s*(true|false)\s*$/);
+      if (requiredMatch) {
+        currentTool.required = requiredMatch[1] === 'true';
+        continue;
+      }
+
+      const ownerMatch = line.match(/^\s+owner:\s*['"]?([^'"]+)['"]?\s*$/);
+      if (ownerMatch) {
+        currentTool.owner = ownerMatch[1];
+        continue;
+      }
+
+      const commandMatch = line.match(/^\s+command:\s*(.+)$/);
+      if (commandMatch) {
+        const cmd = commandMatch[1].trim();
+        currentTool.command = cmd === 'null' ? null : cmd.replace(/^['"]|['"]$/g, '');
+        continue;
+      }
+    }
+
+    // Push last tool
+    if (currentTool && currentTool.id) {
+      tools.push(currentTool as AuditTool);
+    }
+
+    // Find Tier 1 tools that are disabled but required
+    const disabledButRequired = tools.filter(
+      (t) => t.tier === 1 && t.required === true && t.enabled === false
+    );
+
+    // Check for waiver files (waiver records would be in a waivers directory)
+    const waiverDir = join(repoRoot, 'tools/audit/waivers');
+    const existingWaivers: string[] = [];
+
+    if (existsSync(waiverDir)) {
+      try {
+        const waiverFiles = require('fs').readdirSync(waiverDir) as string[];
+        existingWaivers.push(
+          ...waiverFiles.map((f: string) => f.replace(/\.(json|yaml|yml)$/, ''))
+        );
+      } catch {
+        // Ignore errors reading waiver directory
+      }
+    }
+
+    const missingWaivers = disabledButRequired
+      .filter((t) => !existingWaivers.includes(t.id))
+      .map((t) => t.id);
+
+    let gateResult: GateResult;
+    if (disabledButRequired.length === 0) {
+      gateResult = {
+        name: 'Audit Matrix Waivers',
+        severity: 'PASS',
+        message: 'All required Tier-1 tools are enabled',
+      };
+    } else if (missingWaivers.length === 0) {
+      gateResult = {
+        name: 'Audit Matrix Waivers',
+        severity: 'PASS',
+        message: `${disabledButRequired.length} disabled required tool(s) have valid waivers`,
+        details: disabledButRequired.map((t) => `${t.id}: waiver exists`),
+      };
+    } else {
+      gateResult = {
+        name: 'Audit Matrix Waivers',
+        severity: 'WARN', // WARN in default mode, FAIL in strict
+        message: `${missingWaivers.length} required Tier-1 tool(s) are disabled without waivers`,
+        details: [
+          ...missingWaivers.map((id) => `${id}: WAIVER REQUIRED`),
+          '',
+          'To resolve: Either enable the tool or create a waiver file at:',
+          `  tools/audit/waivers/<tool-id>.json`,
+        ],
+      };
+    }
+
+    return {
+      tools,
+      disabledButRequired,
+      missingWaivers,
+      gateResult,
+    };
+  } catch (error) {
+    return {
+      tools: [],
+      disabledButRequired: [],
+      missingWaivers: [],
+      gateResult: {
+        name: 'Audit Matrix Waivers',
+        severity: 'WARN',
+        message: `Failed to parse audit-matrix.yml: ${error instanceof Error ? error.message : String(error)}`,
+      },
+    };
+  }
+}

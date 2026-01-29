@@ -1,0 +1,9 @@
+Sprint,Start Date,End Date,Planned Points,Completed Points,Velocity,Carry Over,Team Size,Focus Factor,Notes
+0,2025-12-14,2025-12-21,35,32,32,3,2,0.91,"Foundation sprint - AI tooling and environment setup"
+1,2025-12-22,2025-12-28,40,38,38,2,2,0.95,"Validation sprint - Architecture and security foundations"
+2,2025-12-29,2026-01-04,42,0,0,0,2,0.00,"In Progress - Core domain models"
+3,2026-01-05,2026-01-11,45,0,0,0,2,0.00,"Planned - Domain services"
+4,2026-01-12,2026-01-18,45,0,0,0,2,0.00,"Planned - Documentation and testing"
+5,2026-01-19,2026-01-25,48,0,0,0,2,0.00,"Planned - Lead capture UI"
+6,2026-01-26,2026-02-01,48,0,0,0,2,0.00,"Planned - AI scoring foundation"
+7,2026-02-02,2026-02-08,50,0,0,0,2,0.00,"Current - Intelligence features"

@@ -1,0 +1,101 @@
+name: System Audit (Tier 1 + Tier 2)
+
+on:
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch: {}
+
+concurrency:
+  group: system-audit-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8.15.0'
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+  TURBO_CACHE_DIR: .turbo
+
+jobs:
+  system-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Cache Turbo
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ hashFiles('pnpm-lock.yaml', 'turbo.json') }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+
+      - name: Cache SonarQube
+        uses: actions/cache@v4
+        with:
+          path: .sonar/cache
+          key: ${{ runner.os }}-sonar-${{ hashFiles('sonar-project.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-sonar-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python deps
+        run: pip install pyyaml pytest
+
+      - name: Run audit tool tests
+        run: python -m pytest tools/audit/tests -q
+
+      - name: Compute PR base ref
+        run: echo "BASE_REF=origin/${{ github.base_ref }}" >> $GITHUB_ENV
+
+      - name: Protect remote cache on forks
+        if: github.event.pull_request.head.repo.full_name != github.repository
+        run: echo "TURBO_REMOTE_CACHE_READ_ONLY=true" >> $GITHUB_ENV
+
+      - name: Run PR audit (Tier 1 + Tier 2, affected scope)
+        run: |
+          RUN_ID="gha-${{ github.run_id }}-${{ github.run_attempt }}"
+          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
+          python tools/audit/run_audit.py --mode pr --run-id "$RUN_ID" --base-ref "$BASE_REF" --resume --concurrency 2
+
+      - name: Generate Sprint 0 snapshot + reports
+        if: always()
+        run: |
+          python tools/audit/status_snapshot.py
+          python tools/audit/sprint0_audit.py --run-id "$RUN_ID"
+
+      - name: Upload audit bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: system-audit-${{ github.run_id }}
+          path: |
+            artifacts/reports/system-audit/${{ env.RUN_ID }}
+            artifacts/reports/affected
+            artifacts/reports/status-snapshot.json
+            artifacts/reports/completed-task-ids.txt
+            artifacts/reports/sprint0-audit.md
+            artifacts/reports/review-queue.json
+            artifacts/reports/review-queue.md
+            artifacts/debt-ledger.md
+            artifacts/debt-ledger.jsonl
+          retention-days: 14

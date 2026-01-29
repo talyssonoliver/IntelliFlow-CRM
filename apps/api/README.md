@@ -4,7 +4,9 @@ Type-safe tRPC API server for IntelliFlow CRM.
 
 ## Overview
 
-This package provides the backend API for IntelliFlow CRM using tRPC for end-to-end type safety. All API endpoints are automatically typed and validated using Zod schemas from `@intelliflow/validators`.
+This package provides the backend API for IntelliFlow CRM using tRPC for
+end-to-end type safety. All API endpoints are automatically typed and validated
+using Zod schemas from `@intelliflow/validators`.
 
 ## Features
 
@@ -114,11 +116,13 @@ The API package exports its router type for use in the client:
 export type { AppRouter } from '@intelliflow/api';
 ```
 
-This type is used by `@intelliflow/api-client` to provide full type safety in the frontend.
+This type is used by `@intelliflow/api-client` to provide full type safety in
+the frontend.
 
 ## Authentication (TODO)
 
-Currently uses a mock user for development. Production implementation will include:
+Currently uses a mock user for development. Production implementation will
+include:
 
 - JWT token validation
 - Session management

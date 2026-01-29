@@ -1,0 +1,195 @@
+{
+  "version": "1.0",
+  "generated_at": "2025-12-22T22:35:00Z",
+  "task_id": "IFC-118",
+  "description": "Risk Register Key Performance Indicators",
+  "review_frequency": "monthly",
+  "next_review": "2026-01-22",
+
+  "summary": {
+    "total_risks": 21,
+    "open_risks": 18,
+    "closed_risks": 3,
+    "risk_by_level": {
+      "critical": 0,
+      "high": 7,
+      "medium": 8,
+      "low": 3
+    },
+    "risk_by_category": {
+      "TECH": 5,
+      "SEC": 3,
+      "AI": 4,
+      "OPS": 3,
+      "BUS": 2,
+      "REG": 2,
+      "PPL": 2
+    },
+    "overall_risk_score": 182,
+    "average_risk_score": 8.67
+  },
+
+  "kris": [
+    {
+      "id": "KRI-001",
+      "name": "Security Vulnerability Count",
+      "description": "Number of open critical/high severity vulnerabilities",
+      "threshold": 5,
+      "current_value": 2,
+      "unit": "count",
+      "status": "green",
+      "trend": "stable",
+      "last_updated": "2025-12-22"
+    },
+    {
+      "id": "KRI-002",
+      "name": "AI Model Accuracy",
+      "description": "Lead scoring model accuracy percentage",
+      "threshold": 85,
+      "current_value": null,
+      "unit": "percentage",
+      "status": "not_measured",
+      "trend": null,
+      "last_updated": null
+    },
+    {
+      "id": "KRI-003",
+      "name": "System Uptime",
+      "description": "Monthly system availability percentage",
+      "threshold": 99.5,
+      "current_value": null,
+      "unit": "percentage",
+      "status": "not_measured",
+      "trend": null,
+      "last_updated": null
+    },
+    {
+      "id": "KRI-004",
+      "name": "Patch SLA Compliance",
+      "description": "Percentage of patches applied within SLA",
+      "threshold": 95,
+      "current_value": 100,
+      "unit": "percentage",
+      "status": "green",
+      "trend": "stable",
+      "last_updated": "2025-12-22"
+    },
+    {
+      "id": "KRI-005",
+      "name": "Incident Response Time",
+      "description": "P1 incident mean time to resolution",
+      "threshold": 60,
+      "current_value": null,
+      "unit": "minutes",
+      "status": "not_measured",
+      "trend": null,
+      "last_updated": null
+    },
+    {
+      "id": "KRI-006",
+      "name": "AI Bias Score",
+      "description": "Demographic parity delta in AI decisions",
+      "threshold": 0.1,
+      "current_value": null,
+      "unit": "ratio",
+      "status": "not_measured",
+      "trend": null,
+      "last_updated": null
+    },
+    {
+      "id": "KRI-007",
+      "name": "Dependency Health",
+      "description": "Count of outdated dependencies",
+      "threshold": 10,
+      "current_value": 3,
+      "unit": "count",
+      "status": "green",
+      "trend": "stable",
+      "last_updated": "2025-12-22"
+    }
+  ],
+
+  "risk_mitigation_progress": {
+    "total_mitigation_actions": 35,
+    "completed": 3,
+    "in_progress": 12,
+    "planned": 18,
+    "blocked": 2,
+    "completion_rate": 8.57
+  },
+
+  "risk_trends": {
+    "new_risks_this_month": 21,
+    "closed_risks_this_month": 0,
+    "escalated_risks": 0,
+    "de_escalated_risks": 0
+  },
+
+  "top_risks": [
+    {
+      "id": "R-004",
+      "title": "Database Performance Degradation",
+      "score": 16,
+      "category": "TECH",
+      "owner": "Backend Lead",
+      "status": "mitigating"
+    },
+    {
+      "id": "R-005",
+      "title": "LLM Hallucination in Automation",
+      "score": 16,
+      "category": "AI",
+      "owner": "ML Engineer",
+      "status": "open"
+    },
+    {
+      "id": "R-006",
+      "title": "Dependency Vulnerability",
+      "score": 16,
+      "category": "SEC",
+      "owner": "DevOps",
+      "status": "mitigating"
+    },
+    {
+      "id": "R-001",
+      "title": "Data Breach Exposure",
+      "score": 15,
+      "category": "SEC",
+      "owner": "Security Lead",
+      "status": "open"
+    },
+    {
+      "id": "R-002",
+      "title": "AI Bias in Lead Scoring",
+      "score": 15,
+      "category": "AI",
+      "owner": "ML Engineer",
+      "status": "open"
+    }
+  ],
+
+  "compliance_status": {
+    "gdpr": {
+      "status": "in_progress",
+      "gaps_identified": 5,
+      "gaps_resolved": 1
+    },
+    "iso_42001": {
+      "status": "gap_analysis_complete",
+      "gaps_identified": 18,
+      "gaps_resolved": 0
+    },
+    "soc2": {
+      "status": "not_started",
+      "gaps_identified": null,
+      "gaps_resolved": null
+    }
+  },
+
+  "metadata": {
+    "source_document": "docs/governance/risk-register.md",
+    "schema_version": "1.0",
+    "generated_by": "IFC-118 implementation",
+    "hash": null
+  }
+}

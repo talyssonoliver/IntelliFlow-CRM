@@ -1,0 +1,68 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "PG-128",
+  "section": "AI Settings",
+  "description": "FLOW-045: AI Chain Versioning Admin UI - Wire IFC-086 Backend",
+  "owner": "Frontend Dev + AI Specialist (STOA-Intelligence)",
+  "status": "Spec Complete",
+  "started_at": "2026-01-29T14:30:00.000Z",
+  "completed_at": null,
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-01-29T13:00:00.000Z",
+      "note": "Task created to wire IFC-086 backend to frontend"
+    },
+    {
+      "status": "Specifying",
+      "at": "2026-01-29T14:30:00.000Z",
+      "note": "spec session started via /spec-session command"
+    },
+    {
+      "status": "Spec Complete",
+      "at": "2026-01-29T15:45:00.000Z",
+      "note": "Specification complete - 4 agents analyzed codebase, generated comprehensive spec with 12 components, 3 hooks, 14 acceptance criteria"
+    }
+  ],
+  "dependencies": {
+    "required": ["IFC-086", "PG-104"],
+    "verified_at": "2026-01-29T14:30:00.000Z",
+    "status": {
+      "IFC-086": "Completed",
+      "PG-104": "Backlog"
+    }
+  },
+  "execution": {
+    "started_at": "2026-01-29T14:30:00.000Z",
+    "executor": "Claude Code /spec-session",
+    "agents": ["Frontend-Lead", "AI-Specialist", "Domain-Expert", "Test-Engineer"],
+    "retry_count": 0
+  },
+  "artifacts": {
+    "created": [
+      ".specify/sprints/sprint-14/specifications/PG-128-spec.md",
+      ".specify/sprints/sprint-14/context/PG-128/PG-128-hydrated-context.json",
+      ".specify/sprints/sprint-14/context/PG-128/PG-128-agent-selection.json",
+      "apps/project-tracker/docs/metrics/_global/flows/FLOW-045.md"
+    ],
+    "expected": [
+      "apps/web/src/app/(settings)/settings/ai/page.tsx",
+      "apps/web/src/app/(settings)/settings/ai/components/ChainVersionsDashboard.tsx",
+      "apps/web/src/app/(settings)/settings/ai/components/ChainVersionsTable.tsx",
+      "apps/web/src/app/(settings)/settings/ai/components/ChainVersionEditor.tsx",
+      "apps/web/src/app/(settings)/settings/ai/components/VersionComparisonView.tsx",
+      "apps/web/src/app/(settings)/settings/ai/components/ZepBudgetGauge.tsx",
+      "apps/web/src/app/(settings)/settings/ai/components/VersionAuditLog.tsx",
+      "apps/web/src/app/(settings)/settings/ai/hooks/useChainVersions.ts"
+    ]
+  },
+  "kpis": {
+    "targets": {
+      "page_load": "<500ms",
+      "lighthouse_score": ">=90",
+      "trpc_endpoints_wired": "100%"
+    },
+    "actual": {}
+  },
+  "notes": "Wires IFC-086 chain versioning backend to frontend UI with full admin functionality"
+}

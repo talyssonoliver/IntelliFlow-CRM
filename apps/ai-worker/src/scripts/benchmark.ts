@@ -101,9 +101,7 @@ async function benchmarkLeadScoring(iterations: number = 10): Promise<BenchmarkR
 /**
  * Benchmark lead qualification
  */
-async function benchmarkLeadQualification(
-  iterations: number = 5
-): Promise<BenchmarkResult> {
+async function benchmarkLeadQualification(iterations: number = 5): Promise<BenchmarkResult> {
   logger.info({ iterations }, 'Benchmarking lead qualification...');
 
   const sampleInput = {

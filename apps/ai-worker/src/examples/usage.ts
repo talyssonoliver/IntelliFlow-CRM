@@ -113,11 +113,7 @@ async function example3_LeadQualification() {
     phone: '+1-555-0123',
     source: 'WEBSITE',
     score: 85,
-    recentActivities: [
-      'Visited pricing page 3 times',
-      'Downloaded whitepaper',
-      'Requested demo',
-    ],
+    recentActivities: ['Visited pricing page 3 times', 'Downloaded whitepaper', 'Requested demo'],
     companyData: {
       industry: 'Technology',
       size: '500-1000 employees',

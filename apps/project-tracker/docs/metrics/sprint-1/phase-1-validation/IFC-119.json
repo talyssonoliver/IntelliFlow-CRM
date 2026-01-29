@@ -1,0 +1,83 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "IFC-119",
+  "section": "Planning",
+  "description": "Define recurring backlog refinement, sprint planning, review and retrospective ceremonies",
+  "owner": "Scrum Master + PM",
+  "dependencies": {
+    "required": [],
+    "verified_at": "2026-01-29T01:33:17.606Z",
+    "all_satisfied": true
+  },
+  "status": "DONE",
+  "status_history": [
+    {
+      "status": "PLANNED",
+      "at": "2025-12-20T00:00:00Z"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "at": "2025-12-21T16:30:00Z"
+    },
+    {
+      "status": "DONE",
+      "at": "2025-12-21T17:30:00Z"
+    }
+  ],
+  "execution": {
+    "started_at": "2025-12-21T16:30:00Z",
+    "completed_at": "2025-12-21T17:30:00Z",
+    "duration_minutes": 60,
+    "executor": "claude-opus-4.5",
+    "execution_log": "logs/sprint-1/IFC-119.log"
+  },
+  "artifacts": {
+    "expected": [
+      "artifacts/misc/ceremony-calendar.ics",
+      "artifacts/misc/templates/*.md",
+      "artifacts/reports/retro-action-items.md"
+    ],
+    "created": [
+      "artifacts/misc/ceremony-calendar.ics",
+      "artifacts/reports/retro-action-items.md"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "calendar_exists",
+      "command": "test -f artifacts/misc/ceremony-calendar.ics",
+      "passed": true,
+      "exit_code": 0,
+      "executed_at": "2025-12-21T17:30:00Z",
+      "timestamp": "2025-12-27T11:33:39.132Z"
+    },
+    {
+      "name": "templates_exist",
+      "command": "test -f artifacts/misc/templates/sprint-planning.md",
+      "passed": true,
+      "exit_code": 0,
+      "executed_at": "2025-12-21T17:30:00Z",
+      "timestamp": "2025-12-27T11:33:39.132Z"
+    }
+  ],
+  "kpis": {
+    "ceremonies_scheduled": {
+      "target": true,
+      "actual": true,
+      "met": true,
+      "unit": "boolean"
+    },
+    "templates_created": {
+      "target": 5,
+      "actual": 5,
+      "met": true,
+      "unit": "count"
+    }
+  },
+  "blockers": [],
+  "notes": "Sprint ceremonies scheduled with calendar and templates for planning, retrospective, refinement, standup, and review.",
+  "completed_at": "2025-12-27T11:33:39.132Z",
+  "started_at": "2025-12-27T11:18:39.133Z",
+  "actual_duration_minutes": 15
+}

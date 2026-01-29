@@ -1,0 +1,62 @@
+name: System Audit Integrity (Cache Bypass)
+
+on:
+  schedule:
+    - cron: '0 4 * * 0' # weekly, Sunday 04:00 UTC
+  workflow_dispatch: {}
+
+concurrency:
+  group: system-audit-integrity
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8.15.0'
+  TURBO_TOKEN: '' # disable remote cache
+  TURBO_TEAM: ''
+  TURBO_CACHE_DIR: .turbo
+  TURBO_FORCE: 'true' # force execution (ignore cache)
+
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies (no cache)
+        run: pnpm install --frozen-lockfile
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python deps
+        run: pip install pyyaml pytest
+
+      - name: Run audit tool tests
+        run: python -m pytest tools/audit/tests -q
+
+      - name: Run Tier 1 full-scope audit (cache bypass)
+        run: |
+          RUN_ID="integrity-${{ github.run_id }}-${{ github.run_attempt }}"
+          python tools/audit/run_audit.py --tier 1 --scope full --run-id "$RUN_ID"
+
+      - name: Upload audit bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: system-audit-integrity-${{ github.run_id }}
+          path: artifacts/reports/system-audit/integrity-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 30

@@ -1,0 +1,75 @@
+{
+  "timestamp": "2025-12-15T07:34:17.584Z",
+  "turboVersion": "2.6.3",
+  "results": [
+    {
+      "name": "turbo.json exists",
+      "passed": true,
+      "message": "turbo.json found at root of monorepo"
+    },
+    {
+      "name": "Schema reference",
+      "passed": true,
+      "message": "Correct schema reference found",
+      "details": {
+        "schema": "https://turbo.build/schema.json",
+        "expected": "https://turbo.build/schema.json"
+      }
+    },
+    {
+      "name": "Essential tasks",
+      "passed": true,
+      "message": "All essential tasks defined (build, lint, typecheck, test)",
+      "details": {
+        "taskCount": 28
+      }
+    },
+    {
+      "name": "Input/output coverage",
+      "passed": true,
+      "message": "Found 64 input patterns and 28 output patterns",
+      "details": {
+        "totalInputs": 64,
+        "totalOutputs": 28
+      }
+    },
+    {
+      "name": "Dependency graph",
+      "passed": false,
+      "message": "Circular dependencies detected in task graph"
+    },
+    {
+      "name": "Remote cache config",
+      "passed": true,
+      "message": "Remote cache configured with signature verification",
+      "details": {
+        "enabled": true,
+        "signature": true
+      }
+    },
+    {
+      "name": "Cache directory",
+      "passed": true,
+      "message": "Cache directory exists with 3 entries",
+      "details": {
+        "path": "C:\\taly\\intelliFlow-CRM\\.turbo",
+        "entries": 3
+      }
+    },
+    {
+      "name": "Global environment variables",
+      "passed": true,
+      "message": "11 environment variables configured",
+      "details": {
+        "globalEnv": 7,
+        "globalPassThrough": 4
+      }
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "passed": 7,
+    "failed": 1,
+    "warnings": 0
+  }
+}

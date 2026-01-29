@@ -1,0 +1,143 @@
+{
+  "sprint": "sprint-9",
+  "name": "Sprint 9 - Risk Management",
+  "target_date": "TBD",
+  "started_at": "2025-12-29T14:00:00.000Z",
+  "completed_at": "2025-12-29T15:30:00.000Z",
+  "phases": [
+    {
+      "phase_id": "phase-0-parallel",
+      "phase_name": "Initialisation (Parallel)",
+      "tasks": [
+        "IFC-056",
+        "IFC-057",
+        "IFC-096",
+        "IFC-097",
+        "IFC-116",
+        "IFC-124",
+        "IFC-145",
+        "IFC-151"
+      ],
+      "status": "DONE",
+      "id": "phase-0-phase0"
+    }
+  ],
+  "task_summary": {
+    "total": 8,
+    "done": 8,
+    "in_progress": 0,
+    "blocked": 0,
+    "not_started": 0,
+    "failed": 0
+  },
+  "notes": "8/8 tasks DONE (100%). Last synced: 2026-01-29T01:33:17.661Z",
+  "completed_tasks": [
+    {
+      "task_id": "IFC-056",
+      "completed_at": "2026-01-29T01:33:17.661Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-057",
+      "completed_at": "2026-01-29T01:33:17.661Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-096",
+      "completed_at": "2026-01-29T01:33:17.661Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-097",
+      "completed_at": "2026-01-29T01:33:17.661Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-116",
+      "completed_at": "2026-01-29T01:33:17.661Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-124",
+      "completed_at": "2026-01-29T01:33:17.661Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-145",
+      "completed_at": "2026-01-29T01:33:17.661Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-151",
+      "completed_at": "2026-01-29T01:33:17.661Z",
+      "duration_minutes": 15
+    }
+  ],
+  "kpis_achieved": [
+    {
+      "kpi": "Team velocity increasing, confidence >4/5",
+      "task": "IFC-056",
+      "status": "met"
+    },
+    {
+      "kpi": "Migration tested, <1 week effort",
+      "task": "IFC-057",
+      "status": "met"
+    },
+    {
+      "kpi": "Custom dashboards created, export functional",
+      "task": "IFC-096",
+      "status": "met"
+    },
+    {
+      "kpi": "99% of requests traced, dashboards available",
+      "task": "IFC-097",
+      "status": "met"
+    },
+    {
+      "kpi": "MTTD <2min; 100% services instrumented",
+      "task": "IFC-116",
+      "status": "met"
+    },
+    {
+      "kpi": "Audit retention meets regulatory needs",
+      "task": "IFC-124",
+      "status": "met"
+    },
+    {
+      "kpi": "Data completeness >=99%; no critical data loss",
+      "task": "IFC-145",
+      "status": "met"
+    },
+    {
+      "kpi": "DLQ drain success >95%; MTTR <30 min",
+      "task": "IFC-151",
+      "status": "met"
+    }
+  ],
+  "execution_stats": {
+    "parallel_streams": 8,
+    "total_duration_minutes": 90,
+    "avg_task_duration_minutes": 28.5,
+    "blockers_resolved": 0,
+    "human_interventions": 0
+  },
+  "schedule": {
+    "sprint_start_date": null,
+    "sprint_end_date": "TBD",
+    "working_hours_per_day": 8,
+    "working_days_per_week": 5,
+    "critical_path": {
+      "task_ids": [],
+      "total_duration_minutes": 0,
+      "completion_percentage": 0,
+      "bottleneck_task_id": null
+    },
+    "schedule_variance": {
+      "sv_minutes": 0,
+      "spi": 1,
+      "status": "on_track"
+    },
+    "calculated_at": "2026-01-29T01:33:17.687Z"
+  }
+}

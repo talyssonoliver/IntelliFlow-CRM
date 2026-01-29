@@ -1,15 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Output configuration for Docker deployment
-  output: 'standalone',
+  // Set `NEXT_OUTPUT=standalone` for Docker/CI builds (Windows requires symlink support)
+  ...(process.env.NEXT_OUTPUT === 'standalone' ? { output: 'standalone' } : {}),
 
   // Enable strict mode for better error detection
   reactStrictMode: true,
 
-  // Disable telemetry
-  telemetry: {
-    disabled: true,
-  },
+  // Configure server external packages (fix Prisma in monorepo)
+  serverExternalPackages: ['@prisma/client', '@prisma/engines'],
 
   // Compiler options
   compiler: {
@@ -26,12 +24,28 @@ const nextConfig = {
       bodySizeLimit: '2mb',
     },
     // Optimize package imports
-    optimizePackageImports: ['@intelliflow/ui', 'recharts', 'lucide-react'],
+    optimizePackageImports: ['@intelliflow/ui', 'recharts'],
+  },
+
+  // Turbopack configuration (Next.js 16+ default bundler)
+  turbopack: {
+    rules: {
+      // Add support for SVG imports (equivalent to @svgr/webpack)
+      '*.svg': {
+        loaders: ['@svgr/webpack'],
+        as: '*.js',
+      },
+    },
   },
 
   // Image optimization
   images: {
-    domains: ['localhost'],
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      }
+    ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
@@ -115,7 +129,7 @@ const nextConfig = {
             ui: {
               name: 'ui',
               chunks: 'all',
-              test: /[\\/]node_modules[\\/](@intelliflow\/ui|lucide-react)[\\/]/,
+              test: /[\\/]node_modules[\\/](@intelliflow\/ui)[\\/]/,
               priority: 30,
             },
             // Charts library chunk
@@ -149,12 +163,6 @@ const nextConfig = {
   typescript: {
     // Only run type checking in CI
     ignoreBuildErrors: process.env.CI !== 'true',
-  },
-
-  // ESLint configuration
-  eslint: {
-    // Only run linting in CI
-    ignoreDuringBuilds: process.env.CI !== 'true',
   },
 
   // Power features

@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>IntelliFlow CRM - Home</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "primary-hover": "#0e6ac7",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1e2936",
+                        "border-light": "#e2e8f0",
+                        "border-dark": "#334155",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.375rem", 
+                        "lg": "0.5rem", 
+                        "xl": "0.75rem", 
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569; 
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #64748b; 
+        }
+    </style>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased">
+<header class="sticky top-0 z-50 w-full border-b border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark">
+<div class="flex h-16 items-center px-4 lg:px-6">
+<!-- Logo -->
+<div class="mr-8">
+<a href="/dashboard" class="flex items-center gap-2">
+<div class="w-8 h-8 rounded bg-primary flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-white text-xl">grid_view</span>
+</div>
+<span class="text-lg font-bold text-slate-900 dark:text-white hidden sm:inline">IntelliFlow CRM</span>
+</a>
+</div>
+<!-- Desktop Navigation -->
+<nav class="hidden lg:flex items-center gap-1">
+<a class="px-3 py-2 text-sm font-medium rounded-lg bg-primary/10 text-primary transition-colors" href="/dashboard">
+                    Dashboard
+                </a>
+<a class="px-3 py-2 text-sm font-medium rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="/leads">
+                    Leads
+                </a>
+<a class="px-3 py-2 text-sm font-medium rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="/contacts">
+                    Contacts
+                </a>
+<a class="px-3 py-2 text-sm font-medium rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="/deals">
+                    Deals
+                </a>
+<a class="px-3 py-2 text-sm font-medium rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="/tickets">
+                    Tickets
+                </a>
+<a class="px-3 py-2 text-sm font-medium rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="/documents">
+                    Documents
+                </a>
+<a class="px-3 py-2 text-sm font-medium rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="/agent-approvals/preview">
+                    Agent Actions
+                </a>
+<a class="px-3 py-2 text-sm font-medium rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="/analytics">
+                    Reports
+                </a>
+</nav>
+<!-- Spacer -->
+<div class="flex-1"></div>
+<!-- Search -->
+<div class="hidden md:flex items-center mr-4">
+<div class="relative w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-lg text-slate-400 dark:text-slate-500">search</span>
+<input type="search" placeholder="Search..." class="w-full pl-10 pr-4 py-2 text-sm border border-border-light dark:border-border-dark rounded-lg bg-background-light dark:bg-background-dark text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"/>
+</div>
+</div>
+<!-- Notifications -->
+<button class="relative p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Notifications (3 unread)">
+<span class="material-symbols-outlined text-xl">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
+</button>
+<!-- User Menu -->
+<div class="relative ml-2">
+<button class="flex items-center gap-2 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" aria-expanded="false" aria-haspopup="true">
+<div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
+<span class="text-sm font-medium text-slate-500 dark:text-slate-400">A</span>
+</div>
+<span class="hidden sm:inline text-sm font-medium text-slate-900 dark:text-white">Alex</span>
+<span class="material-symbols-outlined text-lg text-slate-400 dark:text-slate-500">expand_more</span>
+</button>
+</div>
+<!-- Mobile Menu Button -->
+<button class="lg:hidden ml-4 p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white" aria-label="Toggle menu">
+<span class="material-symbols-outlined text-xl">menu</span>
+</button>
+</div>
+</header>
+<main class="min-h-screen bg-background-light dark:bg-background-dark relative">
+<!-- Subtle grid background pattern -->
+<div class="absolute inset-0 opacity-[0.015] dark:opacity-[0.03]" style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22><rect width=%2240%22 height=%2240%22 fill=%22none%22 stroke=%22%23334155%22 stroke-width=%220.5%22/></svg>');"></div>
+<div class="relative px-4 sm:px-6 lg:px-8 xl:px-12 py-6 max-w-[1800px] mx-auto">
+<!-- Welcome Banner - Full Width (colSpan: 4) -->
+<div class="bg-gradient-to-r from-primary to-indigo-600 rounded-xl p-8 text-white shadow-lg relative overflow-hidden mb-6">
+<div class="absolute top-0 right-0 p-8 opacity-10">
+<span class="material-symbols-outlined text-9xl">waving_hand</span>
+</div>
+<div class="relative z-10 max-w-2xl">
+<div class="flex items-center gap-2 mb-2 text-blue-100">
+<span class="material-symbols-outlined text-sm">wb_sunny</span>
+<span class="text-sm font-medium uppercase tracking-wide">Good Morning</span>
+</div>
+<h1 class="text-3xl md:text-4xl font-bold mb-4">Welcome back, Alex!</h1>
+<p class="text-lg text-blue-50 mb-6 leading-relaxed">
+                            You have 3 high-priority tasks pending and 2 new leads assigned to you since yesterday. Your deal closing rate is up by 5% this week!
+                        </p>
+<div class="flex flex-wrap gap-3">
+<button class="bg-white text-primary hover:bg-blue-50 px-4 py-2 rounded-lg font-semibold text-sm transition-colors shadow-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">calendar_today</span>
+                                View Schedule
+                            </button>
+<a href="/dashboard" class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-colors backdrop-blur-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">dashboard</span>
+                                Go to Dashboard
+                            </a>
+</div>
+</div>
+</div>
+<!-- Dashboard Grid - 4 columns on lg, 2 on md, 1 on mobile -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 auto-rows-min">
+
+<!-- AI Daily Insights - colSpan: 3 -->
+<div class="col-span-1 md:col-span-2 lg:col-span-3 bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm">
+<div class="p-4 border-b border-border-light dark:border-border-dark flex justify-between items-center bg-indigo-50/50 dark:bg-indigo-900/10 rounded-t-xl">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-indigo-600 dark:text-indigo-400">auto_awesome</span>
+<h3 class="font-bold text-slate-800 dark:text-slate-100">AI Daily Insights</h3>
+</div>
+<button class="text-xs font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400">View All</button>
+</div>
+<div class="p-4 grid gap-4">
+<div class="flex gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer border border-transparent hover:border-slate-100 dark:hover:border-slate-700">
+<div class="shrink-0 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-lg p-2 h-fit">
+<span class="material-symbols-outlined">warning</span>
+</div>
+<div>
+<h4 class="font-semibold text-slate-800 dark:text-slate-200 text-sm">Deal at Risk: TechCorp Enterprise</h4>
+<p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Last interaction was 14 days ago. Sentiment analysis of recent emails suggests hesitation. <span class="font-medium text-primary">Suggested Action: Schedule a check-in call.</span></p>
+</div>
+</div>
+<div class="flex gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer border border-transparent hover:border-slate-100 dark:hover:border-slate-700">
+<div class="shrink-0 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg p-2 h-fit">
+<span class="material-symbols-outlined">trending_up</span>
+</div>
+<div>
+<h4 class="font-semibold text-slate-800 dark:text-slate-200 text-sm">Opportunity Detected</h4>
+<p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Contact "Sarah Jenkins" viewed pricing page 3 times today. <span class="font-medium text-primary">Suggested Action: Send personalized pricing breakdown.</span></p>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Quick Actions - colSpan: 1 -->
+<div class="col-span-1 bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm p-5">
+<h3 class="font-bold text-slate-900 dark:text-white mb-4">Quick Actions</h3>
+<div class="grid grid-cols-2 gap-3">
+<button class="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors gap-2 group">
+<div class="p-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-full group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">add_call</span>
+</div>
+<span class="text-xs font-medium text-slate-600 dark:text-slate-300">Log Call</span>
+</button>
+<button class="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors gap-2 group">
+<div class="p-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 rounded-full group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">mail</span>
+</div>
+<span class="text-xs font-medium text-slate-600 dark:text-slate-300">Email</span>
+</button>
+<button class="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors gap-2 group">
+<div class="p-2 bg-amber-50 dark:bg-amber-900/30 text-amber-600 rounded-full group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">event</span>
+</div>
+<span class="text-xs font-medium text-slate-600 dark:text-slate-300">Meeting</span>
+</button>
+<button class="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors gap-2 group">
+<div class="p-2 bg-purple-50 dark:bg-purple-900/30 text-purple-600 rounded-full group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">task</span>
+</div>
+<span class="text-xs font-medium text-slate-600 dark:text-slate-300">Task</span>
+</button>
+</div>
+</div>
+
+<!-- Your Feed - colSpan: 3, rowSpan: 2 -->
+<div class="col-span-1 md:col-span-2 lg:col-span-3 row-span-2 bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm">
+<div class="p-5 border-b border-border-light dark:border-border-dark flex justify-between items-center">
+<h3 class="font-bold text-slate-900 dark:text-white">Your Feed</h3>
+<button class="p-1 text-slate-400 hover:text-primary transition-colors rounded">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+</button>
+</div>
+<div class="divide-y divide-border-light dark:divide-border-dark">
+<div class="p-5 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<div class="flex gap-3">
+<div class="size-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 font-bold shrink-0">JD</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<p class="text-sm font-medium text-slate-900 dark:text-slate-100">John Doe mentioned you in a note</p>
+<span class="text-xs text-slate-400 whitespace-nowrap">10m ago</span>
+</div>
+<p class="text-sm text-slate-600 dark:text-slate-400 mt-1">"@Alex could you review the contract terms for the Globex deal before I send it out?"</p>
+<div class="mt-3 bg-slate-50 dark:bg-slate-800 rounded border border-border-light dark:border-border-dark p-2 flex items-center gap-3">
+<div class="bg-white dark:bg-slate-700 p-1.5 rounded text-red-500">
+<span class="material-symbols-outlined text-sm">picture_as_pdf</span>
+</div>
+<span class="text-sm text-slate-700 dark:text-slate-300 font-medium">Globex_Contract_Draft_v2.pdf</span>
+</div>
+<div class="flex gap-3 mt-3">
+<button class="text-xs font-semibold text-slate-500 hover:text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">reply</span> Reply</button>
+<button class="text-xs font-semibold text-slate-500 hover:text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">thumb_up</span> Like</button>
+</div>
+</div>
+</div>
+</div>
+<div class="p-5 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<div class="flex gap-3">
+<div class="size-10 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center text-emerald-600 dark:text-emerald-300 shrink-0">
+<span class="material-symbols-outlined">call_received</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<p class="text-sm font-medium text-slate-900 dark:text-slate-100">Inbound Call Logged</p>
+<span class="text-xs text-slate-400 whitespace-nowrap">1h ago</span>
+</div>
+<p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Call with <span class="font-semibold text-slate-800 dark:text-slate-200">Mike Ross (Pearson Specter)</span>. Duration: 12m 45s.</p>
+<div class="mt-2 flex gap-2">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Interested</span>
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300">Follow-up Required</span>
+</div>
+</div>
+</div>
+</div>
+<div class="p-5 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<div class="flex gap-3">
+<div class="size-10 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center text-purple-600 dark:text-purple-300 font-bold shrink-0">AI</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<p class="text-sm font-medium text-slate-900 dark:text-slate-100">System Notification</p>
+<span class="text-xs text-slate-400 whitespace-nowrap">2h ago</span>
+</div>
+<p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Your weekly performance report is ready. You've achieved <span class="font-bold text-slate-800 dark:text-slate-200">108%</span> of your target this week.</p>
+<button class="mt-2 text-sm text-primary font-medium hover:underline">View Report</button>
+</div>
+</div>
+</div>
+</div>
+<div class="p-4 border-t border-border-light dark:border-border-dark text-center">
+<button class="text-sm font-medium text-slate-500 hover:text-primary transition-colors">Load More Updates</button>
+</div>
+</div>
+
+<!-- Today's Focus - colSpan: 1 -->
+<div class="col-span-1 bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm p-5">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-bold text-slate-900 dark:text-white">Today's Focus</h3>
+<span class="text-xs font-medium bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-slate-600 dark:text-slate-400">Sales</span>
+</div>
+<div class="relative w-32 h-32 mx-auto mb-4">
+<svg class="size-full -rotate-90" viewBox="0 0 36 36">
+<path class="text-slate-100 dark:text-slate-800" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3"></path>
+<path class="text-primary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="75, 100" stroke-width="3"></path>
+</svg>
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+<span class="text-2xl font-bold text-slate-900 dark:text-white">75%</span>
+<p class="text-[10px] text-slate-500 uppercase font-semibold">Goal Reached</p>
+</div>
+</div>
+<p class="text-sm text-center text-slate-600 dark:text-slate-400">You need <span class="font-bold text-slate-900 dark:text-white">$1,200</span> more to hit today's target.</p>
+</div>
+
+<!-- Pinned - colSpan: 1 -->
+<div class="col-span-1 bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm p-5">
+<div class="flex justify-between items-center mb-3">
+<h3 class="font-bold text-slate-900 dark:text-white">Pinned</h3>
+<button class="text-slate-400 hover:text-primary">
+<span class="material-symbols-outlined text-sm">edit</span>
+</button>
+</div>
+<div class="space-y-3">
+<a class="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors group" href="#">
+<div class="size-8 rounded bg-orange-100 dark:bg-orange-900/30 text-orange-600 flex items-center justify-center">
+<span class="material-symbols-outlined text-lg">folder_special</span>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-medium text-slate-700 dark:text-slate-200 truncate group-hover:text-primary">Q4 Marketing Strategy</p>
+<p class="text-xs text-slate-400">Modified yesterday</p>
+</div>
+</a>
+<a class="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors group" href="#">
+<div class="size-8 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-600 flex items-center justify-center">
+<span class="material-symbols-outlined text-lg">contacts</span>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-medium text-slate-700 dark:text-slate-200 truncate group-hover:text-primary">VIP Clients List</p>
+<p class="text-xs text-slate-400">24 contacts</p>
+</div>
+</a>
+</div>
+</div>
+
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="border-t border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark">
+<div class="px-4 sm:px-6 lg:px-8 xl:px-12 py-12 max-w-[1800px] mx-auto">
+<!-- Main Footer Content -->
+<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-8">
+<!-- Brand Column -->
+<div class="col-span-2 md:col-span-4 lg:col-span-1">
+<div class="flex items-center gap-2 mb-4">
+<div class="w-8 h-8 rounded bg-primary flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-white text-xl">grid_view</span>
+</div>
+<span class="text-lg font-bold text-slate-900 dark:text-white">IntelliFlow CRM</span>
+</div>
+<p class="text-sm text-slate-600 dark:text-slate-400 mb-4">AI-powered CRM with modern automation and governance-grade validation</p>
+<!-- Social Links -->
+<div class="flex items-center gap-3">
+<a href="https://twitter.com/intelliflow" target="_blank" rel="noopener noreferrer" class="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" aria-label="Twitter">
+<span class="text-sm font-medium">X</span>
+</a>
+<a href="https://linkedin.com/company/intelliflow" target="_blank" rel="noopener noreferrer" class="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" aria-label="LinkedIn">
+<span class="text-sm font-medium">LinkedIn</span>
+</a>
+<a href="https://github.com/intelliflow" target="_blank" rel="noopener noreferrer" class="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" aria-label="GitHub">
+<span class="text-sm font-medium">GitHub</span>
+</a>
+</div>
+</div>
+<!-- Product -->
+<div>
+<h3 class="text-sm font-semibold text-slate-900 dark:text-white mb-4">Product</h3>
+<ul class="space-y-3">
+<li><a href="/features" class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Features</a></li>
+<li><a href="/pricing" class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Pricing</a></li>
+<li><a href="/security" class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Security</a></li>
+<li><a href="/integrations" class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Integrations</a></li>
+</ul>
+</div>
+<!-- Company -->
+<div>
+<h3 class="text-sm font-semibold text-slate-900 dark:text-white mb-4">Company</h3>
+<ul class="space-y-3">
+<li><a href="/about" class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">About</a></li>
+<li><a href="/contact" class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Contact</a></li>
+<li><a href="/partners" class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Partners</a></li>
+<li><a href="/press" class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Press</a></li>
+</ul>
+</div>
+<!-- Resources -->
+<div>
+<h3 class="text-sm font-semibold text-slate-900 dark:text-white mb-4">Resources</h3>
+<ul class="space-y-3">
+<li><a href="/docs" class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Documentation</a></li>
+<li><a href="/api-docs" class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">API Reference</a></li>
+<li><a href="/support" class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Support</a></li>
+<li><a href="https://status.intelliflow.ai" class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Status</a></li>
+</ul>
+</div>
+<!-- Legal -->
+<div>
+<h3 class="text-sm font-semibold text-slate-900 dark:text-white mb-4">Legal</h3>
+<ul class="space-y-3">
+<li><a href="/privacy" class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Privacy Policy</a></li>
+<li><a href="/terms" class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Terms of Service</a></li>
+<li><a href="/cookies" class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Cookie Policy</a></li>
+<li><a href="/gdpr" class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">GDPR</a></li>
+</ul>
+</div>
+</div>
+<!-- Bottom Bar -->
+<div class="pt-8 border-t border-border-light dark:border-border-dark">
+<div class="flex flex-col md:flex-row justify-between items-center gap-4">
+<p class="text-sm text-slate-600 dark:text-slate-400">© 2025 IntelliFlow CRM. All rights reserved.</p>
+<div class="flex items-center gap-6">
+<a href="/privacy" class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Privacy</a>
+<a href="/terms" class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Terms</a>
+<a href="/cookies" class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Cookies</a>
+</div>
+</div>
+</div>
+</div>
+</footer>
+
+</body></html>

@@ -1,0 +1,56 @@
+name: Validate Sprint Data
+
+on:
+  pull_request:
+    paths:
+      - 'apps/project-tracker/docs/metrics/**'
+      - 'tools/scripts/validate-sprint-data.ts'
+  push:
+    branches:
+      - main
+      - master
+      - develop
+    paths:
+      - 'apps/project-tracker/docs/metrics/**'
+
+jobs:
+  validate-sprint-data:
+    name: Validate Sprint Metrics Consistency
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate Sprint Data Consistency
+        run: pnpm run validate:sprint-data -- --strict
+
+      - name: Check if sync is needed
+        if: failure()
+        run: |
+          echo "❌ Sprint data validation failed!"
+          echo ""
+          echo "This usually means:"
+          echo "1. CSV and JSON files are out of sync"
+          echo "2. Invalid status values in CSV"
+          echo "3. Missing JSON files for Sprint 0 tasks"
+          echo "4. _summary.json counts don't match CSV"
+          echo ""
+          echo "To fix:"
+          echo "  pnpm run sync:metrics"
+          echo "  pnpm run validate:sprint-data"
+          echo ""
+          exit 1
