@@ -8,7 +8,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock timeline data
+// Mock timeline data - using future dates relative to today (2026-01-24)
 const mockTimelineResponse = {
   success: true,
   data: {
@@ -16,7 +16,7 @@ const mockTimelineResponse = {
       {
         id: 'EVT-001',
         title: 'ISO 27001 Annual Audit',
-        date: '2026-01-15',
+        date: '2026-01-30',
         type: 'audit',
         standard: 'ISO 27001',
         status: 'scheduled',
@@ -25,7 +25,7 @@ const mockTimelineResponse = {
       {
         id: 'EVT-002',
         title: 'GDPR Policy Review',
-        date: '2026-01-20',
+        date: '2026-02-05',
         type: 'review',
         standard: 'GDPR',
         status: 'scheduled',
@@ -52,15 +52,16 @@ const mockTimelineResponse = {
   },
 };
 
-// Mock fetch
+// Mock fetch - declared at module level, stubbed in beforeEach
 const mockFetch = vi.fn();
-vi.stubGlobal('fetch', mockFetch);
 
 import { ComplianceTimeline } from '../ComplianceTimeline';
 
 describe('ComplianceTimeline', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Re-stub fetch in beforeEach because unstubGlobals:true removes it after each test
+    vi.stubGlobal('fetch', mockFetch);
     mockFetch.mockResolvedValue({
       json: () => Promise.resolve(mockTimelineResponse),
     });
@@ -108,7 +109,7 @@ describe('ComplianceTimeline', () => {
     });
 
     it('should highlight active view mode', async () => {
-      const { container } = render(<ComplianceTimeline />);
+      render(<ComplianceTimeline />);
 
       await waitFor(() => {
         const monthButton = screen.getByText('Month');
@@ -130,26 +131,28 @@ describe('ComplianceTimeline', () => {
     });
 
     it('should have previous month navigation button', async () => {
-      const { container } = render(<ComplianceTimeline />);
+      render(<ComplianceTimeline />);
 
       await waitFor(() => {
-        const prevButton = container.querySelector('[class*="chevron_left"]');
-        expect(prevButton).toBeInTheDocument();
+        // chevron_left is text content inside span.material-symbols-outlined
+        expect(screen.getByText('chevron_left')).toBeInTheDocument();
       });
     });
 
     it('should have next month navigation button', async () => {
-      const { container } = render(<ComplianceTimeline />);
+      render(<ComplianceTimeline />);
 
       await waitFor(() => {
-        const nextButton = container.querySelector('[class*="chevron_right"]');
-        expect(nextButton).toBeInTheDocument();
+        // There are multiple chevron_right icons - one for navigation, one per event
+        const chevronRights = screen.getAllByText('chevron_right');
+        // At least one should be present for navigation
+        expect(chevronRights.length).toBeGreaterThan(0);
       });
     });
 
     it('should navigate to previous month when clicking prev button', async () => {
       const user = userEvent.setup();
-      const { container } = render(<ComplianceTimeline />);
+      render(<ComplianceTimeline />);
 
       await waitFor(() => {
         expect(screen.getByText('Compliance Timeline')).toBeInTheDocument();
@@ -158,8 +161,9 @@ describe('ComplianceTimeline', () => {
       const currentHeading = screen.getByRole('heading', { level: 3 });
       const initialMonth = currentHeading.textContent;
 
-      // Click prev button
-      const prevButton = container.querySelector('button:has(.material-symbols-outlined)');
+      // Click prev button - find button containing chevron_left
+      const chevronLeft = screen.getByText('chevron_left');
+      const prevButton = chevronLeft.closest('button');
       if (prevButton) {
         await user.click(prevButton);
       }
@@ -192,7 +196,8 @@ describe('ComplianceTimeline', () => {
 
       await waitFor(() => {
         // Should have multiple calendar day cells (at least 28)
-        const dayCells = container.querySelectorAll('.min-h-\\[70px\\]');
+        // Use attribute selector to avoid escaping Tailwind bracket syntax
+        const dayCells = container.querySelectorAll('[class*="min-h-"]');
         expect(dayCells.length).toBeGreaterThanOrEqual(28);
       });
     });
@@ -253,25 +258,33 @@ describe('ComplianceTimeline', () => {
       render(<ComplianceTimeline />);
 
       await waitFor(() => {
-        expect(screen.getByText('ISO 27001 Annual Audit')).toBeInTheDocument();
+        // Event appears in both calendar and upcoming list, so use getAllByText
+        const eventElements = screen.getAllByText('ISO 27001 Annual Audit');
+        expect(eventElements.length).toBeGreaterThan(0);
       });
     });
 
     it('should show event date in list', async () => {
       render(<ComplianceTimeline />);
 
+      // Extract matcher to reduce function nesting
+      const dateTextMatcher = (content: string, element: Element | null) =>
+        element?.tagName === 'P' && content.includes('Jan 30');
+
       await waitFor(() => {
-        // Events should show date format like "Jan 15"
-        expect(screen.getByText(/Jan 15/)).toBeInTheDocument();
-      });
+        // Events should show date format like "Jan 30" (future date)
+        const dateText = screen.getByText(dateTextMatcher);
+        expect(dateText).toBeInTheDocument();
+      }, { timeout: 3000 });
     });
 
     it('should show event standard in list', async () => {
       render(<ComplianceTimeline />);
 
       await waitFor(() => {
-        // The events list shows standard next to date
-        expect(screen.getByText(/ISO 27001/)).toBeInTheDocument();
+        // The events list shows standard next to date - use getAllByText since it appears in multiple places
+        const standardElements = screen.getAllByText(/ISO 27001/);
+        expect(standardElements.length).toBeGreaterThan(0);
       });
     });
   });
@@ -282,12 +295,17 @@ describe('ComplianceTimeline', () => {
       render(<ComplianceTimeline />);
 
       await waitFor(() => {
-        expect(screen.getByText('ISO 27001 Annual Audit')).toBeInTheDocument();
+        // Event appears in multiple places (calendar + upcoming list)
+        const eventElements = screen.getAllByText('ISO 27001 Annual Audit');
+        expect(eventElements.length).toBeGreaterThan(0);
       });
 
-      // Click on an event in the upcoming list
-      const eventButton = screen.getByRole('button', { name: /ISO 27001 Annual Audit/i });
-      await user.click(eventButton);
+      // Click on an event in the upcoming list - find first button containing the event title
+      const eventElements = screen.getAllByText('ISO 27001 Annual Audit');
+      const eventButton = eventElements[0].closest('button');
+      if (eventButton) {
+        await user.click(eventButton);
+      }
 
       await waitFor(() => {
         // Modal should show event details
@@ -300,15 +318,19 @@ describe('ComplianceTimeline', () => {
       render(<ComplianceTimeline />);
 
       await waitFor(() => {
-        expect(screen.getByText('ISO 27001 Annual Audit')).toBeInTheDocument();
+        const eventElements = screen.getAllByText('ISO 27001 Annual Audit');
+        expect(eventElements.length).toBeGreaterThan(0);
       });
 
-      const eventButton = screen.getByRole('button', { name: /ISO 27001 Annual Audit/i });
-      await user.click(eventButton);
+      const eventElements = screen.getAllByText('ISO 27001 Annual Audit');
+      const eventButton = eventElements[0].closest('button');
+      if (eventButton) {
+        await user.click(eventButton);
+      }
 
       await waitFor(() => {
         // Should show formatted date
-        expect(screen.getByText(/Thursday, January 15, 2026/)).toBeInTheDocument();
+        expect(screen.getByText(/Friday, January 30, 2026/)).toBeInTheDocument();
       });
     });
 
@@ -317,11 +339,15 @@ describe('ComplianceTimeline', () => {
       render(<ComplianceTimeline />);
 
       await waitFor(() => {
-        expect(screen.getByText('ISO 27001 Annual Audit')).toBeInTheDocument();
+        const eventElements = screen.getAllByText('ISO 27001 Annual Audit');
+        expect(eventElements.length).toBeGreaterThan(0);
       });
 
-      const eventButton = screen.getByRole('button', { name: /ISO 27001 Annual Audit/i });
-      await user.click(eventButton);
+      const eventElements = screen.getAllByText('ISO 27001 Annual Audit');
+      const eventButton = eventElements[0].closest('button');
+      if (eventButton) {
+        await user.click(eventButton);
+      }
 
       await waitFor(() => {
         expect(screen.getByText('scheduled')).toBeInTheDocument();
@@ -333,19 +359,26 @@ describe('ComplianceTimeline', () => {
       render(<ComplianceTimeline />);
 
       await waitFor(() => {
-        expect(screen.getByText('ISO 27001 Annual Audit')).toBeInTheDocument();
+        const eventElements = screen.getAllByText('ISO 27001 Annual Audit');
+        expect(eventElements.length).toBeGreaterThan(0);
       });
 
-      const eventButton = screen.getByRole('button', { name: /ISO 27001 Annual Audit/i });
-      await user.click(eventButton);
+      const eventElements = screen.getAllByText('ISO 27001 Annual Audit');
+      const eventButton = eventElements[0].closest('button');
+      if (eventButton) {
+        await user.click(eventButton);
+      }
 
       await waitFor(() => {
         expect(screen.getByText('Annual certification audit')).toBeInTheDocument();
       });
 
-      // Click close button
-      const closeButton = screen.getByRole('button', { name: /close/i });
-      await user.click(closeButton);
+      // Click close button - the button contains text "close" which is icon text
+      const closeIcon = screen.getByText('close');
+      const closeButton = closeIcon.closest('button');
+      if (closeButton) {
+        await user.click(closeButton);
+      }
 
       await waitFor(() => {
         expect(screen.queryByText('Annual certification audit')).not.toBeInTheDocument();

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import PartnersPage, { metadata } from '../page';
@@ -5,7 +6,7 @@ import partnerData from '@/data/partner-benefits.json';
 
 // Mock Next.js Link component
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...props }: any) => (
+  default: ({ children, href, ...props }: { children: React.ReactNode; href: string; [key: string]: unknown }) => (
     <a href={href} {...props}>
       {children}
     </a>
@@ -26,12 +27,12 @@ describe('PartnersPage', () => {
       expect(metadata.openGraph?.title).toBe('Partner with IntelliFlow CRM');
       expect(metadata.openGraph?.url).toBe('https://intelliflow-crm.com/partners');
       expect(metadata.openGraph?.siteName).toBe('IntelliFlow CRM');
-      expect(metadata.openGraph?.type).toBe('website');
+      expect((metadata.openGraph as Record<string, unknown>)?.type).toBe('website');
     });
 
     it('should have Twitter metadata', () => {
       expect(metadata.twitter).toBeDefined();
-      expect(metadata.twitter?.card).toBe('summary_large_image');
+      expect((metadata.twitter as Record<string, unknown>)?.card).toBe('summary_large_image');
       expect(metadata.twitter?.title).toBe('Partner with IntelliFlow CRM');
     });
   });

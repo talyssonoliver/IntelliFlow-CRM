@@ -4,24 +4,12 @@ import * as React from 'react';
 import { useState, useMemo, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@intelliflow/ui';
-import {
-  Calendar,
-  Clock,
-  AlertTriangle,
-  CheckCircle,
-  ChevronDown,
-  ChevronUp,
-  Filter,
-  Bell,
-  FileText,
-  Users,
-  Briefcase,
-  CalendarClock,
-  Bot,
-  ExternalLink,
-  Loader2,
-  RefreshCw,
-} from 'lucide-react';
+// Material Symbols icon helper component
+const Icon = ({ name, className = '' }: { name: string; className?: string }) => (
+  <span className={`material-symbols-outlined ${className}`} aria-hidden="true">
+    {name}
+  </span>
+);
 import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
 import { useRemindersOptional } from '@/lib/cases/reminders-context';
@@ -259,14 +247,14 @@ const getPriorityColor = (priority: Priority): string => {
 // Event type icon mapping
 const getEventIcon = (type: TimelineEventType): React.ReactNode => {
   const iconMap: Record<TimelineEventType, React.ReactNode> = {
-    deadline: <Clock className="h-4 w-4" />,
-    task: <CheckCircle className="h-4 w-4" />,
-    appointment: <CalendarClock className="h-4 w-4" />,
-    document: <FileText className="h-4 w-4" />,
-    status_change: <Briefcase className="h-4 w-4" />,
-    note: <FileText className="h-4 w-4" />,
-    reminder: <Bell className="h-4 w-4" />,
-    agent_action: <Bot className="h-4 w-4" />,
+    deadline: <Icon name="schedule" className="text-base" />,
+    task: <Icon name="check_circle" className="text-base" />,
+    appointment: <Icon name="event_available" className="text-base" />,
+    document: <Icon name="description" className="text-base" />,
+    status_change: <Icon name="work" className="text-base" />,
+    note: <Icon name="description" className="text-base" />,
+    reminder: <Icon name="notifications" className="text-base" />,
+    agent_action: <Icon name="smart_toy" className="text-base" />,
   };
   return iconMap[type];
 };
@@ -382,7 +370,7 @@ function TimelineEventCard({ event, onClick, isExpanded, onToggleExpand }: Reado
             <div>
               <h4 className="font-medium text-gray-900">{event.title}</h4>
               <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
-                <Calendar className="h-3 w-3" aria-hidden="true" />
+                <Icon name="calendar_today" className="text-xs" />
                 <span>{formatDate(event.date)}</span>
                 {event.endDate && (
                   <>
@@ -400,7 +388,7 @@ function TimelineEventCard({ event, onClick, isExpanded, onToggleExpand }: Reado
             >
               {event.status.replace('_', ' ')}
             </span>
-            {isOverdue && <AlertTriangle className="h-4 w-4 text-red-500" aria-label="Overdue" />}
+            {isOverdue && <Icon name="warning" className="text-base text-red-500" />}
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -409,7 +397,7 @@ function TimelineEventCard({ event, onClick, isExpanded, onToggleExpand }: Reado
               className="p-1 hover:bg-gray-100 rounded"
               aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
             >
-              {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              {isExpanded ? <Icon name="expand_less" className="text-base" /> : <Icon name="expand_more" className="text-base" />}
             </button>
           </div>
         </div>
@@ -426,7 +414,7 @@ function TimelineEventCard({ event, onClick, isExpanded, onToggleExpand }: Reado
             {event.type === 'agent_action' && (
               <div className="mb-4 p-3 bg-purple-50 rounded-lg border border-purple-200">
                 <div className="flex items-center gap-2 mb-2">
-                  <Bot className="h-4 w-4 text-purple-600" />
+                  <Icon name="smart_toy" className="text-base text-purple-600" />
                   <span className="font-medium text-purple-800">{event.agentName}</span>
                   {event.confidenceScore && (
                     <span className={`ml-auto px-2 py-0.5 text-xs rounded-full ${getConfidenceScoreStyle(event.confidenceScore)}`}>
@@ -445,12 +433,12 @@ function TimelineEventCard({ event, onClick, isExpanded, onToggleExpand }: Reado
             <div className="grid grid-cols-2 gap-4 text-sm">
               {event.assignedTo && (
                 <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-gray-400" aria-hidden="true" />
+                  <Icon name="group" className="text-base text-gray-400" />
                   <span className="text-gray-600">Assigned to: {event.assignedTo}</span>
                 </div>
               )}
               <div className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-gray-400" aria-hidden="true" />
+                <Icon name="warning" className="text-base text-gray-400" />
                 <span className="text-gray-600">Priority: {event.priority}</span>
               </div>
             </div>
@@ -473,7 +461,7 @@ function TimelineEventCard({ event, onClick, isExpanded, onToggleExpand }: Reado
                   href={`/agent-approvals/preview?actionId=${event.agentActionId}`}
                   className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors flex items-center gap-2"
                 >
-                  <ExternalLink className="h-3 w-3" />
+                  <Icon name="open_in_new" className="text-xs" />
                   Review & Approve
                 </Link>
               )}
@@ -723,7 +711,7 @@ function CaseTimeline({
             aria-expanded={filterOpen}
             aria-controls="filter-panel"
           >
-            <Filter className="h-4 w-4" />
+            <Icon name="filter_list" className="text-base" />
             Filters
             {(filters.eventTypes.length > 0 || filters.priorityFilter.length > 0) && (
               <span className="ml-1 px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full">
@@ -738,9 +726,9 @@ function CaseTimeline({
             aria-label={`Sort ${sortOrder === 'asc' ? 'descending' : 'ascending'}`}
           >
             {sortOrder === 'asc' ? (
-              <ChevronUp className="h-4 w-4" />
+              <Icon name="expand_less" className="text-base" />
             ) : (
-              <ChevronDown className="h-4 w-4" />
+              <Icon name="expand_more" className="text-base" />
             )}
             {sortOrder === 'asc' ? 'Earliest First' : 'Latest First'}
           </button>
@@ -766,7 +754,7 @@ function CaseTimeline({
           role="alert"
           aria-live="polite"
         >
-          <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <Icon name="warning" className="text-xl text-red-600 flex-shrink-0 mt-0.5" />
           <div>
             <h3 className="font-medium text-red-800">
               {overdueEvents.length} Overdue {overdueEvents.length === 1 ? 'Item' : 'Items'}
@@ -782,7 +770,7 @@ function CaseTimeline({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
+            <Icon name="calendar_today" className="text-xl" />
             Timeline Events
           </CardTitle>
           <CardDescription>
@@ -792,7 +780,7 @@ function CaseTimeline({
         <CardContent>
           {filteredEvents.length === 0 ? (
             <div className="text-center py-12">
-              <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <Icon name="calendar_today" className="text-5xl text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500">No events match your filters</p>
               {(filters.eventTypes.length > 0 || filters.priorityFilter.length > 0) && (
                 <button
@@ -832,21 +820,21 @@ function CaseTimeline({
           onClick={onAddDeadline}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
         >
-          <Clock className="h-4 w-4" />
+          <Icon name="schedule" className="text-base" />
           Add Deadline
         </button>
         <button
           onClick={onAddTask}
           className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
         >
-          <CheckCircle className="h-4 w-4" />
+          <Icon name="check_circle" className="text-base" />
           Add Task
         </button>
         <button
           onClick={onAddAppointment}
           className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
         >
-          <CalendarClock className="h-4 w-4" />
+          <Icon name="event_available" className="text-base" />
           Schedule Appointment
         </button>
       </div>
@@ -968,16 +956,23 @@ function CaseTimelinePageContent() {
   React.useEffect(() => {
     if (apiEvents && reminders) {
       // Create reminders from future events (tasks, deadlines, appointments)
-      // Map to TimelineEvent format expected by reminders service
+      // Map local TimelineEvent format to service's expected format
+      // Note: Local Priority has 'critical', service uses 'urgent' - map accordingly
+      const mapPriority = (p: Priority): 'low' | 'medium' | 'high' | 'urgent' =>
+        p === 'critical' ? 'urgent' : p;
+
       const reminderEvents = apiEvents.map(e => ({
-        ...e,
+        id: e.id,
+        type: e.type,
+        title: e.title,
+        description: e.description,
         timestamp: e.date,
-      })) as any[];
+        priority: mapPriority(e.priority),
+        entityType: e.type === 'task' ? 'task' : e.type === 'appointment' ? 'appointment' : 'case',
+        entityId: e.linkedCaseId,
+      }));
       reminders.createFromTimelineEvents(reminderEvents);
     }
-    // Only depend on apiEvents - we want to recreate reminders when events change,
-    // not when the reminders service state changes (which would cause infinite loop)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiEvents]);
 
   const handleEventClick = (event: TimelineEvent) => {
@@ -1001,7 +996,7 @@ function CaseTimelinePageContent() {
     return (
       <div className="container mx-auto py-8 px-4 max-w-5xl">
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <Icon name="progress_activity" className="text-3xl animate-spin text-blue-600" />
           <span className="ml-3 text-gray-600">Loading timeline...</span>
         </div>
       </div>
@@ -1026,7 +1021,7 @@ function CaseTimelinePageContent() {
             onClick={() => refetch()}
             className="flex items-center gap-1 text-blue-600 hover:text-blue-700"
           >
-            <RefreshCw className="h-4 w-4" />
+            <Icon name="refresh" className="text-base" />
             Refresh
           </button>
         </div>
@@ -1056,7 +1051,7 @@ function TimelineLoadingFallback() {
   return (
     <div className="container mx-auto py-8 px-4 max-w-5xl">
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <Icon name="progress_activity" className="text-3xl animate-spin text-blue-600" />
         <span className="ml-3 text-gray-600">Loading timeline...</span>
       </div>
     </div>

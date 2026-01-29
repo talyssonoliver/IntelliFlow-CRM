@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import ContactPage from '../page';
@@ -33,7 +34,9 @@ describe('Contact Page', () => {
       render(<ContactPage />);
 
       expect(screen.getByText(/contact@intelliflow-crm\.com/i)).toBeInTheDocument();
-      expect(screen.getByText(/24 hours/i)).toBeInTheDocument();
+      // The "24 hours" text appears in multiple places - use getAllByText
+      const elements24Hours = screen.getAllByText(/within 24 hours/i);
+      expect(elements24Hours.length).toBeGreaterThan(0);
     });
 
     it('should render FAQ section', () => {
@@ -106,8 +109,10 @@ describe('Contact Page', () => {
     it('should have responsive layout classes', () => {
       render(<ContactPage />);
 
+      // Responsive classes are on child containers, not main element
       const main = screen.getByRole('main');
-      expect(main.className).toMatch(/lg:|md:|sm:/);
+      const responsiveElements = main.querySelectorAll('[class*="lg:"], [class*="md:"], [class*="sm:"]');
+      expect(responsiveElements.length).toBeGreaterThan(0);
     });
   });
 

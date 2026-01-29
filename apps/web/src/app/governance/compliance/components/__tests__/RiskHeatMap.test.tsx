@@ -62,15 +62,16 @@ const mockRiskResponse = {
   },
 };
 
-// Mock fetch
+// Mock fetch - declared at module level, stubbed in beforeEach
 const mockFetch = vi.fn();
-vi.stubGlobal('fetch', mockFetch);
 
 import { RiskHeatMap } from '../RiskHeatMap';
 
 describe('RiskHeatMap', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Re-stub fetch in beforeEach because unstubGlobals:true removes it after each test
+    vi.stubGlobal('fetch', mockFetch);
     mockFetch.mockResolvedValue({
       json: () => Promise.resolve(mockRiskResponse),
     });

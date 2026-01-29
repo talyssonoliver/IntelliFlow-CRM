@@ -4,29 +4,19 @@ import Link from 'next/link';
 import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, Button } from '@intelliflow/ui';
-import {
-  Bot,
-  Check,
-  X,
-  RotateCcw,
-  Clock,
-  AlertTriangle,
-  ChevronDown,
-  ChevronUp,
-  History,
-  Filter,
-  RefreshCw,
-  Eye,
-  Edit3,
-  Shield,
-  Zap,
-} from 'lucide-react';
+// Material Symbols icon helper component
+const Icon = ({ name, className = '' }: { name: string; className?: string }) => (
+  <span className={`material-symbols-outlined ${className}`} aria-hidden="true">
+    {name}
+  </span>
+);
 // IFC-149 Integration: Use barrel export for cleaner imports
 import {
-  type AgentAction,
-  type ActionStatus,
   type ApprovalMetrics,
 } from '@/lib/agent';
+
+// Import types used by mock data and functions
+import type { AgentAction, ActionStatus } from '@/lib/agent';
 
 // =============================================================================
 // Types
@@ -234,37 +224,37 @@ function getStatusBadge(status: ActionStatus): {
       return {
         label: 'Pending Review',
         className: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
-        icon: <Clock className="h-3 w-3" />,
+        icon: <Icon name="schedule" className="text-xs" />,
       };
     case 'approved':
       return {
         label: 'Approved',
         className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-        icon: <Check className="h-3 w-3" />,
+        icon: <Icon name="check" className="text-xs" />,
       };
     case 'rejected':
       return {
         label: 'Rejected',
         className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-        icon: <X className="h-3 w-3" />,
+        icon: <Icon name="close" className="text-xs" />,
       };
     case 'rolled_back':
       return {
         label: 'Rolled Back',
         className: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
-        icon: <RotateCcw className="h-3 w-3" />,
+        icon: <Icon name="history" className="text-xs" />,
       };
     case 'modified':
       return {
         label: 'Modified',
         className: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-        icon: <Edit3 className="h-3 w-3" />,
+        icon: <Icon name="edit" className="text-xs" />,
       };
     case 'expired':
       return {
         label: 'Expired',
         className: 'bg-slate-100 text-slate-800 dark:bg-slate-900/30 dark:text-slate-400',
-        icon: <AlertTriangle className="h-3 w-3" />,
+        icon: <Icon name="warning" className="text-xs" />,
       };
     default:
       return {
@@ -318,11 +308,12 @@ function DiffView({ previousState, proposedState }: DiffViewProps) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" data-testid="diff-view">
       {changes.map((change) => (
         <div
           key={change.field}
           className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3"
+          data-testid="diff-change"
         >
           <div className="flex items-center gap-2 mb-2">
             <span className="font-medium text-slate-900 dark:text-white text-sm">
@@ -414,7 +405,7 @@ function ActionCard({
           <div className="flex items-start gap-3 min-w-0">
             {/* Agent Icon */}
             <div className="w-10 h-10 rounded-full bg-[#137fec]/10 flex items-center justify-center flex-shrink-0">
-              <Bot className="h-5 w-5 text-[#137fec]" />
+              <Icon name="smart_toy" className="text-xl text-[#137fec]" />
             </div>
 
             {/* Action Info */}
@@ -433,16 +424,16 @@ function ActionCard({
 
               <div className="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400">
                 <span className="flex items-center gap-1">
-                  <Zap className="h-3.5 w-3.5" />
+                  <Icon name="bolt" className="text-sm" />
                   {action.agentName}
                 </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="h-3.5 w-3.5" />
+                <span className="flex items-center gap-1" data-testid="relative-time">
+                  <Icon name="schedule" className="text-sm" />
                   {formatTimeAgo(action.createdAt)}
                 </span>
                 {isPending && (
-                  <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
-                    <AlertTriangle className="h-3.5 w-3.5" />
+                  <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400" data-testid="expires-time">
+                    <Icon name="warning" className="text-sm" />
                     Expires in {formatTimeRemaining(action.expiresAt)}
                   </span>
                 )}
@@ -472,9 +463,9 @@ function ActionCard({
               </span>
             </div>
             {isExpanded ? (
-              <ChevronUp className="h-5 w-5 text-slate-400" />
+              <Icon name="expand_less" className="text-xl text-slate-400" />
             ) : (
-              <ChevronDown className="h-5 w-5 text-slate-400" />
+              <Icon name="expand_more" className="text-xl text-slate-400" />
             )}
           </div>
         </div>
@@ -484,14 +475,14 @@ function ActionCard({
       {isExpanded && (
         <div className="border-t border-slate-200 dark:border-slate-700">
           {/* AI Reasoning */}
-          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border-b border-slate-200 dark:border-slate-700">
+          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border-b border-slate-200 dark:border-slate-700" data-testid="action-card-expanded">
             <div className="flex items-start gap-2">
-              <Shield className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+              <Icon name="shield" className="text-base text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
               <div>
                 <h4 className="text-sm font-medium text-blue-900 dark:text-blue-200 mb-1">
                   AI Reasoning
                 </h4>
-                <p className="text-sm text-blue-800 dark:text-blue-300">
+                <p className="text-sm text-blue-800 dark:text-blue-300" data-testid="ai-reasoning-content">
                   {action.aiReasoning}
                 </p>
               </div>
@@ -501,7 +492,7 @@ function ActionCard({
           {/* Diff View */}
           <div className="p-4 border-b border-slate-200 dark:border-slate-700">
             <h4 className="text-sm font-medium text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-              <Eye className="h-4 w-4" />
+              <Icon name="visibility" className="text-base" />
               Proposed Changes
             </h4>
             <DiffView
@@ -521,7 +512,7 @@ function ActionCard({
                   }}
                   className="gap-2"
                 >
-                  <Check className="h-4 w-4" />
+                  <Icon name="check" className="text-base" />
                   Approve
                 </Button>
                 <Button
@@ -532,11 +523,11 @@ function ActionCard({
                   }}
                   className="gap-2"
                 >
-                  <X className="h-4 w-4" />
+                  <Icon name="close" className="text-base" />
                   Reject
                 </Button>
                 <Button variant="ghost" className="gap-2 ml-auto">
-                  <Edit3 className="h-4 w-4" />
+                  <Icon name="edit" className="text-base" />
                   Modify
                 </Button>
               </div>
@@ -562,7 +553,7 @@ function ActionCard({
                     disabled={!feedback.trim()}
                     className="gap-2"
                   >
-                    <X className="h-4 w-4" />
+                    <Icon name="close" className="text-base" />
                     Confirm Rejection
                   </Button>
                   <Button
@@ -589,7 +580,7 @@ function ActionCard({
                   }}
                   className="gap-2"
                 >
-                  <RotateCcw className="h-4 w-4" />
+                  <Icon name="history" className="text-base" />
                   Rollback
                 </Button>
                 <span className="text-sm text-slate-500 dark:text-slate-400">
@@ -618,7 +609,7 @@ function ActionCard({
                     disabled={!feedback.trim()}
                     className="gap-2"
                   >
-                    <RotateCcw className="h-4 w-4" />
+                    <Icon name="history" className="text-base" />
                     Confirm Rollback
                   </Button>
                   <Button
@@ -667,21 +658,21 @@ interface MetricsCardProps {
 
 function MetricsCard({ metrics }: MetricsCardProps) {
   return (
-    <div className="grid gap-4 md:grid-cols-5">
-      <Card className="p-4">
+    <div className="grid gap-4 md:grid-cols-5" data-testid="metrics-dashboard">
+      <Card className="p-4" data-testid="metric-total">
         <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">
           Total Actions
         </div>
-        <div className="text-2xl font-bold text-slate-900 dark:text-white">
+        <div className="text-2xl font-bold text-slate-900 dark:text-white" data-testid="metric-value">
           {metrics.totalActions}
         </div>
       </Card>
 
-      <Card className="p-4">
+      <Card className="p-4" data-testid="metric-approved">
         <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">
           Approved
         </div>
-        <div className="text-2xl font-bold text-green-600">
+        <div className="text-2xl font-bold text-green-600" data-testid="metric-value">
           {metrics.approved}
         </div>
         <div className="text-xs text-slate-500 dark:text-slate-400">
@@ -689,27 +680,27 @@ function MetricsCard({ metrics }: MetricsCardProps) {
         </div>
       </Card>
 
-      <Card className="p-4">
+      <Card className="p-4" data-testid="metric-rejected">
         <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">
           Rejected
         </div>
-        <div className="text-2xl font-bold text-red-600">{metrics.rejected}</div>
+        <div className="text-2xl font-bold text-red-600" data-testid="metric-value">{metrics.rejected}</div>
       </Card>
 
-      <Card className="p-4">
+      <Card className="p-4" data-testid="metric-rolledback">
         <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">
           Rolled Back
         </div>
-        <div className="text-2xl font-bold text-purple-600">
+        <div className="text-2xl font-bold text-purple-600" data-testid="metric-value">
           {metrics.rolledBack}
         </div>
       </Card>
 
-      <Card className="p-4">
+      <Card className="p-4" data-testid="metric-avgtime">
         <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">
           Avg Review Time
         </div>
-        <div className="text-2xl font-bold text-slate-900 dark:text-white">
+        <div className="text-2xl font-bold text-slate-900 dark:text-white" data-testid="metric-value">
           {metrics.avgReviewTimeMs > 60000
             ? `${Math.round(metrics.avgReviewTimeMs / 60000)}m`
             : `${Math.round(metrics.avgReviewTimeMs / 1000)}s`}
@@ -931,7 +922,7 @@ function AgentApprovalsPreviewContent() {
         <div className="flex items-center gap-3">
           {pendingCount > 0 && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 text-sm font-medium">
-              <Clock className="h-4 w-4" />
+              <Icon name="schedule" className="text-base" />
               {pendingCount} pending
             </span>
           )}
@@ -941,9 +932,7 @@ function AgentApprovalsPreviewContent() {
             disabled={isLoading}
             className="gap-2"
           >
-            <RefreshCw
-              className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`}
-            />
+            <Icon name="refresh" className={`text-base ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
         </div>
@@ -956,12 +945,12 @@ function AgentApprovalsPreviewContent() {
       <Card className="p-4">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-slate-400" />
+            <Icon name="filter_list" className="text-base text-slate-400" />
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
               Filter:
             </span>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2" data-testid="filter-buttons">
             {(
               [
                 'all',
@@ -998,7 +987,7 @@ function AgentApprovalsPreviewContent() {
           <Card className="p-12">
             <div className="flex flex-col items-center justify-center text-center">
               <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
-                <Bot className="h-8 w-8 text-slate-400" />
+                <Icon name="smart_toy" className="text-3xl text-slate-400" />
               </div>
               <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-1">
                 No actions found
@@ -1015,6 +1004,8 @@ function AgentApprovalsPreviewContent() {
             <div
               key={action.id}
               id={`action-card-${action.id}`}
+              data-testid={`action-card-${action.id}`}
+              data-status={action.status}
               className={`transition-all duration-500 ${
                 highlightedActionId === action.id
                   ? 'ring-2 ring-[#137fec] ring-offset-2 rounded-lg'
@@ -1042,7 +1033,7 @@ function AgentApprovalsPreviewContent() {
       <Card className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <History className="h-5 w-5 text-slate-400" />
+            <Icon name="history" className="text-xl text-slate-400" />
             <div>
               <h3 className="text-sm font-medium text-slate-900 dark:text-white">
                 Action History

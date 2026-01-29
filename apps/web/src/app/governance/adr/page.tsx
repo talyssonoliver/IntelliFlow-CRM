@@ -69,7 +69,7 @@ export default function ADRRegistryPage() {
       } else {
         setError(result.error);
       }
-    } catch (err) {
+    } catch {
       setError('Failed to fetch ADRs');
     } finally {
       setLoading(false);
@@ -176,7 +176,7 @@ export default function ADRRegistryPage() {
       } else {
         setError(result.error);
       }
-    } catch (err) {
+    } catch {
       setError('Failed to create ADR');
     } finally {
       setCreating(false);
@@ -197,7 +197,7 @@ export default function ADRRegistryPage() {
       } else {
         setError(result.error);
       }
-    } catch (err) {
+    } catch {
       setError('Failed to generate index');
     } finally {
       setGeneratingIndex(false);
@@ -225,7 +225,7 @@ export default function ADRRegistryPage() {
       } else {
         setError(result.error);
       }
-    } catch (err) {
+    } catch {
       setError('Failed to update status');
     } finally {
       setStatusUpdating(null);

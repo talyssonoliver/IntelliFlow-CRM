@@ -76,9 +76,8 @@ const mockDetailResponse = {
   },
 };
 
-// Mock fetch
+// Mock fetch - declared at module level, stubbed in beforeEach
 const mockFetch = vi.fn();
-vi.stubGlobal('fetch', mockFetch);
 
 import { ComplianceDetailPanel } from '../ComplianceDetailPanel';
 
@@ -88,6 +87,8 @@ describe('ComplianceDetailPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockOnClose.mockClear();
+    // Re-stub fetch in beforeEach because unstubGlobals:true removes it after each test
+    vi.stubGlobal('fetch', mockFetch);
     mockFetch.mockResolvedValue({
       json: () => Promise.resolve(mockDetailResponse),
     });
@@ -328,7 +329,7 @@ describe('ComplianceDetailPanel', () => {
     });
 
     it('should display control status icons', async () => {
-      const { container } = render(
+      render(
         <ComplianceDetailPanel
           standardId="iso-27001"
           open={true}
@@ -336,9 +337,16 @@ describe('ComplianceDetailPanel', () => {
         />
       );
 
+      // Wait for data to load first
       await waitFor(() => {
-        // Should have check_circle for passed, cancel for failed, pending for in_progress
-        expect(container.querySelector('.material-symbols-outlined')).toBeInTheDocument();
+        expect(screen.getByText('ISO 27001')).toBeInTheDocument();
+      });
+
+      // Should have material-symbols-outlined icons for control statuses
+      // Note: Sheet renders into a portal, so use document.querySelectorAll
+      await waitFor(() => {
+        const icons = document.querySelectorAll('.material-symbols-outlined');
+        expect(icons.length).toBeGreaterThan(0);
       });
     });
 
@@ -366,7 +374,9 @@ describe('ComplianceDetailPanel', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/Last assessed:/)).toBeInTheDocument();
+        // Multiple controls have last assessed dates
+        const assessedTexts = screen.getAllByText(/Last assessed:/);
+        expect(assessedTexts.length).toBeGreaterThan(0);
       });
     });
   });
@@ -391,14 +401,17 @@ describe('ComplianceDetailPanel', () => {
 
       await waitFor(() => {
         // Should show scores from historical data
+        // Note: 85% is unique to history, 92% appears in both overview and history
         expect(screen.getByText('85%')).toBeInTheDocument();
-        expect(screen.getByText('92%')).toBeInTheDocument();
+        // 92% appears multiple times (overview + history list)
+        const score92Elements = screen.getAllByText('92%');
+        expect(score92Elements.length).toBeGreaterThan(0);
       });
     });
 
     it('should render SVG chart', async () => {
       const user = userEvent.setup();
-      const { container } = render(
+      render(
         <ComplianceDetailPanel
           standardId="iso-27001"
           open={true}
@@ -413,10 +426,15 @@ describe('ComplianceDetailPanel', () => {
       const historyTab = screen.getByRole('button', { name: /history/i });
       await user.click(historyTab);
 
+      // Wait for history content to appear (score trend text indicates history is active)
       await waitFor(() => {
-        const svg = container.querySelector('svg');
-        expect(svg).toBeInTheDocument();
+        expect(screen.getByText('Score trend over the last 6 months')).toBeInTheDocument();
       });
+
+      // Now check for the SVG chart
+      // Note: Sheet renders into a portal, so use document.querySelector
+      const svg = document.querySelector('svg');
+      expect(svg).toBeInTheDocument();
     });
   });
 
@@ -494,7 +512,7 @@ describe('ComplianceDetailPanel', () => {
       );
 
       // Initially should show loading (spinner icon)
-      const { container } = render(
+      render(
         <ComplianceDetailPanel
           standardId="iso-27001"
           open={true}

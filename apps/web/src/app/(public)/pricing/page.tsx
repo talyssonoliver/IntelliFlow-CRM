@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { Button, Card } from '@intelliflow/ui';
 import { cn } from '@intelliflow/ui';
 import pricingData from '@/data/pricing-data.json';
-import { calculatePrice, formatCurrency } from '@/lib/pricing/calculator';
 
 export default function PricingPage() {
   const [billing, setBilling] = React.useState<'monthly' | 'annual'>('annual');
