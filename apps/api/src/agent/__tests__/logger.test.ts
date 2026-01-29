@@ -369,5 +369,265 @@ describe('Agent Logger', () => {
       expect(logEntry.userId).toBe('user-1');
       expect(logEntry.toolName).toBe('search_leads');
     });
+
+    it('should set ERROR level for failed actions', () => {
+      const actionLog: AgentActionLog = {
+        id: 'log-1',
+        timestamp: new Date(),
+        userId: 'user-1',
+        agentSessionId: 'session-1',
+        toolName: 'create_case',
+        actionType: 'CREATE',
+        entityType: 'CASE',
+        input: {},
+        success: false,
+        error: 'Test error',
+        durationMs: 50,
+        approvalRequired: false,
+      };
+
+      const logEntry = createLogEntry(actionLog);
+
+      expect(logEntry.level).toBe('ERROR');
+    });
+  });
+
+  describe('debug method', () => {
+    it('should log debug messages when minLevel is DEBUG', async () => {
+      await logger.debug('user-1', 'session-1', 'Test debug message', { extra: 'data' });
+
+      const logs = await logger.getRecentLogs({ userId: 'user-1' });
+      expect(logs.length).toBe(1);
+      expect(logs[0].input).toEqual({ message: 'Test debug message' });
+      expect(logs[0].metadata).toEqual({ extra: 'data' });
+    });
+
+    it('should skip debug messages when minLevel is INFO', async () => {
+      const infoLogger = new AgentActionLogger({
+        logToConsole: false,
+        logToFile: false,
+        minLevel: 'INFO',
+      });
+
+      await infoLogger.debug('user-1', 'session-1', 'Test debug message');
+
+      const logs = await infoLogger.getRecentLogs({ userId: 'user-1' });
+      expect(logs.length).toBe(0);
+
+      await infoLogger.stop();
+    });
+  });
+
+  describe('getRecentLogs with since filter', () => {
+    it('should filter logs by since date', async () => {
+      const beforeTime = new Date();
+
+      await logger.log({
+        userId: 'user-1',
+        agentSessionId: 'session-1',
+        toolName: 'old_action',
+        actionType: 'SEARCH',
+        entityType: 'LEAD',
+        input: {},
+        success: true,
+        durationMs: 10,
+        approvalRequired: false,
+      });
+
+      // Wait a bit to ensure timestamp difference
+      await new Promise(resolve => setTimeout(resolve, 10));
+      const afterTime = new Date();
+
+      await logger.log({
+        userId: 'user-1',
+        agentSessionId: 'session-1',
+        toolName: 'new_action',
+        actionType: 'CREATE',
+        entityType: 'CASE',
+        input: {},
+        success: true,
+        durationMs: 20,
+        approvalRequired: false,
+      });
+
+      const logsAfter = await logger.getRecentLogs({ since: afterTime });
+      expect(logsAfter.every(l => l.toolName === 'new_action')).toBe(true);
+    });
+  });
+
+  describe('flush behavior', () => {
+    it('should clear buffer after flush', async () => {
+      await logger.log({
+        userId: 'user-1',
+        agentSessionId: 'session-1',
+        toolName: 'test',
+        actionType: 'SEARCH',
+        entityType: 'LEAD',
+        input: {},
+        success: true,
+        durationMs: 10,
+        approvalRequired: false,
+      });
+
+      await logger.flush();
+
+      // Buffer should be cleared but logs are still accessible in memory
+      const stats = await logger.getStatistics();
+      // After flush, buffer is cleared
+      expect(stats.totalActions).toBe(0);
+    });
+
+    it('should handle empty buffer flush', async () => {
+      // Should not throw
+      await logger.flush();
+    });
+  });
+
+  describe('console logging', () => {
+    it('should log to console when enabled', async () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleLogger = new AgentActionLogger({
+        logToConsole: true,
+        logToFile: false,
+        minLevel: 'INFO',
+      });
+
+      await consoleLogger.log({
+        userId: 'user-1',
+        agentSessionId: 'session-1',
+        toolName: 'test_tool',
+        actionType: 'SEARCH',
+        entityType: 'LEAD',
+        input: {},
+        success: true,
+        durationMs: 10,
+        approvalRequired: false,
+      });
+
+      expect(consoleSpy).toHaveBeenCalled();
+      consoleSpy.mockRestore();
+      await consoleLogger.stop();
+    });
+
+    it('should log approval info when approvalRequired', async () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleLogger = new AgentActionLogger({
+        logToConsole: true,
+        logToFile: false,
+        minLevel: 'INFO',
+      });
+
+      await consoleLogger.log({
+        userId: 'user-1',
+        agentSessionId: 'session-1',
+        toolName: 'test_tool',
+        actionType: 'CREATE',
+        entityType: 'CASE',
+        input: {},
+        success: true,
+        durationMs: 10,
+        approvalRequired: true,
+        approvalStatus: 'APPROVED',
+      });
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('approval=APPROVED')
+      );
+      consoleSpy.mockRestore();
+      await consoleLogger.stop();
+    });
+
+    it('should log errors to console.error', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleLogger = new AgentActionLogger({
+        logToConsole: true,
+        logToFile: false,
+        minLevel: 'INFO',
+      });
+
+      await consoleLogger.log({
+        userId: 'user-1',
+        agentSessionId: 'session-1',
+        toolName: 'test_tool',
+        actionType: 'UPDATE',
+        entityType: 'LEAD',
+        input: {},
+        success: false,
+        error: 'Test error message',
+        durationMs: 10,
+        approvalRequired: false,
+      });
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Test error message')
+      );
+      consoleErrorSpy.mockRestore();
+      await consoleLogger.stop();
+    });
+  });
+
+  describe('output redaction', () => {
+    it('should redact sensitive fields in output', async () => {
+      const loggerWithRedaction = new AgentActionLogger({
+        logToConsole: false,
+        logToFile: false,
+        redactSensitiveFields: true,
+        sensitiveFields: ['password', 'secret'],
+      });
+
+      await loggerWithRedaction.log({
+        userId: 'user-1',
+        agentSessionId: 'session-1',
+        toolName: 'test_tool',
+        actionType: 'SEARCH',
+        entityType: 'LEAD',
+        input: { query: 'test' },
+        output: {
+          user: 'testuser',
+          password: 'secret123',
+        },
+        success: true,
+        durationMs: 10,
+        approvalRequired: false,
+      });
+
+      const logs = await loggerWithRedaction.getRecentLogs({ userId: 'user-1' });
+      const output = logs[0].output as Record<string, unknown>;
+      expect(output.user).toBe('testuser');
+      expect(output.password).toBe('[REDACTED]');
+
+      await loggerWithRedaction.stop();
+    });
+  });
+
+  describe('statistics edge cases', () => {
+    it('should return zero avgDuration when no logs', async () => {
+      const stats = await logger.getStatistics('non-existent-session');
+      expect(stats.avgDurationMs).toBe(0);
+    });
+
+    it('should count rollback events', async () => {
+      await logger.logRollback('user-1', 'stats-session-2', 'action-1', true);
+
+      const stats = await logger.getStatistics('stats-session-2');
+      expect(stats.rollbacks).toBe(1);
+    });
+  });
+
+  describe('approval rejection logging', () => {
+    it('should log rejection decisions', async () => {
+      await logger.logApprovalDecision(
+        'user-1',
+        'session-1',
+        'action-123',
+        'REJECT',
+        'manager-1',
+        'Not approved'
+      );
+
+      const logs = await logger.getRecentLogs({ userId: 'user-1' });
+      expect(logs[0].approvalStatus).toBe('REJECTED');
+      expect(logs[0].metadata?.reason).toBe('Not approved');
+    });
   });
 });

@@ -25,6 +25,9 @@ import {
   getAvailableToolNames,
   getToolsByActionType,
   getToolsRequiringApproval,
+  getToolsNotRequiringApproval,
+  toolMetadata,
+  agentToolRegistry,
 } from '../tools';
 import { AgentAuthContext } from '../types';
 import { resetSessionActionCount } from '../authorization';
@@ -109,6 +112,56 @@ describe('Agent Tools', () => {
       expect(approvalTools.some((t) => t.name === 'create_case')).toBe(true);
       expect(approvalTools.some((t) => t.name === 'update_appointment')).toBe(true);
       expect(approvalTools.some((t) => t.name === 'draft_message')).toBe(true);
+    });
+
+    it('should identify tools not requiring approval', () => {
+      const noApprovalTools = getToolsNotRequiringApproval();
+
+      expect(noApprovalTools.length).toBeGreaterThan(0);
+      expect(noApprovalTools.every((t) => !t.requiresApproval)).toBe(true);
+      expect(noApprovalTools.some((t) => t.name === 'search_leads')).toBe(true);
+      expect(noApprovalTools.some((t) => t.name === 'search_contacts')).toBe(true);
+      expect(noApprovalTools.some((t) => t.name === 'search_opportunities')).toBe(true);
+    });
+
+    it('should have tool metadata with categories', () => {
+      expect(toolMetadata).toBeDefined();
+      expect(toolMetadata.categories).toBeDefined();
+      expect(toolMetadata.categories.search).toBeDefined();
+      expect(toolMetadata.categories.create).toBeDefined();
+      expect(toolMetadata.categories.update).toBeDefined();
+      expect(toolMetadata.categories.draft).toBeDefined();
+    });
+
+    it('should have correct category properties', () => {
+      const { search, create, update, draft } = toolMetadata.categories;
+
+      // Search category
+      expect(search.name).toBe('Search');
+      expect(search.requiresApproval).toBe(false);
+      expect(search.tools).toContain('search_leads');
+
+      // Create category
+      expect(create.name).toBe('Create');
+      expect(create.requiresApproval).toBe(true);
+      expect(create.tools).toContain('create_case');
+
+      // Update category
+      expect(update.name).toBe('Update');
+      expect(update.requiresApproval).toBe(true);
+      expect(update.tools).toContain('update_case');
+
+      // Draft category
+      expect(draft.name).toBe('Draft');
+      expect(draft.requiresApproval).toBe(true);
+      expect(draft.tools).toContain('draft_message');
+    });
+
+    it('should expose agentToolRegistry Map', () => {
+      expect(agentToolRegistry).toBeInstanceOf(Map);
+      expect(agentToolRegistry.size).toBeGreaterThan(0);
+      expect(agentToolRegistry.has('search_leads')).toBe(true);
+      expect(agentToolRegistry.has('create_case')).toBe(true);
     });
   });
 

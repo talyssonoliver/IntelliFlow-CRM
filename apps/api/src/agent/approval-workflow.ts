@@ -12,7 +12,7 @@
  * - Diff preview generation
  */
 
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 import {
   PendingAction,
   ApprovalDecision,
@@ -20,7 +20,6 @@ import {
   RollbackResult,
   RollbackRequest,
   AgentAuthContext,
-  ApprovalStatus,
   EntityType,
 } from './types';
 import { agentLogger } from './logger';
@@ -31,7 +30,7 @@ import { getAgentTool } from './tools';
  * In production, this would be backed by a database
  */
 class PendingActionsStore {
-  private actions: Map<string, PendingAction> = new Map();
+  private readonly actions: Map<string, PendingAction> = new Map();
 
   async add(action: PendingAction): Promise<void> {
     this.actions.set(action.id, action);
@@ -103,7 +102,7 @@ class PendingActionsStore {
  * Store for executed actions (for rollback capability)
  */
 class ExecutedActionsStore {
-  private actions: Map<string, ExecutedAction> = new Map();
+  private readonly actions: Map<string, ExecutedAction> = new Map();
 
   async add(action: ExecutedAction): Promise<void> {
     this.actions.set(action.id, action);
@@ -141,7 +140,7 @@ interface RollbackRecord {
 }
 
 class RollbackStore {
-  private records: Map<string, RollbackRecord> = new Map();
+  private readonly records: Map<string, RollbackRecord> = new Map();
 
   async add(record: RollbackRecord): Promise<void> {
     this.records.set(record.actionId, record);
@@ -369,7 +368,7 @@ export class ApprovalWorkflowService {
 
     // Get the tool to perform rollback
     const tool = getAgentTool(executedAction.toolName);
-    if (!tool || !tool.rollback) {
+    if (!tool?.rollback) {
       return {
         success: false,
         actionId: request.actionId,

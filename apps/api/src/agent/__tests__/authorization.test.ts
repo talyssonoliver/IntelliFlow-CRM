@@ -294,5 +294,187 @@ describe('Agent Authorization', () => {
       expect(summary.canApprove).toBe(true);
       expect(summary.canRollback).toBe(true);
     });
+
+    it('should show actionsRemaining as 0 when at limit', () => {
+      const user = {
+        userId: 'user-1',
+        role: 'USER',
+        customMaxActions: 1, // Set limit to 1
+      };
+      const context = buildAuthContext(user, testSessionId);
+      // Manually set actionCount to match max
+      context.actionCount = 1;
+
+      const summary = agentAuthorizationService.getAuthorizationSummary(context);
+
+      expect(summary.actionsRemaining).toBe(0);
+    });
+
+    it('should show USER cannot approve or rollback', () => {
+      const user = { userId: 'user-1', role: 'USER' };
+      const context = buildAuthContext(user, testSessionId);
+
+      const summary = agentAuthorizationService.getAuthorizationSummary(context);
+
+      expect(summary.canApprove).toBe(false);
+      expect(summary.canRollback).toBe(false);
+    });
+  });
+
+  describe('buildAuthContext - additional scenarios', () => {
+    it('should build context with MANAGER role permissions', () => {
+      const user = { userId: 'user-1', role: 'MANAGER' };
+      const context = buildAuthContext(user, testSessionId);
+
+      expect(context.userRole).toBe('MANAGER');
+      expect(context.allowedEntityTypes).toContain('LEAD');
+      expect(context.allowedEntityTypes).toContain('CASE');
+      expect(context.allowedEntityTypes).toContain('APPOINTMENT');
+      expect(context.allowedEntityTypes).toContain('MESSAGE');
+      expect(context.allowedActionTypes).toContain('SEARCH');
+      expect(context.allowedActionTypes).toContain('CREATE');
+      expect(context.allowedActionTypes).toContain('UPDATE');
+      expect(context.allowedActionTypes).toContain('DRAFT');
+      expect(context.allowedActionTypes).not.toContain('DELETE');
+      expect(context.maxActionsPerSession).toBe(500);
+    });
+
+    it('should fall back to READONLY permissions for unknown role', () => {
+      const user = { userId: 'user-1', role: 'UNKNOWN_ROLE' };
+      const context = buildAuthContext(user, testSessionId);
+
+      expect(context.userRole).toBe('UNKNOWN_ROLE');
+      expect(context.allowedActionTypes).toEqual(['SEARCH']);
+      expect(context.maxActionsPerSession).toBe(100);
+    });
+
+    it('should use provided permissions array', () => {
+      const user = {
+        userId: 'user-1',
+        role: 'USER',
+        permissions: ['custom:permission', 'another:permission'],
+      };
+      const context = buildAuthContext(user, testSessionId);
+
+      expect(context.permissions).toEqual(['custom:permission', 'another:permission']);
+    });
+
+    it('should default permissions to empty array when not provided', () => {
+      const user = { userId: 'user-1', role: 'USER' };
+      const context = buildAuthContext(user, testSessionId);
+
+      expect(context.permissions).toEqual([]);
+    });
+  });
+
+  describe('authorizeToolExecution - UPDATE/DELETE operations', () => {
+    it('should authorize UPDATE action for ADMIN without ownership check', async () => {
+      const user = { userId: 'admin-1', role: 'ADMIN' };
+      const context = buildAuthContext(user, testSessionId);
+      const input = { id: 'case-123', title: 'Updated Title' };
+
+      const result = await agentAuthorizationService.authorizeToolExecution(
+        updateCaseTool,
+        input,
+        context
+      );
+
+      expect(result.authorized).toBe(true);
+    });
+
+    it('should authorize UPDATE action for MANAGER with entity ID', async () => {
+      const user = { userId: 'manager-1', role: 'MANAGER' };
+      const context = buildAuthContext(user, testSessionId);
+      const input = { id: 'case-123', title: 'Updated Title' };
+
+      const result = await agentAuthorizationService.authorizeToolExecution(
+        updateCaseTool,
+        input,
+        context
+      );
+
+      expect(result.authorized).toBe(true);
+    });
+
+    it('should authorize UPDATE action for MANAGER without entity ID (new entity)', async () => {
+      const user = { userId: 'manager-1', role: 'MANAGER' };
+      const context = buildAuthContext(user, testSessionId);
+      const input = { title: 'New Case Title' }; // No id field
+
+      const result = await agentAuthorizationService.authorizeToolExecution(
+        updateCaseTool,
+        input,
+        context
+      );
+
+      expect(result.authorized).toBe(true);
+    });
+  });
+
+  describe('authorizeToolExecution - approval required', () => {
+    it('should reject READONLY user for tool requiring approval', async () => {
+      const user = { userId: 'user-1', role: 'READONLY' };
+      const context = buildAuthContext(user, testSessionId);
+
+      // Using draftMessageTool which requires approval
+      const result = await agentAuthorizationService.authorizeToolExecution(
+        draftMessageTool,
+        { recipientId: 'recipient-1', message: 'Hello' },
+        context
+      );
+
+      // First check fails on action type (READONLY can only SEARCH)
+      expect(result.authorized).toBe(false);
+      expect(result.reason).toContain('not authorized to perform');
+    });
+
+    it('should allow non-READONLY user to request approval', async () => {
+      const user = { userId: 'user-1', role: 'USER' };
+      const context = buildAuthContext(user, testSessionId);
+
+      const result = await agentAuthorizationService.authorizeToolExecution(
+        draftMessageTool,
+        { recipientId: 'recipient-1', message: 'Hello' },
+        context
+      );
+
+      expect(result.authorized).toBe(true);
+    });
+  });
+
+  describe('canRollbackAction - additional scenarios', () => {
+    it('should allow MANAGER to rollback action they approved', () => {
+      const user = { userId: 'manager-1', role: 'MANAGER' };
+      const context = buildAuthContext(user, testSessionId);
+
+      // MANAGER can rollback their own approval
+      expect(agentAuthorizationService.canRollbackAction(context, 'manager-1')).toBe(true);
+    });
+
+    it('should not allow MANAGER to rollback action approved by another user', () => {
+      const user = { userId: 'manager-1', role: 'MANAGER' };
+      const context = buildAuthContext(user, testSessionId);
+
+      // MANAGER cannot rollback another's approval (non-ADMIN)
+      expect(agentAuthorizationService.canRollbackAction(context, 'manager-2')).toBe(false);
+    });
+
+    it('should not allow READONLY to rollback action approved by others', () => {
+      const user = { userId: 'readonly-user', role: 'READONLY' };
+      const context = buildAuthContext(user, testSessionId);
+
+      // READONLY cannot rollback actions approved by others
+      expect(agentAuthorizationService.canRollbackAction(context, 'admin-1')).toBe(false);
+      expect(agentAuthorizationService.canRollbackAction(context, 'manager-1')).toBe(false);
+    });
+
+    it('should allow any user to rollback their own approval', () => {
+      // According to implementation, any user can rollback their own approval
+      const user = { userId: 'readonly-user', role: 'READONLY' };
+      const context = buildAuthContext(user, testSessionId);
+
+      // The implementation allows userId === approvedBy regardless of role
+      expect(agentAuthorizationService.canRollbackAction(context, 'readonly-user')).toBe(true);
+    });
   });
 });

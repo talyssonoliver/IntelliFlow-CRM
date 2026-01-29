@@ -11,13 +11,8 @@
  * - User approval latency <30s (via async operation)
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import {
-  approvalWorkflowService,
-  pendingActionsStore,
-  executedActionsStore,
-  ApprovalWorkflowService,
-} from '../approval-workflow';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { approvalWorkflowService, pendingActionsStore } from '../approval-workflow';
 import { PendingAction, ApprovalDecision, AgentAuthContext } from '../types';
 
 describe('Approval Workflow', () => {
@@ -132,7 +127,8 @@ describe('Approval Workflow', () => {
         await pendingActionsStore.add(action);
 
         const pending = await approvalWorkflowService.getPendingActions('test-user');
-        expect(pending.some((a) => a.id === 'pending-test-1')).toBe(true);
+        const hasPendingAction = pending.some((a) => a.id === 'pending-test-1');
+        expect(hasPendingAction).toBe(true);
       });
     });
 
