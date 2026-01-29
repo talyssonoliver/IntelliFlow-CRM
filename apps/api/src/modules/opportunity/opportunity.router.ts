@@ -311,32 +311,193 @@ export const opportunityRouter = createTRPCRouter({
   }),
 
   /**
-   * Get pipeline forecast
+   * Get pipeline forecast with full analytics
+   * Returns: active deals, stage breakdown, win rates, projections
    */
   forecast: tenantProcedure.query(async ({ ctx }) => {
-   const typedCtx = getTenantContext(ctx);
-    const opportunities = await typedCtx.prismaWithTenant.opportunity.findMany({
+    const typedCtx = getTenantContext(ctx);
+
+    // Get active opportunities (not closed)
+    const activeOpportunities = await typedCtx.prismaWithTenant.opportunity.findMany({
       where: {
         stage: {
           notIn: ['CLOSED_WON', 'CLOSED_LOST'],
         },
       },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        account: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: { value: 'desc' },
+    });
+
+    // Get closed deals for win rate calculation (last 6 months)
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const closedDeals = await typedCtx.prismaWithTenant.opportunity.findMany({
+      where: {
+        stage: {
+          in: ['CLOSED_WON', 'CLOSED_LOST'],
+        },
+        closedAt: {
+          gte: sixMonthsAgo,
+        },
+      },
       select: {
+        id: true,
         value: true,
-        probability: true,
         stage: true,
+        closedAt: true,
+        createdAt: true,
       },
     });
 
-    const weightedValue = opportunities.reduce((sum, opp) => {
+    // Calculate weighted pipeline value
+    const weightedValue = activeOpportunities.reduce((sum, opp) => {
       const value = Number(opp.value);
       const probability = opp.probability / 100;
       return sum + value * probability;
     }, 0);
 
+    // Calculate total pipeline value
+    const totalPipelineValue = activeOpportunities.reduce((sum, opp) => {
+      return sum + Number(opp.value);
+    }, 0);
+
+    // Calculate stage breakdown
+    const stageBreakdown: Record<string, { count: number; totalValue: number; weightedValue: number }> = {};
+    for (const opp of activeOpportunities) {
+      if (!stageBreakdown[opp.stage]) {
+        stageBreakdown[opp.stage] = { count: 0, totalValue: 0, weightedValue: 0 };
+      }
+      stageBreakdown[opp.stage].count += 1;
+      stageBreakdown[opp.stage].totalValue += Number(opp.value);
+      stageBreakdown[opp.stage].weightedValue += Number(opp.value) * (opp.probability / 100);
+    }
+
+    // Calculate win rate
+    const wonDeals = closedDeals.filter(d => d.stage === 'CLOSED_WON');
+    const lostDeals = closedDeals.filter(d => d.stage === 'CLOSED_LOST');
+    const totalClosed = wonDeals.length + lostDeals.length;
+    const winRate = totalClosed > 0 ? Math.round((wonDeals.length / totalClosed) * 100) : 0;
+
+    // Calculate average deal size (from won deals)
+    const avgDealSize = wonDeals.length > 0
+      ? wonDeals.reduce((sum, d) => sum + Number(d.value), 0) / wonDeals.length
+      : 0;
+
+    // Calculate average sales cycle (days from created to closed)
+    const avgSalesCycle = wonDeals.length > 0
+      ? Math.round(wonDeals.reduce((sum, d) => {
+          const created = new Date(d.createdAt);
+          const closed = new Date(d.closedAt!);
+          return sum + (closed.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
+        }, 0) / wonDeals.length)
+      : 0;
+
+    // Group closed deals by month for historical data
+    const monthlyRevenue: Record<string, { actual: number; deals: number }> = {};
+    for (const deal of wonDeals) {
+      const month = new Date(deal.closedAt!).toLocaleString('en-US', { month: 'short' });
+      if (!monthlyRevenue[month]) {
+        monthlyRevenue[month] = { actual: 0, deals: 0 };
+      }
+      monthlyRevenue[month].actual += Number(deal.value);
+      monthlyRevenue[month].deals += 1;
+    }
+
+    // Calculate win rate trend by month
+    const winRateTrend: { month: string; rate: number; isProjected: boolean }[] = [];
+    const months = ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
+    for (const month of months) {
+      const monthDeals = closedDeals.filter(d => {
+        const dealMonth = new Date(d.closedAt!).toLocaleString('en-US', { month: 'short' });
+        return dealMonth === month;
+      });
+      const monthWon = monthDeals.filter(d => d.stage === 'CLOSED_WON').length;
+      const rate = monthDeals.length > 0 ? Math.round((monthWon / monthDeals.length) * 100) : 0;
+      winRateTrend.push({ month, rate: rate || winRate, isProjected: monthDeals.length === 0 });
+    }
+
+    // Determine risk level based on probability and value
+    const getRiskLevel = (probability: number, value: number): 'low' | 'medium' | 'high' => {
+      if (probability >= 60) return 'low';
+      if (probability >= 40 || value > 100000) return 'medium';
+      return 'high';
+    };
+
+    // Map opportunities to forecast deals format
+    const forecastDeals = activeOpportunities.map(opp => ({
+      id: opp.id,
+      name: opp.name,
+      stage: opp.stage as 'PROSPECTING' | 'QUALIFICATION' | 'NEEDS_ANALYSIS' | 'PROPOSAL' | 'NEGOTIATION',
+      value: Number(opp.value),
+      probability: opp.probability,
+      expectedCloseDate: opp.expectedCloseDate?.toISOString().split('T')[0] || '',
+      owner: {
+        name: opp.owner?.name || 'Unassigned',
+        avatar: opp.owner?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'NA',
+      },
+      riskLevel: getRiskLevel(opp.probability, Number(opp.value)),
+      accountName: opp.account?.name || null,
+    }));
+
+    // Calculate forecast accuracy (simulated based on historical data)
+    // In production, this would compare past forecasts to actuals
+    const forecastAccuracy = {
+      accuracy: totalClosed > 5 ? Math.min(95, 75 + winRate * 0.2) : 82,
+      target: 85,
+      isAtRisk: false,
+    };
+    forecastAccuracy.isAtRisk = forecastAccuracy.accuracy < forecastAccuracy.target;
+
     return {
-      totalOpportunities: opportunities.length,
-      weightedValue: weightedValue.toString(),
+      // Summary metrics
+      totalOpportunities: activeOpportunities.length,
+      weightedValue: Math.round(weightedValue).toString(),
+      totalPipelineValue: Math.round(totalPipelineValue),
+
+      // Forecast accuracy
+      forecastAccuracy,
+
+      // Win rate metrics
+      winRate,
+      avgDealSize: Math.round(avgDealSize),
+      avgSalesCycle,
+      wonDealsCount: wonDeals.length,
+      lostDealsCount: lostDeals.length,
+
+      // Stage breakdown
+      stageBreakdown: Object.entries(stageBreakdown).map(([stage, data]) => ({
+        stage,
+        ...data,
+        percentage: Math.round((data.totalValue / totalPipelineValue) * 100) || 0,
+      })),
+
+      // Active deals
+      deals: forecastDeals,
+
+      // Historical monthly data
+      monthlyRevenue: Object.entries(monthlyRevenue).map(([month, data]) => ({
+        month,
+        actual: data.actual,
+        projected: null as number | null,
+      })),
+
+      // Win rate trend
+      winRateTrend,
     };
   }),
 });

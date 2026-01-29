@@ -28,14 +28,15 @@ import {
 const createMockDomainOpportunity = (overrides: Record<string, unknown> = {}) => ({
   id: { value: TEST_UUIDS.opportunity1 },
   name: 'Big Deal',
-  value: 50000,
-  probability: 60,
+  value: { amount: 50000, currency: 'GBP' },
+  probability: { value: 60 },
   stage: 'PROPOSAL',
   expectedCloseDate: new Date('2025-06-30'),
   accountId: TEST_UUIDS.account1,
   contactId: TEST_UUIDS.contact1,
   ownerId: TEST_UUIDS.user1,
-  weightedValue: 30000,
+  tenantId: TEST_UUIDS.tenant,
+  weightedValue: { amount: 30000, currency: 'GBP' },
   isClosed: false,
   isWon: false,
   isLost: false,
@@ -68,12 +69,12 @@ describe('Opportunity Router', () => {
 
       const mockDomainOpp = createMockDomainOpportunity({
         name: input.name,
-        value: input.value.amount,
-        probability: input.probability,
+        value: { amount: input.value.amount, currency: 'GBP' },
+        probability: { value: input.probability },
         stage: input.stage,
         expectedCloseDate: input.expectedCloseDate,
         contactId: input.contactId,
-        weightedValue: input.value.amount * (input.probability / 100),
+        weightedValue: { amount: input.value.amount * (input.probability / 100), currency: 'GBP' },
       });
 
       ctx.services!.opportunity!.createOpportunity = vi.fn().mockResolvedValue({
@@ -85,7 +86,7 @@ describe('Opportunity Router', () => {
       const result = await caller.create(input);
 
       expect(result.name).toBe(input.name);
-      expect(result.value).toBe(input.value);
+      expect(result.value).toBe(input.value.amount);  // Mapper returns value.amount
       expect(result.stage).toBe(input.stage);
       expect(ctx.services!.opportunity!.createOpportunity).toHaveBeenCalled();
     });
@@ -261,7 +262,7 @@ describe('Opportunity Router', () => {
     it('should update opportunity with valid data', async () => {
       const mockDomainOpp = createMockDomainOpportunity({
         stage: 'NEGOTIATION',
-        probability: 70,
+        probability: { value: 70 },
       });
 
       ctx.services!.opportunity!.updateOpportunity = vi.fn().mockResolvedValue({
@@ -447,14 +448,16 @@ describe('Opportunity Router', () => {
 
       await caller.forecast();
 
-      expect(prismaMock.opportunity.findMany).toHaveBeenCalledWith({
-        where: {
-          stage: {
-            notIn: ['CLOSED_WON', 'CLOSED_LOST'],
-          },
-        },
-        select: expect.any(Object),
-      });
+      // First call gets active opportunities (excluding closed)
+      expect(prismaMock.opportunity.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            stage: {
+              notIn: ['CLOSED_WON', 'CLOSED_LOST'],
+            },
+          }),
+        })
+      );
     });
 
     it('should handle empty pipeline', async () => {

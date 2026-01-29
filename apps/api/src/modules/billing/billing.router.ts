@@ -12,6 +12,7 @@
  * @implements PG-025 (Billing Portal)
  */
 
+import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure } from '../../trpc';
 import {
@@ -26,13 +27,13 @@ import {
 // Local Type Definitions (from StripeAdapter)
 // ============================================
 
-interface StripeConfig {
+export interface StripeConfig {
   secretKey: string;
   webhookSecret?: string;
   apiVersion?: string;
 }
 
-interface StripeSubscription {
+export interface StripeSubscription {
   id: string;
   customerId: string;
   status: 'incomplete' | 'incomplete_expired' | 'trialing' | 'active' |
@@ -48,7 +49,7 @@ interface StripeSubscription {
   trialEnd?: Date;
 }
 
-interface StripeInvoice {
+export interface StripeInvoice {
   id: string;
   customerId: string;
   subscriptionId?: string;
@@ -64,7 +65,7 @@ interface StripeInvoice {
   created: Date;
 }
 
-interface StripePaymentMethod {
+export interface StripePaymentMethod {
   id: string;
   type: 'card' | 'bank_account' | 'sepa_debit' | 'ideal' | 'paypal';
   customerId?: string;
@@ -91,7 +92,7 @@ interface StripePaymentMethod {
   created: Date;
 }
 
-interface StripeCustomer {
+export interface StripeCustomer {
   id: string;
   email?: string;
   name?: string;
@@ -547,4 +548,80 @@ export const billingRouter = createTRPCRouter({
       },
     };
   }),
+
+  /**
+   * Create a checkout subscription
+   *
+   * Creates a new subscription for the authenticated user.
+   * In production, this would create a Stripe checkout session.
+   */
+  createCheckoutSubscription: protectedProcedure
+    .input(z.object({
+      planId: z.string(),
+      billingCycle: z.enum(['monthly', 'annual']),
+      paymentMethodId: z.string(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const stripe = await getStripeAdapter();
+      const user = ctx.user;
+
+      if (!user) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Authentication required.',
+        });
+      }
+
+      // Ensure customer exists
+      let customerId = user.stripeCustomerId;
+      if (!customerId) {
+        const result = await stripe.createCustomer({
+          email: user.email,
+          name: user.name || undefined,
+          metadata: {
+            userId: user.userId,
+            tenantId: user.tenantId,
+          },
+        });
+
+        if (result.isFailure) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: result.error.message,
+          });
+        }
+
+        customerId = result.value.id;
+
+        // Update user with stripeCustomerId
+        await ctx.prisma.user.update({
+          where: { id: user.userId },
+          data: { stripeCustomerId: customerId },
+        });
+      }
+
+      // Attach payment method to customer
+      const attachResult = await stripe.attachPaymentMethod(
+        input.paymentMethodId,
+        customerId
+      );
+
+      if (attachResult.isFailure) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: attachResult.error.message,
+        });
+      }
+
+      // In production, create subscription via Stripe
+      // For now, return a mock subscription ID
+      const subscriptionId = `sub_${Date.now()}_${input.planId}`;
+
+      return {
+        subscriptionId,
+        customerId,
+        planId: input.planId,
+        billingCycle: input.billingCycle,
+      };
+    }),
 });

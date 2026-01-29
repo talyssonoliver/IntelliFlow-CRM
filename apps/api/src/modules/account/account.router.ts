@@ -299,4 +299,84 @@ export const accountRouter = createTRPCRouter({
       totalRevenue: totalRevenue._sum.revenue?.toString() || '0',
     };
   }),
+
+  /**
+   * Get filter options with counts
+   *
+   * Returns available filter values with count of matching records.
+   * Used for dynamic filters that hide options with 0 matches.
+   */
+  filterOptions: tenantProcedure
+    .input(
+      z.object({
+        search: z.string().optional(),
+        industry: z.string().optional(),
+        ownerId: z.string().optional(),
+      }).optional()
+    )
+    .query(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+
+      // Build base where clause with current filters
+      const baseWhere: Record<string, unknown> = {};
+
+      if (input?.search) {
+        baseWhere.OR = [
+          { name: { contains: input.search, mode: 'insensitive' } },
+          { website: { contains: input.search, mode: 'insensitive' } },
+          { industry: { contains: input.search, mode: 'insensitive' } },
+        ];
+      }
+
+      if (input?.industry) {
+        baseWhere.industry = { contains: input.industry, mode: 'insensitive' };
+      }
+
+      if (input?.ownerId) {
+        baseWhere.ownerId = input.ownerId;
+      }
+
+      const where = createTenantWhereClause(typedCtx.tenant, baseWhere);
+
+      // Get counts for each filter option
+      const [industryCounts, ownerCounts] = await Promise.all([
+        typedCtx.prismaWithTenant.account.groupBy({
+          by: ['industry'],
+          where,
+          _count: true,
+        }),
+        typedCtx.prismaWithTenant.account.groupBy({
+          by: ['ownerId'],
+          where,
+          _count: true,
+        }),
+      ]);
+
+      // Get owner names for display
+      const ownerIds = ownerCounts.map(o => o.ownerId).filter(Boolean) as string[];
+      const owners = ownerIds.length > 0
+        ? await ctx.prisma.user.findMany({
+            where: { id: { in: ownerIds } },
+            select: { id: true, name: true, email: true },
+          })
+        : [];
+      const ownerMap = new Map(owners.map(o => [o.id, o.name || o.email]));
+
+      return {
+        industries: industryCounts
+          .filter(i => i.industry)
+          .map(i => ({
+            value: i.industry as string,
+            label: i.industry as string,
+            count: i._count,
+          })),
+        owners: ownerCounts
+          .filter(o => o.ownerId)
+          .map(o => ({
+            value: o.ownerId as string,
+            label: ownerMap.get(o.ownerId as string) || o.ownerId,
+            count: o._count,
+          })),
+      };
+    }),
 });

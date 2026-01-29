@@ -10,6 +10,11 @@ import {
   AccessLevel,
   DocumentClassification,
 } from '@intelliflow/domain';
+import {
+  bulkDownloadDocumentsSchema,
+  bulkArchiveDocumentsSchema,
+  bulkDeleteDocumentsSchema,
+} from '@intelliflow/validators';
 import { PrismaCaseDocumentRepository } from '@intelliflow/adapters';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
@@ -525,4 +530,131 @@ export const documentsRouter = createTRPCRouter({
 
     return auditLogs;
   }),
+
+  /**
+   * Bulk download documents - returns storage keys
+   */
+  bulkDownload: protectedProcedure
+    .input(bulkDownloadDocumentsSchema)
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user?.userId;
+      if (!userId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
+      }
+
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const { ids } = input;
+
+      const successful: string[] = [];
+      const failed: Array<{ id: string; error: string }> = [];
+      const storageKeys: Array<{ id: string; title: string; storageKey: string }> = [];
+
+      for (const docId of ids) {
+        try {
+          const document = await documentRepo.findById(docId);
+          if (!document) {
+            failed.push({ id: docId, error: 'Document not found' });
+            continue;
+          }
+
+          if (!document.hasAccess(userId, AccessLevel.VIEW)) {
+            failed.push({ id: docId, error: 'Access denied' });
+            continue;
+          }
+
+          const data = document.toJSON();
+          storageKeys.push({
+            id: docId,
+            title: data.metadata.title,
+            storageKey: data.storageKey,
+          });
+          successful.push(docId);
+        } catch (error) {
+          failed.push({
+            id: docId,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      }
+
+      return { successful, failed, totalProcessed: ids.length, storageKeys };
+    }),
+
+  /**
+   * Bulk archive documents
+   */
+  bulkArchive: protectedProcedure
+    .input(bulkArchiveDocumentsSchema)
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user?.userId;
+      if (!userId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
+      }
+
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const { ids } = input;
+
+      const successful: string[] = [];
+      const failed: Array<{ id: string; error: string }> = [];
+
+      for (const docId of ids) {
+        try {
+          const document = await documentRepo.findById(docId);
+          if (!document) {
+            failed.push({ id: docId, error: 'Document not found' });
+            continue;
+          }
+
+          document.archive(userId);
+          await documentRepo.save(document);
+          successful.push(docId);
+        } catch (error) {
+          failed.push({
+            id: docId,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      }
+
+      return { successful, failed, totalProcessed: ids.length };
+    }),
+
+  /**
+   * Bulk delete documents (soft delete)
+   */
+  bulkDelete: protectedProcedure
+    .input(bulkDeleteDocumentsSchema)
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user?.userId;
+      if (!userId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
+      }
+
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const { ids } = input;
+
+      const successful: string[] = [];
+      const failed: Array<{ id: string; error: string }> = [];
+
+      for (const docId of ids) {
+        try {
+          const document = await documentRepo.findById(docId);
+          if (!document) {
+            failed.push({ id: docId, error: 'Document not found' });
+            continue;
+          }
+
+          document.delete(userId);
+          await documentRepo.save(document);
+          successful.push(docId);
+        } catch (error) {
+          failed.push({
+            id: docId,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      }
+
+      return { successful, failed, totalProcessed: ids.length };
+    }),
 });

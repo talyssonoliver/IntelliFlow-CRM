@@ -205,4 +205,207 @@ export const ticketRouter = createTRPCRouter({
       });
     }
   }),
+
+  // ============================================
+  // Bulk Operations
+  // ============================================
+
+  /**
+   * Bulk assign tickets to an agent
+   */
+  bulkAssign: tenantProcedure
+    .input(z.object({
+      ticketIds: z.array(z.string()),
+      assigneeId: z.string(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const ticketService = getTicketService(ctx);
+      const { ticketIds, assigneeId } = input;
+
+      let successCount = 0;
+      for (const ticketId of ticketIds) {
+        try {
+          await ticketService.update(ticketId, { assigneeId });
+          successCount++;
+        } catch {
+          // Continue with other tickets even if one fails
+        }
+      }
+
+      return { success: true, updated: successCount };
+    }),
+
+  /**
+   * Bulk update ticket status
+   */
+  bulkUpdateStatus: tenantProcedure
+    .input(z.object({
+      ticketIds: z.array(z.string()),
+      status: z.enum(['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED']),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const ticketService = getTicketService(ctx);
+      const { ticketIds, status } = input;
+
+      let successCount = 0;
+      for (const ticketId of ticketIds) {
+        try {
+          await ticketService.update(ticketId, { status });
+          successCount++;
+        } catch {
+          // Continue with other tickets
+        }
+      }
+
+      return { success: true, updated: successCount };
+    }),
+
+  /**
+   * Bulk resolve tickets
+   */
+  bulkResolve: tenantProcedure
+    .input(z.object({
+      ticketIds: z.array(z.string()),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const ticketService = getTicketService(ctx);
+      const { ticketIds } = input;
+
+      let successCount = 0;
+      for (const ticketId of ticketIds) {
+        try {
+          await ticketService.update(ticketId, { status: 'RESOLVED' });
+          successCount++;
+        } catch {
+          // Continue with other tickets
+        }
+      }
+
+      return { success: true, updated: successCount };
+    }),
+
+  /**
+   * Bulk escalate tickets
+   */
+  bulkEscalate: tenantProcedure
+    .input(z.object({
+      ticketIds: z.array(z.string()),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const ticketService = getTicketService(ctx);
+      const { ticketIds } = input;
+
+      let successCount = 0;
+      for (const ticketId of ticketIds) {
+        try {
+          await ticketService.update(ticketId, { priority: 'CRITICAL' });
+          successCount++;
+        } catch {
+          // Continue with other tickets
+        }
+      }
+
+      return { success: true, updated: successCount };
+    }),
+
+  /**
+   * Bulk close tickets
+   */
+  bulkClose: tenantProcedure
+    .input(z.object({
+      ticketIds: z.array(z.string()),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const ticketService = getTicketService(ctx);
+      const { ticketIds } = input;
+
+      let successCount = 0;
+      for (const ticketId of ticketIds) {
+        try {
+          await ticketService.update(ticketId, { status: 'CLOSED' });
+          successCount++;
+        } catch {
+          // Continue with other tickets
+        }
+      }
+
+      return { success: true, updated: successCount };
+    }),
+
+  /**
+   * Get filter options with counts
+   *
+   * Returns available filter values with count of matching records.
+   * Used for dynamic filters that hide options with 0 matches.
+   */
+  filterOptions: tenantProcedure
+    .input(
+      z.object({
+        search: z.string().optional(),
+        status: z.string().optional(),
+        priority: z.string().optional(),
+        slaStatus: z.string().optional(),
+        assigneeId: z.string().optional(),
+      }).optional()
+    )
+    .query(async ({ ctx, input }) => {
+      assertTenantContext(ctx);
+      const tenantId = await getTenantId(ctx);
+
+      // Build base where clause with current filters
+      const baseWhere: Record<string, unknown> = { tenantId };
+
+      if (input?.status) {
+        baseWhere.status = input.status;
+      }
+
+      if (input?.priority) {
+        baseWhere.priority = input.priority;
+      }
+
+      if (input?.slaStatus) {
+        baseWhere.slaStatus = input.slaStatus;
+      }
+
+      if (input?.assigneeId) {
+        baseWhere.assignedToId = input.assigneeId;
+      }
+
+      // Get counts for each filter option
+      const [statusCounts, priorityCounts, slaCounts] = await Promise.all([
+        ctx.prisma.ticket.groupBy({
+          by: ['status'],
+          where: baseWhere,
+          _count: true,
+        }),
+        ctx.prisma.ticket.groupBy({
+          by: ['priority'],
+          where: baseWhere,
+          _count: true,
+        }),
+        ctx.prisma.ticket.groupBy({
+          by: ['slaStatus'],
+          where: baseWhere,
+          _count: true,
+        }),
+      ]);
+
+      return {
+        statuses: statusCounts.map(s => ({
+          value: s.status,
+          label: s.status,
+          count: s._count,
+        })),
+        priorities: priorityCounts.map(p => ({
+          value: p.priority,
+          label: p.priority,
+          count: p._count,
+        })),
+        slaStatuses: slaCounts.map(s => ({
+          value: s.slaStatus,
+          label: s.slaStatus,
+          count: s._count,
+        })),
+      };
+    }),
 });

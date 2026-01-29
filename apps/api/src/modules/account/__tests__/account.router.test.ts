@@ -390,4 +390,350 @@ describe('Account Router', () => {
       expect(result.totalRevenue).toBe('0');
     });
   });
+
+  describe('filterOptions', () => {
+    it('should return filter options with counts', async () => {
+      vi.mocked(prismaMock.account.groupBy)
+        .mockResolvedValueOnce([
+          { industry: 'Technology', _count: 10 },
+          { industry: 'Finance', _count: 5 },
+          { industry: null, _count: 2 }, // null should be filtered out
+        ] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>)
+        .mockResolvedValueOnce([
+          { ownerId: TEST_UUIDS.user1, _count: 8 },
+          { ownerId: TEST_UUIDS.admin1, _count: 7 },
+        ] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>);
+
+      prismaMock.user.findMany.mockResolvedValue([
+        { id: TEST_UUIDS.user1, name: 'John Doe', email: 'john@example.com' },
+        { id: TEST_UUIDS.admin1, name: null, email: 'jane@example.com' },
+      ] as any);
+
+      const result = await caller.filterOptions({});
+
+      expect(result.industries).toHaveLength(2); // null filtered out
+      expect(result.industries).toEqual([
+        { value: 'Technology', label: 'Technology', count: 10 },
+        { value: 'Finance', label: 'Finance', count: 5 },
+      ]);
+      expect(result.owners).toHaveLength(2);
+      expect(result.owners[0]).toEqual({
+        value: TEST_UUIDS.user1,
+        label: 'John Doe',
+        count: 8,
+      });
+      // User with null name should fall back to email
+      expect(result.owners[1]).toEqual({
+        value: TEST_UUIDS.admin1,
+        label: 'jane@example.com',
+        count: 7,
+      });
+    });
+
+    it('should apply search filter to filterOptions query', async () => {
+      vi.mocked(prismaMock.account.groupBy)
+        .mockResolvedValueOnce([] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>)
+        .mockResolvedValueOnce([] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>);
+
+      await caller.filterOptions({ search: 'Tech' });
+
+      expect(prismaMock.account.groupBy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            OR: expect.arrayContaining([
+              { name: { contains: 'Tech', mode: 'insensitive' } },
+              { website: { contains: 'Tech', mode: 'insensitive' } },
+              { industry: { contains: 'Tech', mode: 'insensitive' } },
+            ]),
+          }),
+        })
+      );
+    });
+
+    it('should apply industry filter to filterOptions query', async () => {
+      vi.mocked(prismaMock.account.groupBy)
+        .mockResolvedValueOnce([] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>)
+        .mockResolvedValueOnce([] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>);
+
+      await caller.filterOptions({ industry: 'Finance' });
+
+      expect(prismaMock.account.groupBy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            industry: { contains: 'Finance', mode: 'insensitive' },
+          }),
+        })
+      );
+    });
+
+    it('should apply ownerId filter to filterOptions query', async () => {
+      vi.mocked(prismaMock.account.groupBy)
+        .mockResolvedValueOnce([] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>)
+        .mockResolvedValueOnce([] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>);
+
+      await caller.filterOptions({ ownerId: TEST_UUIDS.user1 });
+
+      expect(prismaMock.account.groupBy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            ownerId: TEST_UUIDS.user1,
+          }),
+        })
+      );
+    });
+
+    it('should handle empty owner IDs', async () => {
+      vi.mocked(prismaMock.account.groupBy)
+        .mockResolvedValueOnce([
+          { industry: 'Tech', _count: 5 },
+        ] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>)
+        .mockResolvedValueOnce([
+          { ownerId: null, _count: 3 }, // null ownerId
+        ] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>);
+
+      const result = await caller.filterOptions({});
+
+      // Should not call findMany since no valid ownerIds
+      expect(prismaMock.user.findMany).not.toHaveBeenCalled();
+      expect(result.owners).toHaveLength(0); // null filtered out
+    });
+
+    it('should handle undefined input', async () => {
+      vi.mocked(prismaMock.account.groupBy)
+        .mockResolvedValueOnce([] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>)
+        .mockResolvedValueOnce([] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>);
+
+      const result = await caller.filterOptions(undefined);
+
+      expect(result.industries).toEqual([]);
+      expect(result.owners).toEqual([]);
+    });
+
+    it('should fallback to ownerId when owner not found in map', async () => {
+      vi.mocked(prismaMock.account.groupBy)
+        .mockResolvedValueOnce([] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>)
+        .mockResolvedValueOnce([
+          { ownerId: TEST_UUIDS.user1, _count: 5 },
+        ] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>);
+
+      // Return empty - user not found
+      prismaMock.user.findMany.mockResolvedValue([]);
+
+      const result = await caller.filterOptions({});
+
+      // Should fallback to ownerId when name not found
+      expect(result.owners[0].label).toBe(TEST_UUIDS.user1);
+    });
+  });
+
+  describe('create - additional error handling', () => {
+    it('should throw BAD_REQUEST for non-validation errors', async () => {
+      ctx.services!.account!.createAccount = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'UNKNOWN_ERROR', message: 'Something went wrong' },
+      });
+
+      await expect(caller.create({ name: 'Test Corp' })).rejects.toThrow(
+        expect.objectContaining({
+          code: 'BAD_REQUEST',
+          message: 'Something went wrong',
+        })
+      );
+    });
+  });
+
+  describe('list - additional filters', () => {
+    it('should filter accounts by ownerId', async () => {
+      prismaMock.account.findMany.mockResolvedValue([]);
+      prismaMock.account.count.mockResolvedValue(0);
+
+      await caller.list({ ownerId: TEST_UUIDS.user1 });
+
+      expect(prismaMock.account.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            ownerId: TEST_UUIDS.user1,
+          }),
+        })
+      );
+    });
+
+    it('should apply custom sorting', async () => {
+      prismaMock.account.findMany.mockResolvedValue([]);
+      prismaMock.account.count.mockResolvedValue(0);
+
+      await caller.list({ sortBy: 'name', sortOrder: 'asc' });
+
+      expect(prismaMock.account.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: { name: 'asc' },
+        })
+      );
+    });
+
+    it('should return hasMore=false when on last page', async () => {
+      const accounts = [mockAccount];
+      const accountsWithRelations = accounts.map((account) => ({
+        ...account,
+        owner: mockUser,
+        _count: { contacts: 1, opportunities: 0 },
+      }));
+
+      prismaMock.account.findMany.mockResolvedValue(accountsWithRelations);
+      prismaMock.account.count.mockResolvedValue(1);
+
+      const result = await caller.list({ page: 1, limit: 20 });
+
+      expect(result.hasMore).toBe(false);
+    });
+
+    it('should filter with only minRevenue', async () => {
+      prismaMock.account.findMany.mockResolvedValue([]);
+      prismaMock.account.count.mockResolvedValue(0);
+
+      await caller.list({ minRevenue: 1000000 });
+
+      expect(prismaMock.account.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            revenue: { gte: 1000000 },
+          }),
+        })
+      );
+    });
+
+    it('should filter with only maxRevenue', async () => {
+      prismaMock.account.findMany.mockResolvedValue([]);
+      prismaMock.account.count.mockResolvedValue(0);
+
+      await caller.list({ maxRevenue: 5000000 });
+
+      expect(prismaMock.account.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            revenue: { lte: 5000000 },
+          }),
+        })
+      );
+    });
+
+    it('should filter with only minEmployees', async () => {
+      prismaMock.account.findMany.mockResolvedValue([]);
+      prismaMock.account.count.mockResolvedValue(0);
+
+      await caller.list({ minEmployees: 50 });
+
+      expect(prismaMock.account.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            employees: { gte: 50 },
+          }),
+        })
+      );
+    });
+
+    it('should filter with only maxEmployees', async () => {
+      prismaMock.account.findMany.mockResolvedValue([]);
+      prismaMock.account.count.mockResolvedValue(0);
+
+      await caller.list({ maxEmployees: 100 });
+
+      expect(prismaMock.account.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            employees: { lte: 100 },
+          }),
+        })
+      );
+    });
+  });
+
+  describe('update - additional error handling', () => {
+    it('should throw INTERNAL_SERVER_ERROR for unknown errors', async () => {
+      ctx.services!.account!.updateAccountInfo = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'UNKNOWN_ERROR', message: 'Database connection failed' },
+      });
+
+      await expect(caller.update({ id: TEST_UUIDS.account1, name: 'Test' })).rejects.toThrow(
+        expect.objectContaining({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Database connection failed',
+        })
+      );
+    });
+
+    it('should handle website as string', async () => {
+      const mockDomainAccount = createMockDomainAccount({
+        website: 'https://updated.com',
+      });
+
+      ctx.services!.account!.updateAccountInfo = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainAccount,
+      });
+
+      const result = await caller.update({
+        id: TEST_UUIDS.account1,
+        website: 'https://updated.com',
+      });
+
+      expect(ctx.services!.account!.updateAccountInfo).toHaveBeenCalledWith(
+        TEST_UUIDS.account1,
+        expect.objectContaining({
+          website: 'https://updated.com',
+        }),
+        expect.any(String)
+      );
+      expect(result.website).toBe('https://updated.com');
+    });
+  });
+
+  describe('delete - additional error handling', () => {
+    it('should throw INTERNAL_SERVER_ERROR for unknown errors', async () => {
+      ctx.services!.account!.deleteAccount = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'UNKNOWN_ERROR', message: 'Unexpected database error' },
+      });
+
+      await expect(caller.delete({ id: TEST_UUIDS.account1 })).rejects.toThrow(
+        expect.objectContaining({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Unexpected database error',
+        })
+      );
+    });
+  });
+
+  describe('service unavailable', () => {
+    it('should throw INTERNAL_SERVER_ERROR when account service is not available', async () => {
+      const ctxWithoutService = createTestContext();
+      ctxWithoutService.services = { account: undefined as any };
+      const callerWithoutService = accountRouter.createCaller(ctxWithoutService);
+
+      await expect(callerWithoutService.create({ name: 'Test' })).rejects.toThrow(
+        expect.objectContaining({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Account service not available',
+        })
+      );
+    });
+
+    it('should throw INTERNAL_SERVER_ERROR when services object is missing', async () => {
+      const ctxWithoutServices = createTestContext();
+      ctxWithoutServices.services = undefined as any;
+      const callerWithoutServices = accountRouter.createCaller(ctxWithoutServices);
+
+      await expect(callerWithoutServices.getById({ id: TEST_UUIDS.account1 })).rejects.toThrow(
+        expect.objectContaining({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Account service not available',
+        })
+      );
+    });
+  });
 });
