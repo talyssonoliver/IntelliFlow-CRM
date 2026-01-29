@@ -2,17 +2,22 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { promises as fs } from 'fs';
 import { NextRequest } from 'next/server';
 
-// Mock fs module
+// Mock fs module with default export
 vi.mock('fs', async () => {
   const actual = await vi.importActual<typeof import('fs')>('fs');
+  const mockPromises = {
+    readFile: vi.fn(),
+    writeFile: vi.fn(),
+    mkdir: vi.fn(),
+    stat: vi.fn(),
+  };
   return {
     ...actual,
-    promises: {
-      readFile: vi.fn(),
-      writeFile: vi.fn(),
-      mkdir: vi.fn(),
-      stat: vi.fn(),
+    default: {
+      ...actual,
+      promises: mockPromises,
     },
+    promises: mockPromises,
   };
 });
 

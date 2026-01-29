@@ -1,21 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import {
-  Rocket,
-  Lock,
-  AlertTriangle,
-  RefreshCw,
-  ChevronDown,
-  ChevronRight,
-  Play,
-  Terminal,
-  X,
-  Loader2,
-  FileEdit,
-  Check,
-  Copy,
-} from 'lucide-react';
+import { Icon } from '@/lib/icons';
 
 interface ReadyTaskDetail {
   taskId: string;
@@ -294,7 +280,7 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
     return (
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center gap-2">
-          <RefreshCw className="w-5 h-5 animate-spin text-blue-600" />
+          <Icon name="refresh" size="lg" className="animate-spin text-blue-600" />
           <span className="text-gray-600">Loading next steps...</span>
         </div>
       </div>
@@ -305,7 +291,7 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
     return (
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center gap-2 text-red-600">
-          <AlertTriangle className="w-5 h-5" />
+          <Icon name="warning" size="lg" />
           <span>Error loading dependency graph: {error}</span>
         </div>
         <button
@@ -345,14 +331,14 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
         >
           <div className="flex items-center gap-2">
             {startResult.success ? (
-              <Play className="w-5 h-5" />
+              <Icon name="play_arrow" size="lg" />
             ) : (
-              <AlertTriangle className="w-5 h-5" />
+              <Icon name="warning" size="lg" />
             )}
             <span className="text-sm font-medium">{startResult.message}</span>
           </div>
           <button onClick={closeResultBanner} className="hover:opacity-70">
-            <X className="w-4 h-4" />
+            <Icon name="close" size="sm" />
           </button>
         </div>
       )}
@@ -364,7 +350,7 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
             <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                  <Play className="w-6 h-6 text-white" />
+                  <Icon name="play_arrow" size="xl" className="text-white" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white">Start Task</h3>
@@ -382,7 +368,7 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
                   className="w-full flex items-center justify-between p-4 border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all group"
                 >
                   <div className="flex items-center gap-3">
-                    <Play className="w-5 h-5 text-gray-500 group-hover:text-blue-600" />
+                    <Icon name="play_arrow" size="lg" className="text-gray-500 group-hover:text-blue-600" />
                     <div className="text-left">
                       <p className="font-medium text-gray-900">Start Only</p>
                       <p className="text-xs text-gray-500">Mark as In Progress, work manually</p>
@@ -395,7 +381,7 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
                   className="w-full flex items-center justify-between p-4 border-2 border-indigo-200 bg-indigo-50 rounded-lg hover:border-indigo-400 hover:bg-indigo-100 transition-all group"
                 >
                   <div className="flex items-center gap-3">
-                    <Terminal className="w-5 h-5 text-indigo-600" />
+                    <Icon name="terminal" size="lg" className="text-indigo-600" />
                     <div className="text-left">
                       <p className="font-medium text-indigo-900">Start + MATOP</p>
                       <p className="text-xs text-indigo-600">Run /matop-execute in Claude Code</p>
@@ -429,7 +415,7 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                <Rocket className="w-6 h-6 text-white" />
+                <Icon name="rocket_launch" size="xl" className="text-white" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-white">Ready to Start</h3>
@@ -473,9 +459,9 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
                     >
                       <div className="flex items-center gap-2">
                         {isExpanded ? (
-                          <ChevronDown className="w-5 h-5 text-gray-400" />
+                          <Icon name="expand_more" size="lg" className="text-gray-400" />
                         ) : (
-                          <ChevronRight className="w-5 h-5 text-gray-400" />
+                          <Icon name="chevron_right" size="lg" className="text-gray-400" />
                         )}
                         <span className="font-medium text-gray-900">Sprint {sprint}</span>
                         {isNextSprint && (
@@ -538,7 +524,7 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
                                     isTaskPlanned(task.taskId) ? (
                                       <>
                                     <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
-                                      <Check className="w-3 h-3" />
+                                      <Icon name="check" size="xs" />
                                       Planned
                                     </span>
                                     <button
@@ -546,7 +532,7 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
                                       className="px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 border border-gray-200 text-gray-700 hover:bg-gray-100"
                                       title={specPath || 'Spec path'}
                                     >
-                                      <Copy className="w-3 h-3" />
+                                      <Icon name="content_copy" size="xs" />
                                       Spec
                                     </button>
                                     <button
@@ -554,7 +540,7 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
                                       className="px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 border border-gray-200 text-gray-700 hover:bg-gray-100"
                                       title={planPath || 'Plan path'}
                                     >
-                                      <Copy className="w-3 h-3" />
+                                      <Icon name="content_copy" size="xs" />
                                       Plan
                                     </button>
                                     <button
@@ -568,12 +554,12 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
                                         >
                                           {startingTask === task.taskId ? (
                                             <>
-                                              <Loader2 className="w-4 h-4 animate-spin" />
+                                              <Icon name="progress_activity" size="sm" className="animate-spin" />
                                               <span>Starting...</span>
                                             </>
                                           ) : (
                                             <>
-                                              <Play className="w-4 h-4" />
+                                              <Icon name="play_arrow" size="sm" />
                                               <span>Start</span>
                                             </>
                                           )}
@@ -591,12 +577,12 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
                                       >
                                         {planningTask === task.taskId ? (
                                           <>
-                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            <Icon name="progress_activity" size="sm" className="animate-spin" />
                                             <span>Planning...</span>
                                           </>
                                         ) : (
                                           <>
-                                            <FileEdit className="w-4 h-4" />
+                                            <Icon name="edit_document" size="sm" />
                                             <span>Plan</span>
                                           </>
                                         )}
@@ -627,7 +613,7 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                  <Lock className="w-6 h-6 text-white" />
+                  <Icon name="lock" size="xl" className="text-white" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white">Blocked Tasks</h3>
@@ -701,7 +687,7 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
           onClick={fetchData}
           className="flex items-center gap-1 hover:text-gray-700 transition-colors"
         >
-          <RefreshCw className="w-3 h-3" />
+          <Icon name="refresh" size="xs" />
           Refresh
         </button>
       </div>

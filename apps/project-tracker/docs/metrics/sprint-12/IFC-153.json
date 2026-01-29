@@ -11,8 +11,8 @@
       "IFC-151",
       "IFC-106"
     ],
-    "verified_at": "2026-01-08T23:28:13.417Z",
-    "all_satisfied": true
+    "verified_at": "2026-01-29T01:33:17.637Z",
+    "all_satisfied": false
   },
   "status": "DONE",
   "status_history": [
@@ -39,7 +39,8 @@
       "required": true,
       "executed_at": "2025-12-31T05:25:00Z",
       "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "timestamp": "2025-12-31T05:30:00Z"
     }
   ],
   "kpis": {

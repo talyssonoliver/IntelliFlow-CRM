@@ -85,18 +85,21 @@ function parseDependencies(deps: string): string[] {
 }
 
 // Prefixes that represent file paths to validate
-const PATH_PREFIXES = ['ARTIFACT:', 'EVIDENCE:'] as const;
+const PATH_PREFIXES = ['ARTIFACT:', 'EVIDENCE:', 'SPEC:', 'PLAN:', 'CONTEXT:'] as const;
 // Prefixes that are metadata/commands, not file paths
 const METADATA_PREFIXES = ['VALIDATE:', 'GATE:', 'AUDIT:', 'FILE:', 'ENV:', 'POLICY:'] as const;
 
 interface ParsedArtifacts {
   artifacts: string[]; // ARTIFACT: paths (code/config files)
   evidence: string[]; // EVIDENCE: paths (attestation files)
+  specs: string[]; // SPEC: paths (specification files)
+  plans: string[]; // PLAN: paths (planning files)
+  contexts: string[]; // CONTEXT: paths (hydrated context files)
   raw: string[]; // All items for backward compatibility
 }
 
 function parseArtifactsWithPrefixes(artifactsStr: string): ParsedArtifacts {
-  const result: ParsedArtifacts = { artifacts: [], evidence: [], raw: [] };
+  const result: ParsedArtifacts = { artifacts: [], evidence: [], specs: [], plans: [], contexts: [], raw: [] };
 
   if (
     !artifactsStr ||
@@ -115,7 +118,7 @@ function parseArtifactsWithPrefixes(artifactsStr: string): ParsedArtifacts {
   for (const item of items) {
     result.raw.push(item);
 
-    // Check for path prefixes (ARTIFACT:, EVIDENCE:)
+    // Check for path prefixes (ARTIFACT:, EVIDENCE:, SPEC:, PLAN:)
     const pathPrefix = PATH_PREFIXES.find((prefix) => item.startsWith(prefix));
     if (pathPrefix) {
       const path = item.slice(pathPrefix.length).trim();
@@ -124,6 +127,12 @@ function parseArtifactsWithPrefixes(artifactsStr: string): ParsedArtifacts {
           result.artifacts.push(path);
         } else if (pathPrefix === 'EVIDENCE:') {
           result.evidence.push(path);
+        } else if (pathPrefix === 'SPEC:') {
+          result.specs.push(path);
+        } else if (pathPrefix === 'PLAN:') {
+          result.plans.push(path);
+        } else if (pathPrefix === 'CONTEXT:') {
+          result.contexts.push(path);
         }
       }
     }
@@ -305,7 +314,9 @@ export async function GET(request: Request) {
       }
 
       // Only check completed tasks for mismatches
-      if (isCompleted && (parsed.artifacts.length > 0 || parsed.evidence.length > 0)) {
+      const hasPathsToCheck = parsed.artifacts.length > 0 || parsed.evidence.length > 0 ||
+                              parsed.specs.length > 0 || parsed.plans.length > 0 || parsed.contexts.length > 0;
+      if (isCompleted && hasPathsToCheck) {
         const missingArtifacts: string[] = [];
         const missingEvidence: string[] = [];
 
@@ -321,7 +332,31 @@ export async function GET(request: Request) {
         for (const evidence of parsed.evidence) {
           const exists = await checkArtifactExists(evidence);
           if (!exists) {
-            missingEvidence.push(evidence);
+            missingEvidence.push(`EVIDENCE:${evidence}`);
+          }
+        }
+
+        // Check SPEC: paths
+        for (const spec of parsed.specs) {
+          const exists = await checkArtifactExists(spec);
+          if (!exists) {
+            missingArtifacts.push(`SPEC:${spec}`);
+          }
+        }
+
+        // Check PLAN: paths
+        for (const plan of parsed.plans) {
+          const exists = await checkArtifactExists(plan);
+          if (!exists) {
+            missingArtifacts.push(`PLAN:${plan}`);
+          }
+        }
+
+        // Check CONTEXT: paths
+        for (const context of parsed.contexts) {
+          const exists = await checkArtifactExists(context);
+          if (!exists) {
+            missingArtifacts.push(`CONTEXT:${context}`);
           }
         }
 
@@ -333,7 +368,7 @@ export async function GET(request: Request) {
             description: task.Description?.substring(0, 50) + '...' || '',
             missing_artifacts: [
               ...missingArtifacts,
-              ...missingEvidence.map((e) => `EVIDENCE:${e}`),
+              ...missingEvidence,
             ],
           });
 
@@ -342,7 +377,7 @@ export async function GET(request: Request) {
             task_id: task['Task ID'],
             description: task.Description?.substring(0, 50) + '...' || '',
             current_status: task.Status,
-            missing_artifacts: missingArtifacts,
+            missing_artifacts: missingArtifacts.filter(a => !a.startsWith('SPEC:') && !a.startsWith('PLAN:')),
             missing_evidence: missingEvidence,
           });
         }

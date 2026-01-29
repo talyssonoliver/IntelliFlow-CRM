@@ -1,17 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  Package,
-  FileCheck,
-  Hash,
-  ChevronDown,
-  ChevronUp,
-  CheckCircle,
-  XCircle,
-  Clock,
-  AlertTriangle,
-} from 'lucide-react';
+import { Icon } from '@/lib/icons';
 
 export interface FileHashEntry {
   path: string;
@@ -39,32 +29,31 @@ interface ContextPackStatusProps {
 }
 
 const STATUS_CONFIG = {
-  generated: { icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50', label: 'Generated' },
+  generated: { icon: 'check_circle', color: 'text-green-600', bg: 'bg-green-50', label: 'Generated' },
   acknowledged: {
-    icon: CheckCircle,
+    icon: 'check_circle',
     color: 'text-green-600',
     bg: 'bg-green-50',
     label: 'Acknowledged',
   },
-  valid: { icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50', label: 'Valid' },
-  pending: { icon: Clock, color: 'text-yellow-600', bg: 'bg-yellow-50', label: 'Pending' },
-  missing: { icon: XCircle, color: 'text-red-600', bg: 'bg-red-50', label: 'Missing' },
-  invalid: { icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-50', label: 'Invalid' },
-  error: { icon: XCircle, color: 'text-red-600', bg: 'bg-red-50', label: 'Error' },
-  unchecked: { icon: Clock, color: 'text-gray-400', bg: 'bg-gray-50', label: 'Unchecked' },
-  matched: { icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50', label: 'Matched' },
-  mismatched: { icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-50', label: 'Mismatched' },
+  valid: { icon: 'check_circle', color: 'text-green-600', bg: 'bg-green-50', label: 'Valid' },
+  pending: { icon: 'schedule', color: 'text-yellow-600', bg: 'bg-yellow-50', label: 'Pending' },
+  missing: { icon: 'cancel', color: 'text-red-600', bg: 'bg-red-50', label: 'Missing' },
+  invalid: { icon: 'warning', color: 'text-red-600', bg: 'bg-red-50', label: 'Invalid' },
+  error: { icon: 'cancel', color: 'text-red-600', bg: 'bg-red-50', label: 'Error' },
+  unchecked: { icon: 'schedule', color: 'text-gray-400', bg: 'bg-gray-50', label: 'Unchecked' },
+  matched: { icon: 'check_circle', color: 'text-green-600', bg: 'bg-green-50', label: 'Matched' },
+  mismatched: { icon: 'warning', color: 'text-red-600', bg: 'bg-red-50', label: 'Mismatched' },
 };
 
 function StatusBadge({ status }: { status: keyof typeof STATUS_CONFIG }) {
   const config = STATUS_CONFIG[status];
-  const Icon = config.icon;
 
   return (
     <span
       className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${config.bg} ${config.color}`}
     >
-      <Icon className="w-3 h-3" />
+      <Icon name={config.icon} size="xs" />
       {config.label}
     </span>
   );
@@ -123,31 +112,31 @@ export default function ContextPackStatus({ data, compact = false }: ContextPack
         onClick={() => setExpanded(!expanded)}
       >
         <div className="flex items-center gap-2">
-          <Package className={`w-5 h-5 ${allValid ? 'text-green-600' : 'text-gray-500'}`} />
+          <Icon name="inventory_2" size="lg" className={allValid ? 'text-green-600' : 'text-gray-500'} />
           <span className="font-medium text-gray-900">Context Verification</span>
           <StatusBadge status={overallStatus} />
         </div>
         {expanded ? (
-          <ChevronUp className="w-5 h-5 text-gray-400" />
+          <Icon name="expand_less" size="lg" className="text-gray-400" />
         ) : (
-          <ChevronDown className="w-5 h-5 text-gray-400" />
+          <Icon name="expand_more" size="lg" className="text-gray-400" />
         )}
       </div>
 
       {/* Summary Row */}
       <div className="px-4 py-2 bg-white border-t border-gray-100 grid grid-cols-3 gap-4">
         <div className="flex items-center gap-2">
-          <Package className="w-4 h-4 text-gray-400" />
+          <Icon name="inventory_2" size="sm" className="text-gray-400" />
           <span className="text-sm text-gray-600">Context Pack</span>
           <StatusBadge status={data.packStatus} />
         </div>
         <div className="flex items-center gap-2">
-          <FileCheck className="w-4 h-4 text-gray-400" />
+          <Icon name="task" size="sm" className="text-gray-400" />
           <span className="text-sm text-gray-600">Context Ack</span>
           <StatusBadge status={data.ackStatus} />
         </div>
         <div className="flex items-center gap-2">
-          <Hash className="w-4 h-4 text-gray-400" />
+          <Icon name="tag" size="sm" className="text-gray-400" />
           <span className="text-sm text-gray-600">Hash Match</span>
           <StatusBadge status={data.hashStatus} />
         </div>

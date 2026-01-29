@@ -18,7 +18,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readFileSync, existsSync } from 'fs';
 import {
   scanFullRegistry,
-  scanArtifactRegistry,
   FileEntry,
   CodebaseHealth,
   MissingFile,

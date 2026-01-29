@@ -8,7 +8,7 @@
     "required": [
       "IFC-001"
     ],
-    "verified_at": "2026-01-08T23:28:12.024Z",
+    "verified_at": "2026-01-29T01:33:17.611Z",
     "all_satisfied": true,
     "notes": "IFC-001 Technical Architecture Spike completed"
   },
@@ -57,14 +57,16 @@
       "command": "test -f artifacts/reports/compliance-report.md",
       "executed_at": "2025-12-21T12:00:00Z",
       "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "timestamp": "2025-12-21T12:00:00Z"
     },
     {
       "name": "owasp_checklist_exists",
       "command": "test -f docs/security/owasp-checklist.md",
       "executed_at": "2025-12-21T12:00:00Z",
       "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "timestamp": "2025-12-21T12:00:00Z"
     }
   ],
   "kpis": {

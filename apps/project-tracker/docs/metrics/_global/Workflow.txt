@@ -123,7 +123,7 @@ This means we need a **Context Hydration Layer** before any agent discussion beg
 │  │                                                                       │  │
 │  │   ROUND N: ITERATE until 100% consensus                               │  │
 │  │                                                                       │  │
-│  │   OUTPUT: {TASK_ID}-spec.md (saved to task folder)                    │  │
+│  │   OUTPUT: {TASK_ID}-spec.md (saved to .specify/sprints/sprint-{N}/specifications/) │  │
 │  │                                                                       │  │
 │  └───────────────────────────────────────────────────────────────────────┘  │
 │                                      │                                      │
@@ -142,7 +142,7 @@ This means we need a **Context Hydration Layer** before any agent discussion beg
 │  │   • Integration checkpoints                                           │  │
 │  │   • Validation criteria per step                                      │  │
 │  │                                                                       │  │
-│  │   OUTPUT: {TASK_ID}-plan.md (saved to task folder)                    │  │
+│  │   OUTPUT: {TASK_ID}-plan.md (saved to .specify/sprints/sprint-{N}/planning/)  │  │
 │  │                                                                       │  │
 │  └───────────────────────────────────────────────────────────────────────┘  │
 │                                      │                                      │
@@ -167,7 +167,7 @@ This means we need a **Context Hydration Layer** before any agent discussion beg
 │  │   • Integration points verified                                       │  │
 │  │   • DoD from CSV satisfied                                            │  │
 │  │                                                                       │  │
-│  │   OUTPUT: Code files + {TASK_ID}-delivery.md                          │  │
+│  │   OUTPUT: Code files + {TASK_ID}-delivery.md (saved to attestations/{TASK_ID}/) │  │
 │  │                                                                       │  │
 │  └───────────────────────────────────────────────────────────────────────┘  │
 │                                                                             │
@@ -202,13 +202,13 @@ EXTRACT:
 ### Step 2: Dependency Chain Resolution
 ```
 FOR EACH dependency in {CLEAN_DEPENDENCIES}:
-  LOCATE: /artifacts/tasks/{DEP_ID}/
+  LOCATE: .specify/sprints/sprint-{DEP_SPRINT}/
   LOAD:
-    - {DEP_ID}-spec.md    → Understand what was specified
-    - {DEP_ID}-plan.md    → Understand how it was planned
-    - {DEP_ID}-delivery.md → Understand what was delivered
-    - Code files created  → Understand actual implementation
-  
+    - specifications/{DEP_ID}-spec.md  → Understand what was specified
+    - planning/{DEP_ID}-plan.md        → Understand how it was planned
+    - attestations/{DEP_ID}/           → Understand validation & delivery
+    - Code files created               → Understand actual implementation
+
   EXTRACT:
     - Interfaces exposed
     - Types/schemas defined
@@ -717,25 +717,30 @@ Ready for: Next dependent task
 
 ## 📁 Task Folder Structure
 
-For each task, artifacts live in:
+Tasks are organized by sprint (determined from Sprint_plan.csv "Target Sprint" column):
 
 ```
-/artifacts/tasks/{TASK_ID}/
+/.specify/sprints/sprint-{N}/
+├── specifications/
+│   └── {TASK_ID}-spec.md        # Output of Phase 1 (Spec Session)
+├── planning/
+│   └── {TASK_ID}-plan.md        # Output of Phase 2 (Plan Session)
 ├── context/
-│   ├── hydrated-context.md      # Built by Phase 0
-│   └── agent-selection.json     # Which agents were selected
-├── spec/
-│   ├── {TASK_ID}-spec.md        # Output of Phase 1
-│   └── discussion-log.md        # Full agent dialogue
-├── plan/
-│   └── {TASK_ID}-plan.md        # Output of Phase 2
-├── delivery/
-│   ├── {TASK_ID}-delivery.md    # Output of Phase 3
-│   └── code/                    # Actual code files (or symlinks)
-└── validation/
-    ├── test-results.json
-    └── integration-report.md
+│   └── {TASK_ID}/
+│       ├── hydrated-context.md  # Built by Phase 0
+│       ├── hydrated-context.json
+│       └── agent-selection.json # Which agents were selected
+├── attestations/
+│   └── {TASK_ID}/
+│       ├── {TASK_ID}-delivery.md    # Output of Phase 3 (Exec Session)
+│       ├── validation-report.json
+│       └── test-results.json
+└── execution/
+    └── {TASK_ID}/               # Runtime execution artifacts
 ```
+
+**Note**: The sprint number {N} comes from the task's "Target Sprint" in Sprint_plan.csv.
+Legacy task folders (`.specify/{TASK_ID}/`) may exist for previously migrated tasks.
 
 ---
 
@@ -763,20 +768,20 @@ For each task, artifacts live in:
 │  ├── Select agents dynamically                                              │
 │  ├── Run multi-round discussion                                             │
 │  ├── Generate spec document                                                 │
-│  └── Save to /artifacts/tasks/{TASK_ID}/spec/                               │
+│  └── Save to .specify/sprints/sprint-{N}/specifications/            │
 │                                                                             │
 │  SESSION 2: Plan (separate Claude conversation)                             │
 │  ├── Load spec from previous session                                        │
 │  ├── Owner creates execution plan                                           │
 │  ├── Generate plan document                                                 │
-│  └── Save to /artifacts/tasks/{TASK_ID}/plan/                               │
+│  └── Save to .specify/sprints/sprint-{N}/planning/                  │
 │                                                                             │
 │  SESSION 3: Exec (separate Claude conversation)                             │
 │  ├── Load spec + plan                                                       │
 │  ├── Execute step-by-step                                                   │
 │  ├── Validate against criteria                                              │
 │  ├── Generate delivery report                                               │
-│  └── Save to /artifacts/tasks/{TASK_ID}/delivery/                           │
+│  └── Save to .specify/sprints/sprint-{N}/attestations/{TASK_ID}/    │
 │                                                                             │
 │  END OF DAY: Status Update                                                  │
 │  ─────────────────────────                                                  │

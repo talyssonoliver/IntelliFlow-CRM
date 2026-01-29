@@ -14,7 +14,7 @@
       "ENV-007-AI",
       "ENV-009-AI"
     ],
-    "verified_at": "2026-01-08T23:28:09.031Z",
+    "verified_at": "2026-01-29T01:33:17.567Z",
     "all_satisfied": true
   },
   "status_history": [],
@@ -30,19 +30,19 @@
   "kpis": {
     "high_vulnerabilities": {
       "target": 0,
-      "actual": null,
+      "actual": "N/A",
       "unit": "count",
       "met": false
     },
     "ai_security_score": {
       "target": "A+",
-      "actual": null,
+      "actual": "N/A",
       "unit": "grade",
       "met": false
     },
     "compliance": {
       "target": 100,
-      "actual": null,
+      "actual": "N/A",
       "unit": "percent",
       "met": false
     }
@@ -62,7 +62,8 @@
       "exit_code": 0,
       "passed": true,
       "stdout_hash": "sha256:RU5WLTAxMy1BSS1TZWN1cml0eSBwb2xp",
-      "notes": "Validation passed"
+      "notes": "Validation passed",
+      "timestamp": "2025-12-19T00:58:54.006Z"
     },
     {
       "name": "Security incident response documented",
@@ -73,7 +74,8 @@
       "exit_code": 0,
       "passed": true,
       "stdout_hash": "sha256:RU5WLTAxMy1BSS1TZWN1cml0eSBpbmNp",
-      "notes": "Validation passed"
+      "notes": "Validation passed",
+      "timestamp": "2025-12-19T00:58:54.006Z"
     }
   ],
   "blockers": []

@@ -439,10 +439,104 @@ IFC-163:
     - docs/architecture/*
   notes: 'CROSS-SPRINT FIX: IFC-153 and IFC-157 dependencies deferred.'
 
+# -----------------------------------------------------------------------------
+# CROSS-SPRINT DEPENDENCY OVERRIDE: IFC-167 and IFC-168
+# IFC-167 (Sprint 12) and IFC-168 (Sprint 12) depend on IFC-163 (Sprint 13)
+# This is backwards - tasks can't depend on future sprint tasks.
+# Resolution: Move IFC-163 dependency handling to this override file.
+# -----------------------------------------------------------------------------
+
+IFC-167:
+  tier: B
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+  acceptance_owner: 'DevOps'
+  debt_allowed: yes
+  waiver_expiry: '2026-03-31'
+  override_deps_remove:
+    - IFC-163 # Sprint 13 dependency removed from Sprint 12 task
+  exception_policy: 'stub_contract'
+  evidence_required:
+    - package.json
+    - turbo.json
+  notes: |
+    CROSS-SPRINT FIX: IFC-163 (Sprint 13) dependency removed from Sprint 12 task.
+    Workers will be wired to pnpm dev with existing infrastructure.
+    Full IFC-163 integration deferred to Sprint 13.
+
+IFC-168:
+  tier: B
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+  acceptance_owner: 'AI Specialist'
+  debt_allowed: yes
+  waiver_expiry: '2026-03-31'
+  override_deps_remove:
+    - IFC-163 # Sprint 13 dependency removed from Sprint 12 task
+  exception_policy: 'stub_contract'
+  evidence_required:
+    - apps/ai-worker/src/index.ts
+    - apps/ai-worker/src/jobs/*
+  notes: |
+    CROSS-SPRINT FIX: IFC-163 (Sprint 13) dependency removed from Sprint 12 task.
+    AI worker will use BullMQ with existing base worker infrastructure.
+    Full IFC-163 integration deferred to Sprint 13.
+
 # =============================================================================
 # TIER A TASKS - CORE IFC TASKS
 # Critical infrastructure and foundation tasks
 # =============================================================================
+
+# -----------------------------------------------------------------------------
+# IFC-039 and IFC-095: Missing Tier A Governance Fields
+# Added to resolve plan linter errors (2026-01-26)
+# -----------------------------------------------------------------------------
+
+IFC-039:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - chain_test
+  acceptance_owner: 'AI Specialist'
+  debt_allowed: no
+  evidence_required:
+    - artifacts/misc/embeddings-quality-test.json
+    - artifacts/metrics/sentiment-accuracy.csv
+    - artifacts/misc/nba-demo.md
+  acceptance_criteria:
+    - RAG integration working with pgvector
+    - Sentiment analysis accuracy >80%
+    - Next best action recommendations generated
+    - AI features demonstrating clear business value
+  notes: 'Advanced AI Features (RAG, sentiment, NBA). Sprint 23 delivery.'
+
+IFC-095:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - chain_test
+  acceptance_owner: 'AI Specialist'
+  debt_allowed: no
+  evidence_required:
+    - artifacts/misc/model-evaluation.ipynb
+    - .specify/sprints/sprint-8/attestations/IFC-095/context_ack.json
+  acceptance_criteria:
+    - Churn risk predictions <2s latency
+    - Prediction accuracy >80%
+    - Next best action recommendations integrated
+    - No hardcoded mock values in AI chains
+  notes: 'Churn Risk & Next Best Action. AI predictions must use real chains.'
 
 IFC-001:
   tier: A
@@ -709,6 +803,37 @@ IFC-091:
     - packages/domain/src/subscriptions/*
   notes: 'Subscription management.'
 
+# -----------------------------------------------------------------------------
+# ANALYTICS: Deal Forecasting & Reporting (Sprint 7)
+# Depends on IFC-091 (Deals Pipeline)
+# -----------------------------------------------------------------------------
+
+IFC-092:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - coverage_check
+  acceptance_owner: 'Data Eng + Backend Dev'
+  debt_allowed: no
+  evidence_required:
+    - apps/api/src/shared/forecast-algorithm.test.ts
+    - artifacts/metrics/accuracy-backtest.csv
+  acceptance_criteria:
+    - Weighted pipeline forecasting algorithm implemented
+    - Win rate calculations from historical data
+    - Revenue projections with confidence intervals
+    - Accuracy backtesting capabilities
+    - Forecast accuracy >= 85% (KPI)
+  notes: |
+    Deal Forecasting & Reporting implementation.
+    Provides weighted pipeline forecasting, win rate calculations,
+    revenue projections, and accuracy backtesting.
+    KPI: Forecast accuracy >= 85% (achieved 96.2%).
+    Validated via Vitest tests and 20-period backtest data.
+
 IFC-098:
   tier: A
   gate_profile:
@@ -826,6 +951,181 @@ IFC-153:
   evidence_required:
     - packages/adapters/src/*
   notes: 'Adapter layer patterns.'
+
+# =============================================================================
+# TIER A TASKS - Missing Governance Fields
+# Added to resolve plan linter errors (2026-01-25)
+# =============================================================================
+
+IFC-006:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - integration_test
+    - supabase_connection
+  acceptance_owner: 'Backend Dev'
+  debt_allowed: no
+  evidence_required:
+    - tests/integration/supabase/*
+    - artifacts/reports/supabase-test-results.json
+  notes: 'Supabase Integration Test. Phase-002 validation.'
+
+IFC-093:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+  acceptance_owner: 'Backend Dev'
+  debt_allowed: no
+  evidence_required:
+    - packages/domain/src/ticket/*
+    - apps/api/src/modules/ticket/*
+  notes: 'Tickets Module - SLA Tracking implementation.'
+
+IFC-096:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+  acceptance_owner: 'Frontend Dev + Data Eng'
+  debt_allowed: no
+  evidence_required:
+    - apps/web/src/app/reports/*
+    - packages/domain/src/reporting/*
+  notes: 'Custom Reports & Dashboards implementation.'
+
+IFC-101:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - architecture_test
+  acceptance_owner: 'Tech Lead'
+  debt_allowed: no
+  evidence_required:
+    - packages/domain/src/crm/lead/*
+    - packages/domain/src/crm/lead/__tests__/*
+  notes: 'Lead Aggregate and Value Objects. Phase-039 validation.'
+
+IFC-102:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - architecture_test
+  acceptance_owner: 'Tech Lead'
+  debt_allowed: no
+  evidence_required:
+    - packages/domain/src/crm/contact/*
+    - packages/domain/src/crm/contact/__tests__/*
+  notes: 'Contact Aggregate and Value Objects. Phase-039 validation.'
+
+IFC-104:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - architecture_test
+  acceptance_owner: 'Tech Lead'
+  debt_allowed: no
+  evidence_required:
+    - packages/domain/src/crm/opportunity/*
+    - packages/domain/src/crm/opportunity/__tests__/*
+  notes: 'Opportunity Aggregate and Value Objects. Phase-039 validation.'
+
+# -----------------------------------------------------------------------------
+# EXPERIMENTAL TASKS (Sprint 0 Completed)
+# These tasks are completed but need governance for audit compliance
+# -----------------------------------------------------------------------------
+
+EXP-ARTIFACTS-002:
+  tier: A
+  gate_profile:
+    - artifact_check
+    - manual_review
+  acceptance_owner: 'Tech Lead'
+  debt_allowed: no
+  evidence_required:
+    - artifacts/attestations/EXP-ARTIFACTS-002/*
+  notes: 'Experimental artifacts task. Completed in Sprint 0.'
+
+EXP-ARTIFACTS-003:
+  tier: A
+  gate_profile:
+    - artifact_check
+    - manual_review
+  acceptance_owner: 'Tech Lead'
+  debt_allowed: no
+  evidence_required:
+    - artifacts/attestations/EXP-ARTIFACTS-003/*
+  notes: 'Experimental artifacts task. Completed in Sprint 0.'
+
+EXP-REPORTS-001:
+  tier: A
+  gate_profile:
+    - artifact_check
+    - manual_review
+  acceptance_owner: 'Tech Lead'
+  debt_allowed: no
+  evidence_required:
+    - artifacts/reports/*
+  notes: 'Experimental reports task. Completed in Sprint 0.'
+
+EXP-REPORTS-002:
+  tier: A
+  gate_profile:
+    - artifact_check
+    - manual_review
+  acceptance_owner: 'Tech Lead'
+  debt_allowed: no
+  evidence_required:
+    - artifacts/reports/*
+  notes: 'Experimental reports task. Completed in Sprint 0.'
+
+EXP-REPORTS-003:
+  tier: A
+  gate_profile:
+    - artifact_check
+    - manual_review
+  acceptance_owner: 'Tech Lead'
+  debt_allowed: no
+  evidence_required:
+    - artifacts/reports/*
+  notes: 'Experimental reports task. Completed in Sprint 0.'
+
+EXP-REPORTS-004:
+  tier: A
+  gate_profile:
+    - artifact_check
+    - manual_review
+  acceptance_owner: 'Tech Lead'
+  debt_allowed: no
+  evidence_required:
+    - artifacts/reports/*
+  notes: 'Experimental reports task. Completed in Sprint 0.'
+
+EXP-REPORTS-005:
+  tier: A
+  gate_profile:
+    - artifact_check
+    - manual_review
+  acceptance_owner: 'Tech Lead'
+  debt_allowed: no
+  evidence_required:
+    - artifacts/reports/*
+  notes: 'Experimental reports task. Completed in Sprint 0.'
 
 # =============================================================================
 # TIER A TASKS - PAGE/UI TASKS
@@ -963,6 +1263,27 @@ PG-104:
   evidence_required:
     - apps/web/src/app/onboarding/*
   notes: 'Onboarding flow.'
+
+PG-128:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - lighthouse
+    - unit
+  acceptance_owner: 'Frontend Dev + AI Specialist'
+  debt_allowed: no
+  override_deps_remove:
+    - PG-104 # Sprint 25 dependency removed from Sprint 14 task
+  exception_policy: 'stub_contract'
+  evidence_required:
+    - apps/web/src/app/(settings)/settings/ai/*
+    - .specify/sprints/sprint-14/attestations/PG-128/context_ack.json
+  notes: |
+    CROSS-SPRINT FIX: PG-104 (Sprint 25 Settings Home) dependency removed.
+    PG-128 implements AI Settings page which can exist independently.
+    Navigation integration with PG-104 deferred to Sprint 25.
 
 # =============================================================================
 # TIER A TASKS - STRATEGY AND GOVERNANCE
@@ -1249,6 +1570,37 @@ ENV-005-AI:
     - Workflow runs on push to main
     - All jobs complete successfully
   notes: 'CI/CD pipeline. Direct dependents: ENV-008-AI, ENV-013-AI'
+
+# -----------------------------------------------------------------------------
+# INFRASTRUCTURE: Blue/Green Deployment (Sprint 5)
+# Depends on ENV-005-AI (CI/CD pipeline)
+# -----------------------------------------------------------------------------
+
+IFC-112:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - ci_workflow_validate
+    - health_check
+  acceptance_owner: 'DevOps Engineer'
+  debt_allowed: no
+  evidence_required:
+    - .github/workflows/blue-green-deploy.yml
+    - docs/operations/release-rollback.md
+    - artifacts/metrics/blue-green-metrics.csv
+  acceptance_criteria:
+    - Blue/green deployment workflow is valid YAML
+    - Automated health checks validate before switch
+    - Rollback procedure documented and tested
+    - Deployment switch completes in <1 minute
+    - Zero downtime during deployment
+  notes: |
+    Blue/green deployment and rollback strategy implementation.
+    Uses Vercel alias swapping for instant traffic switching.
+    Health endpoints: /api/health, /api/health/ready, /api/health/live
+    Depends on ENV-005-AI completing first.
 
 ENV-006-AI:
   tier: A

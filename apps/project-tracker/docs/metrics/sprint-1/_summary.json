@@ -1,6 +1,6 @@
 {
   "$schema": "../schemas/sprint-summary.schema.json",
-  "sprint": 1,
+  "sprint": "sprint-1",
   "name": "Sprint 1 - Validation & Architecture",
   "target_date": "2025-12-21",
   "started_at": "2025-12-21T10:00:00Z",
@@ -20,16 +20,47 @@
       "phase_name": "Validation & Architecture",
       "status": "DONE",
       "task_count": 14,
-      "completed_count": 14
+      "completed_count": 14,
+      "id": "phase-0-phase0"
     }
   ],
   "kpi_summary": {
-    "automation_percentage": 100,
-    "manual_interventions": 0,
-    "blockers_raised": 0,
-    "blockers_resolved": 0,
-    "average_task_duration_minutes": 130,
-    "validation_pass_rate": 100
+    "automation_percentage": {
+      "current": 100,
+      "target": 100,
+      "status": "MEASURING",
+      "actual": 100
+    },
+    "manual_interventions": {
+      "current": 0,
+      "target": 0,
+      "status": "MEASURING",
+      "actual": 0
+    },
+    "blockers_raised": {
+      "current": 0,
+      "target": 0,
+      "status": "MEASURING",
+      "actual": 0
+    },
+    "blockers_resolved": {
+      "current": 0,
+      "target": 0,
+      "status": "MEASURING",
+      "actual": 0
+    },
+    "average_task_duration_minutes": {
+      "current": 130,
+      "target": 130,
+      "status": "MEASURING",
+      "actual": 130
+    },
+    "validation_pass_rate": {
+      "current": 100,
+      "target": 100,
+      "status": "MEASURING",
+      "actual": 100
+    }
   },
   "completed_tasks": [
     {
@@ -99,5 +130,23 @@
     }
   ],
   "blockers": [],
-  "notes": "13/13 tasks DONE (100%). Last synced: 2026-01-08T23:28:11.827Z"
+  "notes": "13/13 tasks DONE (100%). Last synced: 2026-01-29T01:33:17.608Z",
+  "schedule": {
+    "sprint_start_date": null,
+    "sprint_end_date": "2025-12-21",
+    "working_hours_per_day": 8,
+    "working_days_per_week": 5,
+    "critical_path": {
+      "task_ids": [],
+      "total_duration_minutes": 0,
+      "completion_percentage": 0,
+      "bottleneck_task_id": null
+    },
+    "schedule_variance": {
+      "sv_minutes": 0,
+      "spi": 1,
+      "status": "on_track"
+    },
+    "calculated_at": "2026-01-29T01:33:17.674Z"
+  }
 }

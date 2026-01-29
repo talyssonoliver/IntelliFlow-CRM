@@ -132,7 +132,7 @@ function calculateCosts(): CostItem[] {
   return costs;
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const investmentGates = loadInvestmentGates();
     const currentCosts = calculateCosts();

@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from 'fs';
+import { existsSync, readFileSync, mkdirSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { execSync } from 'child_process';
 
@@ -120,7 +120,7 @@ function loadHistoricalReports(): WebVitalsReport[] {
         .filter(f => f.endsWith('.json') && f.includes('lighthouse'))
         .slice(-10); // Last 10 reports
 
-      for (const file of files) {
+      for (const _file of files) {
         const report = loadLatestLighthouseReport();
         if (report) {
           reports.push(report);

@@ -13,11 +13,11 @@
     }
   ],
   "task_summary": {
-    "total": 16,
-    "done": 14,
-    "in_progress": 0,
+    "total": 19,
+    "done": 18,
+    "in_progress": 1,
     "blocked": 0,
-    "not_started": 2,
+    "not_started": 0,
     "failed": 0
   },
   "kpi_summary": {
@@ -88,14 +88,19 @@
       "duration_minutes": 60
     },
     {
+      "task_id": "PG-010",
+      "completed_at": "2025-12-31T08:00:00Z",
+      "duration_minutes": 45
+    },
+    {
+      "task_id": "PG-012",
+      "completed_at": "2025-12-31T09:00:00Z",
+      "duration_minutes": 45
+    },
+    {
       "task_id": "IFC-148",
       "completed_at": "2025-12-31T10:00:00Z",
       "duration_minutes": 90
-    },
-    {
-      "task_id": "IFC-155",
-      "completed_at": "2025-12-31T11:00:00Z",
-      "duration_minutes": 75
     },
     {
       "task_id": "EXP-PLATFORM-001",
@@ -111,9 +116,24 @@
       "task_id": "PG-013",
       "completed_at": "2025-12-31T12:30:00Z",
       "duration_minutes": 90
+    },
+    {
+      "task_id": "IFC-169",
+      "completed_at": "2026-01-29T01:33:17.642Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-170",
+      "completed_at": "2026-01-29T01:33:17.642Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-171",
+      "completed_at": "2026-01-29T01:33:17.642Z",
+      "duration_minutes": 15
     }
   ],
-  "notes": "14/16 tasks DONE (88%). Last synced: 2026-01-08T23:28:13.614Z",
+  "notes": "18/19 tasks DONE (95%). Last synced: 2026-01-29T01:33:17.642Z",
   "section": "Public Pages",
   "dependencies": {
     "all_satisfied": true,
@@ -149,5 +169,23 @@
     "expected": [],
     "created": [],
     "missing": []
+  },
+  "schedule": {
+    "sprint_start_date": null,
+    "sprint_end_date": "2025-01-15",
+    "working_hours_per_day": 8,
+    "working_days_per_week": 5,
+    "critical_path": {
+      "task_ids": [],
+      "total_duration_minutes": 0,
+      "completion_percentage": 0,
+      "bottleneck_task_id": null
+    },
+    "schedule_variance": {
+      "sv_minutes": -30,
+      "spi": 0.98,
+      "status": "on_track"
+    },
+    "calculated_at": "2026-01-29T01:33:17.678Z"
   }
 }

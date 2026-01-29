@@ -2,32 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import {
-  Activity,
-  Clock,
-  X,
-  RotateCcw,
-  AlertTriangle,
-  Heart,
-  Play,
-  Pause,
-  Terminal,
-  Eye,
-  Settings,
-  Home,
-  RefreshCw,
-  ChevronDown,
-  ChevronUp,
-  Trash2,
-  Server,
-  Cpu,
-  Wifi,
-  WifiOff,
-  Square,
-  MessageCircleQuestion,
-  Send,
-  CheckCircle,
-} from 'lucide-react';
+import { Icon } from '@/lib/icons';
 
 // Helper to determine log level from activity string
 function getLogLevel(activity: string): string {
@@ -501,21 +476,21 @@ export default function SwarmPage() {
                 href="/"
                 className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
               >
-                <Home className="w-5 h-5" />
+                <Icon name="home" size="lg" />
               </Link>
               <div className="flex items-center gap-2">
-                <Server className="w-6 h-6 text-blue-500" />
+                <Icon name="dns" size="xl" className="text-blue-500" />
                 <h1 className="text-xl font-bold">Swarm Control Center</h1>
               </div>
               <div className="flex items-center gap-2 ml-4">
                 {isConnected ? (
                   <div className="flex items-center gap-1 text-green-400">
-                    <Wifi className="w-4 h-4" />
+                    <Icon name="wifi" size="sm" />
                     <span className="text-sm">Connected</span>
                   </div>
                 ) : (
                   <div className="flex items-center gap-1 text-red-400">
-                    <WifiOff className="w-4 h-4" />
+                    <Icon name="wifi_off" size="sm" />
                     <span className="text-sm">Disconnected</span>
                   </div>
                 )}
@@ -525,7 +500,7 @@ export default function SwarmPage() {
             <div className="flex items-center gap-4">
               {/* Agent Capacity Mini */}
               <div className="flex items-center gap-2 bg-gray-700 px-3 py-1.5 rounded-lg">
-                <Cpu className="w-4 h-4 text-blue-400" />
+                <Icon name="memory" size="sm" className="text-blue-400" />
                 <span className="text-sm font-medium">
                   {activeCount} / {maxAgents} Agents
                 </span>
@@ -540,7 +515,7 @@ export default function SwarmPage() {
               {/* Claude Errors */}
               {health?.recent_claude_errors !== undefined && health.recent_claude_errors > 0 && (
                 <div className="flex items-center gap-1 bg-red-900/50 text-red-400 px-3 py-1.5 rounded-lg">
-                  <AlertTriangle className="w-4 h-4" />
+                  <Icon name="warning" size="sm" />
                   <span className="text-sm">{health.recent_claude_errors} Claude errors</span>
                 </div>
               )}
@@ -552,7 +527,7 @@ export default function SwarmPage() {
                 className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
                 title="Refresh"
               >
-                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                <Icon name="refresh" size="sm" className={isLoading ? 'animate-spin' : ''} />
               </button>
 
               {/* Settings */}
@@ -561,7 +536,7 @@ export default function SwarmPage() {
                 className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
                 title="Settings"
               >
-                <Settings className="w-4 h-4" />
+                <Icon name="settings" size="sm" />
               </button>
             </div>
           </div>
@@ -603,7 +578,7 @@ export default function SwarmPage() {
                   disabled={isStarting}
                   className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white font-medium rounded-lg transition-colors"
                 >
-                  <Play className={`w-4 h-4 ${isStarting ? 'animate-pulse' : ''}`} />
+                  <Icon name="play_arrow" size="sm" className={isStarting ? 'animate-pulse' : ''} />
                   {isStarting ? 'Starting...' : 'Start Swarm'}
                 </button>
               ) : (
@@ -612,7 +587,7 @@ export default function SwarmPage() {
                   disabled={isStopping}
                   className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white font-medium rounded-lg transition-colors"
                 >
-                  <Square className={`w-4 h-4 ${isStopping ? 'animate-pulse' : ''}`} />
+                  <Icon name="stop" size="sm" className={isStopping ? 'animate-pulse' : ''} />
                   {isStopping ? 'Stopping...' : 'Stop Swarm'}
                 </button>
               )}
@@ -656,7 +631,7 @@ export default function SwarmPage() {
           <div className="border-b border-gray-700 p-4">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-semibold flex items-center gap-2">
-                <Terminal className="w-5 h-5 text-cyan-400" />
+                <Icon name="terminal" size="lg" className="text-cyan-400" />
                 CLI Controls
               </h2>
               <button
@@ -772,7 +747,7 @@ export default function SwarmPage() {
             <div className="border-b border-gray-700 p-4">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <MessageCircleQuestion className="w-5 h-5 text-purple-400" />
+                  <Icon name="contact_support" size="lg" className="text-purple-400" />
                   Agent Questions (
                   {pendingQuestions.reduce((acc, t) => acc + t.questions.length, 0)})
                 </h2>
@@ -837,7 +812,7 @@ export default function SwarmPage() {
 
                             {q.answer ? (
                               <div className="flex items-center gap-2 text-xs text-green-400">
-                                <CheckCircle className="w-3 h-3" />
+                                <Icon name="check_circle" size="xs" />
                                 <span>Answered</span>
                               </div>
                             ) : (
@@ -864,7 +839,7 @@ export default function SwarmPage() {
                           }
                           className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded transition-colors"
                         >
-                          <Send className="w-4 h-4" />
+                          <Icon name="send" size="sm" />
                           {isSubmittingAnswers === task.taskId ? 'Submitting...' : 'Submit Answers'}
                         </button>
                       </div>
@@ -879,14 +854,14 @@ export default function SwarmPage() {
           <div className="flex-1 overflow-y-auto p-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold flex items-center gap-2">
-                <Activity className="w-5 h-5 text-blue-400" />
+                <Icon name="monitoring" size="lg" className="text-blue-400" />
                 Active Tasks ({activeTasks.length})
               </h2>
             </div>
 
             {activeTasks.length === 0 ? (
               <div className="text-center py-12">
-                <Clock className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                <Icon name="schedule" size="2xl" className="text-gray-600 mx-auto mb-3 text-5xl" />
                 <p className="text-gray-500">No agents running</p>
                 <p className="text-sm text-gray-600 mt-1">Waiting for tasks...</p>
               </div>
@@ -933,9 +908,9 @@ export default function SwarmPage() {
                             onClick={() => toggleTaskExpanded(task.taskId)}
                           >
                             {isExpanded ? (
-                              <ChevronUp className="w-4 h-4" />
+                              <Icon name="expand_less" size="sm" />
                             ) : (
-                              <ChevronDown className="w-4 h-4" />
+                              <Icon name="expand_more" size="sm" />
                             )}
                           </button>
                         </div>
@@ -946,7 +921,7 @@ export default function SwarmPage() {
                         {/* Heartbeat and Attempt */}
                         <div className="mt-2 flex items-center gap-4 text-xs">
                           <div className={`flex items-center gap-1 ${heartbeat.color}`}>
-                            <Heart className="w-3 h-3" />
+                            <Icon name="favorite" size="xs" />
                             <span>{heartbeat.label}</span>
                           </div>
                           {task.attempt > 1 && (
@@ -965,7 +940,7 @@ export default function SwarmPage() {
                               onClick={() => handleOpenTerminal(task.taskId)}
                               className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-green-600 hover:bg-green-700 rounded transition-colors"
                             >
-                              <Terminal className="w-3 h-3" />
+                              <Icon name="terminal" size="xs" />
                               Terminal
                             </button>
                             <button
@@ -973,7 +948,7 @@ export default function SwarmPage() {
                               onClick={() => handleViewLog(task.taskId)}
                               className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-700 rounded transition-colors"
                             >
-                              <Eye className="w-3 h-3" />
+                              <Icon name="visibility" size="xs" />
                               Full Log
                             </button>
                             <button
@@ -981,7 +956,7 @@ export default function SwarmPage() {
                               onClick={() => handleRestartTask(task.taskId)}
                               className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-yellow-600 hover:bg-yellow-700 rounded transition-colors"
                             >
-                              <RotateCcw className="w-3 h-3" />
+                              <Icon name="refresh" size="xs" />
                               Restart
                             </button>
                             <button
@@ -989,7 +964,7 @@ export default function SwarmPage() {
                               onClick={() => handleKillTask(task.taskId)}
                               className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-red-600 hover:bg-red-700 rounded transition-colors"
                             >
-                              <X className="w-3 h-3" />
+                              <Icon name="close" size="xs" />
                               Kill
                             </button>
                           </div>
@@ -1025,7 +1000,7 @@ export default function SwarmPage() {
           {/* Log Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-700">
             <div className="flex items-center gap-2">
-              <Terminal className="w-5 h-5 text-green-400" />
+              <Icon name="terminal" size="lg" className="text-green-400" />
               <h2 className="text-lg font-semibold">Live Log Stream</h2>
               <span className="text-sm text-gray-500">({logEntries.length} entries)</span>
             </div>
@@ -1036,14 +1011,14 @@ export default function SwarmPage() {
                   autoScroll ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-700 hover:bg-gray-600'
                 }`}
               >
-                {autoScroll ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />}
+                {autoScroll ? <Icon name="play_arrow" size="xs" /> : <Icon name="pause" size="xs" />}
                 Auto-scroll
               </button>
               <button
                 onClick={() => setLogEntries([])}
                 className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-gray-700 hover:bg-gray-600 rounded transition-colors"
               >
-                <Trash2 className="w-3 h-3" />
+                <Icon name="delete" size="xs" />
                 Clear
               </button>
             </div>
@@ -1056,7 +1031,7 @@ export default function SwarmPage() {
           >
             {logEntries.length === 0 ? (
               <div className="text-center py-12 text-gray-600">
-                <Terminal className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <Icon name="terminal" size="2xl" className="mx-auto mb-3 opacity-50 text-5xl" />
                 <p>No log entries yet</p>
                 <p className="text-xs mt-1">Logs will appear here as tasks run</p>
               </div>

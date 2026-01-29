@@ -9,7 +9,7 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-01-08T23:28:10.916Z",
+    "verified_at": "2026-01-29T01:33:17.598Z",
     "required": [
       "ENV-017-AI"
     ]
@@ -36,46 +36,8 @@
     }
   },
   "artifacts": {
-    "expected": [
-      null,
-      null,
-      null,
-      null,
-      null,
-      null
-    ],
-    "created": [
-      {
-        "created_at": "2025-12-16T00:41:57Z",
-        "path": null,
-        "sha256": null
-      },
-      {
-        "created_at": "2025-12-16T00:41:57Z",
-        "path": null,
-        "sha256": null
-      },
-      {
-        "created_at": "2025-12-16T00:41:57Z",
-        "path": null,
-        "sha256": null
-      },
-      {
-        "created_at": "2025-12-16T00:41:57Z",
-        "path": null,
-        "sha256": null
-      },
-      {
-        "created_at": "2025-12-16T00:41:57Z",
-        "path": null,
-        "sha256": null
-      },
-      {
-        "created_at": "2025-12-16T00:41:57Z",
-        "path": null,
-        "sha256": null
-      }
-    ],
+    "expected": [],
+    "created": [],
     "missing": []
   },
   "validations": [
@@ -84,42 +46,48 @@
       "passed": true,
       "command": "echo 'No command recorded'",
       "name": "Validation Check",
-      "exit_code": 0
+      "exit_code": 0,
+      "timestamp": "2025-12-15T00:45:00Z"
     },
     {
       "executed_at": "2025-12-16T00:41:57Z",
       "passed": true,
       "command": "echo 'No command recorded'",
       "name": "Validation Check",
-      "exit_code": 0
+      "exit_code": 0,
+      "timestamp": "2025-12-15T00:45:00Z"
     },
     {
       "executed_at": "2025-12-16T00:41:57Z",
       "passed": true,
       "command": "echo 'No command recorded'",
       "name": "Validation Check",
-      "exit_code": 0
+      "exit_code": 0,
+      "timestamp": "2025-12-15T00:45:00Z"
     },
     {
       "executed_at": "2025-12-16T00:41:57Z",
       "passed": true,
       "command": "echo 'No command recorded'",
       "name": "Validation Check",
-      "exit_code": 0
+      "exit_code": 0,
+      "timestamp": "2025-12-15T00:45:00Z"
     },
     {
       "executed_at": "2025-12-16T00:41:57Z",
       "passed": true,
       "command": "echo 'No command recorded'",
       "name": "Validation Check",
-      "exit_code": 0
+      "exit_code": 0,
+      "timestamp": "2025-12-15T00:45:00Z"
     },
     {
       "executed_at": "2025-12-16T00:41:57Z",
       "passed": true,
       "command": "echo 'No command recorded'",
       "name": "Validation Check",
-      "exit_code": 0
+      "exit_code": 0,
+      "timestamp": "2025-12-15T00:45:00Z"
     }
   ],
   "blockers": [],
@@ -135,5 +103,6 @@
       "note": "Task completed successfully",
       "at": "2025-12-15T00:45:00Z"
     }
-  ]
+  ],
+  "task_id": "ENV-018-AI"
 }

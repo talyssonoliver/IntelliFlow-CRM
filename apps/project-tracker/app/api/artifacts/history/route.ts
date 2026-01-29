@@ -163,7 +163,7 @@ function getFileHistory(relativePath: string, staleDays: number): FileHistoryEnt
         }
       }
     }
-  } catch (error) {
+  } catch {
     // File might not be tracked by git yet
     // Use filesystem timestamps if available
     if (entry.fsModifiedAt) {

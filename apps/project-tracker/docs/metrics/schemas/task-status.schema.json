@@ -1,73 +1,96 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://intelliflow-crm.com/schemas/task-status.schema.json",
+  "$id": "task-status.schema.json",
   "title": "Task Status Schema",
   "description": "Schema for tracking individual task execution, artifacts, validations, and KPIs",
   "type": "object",
-  "required": ["task_id", "status"],
   "properties": {
     "$schema": {
       "type": "string"
     },
     "task_id": {
+      "description": "Unique task identifier (e.g., ENV-002-AI, EXC-SEC-001)",
       "type": "string",
-      "pattern": "^[A-Z]+-[A-Z0-9-]+$",
-      "description": "Unique task identifier (e.g., ENV-002-AI, EXC-SEC-001)"
+      "pattern": "^[A-Z]+-[A-Z0-9-]+$"
     },
     "section": {
-      "type": "string",
-      "description": "Task category/section"
+      "description": "Task category/section",
+      "type": "string"
     },
     "description": {
-      "type": "string",
-      "description": "Brief description of the task"
+      "description": "Brief description of the task",
+      "type": "string"
     },
     "owner": {
-      "type": "string",
-      "description": "Task owner or responsible party"
+      "description": "Task owner or responsible party",
+      "type": "string"
     },
     "sprint": {
-      "type": "string",
-      "description": "Sprint identifier (e.g., sprint-0)"
+      "description": "Sprint identifier (e.g., sprint-0)",
+      "type": "string"
     },
     "phase": {
-      "type": "string",
-      "description": "Phase within the sprint (e.g., phase-1-ai-foundation)"
+      "description": "Phase within the sprint (e.g., phase-1-ai-foundation)",
+      "type": "string"
     },
     "stream": {
-      "type": ["string", "null"],
-      "description": "Parallel stream identifier (e.g., parallel-a, parallel-b, parallel-c)"
+      "description": "Parallel stream identifier (e.g., parallel-a, parallel-b, parallel-c)",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "dependencies": {
       "type": "object",
-      "required": ["required", "all_satisfied"],
       "properties": {
         "required": {
+          "description": "List of prerequisite task IDs",
           "type": "array",
-          "items": { "type": "string" },
-          "description": "List of prerequisite task IDs"
+          "items": {
+            "type": "string"
+          }
         },
         "verified_at": {
-          "type": ["string", "null"],
-          "format": "date-time",
-          "description": "ISO 8601 timestamp when dependencies were verified (null if not yet verified)"
+          "description": "ISO 8601 timestamp when dependencies were verified (null if not yet verified)",
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "all_satisfied": {
-          "type": "boolean",
-          "description": "Whether all dependencies are satisfied"
+          "description": "Whether all dependencies are satisfied",
+          "type": "boolean"
         },
         "notes": {
-          "type": "string",
-          "description": "Additional notes about dependency status"
+          "description": "Additional notes about dependency status",
+          "type": "string"
         }
-      }
+      },
+      "required": [
+        "required",
+        "all_satisfied"
+      ],
+      "additionalProperties": false
     },
     "dependencies_resolved": {
+      "description": "List of resolved dependency task IDs (legacy compatibility)",
       "type": "array",
-      "items": { "type": "string" },
-      "description": "List of resolved dependency task IDs (legacy compatibility)"
+      "items": {
+        "type": "string"
+      }
     },
     "status": {
+      "description": "Current task status",
       "type": "string",
       "enum": [
         "PLANNED",
@@ -88,32 +111,61 @@
         "Needs Human",
         "IN_REVIEW",
         "In Review"
-      ],
-      "description": "Current task status"
+      ]
     },
     "started_at": {
-      "type": ["string", "null"],
-      "format": "date-time",
-      "description": "ISO 8601 timestamp when task execution started (null if not started)"
+      "description": "ISO 8601 timestamp when task execution started (null if not started)",
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "completed_at": {
-      "type": ["string", "null"],
-      "format": "date-time",
-      "description": "ISO 8601 timestamp when task was completed (null if not completed)"
+      "description": "ISO 8601 timestamp when task was completed (null if not completed)",
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "target_duration_minutes": {
-      "type": ["number", "null"],
-      "description": "Expected duration in minutes"
+      "description": "Expected duration in minutes",
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "actual_duration_minutes": {
-      "type": ["number", "null"],
-      "description": "Actual duration in minutes"
+      "description": "Actual duration in minutes",
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "status_history": {
+      "description": "Chronological history of status changes",
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["status", "at"],
         "properties": {
           "status": {
             "type": "string",
@@ -140,74 +192,118 @@
           },
           "at": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
           },
           "note": {
             "type": "string"
           }
-        }
-      },
-      "description": "Chronological history of status changes"
+        },
+        "required": [
+          "status",
+          "at"
+        ],
+        "additionalProperties": false
+      }
     },
     "execution": {
       "type": "object",
       "properties": {
         "started_at": {
-          "type": ["string", "null"],
-          "format": "date-time",
-          "description": "When execution started (null if not started)"
+          "description": "When execution started (null if not started)",
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "completed_at": {
-          "type": ["string", "null"],
-          "format": "date-time",
-          "description": "When execution completed (null if not completed)"
+          "description": "When execution completed (null if not completed)",
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "duration_minutes": {
-          "type": ["number", "null"],
-          "description": "Execution duration in minutes"
+          "description": "Execution duration in minutes",
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "executor": {
-          "type": "string",
-          "description": "Who/what executed the task (human, agent, etc.)"
+          "description": "Who/what executed the task (human, agent, etc.)",
+          "type": "string"
         },
         "agents": {
+          "description": "List of AI agents involved in execution",
           "type": "array",
-          "items": { "type": "string" },
-          "description": "List of AI agents involved in execution"
+          "items": {
+            "type": "string"
+          }
         },
         "execution_log": {
-          "type": "string",
-          "description": "Path to detailed execution log file"
+          "description": "Path to detailed execution log file",
+          "type": "string"
         },
         "log_path": {
-          "type": "string",
-          "description": "Alternative path to execution log (alias for execution_log)"
+          "description": "Alternative path to execution log (alias for execution_log)",
+          "type": "string"
         },
         "retry_count": {
+          "description": "Number of retry attempts",
+          "default": 0,
           "type": "integer",
           "minimum": 0,
-          "default": 0,
-          "description": "Number of retry attempts"
+          "maximum": 9007199254740991
         },
         "last_error": {
-          "type": ["string", "null"],
-          "description": "Last error message if task failed (null if no error)"
+          "description": "Last error message if task failed (null if no error)",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
-      }
+      },
+      "required": [
+        "retry_count"
+      ],
+      "additionalProperties": false
     },
     "artifacts": {
       "type": "object",
       "properties": {
         "expected": {
+          "description": "List of expected file paths or patterns",
           "type": "array",
-          "items": { "type": "string" },
-          "description": "List of expected file paths or patterns"
+          "items": {
+            "type": "string"
+          }
         },
         "created": {
+          "description": "Artifacts actually created with verification hashes",
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["path", "sha256", "created_at"],
             "properties": {
               "path": {
                 "type": "string"
@@ -218,24 +314,33 @@
               },
               "created_at": {
                 "type": "string",
-                "format": "date-time"
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
               }
-            }
-          },
-          "description": "Artifacts actually created with verification hashes"
+            },
+            "required": [
+              "path",
+              "sha256",
+              "created_at"
+            ],
+            "additionalProperties": false
+          }
         },
         "missing": {
+          "description": "Expected artifacts that were not created",
           "type": "array",
-          "items": { "type": "string" },
-          "description": "Expected artifacts that were not created"
+          "items": {
+            "type": "string"
+          }
         }
-      }
+      },
+      "additionalProperties": false
     },
     "validations": {
+      "description": "Validation commands executed to verify task completion",
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["name", "command", "executed_at", "exit_code", "passed"],
         "properties": {
           "name": {
             "type": "string"
@@ -245,75 +350,135 @@
           },
           "executed_at": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
           },
           "exit_code": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
           },
           "duration_ms": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
           },
           "stdout_hash": {
-            "type": "string",
-            "description": "SHA256 hash of stdout for verification"
+            "description": "SHA256 hash of stdout for verification",
+            "type": "string"
           },
           "passed": {
             "type": "boolean"
           }
-        }
-      },
-      "description": "Validation commands executed to verify task completion"
+        },
+        "required": [
+          "name",
+          "command",
+          "executed_at",
+          "exit_code",
+          "passed"
+        ],
+        "additionalProperties": false
+      }
     },
     "kpis": {
+      "description": "Key Performance Indicators for this task",
       "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
       "additionalProperties": {
         "type": "object",
-        "required": ["target", "actual", "met"],
         "properties": {
           "target": {
-            "description": "Target value for the KPI"
+            "description": "Target value for the KPI",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
           },
           "actual": {
-            "description": "Actual measured value"
+            "description": "Actual measured value",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
           },
           "met": {
-            "type": "boolean",
-            "description": "Whether target was met"
+            "description": "Whether target was met",
+            "type": "boolean"
           },
           "unit": {
             "type": "string"
           }
-        }
-      },
-      "description": "Key Performance Indicators for this task"
+        },
+        "required": [
+          "target",
+          "actual",
+          "met"
+        ],
+        "additionalProperties": false
+      }
     },
     "blockers": {
+      "description": "Any blockers encountered during task execution",
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["description", "raised_at"],
         "properties": {
           "description": {
             "type": "string"
           },
           "raised_at": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
           },
           "resolved_at": {
-            "type": ["string", "null"],
-            "format": "date-time"
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "resolution": {
             "type": "string"
           }
-        }
-      },
-      "description": "Any blockers encountered during task execution"
+        },
+        "required": [
+          "description",
+          "raised_at"
+        ],
+        "additionalProperties": false
+      }
     },
     "notes": {
-      "type": "string",
-      "description": "Additional notes or context"
+      "description": "Additional notes or context",
+      "type": "string"
     }
-  }
+  },
+  "required": [
+    "task_id",
+    "status"
+  ],
+  "additionalProperties": false
 }

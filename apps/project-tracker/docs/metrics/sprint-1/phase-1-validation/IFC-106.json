@@ -8,7 +8,7 @@
     "required": [
       "IFC-002"
     ],
-    "verified_at": "2026-01-08T23:28:11.663Z",
+    "verified_at": "2026-01-29T01:33:17.605Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -49,14 +49,16 @@
       "command": "test -d packages/application/src/ports",
       "passed": true,
       "exit_code": 0,
-      "executed_at": "2025-12-21T16:00:00Z"
+      "executed_at": "2025-12-21T16:00:00Z",
+      "timestamp": "2025-12-27T11:33:39.130Z"
     },
     {
       "name": "usecases_exist",
       "command": "test -d packages/application/src/usecases",
       "passed": true,
       "exit_code": 0,
-      "executed_at": "2025-12-21T16:00:00Z"
+      "executed_at": "2025-12-21T16:00:00Z",
+      "timestamp": "2025-12-27T11:33:39.130Z"
     }
   ],
   "kpis": {
@@ -74,7 +76,7 @@
     }
   },
   "blockers": [],
-  "notes": "Hexagonal architecture with ports, use cases, and adapters properly separated.",
+  "notes": "Hexagonal architecture with ports, use cases, and adapters properly separated.\n\n**DRY Enum Pattern - Architecture Enforcement**:\nAll domain enum types follow the Single Source of Truth pattern to prevent drift:\n\n1. Domain Layer (canonical source):\n   - Define const arrays: export const ENTITY_STATUSES = ['VALUE1', 'VALUE2'] as const;\n   - Derive types: export type EntityStatus = (typeof ENTITY_STATUSES)[number];\n\n2. Validators Layer (derives from domain):\n   - Import domain constants: import { ENTITY_STATUSES } from '@intelliflow/domain';\n   - Create Zod schemas: export const entityStatusSchema = z.enum(ENTITY_STATUSES);\n\n3. Application/Adapters Layer:\n   - Import types from domain (NOT validators) for internal use\n   - Use validator schemas only at API boundaries\n\n4. API Layer:\n   - Use validator schemas for request/response validation\n   - Import from @intelliflow/validators\n\n**Entities following this pattern**: Lead, Contact, Opportunity, Task, Case, Appointment, Ticket\n\n**Enforcement**: Architecture tests in packages/validators/__tests__/enum-consistency.test.ts verify all domain enums have corresponding validator schemas.",
   "completed_at": "2025-12-27T11:33:39.130Z",
   "started_at": "2025-12-27T11:18:39.130Z",
   "actual_duration_minutes": 15,

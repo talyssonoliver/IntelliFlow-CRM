@@ -1,28 +1,16 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  RefreshCw,
-  Play,
-  Terminal,
-  FileText,
-  AlertTriangle,
-  CheckCircle2,
-  XCircle,
-  ClipboardCheck,
-  FileWarning,
-  Clock,
-  Users,
-  Copy,
-  Wand2,
-} from 'lucide-react';
+import { Icon } from '@/lib/icons';
 
 type AuditMode = 'pr' | 'main' | 'nightly' | 'release';
 type AuditScope = 'affected' | 'full';
 
 type BundleListItem = {
   runId: string;
-  type?: 'system' | 'sprint';
+  type?: 'system' | 'sprint' | 'matop';
+  taskId?: string;
+  sprintNumber?: number;
   updatedAt: string | null;
   summary: any | null;
   paths: { summaryJson: string; summaryMd: string };
@@ -35,7 +23,9 @@ type BundleListResponse = {
 
 type BundleDetailResponse = {
   runId: string;
-  type?: 'system' | 'sprint';
+  type?: 'system' | 'sprint' | 'matop';
+  taskId?: string;
+  sprintNumber?: number;
   runDir: string;
   updatedAt: string;
   summary: any;
@@ -116,7 +106,9 @@ function getOverallBadge(overall?: string, verdict?: string) {
   return { cls: 'bg-gray-100 text-gray-700 border-gray-300', label: 'UNKNOWN' };
 }
 
-function getBundleTypeBadge(type?: 'system' | 'sprint') {
+function getBundleTypeBadge(type?: 'system' | 'sprint' | 'matop') {
+  if (type === 'matop')
+    return { cls: 'bg-purple-100 text-purple-800 border-purple-300', label: 'MATOP' };
   if (type === 'sprint')
     return { cls: 'bg-teal-100 text-teal-800 border-teal-300', label: 'Sprint' };
   return { cls: 'bg-blue-100 text-blue-800 border-blue-300', label: 'System' };
@@ -303,7 +295,7 @@ export default function AuditView() {
   const logEndRef = useRef<HTMLDivElement | null>(null);
 
   const [bundles, setBundles] = useState<BundleListItem[]>([]);
-  const [bundlesDir, setBundlesDir] = useState<string>('artifacts/reports/system-audit');
+  const [bundlesDir, setBundlesDir] = useState<string>('.specify/sprints (MATOP)');
   const [selectedRunId, setSelectedRunId] = useState<string>('');
   const [selectedBundle, setSelectedBundle] = useState<BundleDetailResponse | null>(null);
 
@@ -516,7 +508,7 @@ export default function AuditView() {
     startStream(`/api/audit/stream?${params.toString()}`);
   };
 
-  const runSprint0Audit = () => {
+  const _runSprint0Audit = () => {
     if (!selectedRunId) return;
     const params = new URLSearchParams();
     params.set('cmd', 'sprint0-audit');
@@ -620,7 +612,7 @@ export default function AuditView() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Terminal className="w-6 h-6 text-blue-600" />
+            <Icon name="terminal" size="xl" className="text-blue-600" />
             Audit
           </h2>
           <p className="text-sm text-gray-600 mt-1">
@@ -635,7 +627,7 @@ export default function AuditView() {
           disabled={isLoading || isRunning}
           className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
         >
-          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+          <Icon name="refresh" size="sm" className={isLoading ? 'animate-spin' : ''} />
           Refresh
         </button>
       </div>
@@ -645,7 +637,7 @@ export default function AuditView() {
         <div className="bg-white rounded-lg shadow p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <Play className="w-5 h-5 text-green-600" />
+              <Icon name="play_arrow" size="lg" className="text-green-600" />
               Run System Audit
             </h3>
             {isRunning && (
@@ -729,7 +721,7 @@ export default function AuditView() {
               disabled={isRunning}
               className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
             >
-              <Play className="w-4 h-4" />
+              <Icon name="play_arrow" size="sm" />
               Run
             </button>
             <button
@@ -738,7 +730,7 @@ export default function AuditView() {
               disabled={!isRunning}
               className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 disabled:opacity-50"
             >
-              <XCircle className="w-4 h-4" />
+              <Icon name="cancel" size="sm" />
               Stop
             </button>
           </div>
@@ -746,7 +738,7 @@ export default function AuditView() {
 
         <div className="bg-white rounded-lg shadow p-6 space-y-4">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <FileText className="w-5 h-5 text-purple-600" />
+            <Icon name="description" size="lg" className="text-purple-600" />
             Reports & Utilities
           </h3>
 
@@ -781,7 +773,7 @@ export default function AuditView() {
 
           <div className="border-t pt-4 space-y-3">
             <div className="text-sm font-medium text-gray-700 flex items-center gap-2">
-              <ClipboardCheck className="w-4 h-4 text-teal-600" />
+              <Icon name="assignment_turned_in" size="sm" className="text-teal-600" />
               Sprint Completion Audit
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -842,12 +834,12 @@ export default function AuditView() {
             >
               {isRunning ? (
                 <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <Icon name="refresh" size="sm" className="animate-spin" />
                   Auditing...
                 </>
               ) : (
                 <>
-                  <Play className="w-4 h-4" />
+                  <Icon name="play_arrow" size="sm" />
                   Run Completion Audit
                 </>
               )}
@@ -873,7 +865,7 @@ export default function AuditView() {
 
                 {sprintAuditResult.error && (
                   <div className="flex items-center gap-2 text-sm text-red-600">
-                    <AlertTriangle className="w-4 h-4" />
+                    <Icon name="warning" size="sm" />
                     {sprintAuditResult.error}
                   </div>
                 )}
@@ -904,13 +896,13 @@ export default function AuditView() {
                 {sprintAuditResult.attestationSummary && (
                   <div className="text-xs text-gray-600 space-y-1">
                     <div className="flex items-center gap-2">
-                      <FileWarning className="w-3 h-3" />
+                      <Icon name="file_present" size="xs" />
                       <span>
                         Debt items: {sprintAuditResult.attestationSummary.debt_items_created}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Users className="w-3 h-3" />
+                      <Icon name="group" size="xs" />
                       <span>
                         Review queue: {sprintAuditResult.attestationSummary.review_queue_items}
                       </span>
@@ -944,7 +936,7 @@ export default function AuditView() {
       <div className="bg-white rounded-lg shadow p-6 space-y-3">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <Terminal className="w-5 h-5 text-gray-700" />
+            <Icon name="terminal" size="lg" className="text-gray-700" />
             <h3 className="text-lg font-semibold text-gray-900">Live Output</h3>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -969,7 +961,7 @@ export default function AuditView() {
 
         {serverError && (
           <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
-            <AlertTriangle className="w-4 h-4" />
+            <Icon name="warning" size="sm" />
             {serverError}
           </div>
         )}
@@ -1041,12 +1033,18 @@ export default function AuditView() {
                         </span>
                       </div>
                     </div>
+                    {b.type === 'matop' && (
+                      <div className="text-[11px] text-gray-500 mt-1">
+                        {b.taskId} • Sprint {b.sprintNumber ?? b.summary?.sprint ?? '?'} •{' '}
+                        {b.summary?.finalVerdict ?? b.summary?.result?.overall_status ?? 'running'}
+                      </div>
+                    )}
                     {b.type === 'sprint' && b.summary?.sprint !== undefined && (
                       <div className="text-[11px] text-gray-500 mt-1">
                         Sprint {b.summary.sprint} • {b.summary.summary?.auditedTasks ?? 0} tasks audited
                       </div>
                     )}
-                    {b.type !== 'sprint' && b.summary?.commit_sha && (
+                    {b.type === 'system' && b.summary?.commit_sha && (
                       <div className="text-[11px] text-gray-500 mt-1">
                         {String(b.summary.commit_sha).slice(0, 12)} • {b.summary.mode ?? 'tier'} •{' '}
                         {b.summary.scope ?? ''}
@@ -1085,7 +1083,7 @@ export default function AuditView() {
                         onClick={handleGenerateFixPrompt}
                         className="flex items-center gap-1 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-xs font-medium"
                       >
-                        <Wand2 className="w-3.5 h-3.5" />
+                        <Icon name="auto_fix_high" size="sm" />
                         Generate Fix Prompt
                       </button>
                     )}
@@ -1112,12 +1110,12 @@ export default function AuditView() {
           <div className="flex items-center gap-2 text-sm">
             {exitCode === 0 ? (
               <>
-                <CheckCircle2 className="w-4 h-4 text-green-600" />
+                <Icon name="check_circle" size="sm" className="text-green-600" />
                 <span className="text-green-700">Last command finished successfully.</span>
               </>
             ) : (
               <>
-                <AlertTriangle className="w-4 h-4 text-red-600" />
+                <Icon name="warning" size="sm" className="text-red-600" />
                 <span className="text-red-700">Last command exited with code {exitCode}.</span>
               </>
             )}
@@ -1172,7 +1170,7 @@ export default function AuditView() {
           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
               <div className="flex items-center gap-2">
-                <Wand2 className="w-5 h-5 text-purple-600" />
+                <Icon name="auto_fix_high" size="lg" className="text-purple-600" />
                 <h3 className="text-lg font-semibold text-gray-900">Fix Audit Failures Prompt</h3>
               </div>
               <div className="flex items-center gap-2">
@@ -1187,12 +1185,12 @@ export default function AuditView() {
                 >
                   {promptCopied ? (
                     <>
-                      <CheckCircle2 className="w-4 h-4" />
+                      <Icon name="check_circle" size="sm" />
                       Copied!
                     </>
                   ) : (
                     <>
-                      <Copy className="w-4 h-4" />
+                      <Icon name="content_copy" size="sm" />
                       Copy to Clipboard
                     </>
                   )}
@@ -1202,7 +1200,7 @@ export default function AuditView() {
                   onClick={() => setShowFixPrompt(false)}
                   className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
                 >
-                  <XCircle className="w-5 h-5" />
+                  <Icon name="cancel" size="lg" />
                 </button>
               </div>
             </div>

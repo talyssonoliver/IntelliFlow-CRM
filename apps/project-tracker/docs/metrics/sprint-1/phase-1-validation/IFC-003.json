@@ -8,7 +8,7 @@
     "required": [
       "IFC-002"
     ],
-    "verified_at": "2026-01-08T23:28:11.114Z",
+    "verified_at": "2026-01-29T01:33:17.600Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -59,14 +59,16 @@
       "command": "test -d apps/api/src/modules",
       "passed": true,
       "exit_code": 0,
-      "executed_at": "2025-12-21T16:30:00Z"
+      "executed_at": "2025-12-21T16:30:00Z",
+      "timestamp": "2025-12-27T11:33:39.034Z"
     },
     {
       "name": "trpc_router_exists",
       "command": "test -f apps/api/src/trpc.ts",
       "passed": true,
       "exit_code": 0,
-      "executed_at": "2025-12-21T16:30:00Z"
+      "executed_at": "2025-12-21T16:30:00Z",
+      "timestamp": "2025-12-27T11:33:39.034Z"
     }
   ],
   "kpis": {

@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { Task } from '@/lib/types';
-import { FileText, CheckCircle, AlertTriangle, BarChart3 } from 'lucide-react';
+import { Icon } from '@/lib/icons';
 import { parseContractTags, hasContractTags } from './ContractTagList';
 
 interface ContractComplianceDashboardProps {
@@ -113,7 +113,7 @@ export default function ContractComplianceDashboard({
       {/* Header */}
       <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <BarChart3 className="w-5 h-5 text-gray-600" />
+          <Icon name="bar_chart" size="lg" className="text-gray-600" />
           <h3 className="font-medium text-gray-900">Contract Compliance Overview</h3>
         </div>
         {sprint !== undefined && <span className="text-sm text-gray-500">Sprint {sprint}</span>}
@@ -165,12 +165,12 @@ export default function ContractComplianceDashboard({
         </div>
         {stats.noEllipsis === stats.totalTasks ? (
           <span className="flex items-center gap-1 text-green-600 text-sm font-medium">
-            <CheckCircle className="w-4 h-4" />
+            <Icon name="check_circle" size="sm" />
             Compliant
           </span>
         ) : (
           <span className="flex items-center gap-1 text-yellow-600 text-sm font-medium">
-            <AlertTriangle className="w-4 h-4" />
+            <Icon name="warning" size="sm" />
             {stats.totalTasks - stats.noEllipsis} with ellipsis
           </span>
         )}
@@ -185,7 +185,7 @@ export default function ContractComplianceDashboard({
           <div className="space-y-1 max-h-32 overflow-y-auto">
             {tasksMissingAck.slice(0, 10).map((task) => (
               <div key={task.id} className="flex items-center gap-2 text-sm text-gray-600">
-                <FileText className="w-3.5 h-3.5 text-gray-400" />
+                <Icon name="description" size="xs" className="text-gray-400" />
                 <span className="font-mono">{task.id}</span>
                 <span className="text-gray-400">({task.status})</span>
                 <span className="text-gray-500 truncate">- {task.description.slice(0, 40)}...</span>

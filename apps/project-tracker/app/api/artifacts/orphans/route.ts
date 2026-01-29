@@ -8,7 +8,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readFileSync, existsSync } from 'fs';
 import {
   scanArtifactRegistry,
-  ArtifactEntry,
   ArtifactCategory,
 } from '@/lib/artifact-registry';
 import { PATHS } from '@/lib/paths';

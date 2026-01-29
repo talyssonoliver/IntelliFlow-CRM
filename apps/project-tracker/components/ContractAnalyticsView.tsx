@@ -2,19 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { Task } from '@/lib/types';
-import {
-  FileText,
-  Folder,
-  Key,
-  Shield,
-  CheckCircle,
-  Terminal,
-  Lock,
-  Eye,
-  Filter,
-  Package,
-  LucideIcon,
-} from 'lucide-react';
+import { Icon, type IconName } from '@/lib/icons';
 import { parseContractTags, ContractTagType } from './ContractTagList';
 
 interface ContractAnalyticsViewProps {
@@ -25,7 +13,7 @@ interface TagStats {
   type: ContractTagType;
   count: number;
   percentage: number;
-  icon: LucideIcon;
+  icon: IconName;
   color: string;
   bgColor: string;
   barColor: string;
@@ -39,43 +27,43 @@ interface FileReference {
 
 const TAG_CONFIG: Record<
   ContractTagType,
-  { icon: LucideIcon; color: string; bgColor: string; barColor: string }
+  { icon: IconName; color: string; bgColor: string; barColor: string }
 > = {
-  FILE: { icon: FileText, color: 'text-blue-700', bgColor: 'bg-blue-100', barColor: 'bg-blue-500' },
+  FILE: { icon: 'description', color: 'text-blue-700', bgColor: 'bg-blue-100', barColor: 'bg-blue-500' },
   DIR: {
-    icon: Folder,
+    icon: 'folder',
     color: 'text-indigo-700',
     bgColor: 'bg-indigo-100',
     barColor: 'bg-indigo-500',
   },
-  ENV: { icon: Key, color: 'text-purple-700', bgColor: 'bg-purple-100', barColor: 'bg-purple-500' },
+  ENV: { icon: 'vpn_key', color: 'text-purple-700', bgColor: 'bg-purple-100', barColor: 'bg-purple-500' },
   POLICY: {
-    icon: Shield,
+    icon: 'shield',
     color: 'text-orange-700',
     bgColor: 'bg-orange-100',
     barColor: 'bg-orange-500',
   },
   EVIDENCE: {
-    icon: CheckCircle,
+    icon: 'check_circle',
     color: 'text-green-700',
     bgColor: 'bg-green-100',
     barColor: 'bg-green-500',
   },
   VALIDATE: {
-    icon: Terminal,
+    icon: 'terminal',
     color: 'text-cyan-700',
     bgColor: 'bg-cyan-100',
     barColor: 'bg-cyan-500',
   },
-  GATE: { icon: Lock, color: 'text-red-700', bgColor: 'bg-red-100', barColor: 'bg-red-500' },
+  GATE: { icon: 'lock', color: 'text-red-700', bgColor: 'bg-red-100', barColor: 'bg-red-500' },
   AUDIT: {
-    icon: Eye,
+    icon: 'visibility',
     color: 'text-yellow-700',
     bgColor: 'bg-yellow-100',
     barColor: 'bg-yellow-500',
   },
   ARTIFACT: {
-    icon: Package,
+    icon: 'inventory_2',
     color: 'text-teal-700',
     bgColor: 'bg-teal-100',
     barColor: 'bg-teal-500',
@@ -187,7 +175,7 @@ export default function ContractAnalyticsView({ tasks }: ContractAnalyticsViewPr
       <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center justify-between">
         <h3 className="font-medium text-gray-900">Contract Tag Analysis</h3>
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-gray-400" />
+          <Icon name="filter_list" size="sm" className="text-gray-400" />
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value as ContractTagType | 'all')}
@@ -208,7 +196,6 @@ export default function ContractAnalyticsView({ tasks }: ContractAnalyticsViewPr
         <h4 className="text-sm font-medium text-gray-700 mb-3">Tag Distribution</h4>
         <div className="space-y-2">
           {tagDistribution.stats.map((stat) => {
-            const Icon = stat.icon;
             const barWidth = maxCount > 0 ? (stat.count / maxCount) * 100 : 0;
 
             if (filterType !== 'all' && stat.type !== filterType) return null;
@@ -216,7 +203,7 @@ export default function ContractAnalyticsView({ tasks }: ContractAnalyticsViewPr
             return (
               <div key={stat.type} className="flex items-center gap-3">
                 <div className={`w-20 flex items-center gap-1 ${stat.color}`}>
-                  <Icon className="w-4 h-4" />
+                  <Icon name={stat.icon} size="sm" />
                   <span className="text-xs font-medium">{stat.type}:</span>
                 </div>
                 <div className="flex-1 h-5 bg-gray-100 rounded overflow-hidden">
@@ -266,7 +253,7 @@ export default function ContractAnalyticsView({ tasks }: ContractAnalyticsViewPr
               <div key={ref.path} className="flex items-center gap-2 text-sm">
                 <span className="w-5 text-gray-400 text-right">{idx + 1}.</span>
                 <span className="flex-1 flex items-center gap-1">
-                  <Shield className="w-3.5 h-3.5 text-orange-500" />
+                  <Icon name="shield" size="xs" className="text-orange-500" />
                   <code className="text-gray-700 font-mono text-xs">{ref.path}</code>
                 </span>
                 <span className="text-gray-500 whitespace-nowrap">{ref.taskCount} tasks</span>

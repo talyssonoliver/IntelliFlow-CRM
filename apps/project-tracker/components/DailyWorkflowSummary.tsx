@@ -1,8 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Icon } from '@/lib/icons';
 import { Task, SprintNumber } from '@/lib/types';
+import {
+  SessionOutputModal,
+  useSessionPolling,
+  type SessionType,
+} from './SessionOutputModal';
 
 interface DailyWorkflowSummaryProps {
   tasks: Task[];
@@ -27,6 +32,16 @@ interface TaskWorkflowStatus {
   // Dependencies
   dependenciesMet: boolean;
   dependencies: string[];
+}
+
+/**
+ * Optimistic UI state for a task being processed
+ */
+interface OptimisticState {
+  taskId: string;
+  expectedStatus: string;
+  expectedSession: 'spec' | 'plan' | 'exec' | 'completed';
+  startedAt: number;
 }
 
 interface WorkflowData {
@@ -70,6 +85,27 @@ export function DailyWorkflowSummary({
   const [error, setError] = useState<string | null>(null);
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
   const [actionResult, setActionResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  // Optimistic UI state - tracks tasks being processed
+  const [optimisticUpdates, setOptimisticUpdates] = useState<Map<string, OptimisticState>>(new Map());
+
+  // Session modal state
+  const [showSessionModal, setShowSessionModal] = useState(false);
+  const [activeSession, setActiveSession] = useState<{
+    sessionId: string | null;
+    taskId: string;
+    sessionType: SessionType;
+    isSwarm: boolean;
+  } | null>(null);
+
+  // Session polling for real-time output
+  const sessionPolling = useSessionPolling({
+    sessionId: activeSession?.sessionId ?? null,
+    taskId: activeSession?.taskId ?? '',
+    sessionType: activeSession?.sessionType ?? 'spec',
+    enabled: showSessionModal && activeSession !== null,
+    pollInterval: activeSession?.isSwarm ? 5000 : 3000, // Swarm polls less frequently
+  });
 
   // Fetch workflow status for all tasks
   const fetchWorkflowData = useCallback(async () => {
@@ -175,7 +211,30 @@ export function DailyWorkflowSummary({
     fetchWorkflowData();
   }, [fetchWorkflowData]);
 
-  // Run SESSION 1: Spec
+  // Helper to apply optimistic update
+  const applyOptimisticUpdate = useCallback((taskId: string, expectedStatus: string, expectedSession: OptimisticState['expectedSession']) => {
+    setOptimisticUpdates(prev => {
+      const next = new Map(prev);
+      next.set(taskId, {
+        taskId,
+        expectedStatus,
+        expectedSession,
+        startedAt: Date.now(),
+      });
+      return next;
+    });
+  }, []);
+
+  // Helper to clear optimistic update
+  const clearOptimisticUpdate = useCallback((taskId: string) => {
+    setOptimisticUpdates(prev => {
+      const next = new Map(prev);
+      next.delete(taskId);
+      return next;
+    });
+  }, []);
+
+  // Run SESSION 1: Spec - Uses full Claude Code CLI session
   const handleRunSpec = useCallback(async (e: React.MouseEvent, taskId: string) => {
     e.preventDefault();
     e.stopPropagation();
@@ -183,28 +242,43 @@ export function DailyWorkflowSummary({
     setActionInProgress(taskId);
     setActionResult(null);
 
+    // OPTIMISTIC UPDATE: Show task as "Specifying" immediately
+    applyOptimisticUpdate(taskId, 'Specifying', 'spec');
+
     try {
-      const res = await fetch('/api/matop/plan', {
+      // Start Claude Code session for spec generation
+      const res = await fetch('/api/claude-session/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taskId }),
+        body: JSON.stringify({ taskId, session: 'spec' }),
       });
 
       const result = await res.json();
 
       if (res.ok && result.success) {
+        // Session started - open the modal to show real-time output
+        setActiveSession({
+          sessionId: result.sessionId,
+          taskId,
+          sessionType: 'spec',
+          isSwarm: false,
+        });
+        setShowSessionModal(true);
         setActionResult({
           success: true,
-          message: `SESSION 1 complete: ${taskId} spec generated`,
+          message: `SESSION 1 started: Claude Code session running for ${taskId}`,
         });
-        await fetchWorkflowData();
       } else {
+        // ROLLBACK: Clear optimistic state on failure
+        clearOptimisticUpdate(taskId);
         setActionResult({
           success: false,
-          message: result.error || result.message || 'Spec session failed',
+          message: result.error || result.message || 'Failed to start spec session',
         });
       }
     } catch (err) {
+      // ROLLBACK: Clear optimistic state on error
+      clearOptimisticUpdate(taskId);
       setActionResult({
         success: false,
         message: err instanceof Error ? err.message : 'Network error',
@@ -212,9 +286,63 @@ export function DailyWorkflowSummary({
     } finally {
       setActionInProgress(null);
     }
-  }, [fetchWorkflowData]);
+  }, [applyOptimisticUpdate, clearOptimisticUpdate]);
 
-  // Run SESSION 3: Exec (via MATOP)
+  // Run SESSION 2: Plan - Uses full Claude Code CLI session
+  const handleRunPlan = useCallback(async (e: React.MouseEvent, taskId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    setActionInProgress(taskId);
+    setActionResult(null);
+
+    // OPTIMISTIC UPDATE: Show task as "Planning" immediately
+    applyOptimisticUpdate(taskId, 'Planning', 'plan');
+
+    try {
+      // Start Claude Code session for plan generation
+      const res = await fetch('/api/claude-session/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskId, session: 'plan' }),
+      });
+
+      const result = await res.json();
+
+      if (res.ok && result.success) {
+        // Session started - open the modal to show real-time output
+        setActiveSession({
+          sessionId: result.sessionId,
+          taskId,
+          sessionType: 'plan',
+          isSwarm: false,
+        });
+        setShowSessionModal(true);
+        setActionResult({
+          success: true,
+          message: `SESSION 2 started: Claude Code session running for ${taskId}`,
+        });
+      } else {
+        // ROLLBACK: Clear optimistic state on failure
+        clearOptimisticUpdate(taskId);
+        setActionResult({
+          success: false,
+          message: result.error || result.message || 'Failed to start plan session',
+        });
+      }
+    } catch (err) {
+      // ROLLBACK: Clear optimistic state on error
+      clearOptimisticUpdate(taskId);
+      setActionResult({
+        success: false,
+        message: err instanceof Error ? err.message : 'Network error',
+      });
+    } finally {
+      setActionInProgress(null);
+    }
+  }, [applyOptimisticUpdate, clearOptimisticUpdate]);
+
+  // Run SESSION 3: Exec - Uses orchestrator.sh run (full pipeline with review)
   const handleRunExec = useCallback(async (e: React.MouseEvent, taskId: string) => {
     e.preventDefault();
     e.stopPropagation();
@@ -222,33 +350,42 @@ export function DailyWorkflowSummary({
     setActionInProgress(taskId);
     setActionResult(null);
 
+    // OPTIMISTIC UPDATE: Show task as "Executing" immediately
+    applyOptimisticUpdate(taskId, 'In Progress', 'exec');
+
     try {
-      // Start task and execute MATOP
-      const execRes = await fetch('/api/sprint/execute', {
+      // Run task via orchestrator.sh run (full pipeline with qualitative review)
+      const execRes = await fetch(`/api/swarm/run-task/${taskId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sprintNumber: sprint === 'all' ? 0 : sprint,
-          taskFilter: [taskId],
-          autoExecute: true,
-        }),
       });
 
       const execResult = await execRes.json();
 
-      if (execRes.ok) {
+      if (execRes.ok && execResult.success) {
+        // Task execution started - open the modal to show real-time output
+        setActiveSession({
+          sessionId: null, // Swarm uses taskId for identification
+          taskId,
+          sessionType: 'exec',
+          isSwarm: true,
+        });
+        setShowSessionModal(true);
         setActionResult({
           success: true,
-          message: `SESSION 3 started: ${taskId} execution initiated`,
+          message: `SESSION 3 started: ${execResult.command}`,
         });
-        await fetchWorkflowData();
       } else {
+        // ROLLBACK: Clear optimistic state on failure
+        clearOptimisticUpdate(taskId);
         setActionResult({
           success: false,
-          message: execResult.error || 'Exec session failed',
+          message: execResult.error || execResult.message || 'Failed to start exec session',
         });
       }
     } catch (err) {
+      // ROLLBACK: Clear optimistic state on error
+      clearOptimisticUpdate(taskId);
       setActionResult({
         success: false,
         message: err instanceof Error ? err.message : 'Network error',
@@ -256,7 +393,70 @@ export function DailyWorkflowSummary({
     } finally {
       setActionInProgress(null);
     }
-  }, [sprint, fetchWorkflowData]);
+  }, [applyOptimisticUpdate, clearOptimisticUpdate]);
+
+  // Kill active session
+  const handleKillSession = useCallback(async () => {
+    if (!activeSession) return;
+
+    try {
+      if (activeSession.isSwarm) {
+        // Kill via swarm endpoint
+        await fetch(`/api/swarm/kill-task/${activeSession.taskId}`, {
+          method: 'POST',
+        });
+      } else if (activeSession.sessionId) {
+        // Kill via claude-session endpoint
+        await fetch('/api/claude-session/kill', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: activeSession.sessionId,
+            revertStatus: true,
+          }),
+        });
+      }
+
+      // Clear optimistic update and close modal
+      clearOptimisticUpdate(activeSession.taskId);
+      setShowSessionModal(false);
+      setActiveSession(null);
+      setActionResult({
+        success: true,
+        message: `Session for ${activeSession.taskId} terminated`,
+      });
+
+      // Refresh workflow data
+      await fetchWorkflowData();
+    } catch (err) {
+      setActionResult({
+        success: false,
+        message: err instanceof Error ? err.message : 'Failed to kill session',
+      });
+    }
+  }, [activeSession, clearOptimisticUpdate, fetchWorkflowData]);
+
+  // Close session modal (allows session to continue in background)
+  const handleCloseSessionModal = useCallback(() => {
+    setShowSessionModal(false);
+    // Don't clear activeSession - session continues in background
+    // The polling will continue and update workflow data when done
+  }, []);
+
+  // Auto-refresh workflow data when session completes
+  useEffect(() => {
+    if (
+      sessionPolling.status === 'completed' ||
+      sessionPolling.status === 'failed' ||
+      sessionPolling.status === 'timeout'
+    ) {
+      // Session finished - clear optimistic update and refresh data
+      if (activeSession) {
+        clearOptimisticUpdate(activeSession.taskId);
+      }
+      fetchWorkflowData();
+    }
+  }, [sessionPolling.status, activeSession, clearOptimisticUpdate, fetchWorkflowData]);
 
   // Get current date and time
   const now = new Date();
@@ -266,6 +466,95 @@ export function DailyWorkflowSummary({
     month: 'short',
     day: 'numeric',
   });
+
+  // Apply optimistic updates to workflow data for immediate UI feedback
+  // NOTE: This hook MUST be called before any early returns to comply with Rules of Hooks
+  const data = useMemo(() => {
+    if (!workflowData) return null;
+    if (optimisticUpdates.size === 0) return workflowData;
+
+    // Create a map of all tasks with optimistic updates applied
+    const applyOptimisticToTasks = (tasks: TaskWorkflowStatus[]): TaskWorkflowStatus[] => {
+      return tasks.map((task) => {
+        const optimistic = optimisticUpdates.get(task.taskId);
+        if (!optimistic) return task;
+
+        // Apply the optimistic state
+        return {
+          ...task,
+          status: optimistic.expectedStatus,
+          currentSession: optimistic.expectedSession,
+          // Update flags based on expected session
+          hasSpec: optimistic.expectedSession !== 'spec' || task.hasSpec,
+          hasPlan: optimistic.expectedSession === 'exec' || optimistic.expectedSession === 'completed' || task.hasPlan,
+          hasDelivery: optimistic.expectedSession === 'completed',
+        };
+      });
+    };
+
+    // Filter tasks based on optimistic session state
+    const filterByOptimisticSession = (
+      tasks: TaskWorkflowStatus[],
+      targetSession: 'spec' | 'plan' | 'exec' | 'completed'
+    ): TaskWorkflowStatus[] => {
+      return tasks.filter((task) => {
+        const optimistic = optimisticUpdates.get(task.taskId);
+        if (optimistic) {
+          // If task has optimistic update, use that session
+          return optimistic.expectedSession === targetSession;
+        }
+        // Otherwise use actual session
+        return task.currentSession === targetSession;
+      });
+    };
+
+    // Recompute task lists with optimistic updates
+    const allTasks = [
+      ...workflowData.readyTasks,
+      ...workflowData.inProgressTasks,
+      ...workflowData.awaitingSpec,
+      ...workflowData.awaitingPlan,
+      ...workflowData.awaitingExec,
+      ...workflowData.completedToday,
+      ...workflowData.blockedTasks,
+    ];
+
+    // Remove duplicates
+    const uniqueTasks = Array.from(
+      new Map(allTasks.map((t) => [t.taskId, t])).values()
+    );
+
+    const tasksWithOptimistic = applyOptimisticToTasks(uniqueTasks);
+
+    return {
+      readyTasks: workflowData.readyTasks.filter(
+        (t) => !optimisticUpdates.has(t.taskId)
+      ),
+      inProgressTasks: [
+        ...workflowData.inProgressTasks,
+        ...tasksWithOptimistic.filter((t) => {
+          const opt = optimisticUpdates.get(t.taskId);
+          return opt && ['spec', 'plan', 'exec'].includes(opt.expectedSession);
+        }),
+      ],
+      awaitingSpec: filterByOptimisticSession(tasksWithOptimistic, 'spec').filter(
+        (t) => !optimisticUpdates.has(t.taskId) || optimisticUpdates.get(t.taskId)?.expectedSession !== 'spec'
+      ),
+      awaitingPlan: [
+        ...workflowData.awaitingPlan.filter((t) => !optimisticUpdates.has(t.taskId)),
+        // Tasks that just completed spec move here optimistically
+      ],
+      awaitingExec: [
+        ...workflowData.awaitingExec.filter((t) => !optimisticUpdates.has(t.taskId)),
+        // Tasks that just completed plan move here optimistically
+      ],
+      completedToday: [
+        ...workflowData.completedToday,
+        ...tasksWithOptimistic.filter((t) => optimisticUpdates.get(t.taskId)?.expectedSession === 'completed'),
+      ],
+      blockedTasks: workflowData.blockedTasks,
+    };
+  }, [workflowData, optimisticUpdates]);
 
   // Loading state
   if (loading) {
@@ -311,7 +600,7 @@ export function DailyWorkflowSummary({
     );
   }
 
-  const data = workflowData!;
+  if (!data) return null;
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -474,7 +763,7 @@ export function DailyWorkflowSummary({
                         disabled={actionInProgress === task.taskId}
                         className="px-2 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:bg-gray-300"
                       >
-                        {actionInProgress === task.taskId ? 'Running...' : 'Run Spec'}
+                        {actionInProgress === task.taskId ? 'Specifying...' : 'Run Spec'}
                       </button>
                     </div>
                   ))
@@ -505,11 +794,11 @@ export function DailyWorkflowSummary({
                       <span className="font-mono text-xs text-cyan-600">{task.taskId}</span>
                       <button
                         type="button"
-                        onClick={(e) => handleRunSpec(e, task.taskId)}
+                        onClick={(e) => handleRunPlan(e, task.taskId)}
                         disabled={actionInProgress === task.taskId}
                         className="px-2 py-1 text-xs bg-cyan-600 text-white rounded hover:bg-cyan-700 disabled:bg-gray-300"
                       >
-                        {actionInProgress === task.taskId ? 'Running...' : 'Run Plan'}
+                        {actionInProgress === task.taskId ? 'Planning...' : 'Run Plan'}
                       </button>
                     </div>
                   ))
@@ -544,7 +833,7 @@ export function DailyWorkflowSummary({
                         disabled={actionInProgress === task.taskId}
                         className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-300"
                       >
-                        {actionInProgress === task.taskId ? 'Running...' : 'Run Exec'}
+                        {actionInProgress === task.taskId ? 'Executing...' : 'Run Exec'}
                       </button>
                     </div>
                   ))
@@ -643,6 +932,22 @@ export function DailyWorkflowSummary({
           </div>
         </div>
       </div>
+
+      {/* Session Output Modal */}
+      {activeSession && (
+        <SessionOutputModal
+          open={showSessionModal}
+          onClose={handleCloseSessionModal}
+          sessionId={activeSession.sessionId}
+          taskId={activeSession.taskId}
+          sessionType={activeSession.sessionType}
+          output={sessionPolling.output}
+          status={sessionPolling.status}
+          phase={sessionPolling.phase}
+          isSwarm={activeSession.isSwarm}
+          onKill={handleKillSession}
+        />
+      )}
     </div>
   );
 }

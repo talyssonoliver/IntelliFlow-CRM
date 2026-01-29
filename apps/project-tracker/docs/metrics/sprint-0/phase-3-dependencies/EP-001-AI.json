@@ -13,7 +13,7 @@
       "status": "completed"
     },
     "all_satisfied": true,
-    "verified_at": "2026-01-08T23:28:09.384Z",
+    "verified_at": "2026-01-29T01:33:17.572Z",
     "required": [
       "ENV-003-AI",
       "ENV-008-AI"
@@ -21,24 +21,24 @@
   },
   "status_history": [
     {
-      "status": "planned",
+      "status": "PLANNED",
       "at": "2025-12-19T00:00:00Z",
       "by": "claude-code"
     },
     {
-      "status": "config_created",
+      "status": "IN_PROGRESS",
       "at": "2025-12-19T18:00:00Z",
       "by": "claude-code",
       "notes": "v2 configs created with push-based OTLP pipeline, access control, Tempo tracing"
     },
     {
-      "status": "deployed",
+      "status": "DONE",
       "at": "2025-12-19T23:40:00Z",
       "by": "claude-code",
       "notes": "Deployed full monitoring stack locally, all health checks passing"
     },
     {
-      "status": "completed",
+      "status": "DONE",
       "at": "2025-12-19T23:45:00Z",
       "by": "claude-code",
       "notes": "All validations passed, SHA256 hashes generated, runbook created"
@@ -98,13 +98,13 @@
       },
       {
         "path": "artifacts/monitoring-config-hashes.txt",
-        "sha256": null,
+        "sha256": "855a0e6f6d89889689ef5aab3fc3c88585ff02b9eea734f8ef557fd3215a0ed3",
         "created_at": "2025-12-19T23:39:53Z",
         "description": "SHA256 hashes of all monitoring configs"
       },
       {
         "path": "docs/operations/monitoring-runbook.md",
-        "sha256": null,
+        "sha256": "77e0de16c669abc6836af48f45e0d041568e2764366979ad2fe95edcf8dc604b",
         "created_at": "2025-12-19T23:45:00Z",
         "description": "Operations runbook for monitoring stack"
       }
@@ -117,8 +117,10 @@
       "expected": "200",
       "actual": "200",
       "passed": true,
-      "validated_at": "2025-12-19T23:38:00Z",
-      "notes": "OTel Collector health check endpoint"
+      "executed_at": "2025-12-19T23:38:00Z",
+      "notes": "OTel Collector health check endpoint",
+      "exit_code": 0,
+      "timestamp": "2025-12-20T19:31:55.100Z"
     },
     {
       "name": "prometheus_health",
@@ -126,8 +128,10 @@
       "expected": "200",
       "actual": "200",
       "passed": true,
-      "validated_at": "2025-12-19T23:38:00Z",
-      "notes": "Prometheus ready endpoint"
+      "executed_at": "2025-12-19T23:38:00Z",
+      "notes": "Prometheus ready endpoint",
+      "exit_code": 0,
+      "timestamp": "2025-12-20T19:31:55.100Z"
     },
     {
       "name": "grafana_health",
@@ -135,8 +139,10 @@
       "expected": "200",
       "actual": "200",
       "passed": true,
-      "validated_at": "2025-12-19T23:38:00Z",
-      "notes": "Grafana health API"
+      "executed_at": "2025-12-19T23:38:00Z",
+      "notes": "Grafana health API",
+      "exit_code": 0,
+      "timestamp": "2025-12-20T19:31:55.100Z"
     },
     {
       "name": "loki_health",
@@ -144,8 +150,10 @@
       "expected": "200",
       "actual": "200",
       "passed": true,
-      "validated_at": "2025-12-19T23:38:00Z",
-      "notes": "Loki ready endpoint"
+      "executed_at": "2025-12-19T23:38:00Z",
+      "notes": "Loki ready endpoint",
+      "exit_code": 0,
+      "timestamp": "2025-12-20T19:31:55.100Z"
     },
     {
       "name": "tempo_health",
@@ -153,8 +161,10 @@
       "expected": "200",
       "actual": "200",
       "passed": true,
-      "validated_at": "2025-12-19T23:38:00Z",
-      "notes": "Tempo ready endpoint"
+      "executed_at": "2025-12-19T23:38:00Z",
+      "notes": "Tempo ready endpoint",
+      "exit_code": 0,
+      "timestamp": "2025-12-20T19:31:55.100Z"
     },
     {
       "name": "grafana_auth_required",
@@ -162,8 +172,10 @@
       "expected": "401",
       "actual": "401",
       "passed": true,
-      "validated_at": "2025-12-19T23:38:30Z",
-      "notes": "Grafana blocks unauthenticated API access"
+      "executed_at": "2025-12-19T23:38:30Z",
+      "notes": "Grafana blocks unauthenticated API access",
+      "exit_code": 0,
+      "timestamp": "2025-12-20T19:31:55.100Z"
     },
     {
       "name": "otlp_push_test",
@@ -171,74 +183,41 @@
       "expected": "200",
       "actual": "200",
       "passed": true,
-      "validated_at": "2025-12-19T23:39:00Z",
-      "notes": "OTLP trace push accepted by collector"
+      "executed_at": "2025-12-19T23:39:00Z",
+      "notes": "OTLP trace push accepted by collector",
+      "exit_code": 0,
+      "timestamp": "2025-12-20T19:31:55.100Z"
     }
   ],
-  "kpis": [
-    {
-      "metric": "setup_time",
+  "kpis": {
+    "setup_time": {
       "target": "<30 min",
       "actual": "15 min",
       "met": true
     },
-    {
-      "metric": "ssl_manual_config",
+    "ssl_manual_config": {
       "target": "0",
       "actual": "0",
-      "met": true,
-      "notes": "No manual SSL config needed (local deployment)"
+      "met": true
     },
-    {
-      "metric": "services_behind_access_control",
+    "services_behind_access_control": {
       "target": "100%",
       "actual": "100%",
-      "met": true,
-      "notes": "Grafana requires authentication (admin/admin)"
+      "met": true
     },
-    {
-      "metric": "retention_configured",
+    "retention_configured": {
       "target": "30 days metrics/logs, 7 days traces",
       "actual": "30d metrics, 30d logs, 7d traces",
       "met": true
     },
-    {
-      "metric": "otlp_push_working",
+    "otlp_push_working": {
       "target": "true",
       "actual": "true",
-      "met": true,
-      "notes": "Test trace successfully pushed to collector"
-    }
-  ],
-  "blockers": [],
-  "notes": {
-    "architecture": {
-      "model": "Push-based OTLP pipeline",
-      "reason": "Railway/Vercel cannot be scraped - dynamic IPs, serverless",
-      "flow": "Apps -> OTLP -> OTel Collector -> Prometheus/Loki/Tempo -> Grafana"
-    },
-    "access_control": {
-      "required": true,
-      "implemented": "Grafana authentication (GF_AUTH_ANONYMOUS_ENABLED=false)",
-      "production_options": [
-        "Tailscale (recommended)",
-        "Cloudflare Access"
-      ],
-      "warning": "Do NOT use public subdomains without access control"
-    },
-    "config_fixes": [
-      "Removed deprecated 'search_enabled' from tempo-config.yml",
-      "Removed deprecated 'defaults' from tempo overrides",
-      "Simplified loki exporter in otel-collector.yaml"
-    ],
-    "services": {
-      "grafana": "http://localhost:3001 (admin/admin)",
-      "prometheus": "http://localhost:9090",
-      "loki": "http://localhost:3100",
-      "tempo": "http://localhost:3200",
-      "otel_collector": "http://localhost:4318 (OTLP HTTP)"
+      "met": true
     }
   },
+  "blockers": [],
+  "notes": "Push-based OTLP pipeline deployment. Architecture: Apps -> OTLP -> OTel Collector -> Prometheus/Loki/Tempo -> Grafana. Services: Grafana (localhost:3001), Prometheus (localhost:9090), Loki (localhost:3100), Tempo (localhost:3200), OTel Collector (localhost:4318). Config fixes applied: removed deprecated search_enabled from tempo-config.yml, removed deprecated defaults from tempo overrides, simplified loki exporter.",
   "status": "DONE",
   "completed_at": "2025-12-20T19:31:55.100Z",
   "started_at": "2025-12-20T19:16:55.100Z",

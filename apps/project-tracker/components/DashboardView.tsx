@@ -4,10 +4,12 @@ import { Task, SprintNumber } from '@/lib/types';
 import { countTasksByStatus, calculateCompletionRate } from '@/lib/csv-parser';
 import { groupBy } from '@/lib/utils';
 import React from 'react';
-import { Clock, CheckCircle2, PlayCircle } from 'lucide-react';
+import { Icon } from '@/lib/icons';
 import ExecutiveSummary from './ExecutiveSummary';
 import SwarmMonitor from './SwarmMonitor';
 import NextStepsView from './NextStepsView';
+import DailyWorkflowSummary from './DailyWorkflowSummary';
+import ScheduleHealthWidget from './ScheduleHealthWidget';
 
 interface DashboardViewProps {
   readonly tasks: Task[];
@@ -37,7 +39,7 @@ export default function DashboardView({
               <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
             </div>
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <CheckCircle2 className="w-6 h-6 text-blue-600" />
+              <Icon name="check_circle" size="xl" className="text-blue-600" />
             </div>
           </div>
         </div>
@@ -49,7 +51,7 @@ export default function DashboardView({
               <p className="text-3xl font-bold text-green-600">{stats.completed}</p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <CheckCircle2 className="w-6 h-6 text-green-600" />
+              <Icon name="check_circle" size="xl" className="text-green-600" />
             </div>
           </div>
         </div>
@@ -61,7 +63,7 @@ export default function DashboardView({
               <p className="text-3xl font-bold text-blue-600">{stats.inProgress}</p>
             </div>
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <PlayCircle className="w-6 h-6 text-blue-600" />
+              <Icon name="play_circle" size="xl" className="text-blue-600" />
             </div>
           </div>
         </div>
@@ -73,7 +75,7 @@ export default function DashboardView({
               <p className="text-3xl font-bold text-gray-600">{stats.planned}</p>
             </div>
             <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-              <Clock className="w-6 h-6 text-gray-600" />
+              <Icon name="schedule" size="xl" className="text-gray-600" />
             </div>
           </div>
         </div>
@@ -93,8 +95,18 @@ export default function DashboardView({
         </div>
       </div>
 
+      {/* Schedule Health (EVM Metrics) */}
+      <ScheduleHealthWidget sprint={typeof sprint === 'number' ? sprint : sprint === 'all' ? 'all' : 0} />
+
       {/* Executive Summary */}
       <ExecutiveSummary sprint={sprint} />
+
+      {/* Daily Workflow Summary */}
+      <DailyWorkflowSummary
+        tasks={tasks}
+        sprint={sprint ?? 'all'}
+        onTaskClick={onTaskClick}
+      />
 
       {/* Swarm Monitor */}
       <SwarmMonitor />

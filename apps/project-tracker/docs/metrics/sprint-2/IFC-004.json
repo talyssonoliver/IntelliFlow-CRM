@@ -8,7 +8,7 @@
     "required": [
       "IFC-003"
     ],
-    "verified_at": "2026-01-08T23:28:11.882Z",
+    "verified_at": "2026-01-29T01:33:17.609Z",
     "all_satisfied": true,
     "notes": "IFC-003 tRPC API foundation completed - lead.create mutation available"
   },
@@ -77,7 +77,8 @@
       "executed_at": "2025-12-22T20:25:00Z",
       "exit_code": 0,
       "passed": true,
-      "duration_ms": 15000
+      "duration_ms": 15000,
+      "timestamp": "2025-12-22T20:28:00Z"
     },
     {
       "name": "test_suite",
@@ -86,14 +87,16 @@
       "exit_code": 0,
       "passed": true,
       "duration_ms": 28970,
-      "output_summary": "62 test files passed, 1840 tests passed"
+      "output_summary": "62 test files passed, 1840 tests passed",
+      "timestamp": "2025-12-22T20:28:00Z"
     },
     {
       "name": "form_component_exists",
       "command": "ls apps/web/src/app/leads/(list)/new/page.tsx",
       "executed_at": "2025-12-22T20:28:30Z",
       "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "timestamp": "2025-12-22T20:28:00Z"
     },
     {
       "name": "trpc_integration",
@@ -101,7 +104,8 @@
       "executed_at": "2025-12-22T20:28:30Z",
       "exit_code": 0,
       "passed": true,
-      "notes": "tRPC mutation integrated with lead.create endpoint"
+      "notes": "tRPC mutation integrated with lead.create endpoint",
+      "timestamp": "2025-12-22T20:28:00Z"
     },
     {
       "name": "zod_validation",
@@ -109,7 +113,8 @@
       "executed_at": "2025-12-22T20:28:30Z",
       "exit_code": 0,
       "passed": true,
-      "notes": "Zod schema validation integrated with react-hook-form"
+      "notes": "Zod schema validation integrated with react-hook-form",
+      "timestamp": "2025-12-22T20:28:00Z"
     }
   ],
   "kpis": {
@@ -121,7 +126,7 @@
     },
     "lighthouse_score": {
       "target": 90,
-      "actual": null,
+      "actual": "N/A",
       "met": false,
       "unit": "score",
       "waiver": "Requires browser runtime - cannot be validated in CLI"

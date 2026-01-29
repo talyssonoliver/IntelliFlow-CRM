@@ -8,7 +8,7 @@
     "required": [
       "EXC-INIT-001"
     ],
-    "verified_at": "2026-01-08T23:28:13.538Z",
+    "verified_at": "2026-01-29T01:33:17.639Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -36,7 +36,8 @@
       "required": true,
       "executed_at": "2025-12-31T11:55:00Z",
       "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "timestamp": "2025-12-31T12:00:00Z"
     }
   ],
   "kpis": {

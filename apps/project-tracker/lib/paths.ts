@@ -194,3 +194,64 @@ export const GOVERNANCE_PATHS = {
     return join(PATHS.artifacts.reports, 'phantom-completion-audit.json');
   },
 } as const;
+
+// =============================================================================
+// Input Validation Utilities
+// =============================================================================
+
+/**
+ * Valid task ID patterns:
+ * - IFC-001, IFC-106
+ * - PG-001, PG-015
+ * - ENV-001-AI, ENV-012-AI
+ * - AI-SETUP-001, AI-SETUP-003
+ * - EXC-INIT-001, EXC-SEC-001
+ * - AUTOMATION-001
+ * - ANALYTICS-001
+ * - BRAND-001
+ * - DOC-001
+ * - GOV-001
+ * - GTM-001
+ * - SALES-001
+ * - ENG-OPS-001
+ * - PM-OPS-001
+ * - EP-001-AI
+ * - EXP-PLATFORM-001, EXP-SCRIPTS-001
+ */
+const TASK_ID_PATTERN = /^[A-Z][A-Z0-9]*(-[A-Z0-9]+)*-\d{3}(-[A-Z]+)?$/;
+
+/**
+ * Validate a task ID against the expected pattern
+ *
+ * @param taskId The task ID to validate
+ * @returns true if valid, false if invalid
+ */
+export function isValidTaskId(taskId: string): boolean {
+  if (!taskId || typeof taskId !== 'string') {
+    return false;
+  }
+
+  // Basic length check
+  if (taskId.length < 5 || taskId.length > 30) {
+    return false;
+  }
+
+  return TASK_ID_PATTERN.test(taskId);
+}
+
+/**
+ * Sanitize a task ID for safe use in paths and commands
+ * Returns null if the task ID is invalid
+ *
+ * @param taskId The task ID to sanitize
+ * @returns Sanitized task ID or null if invalid
+ */
+export function sanitizeTaskId(taskId: string): string | null {
+  if (!isValidTaskId(taskId)) {
+    return null;
+  }
+
+  // Additional sanitization - remove any characters that could be shell injection
+  // Since we've already validated the pattern, this is just an extra safety layer
+  return taskId.replace(/[^A-Z0-9-]/g, '');
+}

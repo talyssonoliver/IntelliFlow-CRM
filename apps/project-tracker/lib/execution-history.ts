@@ -134,7 +134,7 @@ export function loadExecutionHistory(
   // Sort by modification time, newest first
   const files = allFiles.sort((a, b) => b.mtime - a.mtime);
 
-  let runs: ExecutionRun[] = [];
+  const runs: ExecutionRun[] = [];
 
   for (const file of files) {
     try {

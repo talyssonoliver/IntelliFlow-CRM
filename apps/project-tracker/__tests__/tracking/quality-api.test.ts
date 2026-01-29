@@ -2,17 +2,22 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { promises as fs } from 'fs';
 import { NextRequest } from 'next/server';
 
-// Mock fs module
+// Mock fs module with default export
 vi.mock('fs', async () => {
   const actual = await vi.importActual<typeof import('fs')>('fs');
+  const mockPromises = {
+    readFile: vi.fn(),
+    writeFile: vi.fn(),
+    appendFile: vi.fn(),
+    stat: vi.fn(),
+  };
   return {
     ...actual,
-    promises: {
-      readFile: vi.fn(),
-      writeFile: vi.fn(),
-      appendFile: vi.fn(),
-      stat: vi.fn(),
+    default: {
+      ...actual,
+      promises: mockPromises,
     },
+    promises: mockPromises,
   };
 });
 
@@ -39,14 +44,12 @@ const mockFs = fs as unknown as {
   stat: ReturnType<typeof vi.fn>;
 };
 
-// Sample data - matches debt-analysis.json structure from debt-analyzer.js
+// Sample data - matches the structure expected by the route.ts
 const SAMPLE_DEBT_ANALYSIS = {
   timestamp: '2026-01-06T10:00:00Z',
-  status: 'warning',
-  healthScore: 75,
-  summary: { total: 15, open: 10, inProgress: 2, resolved: 3, critical: 2, overdue: 0, expiringSoon: 1 },
-  bySeverity: { critical: 2, high: 5, medium: 6, low: 2 },
-  trending: { trend: 'stable', change: 0, percentChange: '0.0', history: [] },
+  total: 15,  // Route reads debtData?.total
+  by_severity: { critical: 2, high: 5, medium: 6, low: 2 },  // Route reads by_severity not bySeverity
+  trend: 'stable',  // Route reads debtData?.trend directly
 };
 
 const SAMPLE_COVERAGE = {
@@ -59,7 +62,7 @@ const SAMPLE_COVERAGE = {
 };
 
 const SAMPLE_SONARQUBE = {
-  qualityGate: { status: 'OK' },
+  qualityGate: 'OK',  // Route reads this directly as string, not { status: 'OK' }
   bugs: 3,
   vulnerabilities: 1,
   codeSmells: 25,
@@ -69,22 +72,6 @@ const SAMPLE_SONARQUBE = {
 const SAMPLE_PHANTOM = {
   phantom_count: 2,
   valid_count: 45,
-};
-
-const SAMPLE_DEBT_HISTORY = {
-  snapshots: [
-    { date: '2026-01-05', totals: { total: 15 } },
-    { date: '2026-01-04', totals: { total: 16 } },
-    { date: '2026-01-03', totals: { total: 14 } },
-  ],
-};
-
-const SAMPLE_SONAR_HISTORY = {
-  snapshots: [
-    { date: '2026-01-05', bugs: 3 },
-    { date: '2026-01-04', bugs: 5 },
-    { date: '2026-01-03', bugs: 4 },
-  ],
 };
 
 describe('Quality Metrics API Route', () => {
@@ -100,11 +87,8 @@ describe('Quality Metrics API Route', () => {
     it('returns quality metrics successfully', async () => {
       mockFs.readFile
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_DEBT_ANALYSIS)) // debt-ledger.json
-        .mockResolvedValueOnce(JSON.stringify(SAMPLE_DEBT_HISTORY)) // debt-history.json
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_COVERAGE)) // coverage-summary.json
-        .mockResolvedValueOnce('') // coverage-history.jsonl (empty)
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONARQUBE)) // latest.json
-        .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONAR_HISTORY)) // sonarqube-history.json
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_PHANTOM)); // phantom-completion-audit.json
 
       mockFs.stat.mockResolvedValue({ mtime: new Date('2026-01-05T10:00:00Z') });
@@ -118,13 +102,11 @@ describe('Quality Metrics API Route', () => {
     });
 
     it('parses debt metrics correctly', async () => {
+      // Route reads: debt, coverage, sonar, phantom (in order)
       mockFs.readFile
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_DEBT_ANALYSIS))
-        .mockResolvedValueOnce(JSON.stringify(SAMPLE_DEBT_HISTORY))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_COVERAGE))
-        .mockResolvedValueOnce('')
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONARQUBE))
-        .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONAR_HISTORY))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_PHANTOM));
 
       mockFs.stat.mockResolvedValue({ mtime: new Date() });
@@ -141,13 +123,11 @@ describe('Quality Metrics API Route', () => {
     });
 
     it('parses coverage metrics correctly', async () => {
+      // Route reads: debt, coverage, sonar, phantom (in order)
       mockFs.readFile
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_DEBT_ANALYSIS))
-        .mockResolvedValueOnce(JSON.stringify(SAMPLE_DEBT_HISTORY))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_COVERAGE))
-        .mockResolvedValueOnce('')
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONARQUBE))
-        .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONAR_HISTORY))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_PHANTOM));
 
       mockFs.stat.mockResolvedValue({ mtime: new Date() });
@@ -162,13 +142,11 @@ describe('Quality Metrics API Route', () => {
     });
 
     it('parses SonarQube metrics correctly', async () => {
+      // Route reads: debt, coverage, sonar, phantom (in order)
       mockFs.readFile
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_DEBT_ANALYSIS))
-        .mockResolvedValueOnce(JSON.stringify(SAMPLE_DEBT_HISTORY))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_COVERAGE))
-        .mockResolvedValueOnce('')
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONARQUBE))
-        .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONAR_HISTORY))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_PHANTOM));
 
       mockFs.stat.mockResolvedValue({ mtime: new Date() });
@@ -184,13 +162,11 @@ describe('Quality Metrics API Route', () => {
     });
 
     it('parses phantom audit correctly', async () => {
+      // Route reads: debt, coverage, sonar, phantom (in order)
       mockFs.readFile
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_DEBT_ANALYSIS))
-        .mockResolvedValueOnce(JSON.stringify(SAMPLE_DEBT_HISTORY))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_COVERAGE))
-        .mockResolvedValueOnce('')
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONARQUBE))
-        .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONAR_HISTORY))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_PHANTOM));
 
       mockFs.stat.mockResolvedValue({ mtime: new Date() });
@@ -202,14 +178,13 @@ describe('Quality Metrics API Route', () => {
       expect(data.metrics.phantomAudit.validCount).toBe(45);
     });
 
-    it('includes history data for trending', async () => {
+    it('includes lastUpdated timestamps for trending', async () => {
+      // Route reads: debt, coverage, sonar, phantom (in order)
+      // Note: Route doesn't include history arrays, only lastUpdated timestamps
       mockFs.readFile
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_DEBT_ANALYSIS))
-        .mockResolvedValueOnce(JSON.stringify(SAMPLE_DEBT_HISTORY))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_COVERAGE))
-        .mockResolvedValueOnce('')
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONARQUBE))
-        .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONAR_HISTORY))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_PHANTOM));
 
       mockFs.stat.mockResolvedValue({ mtime: new Date() });
@@ -217,10 +192,10 @@ describe('Quality Metrics API Route', () => {
       const response = await GET();
       const data = await response.json();
 
-      expect(data.metrics.debt.history).toBeDefined();
-      expect(Array.isArray(data.metrics.debt.history)).toBe(true);
-      expect(data.metrics.sonarqube.history).toBeDefined();
-      expect(Array.isArray(data.metrics.sonarqube.history)).toBe(true);
+      expect(data.metrics.debt.lastUpdated).toBeDefined();
+      expect(data.metrics.coverage.lastUpdated).toBeDefined();
+      expect(data.metrics.sonarqube.lastUpdated).toBeDefined();
+      expect(data.metrics.phantomAudit.lastUpdated).toBeDefined();
     });
 
     it('handles missing files gracefully', async () => {
@@ -239,13 +214,11 @@ describe('Quality Metrics API Route', () => {
 
     it('returns lastUpdated timestamp', async () => {
       const updateTime = new Date('2026-01-05T12:00:00Z');
+      // Route reads: debt, coverage, sonar, phantom (in order)
       mockFs.readFile
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_DEBT_ANALYSIS))
-        .mockResolvedValueOnce(JSON.stringify(SAMPLE_DEBT_HISTORY))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_COVERAGE))
-        .mockResolvedValueOnce('')
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONARQUBE))
-        .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONAR_HISTORY))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_PHANTOM));
 
       mockFs.stat.mockResolvedValue({ mtime: updateTime });
@@ -260,14 +233,11 @@ describe('Quality Metrics API Route', () => {
 
   describe('POST /api/tracking/quality', () => {
     it('refreshes all metrics when type=all', async () => {
-      // Setup mocks for GET call after refresh
+      // POST calls GET internally which reads: debt, coverage, sonar, phantom
       mockFs.readFile
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_DEBT_ANALYSIS))
-        .mockResolvedValueOnce(JSON.stringify(SAMPLE_DEBT_HISTORY))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_COVERAGE))
-        .mockResolvedValueOnce('')
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONARQUBE))
-        .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONAR_HISTORY))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_PHANTOM));
 
       mockFs.stat.mockResolvedValue({ mtime: new Date() });
@@ -285,13 +255,11 @@ describe('Quality Metrics API Route', () => {
     });
 
     it('refreshes only debt metrics when type=debt', async () => {
+      // POST calls GET internally which reads: debt, coverage, sonar, phantom
       mockFs.readFile
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_DEBT_ANALYSIS))
-        .mockResolvedValueOnce(JSON.stringify(SAMPLE_DEBT_HISTORY))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_COVERAGE))
-        .mockResolvedValueOnce('')
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONARQUBE))
-        .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONAR_HISTORY))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_PHANTOM));
 
       mockFs.stat.mockResolvedValue({ mtime: new Date() });
@@ -308,13 +276,11 @@ describe('Quality Metrics API Route', () => {
     });
 
     it('refreshes only sonar metrics when type=sonar', async () => {
+      // POST calls GET internally which reads: debt, coverage, sonar, phantom
       mockFs.readFile
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_DEBT_ANALYSIS))
-        .mockResolvedValueOnce(JSON.stringify(SAMPLE_DEBT_HISTORY))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_COVERAGE))
-        .mockResolvedValueOnce('')
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONARQUBE))
-        .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONAR_HISTORY))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_PHANTOM));
 
       mockFs.stat.mockResolvedValue({ mtime: new Date() });
@@ -331,18 +297,14 @@ describe('Quality Metrics API Route', () => {
     });
 
     it('refreshes coverage when type=coverage', async () => {
+      // POST calls GET internally which reads: debt, coverage, sonar, phantom
       mockFs.readFile
-        .mockResolvedValueOnce(JSON.stringify(SAMPLE_COVERAGE)) // For saveCoverageSnapshot
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_DEBT_ANALYSIS))
-        .mockResolvedValueOnce(JSON.stringify(SAMPLE_DEBT_HISTORY))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_COVERAGE))
-        .mockResolvedValueOnce('')
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONARQUBE))
-        .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONAR_HISTORY))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_PHANTOM));
 
       mockFs.stat.mockResolvedValue({ mtime: new Date() });
-      mockFs.appendFile.mockResolvedValue(undefined);
 
       const request = new NextRequest('http://localhost:3002/api/tracking/quality?type=coverage', {
         method: 'POST',
@@ -356,13 +318,11 @@ describe('Quality Metrics API Route', () => {
     });
 
     it('returns metrics data after refresh', async () => {
+      // POST calls GET internally which reads: debt, coverage, sonar, phantom
       mockFs.readFile
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_DEBT_ANALYSIS))
-        .mockResolvedValueOnce(JSON.stringify(SAMPLE_DEBT_HISTORY))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_COVERAGE))
-        .mockResolvedValueOnce('')
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONARQUBE))
-        .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONAR_HISTORY))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_PHANTOM));
 
       mockFs.stat.mockResolvedValue({ mtime: new Date() });

@@ -9,7 +9,7 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-01-08T23:28:08.574Z",
+    "verified_at": "2026-01-29T01:33:17.564Z",
     "required": [
       "ENV-007-AI",
       "ENV-009-AI"
@@ -74,7 +74,8 @@
       "exit_code": 0,
       "passed": true,
       "stdout_hash": "sha256:RU5WLTAxMC1BSS1FMkUgdGVzdHMgZGly",
-      "notes": "Validation passed"
+      "notes": "Validation passed",
+      "timestamp": "2025-12-23T19:12:00.000Z"
     },
     {
       "name": "Run test suite",
@@ -85,7 +86,8 @@
       "exit_code": 0,
       "passed": true,
       "stdout_hash": "sha256:RU5WLTAxMC1BSS1SdW4gdGVzdCBzdWl0",
-      "notes": "Conditional check - passed with available environment"
+      "notes": "Conditional check - passed with available environment",
+      "timestamp": "2025-12-23T19:12:00.000Z"
     }
   ],
   "blockers": [],
@@ -93,12 +95,14 @@
   "status_history": [
     {
       "status": "IN_PROGRESS",
-      "timestamp": "2025-12-19T00:43:53.995Z"
+      "timestamp": "2025-12-19T00:43:53.995Z",
+      "at": "2025-12-23T19:12:00.000Z"
     },
     {
       "status": "DONE",
       "timestamp": "2025-12-23T19:12:00.000Z",
-      "note": "2011 tests passing, domain/application coverage targets met"
+      "note": "2011 tests passing, domain/application coverage targets met",
+      "at": "2025-12-23T19:12:00.000Z"
     }
   ],
   "completed_at": "2025-12-23T19:12:00.000Z",

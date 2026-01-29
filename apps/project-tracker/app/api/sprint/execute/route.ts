@@ -17,6 +17,12 @@ import {
   type SubprocessProgress,
   type SubprocessResult,
 } from '../../../../lib/subprocess-spawner';
+import {
+  updateTaskStatus,
+  canProceedToSession,
+  loadTasks,
+  type TaskRecord,
+} from '../../../../lib/csv-status';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes max for API response
@@ -63,7 +69,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'sprintNumber is required' }, { status: 400 });
     }
 
-    const includeAll = sprintNumber === 'all';
+    const _includeAll = sprintNumber === 'all';
 
     const metricsDir = join(process.cwd(), 'docs', 'metrics');
     const projectRoot = join(process.cwd(), '..', '..');
@@ -95,7 +101,8 @@ export async function POST(request: Request) {
     const dependencyGraph: DependencyGraph = JSON.parse(graphContent);
 
     // Calculate phases
-    let { phases, parallelStreams } = calculatePhases(dependencyGraph, tasks, sprintNumber);
+    const { phases: initialPhases, parallelStreams } = calculatePhases(dependencyGraph, tasks, sprintNumber);
+    let phases = initialPhases;
 
     // Apply task filter if provided
     if (taskFilter && taskFilter.length > 0) {
@@ -106,6 +113,78 @@ export async function POST(request: Request) {
           tasks: phase.tasks.filter((t) => filterSet.has(t.taskId)),
         }))
         .filter((phase) => phase.tasks.length > 0);
+    }
+
+    // SESSION 3: Exec - Validate prerequisites for each task
+    // Tasks must have both spec and plan completed before execution
+    const specifyDir = join(projectRoot, '.specify');
+    const csvTasks = await loadTasks();
+
+    const prerequisiteErrors: { taskId: string; error: string }[] = [];
+    const tasksToExecute: string[] = [];
+
+    for (const phase of phases) {
+      for (const task of phase.tasks) {
+        // Get task's sprint number from CSV
+        const csvTask = csvTasks.find((t: TaskRecord) => t['Task ID'] === task.taskId);
+        const taskSprintNumber = parseInt(csvTask?.['Target Sprint'] || '0', 10);
+        const sprintDir = join(specifyDir, 'sprints', `sprint-${taskSprintNumber}`);
+
+        // Check sprint-based paths first, then legacy for backward compatibility
+        const specPathNew = join(sprintDir, 'specifications', `${task.taskId}-spec.md`);
+        const planPathNew = join(sprintDir, 'planning', `${task.taskId}-plan.md`);
+        const specPathLegacy = join(specifyDir, 'specifications', `${task.taskId}-spec.md`);
+        const planPathLegacy = join(specifyDir, 'planning', `${task.taskId}-plan.md`);
+
+        const specExists = existsSync(specPathNew) || existsSync(specPathLegacy);
+        const planExists = existsSync(planPathNew) || existsSync(planPathLegacy);
+
+        if (!specExists) {
+          prerequisiteErrors.push({
+            taskId: task.taskId,
+            error: 'Spec required. Run SESSION 1: Spec first.',
+          });
+        } else if (!planExists) {
+          prerequisiteErrors.push({
+            taskId: task.taskId,
+            error: 'Plan required. Run SESSION 2: Plan first.',
+          });
+        } else {
+          // Also check CSV task status using canProceedToSession
+          if (csvTask) {
+            const canProceed = canProceedToSession(csvTask, 'exec');
+            if (!canProceed.canProceed) {
+              prerequisiteErrors.push({
+                taskId: task.taskId,
+                error: canProceed.reason || 'Cannot proceed to execution',
+              });
+            } else {
+              tasksToExecute.push(task.taskId);
+            }
+          } else {
+            tasksToExecute.push(task.taskId);
+          }
+        }
+      }
+    }
+
+    // If there are prerequisite errors, return them (unless it's a dry run)
+    if (prerequisiteErrors.length > 0 && !dryRun) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Prerequisites not met for some tasks',
+          prerequisiteErrors,
+          message: `${prerequisiteErrors.length} task(s) missing prerequisites. Complete SESSION 1 (Spec) and SESSION 2 (Plan) first.`,
+          tasksReady: tasksToExecute,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Update status to "In Progress" for all tasks that will be executed
+    for (const taskId of tasksToExecute) {
+      await updateTaskStatus(taskId, 'In Progress');
     }
 
     // Filter to phases starting from startFromPhase
@@ -499,12 +578,18 @@ async function executeParallelPhase(
       results.set(task.taskId, result);
 
       if (result.success) {
+        // Update CSV status to Completed
+        await updateTaskStatus(task.taskId, 'Completed');
+
         await updateStatus({
           type: 'task_complete',
           taskId: task.taskId,
           phaseNumber: phase.phaseNumber,
         });
       } else {
+        // Set status to Failed - task needs investigation/remediation
+        await updateTaskStatus(task.taskId, 'Failed');
+
         await updateStatus({
           type: 'task_failed',
           taskId: task.taskId,
@@ -558,12 +643,18 @@ async function executeSequentialPhase(
     results.set(task.taskId, result);
 
     if (result.success) {
+      // Update CSV status to Completed
+      await updateTaskStatus(task.taskId, 'Completed');
+
       await updateStatus({
         type: 'task_complete',
         taskId: task.taskId,
         phaseNumber: phase.phaseNumber,
       });
     } else {
+      // Set status to Failed - task needs investigation/remediation
+      await updateTaskStatus(task.taskId, 'Failed');
+
       await updateStatus({
         type: 'task_failed',
         taskId: task.taskId,

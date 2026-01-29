@@ -134,7 +134,7 @@ function loadPhaseProgress(sprintNumber: number): PhaseProgress[] {
 }
 
 // Load attestation data for completion timestamps
-function loadAttestations(sprintNumber: number): Map<string, { timestamp: string; verdict: string }> {
+function loadAttestations(_sprintNumber: number): Map<string, { timestamp: string; verdict: string }> {
   const projectRoot = getProjectRoot();
   const attestationsDir = join(projectRoot, 'artifacts', 'attestations');
   const attestations = new Map<string, { timestamp: string; verdict: string }>();

@@ -86,7 +86,7 @@ function loadAccessibilityKPIs(): { taskId: string; kpi: string; met: boolean }[
   return kpis;
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const axeResults = loadAxeResults();
     const accessibilityKPIs = loadAccessibilityKPIs();

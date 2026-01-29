@@ -9,7 +9,7 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-01-08T23:28:09.662Z",
+    "verified_at": "2026-01-29T01:33:17.576Z",
     "required": [
       "ENV-010-AI"
     ]
@@ -61,7 +61,8 @@
       "executed_at": "2025-12-23T21:30:00.000Z",
       "exit_code": 0,
       "passed": true,
-      "notes": "Coverage report generated"
+      "notes": "Coverage report generated",
+      "timestamp": "2025-12-23T21:30:00.000Z"
     },
     {
       "name": "Vitest config exists",
@@ -71,7 +72,8 @@
       "executed_at": "2025-12-23T21:30:00.000Z",
       "exit_code": 0,
       "passed": true,
-      "notes": "Vitest configured"
+      "notes": "Vitest configured",
+      "timestamp": "2025-12-23T21:30:00.000Z"
     }
   ],
   "blockers": [],
@@ -79,12 +81,14 @@
   "status_history": [
     {
       "status": "IN_PROGRESS",
-      "timestamp": "2025-12-19T00:00:00.000Z"
+      "timestamp": "2025-12-19T00:00:00.000Z",
+      "at": "2025-12-23T21:30:00.000Z"
     },
     {
       "status": "DONE",
       "timestamp": "2025-12-23T21:30:00.000Z",
-      "note": "2471 tests passing, TDD workflow adopted"
+      "note": "2471 tests passing, TDD workflow adopted",
+      "at": "2025-12-23T21:30:00.000Z"
     }
   ],
   "completed_at": "2025-12-23T21:30:00.000Z",

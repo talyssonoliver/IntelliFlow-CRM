@@ -12,7 +12,7 @@
       "IFC-001",
       "IFC-005"
     ],
-    "verified_at": "2026-01-08T23:28:12.754Z",
+    "verified_at": "2026-01-29T01:33:17.622Z",
     "all_satisfied": true,
     "notes": "IFC-001 (Technical Architecture Spike) and IFC-005 (Technology Stack Validation) verified as DONE"
   },
@@ -27,17 +27,17 @@
   "actual_duration_minutes": 10,
   "status_history": [
     {
-      "status": "Planned",
+      "status": "PLANNED",
       "at": "2025-12-20T00:00:00Z",
       "note": "Task created as part of Sprint 4 planning"
     },
     {
-      "status": "In Progress",
+      "status": "IN_PROGRESS",
       "at": "2025-12-26T21:55:00Z",
       "note": "Started team capability assessment"
     },
     {
-      "status": "Completed",
+      "status": "DONE",
       "at": "2025-12-26T22:05:00Z",
       "note": "All artifacts created, KPIs met (>=80% team confidence)"
     }
@@ -70,12 +70,12 @@
       "docs/planning/training-plan.md",
       "artifacts/misc/competency-test-results.csv",
       "apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md",
-      "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md",
-      "artifacts/attestations/IFC-009/context_ack.json"
+      "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md"
     ],
     "missing": [
       "artifacts/reports/team-skills-matrix.xlsx",
-      "artifacts/reports/confidence-survey.pdf"
+      "artifacts/reports/confidence-survey.pdf",
+      "artifacts/attestations/IFC-009/context_ack.json"
     ]
   },
   "validations": [
@@ -86,7 +86,8 @@
       "exit_code": 0,
       "duration_ms": 1000,
       "stdout_hash": "team_confidence_81_percent",
-      "passed": true
+      "passed": true,
+      "timestamp": "2025-12-26T22:05:00Z"
     },
     {
       "name": "Competency test pass rate",
@@ -95,7 +96,8 @@
       "exit_code": 0,
       "duration_ms": 500,
       "stdout_hash": "pass_rate_87_percent",
-      "passed": true
+      "passed": true,
+      "timestamp": "2025-12-26T22:05:00Z"
     },
     {
       "name": "Training plan completeness",
@@ -104,7 +106,8 @@
       "exit_code": 0,
       "duration_ms": 500,
       "stdout_hash": "training_plan_complete",
-      "passed": true
+      "passed": true,
+      "timestamp": "2025-12-26T22:05:00Z"
     }
   ],
   "kpis": {

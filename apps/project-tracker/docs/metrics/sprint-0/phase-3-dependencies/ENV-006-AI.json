@@ -9,7 +9,7 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-01-08T23:28:07.945Z",
+    "verified_at": "2026-01-29T01:33:17.559Z",
     "required": [
       "ENV-004-AI"
     ]
@@ -75,21 +75,24 @@
       "passed": true,
       "command": "pnpm db:generate",
       "name": "prisma_generate",
-      "exit_code": 0
+      "exit_code": 0,
+      "timestamp": "2025-12-14T23:50:00Z"
     },
     {
       "executed_at": "2025-12-14T23:45:00Z",
       "passed": true,
       "command": "pnpm build",
       "name": "package_build",
-      "exit_code": 0
+      "exit_code": 0,
+      "timestamp": "2025-12-14T23:50:00Z"
     },
     {
       "executed_at": "2025-12-14T23:45:00Z",
       "passed": true,
       "command": "tsup --dts",
       "name": "dts_generation",
-      "exit_code": 0
+      "exit_code": 0,
+      "timestamp": "2025-12-14T23:50:00Z"
     }
   ],
   "blockers": [],

@@ -8,7 +8,7 @@
     "required": [
       "IFC-004"
     ],
-    "verified_at": "2026-01-08T23:28:11.961Z",
+    "verified_at": "2026-01-29T01:33:17.610Z",
     "all_satisfied": true,
     "notes": "IFC-004 Lead Capture UI completed - form integrates with tRPC API"
   },
@@ -54,7 +54,8 @@
       "executed_at": "2025-12-22T20:35:00Z",
       "exit_code": 0,
       "passed": true,
-      "duration_ms": 8000
+      "duration_ms": 8000,
+      "timestamp": "2025-12-22T20:40:00Z"
     },
     {
       "name": "scoring_chain_tests",
@@ -63,14 +64,16 @@
       "exit_code": 0,
       "passed": true,
       "duration_ms": 6090,
-      "output_summary": "7 tests passed"
+      "output_summary": "7 tests passed",
+      "timestamp": "2025-12-22T20:40:00Z"
     },
     {
       "name": "scoring_chain_exists",
       "command": "ls apps/ai-worker/src/chains/scoring.chain.ts",
       "executed_at": "2025-12-22T20:36:00Z",
       "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "timestamp": "2025-12-22T20:40:00Z"
     },
     {
       "name": "langchain_integration",
@@ -78,7 +81,8 @@
       "executed_at": "2025-12-22T20:36:00Z",
       "exit_code": 0,
       "passed": true,
-      "notes": "LangChain ChatOpenAI integration verified"
+      "notes": "LangChain ChatOpenAI integration verified",
+      "timestamp": "2025-12-22T20:40:00Z"
     },
     {
       "name": "structured_output_parser",
@@ -86,7 +90,8 @@
       "executed_at": "2025-12-22T20:36:00Z",
       "exit_code": 0,
       "passed": true,
-      "notes": "Structured output parsing with Zod verified"
+      "notes": "Structured output parsing with Zod verified",
+      "timestamp": "2025-12-22T20:40:00Z"
     },
     {
       "name": "zod_schema_integration",
@@ -94,7 +99,8 @@
       "executed_at": "2025-12-22T20:36:00Z",
       "exit_code": 0,
       "passed": true,
-      "notes": "Zod schema from @intelliflow/validators integrated"
+      "notes": "Zod schema from @intelliflow/validators integrated",
+      "timestamp": "2025-12-22T20:40:00Z"
     },
     {
       "name": "cost_tracking",
@@ -102,7 +108,8 @@
       "executed_at": "2025-12-22T20:36:00Z",
       "exit_code": 0,
       "passed": true,
-      "notes": "Cost tracking for AI usage implemented"
+      "notes": "Cost tracking for AI usage implemented",
+      "timestamp": "2025-12-22T20:40:00Z"
     }
   ],
   "kpis": {

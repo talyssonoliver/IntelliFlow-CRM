@@ -106,7 +106,7 @@ function loadTrivyScan(): { vulnerabilities: Vulnerability[]; timestamp: string 
   return null;
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const pnpmAudit = loadPnpmAudit();
     const trivyScan = loadTrivyScan();

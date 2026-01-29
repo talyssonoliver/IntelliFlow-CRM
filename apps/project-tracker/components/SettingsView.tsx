@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Cpu, GitBranch, Activity, Link } from 'lucide-react';
+import { Icon } from '@/lib/icons';
 
 type SettingsSection = 'ai-agents' | 'devops' | 'monitoring' | 'integrations';
 
@@ -33,7 +33,7 @@ export default function SettingsView() {
                   : 'text-gray-700 hover:bg-gray-50'
               }`}
             >
-              <Cpu className="w-4 h-4" />
+              <Icon name="memory" size="sm" />
               AI Agents
             </button>
 
@@ -48,7 +48,7 @@ export default function SettingsView() {
                   : 'text-gray-700 hover:bg-gray-50'
               }`}
             >
-              <GitBranch className="w-4 h-4" />
+              <Icon name="account_tree" size="sm" />
               DevSecOps
             </button>
             <button
@@ -59,7 +59,7 @@ export default function SettingsView() {
                   : 'text-gray-700 hover:bg-gray-50'
               }`}
             >
-              <Activity className="w-4 h-4" />
+              <Icon name="monitoring" size="sm" />
               Monitoring
             </button>
             <button
@@ -70,7 +70,7 @@ export default function SettingsView() {
                   : 'text-gray-700 hover:bg-gray-50'
               }`}
             >
-              <Link className="w-4 h-4" />
+              <Icon name="link" size="sm" />
               External Services
             </button>
           </nav>

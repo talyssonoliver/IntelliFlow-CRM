@@ -17,6 +17,8 @@ import ContractsView from '@/components/ContractsView';
 import TaskModal from '@/components/TaskModal';
 import SprintExecutionView from '@/components/SprintExecutionView';
 import ArtifactsView from '@/components/ArtifactsView';
+import PerformanceReportView from '@/components/PerformanceReportView';
+import ScheduleView from '@/components/ScheduleView';
 
 type Page =
   | 'dashboard'
@@ -27,6 +29,8 @@ type Page =
   | 'governance'
   | 'contracts'
   | 'audit'
+  | 'performance'
+  | 'schedule'
   | 'settings'
   | 'sprint-execution';
 
@@ -219,6 +223,17 @@ export default function Home() {
               Execution
             </button>
             <button
+              onClick={() => setCurrentPage('schedule')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
+                currentPage === 'schedule'
+                  ? 'bg-red-600 text-white'
+                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              <Icon name="calendar_today" size="sm" />
+              Schedule
+            </button>
+            <button
               onClick={() => setCurrentPage('governance')}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
                 currentPage === 'governance'
@@ -250,6 +265,17 @@ export default function Home() {
             >
               <Icon name="terminal" size="sm" />
               Audit
+            </button>
+            <button
+              onClick={() => setCurrentPage('performance')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
+                currentPage === 'performance'
+                  ? 'bg-cyan-600 text-white'
+                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              <Icon name="speed" size="sm" />
+              Performance
             </button>
             <button
               onClick={() => setCurrentPage('settings')}
@@ -325,6 +351,8 @@ export default function Home() {
               <ContractsView tasks={filteredTasks} sprint={currentSprint} />
             )}
             {currentPage === 'audit' && <AuditView />}
+            {currentPage === 'performance' && <PerformanceReportView />}
+            {currentPage === 'schedule' && <ScheduleView />}
             {currentPage === 'settings' && <SettingsView />}
             {currentPage === 'sprint-execution' && (
               <SprintExecutionView

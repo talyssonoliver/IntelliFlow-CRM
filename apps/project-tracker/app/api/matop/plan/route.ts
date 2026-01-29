@@ -2,7 +2,13 @@ import { NextResponse } from 'next/server';
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
-import Papa from 'papaparse';
+import {
+  loadTasks,
+  updateTaskStatus,
+  updateTaskArtifacts,
+  canProceedToSession,
+  type TaskRecord,
+} from '@/lib/csv-status';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -12,48 +18,31 @@ interface PlanRequest {
   forceRegenerate?: boolean;
 }
 
-interface TaskRecord {
-  'Task ID': string;
-  Section: string;
-  Description: string;
-  Owner: string;
-  Dependencies: string;
-  'Pre-requisites': string;
-  'Definition of Done': string;
-  Status: string;
-  KPIs: string;
-  'Target Sprint': string;
-  'Artifacts To Track': string;
-  'Validation Method': string;
-}
-
 interface PhaseResult {
   status: string;
   path?: string;
-  sources?: number;
-  dependencies?: number;
-  patterns?: number;
   steps?: number;
   checkpoints?: number;
   effort?: string;
-  domain?: string;
-  agents?: string[];
-  acceptanceCriteria?: number;
 }
 
 /**
  * POST /api/matop/plan
  *
- * Runs MATOP Phases 0-2 for a task:
- * - Phase 0: Context Hydration (gather dependencies, codebase patterns)
- * - Phase 0.5: Agent Selection (pick optimal agents)
- * - Phase 1: Spec Session (generate specification)
+ * SESSION 2: Planning Session
+ * Runs MATOP Phase 2 for a task:
  * - Phase 2: Plan Session (generate TDD execution plan)
+ *
+ * Prerequisites: Spec must exist (SESSION 1 must be complete)
+ * Updates Sprint_plan.csv status: Planning -> Plan Complete
  */
 export async function POST(request: Request) {
+  let taskId: string | undefined;
+
   try {
     const body: PlanRequest = await request.json();
-    const { taskId, forceRegenerate = false } = body;
+    taskId = body.taskId;
+    const forceRegenerate = body.forceRegenerate || false;
 
     if (!taskId) {
       return NextResponse.json({ error: 'Task ID is required' }, { status: 400 });
@@ -62,34 +51,9 @@ export async function POST(request: Request) {
     // Resolve paths - go up from apps/project-tracker to project root
     const projectRoot = join(process.cwd(), '..', '..');
     const specifyDir = join(projectRoot, '.specify');
-    const specPath = join(specifyDir, 'specifications', `${taskId}-spec.md`);
-    const planPath = join(specifyDir, 'planning', `${taskId}-plan.md`);
-    const contextPath = join(specifyDir, 'context', taskId, 'hydrated-context.md');
-    const csvPath = join(process.cwd(), 'docs', 'metrics', '_global', 'Sprint_plan.csv');
-
-    // Check if already planned (unless force regenerate)
-    const specExists = existsSync(specPath);
-    const planExists = existsSync(planPath);
-    const contextExists = existsSync(contextPath);
-
-    if (specExists && planExists && contextExists && !forceRegenerate) {
-      return NextResponse.json({
-        success: true,
-        taskId,
-        status: 'already_planned',
-        phases: {
-          contextHydration: { status: 'exists', path: contextPath },
-          specification: { status: 'exists', path: specPath },
-          plan: { status: 'exists', path: planPath },
-        },
-        message: `${taskId} already has spec and plan. Use forceRegenerate: true to regenerate.`,
-      });
-    }
 
     // Load task from CSV
-    const csvContent = await readFile(csvPath, 'utf-8');
-    const { data } = Papa.parse<TaskRecord>(csvContent, { header: true, skipEmptyLines: true });
-    const tasks = data;
+    const tasks = await loadTasks();
     const task = tasks.find((t) => t['Task ID'] === taskId);
 
     if (!task) {
@@ -99,48 +63,82 @@ export async function POST(request: Request) {
       );
     }
 
-    // Ensure directories exist
-    await mkdir(join(specifyDir, 'specifications'), { recursive: true });
-    await mkdir(join(specifyDir, 'planning'), { recursive: true });
-    await mkdir(join(specifyDir, 'context', taskId), { recursive: true });
+    // Get sprint number from task
+    const sprintNumber = parseInt(task['Target Sprint'] || '0', 10);
+    const sprintDir = join(specifyDir, 'sprints', `sprint-${sprintNumber}`);
 
-    // Phase 0: Context Hydration
-    const contextResult = await generateContext(task, tasks, projectRoot);
-    await writeFile(contextPath, contextResult.content, 'utf-8');
+    // Sprint-based paths
+    const specPath = join(sprintDir, 'specifications', `${taskId}-spec.md`);
+    const planPath = join(sprintDir, 'planning', `${taskId}-plan.md`);
+    const _contextPath = join(sprintDir, 'context', taskId, 'hydrated-context.md');
 
-    // Phase 0.5: Agent Selection
-    const agentResult = selectAgentsForTask(task);
+    // Check prerequisites - must have spec (check both new and legacy locations)
+    const legacySpecPath = join(specifyDir, 'specifications', `${taskId}-spec.md`);
+    const specExists = existsSync(specPath) || existsSync(legacySpecPath);
+    if (!specExists) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Spec required for ${taskId}. Run SESSION 1: Spec first.`,
+          requiredSession: 'spec',
+          currentStatus: task.Status,
+        },
+        { status: 400 }
+      );
+    }
 
-    // Phase 1: Specification
-    const specContent = generateSpecification(task, tasks, agentResult.agents);
-    await writeFile(specPath, specContent, 'utf-8');
+    // Validate session progression
+    const canProceed = canProceedToSession(task, 'plan');
+    if (!canProceed.canProceed && !forceRegenerate) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: canProceed.reason,
+          currentStatus: task.Status,
+        },
+        { status: 400 }
+      );
+    }
 
-    // Phase 2: Plan
-    const planContent = generatePlan(task, agentResult.domain);
+    // Check if already has plan (unless force regenerate)
+    const planExists = existsSync(planPath);
+    if (planExists && !forceRegenerate) {
+      return NextResponse.json({
+        success: true,
+        taskId,
+        status: 'already_planned',
+        phases: {
+          plan: { status: 'exists', path: planPath },
+        },
+        message: `${taskId} already has plan. Use forceRegenerate: true to regenerate.`,
+      });
+    }
+
+    // Update status to "Planning" at the start
+    await updateTaskStatus(taskId, 'Planning');
+
+    // Ensure sprint directories exist
+    await mkdir(join(sprintDir, 'planning'), { recursive: true });
+
+    // Read spec to get domain info (try new path first, then legacy)
+    const actualSpecPath = existsSync(specPath) ? specPath : legacySpecPath;
+    const specContent = await readFile(actualSpecPath, 'utf-8');
+    const domain = extractDomainFromSpec(specContent);
+
+    // Phase 2: Plan Generation
+    const planContent = generatePlan(task, domain, sprintNumber);
     await writeFile(planPath, planContent, 'utf-8');
 
     // Update task artifacts in CSV
-    await updateTaskArtifacts(taskId, csvPath, tasks);
+    await updateTaskArtifacts(taskId, {
+      plan: `.specify/sprints/sprint-${sprintNumber}/planning/${taskId}-plan.md`,
+    });
+
+    // Update status to "Plan Complete"
+    await updateTaskStatus(taskId, 'Plan Complete');
 
     // Build response
     const phases: Record<string, PhaseResult> = {
-      contextHydration: {
-        status: 'completed',
-        path: contextPath,
-        sources: contextResult.sources,
-        dependencies: contextResult.dependencies,
-        patterns: contextResult.patterns,
-      },
-      agentSelection: {
-        status: 'completed',
-        domain: agentResult.domain,
-        agents: agentResult.agents,
-      },
-      specification: {
-        status: 'completed',
-        path: specPath,
-        acceptanceCriteria: task['Definition of Done']?.split(';').filter(Boolean).length || 0,
-      },
       plan: {
         status: 'completed',
         path: planPath,
@@ -153,16 +151,28 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       taskId,
-      status: 'planned',
+      status: 'plan_complete',
+      csvStatus: 'Plan Complete',
       phases,
-      message: `${taskId} planned using MATOP workflow. Context: ${contextResult.sources} sources, ${contextResult.dependencies} deps. Plan: ${phases.plan.steps} steps.`,
+      message: `SESSION 2 complete: ${taskId} plan generated. ${phases.plan.steps} steps, ${phases.plan.effort} estimated. Ready for SESSION 3: Exec.`,
+      nextSession: 'exec',
     });
   } catch (error) {
-    console.error('MATOP planning failed:', error);
+    console.error('MATOP plan session failed:', error);
+
+    // Rollback status on failure
+    if (taskId) {
+      try {
+        await updateTaskStatus(taskId, 'Spec Complete');
+      } catch {
+        // Ignore rollback errors
+      }
+    }
+
     return NextResponse.json(
       {
         success: false,
-        error: 'MATOP planning failed',
+        error: 'MATOP plan session failed',
         details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
@@ -170,249 +180,39 @@ export async function POST(request: Request) {
   }
 }
 
-async function generateContext(
-  task: TaskRecord,
-  allTasks: TaskRecord[],
-  projectRoot: string
-): Promise<{ content: string; sources: number; dependencies: number; patterns: number }> {
-  const deps = task.Dependencies?.split(',').map((d) => d.trim()).filter(Boolean) || [];
+function extractDomainFromSpec(specContent: string): string {
+  // Try to extract domain from spec content
+  const domainMatch = specContent.match(/Domain:\s*(\w+)/i);
+  if (domainMatch) {
+    return domainMatch[1].toLowerCase();
+  }
 
-  // Get dependency details
-  const depDetails = deps.map((depId) => {
-    const depTask = allTasks.find((t) => t['Task ID'] === depId);
-    return {
-      taskId: depId,
-      description: depTask?.Description || 'Not found',
-      status: depTask?.Status || 'Unknown',
-      artifacts: depTask?.['Artifacts To Track'] || '',
-    };
-  });
+  // Infer from agents mentioned
+  if (specContent.includes('Frontend-Lead')) return 'frontend';
+  if (specContent.includes('Backend-Architect')) return 'backend';
+  if (specContent.includes('AI-Specialist')) return 'ai';
+  if (specContent.includes('Security-Lead')) return 'security';
+  if (specContent.includes('DevOps-Lead')) return 'devops';
 
-  // Check for existing specs/plans from dependencies
-  const specifyDir = join(projectRoot, '.specify');
-  const depArtifacts = await Promise.all(
-    deps.map(async (depId) => {
-      const depSpecPath = join(specifyDir, 'specifications', `${depId}-spec.md`);
-      const depPlanPath = join(specifyDir, 'planning', `${depId}-plan.md`);
-      return {
-        taskId: depId,
-        hasSpec: existsSync(depSpecPath),
-        hasPlan: existsSync(depPlanPath),
-      };
-    })
-  );
-
-  // Simple pattern matching - look for keywords in task description
-  const keywords = extractKeywords(task.Description);
-  const patterns = keywords.slice(0, 5);
-
-  const content = `# Hydrated Context: ${task['Task ID']}
-
-## Task Metadata
-
-- **Task ID**: ${task['Task ID']}
-- **Section**: ${task.Section}
-- **Owner**: ${task.Owner}
-- **Sprint**: ${task['Target Sprint']}
-- **Status**: ${task.Status}
-
-## Description
-
-${task.Description}
-
-## Definition of Done
-
-${task['Definition of Done'] || 'None specified'}
-
-## KPIs
-
-${task.KPIs || 'None specified'}
-
-## Pre-requisites
-
-${task['Pre-requisites'] || 'None specified'}
-
-## Dependency Chain
-
-${depDetails.length > 0 ? depDetails.map((d) => `### ${d.taskId}
-- **Status**: ${d.status}
-- **Description**: ${d.description}
-- **Artifacts**: ${d.artifacts || 'None'}`).join('\n\n') : 'No dependencies'}
-
-## Dependency Artifacts
-
-${depArtifacts.map((a) => `- **${a.taskId}**: Spec: ${a.hasSpec ? 'Yes' : 'No'}, Plan: ${a.hasPlan ? 'Yes' : 'No'}`).join('\n') || 'None'}
-
-## Codebase Patterns
-
-Keywords extracted for pattern matching:
-${patterns.map((p) => `- ${p}`).join('\n') || '- No patterns identified'}
-
-## Project Knowledge
-
-- **CLAUDE.md**: Project conventions and standards
-- **Architecture docs**: docs/planning/adr/
-- **Domain models**: packages/domain/src/
-- **Validators**: packages/validators/src/
-
-## Context Sources
-
-1. Sprint_plan.csv (task metadata)
-2. Dependency chain analysis (${deps.length} dependencies)
-3. Artifact verification (.specify/ directory)
-4. Keyword extraction (${patterns.length} patterns)
-
----
-
-*Generated: ${new Date().toISOString()}*
-*Mode: MATOP Context Hydration*
-`;
-
-  return {
-    content,
-    sources: 4,
-    dependencies: deps.length,
-    patterns: patterns.length,
-  };
+  return 'general';
 }
 
-function selectAgentsForTask(task: TaskRecord): { domain: string; agents: string[] } {
-  const text = `${task.Description} ${task.Section}`.toLowerCase();
-
-  let domain = 'general';
-  const agents: string[] = ['Domain-Expert', 'Test-Engineer']; // Always included
-
-  if (text.match(/frontend|ui|component|page|form|dashboard|react|next/)) {
-    domain = 'frontend';
-    agents.push('Frontend-Lead');
-  }
-  if (text.match(/backend|api|router|endpoint|database|prisma|trpc/)) {
-    domain = 'backend';
-    agents.push('Backend-Architect');
-  }
-  if (text.match(/ai|ml|embedding|vector|langchain|model|agent|llm/)) {
-    domain = 'ai';
-    agents.push('AI-Specialist');
-  }
-  if (text.match(/security|auth|permission|encrypt|token|rbac/)) {
-    domain = 'security';
-    agents.push('Security-Lead');
-  }
-  if (text.match(/docker|deploy|ci|pipeline|infra|monitoring/)) {
-    domain = 'devops';
-    agents.push('DevOps-Lead');
-  }
-  if (text.match(/schema|migration|query|database|model|prisma/)) {
-    agents.push('Data-Engineer');
-  }
-
-  // Ensure at least 3 agents
-  if (agents.length < 3) {
-    agents.push('Backend-Architect');
-  }
-
-  return { domain, agents: [...new Set(agents)].slice(0, 5) };
-}
-
-function generateSpecification(task: TaskRecord, allTasks: TaskRecord[], agents: string[]): string {
-  const deps = task.Dependencies?.split(',').map((d) => d.trim()).filter(Boolean) || [];
-  const depDetails = deps.map((depId) => {
-    const depTask = allTasks.find((t) => t['Task ID'] === depId);
-    return depTask
-      ? `- **${depId}**: ${depTask.Description}`
-      : `- **${depId}**: (not found)`;
-  }).join('\n');
-
-  const dod = task['Definition of Done']?.split(';').map((d) => d.trim()).filter(Boolean) || [];
-  const artifacts = task['Artifacts To Track']?.split(';')
-    .filter((a) => a.startsWith('ARTIFACT:'))
-    .map((a) => a.replace('ARTIFACT:', '').trim()) || [];
-
-  return `# Specification: ${task['Task ID']}
-
-## Overview
-
-**Task ID**: ${task['Task ID']}
-**Section**: ${task.Section}
-**Owner**: ${task.Owner}
-**Sprint**: ${task['Target Sprint']}
-**Generated By**: MATOP Spec Session
-
-## Description
-
-${task.Description}
-
-## Technical Approach
-
-This task will be implemented following these principles:
-1. **Context-Driven**: All implementation decisions informed by hydrated context
-2. **TDD-Based**: Test-first development with RED → GREEN → REFACTOR cycle
-3. **Agent-Verified**: Specification reviewed by domain experts
-
-### Selected Agents
-
-${agents.map((a) => `- ${a}`).join('\n')}
-
-## Dependencies
-
-${depDetails || 'No dependencies'}
-
-## Components to Create
-
-| Component | Type | Location | Purpose |
-|-----------|------|----------|---------|
-${artifacts.map((a) => `| ${a.split('/').pop()} | Implementation | \`${a}\` | Task artifact |`).join('\n') || '| TBD | Implementation | TBD | See Definition of Done |'}
-
-## Acceptance Criteria
-
-${dod.map((d, i) => `- [ ] AC-${i + 1}: ${d}`).join('\n') || '- [ ] AC-1: Implementation complete\n- [ ] AC-2: Tests passing'}
-
-## Test Requirements
-
-### Unit Tests
-- Unit tests for all new functions/methods
-- Edge case coverage for business logic
-- Mocking for external dependencies
-
-### Integration Tests
-- API endpoint tests (if applicable)
-- Data flow validation
-- Cross-module integration
-
-### Edge Cases
-${dod.map((d) => `- Verify: ${d}`).join('\n') || '- Standard edge case coverage'}
-
-## KPIs
-
-${task.KPIs || 'None specified'}
-
-## Risks & Mitigations
-
-| Risk | Mitigation |
-|------|------------|
-| Dependencies incomplete | Verify status before starting |
-| Scope creep | Stick strictly to Definition of Done |
-| Integration issues | Run integration tests early |
-
-## Agent Sign-off
-
-${agents.map((a) => `- [ ] ${a}: Pending`).join('\n')}
-
----
-
-*Generated: ${new Date().toISOString()}*
-*MATOP Phase 1: Spec Session*
-`;
-}
-
-function generatePlan(task: TaskRecord, domain: string): string {
-  const dod = task['Definition of Done']?.split(';').map((d) => d.trim()).filter(Boolean) || [];
-  const artifacts = task['Artifacts To Track']?.split(';')
-    .filter((a) => a.startsWith('ARTIFACT:'))
-    .map((a) => a.replace('ARTIFACT:', '').trim()) || [];
-  const validations = task['Validation Method']?.split(';')
-    .filter((v) => v.startsWith('VALIDATE:'))
-    .map((v) => v.replace('VALIDATE:', '').trim()) || [];
+function generatePlan(task: TaskRecord, domain: string, sprintNumber: number = 0): string {
+  const dod =
+    task['Definition of Done']
+      ?.split(';')
+      .map((d) => d.trim())
+      .filter(Boolean) || [];
+  const artifacts =
+    task['Artifacts To Track']
+      ?.split(';')
+      .filter((a) => a.startsWith('ARTIFACT:'))
+      .map((a) => a.replace('ARTIFACT:', '').trim()) || [];
+  const validations =
+    task['Validation Method']
+      ?.split(';')
+      .filter((v) => v.startsWith('VALIDATE:'))
+      .map((v) => v.replace('VALIDATE:', '').trim()) || [];
 
   const totalSteps = 2 + dod.length + 2; // Setup + DoD items + Integration + Validation
 
@@ -423,11 +223,12 @@ function generatePlan(task: TaskRecord, domain: string): string {
 This plan decomposes the specification into actionable TDD steps.
 - **Domain**: ${domain}
 - **Total Steps**: ${totalSteps}
+- **Generated By**: MATOP SESSION 2 - Plan
 
 ## Pre-flight Checks
 
 1. [ ] Dependencies verified: ${task.Dependencies || 'None'}
-2. [ ] Specification reviewed: \`.specify/specifications/${task['Task ID']}-spec.md\`
+2. [ ] Specification reviewed: \`.specify/sprints/sprint-${sprintNumber}/specifications/${task['Task ID']}-spec.md\`
 3. [ ] Context pack acknowledged
 4. [ ] Feature branch created: \`feat/${task['Task ID'].toLowerCase()}\`
 
@@ -438,8 +239,8 @@ This plan decomposes the specification into actionable TDD steps.
 **TDD Phase**: N/A
 **Duration**: 15 min
 **Actions**:
-- [ ] Review specification at \`.specify/specifications/${task['Task ID']}-spec.md\`
-- [ ] Review hydrated context at \`.specify/context/${task['Task ID']}/hydrated-context.md\`
+- [ ] Review specification at \`.specify/sprints/sprint-${sprintNumber}/specifications/${task['Task ID']}-spec.md\`
+- [ ] Review hydrated context at \`.specify/sprints/sprint-${sprintNumber}/context/${task['Task ID']}/hydrated-context.md\`
 - [ ] Verify all dependencies are complete
 - [ ] Create feature branch
 
@@ -454,9 +255,11 @@ This plan decomposes the specification into actionable TDD steps.
 
 ## Phase 2: Implementation (TDD)
 
-${dod.map((d, i) => `### Step ${i + 3}: ${d}
+${dod
+  .map(
+    (d, i) => `### Step ${i + 3}: ${d}
 **Type**: Implementation
-**TDD Phase**: RED → GREEN → REFACTOR
+**TDD Phase**: RED -> GREEN -> REFACTOR
 **Acceptance Criteria**: AC-${i + 1}
 **Duration**: ${estimateStepDuration(d)}
 **Actions**:
@@ -464,7 +267,9 @@ ${dod.map((d, i) => `### Step ${i + 3}: ${d}
 - [ ] Implement minimal code to pass (GREEN)
 - [ ] Refactor for quality (REFACTOR)
 - [ ] Verify AC-${i + 1} is satisfied
-`).join('\n')}
+`
+  )
+  .join('\n')}
 
 ## Phase 3: Integration & Validation
 
@@ -483,7 +288,7 @@ ${dod.map((d, i) => `### Step ${i + 3}: ${d}
 **TDD Phase**: N/A
 **Duration**: 20 min
 **Actions**:
-${validations.map((v) => `- [ ] Run: \`${v}\``).join('\n') || '- [ ] Manual validation review'}
+${validations.map((v: string) => `- [ ] Run: \`${v}\``).join('\n') || '- [ ] Manual validation review'}
 - [ ] Create evidence bundle
 - [ ] Update task status
 
@@ -497,7 +302,10 @@ ${validations.map((v) => `- [ ] Run: \`${v}\``).join('\n') || '- [ ] Manual vali
 
 ## Expected Artifacts
 
-${artifacts.map((a) => `- [ ] \`${a}\``).join('\n') || `- [ ] Implementation files for ${task['Task ID']}\n- [ ] Test files`}
+${
+  artifacts.map((a: string) => `- [ ] \`${a}\``).join('\n') ||
+  `- [ ] Implementation files for ${task['Task ID']}\n- [ ] Test files`
+}
 
 ## Estimated Effort
 
@@ -522,48 +330,9 @@ ${artifacts.map((a) => `- [ ] \`${a}\``).join('\n') || `- [ ] Implementation fil
 ---
 
 *Generated: ${new Date().toISOString()}*
-*MATOP Phase 2: Plan Session*
+*Session: MATOP SESSION 2 - Plan*
+*Next: SESSION 3 - Exec*
 `;
-}
-
-async function updateTaskArtifacts(taskId: string, csvPath: string, tasks: TaskRecord[]): Promise<void> {
-  const taskIndex = tasks.findIndex((t) => t['Task ID'] === taskId);
-  if (taskIndex === -1) return;
-
-  const task = tasks[taskIndex];
-  const currentArtifacts = task['Artifacts To Track'] || '';
-
-  // Add SPEC and PLAN artifacts if not present
-  const specArtifact = `SPEC:.specify/specifications/${taskId}-spec.md`;
-  const planArtifact = `PLAN:.specify/planning/${taskId}-plan.md`;
-  const contextArtifact = `CONTEXT:.specify/context/${taskId}/hydrated-context.md`;
-
-  const parts = currentArtifacts.split(';').map((p) => p.trim()).filter(Boolean);
-  const hasSpec = parts.some((p) => p.startsWith('SPEC:'));
-  const hasPlan = parts.some((p) => p.startsWith('PLAN:'));
-  const hasContext = parts.some((p) => p.startsWith('CONTEXT:'));
-
-  const newParts = [...parts];
-  if (!hasSpec) newParts.unshift(specArtifact);
-  if (!hasPlan) newParts.unshift(planArtifact);
-  if (!hasContext) newParts.unshift(contextArtifact);
-
-  if (!hasSpec || !hasPlan || !hasContext) {
-    tasks[taskIndex] = {
-      ...task,
-      'Artifacts To Track': newParts.join(';'),
-      Status: task.Status === 'Backlog' ? 'Planned' : task.Status,
-    };
-
-    const updatedCsv = Papa.unparse(tasks, { header: true, quotes: true });
-    await writeFile(csvPath, updatedCsv, 'utf-8');
-  }
-}
-
-function extractKeywords(description: string): string[] {
-  const words = description.toLowerCase().split(/\W+/);
-  const stopWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'shall', 'can', 'this', 'that', 'these', 'those', 'it', 'its']);
-  return words.filter((w) => w.length > 3 && !stopWords.has(w));
 }
 
 function countPlanSteps(task: TaskRecord): number {

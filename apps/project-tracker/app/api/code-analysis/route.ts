@@ -12,9 +12,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { execSync } from 'child_process';
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
+import { MONOREPO_ROOT, PATHS } from '../../../lib/paths';
 
-const PROJECT_ROOT = process.cwd().replace(/[\\/]apps[\\/]project-tracker$/, '');
-const CACHE_DIR = join(PROJECT_ROOT, 'artifacts', 'reports', 'code-analysis');
+const PROJECT_ROOT = MONOREPO_ROOT;
+const CACHE_DIR = join(PATHS.artifacts.reports, 'code-analysis');
 const CACHE_FILE = join(CACHE_DIR, 'latest.json');
 
 interface KnipResult {
@@ -176,7 +177,7 @@ function runKnip(): AnalysisResult['knip'] {
     // Knip exits with non-zero when issues are found, so we need to handle that
     let output = '';
     try {
-      output = execSync('npx knip --reporter json --exclude unlisted,unresolved', {
+      output = execSync('npx knip --reporter json --exclude unlisted,unresolved --no-gitignore', {
         cwd: PROJECT_ROOT,
         encoding: 'utf-8',
         timeout: 120000, // 2 minutes

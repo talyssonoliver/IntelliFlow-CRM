@@ -8,7 +8,7 @@
     "required": [
       "IFC-013"
     ],
-    "verified_at": "2026-01-08T23:28:12.896Z",
+    "verified_at": "2026-01-29T01:33:17.627Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -54,14 +54,16 @@
       "command": "test -f apps/api/src/middleware/rate-limit.ts",
       "passed": true,
       "exit_code": 0,
-      "executed_at": "2025-12-21T17:00:00Z"
+      "executed_at": "2025-12-21T17:00:00Z",
+      "timestamp": "2025-12-27T11:33:39.930Z"
     },
     {
       "name": "rate_limit_config_exists",
       "command": "test -f artifacts/misc/rate-limit-config.yaml",
       "passed": true,
       "exit_code": 0,
-      "executed_at": "2025-12-21T17:00:00Z"
+      "executed_at": "2025-12-21T17:00:00Z",
+      "timestamp": "2025-12-27T11:33:39.930Z"
     }
   ],
   "kpis": {

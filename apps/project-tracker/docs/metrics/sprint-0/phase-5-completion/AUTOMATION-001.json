@@ -9,7 +9,7 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-01-08T23:28:09.463Z",
+    "verified_at": "2026-01-29T01:33:17.573Z",
     "required": [
       "AI-SETUP-001",
       "AI-SETUP-002",
@@ -70,7 +70,8 @@
       "exit_code": 0,
       "passed": true,
       "stdout_hash": "sha256:QVVUT01BVElPTi0wMDEtQUkgYWdlbnQg",
-      "notes": "Validation passed"
+      "notes": "Validation passed",
+      "timestamp": "2025-12-19T00:58:54.062Z"
     },
     {
       "name": "Orchestration configuration exists",
@@ -81,7 +82,8 @@
       "exit_code": 0,
       "passed": true,
       "stdout_hash": "sha256:QVVUT01BVElPTi0wMDEtT3JjaGVzdHJh",
-      "notes": "Validation passed"
+      "notes": "Validation passed",
+      "timestamp": "2025-12-19T00:58:54.062Z"
     }
   ],
   "blockers": [],
@@ -89,12 +91,14 @@
   "status_history": [
     {
       "status": "IN_PROGRESS",
-      "timestamp": "2025-12-19T00:43:54.062Z"
+      "timestamp": "2025-12-19T00:43:54.062Z",
+      "at": "2025-12-19T00:58:54.062Z"
     },
     {
       "status": "DONE",
       "timestamp": "2025-12-23T19:15:00.000Z",
-      "note": "STOA framework active, MATOP orchestration operational"
+      "note": "STOA framework active, MATOP orchestration operational",
+      "at": "2025-12-19T00:58:54.062Z"
     }
   ]
 }

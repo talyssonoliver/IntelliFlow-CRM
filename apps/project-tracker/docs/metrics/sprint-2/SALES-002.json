@@ -9,7 +9,7 @@
       "SALES-001",
       "GTM-002"
     ],
-    "verified_at": "2026-01-08T23:28:12.263Z",
+    "verified_at": "2026-01-29T01:33:17.614Z",
     "all_satisfied": true,
     "notes": "Commercial narrative established, qualification framework (BANT) documented"
   },
@@ -57,7 +57,8 @@
       "command": "ls docs/sales/sales-motion-playbook.md",
       "executed_at": "2025-12-22T21:10:00Z",
       "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "timestamp": "2025-12-22T21:15:00Z"
     },
     {
       "name": "playbook_has_qualification",
@@ -65,28 +66,32 @@
       "executed_at": "2025-12-22T21:10:00Z",
       "exit_code": 0,
       "passed": true,
-      "notes": "BANT qualification framework documented"
+      "notes": "BANT qualification framework documented",
+      "timestamp": "2025-12-22T21:15:00Z"
     },
     {
       "name": "discovery_script_exists",
       "command": "ls docs/sales/discovery-script.md",
       "executed_at": "2025-12-22T21:10:00Z",
       "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "timestamp": "2025-12-22T21:15:00Z"
     },
     {
       "name": "demo_script_exists",
       "command": "ls docs/sales/demo-script.md",
       "executed_at": "2025-12-22T21:10:00Z",
       "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "timestamp": "2025-12-22T21:15:00Z"
     },
     {
       "name": "outreach_sequences_exist",
       "command": "ls docs/sales/outreach-sequences.md",
       "executed_at": "2025-12-22T21:10:00Z",
       "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "timestamp": "2025-12-22T21:15:00Z"
     },
     {
       "name": "email_sequence_defined",
@@ -94,7 +99,8 @@
       "executed_at": "2025-12-22T21:10:00Z",
       "exit_code": 0,
       "passed": true,
-      "notes": "Email outreach sequence with 6 touches documented"
+      "notes": "Email outreach sequence with 6 touches documented",
+      "timestamp": "2025-12-22T21:15:00Z"
     },
     {
       "name": "linkedin_sequence_defined",
@@ -102,7 +108,8 @@
       "executed_at": "2025-12-22T21:10:00Z",
       "exit_code": 0,
       "passed": true,
-      "notes": "LinkedIn outreach sequence documented"
+      "notes": "LinkedIn outreach sequence documented",
+      "timestamp": "2025-12-22T21:15:00Z"
     },
     {
       "name": "handoff_policy_defined",
@@ -110,7 +117,8 @@
       "executed_at": "2025-12-22T21:10:00Z",
       "exit_code": 0,
       "passed": true,
-      "notes": "Marketing-to-Sales and Sales-to-Implementation handoff documented"
+      "notes": "Marketing-to-Sales and Sales-to-Implementation handoff documented",
+      "timestamp": "2025-12-22T21:15:00Z"
     }
   ],
   "kpis": {

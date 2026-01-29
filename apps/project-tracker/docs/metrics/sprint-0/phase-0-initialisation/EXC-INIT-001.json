@@ -9,7 +9,7 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-01-08T23:28:07.240Z",
+    "verified_at": "2026-01-29T01:33:17.549Z",
     "required": []
   },
   "dependencies_resolved": [],
@@ -20,19 +20,19 @@
   "kpis": {
     "setup_time_hours": {
       "target": 4,
-      "actual": null,
+      "actual": "N/A",
       "unit": "hours",
       "met": false
     },
     "automation_percentage": {
       "target": 80,
-      "actual": null,
+      "actual": "N/A",
       "unit": "percent",
       "met": false
     },
     "manual_configuration_errors": {
       "target": 0,
-      "actual": null,
+      "actual": "N/A",
       "unit": "count",
       "met": false
     }
@@ -52,7 +52,8 @@
       "exit_code": 0,
       "passed": true,
       "stdout_hash": "sha256:RVhDLUlOSVQtMDAxLUNoZWNrIENsYXVk",
-      "notes": "Validation passed"
+      "notes": "Validation passed",
+      "timestamp": "2025-12-14T20:05:00Z"
     },
     {
       "name": "Check automation metrics artifact",
@@ -63,7 +64,8 @@
       "exit_code": 0,
       "passed": true,
       "stdout_hash": "sha256:RVhDLUlOSVQtMDAxLUNoZWNrIGF1dG9t",
-      "notes": "Validation passed"
+      "notes": "Validation passed",
+      "timestamp": "2025-12-14T20:05:00Z"
     }
   ],
   "blockers": [],

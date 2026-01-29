@@ -6,10 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { readFileSync, existsSync } from 'fs';
-import {
-  scanArtifactRegistry,
-  MissingArtifact,
-} from '@/lib/artifact-registry';
+import { scanArtifactRegistry } from '@/lib/artifact-registry';
 import { PATHS } from '@/lib/paths';
 
 interface MissingSummary {

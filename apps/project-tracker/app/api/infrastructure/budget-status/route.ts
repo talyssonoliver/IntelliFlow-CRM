@@ -107,7 +107,7 @@ function loadBudgetData(): { lines: BudgetLine[]; milestones: MilestonePayment[]
   return { lines, milestones: milestones.sort((a, b) => a.taskId.localeCompare(b.taskId)) };
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const { lines, milestones } = loadBudgetData();
 

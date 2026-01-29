@@ -9,7 +9,7 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-01-08T23:28:09.742Z",
+    "verified_at": "2026-01-29T01:33:17.578Z",
     "required": [
       "DOC-001"
     ]
@@ -42,7 +42,8 @@
       "command": "verify docs/company/brand/*.tokens.json exist",
       "executed_at": "2025-12-20T00:00:00Z",
       "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "timestamp": "2025-12-21T07:21:10.544Z"
     }
   ],
   "blockers": [],

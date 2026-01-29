@@ -360,7 +360,7 @@ export function killSubprocess(runId: string, taskId: string): boolean {
 export function killAllSubprocesses(runId: string): number {
   let killed = 0;
 
-  for (const [key, active] of activeProcesses.entries()) {
+  for (const [_key, active] of activeProcesses.entries()) {
     if (active.runId === runId) {
       active.process.kill('SIGTERM');
       killed++;
@@ -369,7 +369,7 @@ export function killAllSubprocesses(runId: string): number {
 
   // Force kill after 5 seconds
   setTimeout(() => {
-    for (const [key, active] of activeProcesses.entries()) {
+    for (const [_key, active] of activeProcesses.entries()) {
       if (active.runId === runId) {
         active.process.kill('SIGKILL');
       }

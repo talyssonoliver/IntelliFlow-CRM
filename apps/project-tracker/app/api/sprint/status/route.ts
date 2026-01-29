@@ -4,7 +4,6 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import type {
   SprintExecutionState,
-  PhaseProgress,
   SubAgentInfo,
 } from '../../../../../../tools/scripts/lib/sprint/types';
 
@@ -65,10 +64,7 @@ export async function GET(request: Request) {
         .sort((a, b) => new Date(b[1].startedAt).getTime() - new Date(a[1].startedAt).getTime());
 
       if (runs.length === 0) {
-        // Check for persisted runs
-        const projectRoot = join(process.cwd(), '..', '..');
-        const runsDir = join(projectRoot, 'artifacts', 'sprint-runs');
-
+        // No active runs in memory for this sprint
         return NextResponse.json({
           success: true,
           sprintNumber: sprint,
@@ -261,7 +257,7 @@ export async function POST(request: Request) {
         };
         break;
 
-      case 'agent_spawn':
+      case 'agent_spawn': {
         const newAgent: SubAgentInfo = {
           agentId: update.agentId,
           taskId: update.taskId,
@@ -276,6 +272,7 @@ export async function POST(request: Request) {
           activeSubAgents: [...existingState!.activeSubAgents, newAgent],
         };
         break;
+      }
 
       case 'agent_complete':
         newState = {

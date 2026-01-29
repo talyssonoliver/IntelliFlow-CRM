@@ -14,7 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { loadCSVTasks } from '@/lib/governance';
 import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
-import { join, basename, dirname } from 'path';
+import { join } from 'path';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -69,24 +69,59 @@ function getFileInfo(filePath: string): { exists: boolean; size?: number; modifi
   return { exists: false };
 }
 
+// Get task sprint number from CSV (cached for performance)
+const taskSprintCache = new Map<string, number>();
+
+function getTaskSprint(taskId: string): number {
+  if (taskSprintCache.has(taskId)) {
+    return taskSprintCache.get(taskId)!;
+  }
+
+  const projectRoot = getProjectRoot();
+  const csvPath = join(projectRoot, 'apps', 'project-tracker', 'docs', 'metrics', '_global', 'Sprint_plan.csv');
+
+  try {
+    const content = readFileSync(csvPath, 'utf-8');
+    const lines = content.split('\n');
+    const headers = lines[0].split(',');
+    const taskIdIndex = headers.findIndex(h => h.includes('Task ID'));
+    const sprintIndex = headers.findIndex(h => h.includes('Target Sprint'));
+
+    for (let i = 1; i < lines.length; i++) {
+      const row = lines[i].split(',');
+      if (row[taskIdIndex]?.trim() === taskId) {
+        const sprint = parseInt(row[sprintIndex]?.trim() || '0', 10);
+        taskSprintCache.set(taskId, sprint);
+        return sprint;
+      }
+    }
+  } catch {
+    // Ignore errors
+  }
+
+  taskSprintCache.set(taskId, 0);
+  return 0;
+}
+
 // Find attestation for a task
 function findAttestation(taskId: string): TraceLink | null {
   const projectRoot = getProjectRoot();
-  const attestationDir = join(projectRoot, 'artifacts', 'attestations', taskId);
+  const sprintNumber = getTaskSprint(taskId);
+
+  // Sprint-based attestation path
+  const attestationDir = join(projectRoot, '.specify', 'sprints', `sprint-${sprintNumber}`, 'attestations', taskId);
+  const attestationFile = join(attestationDir, 'attestation.json');
 
   try {
-    if (existsSync(attestationDir)) {
-      const ackPath = join(attestationDir, 'context_ack.json');
-      if (existsSync(ackPath)) {
-        const stats = statSync(ackPath);
-        return {
-          type: 'attestation',
-          path: `artifacts/attestations/${taskId}/context_ack.json`,
-          exists: true,
-          size: stats.size,
-          modifiedAt: stats.mtime.toISOString(),
-        };
-      }
+    if (existsSync(attestationFile)) {
+      const stats = statSync(attestationFile);
+      return {
+        type: 'attestation',
+        path: `.specify/sprints/sprint-${sprintNumber}/attestations/${taskId}/attestation.json`,
+        exists: true,
+        size: stats.size,
+        modifiedAt: stats.mtime.toISOString(),
+      };
     }
   } catch {
     // Ignore errors
@@ -154,9 +189,10 @@ function findRelatedTests(taskId: string): TraceLink[] {
 }
 
 // Find related documentation
-function findRelatedDocs(taskId: string, section: string): TraceLink[] {
+function findRelatedDocs(taskId: string, _section: string): TraceLink[] {
   const projectRoot = getProjectRoot();
   const docs: TraceLink[] = [];
+  const sprintNumber = getTaskSprint(taskId);
 
   // Check for ADR
   const adrDir = join(projectRoot, 'docs', 'planning', 'adr');
@@ -182,8 +218,8 @@ function findRelatedDocs(taskId: string, section: string): TraceLink[] {
     // Ignore errors
   }
 
-  // Check for task-specific context pack
-  const contextPackPath = `artifacts/attestations/${taskId}/context_pack.md`;
+  // Check for task-specific context pack (sprint-based path)
+  const contextPackPath = `.specify/sprints/sprint-${sprintNumber}/attestations/${taskId}/context_pack.md`;
   const contextInfo = getFileInfo(contextPackPath);
   if (contextInfo.exists) {
     docs.push({
@@ -195,8 +231,8 @@ function findRelatedDocs(taskId: string, section: string): TraceLink[] {
     });
   }
 
-  // Check for implementation spec
-  const implSpecPath = `artifacts/attestations/${taskId}/implementation-spec.md`;
+  // Check for implementation spec (sprint-based path)
+  const implSpecPath = `.specify/sprints/sprint-${sprintNumber}/attestations/${taskId}/implementation-spec.md`;
   const implInfo = getFileInfo(implSpecPath);
   if (implInfo.exists) {
     docs.push({

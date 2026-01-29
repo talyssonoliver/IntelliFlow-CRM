@@ -80,7 +80,7 @@ function loadZapReport(): { alerts: ZapAlert[]; timestamp: string; site: string 
   return null;
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const zapReport = loadZapReport();
 

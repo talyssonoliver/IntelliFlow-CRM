@@ -1,17 +1,6 @@
 'use client';
 
-import {
-  FileText,
-  Folder,
-  Key,
-  Shield,
-  CheckCircle,
-  Terminal,
-  Lock,
-  Eye,
-  Package,
-  LucideIcon,
-} from 'lucide-react';
+import { Icon, type IconName } from '@/lib/icons';
 
 export type ContractTagType =
   | 'FILE'
@@ -33,60 +22,60 @@ interface ContractTagBadgeProps {
 
 const TAG_CONFIG: Record<
   ContractTagType,
-  { color: string; bgColor: string; icon: LucideIcon; label: string }
+  { color: string; bgColor: string; icon: IconName; label: string }
 > = {
   FILE: {
     color: 'text-blue-700',
     bgColor: 'bg-blue-50 border-blue-200',
-    icon: FileText,
+    icon: 'description',
     label: 'FILE',
   },
   DIR: {
     color: 'text-indigo-700',
     bgColor: 'bg-indigo-50 border-indigo-200',
-    icon: Folder,
+    icon: 'folder',
     label: 'DIR',
   },
   ENV: {
     color: 'text-purple-700',
     bgColor: 'bg-purple-50 border-purple-200',
-    icon: Key,
+    icon: 'vpn_key',
     label: 'ENV',
   },
   POLICY: {
     color: 'text-orange-700',
     bgColor: 'bg-orange-50 border-orange-200',
-    icon: Shield,
+    icon: 'shield',
     label: 'POLICY',
   },
   EVIDENCE: {
     color: 'text-green-700',
     bgColor: 'bg-green-50 border-green-200',
-    icon: CheckCircle,
+    icon: 'check_circle',
     label: 'EVIDENCE',
   },
   VALIDATE: {
     color: 'text-cyan-700',
     bgColor: 'bg-cyan-50 border-cyan-200',
-    icon: Terminal,
+    icon: 'terminal',
     label: 'VALIDATE',
   },
   GATE: {
     color: 'text-red-700',
     bgColor: 'bg-red-50 border-red-200',
-    icon: Lock,
+    icon: 'lock',
     label: 'GATE',
   },
   AUDIT: {
     color: 'text-yellow-700',
     bgColor: 'bg-yellow-50 border-yellow-200',
-    icon: Eye,
+    icon: 'visibility',
     label: 'AUDIT',
   },
   ARTIFACT: {
     color: 'text-teal-700',
     bgColor: 'bg-teal-50 border-teal-200',
-    icon: Package,
+    icon: 'inventory_2',
     label: 'ARTIFACT',
   },
 };
@@ -105,7 +94,6 @@ export default function ContractTagBadge({
   compact = false,
 }: ContractTagBadgeProps) {
   const config = TAG_CONFIG[type];
-  const Icon = config.icon;
   const statusConfig = status ? STATUS_INDICATOR[status] : null;
 
   if (compact) {
@@ -114,7 +102,7 @@ export default function ContractTagBadge({
         className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded border ${config.bgColor} ${config.color}`}
         title={`${type}:${value}`}
       >
-        <Icon className="w-3 h-3" />
+        <Icon name={config.icon} size="xs" />
         <span className="truncate max-w-[120px]">{value}</span>
         {statusConfig && <span className={statusConfig.color}>{statusConfig.icon}</span>}
       </span>
@@ -126,7 +114,7 @@ export default function ContractTagBadge({
       <span
         className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold rounded ${config.color} bg-white border ${config.bgColor}`}
       >
-        <Icon className="w-3.5 h-3.5" />
+        <Icon name={config.icon} size="sm" />
         {config.label}
       </span>
       <span className="flex-1 text-sm font-mono text-gray-700 truncate">{value}</span>
@@ -145,14 +133,13 @@ export function ContractTagSummary({ tags }: { tags: { type: ContractTagType; co
     <div className="flex flex-wrap gap-1">
       {tags.map(({ type, count }) => {
         const config = TAG_CONFIG[type];
-        const Icon = config.icon;
         return (
           <span
             key={type}
             className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium rounded border ${config.bgColor} ${config.color}`}
             title={`${count} ${type} tags`}
           >
-            <Icon className="w-3 h-3" />
+            <Icon name={config.icon} size="xs" />
             <span>{count}</span>
           </span>
         );

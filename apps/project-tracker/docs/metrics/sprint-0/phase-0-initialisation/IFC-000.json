@@ -6,7 +6,7 @@
   "owner": "CEO + CTO + CFO",
   "dependencies": {
     "required": [],
-    "verified_at": "2026-01-08T23:28:09.594Z",
+    "verified_at": "2026-01-29T01:33:17.575Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -17,17 +17,17 @@
       "note": "Initial planning phase"
     },
     {
-      "status": "In Progress",
+      "status": "IN_PROGRESS",
       "at": "2025-12-18T23:55:05+00:00",
       "note": "Task execution started"
     },
     {
-      "status": "In Progress",
+      "status": "IN_PROGRESS",
       "at": "2025-12-19T00:11:17+00:00",
       "note": "Task execution started"
     },
     {
-      "status": "In Progress",
+      "status": "IN_PROGRESS",
       "at": "2025-12-19T00:12:17+00:00",
       "note": "Task execution started"
     }
@@ -58,7 +58,8 @@
       "exit_code": 0,
       "passed": true,
       "stdout_hash": "sha256:SUZDLTAwMC1CdXNpbmVzcyBjYXNlIG9y",
-      "notes": "Validation passed"
+      "notes": "Validation passed",
+      "timestamp": "2025-12-19T00:58:54.068Z"
     },
     {
       "name": "Planning analysis exists",
@@ -69,13 +70,14 @@
       "exit_code": 0,
       "passed": true,
       "stdout_hash": "sha256:SUZDLTAwMC1QbGFubmluZyBhbmFseXNp",
-      "notes": "Validation passed"
+      "notes": "Validation passed",
+      "timestamp": "2025-12-19T00:58:54.068Z"
     }
   ],
   "kpis": {
     "decision_confidence": {
       "target": 80,
-      "actual": null,
+      "actual": "N/A",
       "met": false,
       "unit": "percent"
     }

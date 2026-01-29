@@ -21,47 +21,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Task ID is required' }, { status: 400 });
     }
 
-  const projectRoot = join(process.cwd(), '..', '..');
-  const specFile = join(projectRoot, '.specify', 'specifications', `${taskId}.md`);
-  const planFile = join(projectRoot, '.specify', 'planning', `${taskId}.md`);
-  const contextAckFile = join(projectRoot, 'artifacts', 'attestations', taskId, 'context_ack.json');
-  const csvPath = join(process.cwd(), 'docs', 'metrics', '_global', 'Sprint_plan.csv');
-  const specPath = `.specify/specifications/${taskId}.md`;
-  const planPath = `.specify/planning/${taskId}.md`;
+    const projectRoot = join(process.cwd(), '..', '..');
+    const specifyDir = join(projectRoot, '.specify');
+    const csvPath = join(process.cwd(), 'docs', 'metrics', '_global', 'Sprint_plan.csv');
 
-    // Check if task has spec/plan (unless skipped)
-    if (!skipPlanCheck) {
-      const hasSpec = existsSync(specFile);
-      const hasPlan = existsSync(planFile);
-
-      if (!hasSpec || !hasPlan) {
-        return NextResponse.json(
-          {
-            error: 'Task must be planned before starting',
-            needsPlanning: true,
-            hasSpec,
-            hasPlan,
-            suggestion: `Run planning first: POST /api/tasks/plan with {"taskId": "${taskId}"}`,
-          },
-          { status: 400 }
-        );
-      }
-
-      if (!existsSync(contextAckFile)) {
-        return NextResponse.json(
-          {
-            error: 'Context Ack is required before starting this task.',
-            needsContextAck: true,
-            contextAckPath: `artifacts/attestations/${taskId}/context_ack.json`,
-            suggestion:
-              'Build a context pack and create a context_ack.json acknowledging files and invariants before starting.',
-          },
-          { status: 400 }
-        );
-      }
-    }
-
-    // Read CSV
+    // Read CSV first to get sprint number
     const csvContent = await readFile(csvPath, 'utf-8');
     const { data, meta } = Papa.parse(csvContent, {
       header: true,
@@ -79,6 +43,40 @@ export async function POST(request: Request) {
 
     const task = tasks[taskIndex];
     const currentStatus = task.Status;
+    const sprintNumber = parseInt(task['Target Sprint'] || '0', 10);
+    const sprintDir = join(specifyDir, 'sprints', `sprint-${sprintNumber}`);
+
+    // Sprint-based paths
+    const specFile = join(sprintDir, 'specifications', `${taskId}-spec.md`);
+    const planFile = join(sprintDir, 'planning', `${taskId}-plan.md`);
+    const contextAckFile = join(sprintDir, 'attestations', taskId, 'attestation.json');
+
+    const hasSpec = existsSync(specFile);
+    const hasPlan = existsSync(planFile);
+    const hasContextAck = existsSync(contextAckFile);
+
+    const specPath = hasSpec
+      ? `.specify/sprints/sprint-${sprintNumber}/specifications/${taskId}-spec.md`
+      : null;
+    const planPath = hasPlan
+      ? `.specify/sprints/sprint-${sprintNumber}/planning/${taskId}-plan.md`
+      : null;
+
+    // Check if task has spec/plan (unless skipped)
+    if (!skipPlanCheck) {
+      if (!hasSpec || !hasPlan) {
+        return NextResponse.json(
+          {
+            error: 'Task must be planned before starting',
+            needsPlanning: true,
+            hasSpec,
+            hasPlan,
+            suggestion: `Run planning first: POST /api/tasks/plan with {"taskId": "${taskId}"}`,
+          },
+          { status: 400 }
+        );
+      }
+    }
 
     // Validate status transition - must be Planned to start (or Backlog with skipPlanCheck)
     const validStartStatuses = skipPlanCheck ? ['Backlog', 'Planned', 'Not Started'] : ['Planned']; // Only Planned tasks can be started (they have specs)
@@ -97,14 +95,14 @@ export async function POST(request: Request) {
     }
 
     // Context Ack is required regardless of planning skip; ensures Gate 10 compliance
-    if (!existsSync(contextAckFile)) {
+    if (!hasContextAck) {
       return NextResponse.json(
         {
           error: 'Context Ack is required before starting this task.',
           needsContextAck: true,
-          contextAckPath: `artifacts/attestations/${taskId}/context_ack.json`,
+          contextAckPath: `.specify/sprints/sprint-${sprintNumber}/attestations/${taskId}/attestation.json`,
           suggestion:
-            'Build a context pack and create a context_ack.json acknowledging files and invariants before starting.',
+            'Build a context pack and create an attestation.json acknowledging files and invariants before starting.',
         },
         { status: 400 }
       );

@@ -10,7 +10,7 @@
       "GTM-002",
       "BRAND-001"
     ],
-    "verified_at": "2026-01-08T23:28:13.288Z",
+    "verified_at": "2026-01-29T01:33:17.634Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -38,7 +38,8 @@
       "required": true,
       "executed_at": "2025-12-31T12:25:00Z",
       "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "timestamp": "2025-12-31T12:30:00Z"
     }
   ],
   "kpis": {

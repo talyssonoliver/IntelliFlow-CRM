@@ -2,14 +2,18 @@
  * Material Symbols Icon Helper for Project Tracker
  *
  * Provides a consistent way to use Material Symbols icons throughout the app.
- * Replaces Lucide React icons with the design system standard.
  */
 
 import { cn } from './utils';
 
+/**
+ * Icon name type for type-safe icon usage
+ */
+export type IconName = string;
+
 export interface IconProps {
   /** Material Symbol icon name (e.g., 'check', 'close', 'search') */
-  name: string;
+  name: IconName;
   /** Additional CSS classes */
   className?: string;
   /** Size variant */
@@ -47,9 +51,9 @@ export function Icon({ name, className, size = 'base' }: IconProps) {
 }
 
 /**
- * Lucide to Material Symbols mapping for reference during migration
+ * Icon name mapping reference for common UI icons
  */
-export const LUCIDE_TO_MATERIAL: Record<string, string> = {
+export const ICON_NAME_MAPPING: Record<string, string> = {
   // Common UI icons
   Check: 'check',
   CheckCircle: 'check_circle',

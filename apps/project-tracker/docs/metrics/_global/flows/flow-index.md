@@ -2,7 +2,7 @@
 
 > **Location**: `apps/project-tracker/docs/metrics/_global/flows/flow-index.md`
 > **Last Updated**: 2025-12-27
-> **Total Flows**: 38
+> **Total Flows**: 39
 
 This document serves as the master index linking all user flows to sitemap routes,
 UI components, and style guide patterns.
@@ -20,6 +20,7 @@ UI components, and style guide patterns.
 | [Analytics e Insights](#analytics-e-insights) | FLOW-023 to FLOW-028 | 5-9 |
 | [Segurança e Compliance](#segurança-e-compliance) | FLOW-029 to FLOW-033 | 0-3 |
 | [Qualidade e Testes](#qualidade-e-testes) | FLOW-034 to FLOW-038 | 2-4 |
+| [AI & Configuration](#ai--configuration) | FLOW-045 | 14 |
 
 ---
 
@@ -516,6 +517,39 @@ UI components, and style guide patterns.
 | `/reports/builder` | FLOW-023 | Analytics e Insights |
 | `/ops/monitoring` (backup) | FLOW-030 | Segurança e Compliance |
 | `/ops/monitoring` (perf) | FLOW-038 | Qualidade e Testes |
+| `/settings/ai` | FLOW-045 | AI & Configuration |
+
+---
+
+## AI & Configuration
+
+### FLOW-045: AI Chain Versioning Admin UI
+
+| Property | Value |
+|----------|-------|
+| **Priority** | High |
+| **Sprint** | 14 |
+| **Category** | AI & Configuration |
+
+**Routes (Sitemap)**:
+- `/settings/ai` → [PG-128] Sprint 14
+- `/settings/ai/versions` → Chain versions management
+- `/settings/ai/experiments` → A/B testing
+- `/settings/ai/budget` → Zep memory budget
+
+**Key Artifacts**:
+- `apps/web/src/app/(settings)/settings/ai/page.tsx`
+- `apps/web/src/app/(settings)/settings/ai/components/ChainVersionsDashboard.tsx`
+- `apps/web/src/app/(settings)/settings/ai/components/ChainVersionsTable.tsx`
+- `apps/web/src/app/(settings)/settings/ai/components/ZepBudgetGauge.tsx`
+- `apps/web/src/app/(settings)/settings/ai/components/VersionAuditLog.tsx`
+- `apps/api/src/modules/chain-version/chain-version.router.ts` (IFC-086)
+
+**Backend Dependencies (IFC-086)**:
+- Chain version tRPC router with lifecycle management
+- ChainVersionService for version orchestration
+- ZepMemoryAdapter with persistence
+- Zod validators for all inputs
 
 ---
 

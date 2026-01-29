@@ -1,7 +1,7 @@
 {
   "sprint": "sprint-6",
   "name": "Sprint 6",
-  "target_date": null,
+  "target_date": "TBD",
   "started_at": null,
   "completed_at": null,
   "phases": [],
@@ -13,57 +13,75 @@
     "not_started": 0,
     "failed": 0
   },
-  "notes": "10/10 tasks DONE (100%). Last synced: 2026-01-08T23:28:12.836Z",
+  "notes": "10/10 tasks DONE (100%). Last synced: 2026-01-29T01:33:17.625Z",
   "completed_tasks": [
     {
       "task_id": "IFC-010",
-      "completed_at": "2026-01-08T23:28:12.836Z",
+      "completed_at": "2026-01-29T01:33:17.624Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-012",
-      "completed_at": "2026-01-08T23:28:12.836Z",
+      "completed_at": "2026-01-29T01:33:17.625Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-013",
-      "completed_at": "2026-01-08T23:28:12.836Z",
+      "completed_at": "2026-01-29T01:33:17.625Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-017",
-      "completed_at": "2026-01-08T23:28:12.836Z",
+      "completed_at": "2026-01-29T01:33:17.625Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-090",
-      "completed_at": "2026-01-08T23:28:12.836Z",
+      "completed_at": "2026-01-29T01:33:17.625Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-091",
-      "completed_at": "2026-01-08T23:28:12.836Z",
+      "completed_at": "2026-01-29T01:33:17.625Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-129",
-      "completed_at": "2026-01-08T23:28:12.836Z",
+      "completed_at": "2026-01-29T01:33:17.625Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-132",
-      "completed_at": "2026-01-08T23:28:12.836Z",
+      "completed_at": "2026-01-29T01:33:17.625Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-139",
-      "completed_at": "2026-01-08T23:28:12.836Z",
+      "completed_at": "2026-01-29T01:33:17.625Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-149",
-      "completed_at": "2026-01-08T23:28:12.836Z",
+      "completed_at": "2026-01-29T01:33:17.625Z",
       "duration_minutes": 15
     }
-  ]
+  ],
+  "schedule": {
+    "sprint_start_date": null,
+    "sprint_end_date": "TBD",
+    "working_hours_per_day": 8,
+    "working_days_per_week": 5,
+    "critical_path": {
+      "task_ids": [],
+      "total_duration_minutes": 0,
+      "completion_percentage": 0,
+      "bottleneck_task_id": null
+    },
+    "schedule_variance": {
+      "sv_minutes": 0,
+      "spi": 1,
+      "status": "on_track"
+    },
+    "calculated_at": "2026-01-29T01:33:17.676Z"
+  }
 }

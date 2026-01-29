@@ -9,7 +9,7 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-01-08T23:28:09.883Z",
+    "verified_at": "2026-01-29T01:33:17.582Z",
     "required": [
       "AUTOMATION-001",
       "ENV-005-AI"
@@ -46,7 +46,8 @@
       "command": "verify docs/operations/*.md exist",
       "executed_at": "2025-12-20T00:00:00Z",
       "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "timestamp": "2025-12-21T07:21:10.592Z"
     }
   ],
   "blockers": [],

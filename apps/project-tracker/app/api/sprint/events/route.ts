@@ -52,7 +52,7 @@ export async function GET(request: Request) {
           });
           try {
             controller.enqueue(encoder.encode(message));
-          } catch (err) {
+          } catch {
             // Connection may be closed
             cleanup();
           }
@@ -68,7 +68,7 @@ export async function GET(request: Request) {
           });
           try {
             controller.enqueue(encoder.encode(message));
-          } catch (err) {
+          } catch {
             // Connection may be closed
             cleanup();
           }
@@ -91,7 +91,7 @@ export async function GET(request: Request) {
         try {
           const ping = formatSSE({ type: 'ping', timestamp: new Date().toISOString() });
           controller.enqueue(encoder.encode(ping));
-        } catch (err) {
+        } catch {
           clearInterval(pingInterval);
           cleanup();
         }
@@ -152,7 +152,7 @@ export async function POST(request: Request) {
         try {
           conn.controller.enqueue(encoder.encode(message));
           broadcastCount++;
-        } catch (err) {
+        } catch {
           // Connection may be closed, remove it
           connections.delete(id);
         }
@@ -163,7 +163,7 @@ export async function POST(request: Request) {
       success: true,
       broadcastCount,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to broadcast event' }, { status: 500 });
   }
 }

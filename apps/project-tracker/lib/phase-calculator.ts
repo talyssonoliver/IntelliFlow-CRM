@@ -9,10 +9,7 @@ import type {
   ExecutionPhase,
   TaskPhaseEntry,
   ParallelStream,
-  DependencySignature,
   CSVTask,
-  csvTaskToPhaseEntry,
-  getStreamLetter,
 } from '../../../tools/scripts/lib/sprint/types';
 
 interface DependencyNode {
@@ -57,7 +54,7 @@ export function calculatePhases(
 
   // Build phase assignment using topological sort
   const phaseAssignment = new Map<string, number>();
-  const taskMap = new Map(sprintTasks.map((t) => [t['Task ID'], t]));
+  const _taskMap = new Map(sprintTasks.map((t) => [t['Task ID'], t]));
 
   // Calculate phase for each task: phase = max(dependency phases) + 1
   const calculateTaskPhase = (taskId: string, visited: Set<string>): number => {
@@ -182,7 +179,7 @@ export function calculatePhases(
 function identifyParallelStreams(
   tasks: TaskPhaseEntry[],
   dependencyGraph: DependencyGraph,
-  phaseNumber: number
+  _phaseNumber: number
 ): { streams: ParallelStream[]; taskStreams: Map<string, string> } {
   // Group tasks by dependency signature
   const signatureGroups = new Map<string, string[]>();
@@ -241,7 +238,7 @@ function identifyParallelStreams(
  */
 function checkInterDependencies(
   tasks: TaskPhaseEntry[],
-  dependencyGraph: DependencyGraph
+  _dependencyGraph: DependencyGraph
 ): boolean {
   const taskIdsInPhase = new Set(tasks.map((t) => t.taskId));
 
@@ -502,7 +499,7 @@ export function getBlockedTasks(
  */
 export function generateAsciiGraph(
   phases: ExecutionPhase[],
-  parallelStreams: ParallelStream[]
+  _parallelStreams: ParallelStream[]
 ): string {
   const lines: string[] = [];
 

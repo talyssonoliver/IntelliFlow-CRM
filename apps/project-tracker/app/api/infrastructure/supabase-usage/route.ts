@@ -99,7 +99,7 @@ function estimateUsage(): UsageMetric[] {
   return metrics;
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const cachedReport = loadUsageReport();
     const estimatedMetrics = estimateUsage();

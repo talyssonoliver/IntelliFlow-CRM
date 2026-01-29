@@ -10,10 +10,10 @@
       "GTM-002",
       "BRAND-001"
     ],
-    "verified_at": "2026-01-08T23:28:13.258Z",
+    "verified_at": "2026-01-29T01:33:17.633Z",
     "all_satisfied": true
   },
-  "status": "BACKLOG",
+  "status": "DONE",
   "status_history": [
     {
       "status": "DONE",
@@ -38,7 +38,8 @@
       "required": true,
       "executed_at": "2025-12-31T08:55:00Z",
       "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "timestamp": "2025-12-31T09:00:00Z"
     }
   ],
   "kpis": {

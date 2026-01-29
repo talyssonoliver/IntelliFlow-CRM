@@ -64,6 +64,10 @@ async function parseRiskRegister(): Promise<{ risks: Risk[]; lastUpdated: string
       const values = parseCSVLine(lines[i]);
       if (values.length < 3) continue;
 
+      // Skip summary/legend rows - valid risks have IDs starting with RISK-
+      const firstValue = values[0]?.trim() || '';
+      if (!firstValue.startsWith('RISK-')) continue;
+
       const getValue = (key: string): string => {
         const idx = headers.findIndex(h => h.includes(key));
         return idx >= 0 ? values[idx] || '' : '';

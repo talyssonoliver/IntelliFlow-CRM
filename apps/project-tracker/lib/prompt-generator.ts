@@ -163,7 +163,7 @@ function generateOverviewTable(
 function generateDependencyGraphSection(
   phases: ExecutionPhase[],
   parallelStreams: ParallelStream[],
-  tasks: CSVTask[]
+  _tasks: CSVTask[]
 ): string {
   const lines: string[] = ['## Sprint Dependency Graph', '', '```'];
 
@@ -559,15 +559,13 @@ ls -la artifacts/plans/
 
 **Key Files to Read for Context:**
 - \`apps/project-tracker/docs/metrics/_global/Sprint_plan.csv\` - Full task registry
-- \`apps/project-tracker/docs/metrics/sprint-*/\` - Previous sprint evidence
-- \`artifacts/attestations/<TASK_ID>/\` - Task attestations (schema: \`attestation.schema.json\`)
+- \`.specify/sprints/sprint-*/\` - Sprint-organized specs, plans, attestations, evidence
 - \`docs/architecture/\` - Architecture decisions and patterns
 
-**Attestation Structure** (\`artifacts/attestations/<TASK_ID>/\`):
+**Attestation Structure** (\`.specify/sprints/sprint-{N}/attestations/<TASK_ID>/\`):
 - \`attestation.json\` - Completion evidence with verdict, KPIs, validations
 - \`context_pack.md\` - Prerequisites (files read before starting)
 - \`context_pack.manifest.json\` - SHA256 hashes of prerequisite files
-- \`plan.md\` / \`spec.md\` - Task planning documents (if applicable)
 
 ### 1. Task Lifecycle Workflow
 
@@ -604,7 +602,7 @@ mkdir -p artifacts/specs/<TASK_ID>
 \`\`\`bash
 # Run validation and audit (see Section 8)
 # Update status to "Done" in Sprint_plan.csv with evidence
-# Create attestation in artifacts/attestations/<TASK_ID>/
+# Create attestation in .specify/sprints/sprint-{N}/attestations/<TASK_ID>/
 \`\`\`
 
 ### 2. Parallel Task Spawning
@@ -691,8 +689,8 @@ ${manualTasks.length > 0 ? manualTasks.map((t) => `- \`${t.taskId}\`: ${t.descri
 After completing each task, the system will automatically:
 1. Update \`Sprint_plan.csv\` status to "Done"
 2. Generate evidence in \`artifacts/stoa-runs/\` or \`artifacts/swarm-runs/\`
-3. Create attestation in \`artifacts/attestations/<TASK_ID>/attestation.json\` with:
-   - \`$schema\`: \`https://intelliflow-crm.com/schemas/attestation.schema.json\`
+3. Create attestation in \`.specify/sprints/sprint-{N}/attestations/<TASK_ID>/attestation.json\` with:
+   - \`$schema\`: Relative path to \`apps/project-tracker/docs/metrics/schemas/attestation.schema.json\`
    - \`schema_version\`: \`"1.0.0"\`
    - \`verdict\`: \`"COMPLETE"\` or \`"INCOMPLETE"\`
    - \`context_acknowledgment\`: files_read with SHA256 hashes
@@ -829,7 +827,7 @@ A task is considered **DONE** when:
 3. ✅ All KPIs meet or exceed target values
 4. ✅ No blocking issues or errors remain
 5. ✅ Status updated to "Done" in Sprint_plan.csv
-6. ✅ Attestation created in \`artifacts/attestations/<TASK_ID>/\`
+6. ✅ Attestation created in \`.specify/sprints/sprint-{N}/attestations/<TASK_ID>/\`
 7. ✅ Code merged to main branch (if applicable)
 
 ### Sprint ${sprintNumber} Completion Gate
@@ -920,7 +918,7 @@ export function generateSprintPromptData(options: GeneratorOptions): SprintPromp
   } = options;
 
   const sprintTasks = tasks.filter((t) => t['Target Sprint'] === String(sprintNumber));
-  const completedTasks = sprintTasks.filter((t) => t.Status === 'Done' || t.Status === 'Completed');
+  const _completedTasks = sprintTasks.filter((t) => t.Status === 'Done' || t.Status === 'Completed');
   const inferredTheme = theme || inferTheme(sprintTasks);
 
   // Mission Brief
@@ -1056,7 +1054,7 @@ export function generateSprintPromptData(options: GeneratorOptions): SprintPromp
     'All KPIs meet or exceed target values',
     'No blocking issues or errors remain',
     'Status updated to "Done" in Sprint_plan.csv',
-    'Attestation created in artifacts/attestations/<TASK_ID>/',
+    'Attestation created in .specify/sprints/sprint-{N}/attestations/<TASK_ID>/',
     'Code merged to main branch (if applicable)',
   ];
 

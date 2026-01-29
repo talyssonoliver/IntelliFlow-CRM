@@ -9,7 +9,7 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-01-08T23:28:09.526Z",
+    "verified_at": "2026-01-29T01:33:17.574Z",
     "required": [
       "AUTOMATION-001"
     ]
@@ -61,7 +61,8 @@
       "exit_code": 0,
       "passed": true,
       "stdout_hash": "sha256:QVVUT01BVElPTi0wMDItQUkgZGFzaGJv",
-      "notes": "Validation passed"
+      "notes": "Validation passed",
+      "timestamp": "2025-12-19T00:58:54.066Z"
     },
     {
       "name": "Optimization loop configuration exists",
@@ -72,7 +73,8 @@
       "exit_code": 0,
       "passed": true,
       "stdout_hash": "sha256:QVVUT01BVElPTi0wMDItT3B0aW1pemF0",
-      "notes": "Validation passed"
+      "notes": "Validation passed",
+      "timestamp": "2025-12-19T00:58:54.066Z"
     }
   ],
   "blockers": [],
@@ -80,12 +82,14 @@
   "status_history": [
     {
       "status": "IN_PROGRESS",
-      "timestamp": "2025-12-19T00:43:54.066Z"
+      "timestamp": "2025-12-19T00:43:54.066Z",
+      "at": "2025-12-19T00:58:54.066Z"
     },
     {
       "status": "DONE",
       "timestamp": "2025-12-23T19:16:00.000Z",
-      "note": "Dashboard and metrics tracking operational"
+      "note": "Dashboard and metrics tracking operational",
+      "at": "2025-12-19T00:58:54.066Z"
     }
   ]
 }

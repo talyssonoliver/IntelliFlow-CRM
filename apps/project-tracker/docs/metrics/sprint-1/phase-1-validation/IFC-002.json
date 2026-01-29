@@ -8,7 +8,7 @@
     "required": [
       "IFC-000"
     ],
-    "verified_at": "2026-01-08T23:28:11.045Z",
+    "verified_at": "2026-01-29T01:33:17.599Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -59,14 +59,16 @@
       "command": "test -d packages/domain/src",
       "passed": true,
       "exit_code": 0,
-      "executed_at": "2025-12-21T16:00:00Z"
+      "executed_at": "2025-12-21T16:00:00Z",
+      "timestamp": "2025-12-27T11:33:39.031Z"
     },
     {
       "name": "lead_aggregate_exists",
       "command": "test -f packages/domain/src/crm/lead/Lead.ts",
       "passed": true,
       "exit_code": 0,
-      "executed_at": "2025-12-21T16:00:00Z"
+      "executed_at": "2025-12-21T16:00:00Z",
+      "timestamp": "2025-12-27T11:33:39.031Z"
     }
   ],
   "kpis": {

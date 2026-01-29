@@ -12,6 +12,8 @@ function getRepoRootDir(): string {
 
 type AuditBundleSummary = {
   run_id?: string;
+  runId?: string;
+  taskId?: string;
   commit_sha?: string;
   started_at?: string;
   finished_at?: string;
@@ -20,6 +22,7 @@ type AuditBundleSummary = {
   scope?: string;
   sprint?: number;
   verdict?: string;
+  finalVerdict?: string;
   result?: { overall_status?: string };
   summary?: {
     totalTasks?: number;
@@ -31,7 +34,9 @@ type AuditBundleSummary = {
 
 type BundleItem = {
   runId: string;
-  type: 'system' | 'sprint';
+  type: 'system' | 'sprint' | 'matop';
+  taskId?: string;
+  sprintNumber?: number;
   summary: AuditBundleSummary | null;
   updatedAt: string | null;
   paths: {
@@ -40,6 +45,9 @@ type BundleItem = {
   };
 };
 
+/**
+ * Load bundles from a flat directory structure (e.g., sprint-audit).
+ */
 async function loadBundlesFromDir(
   repoRoot: string,
   bundlesDir: string,
@@ -87,24 +95,110 @@ async function loadBundlesFromDir(
   return items;
 }
 
+/**
+ * Load MATOP bundles from the sprint-based execution structure.
+ * Path: .specify/sprints/sprint-{N}/execution/{taskId}/{runId}/matop/
+ */
+async function loadMatopBundles(repoRoot: string): Promise<BundleItem[]> {
+  const items: BundleItem[] = [];
+  const sprintsDir = path.join(repoRoot, '.specify', 'sprints');
+
+  try {
+    // List all sprint directories
+    const sprintEntries = await readdir(sprintsDir, { withFileTypes: true });
+    const sprintDirs = sprintEntries
+      .filter((e) => e.isDirectory() && e.name.startsWith('sprint-'))
+      .map((e) => e.name);
+
+    for (const sprintDir of sprintDirs) {
+      const sprintNumber = parseInt(sprintDir.replace('sprint-', ''), 10);
+      const executionDir = path.join(sprintsDir, sprintDir, 'execution');
+
+      try {
+        // List all task directories in this sprint's execution folder
+        const taskEntries = await readdir(executionDir, { withFileTypes: true });
+        const taskDirs = taskEntries.filter((e) => e.isDirectory()).map((e) => e.name);
+
+        for (const taskId of taskDirs) {
+          const taskExecutionDir = path.join(executionDir, taskId);
+
+          try {
+            // List all run directories for this task
+            const runEntries = await readdir(taskExecutionDir, { withFileTypes: true });
+            const runDirs = runEntries
+              .filter((e) => e.isDirectory() && !e.name.endsWith('-latest'))
+              .map((e) => e.name);
+            runDirs.sort((a, b) => b.localeCompare(a)); // Most recent first
+
+            for (const runId of runDirs.slice(0, 5)) {
+              // Limit per task
+              const matopDir = path.join(taskExecutionDir, runId, 'matop');
+              const summaryPath = path.join(matopDir, 'summary.json');
+              const summaryMdPath = path.join(matopDir, 'summary.md');
+
+              try {
+                const [summaryRaw, summaryStat] = await Promise.all([
+                  readFile(summaryPath, 'utf-8'),
+                  stat(summaryPath),
+                ]);
+                const summary = JSON.parse(summaryRaw) as AuditBundleSummary;
+                items.push({
+                  runId,
+                  type: 'matop',
+                  taskId,
+                  sprintNumber,
+                  summary,
+                  updatedAt: summaryStat.mtime.toISOString(),
+                  paths: {
+                    summaryJson: path.relative(repoRoot, summaryPath).replaceAll('\\', '/'),
+                    summaryMd: path.relative(repoRoot, summaryMdPath).replaceAll('\\', '/'),
+                  },
+                });
+              } catch {
+                // No summary file in this matop directory
+              }
+            }
+          } catch {
+            // Can't read task execution directory
+          }
+        }
+      } catch {
+        // No execution directory for this sprint
+      }
+    }
+  } catch {
+    // .specify/sprints directory doesn't exist
+  }
+
+  return items;
+}
+
+/**
+ * Also check legacy system-audit path for backwards compatibility.
+ */
+async function loadLegacySystemBundles(repoRoot: string): Promise<BundleItem[]> {
+  const legacyDir = path.join(repoRoot, 'artifacts', 'reports', 'system-audit');
+  return loadBundlesFromDir(repoRoot, legacyDir, 'system', 'summary.json', 'summary.md');
+}
+
 export async function GET() {
   const repoRoot = getRepoRootDir();
-  const systemBundlesDir = path.join(repoRoot, 'artifacts', 'reports', 'system-audit');
   const sprintBundlesDir = path.join(repoRoot, 'artifacts', 'reports', 'sprint-audit');
 
-  // Load bundles from both directories in parallel
-  const [systemBundles, sprintBundles] = await Promise.all([
-    loadBundlesFromDir(repoRoot, systemBundlesDir, 'system', 'summary.json', 'summary.md'),
+  // Load bundles from all sources in parallel
+  const [matopBundles, legacyBundles, sprintBundles] = await Promise.all([
+    loadMatopBundles(repoRoot),
+    loadLegacySystemBundles(repoRoot),
     loadBundlesFromDir(repoRoot, sprintBundlesDir, 'sprint', 'audit.json', 'audit.md'),
   ]);
 
   // Combine and sort by runId (which includes timestamp)
-  const allItems = [...systemBundles, ...sprintBundles];
+  const allItems = [...matopBundles, ...legacyBundles, ...sprintBundles];
   allItems.sort((a, b) => b.runId.localeCompare(a.runId));
 
   return NextResponse.json({
-    bundlesDir: 'artifacts/reports',
-    systemBundlesDir: path.relative(repoRoot, systemBundlesDir).replaceAll('\\', '/'),
+    bundlesDir: '.specify/sprints (MATOP) + artifacts/reports (legacy/sprint-audit)',
+    matopBundlesPath: '.specify/sprints/sprint-{N}/execution/{taskId}/{runId}/matop/',
     sprintBundlesDir: path.relative(repoRoot, sprintBundlesDir).replaceAll('\\', '/'),
     items: allItems.slice(0, 50),
   });

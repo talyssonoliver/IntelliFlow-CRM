@@ -143,7 +143,7 @@ export async function GET() {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     // Simulate metrics refresh by updating the file timestamp
     // In production, this would trigger actual model evaluation jobs

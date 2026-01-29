@@ -184,8 +184,8 @@ function buildTaskPrompt(tasks: CsvTask[], dependencyGraph: any | null): string 
     lines.push('');
     lines.push('### Context Controls');
     lines.push('- Build context pack and context ack before coding.');
-    lines.push('- Evidence folder: artifacts/attestations/<task_id>/');
-    lines.push('- Use spec/plan if present under .specify/.');
+    lines.push('- Evidence folder: .specify/sprints/sprint-{N}/attestations/<task_id>/');
+    lines.push('- Use spec/plan from .specify/sprints/sprint-{N}/specifications/ and planning/');
     lines.push('');
     lines.push('---');
     lines.push('');

@@ -72,7 +72,7 @@ function extractFeedbackFromAttestations(): FeedbackRecord[] {
           // Analyze KPIs for feedback
           if (content.kpis) {
             const kpisMet = Object.entries(content.kpis)
-              .filter(([key, value]) => typeof value === 'boolean')
+              .filter(([_key, value]) => typeof value === 'boolean')
               .every(([_, value]) => value === true);
 
             records.push({

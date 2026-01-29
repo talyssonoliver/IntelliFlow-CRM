@@ -1,16 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  Clock,
-  ChevronDown,
-  ChevronUp,
-  Shield,
-  Sparkles,
-} from 'lucide-react';
+import { Icon } from '@/lib/icons';
 
 export type GateStatus = 'passed' | 'failed' | 'warning' | 'pending' | 'skipped';
 
@@ -34,34 +25,34 @@ interface GateValidationTableProps {
 
 const STATUS_CONFIG: Record<
   GateStatus,
-  { icon: typeof CheckCircle; color: string; bgColor: string; label: string }
+  { iconName: string; color: string; bgColor: string; label: string }
 > = {
   passed: {
-    icon: CheckCircle,
+    iconName: 'check_circle',
     color: 'text-green-600',
     bgColor: 'bg-green-50',
     label: 'PASS',
   },
   failed: {
-    icon: XCircle,
+    iconName: 'cancel',
     color: 'text-red-600',
     bgColor: 'bg-red-50',
     label: 'FAIL',
   },
   warning: {
-    icon: AlertTriangle,
+    iconName: 'warning',
     color: 'text-yellow-600',
     bgColor: 'bg-yellow-50',
     label: 'WARN',
   },
   pending: {
-    icon: Clock,
+    iconName: 'schedule',
     color: 'text-gray-400',
     bgColor: 'bg-gray-50',
     label: 'PENDING',
   },
   skipped: {
-    icon: Clock,
+    iconName: 'schedule',
     color: 'text-gray-400',
     bgColor: 'bg-gray-50',
     label: 'SKIPPED',
@@ -70,13 +61,12 @@ const STATUS_CONFIG: Record<
 
 function GateStatusBadge({ status }: Readonly<{ status: GateStatus }>) {
   const config = STATUS_CONFIG[status];
-  const Icon = config.icon;
 
   return (
     <span
       className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-bold ${config.bgColor} ${config.color}`}
     >
-      <Icon className="w-3.5 h-3.5" />
+      <Icon name={config.iconName} size="xs" />
       {config.label}
     </span>
   );
@@ -102,24 +92,24 @@ export default function GateValidationTable({
       {/* Header */}
       <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Shield className="w-5 h-5 text-gray-600" />
+          <Icon name="shield" size="lg" className="text-gray-600" />
           <h3 className="font-medium text-gray-900">Validation Gates</h3>
           <span className="text-sm text-gray-500">Sprint {sprint}</span>
         </div>
         <div className="flex items-center gap-3 text-sm">
           <span className="flex items-center gap-1 text-green-600">
-            <CheckCircle className="w-4 h-4" />
+            <Icon name="check_circle" size="sm" />
             {passedCount} PASS
           </span>
           {warnCount > 0 && (
             <span className="flex items-center gap-1 text-yellow-600">
-              <AlertTriangle className="w-4 h-4" />
+              <Icon name="warning" size="sm" />
               {warnCount} WARN
             </span>
           )}
           {failedCount > 0 && (
             <span className="flex items-center gap-1 text-red-600">
-              <XCircle className="w-4 h-4" />
+              <Icon name="cancel" size="sm" />
               {failedCount} FAIL
             </span>
           )}
@@ -155,7 +145,7 @@ export default function GateValidationTable({
                     <span className="text-sm font-medium text-gray-900">{gate.name}</span>
                     {gate.isNew && (
                       <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded">
-                        <Sparkles className="w-3 h-3" />
+                        <Icon name="auto_awesome" size="xs" />
                         NEW
                       </span>
                     )}
@@ -174,9 +164,9 @@ export default function GateValidationTable({
                 </td>
                 <td className="px-4 py-3 text-center">
                   {expandedGate === gate.id ? (
-                    <ChevronUp className="w-4 h-4 text-gray-400" />
+                    <Icon name="expand_less" size="sm" className="text-gray-400" />
                   ) : (
-                    <ChevronDown className="w-4 h-4 text-gray-400" />
+                    <Icon name="expand_more" size="sm" className="text-gray-400" />
                   )}
                 </td>
               </tr>

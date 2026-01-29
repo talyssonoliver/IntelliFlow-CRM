@@ -9,7 +9,7 @@
       "IFC-000",
       "ENV-018-AI"
     ],
-    "verified_at": "2026-01-08T23:28:12.571Z",
+    "verified_at": "2026-01-29T01:33:17.618Z",
     "all_satisfied": true,
     "notes": "Feasibility assessment and sprint planning available"
   },
@@ -61,7 +61,8 @@
       "command": "ls docs/planning/prd-template.md",
       "executed_at": "2025-12-22T21:00:00Z",
       "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "timestamp": "2025-12-22T21:05:00Z"
     },
     {
       "name": "prd_has_structure",
@@ -69,21 +70,24 @@
       "executed_at": "2025-12-22T21:00:00Z",
       "exit_code": 0,
       "passed": true,
-      "notes": "PRD template has structured sections"
+      "notes": "PRD template has structured sections",
+      "timestamp": "2025-12-22T21:05:00Z"
     },
     {
       "name": "user_journey_exists",
       "command": "ls docs/planning/user-journey-template.md",
       "executed_at": "2025-12-22T21:00:00Z",
       "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "timestamp": "2025-12-22T21:05:00Z"
     },
     {
       "name": "dor_exists",
       "command": "ls docs/planning/definition-of-ready.md",
       "executed_at": "2025-12-22T21:00:00Z",
       "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "timestamp": "2025-12-22T21:05:00Z"
     },
     {
       "name": "dor_has_criteria",
@@ -91,14 +95,16 @@
       "executed_at": "2025-12-22T21:00:00Z",
       "exit_code": 0,
       "passed": true,
-      "notes": "DoR includes acceptance criteria requirement"
+      "notes": "DoR includes acceptance criteria requirement",
+      "timestamp": "2025-12-22T21:05:00Z"
     },
     {
       "name": "traceability_matrix_exists",
       "command": "ls artifacts/reports/traceability-matrix.json",
       "executed_at": "2025-12-22T21:00:00Z",
       "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "timestamp": "2025-12-22T21:05:00Z"
     },
     {
       "name": "traceability_has_capabilities",
@@ -106,14 +112,16 @@
       "executed_at": "2025-12-22T21:00:00Z",
       "exit_code": 0,
       "passed": true,
-      "notes": "6 capabilities traced to domain services, APIs, UIs, tests"
+      "notes": "6 capabilities traced to domain services, APIs, UIs, tests",
+      "timestamp": "2025-12-22T21:05:00Z"
     },
     {
       "name": "backlog_log_exists",
       "command": "ls artifacts/logs/backlog-updates-log.json",
       "executed_at": "2025-12-22T21:00:00Z",
       "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "timestamp": "2025-12-22T21:05:00Z"
     }
   ],
   "kpis": {

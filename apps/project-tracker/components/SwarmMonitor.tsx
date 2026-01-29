@@ -2,18 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import {
-  Activity,
-  Zap,
-  Clock,
-  X,
-  RotateCcw,
-  FileText,
-  AlertTriangle,
-  Heart,
-  Play,
-  ExternalLink,
-} from 'lucide-react';
+import { Icon } from '@/lib/icons';
 
 interface SwarmHealth {
   active: number;
@@ -127,7 +116,7 @@ export default function SwarmMonitor() {
     return (
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Activity className="w-5 h-5 text-blue-600 animate-pulse" />
+          <Icon name="monitoring" size="lg" className="text-blue-600 animate-pulse" />
           <h3 className="text-lg font-semibold text-gray-900">Swarm Manager</h3>
         </div>
         <p className="text-sm text-gray-500">Loading swarm status...</p>
@@ -198,23 +187,25 @@ export default function SwarmMonitor() {
   };
 
   const getPhaseIcon = (currentPhase?: string | null) => {
-    if (!currentPhase) return <Play className="w-4 h-4" />;
+    if (!currentPhase) return <Icon name="play_arrow" size="sm" />;
 
     if (currentPhase.includes('CRASHED') || currentPhase.includes('STUCK')) {
-      return <AlertTriangle className="w-4 h-4 text-red-500" />;
+      return <Icon name="warning" size="sm" className="text-red-500" />;
     }
     if (currentPhase.includes('COMPLETED')) {
-      return <Activity className="w-4 h-4 text-green-500" />;
+      return <Icon name="monitoring" size="sm" className="text-green-500" />;
     }
-    return <Zap className="w-4 h-4 text-blue-500 animate-pulse" />;
+    return <Icon name="bolt" size="sm" className="text-blue-500 animate-pulse" />;
   };
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Activity
-            className={`w-5 h-5 ${activeCount > 0 ? 'text-green-600 animate-pulse' : 'text-gray-400'}`}
+          <Icon
+            name="monitoring"
+            size="lg"
+            className={activeCount > 0 ? 'text-green-600 animate-pulse' : 'text-gray-400'}
           />
           <h3 className="text-lg font-semibold text-gray-900">Swarm Manager</h3>
           <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
@@ -233,7 +224,7 @@ export default function SwarmMonitor() {
             className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
           >
             Full Control
-            <ExternalLink className="w-3 h-3" />
+            <Icon name="open_in_new" size="xs" />
           </Link>
         </div>
       </div>
@@ -305,8 +296,10 @@ export default function SwarmMonitor() {
 
                   {/* Heartbeat Indicator */}
                   <div className="flex items-center gap-1">
-                    <Heart
-                      className={`w-4 h-4 ${heartbeat.color} ${heartbeat.isAlive ? 'animate-pulse' : ''}`}
+                    <Icon
+                      name="favorite"
+                      size="sm"
+                      className={`${heartbeat.color} ${heartbeat.isAlive ? 'animate-pulse' : ''}`}
                     />
                     <span className={`text-xs ${heartbeat.color}`}>{heartbeat.label}</span>
                   </div>
@@ -336,33 +329,33 @@ export default function SwarmMonitor() {
                         onClick={() => handleOpenTerminal(task.taskId)}
                         className="flex items-center gap-1 px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-lg shadow-md transition-all"
                       >
-                        <Activity className="w-4 h-4" />
+                        <Icon name="monitoring" size="sm" />
                         Open Terminal & Help
                       </button>
                       <button
                         onClick={() => handleViewLog(task.taskId)}
                         className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 rounded transition-colors"
                       >
-                        <FileText className="w-3 h-3" />
+                        <Icon name="description" size="xs" />
                         View Log
                       </button>
                       <button
                         onClick={() => handleRestartTask(task.taskId)}
                         className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-yellow-700 bg-yellow-100 hover:bg-yellow-200 rounded transition-colors"
                       >
-                        <RotateCcw className="w-3 h-3" />
+                        <Icon name="refresh" size="xs" />
                         Restart
                       </button>
                       <button
                         onClick={() => handleKillTask(task.taskId)}
                         className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded transition-colors"
                       >
-                        <X className="w-3 h-3" />
+                        <Icon name="close" size="xs" />
                         Kill
                       </button>
                       {task.isStuck && (
                         <div className="ml-auto flex items-center gap-1 text-xs text-yellow-700">
-                          <AlertTriangle className="w-3 h-3" />
+                          <Icon name="warning" size="xs" />
                           <span className="font-medium">Agent may need manual intervention</span>
                         </div>
                       )}
@@ -398,7 +391,7 @@ export default function SwarmMonitor() {
         </div>
       ) : (
         <div className="text-center py-4">
-          <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+          <Icon name="schedule" size="2xl" className="text-gray-400 mx-auto mb-2" />
           <p className="text-sm text-gray-500">No agents currently running</p>
           <p className="text-xs text-gray-400 mt-1">Waiting for tasks...</p>
         </div>

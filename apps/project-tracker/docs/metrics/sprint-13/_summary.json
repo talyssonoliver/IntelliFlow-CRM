@@ -1,0 +1,92 @@
+{
+  "sprint": "sprint-13",
+  "name": "Sprint 13 - UI Pages & Lead Intelligence",
+  "target_date": null,
+  "started_at": "2026-01-25T00:00:00.000Z",
+  "completed_at": null,
+  "phases": [],
+  "task_summary": {
+    "total": 18,
+    "done": 11,
+    "in_progress": 0,
+    "blocked": 0,
+    "not_started": 7,
+    "failed": 0
+  },
+  "completed_tasks": [
+    {
+      "task_id": "IFC-021",
+      "completed_at": "2026-01-29T01:33:17.643Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-022",
+      "completed_at": "2026-01-29T01:33:17.643Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-023",
+      "completed_at": "2026-01-29T01:33:17.643Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "PG-015",
+      "completed_at": "2026-01-29T01:33:17.643Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "PG-016",
+      "completed_at": "2026-01-29T01:33:17.643Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "PG-018",
+      "completed_at": "2026-01-29T01:33:17.643Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-156",
+      "completed_at": "2026-01-29T01:33:17.643Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-159",
+      "completed_at": "2026-01-29T01:33:17.643Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-163",
+      "completed_at": "2026-01-29T01:33:17.643Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-172",
+      "completed_at": "2026-01-29T01:33:17.643Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-173",
+      "completed_at": "2026-01-29T01:33:17.643Z",
+      "duration_minutes": 15
+    }
+  ],
+  "notes": "11/18 tasks DONE (61%). Last synced: 2026-01-29T01:33:17.643Z",
+  "schedule": {
+    "sprint_start_date": null,
+    "sprint_end_date": null,
+    "working_hours_per_day": 8,
+    "working_days_per_week": 5,
+    "critical_path": {
+      "task_ids": [],
+      "total_duration_minutes": 0,
+      "completion_percentage": 0,
+      "bottleneck_task_id": null
+    },
+    "schedule_variance": {
+      "sv_minutes": -420,
+      "spi": 0.7,
+      "status": "critical"
+    },
+    "calculated_at": "2026-01-29T01:33:17.679Z"
+  }
+}

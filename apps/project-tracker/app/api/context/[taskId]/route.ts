@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
+import { parse } from 'csv-parse/sync';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -9,6 +10,21 @@ export const revalidate = 0;
 // Get repo root (apps/project-tracker -> repo root)
 function getRepoRoot(): string {
   return join(process.cwd(), '..', '..');
+}
+
+// Get sprint number for a task from CSV
+async function getTaskSprintNumber(taskId: string): Promise<number> {
+  const repoRoot = getRepoRoot();
+  const csvPath = join(repoRoot, 'apps', 'project-tracker', 'docs', 'metrics', '_global', 'Sprint_plan.csv');
+
+  try {
+    const csvContent = await readFile(csvPath, 'utf-8');
+    const records = parse(csvContent, { columns: true, skip_empty_lines: true }) as Array<Record<string, string>>;
+    const task = records.find((r) => r['Task ID'] === taskId);
+    return parseInt(task?.['Target Sprint'] || '0', 10);
+  } catch {
+    return 0;
+  }
 }
 
 interface Params {
@@ -83,17 +99,18 @@ function normalizeManifest(raw: RawManifest, taskId: string): NormalizedManifest
 }
 
 /**
- * Load context pack from canonical location: artifacts/attestations/{taskId}/
+ * Load context pack from sprint-based location first, then legacy
  */
-async function loadContextPack(taskId: string): Promise<{
+async function loadContextPack(taskId: string, sprintNumber: number): Promise<{
   manifest?: NormalizedManifest;
   content?: string;
 }> {
   const repoRoot = getRepoRoot();
 
-  // Canonical location: artifacts/attestations/{taskId}/
+  // Sprint-based location first, then legacy
   const possibleDirs = [
-    join(repoRoot, 'artifacts', 'attestations', taskId),
+    join(repoRoot, '.specify', 'sprints', `sprint-${sprintNumber}`, 'attestations', taskId),
+    join(repoRoot, 'artifacts', 'attestations', taskId), // Legacy location
   ];
 
   const result: { manifest?: NormalizedManifest; content?: string } = {};
@@ -170,18 +187,20 @@ function normalizeAck(raw: RawAckData, taskId: string): NormalizedAck {
 }
 
 /**
- * Load context acknowledgment from canonical location: artifacts/attestations/{taskId}/
+ * Load context acknowledgment from sprint-based location first, then legacy
  * Supports both attestation.json (new format) and context_ack.json (legacy format)
  */
-async function loadContextAck(taskId: string): Promise<{
+async function loadContextAck(taskId: string, sprintNumber: number): Promise<{
   ack?: NormalizedAck;
 }> {
   const repoRoot = getRepoRoot();
 
-  // Check canonical location only, supporting both file names
+  // Sprint-based location first, then legacy locations
   const possiblePaths = [
-    join(repoRoot, 'artifacts', 'attestations', taskId, 'attestation.json'), // New canonical format
-    join(repoRoot, 'artifacts', 'attestations', taskId, 'context_ack.json'), // Legacy format in canonical location
+    join(repoRoot, '.specify', 'sprints', `sprint-${sprintNumber}`, 'attestations', taskId, 'attestation.json'),
+    join(repoRoot, '.specify', 'sprints', `sprint-${sprintNumber}`, 'attestations', taskId, 'context_ack.json'),
+    join(repoRoot, 'artifacts', 'attestations', taskId, 'attestation.json'), // Legacy location
+    join(repoRoot, 'artifacts', 'attestations', taskId, 'context_ack.json'), // Legacy format
   ];
 
   let ackPath: string | null = null;
@@ -248,9 +267,12 @@ export async function GET(request: Request, { params }: Params) {
   const { taskId } = resolvedParams;
 
   try {
-    // Load context pack from canonical location: artifacts/attestations/{taskId}/
-    const { manifest, content } = await loadContextPack(taskId);
-    const { ack } = await loadContextAck(taskId);
+    // Get sprint number from CSV for sprint-based path lookup
+    const sprintNumber = await getTaskSprintNumber(taskId);
+
+    // Load context pack from sprint-based location first, then legacy
+    const { manifest, content } = await loadContextPack(taskId, sprintNumber);
+    const { ack } = await loadContextAck(taskId, sprintNumber);
 
     // Check if nothing exists (no pack AND no ack)
     if (!manifest && !content && !ack) {

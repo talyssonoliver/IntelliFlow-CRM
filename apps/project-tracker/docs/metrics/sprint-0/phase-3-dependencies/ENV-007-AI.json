@@ -9,7 +9,7 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-01-08T23:28:08.188Z",
+    "verified_at": "2026-01-29T01:33:17.560Z",
     "required": [
       "ENV-006-AI"
     ]
@@ -81,7 +81,8 @@
       "exit_code": 0,
       "passed": true,
       "stdout_hash": "sha256:RU5WLTAwNy1BSS10UlBDIEFQSSBzb3Vy",
-      "notes": "Validation passed"
+      "notes": "Validation passed",
+      "timestamp": "2025-12-16T21:49:01.145Z"
     },
     {
       "name": "tRPC API entry point exists",
@@ -92,7 +93,8 @@
       "exit_code": 0,
       "passed": true,
       "stdout_hash": "sha256:RU5WLTAwNy1BSS10UlBDIEFQSSBlbnRy",
-      "notes": "Validation passed"
+      "notes": "Validation passed",
+      "timestamp": "2025-12-16T21:49:01.145Z"
     }
   ],
   "blockers": [],

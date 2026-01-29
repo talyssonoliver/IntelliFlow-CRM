@@ -12,37 +12,37 @@
     "required": [
       "ENV-005-AI"
     ],
-    "verified_at": "2026-01-08T23:28:08.425Z",
+    "verified_at": "2026-01-29T01:33:17.562Z",
     "all_satisfied": true
   },
   "status_history": [
     {
-      "status": "In Progress",
+      "status": "IN_PROGRESS",
       "at": "2025-12-18T23:21:37+00:00",
       "note": "Task execution started"
     },
     {
-      "status": "In Progress",
+      "status": "IN_PROGRESS",
       "at": "2025-12-18T23:23:20+00:00",
       "note": "Task execution started"
     },
     {
-      "status": "In Progress",
+      "status": "IN_PROGRESS",
       "at": "2025-12-18T23:47:13+00:00",
       "note": "Task execution started"
     },
     {
-      "status": "In Progress",
+      "status": "IN_PROGRESS",
       "at": "2025-12-18T23:47:45+00:00",
       "note": "Task execution started"
     },
     {
-      "status": "In Progress",
+      "status": "IN_PROGRESS",
       "at": "2025-12-18T23:52:07+00:00",
       "note": "Task execution started"
     },
     {
-      "status": "In Progress",
+      "status": "IN_PROGRESS",
       "at": "2025-12-19T00:12:22+00:00",
       "note": "Task execution started"
     }
@@ -57,19 +57,19 @@
   "kpis": {
     "services_instrumented": {
       "target": 100,
-      "actual": null,
+      "actual": "N/A",
       "unit": "percent",
       "met": false
     },
     "alerting_configured": {
       "target": true,
-      "actual": null,
+      "actual": "N/A",
       "unit": "boolean",
       "met": false
     },
     "dashboards_live": {
       "target": true,
-      "actual": null,
+      "actual": "N/A",
       "unit": "boolean",
       "met": false
     }
@@ -89,7 +89,8 @@
       "exit_code": 0,
       "passed": true,
       "stdout_hash": "sha256:RU5WLTAwOC1BSS1PcGVuVGVsZW1ldHJ5",
-      "notes": "Validation passed"
+      "notes": "Validation passed",
+      "timestamp": "2025-12-19T00:58:53.985Z"
     },
     {
       "name": "Observability infrastructure exists",
@@ -100,7 +101,8 @@
       "exit_code": 0,
       "passed": true,
       "stdout_hash": "sha256:RU5WLTAwOC1BSS1PYnNlcnZhYmlsaXR5",
-      "notes": "Validation passed"
+      "notes": "Validation passed",
+      "timestamp": "2025-12-19T00:58:53.985Z"
     }
   ],
   "blockers": [],

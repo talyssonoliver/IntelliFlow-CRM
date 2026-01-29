@@ -6,7 +6,7 @@
   "owner": "Scrum Master + PM",
   "dependencies": {
     "required": [],
-    "verified_at": "2026-01-08T23:28:11.689Z",
+    "verified_at": "2026-01-29T01:33:17.606Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -49,14 +49,16 @@
       "command": "test -f artifacts/misc/ceremony-calendar.ics",
       "passed": true,
       "exit_code": 0,
-      "executed_at": "2025-12-21T17:30:00Z"
+      "executed_at": "2025-12-21T17:30:00Z",
+      "timestamp": "2025-12-27T11:33:39.132Z"
     },
     {
       "name": "templates_exist",
       "command": "test -f artifacts/misc/templates/sprint-planning.md",
       "passed": true,
       "exit_code": 0,
-      "executed_at": "2025-12-21T17:30:00Z"
+      "executed_at": "2025-12-21T17:30:00Z",
+      "timestamp": "2025-12-27T11:33:39.132Z"
     }
   ],
   "kpis": {

@@ -4,6 +4,16 @@
  */
 
 // =============================================================================
+// RAW CSV TYPES
+// =============================================================================
+
+/**
+ * Raw CSV row with string-indexed properties from Papa Parse.
+ * Used when parsing Sprint_plan.csv before transformation to Task type.
+ */
+export type RawCSVRow = Record<string, string | undefined>;
+
+// =============================================================================
 // CANONICAL STATUS VALUES - Single Source of Truth
 // =============================================================================
 
@@ -12,6 +22,7 @@
  * All status comparisons should use these constants.
  */
 export const TASK_STATUSES = {
+  // Base statuses
   BACKLOG: 'Backlog',
   PLANNED: 'Planned',
   IN_PROGRESS: 'In Progress',
@@ -21,6 +32,11 @@ export const TASK_STATUSES = {
   FAILED: 'Failed',
   NEEDS_HUMAN: 'Needs Human',
   IN_REVIEW: 'In Review',
+  // Workflow statuses (SESSION 1-3)
+  SPECIFYING: 'Specifying',       // SESSION 1 in progress
+  SPEC_COMPLETE: 'Spec Complete', // SESSION 1 done, ready for SESSION 2
+  PLANNING: 'Planning',           // SESSION 2 in progress
+  PLAN_COMPLETE: 'Plan Complete', // SESSION 2 done, ready for SESSION 3
 } as const;
 
 /**
@@ -67,15 +83,39 @@ export const STATUS_ALIASES: Record<string, TaskStatus> = {
   'in review': 'In Review',
   in_review: 'In Review',
   review: 'In Review',
+  // Workflow status aliases (SESSION 1-3)
+  specifying: 'Specifying',
+  'spec in progress': 'Specifying',
+  'spec complete': 'Spec Complete',
+  spec_complete: 'Spec Complete',
+  specified: 'Spec Complete',
+  planning: 'Planning',
+  'plan in progress': 'Planning',
+  'plan complete': 'Plan Complete',
+  plan_complete: 'Plan Complete',
+  planned_complete: 'Plan Complete',
 };
 
 /**
  * Status groupings for dashboard/kanban display
  */
+/**
+ * Status groupings for dashboard/kanban display.
+ * Maps detailed statuses to 5 UI columns.
+ */
 export const STATUS_GROUPS = {
   backlog: [TASK_STATUSES.BACKLOG, TASK_STATUSES.IN_REVIEW] as TaskStatus[],
-  planned: [TASK_STATUSES.PLANNED] as TaskStatus[],
-  active: [TASK_STATUSES.IN_PROGRESS, TASK_STATUSES.VALIDATING] as TaskStatus[],
+  planned: [
+    TASK_STATUSES.PLANNED,
+    TASK_STATUSES.SPEC_COMPLETE,  // Ready for SESSION 2
+    TASK_STATUSES.PLAN_COMPLETE,  // Ready for SESSION 3
+  ] as TaskStatus[],
+  active: [
+    TASK_STATUSES.IN_PROGRESS,
+    TASK_STATUSES.VALIDATING,
+    TASK_STATUSES.SPECIFYING,     // SESSION 1 in progress
+    TASK_STATUSES.PLANNING,       // SESSION 2 in progress
+  ] as TaskStatus[],
   blocked: [TASK_STATUSES.BLOCKED, TASK_STATUSES.NEEDS_HUMAN, TASK_STATUSES.FAILED] as TaskStatus[],
   completed: [TASK_STATUSES.COMPLETED] as TaskStatus[],
 } as const;
@@ -89,7 +129,12 @@ export type TaskStatus =
   | 'Blocked'
   | 'Failed'
   | 'Needs Human'
-  | 'In Review';
+  | 'In Review'
+  // Workflow statuses (SESSION 1-3)
+  | 'Specifying'
+  | 'Spec Complete'
+  | 'Planning'
+  | 'Plan Complete';
 
 export type SprintNumber = number | 'Continuous' | 'all';
 
@@ -506,5 +551,247 @@ export interface TaskWithGovernance extends Task {
     waiverExpiry?: string;
     inReviewQueue: boolean;
     reviewReasons?: string[];
+  };
+}
+
+// =============================================================================
+// VALIDATION SUMMARY TYPES (TaskModal Validation Tab)
+// =============================================================================
+
+/**
+ * Build/Test validation status for a specific check
+ */
+export interface BuildValidationItem {
+  name: 'typecheck' | 'tests' | 'lint' | 'build';
+  status: 'pass' | 'fail' | 'skip' | 'pending';
+  exitCode?: number;
+  count?: number; // For tests: number of tests
+  passed?: number; // For tests: passed count
+  failed?: number; // For tests: failed count
+  timestamp?: string;
+  duration?: number; // ms
+  command?: string;
+}
+
+/**
+ * Coverage metrics from attestation or coverage reports
+ */
+export interface CoverageMetrics {
+  lines: { pct: number; covered: number; total: number; met: boolean };
+  branches: { pct: number; covered: number; total: number; met: boolean };
+  functions: { pct: number; covered: number; total: number; met: boolean };
+  statements?: { pct: number; covered: number; total: number; met: boolean };
+  overall: { pct: number; met: boolean };
+}
+
+/**
+ * STOA verdict from MATOP execution
+ */
+export interface STOAVerdict {
+  role: 'Lead' | 'Supporting';
+  verdict: 'PASS' | 'WARN' | 'FAIL';
+  summary?: string;
+}
+
+/**
+ * MATOP execution summary
+ */
+export interface MATOPExecutionSummary {
+  runId: string;
+  timestamp: string;
+  consensusVerdict: 'PASS' | 'WARN' | 'FAIL';
+  verdictReason?: string;
+  stoaResults: Record<string, STOAVerdict>;
+  gatesExecuted: {
+    total: number;
+    passed: number;
+    warned: number;
+    failed: number;
+  };
+  issuesIdentified?: {
+    high: number;
+    medium: number;
+    low: number;
+  };
+  keyIssues?: Array<{
+    id: string;
+    severity: 'HIGH' | 'MEDIUM' | 'LOW';
+    description: string;
+  }>;
+  recommendations?: string[];
+  metrics?: {
+    testsRun?: number;
+    testsPassed?: number;
+    testsFailed?: number;
+    coverage?: {
+      statements: number;
+      branches: number;
+      functions: number;
+      lines: number;
+    };
+  };
+}
+
+/**
+ * KPI result from attestation
+ */
+export interface AttestationKPIResult {
+  kpi: string;
+  target: string;
+  actual: string;
+  met: boolean;
+}
+
+/**
+ * Definition of Done item validation from attestation
+ */
+export interface DODItemResult {
+  criterion: string;
+  met: boolean;
+  evidence?: string;
+}
+
+/**
+ * Enhanced context data with detailed file tracking
+ */
+export interface EnhancedContextData {
+  taskId: string;
+  runId?: string;
+  filesRead: Array<{
+    path: string;
+    hash: string;
+    status: 'matched' | 'mismatched' | 'missing' | 'pending';
+    size?: number;
+  }>;
+  invariantsAcknowledged: string[];
+  generatedAt?: string;
+  acknowledgedAt?: string;
+  totalFilesCount: number;
+  validatedFilesCount: number;
+}
+
+/**
+ * Spec/Plan preview excerpt
+ */
+export interface DocumentPreview {
+  exists: boolean;
+  path: string | null;
+  title?: string;
+  excerpt?: string; // First 500 chars or key sections
+  sections?: string[]; // List of H2 headings found
+  lastModified?: string;
+}
+
+// =============================================================================
+// PLAN DELIVERABLES VERIFICATION TYPES
+// =============================================================================
+
+/**
+ * Status of a single plan deliverable (file to create/modify)
+ */
+export interface PlanDeliverable {
+  path: string;
+  type: 'file' | 'directory';
+  status: 'exists' | 'missing' | 'unknown';
+  size?: number;
+  lastModified?: string;
+  fromSection: 'Files to Create/Modify' | 'Artifacts' | 'Implementation Steps';
+}
+
+/**
+ * Status of a plan checkbox item
+ */
+export interface PlanCheckboxItem {
+  text: string;
+  checked: boolean;
+  phase: string; // e.g., "Phase 1: Setup", "Phase 2: Implementation"
+  lineNumber?: number;
+}
+
+/**
+ * Complete plan deliverables verification result
+ */
+export interface PlanDeliverablesVerification {
+  taskId: string;
+  planExists: boolean;
+  planPath: string | null;
+
+  // Files to create/modify
+  deliverables: {
+    total: number;
+    verified: number;
+    missing: number;
+    items: PlanDeliverable[];
+  };
+
+  // Checkbox items from the plan
+  checkboxes: {
+    total: number;
+    checked: number;
+    unchecked: number;
+    items: PlanCheckboxItem[];
+  };
+
+  // Overall verification status
+  overallStatus: 'complete' | 'partial' | 'incomplete' | 'no-plan';
+  completionPercentage: number;
+
+  // Timestamp of verification
+  verifiedAt: string;
+}
+
+/**
+ * Complete validation summary for a task
+ */
+export interface TaskValidationSummary {
+  taskId: string;
+  sprintNumber: number;
+  timestamp: string;
+
+  // Build/Test validation
+  buildValidation: {
+    overall: 'pass' | 'fail' | 'partial' | 'pending';
+    items: BuildValidationItem[];
+  };
+
+  // Coverage metrics
+  coverage: CoverageMetrics | null;
+
+  // MATOP execution (if available)
+  matop: MATOPExecutionSummary | null;
+
+  // KPI results from attestation
+  kpis: {
+    total: number;
+    met: number;
+    results: AttestationKPIResult[];
+  };
+
+  // Definition of Done results
+  dod: {
+    total: number;
+    met: number;
+    items: DODItemResult[];
+  };
+
+  // Enhanced context
+  context: EnhancedContextData | null;
+
+  // Plan deliverables verification
+  planDeliverables: PlanDeliverablesVerification | null;
+
+  // Document previews
+  spec: DocumentPreview;
+  plan: DocumentPreview;
+
+  // Attestation summary
+  attestation: {
+    exists: boolean;
+    verdict?: 'COMPLETE' | 'INCOMPLETE' | 'BLOCKED';
+    attestor?: string;
+    timestamp?: string;
+    artifactsVerified?: number;
+    validationsPassed?: number;
+    gatesPassed?: number;
   };
 }

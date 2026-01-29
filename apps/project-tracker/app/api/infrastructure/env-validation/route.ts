@@ -125,7 +125,7 @@ function checkServices(): ServiceHealth[] {
   return services;
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const healthConfig = loadHealthCheckConfig();
     const envVars = validateEnvironment();

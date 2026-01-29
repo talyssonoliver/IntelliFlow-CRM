@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
 
@@ -19,7 +19,7 @@ interface StatusSnapshot {
   tasks: Record<string, { status: string; section: string; sprint: string }>;
 }
 
-export async function GET() {
+export async function GET(_request?: NextRequest) {
   try {
     // Always generate fresh data from CSV to ensure accuracy
     const csvPath = path.join(
@@ -151,7 +151,7 @@ function getRecentCompletions(tasks: Record<string, { status: string; section: s
     }));
 }
 
-export async function POST() {
+export async function POST(_request?: NextRequest) {
   try {
     // Generate status from CSV directly (most reliable approach)
     return await generateStatusFromCSV();

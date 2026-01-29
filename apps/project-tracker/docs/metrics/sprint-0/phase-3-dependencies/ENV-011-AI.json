@@ -12,7 +12,7 @@
     "required": [
       "ENV-007-AI"
     ],
-    "verified_at": "2026-01-08T23:28:08.861Z",
+    "verified_at": "2026-01-29T01:33:17.565Z",
     "all_satisfied": true
   },
   "status_history": [],
@@ -26,19 +26,19 @@
   "kpis": {
     "workflow_runtime_p95": {
       "target": 300,
-      "actual": null,
+      "actual": "N/A",
       "unit": "milliseconds",
       "met": false
     },
     "cost_logging_enabled": {
       "target": true,
-      "actual": null,
+      "actual": "N/A",
       "unit": "boolean",
       "met": false
     },
     "deterministic_replays": {
       "target": true,
-      "actual": null,
+      "actual": "N/A",
       "unit": "boolean",
       "met": false
     }
@@ -58,7 +58,8 @@
       "exit_code": 0,
       "passed": true,
       "stdout_hash": "sha256:RU5WLTAxMS1BSS1JREUgY29uZmlndXJh",
-      "notes": "Validation passed"
+      "notes": "Validation passed",
+      "timestamp": "2025-12-17T20:38:07.638Z"
     },
     {
       "name": "Dev environment configuration exists",
@@ -69,7 +70,8 @@
       "exit_code": 0,
       "passed": true,
       "stdout_hash": "sha256:RU5WLTAxMS1BSS1EZXYgZW52aXJvbm1l",
-      "notes": "Validation passed"
+      "notes": "Validation passed",
+      "timestamp": "2025-12-17T20:38:07.638Z"
     }
   ],
   "blockers": []

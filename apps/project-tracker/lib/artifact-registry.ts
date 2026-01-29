@@ -10,7 +10,7 @@
 import { readdirSync, statSync, existsSync } from 'fs';
 import { join, extname } from 'path';
 import { execSync } from 'child_process';
-import { PATHS, MONOREPO_ROOT } from './paths';
+import { MONOREPO_ROOT } from './paths';
 
 // =============================================================================
 // TYPES
@@ -120,7 +120,7 @@ export interface CodebaseHealth {
 export interface MissingFile {
   path: string;
   expectedBy: string[];
-  prefix: 'ARTIFACT' | 'EVIDENCE' | 'FILE';
+  prefix: 'ARTIFACT' | 'EVIDENCE' | 'FILE' | 'CONTEXT' | 'PLAN' | 'SPEC';
 }
 
 export interface CleanupSuggestion {
@@ -130,6 +130,287 @@ export interface CleanupSuggestion {
   size: number;
   lastModified: string;
   priority: 'high' | 'medium' | 'low';
+}
+
+// =============================================================================
+// CONTENT VALIDATION - Detect placeholders, mocks, and fabricated data
+// =============================================================================
+
+export type ContentIssueType =
+  | 'placeholder'      // File explicitly says it's a placeholder
+  | 'mock_data'        // Data labeled as mock/fake/dummy
+  | 'wrong_format'     // Expected .mp4 but got .md, etc.
+  | 'empty_stub'       // File exists but has no real content
+  | 'pending_status'   // Content indicates pending/incomplete status
+  | 'fabricated';      // Generated test data with no real execution
+
+export interface ContentValidationResult {
+  path: string;
+  isValid: boolean;
+  issues: Array<{
+    type: ContentIssueType;
+    message: string;
+    evidence: string;  // Line or pattern that triggered the issue
+  }>;
+}
+
+/**
+ * Patterns that indicate placeholder/mock/fabricated content
+ */
+const CONTENT_ISSUE_PATTERNS: Array<{
+  type: ContentIssueType;
+  pattern: RegExp;
+  message: string;
+}> = [
+  // Explicit placeholder markers
+  {
+    type: 'placeholder',
+    pattern: /\bPLACEHOLDER\b|\bplaceholder\b/gi,
+    message: 'File contains explicit PLACEHOLDER marker',
+  },
+  {
+    type: 'placeholder',
+    pattern: /Status:\s*PLACEHOLDER|PLACEHOLDER\s*-\s*[Vv]ideo|placeholder.*pending/gi,
+    message: 'File marked as placeholder with pending status',
+  },
+  // Mock data indicators
+  {
+    type: 'mock_data',
+    pattern: /["']?model[_-]?version["']?\s*[:=]\s*["']?mock:/gi,
+    message: 'Uses mock model version instead of real AI model',
+  },
+  {
+    type: 'mock_data',
+    pattern: /\b(mock|fake|dummy|fabricated)[_-]?(data|result|output|response)\b/gi,
+    message: 'Contains mock/fake data markers',
+  },
+  {
+    type: 'mock_data',
+    pattern: /["']?executor["']?\s*[:=]\s*["']?mock/gi,
+    message: 'Execution attributed to mock executor',
+  },
+  // Pending/incomplete status
+  {
+    type: 'pending_status',
+    pattern: /\b(Video|Recording|Implementation)\s+(recording\s+)?pending\b/gi,
+    message: 'Content indicates feature is pending implementation',
+  },
+  {
+    type: 'pending_status',
+    pattern: /\bwill be (recorded|created|implemented|added)\b/gi,
+    message: 'Content indicates future work required',
+  },
+  {
+    type: 'pending_status',
+    pattern: /\bTODO\s*:\s*[A-Z]/gi,
+    message: 'Contains TODO markers indicating incomplete work',
+  },
+  // Fabricated test results (100% pass rate with suspicious patterns)
+  {
+    type: 'fabricated',
+    pattern: /"passRate"\s*:\s*1\.0\s*,[\s\S]*?"passRate"\s*:\s*1\.0/gi,
+    message: 'Suspiciously perfect test results (multiple 100% pass rates)',
+  },
+  {
+    type: 'fabricated',
+    pattern: /"passed"\s*:\s*true[\s\S]*?"passed"\s*:\s*true[\s\S]*?"passed"\s*:\s*true[\s\S]*?"passed"\s*:\s*true[\s\S]*?"passed"\s*:\s*true/gi,
+    message: 'All tests passed with no failures - verify actual execution',
+  },
+  // Simulated/mock data detection (IFC-085, IFC-099, etc.)
+  {
+    type: 'mock_data',
+    pattern: /["']?model[_-]?version["']?\s*[:=]\s*["']?simulated/gi,
+    message: 'Uses simulated model version instead of real execution',
+  },
+  {
+    type: 'placeholder',
+    pattern: /placeholder:\s*true/gi,
+    message: 'Contains placeholder return value indicating stub implementation',
+  },
+  {
+    type: 'fabricated',
+    pattern: /\b(simulated|synthetic|fabricated)[_-]?(benchmark|data|result)\b/gi,
+    message: 'Contains simulated/synthetic data markers',
+  },
+  // Not wired/integrated indicators (IFC-099, IFC-117, IFC-144)
+  {
+    type: 'pending_status',
+    pattern: /\/\/\s*(TODO|PLACEHOLDER):\s*(wire|integrate|connect)/gi,
+    message: 'Code marked as needing wiring/integration',
+  },
+  // Placeholder channel implementations (IFC-157)
+  {
+    type: 'placeholder',
+    pattern: /case\s+['"](\w+)['"]\s*:[\s\S]{0,100}placeholder:\s*true/gi,
+    message: 'Channel implementation returns placeholder instead of real delivery',
+  },
+  // Null fallback returns (IFC-020, IFC-155)
+  {
+    type: 'placeholder',
+    pattern: /\/\/\s*For now,?\s*return\s*null\s*to\s*fallback/gi,
+    message: 'Function returns null as fallback instead of real implementation',
+  },
+  {
+    type: 'placeholder',
+    pattern: /return\s*null\s*;?\s*\/\/\s*(placeholder|TODO|fallback)/gi,
+    message: 'Returns null with placeholder/TODO comment',
+  },
+  // Not yet implemented throws (IFC-086)
+  {
+    type: 'pending_status',
+    pattern: /throw\s+(?:new\s+)?Error\s*\(\s*['"`].*not\s+yet\s+implemented/gi,
+    message: 'Throws "not yet implemented" error instead of real implementation',
+  },
+  // Hardcoded prediction values (IFC-095)
+  {
+    type: 'mock_data',
+    pattern: /\/\/\s*TODO:\s*Implement\s+with\s+real\s+.*chain/gi,
+    message: 'Contains TODO for implementing real AI chain',
+  },
+  {
+    type: 'mock_data',
+    pattern: /return\s*\{\s*(confidence|score|risk):\s*\d+\.?\d*\s*,/gi,
+    message: 'Returns hardcoded confidence/score value instead of AI prediction',
+  },
+  // Deferred audit logging (IFC-125)
+  {
+    type: 'pending_status',
+    pattern: /\/\/\s*TODO:?\s*.*audit\s*log/gi,
+    message: 'Contains deferred TODO for audit logging integration',
+  },
+  // Placeholder demonstration comments (IFC-128)
+  {
+    type: 'placeholder',
+    pattern: /\/\/\s*This\s+is\s+a\s+placeholder\s+for\s+demonstration/gi,
+    message: 'Contains placeholder demonstration comment',
+  },
+  // Simulated benchmark entries (IFC-150)
+  {
+    type: 'fabricated',
+    pattern: /["']name["']\s*:\s*["'][^"']*\(simulated\)["']/gi,
+    message: 'Benchmark entry marked as simulated',
+  },
+  // Token counting stubs (IFC-115)
+  {
+    type: 'placeholder',
+    pattern: /\/\/\s*Would\s+need\s+actual\s+token\s+counting/gi,
+    message: 'Token counting is stubbed/placeholder',
+  },
+];
+
+/**
+ * File format validation - detect wrong file types
+ */
+const FORMAT_EXPECTATIONS: Record<string, string[]> = {
+  '.mp4': ['.md', '.txt', '.json'],   // Video expected, got text/json
+  '.pdf': ['.md', '.txt'],            // PDF expected, got text
+  '.xlsx': ['.json', '.csv'],         // Excel expected, got data file
+  '.png': ['.md', '.txt', '.svg'],    // Image expected, got text
+  '.jpg': ['.md', '.txt', '.svg'],    // Image expected, got text
+};
+
+/**
+ * Validate content of a single file for placeholder/mock patterns
+ */
+export function validateFileContent(
+  filePath: string,
+  content: string,
+  expectedExtension?: string
+): ContentValidationResult {
+  const issues: ContentValidationResult['issues'] = [];
+
+  // Check for wrong file format
+  if (expectedExtension) {
+    const actualExtension = filePath.substring(filePath.lastIndexOf('.'));
+    const wrongFormats = FORMAT_EXPECTATIONS[expectedExtension];
+
+    if (wrongFormats && wrongFormats.includes(actualExtension)) {
+      issues.push({
+        type: 'wrong_format',
+        message: `Expected ${expectedExtension} file but got ${actualExtension}`,
+        evidence: `File path: ${filePath}`,
+      });
+    }
+  }
+
+  // Check for empty/stub files
+  const trimmedContent = content.trim();
+  if (trimmedContent.length === 0) {
+    issues.push({
+      type: 'empty_stub',
+      message: 'File is empty',
+      evidence: 'No content',
+    });
+  } else if (trimmedContent.length < 50 && !filePath.endsWith('.json')) {
+    issues.push({
+      type: 'empty_stub',
+      message: 'File has minimal content (less than 50 characters)',
+      evidence: trimmedContent.substring(0, 50),
+    });
+  }
+
+  // Check for placeholder/mock patterns
+  for (const { type, pattern, message } of CONTENT_ISSUE_PATTERNS) {
+    // Reset regex state
+    pattern.lastIndex = 0;
+    const match = pattern.exec(content);
+
+    if (match) {
+      issues.push({
+        type,
+        message,
+        evidence: match[0].substring(0, 100),
+      });
+    }
+  }
+
+  return {
+    path: filePath,
+    isValid: issues.length === 0,
+    issues,
+  };
+}
+
+/**
+ * Batch validate multiple files
+ */
+export function validateFilesContent(
+  filesToValidate: Array<{ path: string; content: string; expectedExtension?: string }>
+): ContentValidationResult[] {
+  return filesToValidate.map(({ path, content, expectedExtension }) =>
+    validateFileContent(path, content, expectedExtension)
+  );
+}
+
+/**
+ * Quick check if content appears to be fabricated (without full validation)
+ */
+export function isLikelyFabricated(content: string): boolean {
+  // Check for common fabrication indicators
+  const fabricationIndicators = [
+    /mock:.*:v\d/i,                      // Mock version strings
+    /PLACEHOLDER/i,                       // Explicit placeholder
+    /pending|will be (recorded|created)/i, // Future tense
+    /"passed"\s*:\s*true/g,              // Count passed tests
+  ];
+
+  let suspiciousCount = 0;
+
+  for (const pattern of fabricationIndicators) {
+    if (pattern.test(content)) {
+      suspiciousCount++;
+    }
+  }
+
+  // If all tests pass (JSON with many "passed": true), check if it's suspicious
+  const passedMatches = content.match(/"passed"\s*:\s*true/g);
+  const failedMatches = content.match(/"passed"\s*:\s*false/g);
+
+  if (passedMatches && passedMatches.length > 5 && (!failedMatches || failedMatches.length === 0)) {
+    suspiciousCount++;
+  }
+
+  return suspiciousCount >= 2;
 }
 
 // =============================================================================
@@ -308,14 +589,26 @@ export function scanAllArtifacts(): FileEntry[] {
 // TASK FILE PARSING
 // =============================================================================
 
+export interface ParsedTaskFileRefs {
+  artifacts: string[];
+  evidence: string[];
+  files: string[];
+  context: string[];
+  plan: string[];
+  spec: string[];
+}
+
 export function parseTaskFileRefs(
   artifactsField: string,
   prerequisitesField: string,
   validationField: string
-): { artifacts: string[]; evidence: string[]; files: string[] } {
+): ParsedTaskFileRefs {
   const artifacts: string[] = [];
   const evidence: string[] = [];
   const files: string[] = [];
+  const context: string[] = [];
+  const plan: string[] = [];
+  const spec: string[] = [];
 
   // Parse Artifacts To Track field
   if (artifactsField) {
@@ -326,6 +619,12 @@ export function parseTaskFileRefs(
         artifacts.push(trimmed.replace('ARTIFACT:', '').trim());
       } else if (trimmed.startsWith('EVIDENCE:')) {
         evidence.push(trimmed.replace('EVIDENCE:', '').trim());
+      } else if (trimmed.startsWith('CONTEXT:')) {
+        context.push(trimmed.replace('CONTEXT:', '').trim());
+      } else if (trimmed.startsWith('PLAN:')) {
+        plan.push(trimmed.replace('PLAN:', '').trim());
+      } else if (trimmed.startsWith('SPEC:')) {
+        spec.push(trimmed.replace('SPEC:', '').trim());
       } else if (trimmed && !trimmed.startsWith('VALIDATE:') && !trimmed.startsWith('GATE:') && !trimmed.startsWith('AUDIT:')) {
         artifacts.push(trimmed);
       }
@@ -354,7 +653,7 @@ export function parseTaskFileRefs(
     }
   }
 
-  return { artifacts, evidence, files };
+  return { artifacts, evidence, files, context, plan, spec };
 }
 
 // =============================================================================
@@ -366,6 +665,9 @@ export interface TaskFileMap {
     expectedArtifacts: string[];
     expectedEvidence: string[];
     requiredFiles: string[];
+    expectedContext: string[];
+    expectedPlan: string[];
+    expectedSpec: string[];
     status: string;
     section: string;
   };
@@ -382,7 +684,7 @@ export function buildTaskFileMap(tasks: Array<{
   const map: TaskFileMap = {};
 
   for (const task of tasks) {
-    const { artifacts, evidence, files } = parseTaskFileRefs(
+    const { artifacts, evidence, files, context, plan, spec } = parseTaskFileRefs(
       task.artifacts.join(','),
       task.prerequisites,
       task.validation
@@ -392,6 +694,9 @@ export function buildTaskFileMap(tasks: Array<{
       expectedArtifacts: artifacts,
       expectedEvidence: evidence,
       requiredFiles: files,
+      expectedContext: context,
+      expectedPlan: plan,
+      expectedSpec: spec,
       status: task.status,
       section: task.section,
     };
@@ -411,6 +716,9 @@ export function linkFilesToTasks(
       ...data.expectedArtifacts,
       ...data.expectedEvidence,
       ...data.requiredFiles,
+      ...data.expectedContext,
+      ...data.expectedPlan,
+      ...data.expectedSpec,
     ];
 
     for (const path of allPaths) {
@@ -506,6 +814,9 @@ export function findMissingFiles(
       { paths: data.expectedArtifacts, prefix: 'ARTIFACT' as const },
       { paths: data.expectedEvidence, prefix: 'EVIDENCE' as const },
       { paths: data.requiredFiles, prefix: 'FILE' as const },
+      { paths: data.expectedContext, prefix: 'CONTEXT' as const },
+      { paths: data.expectedPlan, prefix: 'PLAN' as const },
+      { paths: data.expectedSpec, prefix: 'SPEC' as const },
     ];
 
     for (const { paths, prefix } of checkPaths) {

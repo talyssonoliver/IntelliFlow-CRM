@@ -9,7 +9,7 @@
       "IFC-100",
       "GOV-001"
     ],
-    "verified_at": "2026-01-08T23:28:13.364Z",
+    "verified_at": "2026-01-29T01:33:17.635Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -39,7 +39,8 @@
       "required": true,
       "executed_at": "2025-12-31T06:55:00Z",
       "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "timestamp": "2025-12-31T07:00:00Z"
     }
   ],
   "kpis": {

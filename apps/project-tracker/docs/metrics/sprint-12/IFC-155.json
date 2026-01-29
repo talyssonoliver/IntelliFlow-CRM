@@ -10,10 +10,10 @@
       "IFC-127",
       "ENV-004-AI"
     ],
-    "verified_at": "2026-01-08T23:28:13.478Z",
+    "verified_at": "2026-01-29T01:33:17.638Z",
     "all_satisfied": true
   },
-  "status": "DONE",
+  "status": "IN_PROGRESS",
   "status_history": [
     {
       "status": "DONE",
@@ -38,7 +38,8 @@
       "required": true,
       "executed_at": "2025-12-31T10:55:00Z",
       "exit_code": 0,
-      "passed": true
+      "passed": true,
+      "timestamp": "2025-12-31T11:00:00Z"
     }
   ],
   "kpis": {

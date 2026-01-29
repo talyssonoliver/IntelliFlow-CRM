@@ -1,21 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import {
-  BarChart3,
-  RefreshCw,
-  AlertTriangle,
-  CheckCircle2,
-  Clock,
-  FileWarning,
-  GitBranch,
-  Target,
-  ChevronDown,
-  ChevronRight,
-  Package,
-  Folder,
-  Server,
-} from 'lucide-react';
+import { Icon } from '@/lib/icons';
 
 // Detail types - using snake_case to match API response
 interface MismatchDetail {
@@ -117,7 +103,7 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
     return (
       <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-lg shadow-xl p-6 border border-slate-700">
         <div className="flex items-center justify-center py-8">
-          <RefreshCw className="w-6 h-6 text-blue-400 animate-spin mr-2" />
+          <Icon name="refresh" size="xl" className="text-blue-400 animate-spin mr-2" />
           <span className="text-slate-300">Loading executive metrics...</span>
         </div>
       </div>
@@ -128,7 +114,7 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
     return (
       <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-lg shadow-xl p-6 border border-red-500/30">
         <div className="flex items-center text-red-400">
-          <AlertTriangle className="w-5 h-5 mr-2" />
+          <Icon name="warning" size="lg" className="mr-2" />
           <span>Error: {error}</span>
         </div>
       </div>
@@ -141,28 +127,28 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
     {
       metric: 'Total Tasks',
       value: metrics.total_tasks.toString(),
-      icon: <BarChart3 className="w-4 h-4" />,
+      icon: <Icon name="bar_chart" size="sm" />,
       color: 'text-blue-400',
       bgColor: 'bg-blue-500/10',
     },
     {
       metric: 'Completed',
       value: `${metrics.completed.count} (${metrics.completed.percentage}%)`,
-      icon: <CheckCircle2 className="w-4 h-4" />,
+      icon: <Icon name="check_circle" size="sm" />,
       color: 'text-green-400',
       bgColor: 'bg-green-500/10',
     },
     {
       metric: 'In Progress',
       value: `${metrics.in_progress.count} (${metrics.in_progress.percentage}%)`,
-      icon: <Clock className="w-4 h-4" />,
+      icon: <Icon name="schedule" size="sm" />,
       color: 'text-yellow-400',
       bgColor: 'bg-yellow-500/10',
     },
     {
       metric: 'Backlog',
       value: `${metrics.backlog.count} (${metrics.backlog.percentage}%)`,
-      icon: <Target className="w-4 h-4" />,
+      icon: <Icon name="my_location" size="sm" />,
       color: 'text-slate-400',
       bgColor: 'bg-slate-500/10',
     },
@@ -171,11 +157,11 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
   const getTypeIcon = (type: 'package' | 'app' | 'infra') => {
     switch (type) {
       case 'package':
-        return <Package className="w-3 h-3" />;
+        return <Icon name="inventory_2" size="xs" />;
       case 'app':
-        return <Server className="w-3 h-3" />;
+        return <Icon name="dns" size="xs" />;
       case 'infra':
-        return <Folder className="w-3 h-3" />;
+        return <Icon name="folder" size="xs" />;
     }
   };
 
@@ -196,7 +182,7 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
       <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700 bg-slate-800/50">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-            <BarChart3 className="w-5 h-5 text-blue-400" />
+            <Icon name="bar_chart" size="lg" className="text-blue-400" />
           </div>
           <div>
             <h2 className="text-lg font-semibold text-white">Executive Summary</h2>
@@ -211,7 +197,7 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
           className="p-2 rounded-lg bg-slate-700/50 hover:bg-slate-600/50 transition-colors disabled:opacity-50"
           title="Refresh metrics"
         >
-          <RefreshCw className={`w-4 h-4 text-slate-300 ${loading ? 'animate-spin' : ''}`} />
+          <Icon name="refresh" size="sm" className={`text-slate-300 ${loading ? 'animate-spin' : ''}`} />
         </button>
       </div>
 
@@ -259,16 +245,16 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
                     <div
                       className={`w-8 h-8 rounded-lg ${metrics.plan_vs_code_mismatches > 0 ? 'bg-orange-500/10' : 'bg-green-500/10'} flex items-center justify-center ${metrics.plan_vs_code_mismatches > 0 ? 'text-orange-400' : 'text-green-400'}`}
                     >
-                      <FileWarning className="w-4 h-4" />
+                      <Icon name="description" size="sm" />
                     </div>
                     <span className="text-sm font-medium text-slate-200">
                       Plan-vs-Code Mismatches
                     </span>
                     {metrics.plan_vs_code_mismatches_details.length > 0 &&
                       (expanded.has('mismatches') ? (
-                        <ChevronDown className="w-4 h-4 text-slate-400" />
+                        <Icon name="expand_more" size="sm" className="text-slate-400" />
                       ) : (
-                        <ChevronRight className="w-4 h-4 text-slate-400" />
+                        <Icon name="chevron_right" size="sm" className="text-slate-400" />
                       ))}
                   </div>
                 </td>
@@ -315,16 +301,16 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
                     <div
                       className={`w-8 h-8 rounded-lg ${metrics.untracked_code_artifacts > 0 ? 'bg-orange-500/10' : 'bg-green-500/10'} flex items-center justify-center ${metrics.untracked_code_artifacts > 0 ? 'text-orange-400' : 'text-green-400'}`}
                     >
-                      <AlertTriangle className="w-4 h-4" />
+                      <Icon name="warning" size="sm" />
                     </div>
                     <span className="text-sm font-medium text-slate-200">
                       Untracked Code Artifacts
                     </span>
                     {metrics.untracked_code_artifacts_details.length > 0 &&
                       (expanded.has('untracked') ? (
-                        <ChevronDown className="w-4 h-4 text-slate-400" />
+                        <Icon name="expand_more" size="sm" className="text-slate-400" />
                       ) : (
-                        <ChevronRight className="w-4 h-4 text-slate-400" />
+                        <Icon name="chevron_right" size="sm" className="text-slate-400" />
                       ))}
                   </div>
                 </td>
@@ -368,14 +354,14 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
                     <div
                       className={`w-8 h-8 rounded-lg ${metrics.forward_dependencies > 0 ? 'bg-red-500/10' : 'bg-green-500/10'} flex items-center justify-center ${metrics.forward_dependencies > 0 ? 'text-red-400' : 'text-green-400'}`}
                     >
-                      <GitBranch className="w-4 h-4" />
+                      <Icon name="account_tree" size="sm" />
                     </div>
                     <span className="text-sm font-medium text-slate-200">Forward Dependencies</span>
                     {metrics.forward_dependencies_details.length > 0 &&
                       (expanded.has('forward') ? (
-                        <ChevronDown className="w-4 h-4 text-slate-400" />
+                        <Icon name="expand_more" size="sm" className="text-slate-400" />
                       ) : (
-                        <ChevronRight className="w-4 h-4 text-slate-400" />
+                        <Icon name="chevron_right" size="sm" className="text-slate-400" />
                       ))}
                   </div>
                 </td>
@@ -427,14 +413,14 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
                 <td className="py-3 px-3">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400">
-                      <Target className="w-4 h-4" />
+                      <Icon name="my_location" size="sm" />
                     </div>
                     <span className="text-sm font-medium text-slate-200">Sprint Bottleneck</span>
                     {metrics.sprint_bottlenecks_details.length > 0 &&
                       (expanded.has('bottleneck') ? (
-                        <ChevronDown className="w-4 h-4 text-slate-400" />
+                        <Icon name="expand_more" size="sm" className="text-slate-400" />
                       ) : (
-                        <ChevronRight className="w-4 h-4 text-slate-400" />
+                        <Icon name="chevron_right" size="sm" className="text-slate-400" />
                       ))}
                   </div>
                 </td>
@@ -505,13 +491,13 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
           </div>
           {metrics.forward_dependencies > 0 && (
             <div className="flex items-center gap-1.5 text-red-400">
-              <AlertTriangle className="w-3 h-3" />
+              <Icon name="warning" size="xs" />
               <span>{metrics.forward_dependencies} forward deps need review</span>
             </div>
           )}
           {metrics.plan_vs_code_mismatches > 0 && (
             <div className="flex items-center gap-1.5 text-orange-400">
-              <FileWarning className="w-3 h-3" />
+              <Icon name="description" size="xs" />
               <span>{metrics.plan_vs_code_mismatches} artifact mismatches</span>
             </div>
           )}

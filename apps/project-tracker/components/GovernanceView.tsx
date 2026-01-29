@@ -1,21 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-  RefreshCw,
-  Shield,
-  AlertTriangle,
-  CheckCircle2,
-  Clock,
-  FileText,
-  AlertCircle,
-  Play,
-  ChevronDown,
-  ChevronUp,
-  Ghost,
-  XCircle,
-  Terminal,
-} from 'lucide-react';
+import { Icon } from '@/lib/icons';
 
 interface GovernanceSummary {
   sprint: number;
@@ -157,7 +143,7 @@ function ActionableSummary({ tierTasks }: ActionableSummaryProps) {
       {hasErrors && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
           <h3 className="font-semibold text-amber-800 flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5" />
+            <Icon name="warning" size="lg" />
             Action Required
           </h3>
           <div className="mt-3 space-y-3">
@@ -284,7 +270,7 @@ function TierCard({
               />
             </div>
           </div>
-          {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          {isExpanded ? <Icon name="expand_less" size="lg" /> : <Icon name="expand_more" size="lg" />}
         </div>
       </button>
       {isExpanded && tasks && (
@@ -502,12 +488,12 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
   // Helper to get task status icon
   const getTaskStatusIcon = (status: string, hasLintErrors: boolean) => {
     if (status === 'done') {
-      return <CheckCircle2 className="w-4 h-4 text-green-600" />;
+      return <Icon name="check_circle" size="sm" className="text-green-600" />;
     }
     if (hasLintErrors) {
-      return <XCircle className="w-4 h-4 text-red-600" />;
+      return <Icon name="cancel" size="sm" className="text-red-600" />;
     }
-    return <Clock className="w-4 h-4 text-gray-400" />;
+    return <Icon name="schedule" size="sm" className="text-gray-400" />;
   };
 
   // Helper to get task card background class
@@ -568,7 +554,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
   if (isLoading && !summary) {
     return (
       <div className="flex items-center justify-center h-64">
-        <RefreshCw className="w-8 h-8 animate-spin text-blue-500" />
+        <Icon name="refresh" size="2xl" className="animate-spin text-blue-500" />
       </div>
     );
   }
@@ -576,7 +562,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
   if (!filesExist.planOverrides) {
     return (
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-        <AlertTriangle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+        <Icon name="warning" size="2xl" className="text-yellow-500 mx-auto mb-4" />
         <h2 className="text-xl font-semibold text-yellow-800 mb-2">Governance Not Initialized</h2>
         <p className="text-yellow-700 mb-4">The plan governance system has not been set up yet.</p>
         <p className="text-sm text-yellow-600 mb-4">
@@ -588,7 +574,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
           disabled={isRunningLint}
           className="flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 disabled:opacity-50 mx-auto"
         >
-          <Play className={`w-4 h-4 ${isRunningLint ? 'animate-pulse' : ''}`} />
+          <Icon name="play_arrow" size="sm" className={isRunningLint ? 'animate-pulse' : ''} />
           {isRunningLint ? 'Running...' : 'Initialize Governance'}
         </button>
       </div>
@@ -600,7 +586,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Shield className="w-8 h-8 text-blue-600" />
+          <Icon name="shield" size="2xl" className="text-blue-600" />
           <div>
             <h1 className="text-2xl font-bold">Plan Governance</h1>
             <p className="text-gray-600">
@@ -619,7 +605,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
             disabled={isRunningLint}
             className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:opacity-50"
           >
-            <Play className={`w-4 h-4 ${isRunningLint ? 'animate-pulse' : ''}`} />
+            <Icon name="play_arrow" size="sm" className={isRunningLint ? 'animate-pulse' : ''} />
             {isRunningLint ? 'Running...' : 'Run Lint'}
           </button>
           <button
@@ -627,7 +613,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
             disabled={isLoading}
             className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <Icon name="refresh" size="sm" className={isLoading ? 'animate-spin' : ''} />
             Refresh
           </button>
         </div>
@@ -684,7 +670,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-lg">
-              <FileText className="w-6 h-6 text-blue-600" />
+              <Icon name="description" size="xl" className="text-blue-600" />
             </div>
             <div>
               <p className="text-2xl font-bold">{summary?.validationCoverage || 0}%</p>
@@ -696,7 +682,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-orange-100 rounded-lg">
-              <Clock className="w-6 h-6 text-orange-600" />
+              <Icon name="schedule" size="xl" className="text-orange-600" />
             </div>
             <div>
               <p className="text-2xl font-bold">{summary?.reviewQueueSize || 0}</p>
@@ -708,7 +694,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-red-100 rounded-lg">
-              <AlertCircle className="w-6 h-6 text-red-600" />
+              <Icon name="error" size="xl" className="text-red-600" />
             </div>
             <div>
               <p className="text-2xl font-bold">{summary?.errorCount || 0}</p>
@@ -720,7 +706,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-yellow-100 rounded-lg">
-              <AlertTriangle className="w-6 h-6 text-yellow-600" />
+              <Icon name="warning" size="xl" className="text-yellow-600" />
             </div>
             <div>
               <p className="text-2xl font-bold">{summary?.debtItems || 0}</p>
@@ -782,7 +768,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
       {phantomAudit && phantomAudit.summary.phantom_completions > 0 && (
         <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4">
           <div className="flex items-start gap-3">
-            <Ghost className="w-8 h-8 text-red-500 flex-shrink-0" />
+            <Icon name="warning" size="2xl" className="text-red-500 flex-shrink-0" />
             <div className="flex-1">
               <h3 className="font-bold text-red-800 text-lg">
                 Data Integrity Alert: Phantom Completions Detected
@@ -822,7 +808,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                 id: 'phantom',
                 label: 'Phantom Completions',
                 count: phantomAudit?.summary.phantom_completions || 0,
-                icon: Ghost,
+                iconName: 'warning',
                 critical: true,
               },
             ].map((tab) => (
@@ -831,7 +817,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`px-4 py-3 text-sm font-medium border-b-2 flex items-center gap-1 ${getTabClass(tab.id, !!tab.critical, (tab.count || 0) > 0)}`}
               >
-                {tab.icon && <tab.icon className="w-4 h-4" />}
+                {tab.iconName && <Icon name={tab.iconName} size="sm" />}
                 {tab.label}
                 {tab.count !== null && (
                   <span
@@ -858,9 +844,9 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                     {Object.entries(filesExist).map(([file, exists]) => (
                       <li key={file} className="flex items-center gap-2">
                         {exists ? (
-                          <CheckCircle2 className="w-4 h-4 text-green-500" />
+                          <Icon name="check_circle" size="sm" className="text-green-500" />
                         ) : (
-                          <AlertCircle className="w-4 h-4 text-red-500" />
+                          <Icon name="error" size="sm" className="text-red-500" />
                         )}
                         <span className={exists ? 'text-green-700' : 'text-red-700'}>
                           {file.replaceAll(/([A-Z])/g, ' $1').trim()}
@@ -874,12 +860,12 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                   <h3 className="font-semibold mb-2">Expiring Waivers</h3>
                   {summary?.expiringWaivers ? (
                     <p className="text-orange-600 flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4" />
+                      <Icon name="warning" size="sm" />
                       {summary.expiringWaivers} waiver(s) expire within 30 days
                     </p>
                   ) : (
                     <p className="text-green-600 flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4" />
+                      <Icon name="check_circle" size="sm" />
                       No waivers expiring soon
                     </p>
                   )}
@@ -918,9 +904,9 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-gray-500">{item.owner}</span>
                         {expandedItems.has(item.task_id) ? (
-                          <ChevronUp className="w-4 h-4" />
+                          <Icon name="expand_less" size="sm" />
                         ) : (
-                          <ChevronDown className="w-4 h-4" />
+                          <Icon name="expand_more" size="sm" />
                         )}
                       </div>
                     </button>
@@ -1009,7 +995,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
               {lintErrors.length > 0 && (
                 <div>
                   <h3 className="font-semibold text-red-600 mb-2 flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4" />
+                    <Icon name="error" size="sm" />
                     Errors ({lintErrors.length})
                   </h3>
                   <div className="space-y-2">
@@ -1034,7 +1020,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
               {lintWarnings.length > 0 && (
                 <div>
                   <h3 className="font-semibold text-yellow-600 mb-2 flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4" />
+                    <Icon name="warning" size="sm" />
                     Warnings ({lintWarnings.length})
                   </h3>
                   <div className="space-y-2">
@@ -1058,7 +1044,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
 
               {lintErrors.length === 0 && lintWarnings.length === 0 && (
                 <div className="text-center py-8 text-green-600">
-                  <CheckCircle2 className="w-12 h-12 mx-auto mb-2" />
+                  <Icon name="check_circle" size="2xl" className="mx-auto mb-2" />
                   <p>No lint issues found</p>
                 </div>
               )}
@@ -1101,7 +1087,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                   {/* Phantom Completions List */}
                   <div>
                     <h3 className="font-semibold text-red-600 mb-3 flex items-center gap-2">
-                      <Ghost className="w-5 h-5" />
+                      <Icon name="warning" size="lg" />
                       Phantom Completions ({phantomAudit.phantom_completions.length})
                     </h3>
                     <div className="space-y-3">
@@ -1116,7 +1102,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                             onClick={() => toggleExpand(`phantom-${item.task_id}`)}
                           >
                             <div className="flex items-center gap-3">
-                              <XCircle className="w-5 h-5 text-red-500" />
+                              <Icon name="cancel" size="lg" className="text-red-500" />
                               <span className="font-semibold text-red-700">{item.task_id}</span>
                               <span className="text-sm text-gray-500">{item.description}</span>
                             </div>
@@ -1125,9 +1111,9 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                                 {item.missing_artifacts.length} missing
                               </span>
                               {expandedItems.has(`phantom-${item.task_id}`) ? (
-                                <ChevronUp className="w-4 h-4" />
+                                <Icon name="expand_less" size="sm" />
                               ) : (
-                                <ChevronDown className="w-4 h-4" />
+                                <Icon name="expand_more" size="sm" />
                               )}
                             </div>
                           </button>
@@ -1205,7 +1191,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                 </>
               ) : (
                 <div className="text-center py-8">
-                  <Ghost className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                  <Icon name="warning" size="2xl" className="mx-auto mb-4 text-gray-400" />
                   <p className="text-gray-500 mb-4">No phantom completion audit available.</p>
                   <p className="text-sm text-gray-400 mb-4">
                     Run the Python linter to generate an audit report.
@@ -1215,7 +1201,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                     disabled={isRunningLint}
                     className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 disabled:opacity-50"
                   >
-                    <Play className="w-4 h-4 inline mr-2" />
+                    <Icon name="play_arrow" size="sm" className="inline mr-2" />
                     {isRunningLint ? 'Running...' : 'Run Lint'}
                   </button>
                 </div>
@@ -1225,7 +1211,7 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
               {lintOutput && (
                 <div className="mt-4">
                   <h3 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                    <Terminal className="w-4 h-4" />
+                    <Icon name="terminal" size="sm" />
                     Linter Output
                   </h3>
                   <pre className="bg-gray-900 text-green-400 p-4 rounded-lg text-xs overflow-auto max-h-64 font-mono">

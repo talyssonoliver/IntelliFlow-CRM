@@ -2,26 +2,8 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { clsx } from 'clsx';
-import {
-  Play,
-  Pause,
-  RefreshCw,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  AlertTriangle,
-  Users,
-  Zap,
-  FileText,
-  ChevronDown,
-  ChevronRight,
-  History,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  Info,
-} from 'lucide-react';
-import TaskDetailModal from './TaskDetailModal';
+import { Icon } from '@/lib/icons';
+import TaskModal from './TaskModal';
 
 interface ExecutionPhase {
   phaseNumber: number;
@@ -395,13 +377,13 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
   const getStatusIcon = (status: PhaseProgress['status']) => {
     switch (status) {
       case 'completed':
-        return <CheckCircle2 className="w-5 h-5 text-green-500" />;
+        return <Icon name="check_circle" size="lg" className="text-green-500" />;
       case 'in_progress':
-        return <RefreshCw className="w-5 h-5 text-blue-500 animate-spin" />;
+        return <Icon name="refresh" size="lg" className="text-blue-500 animate-spin" />;
       case 'failed':
-        return <XCircle className="w-5 h-5 text-red-500" />;
+        return <Icon name="cancel" size="lg" className="text-red-500" />;
       default:
-        return <Clock className="w-5 h-5 text-gray-400" />;
+        return <Icon name="schedule" size="lg" className="text-gray-400" />;
     }
   };
 
@@ -410,19 +392,19 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
       case 'swarm':
         return (
           <span title="SWARM">
-            <Zap className="w-4 h-4 text-yellow-500" />
+            <Icon name="bolt" size="sm" className="text-yellow-500" />
           </span>
         );
       case 'matop':
         return (
           <span title="MATOP">
-            <CheckCircle2 className="w-4 h-4 text-purple-500" />
+            <Icon name="check_circle" size="sm" className="text-purple-500" />
           </span>
         );
       default:
         return (
           <span title="Manual">
-            <Users className="w-4 h-4 text-gray-500" />
+            <Icon name="group" size="sm" className="text-gray-500" />
           </span>
         );
     }
@@ -453,11 +435,11 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
   const getTrendIcon = (trend: HistoryStats['trend']) => {
     switch (trend) {
       case 'improving':
-        return <TrendingUp className="w-4 h-4 text-green-500" />;
+        return <Icon name="trending_up" size="sm" className="text-green-500" />;
       case 'declining':
-        return <TrendingDown className="w-4 h-4 text-red-500" />;
+        return <Icon name="trending_down" size="sm" className="text-red-500" />;
       default:
-        return <Minus className="w-4 h-4 text-gray-400" />;
+        return <Icon name="remove" size="sm" className="text-gray-400" />;
     }
   };
 
@@ -469,7 +451,7 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <RefreshCw className="w-8 h-8 animate-spin text-blue-500" />
+        <Icon name="refresh" size="2xl" className="animate-spin text-blue-500" />
         <span className="ml-2">Loading phases...</span>
       </div>
     );
@@ -499,7 +481,7 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
             onClick={fetchPhases}
             className="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center gap-1"
           >
-            <RefreshCw className="w-4 h-4" />
+            <Icon name="refresh" size="sm" />
             Refresh
           </button>
 
@@ -507,7 +489,7 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
             onClick={handleGeneratePrompt}
             className="px-3 py-2 text-sm bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg flex items-center gap-1"
           >
-            <FileText className="w-4 h-4" />
+            <Icon name="description" size="sm" />
             Generate Prompt
           </button>
 
@@ -516,7 +498,7 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
             disabled={executing}
             className="px-3 py-2 text-sm bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded-lg flex items-center gap-1 disabled:opacity-50"
           >
-            <Play className="w-4 h-4" />
+            <Icon name="play_arrow" size="sm" />
             Dry Run
           </button>
 
@@ -527,9 +509,9 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
             title="Initialize execution (manual task running)"
           >
             {executing ? (
-              <RefreshCw className="w-4 h-4 animate-spin" />
+              <Icon name="refresh" size="sm" className="animate-spin" />
             ) : (
-              <Play className="w-4 h-4" />
+              <Icon name="play_arrow" size="sm" />
             )}
             Initialize
           </button>
@@ -541,9 +523,9 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
             title="Auto-execute tasks via SWARM/MATOP"
           >
             {executing ? (
-              <RefreshCw className="w-4 h-4 animate-spin" />
+              <Icon name="refresh" size="sm" className="animate-spin" />
             ) : (
-              <Zap className="w-4 h-4" />
+              <Icon name="bolt" size="sm" />
             )}
             Auto Execute
           </button>
@@ -553,7 +535,7 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
       {/* Error Display */}
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5" />
+          <Icon name="warning" size="lg" />
           {error}
         </div>
       )}
@@ -592,7 +574,7 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
 
             {executionState.status === 'running' && (
               <button className="p-2 hover:bg-white/50 rounded">
-                <Pause className="w-4 h-4" />
+                <Icon name="pause" size="sm" />
               </button>
             )}
           </div>
@@ -613,7 +595,7 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
                 >
                   {getExecutionModeIcon(agent.type)}
                   <span>{agent.taskId}</span>
-                  <RefreshCw className="w-3 h-3 animate-spin text-blue-500 ml-auto" />
+                  <Icon name="refresh" size="xs" className="animate-spin text-blue-500 ml-auto" />
                 </div>
               ))}
           </div>
@@ -645,9 +627,9 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
                   className="flex items-center gap-3 text-left flex-1"
                 >
                   {isExpanded ? (
-                    <ChevronDown className="w-4 h-4" />
+                    <Icon name="expand_more" size="sm" />
                   ) : (
-                    <ChevronRight className="w-4 h-4" />
+                    <Icon name="chevron_right" size="sm" />
                   )}
                   {getStatusIcon(status)}
                   <div>
@@ -735,9 +717,9 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
                             </span>
                           )}
 
-                          {isCompleted && <CheckCircle2 className="w-4 h-4 text-green-500" />}
-                          {isFailed && <XCircle className="w-4 h-4 text-red-500" />}
-                          {needsHuman && <AlertTriangle className="w-4 h-4 text-yellow-500" />}
+                          {isCompleted && <Icon name="check_circle" size="sm" className="text-green-500" />}
+                          {isFailed && <Icon name="cancel" size="sm" className="text-red-500" />}
+                          {needsHuman && <Icon name="warning" size="sm" className="text-yellow-500" />}
 
                           <button
                             onClick={(e) => {
@@ -747,7 +729,7 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
                             className="px-2 py-1 text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 rounded"
                             title="View task details"
                           >
-                            <Info className="w-3 h-3" />
+                            <Icon name="info" size="xs" />
                           </button>
 
                           <button
@@ -774,7 +756,7 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
       {/* Empty State */}
       {phases.length === 0 && !loading && (
         <div className="text-center py-12 text-gray-500">
-          <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <Icon name="schedule" size="2xl" className="mx-auto mb-4 opacity-50" />
           <p>No phases found for {targetSprint === 'all' ? 'All Sprints' : `Sprint ${targetSprint}`}</p>
           <p className="text-sm mt-2">
             Make sure dependency-graph.json is synced and tasks exist for this sprint.
@@ -797,11 +779,11 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
         >
           <div className="flex items-center gap-3">
             {historyExpanded ? (
-              <ChevronDown className="w-4 h-4" />
+              <Icon name="expand_more" size="sm" />
             ) : (
-              <ChevronRight className="w-4 h-4" />
+              <Icon name="chevron_right" size="sm" />
             )}
-            <History className="w-5 h-5 text-gray-500" />
+            <Icon name="history" size="lg" className="text-gray-500" />
             <span className="font-medium">Execution History</span>
             {historyStats && (
               <span className="text-sm text-gray-500 ml-2">({historyStats.totalRuns} runs)</span>
@@ -832,12 +814,12 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
           <div className="border-t bg-white p-4">
             {historyLoading ? (
               <div className="flex items-center justify-center py-8">
-                <RefreshCw className="w-6 h-6 animate-spin text-blue-500" />
+                <Icon name="refresh" size="xl" className="animate-spin text-blue-500" />
                 <span className="ml-2 text-gray-500">Loading history...</span>
               </div>
             ) : historyRuns.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                <History className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <Icon name="history" size="2xl" className="mx-auto mb-2 opacity-50" />
                 <p>
                   No execution history found for {targetSprint === 'all' ? 'All Sprints' : `Sprint ${targetSprint}`}
                 </p>
@@ -949,7 +931,7 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
                   disabled={historyLoading}
                   className="w-full mt-2 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center gap-1 disabled:opacity-50"
                 >
-                  <RefreshCw className={clsx('w-4 h-4', { 'animate-spin': historyLoading })} />
+                  <Icon name="refresh" size="sm" className={clsx({ 'animate-spin': historyLoading })} />
                   Refresh History
                 </button>
               </div>
@@ -960,7 +942,7 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
 
       {/* Task Detail Modal */}
       {selectedTask && (
-        <TaskDetailModal
+        <TaskModal
           task={selectedTask}
           isOpen={modalOpen}
           onClose={closeModal}
