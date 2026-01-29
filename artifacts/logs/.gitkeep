@@ -1,0 +1,2 @@
+# This file ensures the artifacts/logs/ directory is tracked by git
+# Individual log files are gitignored, but the directory structure must exist

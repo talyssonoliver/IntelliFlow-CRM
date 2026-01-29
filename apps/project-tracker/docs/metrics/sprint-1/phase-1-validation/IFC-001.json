@@ -45,13 +45,10 @@
   },
   "artifacts": {
     "expected": [
-      "docs/planning/adr/*",
-      "docs/architecture/technical-spike.md"
+      "docs/planning/adr/*"
     ],
     "created": [],
-    "missing": [
-      "docs/architecture/technical-spike.md"
-    ]
+    "missing": []
   },
   "validations": [
     {

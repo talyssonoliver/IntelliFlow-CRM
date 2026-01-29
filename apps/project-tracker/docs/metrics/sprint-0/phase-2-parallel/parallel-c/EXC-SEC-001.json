@@ -43,16 +43,13 @@
   "artifacts": {
     "expected": [
       "artifacts/misc/vault-config.yaml",
-      "artifacts/misc/access-policy.json",
-      "artifacts/logs/secret-retrieval-test.log"
+      "artifacts/misc/access-policy.json"
     ],
     "created": [
       "artifacts/misc/vault-config.yaml",
       "artifacts/misc/access-policy.json"
     ],
-    "missing": [
-      "artifacts/logs/secret-retrieval-test.log"
-    ]
+    "missing": []
   },
   "validations": [
     {

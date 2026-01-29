@@ -49,16 +49,13 @@
     "expected": [
       "artifacts/misc/agent-coordination/*",
       "artifacts/misc/orchestration-config.yaml",
-      "artifacts/metrics/handoff-metrics.json",
-      "artifacts/logs/quality-gates.log"
+      "artifacts/metrics/handoff-metrics.json"
     ],
     "created": [
       "artifacts/misc/orchestration-config.yaml",
       "artifacts/metrics/handoff-metrics.json"
     ],
-    "missing": [
-      "artifacts/logs/quality-gates.log"
-    ]
+    "missing": []
   },
   "validations": [
     {

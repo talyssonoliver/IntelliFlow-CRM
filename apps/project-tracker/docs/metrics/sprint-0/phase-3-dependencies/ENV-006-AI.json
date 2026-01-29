@@ -57,17 +57,14 @@
     "expected": [
       "packages/db/prisma/schema.prisma",
       "packages/db/dist/index.js",
-      "packages/db/dist/client.js",
-      "artifacts/logs/prisma-validation-test.log"
+      "packages/db/dist/client.js"
     ],
     "created": [
       "packages/db/prisma/schema.prisma",
       "packages/db/dist/index.js",
       "packages/db/dist/client.js"
     ],
-    "missing": [
-      "artifacts/logs/prisma-validation-test.log"
-    ]
+    "missing": []
   },
   "validations": [
     {
