@@ -68,7 +68,7 @@ export function ContactForm() {
     if (result.ok) {
       setFormState({ isSubmitting: false, isSuccess: true, error: null });
       // Clear form
-      event.currentTarget.reset();
+      event.currentTarget?.reset();
 
       // Reset success message after 5 seconds
       setTimeout(() => {

@@ -9,7 +9,8 @@ describe('ConversionRateWidget', () => {
 
     expect(screen.getByText('Conversion Rate')).toBeInTheDocument();
     expect(screen.getByText('3.2%')).toBeInTheDocument();
-    const progress = container.querySelector('.bg-amber-500') as HTMLElement;
+    // Component uses bg-warning class (design system color)
+    const progress = container.querySelector('.bg-warning') as HTMLElement;
     expect(progress.style.width).toBe('65%');
   });
 });

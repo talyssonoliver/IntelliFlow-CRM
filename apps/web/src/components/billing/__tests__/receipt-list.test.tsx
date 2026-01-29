@@ -1,4 +1,7 @@
 /**
+ * @vitest-environment jsdom
+ */
+/**
  * Receipt List Component Tests
  *
  * @implements PG-031 (Receipts)

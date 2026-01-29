@@ -1,4 +1,7 @@
 /**
+ * @vitest-environment jsdom
+ */
+/**
  * @vitest-environment happy-dom
  */
 import { render, screen, waitFor } from '@testing-library/react';

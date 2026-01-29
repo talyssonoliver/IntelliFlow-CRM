@@ -9,7 +9,8 @@ describe('PendingTasksWidget', () => {
 
     expect(screen.getByText('Pending Tasks')).toBeInTheDocument();
     expect(screen.getByText('Call with Acme Corp')).toBeInTheDocument();
-    expect(screen.getByText('Overdue')).toHaveClass('text-red-500');
+    // Component uses design system color (text-destructive)
+    expect(screen.getByText('Overdue')).toHaveClass('text-destructive');
     expect(screen.getByRole('button', { name: /\+ Add New Task/i })).toBeInTheDocument();
   });
 });

@@ -1,4 +1,7 @@
 /**
+ * @vitest-environment jsdom
+ */
+/**
  * @vitest-environment happy-dom
  *
  * Email Verification Component Tests
