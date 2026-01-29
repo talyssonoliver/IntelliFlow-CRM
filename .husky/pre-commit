@@ -17,6 +17,33 @@ if git diff --cached --name-only | grep -q "Sprint_plan\.csv$"; then
   echo "✅ Local split files regenerated (not committed - gitignored)"
 fi
 
+# Auto-sync API inventory if router files changed
+# Keeps baseline.json in sync with actual tRPC endpoints
+if git diff --cached --name-only | grep -q "\.router\.ts$"; then
+  echo "🔄 Router files changed - syncing API inventory..."
+  npx tsx tools/scripts/sync-api-inventory.ts || {
+    echo "❌ Failed to sync API inventory"
+    exit 1
+  }
+  # Stage the updated baseline.json
+  git add artifacts/benchmarks/baseline.json
+  echo "✅ API inventory synced and staged"
+fi
+
+# Auto-sync codebase inventory if relevant source files changed
+# Tracks: Prisma schema, middleware, workers, adapters, domain events, validators
+CODEBASE_PATTERNS="schema\.prisma|middleware/|workers/|adapters/src/|domain/src/events|validators/src/"
+if git diff --cached --name-only | grep -qE "$CODEBASE_PATTERNS"; then
+  echo "🔄 Codebase files changed - syncing full inventory..."
+  npx tsx tools/scripts/sync-codebase-inventory.ts || {
+    echo "❌ Failed to sync codebase inventory"
+    exit 1
+  }
+  # Stage the updated baseline.json
+  git add artifacts/benchmarks/baseline.json
+  echo "✅ Codebase inventory synced and staged"
+fi
+
 # Run linting
 echo "📋 Linting code..."
 pnpm run lint --filter=!project-tracker || {
