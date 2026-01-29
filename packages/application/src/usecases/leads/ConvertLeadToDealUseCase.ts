@@ -180,7 +180,7 @@ export class ConvertLeadToDealUseCase {
       contactId,
       accountId,
       stage: opportunity.stage,
-      probability: opportunity.probability,
+      probability: opportunity.probability.value,
       convertedBy: input.convertedBy,
       convertedAt: new Date(),
     });

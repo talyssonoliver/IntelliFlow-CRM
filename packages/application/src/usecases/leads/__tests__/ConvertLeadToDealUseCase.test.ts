@@ -181,7 +181,7 @@ describe('ConvertLeadToDealUseCase', () => {
       // Verify opportunity was created
       const savedOpportunity = opportunityRepository.savedOpportunity;
       expect(savedOpportunity).not.toBeNull();
-      expect(savedOpportunity!.value).toBe(50000);
+      expect(savedOpportunity!.value.amount).toBe(50000);
       expect(savedOpportunity!.ownerId).toBe('owner-123');
       expect(savedOpportunity!.tenantId).toBe('tenant-456');
       expect(output.opportunityId).toBe(savedOpportunity!.id.value);
@@ -291,7 +291,7 @@ describe('ConvertLeadToDealUseCase', () => {
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.probability).toBe(10);
-      expect(opportunityRepository.savedOpportunity!.probability).toBe(10);
+      expect(opportunityRepository.savedOpportunity!.probability.value).toBe(10);
     });
   });
 
