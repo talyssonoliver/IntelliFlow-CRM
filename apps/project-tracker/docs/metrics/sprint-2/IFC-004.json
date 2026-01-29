@@ -52,16 +52,10 @@
     "expected": [
       "apps/web/app/leads/*",
       "apps/web/src/app/leads/(list)/new/page.tsx",
-      "artifacts/lighthouse/lighthouse-report.html",
       "artifacts/misc/mobile-screenshots/*"
     ],
-    "missing": [
-      "artifacts/lighthouse/lighthouse-report.html"
-    ],
+    "missing": [],
     "missing_reason": {
-      "lighthouse": {
-        "reason": "Lighthouse requires browser runtime"
-      },
       "mobile_screenshots": {
         "reason": "Mobile screenshots require device emulation"
       }

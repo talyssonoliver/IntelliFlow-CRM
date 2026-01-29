@@ -41,7 +41,6 @@
       "docs/planning/prd-template.md",
       "docs/planning/user-journey-template.md",
       "docs/planning/definition-of-ready.md",
-      "artifacts/reports/traceability-matrix.xlsx",
       "artifacts/logs/backlog-updates-log.csv"
     ],
     "created": [
@@ -50,10 +49,7 @@
       "docs/planning/definition-of-ready.md",
       "artifacts/logs/backlog-updates-log.csv"
     ],
-    "missing": [
-      "artifacts/reports/traceability-matrix.xlsx"
-    ],
-    "missing_reason": "xlsx/csv replaced with json for better tooling integration"
+    "missing": []
   },
   "validations": [
     {
