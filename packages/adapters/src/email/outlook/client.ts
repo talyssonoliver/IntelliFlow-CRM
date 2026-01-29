@@ -915,9 +915,10 @@ export class OutlookAdapter implements OutlookEmailServicePort {
         return Result.fail(new OutlookAuthenticationError(error.message ?? 'Token expired or invalid'));
       case 404:
         return Result.fail(new OutlookNotFoundError('Resource', error.message ?? 'unknown'));
-      case 429:
+      case 429: {
         const retryAfter = parseInt(response.headers.get('Retry-After') ?? '60');
         return Result.fail(new OutlookRateLimitError(retryAfter));
+      }
       default:
         return Result.fail(new OutlookInvalidRequestError(error.message ?? 'Request failed'));
     }

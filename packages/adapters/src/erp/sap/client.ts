@@ -137,6 +137,14 @@ export class SAPRateLimitError extends DomainError {
   }
 }
 
+export class SAPNotFoundError extends DomainError {
+  readonly code = 'SAP_NOT_FOUND';
+
+  constructor(resource: string, identifier: string) {
+    super(`${resource} not found: ${identifier}`);
+  }
+}
+
 // ==================== Adapter Interface ====================
 
 export interface ERPServicePort {
@@ -737,9 +745,10 @@ export class SAPAdapter implements ERPServicePort {
     switch (response.status) {
       case 401:
         return Result.fail(new SAPAuthenticationError('Session expired or invalid'));
-      case 429:
+      case 429: {
         const retryAfter = parseInt(response.headers.get('Retry-After') ?? '60');
         return Result.fail(new SAPRateLimitError(retryAfter));
+      }
       default:
         return Result.fail(new SAPDataError(`SAP API error: ${response.statusText}`));
     }

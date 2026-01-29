@@ -973,9 +973,10 @@ ${original.body.text ?? original.body.html ?? ''}
         return Result.fail(new GmailAuthenticationError(error.message ?? 'Token expired or invalid'));
       case 404:
         return Result.fail(new GmailNotFoundError('Resource', error.message ?? 'unknown'));
-      case 429:
+      case 429: {
         const retryAfter = parseInt(response.headers.get('Retry-After') ?? '60');
         return Result.fail(new GmailRateLimitError(retryAfter));
+      }
       default:
         return Result.fail(new GmailInvalidRequestError(error.message ?? 'Request failed'));
     }
@@ -1037,14 +1038,18 @@ ${original.body.text ?? original.body.html ?? ''}
     const parseEmailAddress = (
       value: string
     ): { name?: string; email: string } => {
-      const match = value.match(/^(?:"?([^"<]*)"?\s*)?<?([^>]+)>?$/);
-      if (match) {
-        return {
-          name: match[1]?.trim() || undefined,
-          email: match[2]?.trim() ?? value,
-        };
+      // Check if the email has angle brackets (e.g., "Name" <email@example.com>)
+      if (value.includes('<') && value.includes('>')) {
+        const match = value.match(/^"?([^"<]*)"?\s*<([^>]+)>$/);
+        if (match) {
+          return {
+            name: match[1]?.trim() || undefined,
+            email: match[2]?.trim() ?? value,
+          };
+        }
       }
-      return { email: value };
+      // Plain email without angle brackets
+      return { email: value.trim() };
     };
 
     const parseEmailAddresses = (
