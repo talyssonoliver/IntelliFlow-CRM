@@ -84,7 +84,7 @@ export function formatEmbedding(embedding: VectorEmbedding): string {
  */
 export function parseEmbedding(vectorString: string): VectorEmbedding {
   // pgvector format: [0.1,0.2,0.3,...]
-  const cleaned = vectorString.replace(/[\[\]]/g, '');
+  const cleaned = vectorString.replace(/[[\]]/g, '');
   return cleaned.split(',').map((v) => parseFloat(v));
 }
 

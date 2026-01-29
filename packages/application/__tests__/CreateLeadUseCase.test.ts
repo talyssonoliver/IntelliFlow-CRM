@@ -230,7 +230,8 @@ describe('CreateLeadUseCase', () => {
       const result = await useCase.execute(input);
 
       expect(result.isSuccess).toBe(true);
-      expect(result.value.phone).toBe('+44 20 7946 0958');
+      // PhoneNumber normalizes to E.164 format
+      expect(result.value.phone).toBe('+442079460958');
     });
 
     it('should not fail if event bus throws but still persist the lead', async () => {

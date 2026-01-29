@@ -206,9 +206,8 @@ describe('Observability Package Index', () => {
     consoleLogSpy.mockRestore();
   });
 
-  // TODO: Fix mocking issue - require() bypasses vi.mock, need to refactor
-  // These tests are temporarily skipped until we implement proper DI
-  describe.skip('initObservability', () => {
+  // Mocking now works with static imports (removed require() calls)
+  describe('initObservability', () => {
     it('should initialize all systems with default configuration', () => {
       initObservability({
         serviceName: 'test-service',
@@ -438,8 +437,8 @@ describe('Observability Package Index', () => {
     });
   });
 
-  // TODO: Fix mocking issue - require() bypasses vi.mock, need to refactor
-  describe.skip('shutdownObservability', () => {
+  // Mocking now works with static imports (removed require() calls)
+  describe('shutdownObservability', () => {
     it('should shutdown both tracing and metrics systems', async () => {
       await shutdownObservability();
 
@@ -729,8 +728,8 @@ describe('Observability Package Index', () => {
     });
   });
 
-  // TODO: Fix mocking issue - require() bypasses vi.mock, need to refactor
-  describe.skip('Integration scenarios', () => {
+  // Mocking now works with static imports (removed require() calls)
+  describe('Integration scenarios', () => {
     it('should allow initializing and shutting down multiple times', async () => {
       initObservability({ serviceName: 'service-1' });
       await shutdownObservability();

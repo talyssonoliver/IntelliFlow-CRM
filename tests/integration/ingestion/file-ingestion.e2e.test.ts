@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
-import { PrismaClient } from '@intelliflow/db';
-import { IngestionOrchestrator } from '@intelliflow/application';
-import { PrismaCaseDocumentRepository } from '@intelliflow/adapters';
-import { InMemoryEventBus, SupabaseStorageAdapter, MockAVScanner } from '@intelliflow/adapters';
-import { CaseDocument } from '@intelliflow/domain';
+// Use relative paths since vitest aliases don't work consistently in tests/integration
+import { PrismaClient } from '../../../packages/db/src';
+import { IngestionOrchestrator } from '../../../packages/application/src';
+import { PrismaCaseDocumentRepository } from '../../../packages/adapters/src';
+import { InMemoryEventBus, SupabaseStorageAdapter, MockAVScanner } from '../../../packages/adapters/src';
+import { CaseDocument } from '../../../packages/domain/src';
 import { createHash } from 'crypto';
 
 /**
@@ -18,8 +19,79 @@ import { createHash } from 'crypto';
  * 6. Primary storage
  * 7. Database persistence
  * 8. Event emission
+ *
+ * NOTE: This test requires:
+ * - A running PostgreSQL database (DATABASE_URL or DATABASE_TEST_URL)
+ * - Supabase with storage buckets (NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+ * - Storage buckets: 'case-documents-quarantine' and 'case-documents'
+ *
+ * Run `npx supabase db push` to create required storage buckets.
+ * Tests will be skipped if infrastructure is not available.
  */
-describe('File Ingestion Pipeline E2E', () => {
+
+/**
+ * Check if test infrastructure is actually available (not just env vars).
+ * This validates connectivity to Supabase storage and required buckets.
+ */
+async function isInfrastructureAvailable(): Promise<{ available: boolean; reason?: string }> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const dbUrl = process.env.DATABASE_TEST_URL || process.env.DATABASE_URL;
+
+  if (!supabaseUrl || !serviceKey) {
+    return { available: false, reason: 'Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY' };
+  }
+
+  if (!dbUrl) {
+    return { available: false, reason: 'Missing DATABASE_URL or DATABASE_TEST_URL' };
+  }
+
+  try {
+    // Check Supabase storage is accessible
+    const response = await fetch(`${supabaseUrl}/storage/v1/bucket`, {
+      headers: { 'Authorization': `Bearer ${serviceKey}` },
+    });
+
+    if (!response.ok) {
+      return { available: false, reason: `Supabase storage not accessible: ${response.status} ${response.statusText}` };
+    }
+
+    // Check required buckets exist (must match SupabaseStorageAdapter bucket names)
+    const buckets = await response.json();
+    const bucketNames = buckets.map((b: { name: string }) => b.name);
+    const hasQuarantine = bucketNames.includes('case-documents-quarantine');
+    const hasDocuments = bucketNames.includes('case-documents');
+
+    if (!hasQuarantine || !hasDocuments) {
+      const missing = [];
+      if (!hasQuarantine) missing.push('case-documents-quarantine');
+      if (!hasDocuments) missing.push('case-documents');
+      return {
+        available: false,
+        reason: `Missing storage buckets: ${missing.join(', ')}. Run: npx supabase db push`,
+      };
+    }
+
+    return { available: true };
+  } catch (error) {
+    return { available: false, reason: `Infrastructure check failed: ${error}` };
+  }
+}
+
+// Basic env var check (fast, synchronous) - skip if no env vars at all
+const hasBasicConfig = Boolean(
+  process.env.NEXT_PUBLIC_SUPABASE_URL &&
+  process.env.SUPABASE_SERVICE_ROLE_KEY &&
+  (process.env.DATABASE_TEST_URL || process.env.DATABASE_URL)
+);
+
+// Use describe.skipIf for basic config check
+const describeOrSkip = hasBasicConfig ? describe : describe.skip;
+
+// Track infrastructure availability for detailed check in beforeAll
+let infrastructureStatus: { available: boolean; reason?: string } = { available: false };
+
+describeOrSkip('File Ingestion Pipeline E2E', () => {
   let prisma: PrismaClient;
   let orchestrator: IngestionOrchestrator;
   let repository: PrismaCaseDocumentRepository;
@@ -28,11 +100,22 @@ describe('File Ingestion Pipeline E2E', () => {
   let avScanner: MockAVScanner;
 
   beforeAll(async () => {
+    // First, validate infrastructure is actually available
+    infrastructureStatus = await isInfrastructureAvailable();
+
+    if (!infrastructureStatus.available) {
+      console.log(`\n⏭️  File Ingestion E2E: Skipping tests - ${infrastructureStatus.reason}\n`);
+      // Note: Tests will still run but fail gracefully - see individual test checks
+      return;
+    }
+
+    console.log('\n✅ File Ingestion E2E: Infrastructure available, running tests\n');
+
     // Initialize test database
     prisma = new PrismaClient({
       datasources: {
         db: {
-          url: process.env.TEST_DATABASE_URL || 'postgresql://test:test@localhost:5432/test',
+          url: process.env.DATABASE_TEST_URL || process.env.DATABASE_URL,
         },
       },
     });
@@ -41,31 +124,33 @@ describe('File Ingestion Pipeline E2E', () => {
     repository = new PrismaCaseDocumentRepository(prisma);
     eventBus = new InMemoryEventBus();
     storage = new SupabaseStorageAdapter(
-      process.env.SUPABASE_URL || 'http://localhost:54321',
-      process.env.SUPABASE_KEY || 'test-key'
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
     avScanner = new MockAVScanner();
 
     orchestrator = new IngestionOrchestrator(repository, eventBus, storage, avScanner);
-
-    // Run migrations
-    // await prisma.$executeRaw`DROP SCHEMA IF EXISTS public CASCADE`;
-    // await prisma.$executeRaw`CREATE SCHEMA public`;
-    // Note: In real tests, use Prisma migrations
   });
 
   beforeEach(() => {
+    if (!infrastructureStatus.available) return;
     eventBus.clearPublishedEvents();
     avScanner.setInfected(false);
     avScanner.setShouldFail(false);
   });
 
   afterAll(async () => {
+    if (!infrastructureStatus.available || !prisma) return;
     await prisma.$disconnect();
   });
 
   describe('Successful Ingestion Flow', () => {
-    it('should successfully ingest a PDF document', async () => {
+    it('should successfully ingest a PDF document', async (context) => {
+      if (!infrastructureStatus.available) {
+        context.skip();
+        return;
+      }
+
       const fileContent = Buffer.from('%PDF-1.4\nTest PDF content');
       const metadata = {
         tenantId: 'tenant-1',
@@ -98,7 +183,12 @@ describe('File Ingestion Pipeline E2E', () => {
       expect(events[0].data.documentId).toBe(result.documentId);
     });
 
-    it('should handle DOCX files', async () => {
+    it('should handle DOCX files', async (context) => {
+      if (!infrastructureStatus.available) {
+        context.skip();
+        return;
+      }
+
       const fileContent = Buffer.from('PK\\x03\\x04'); // DOCX magic number
       const metadata = {
         tenantId: 'tenant-1',
@@ -116,7 +206,12 @@ describe('File Ingestion Pipeline E2E', () => {
       expect(document!.metadata.title).toBe('report.docx');
     });
 
-    it('should classify privileged documents correctly', async () => {
+    it('should classify privileged documents correctly', async (context) => {
+      if (!infrastructureStatus.available) {
+        context.skip();
+        return;
+      }
+
       const fileContent = Buffer.from('Confidential legal document');
       const metadata = {
         tenantId: 'tenant-1',
@@ -135,7 +230,12 @@ describe('File Ingestion Pipeline E2E', () => {
   });
 
   describe('Antivirus Scanning', () => {
-    it('should reject infected files', async () => {
+    it('should reject infected files', async (context) => {
+      if (!infrastructureStatus.available) {
+        context.skip();
+        return;
+      }
+
       avScanner.setInfected(true);
 
       const fileContent = Buffer.from('Infected content');
@@ -161,7 +261,12 @@ describe('File Ingestion Pipeline E2E', () => {
       expect(events[0].eventType).toBe('DocumentIngestionFailedEvent');
     });
 
-    it('should detect EICAR test virus', async () => {
+    it('should detect EICAR test virus', async (context) => {
+      if (!infrastructureStatus.available) {
+        context.skip();
+        return;
+      }
+
       const eicarString =
         'X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*';
 
@@ -178,7 +283,12 @@ describe('File Ingestion Pipeline E2E', () => {
   });
 
   describe('Validation', () => {
-    it('should reject files exceeding size limit', async () => {
+    it('should reject files exceeding size limit', async (context) => {
+      if (!infrastructureStatus.available) {
+        context.skip();
+        return;
+      }
+
       const largeFile = Buffer.alloc(55 * 1024 * 1024); // 55MB
 
       const result = await orchestrator.ingestFile(largeFile, {
@@ -192,7 +302,12 @@ describe('File Ingestion Pipeline E2E', () => {
       expect(result.error).toContain('exceeds maximum size');
     });
 
-    it('should reject disallowed MIME types', async () => {
+    it('should reject disallowed MIME types', async (context) => {
+      if (!infrastructureStatus.available) {
+        context.skip();
+        return;
+      }
+
       const fileContent = Buffer.from('Executable content');
 
       const result = await orchestrator.ingestFile(fileContent, {
@@ -208,7 +323,12 @@ describe('File Ingestion Pipeline E2E', () => {
   });
 
   describe('Idempotency', () => {
-    it('should handle duplicate uploads', async () => {
+    it('should handle duplicate uploads', async (context) => {
+      if (!infrastructureStatus.available) {
+        context.skip();
+        return;
+      }
+
       const fileContent = Buffer.from('Same content');
       const metadata = {
         tenantId: 'tenant-1',
@@ -233,12 +353,18 @@ describe('File Ingestion Pipeline E2E', () => {
   });
 
   describe('Failure Handling', () => {
-    it('should retry on transient storage failures', async () => {
+    it('should retry on transient storage failures', async (context) => {
       // This test requires mocking storage service to fail then succeed
       // Skipped for now as we're using real Supabase adapter
+      context.skip();
     });
 
-    it('should emit failure event after max retries', async () => {
+    it('should emit failure event after max retries', async (context) => {
+      if (!infrastructureStatus.available) {
+        context.skip();
+        return;
+      }
+
       avScanner.setShouldFail(true);
 
       const result = await orchestrator.ingestFile(Buffer.from('test'), {
@@ -256,7 +382,12 @@ describe('File Ingestion Pipeline E2E', () => {
   });
 
   describe('Access Control', () => {
-    it('should grant creator ADMIN access by default', async () => {
+    it('should grant creator ADMIN access by default', async (context) => {
+      if (!infrastructureStatus.available) {
+        context.skip();
+        return;
+      }
+
       const result = await orchestrator.ingestFile(Buffer.from('test content'), {
         tenantId: 'tenant-1',
         filename: 'test.pdf',
@@ -275,7 +406,12 @@ describe('File Ingestion Pipeline E2E', () => {
       expect(userAccess!.accessLevel).toBe('ADMIN');
     });
 
-    it('should isolate documents by tenant', async () => {
+    it('should isolate documents by tenant', async (context) => {
+      if (!infrastructureStatus.available) {
+        context.skip();
+        return;
+      }
+
       // Upload document for tenant-1
       const result1 = await orchestrator.ingestFile(Buffer.from('tenant1 doc'), {
         tenantId: 'tenant-1',

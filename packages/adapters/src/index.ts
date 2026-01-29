@@ -6,6 +6,15 @@
 export * from './repositories';
 export * from './external';
 
+// Common adapter utilities (shared across all adapters)
+export * from './common';
+
+// Storage Adapters
+export * from './storage/SupabaseStorageAdapter';
+
+// Antivirus Adapters
+export * from './antivirus/ClamAVScanner';
+
 // ICS Generation Service (IFC-158)
 export * from './ics/IcsGenerationService';
 

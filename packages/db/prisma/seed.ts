@@ -60,18 +60,19 @@ const prisma = new PrismaClient();
 // =============================================================================
 
 const SEED_IDS = {
+  // User IDs match actual UUIDs in Supabase cloud database
   users: {
-    admin: 'seed-user-admin-001',
-    manager: 'seed-user-manager-001',
-    sarahJohnson: 'seed-user-sarah-johnson',
-    mikeDavis: 'seed-user-mike-davis',
-    emilyDavis: 'seed-user-emily-davis',
-    jamesWilson: 'seed-user-james-wilson',
-    alexMorgan: 'seed-user-alex-morgan',
-    sarahJenkins: 'seed-user-sarah-jenkins',
-    mikeRoss: 'seed-user-mike-ross',
-    davidKim: 'seed-user-david-kim',
-    janeDoe: 'seed-user-jane-doe',
+    admin: '00000000-0000-4000-8000-000000000011',
+    manager: '00000000-0000-4000-8000-000000000012',
+    sarahJohnson: '00000000-0000-4000-8000-000000000013',
+    mikeDavis: '00000000-0000-4000-8000-000000000014',
+    emilyDavis: '00000000-0000-4000-8000-000000000015',
+    jamesWilson: '00000000-0000-4000-8000-000000000016',
+    alexMorgan: '00000000-0000-4000-8000-000000000017',
+    sarahJenkins: '00000000-0000-4000-8000-000000000018',
+    mikeRoss: '00000000-0000-4000-8000-000000000019',
+    davidKim: '00000000-0000-4000-8000-00000000001a',
+    janeDoe: '00000000-0000-4000-8000-00000000001b',
   },
   leads: {
     sarahMiller: 'seed-lead-sarah-miller',
@@ -1769,7 +1770,7 @@ async function seedOpportunities(tenantId: string) {
   return opportunities;
 }
 
-async function seedSLAPolicies() {
+async function seedSLAPolicies(tenantId: string) {
   console.log('📋 Seeding SLA policies...');
 
   const policies = [
@@ -1777,6 +1778,7 @@ async function seedSLAPolicies() {
       id: SEED_IDS.slaPolicy.default,
       name: 'Standard SLA',
       description: 'Default SLA policy for standard support tickets',
+      tenantId,
       criticalResponseMinutes: 15,
       highResponseMinutes: 60,
       mediumResponseMinutes: 240,
@@ -1793,6 +1795,7 @@ async function seedSLAPolicies() {
       id: SEED_IDS.slaPolicy.premium,
       name: 'Premium SLA',
       description: 'Premium SLA policy for enterprise customers',
+      tenantId,
       criticalResponseMinutes: 5,
       highResponseMinutes: 30,
       mediumResponseMinutes: 120,
@@ -5446,7 +5449,7 @@ async function main() {
     await seedLeads(tenantId);
     await seedContacts(tenantId);
     await seedOpportunities(tenantId);
-    await seedSLAPolicies();
+    await seedSLAPolicies(tenantId);
     await seedTickets(tenantId);
     await seedTasks(tenantId);
     await seedAIScores();

@@ -146,6 +146,7 @@ function createTestContext(user: typeof testUsers.userA): TenantAwareContext {
     userId: user.id,
     email: user.email,
     role: user.role,
+    tenantId: user.id, // Use user.id as tenantId for testing
   });
 
   return {
@@ -153,6 +154,7 @@ function createTestContext(user: typeof testUsers.userA): TenantAwareContext {
       userId: user.id,
       email: user.email,
       role: user.role,
+      tenantId: user.id,
     },
     tenant,
     prisma: mockPrisma,

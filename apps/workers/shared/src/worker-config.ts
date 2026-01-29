@@ -23,7 +23,7 @@ export const RedisConfigSchema = z.object({
   password: z.string().optional(),
   tls: z.boolean().default(false),
   db: z.number().int().min(0).max(15).default(0),
-  maxRetriesPerRequest: z.number().int().min(0).default(3),
+  maxRetriesPerRequest: z.number().int().min(0).nullable().default(null),
   enableOfflineQueue: z.boolean().default(false),
   lazyConnect: z.boolean().default(true),
 });
@@ -73,7 +73,7 @@ export const CircuitBreakerConfigSchema = z.object({
  * Health check configuration
  */
 export const HealthCheckConfigSchema = z.object({
-  port: z.number().int().min(1024).max(65535).default(3100),
+  port: z.number().int().min(0).max(65535).default(0), // 0 = random available port
   path: z.string().default('/health'),
   readyPath: z.string().default('/health/ready'),
   livePath: z.string().default('/health/live'),
@@ -148,7 +148,7 @@ export function loadWorkerConfig(workerName: string): WorkerConfig {
       password: process.env.REDIS_PASSWORD,
       tls: process.env.REDIS_TLS === 'true',
       db: parseInt(process.env.REDIS_DB || '0', 10),
-      maxRetriesPerRequest: parseInt(process.env.REDIS_MAX_RETRIES || '3', 10),
+      maxRetriesPerRequest: process.env.REDIS_MAX_RETRIES ? parseInt(process.env.REDIS_MAX_RETRIES, 10) : null,
       enableOfflineQueue: process.env.REDIS_OFFLINE_QUEUE === 'true',
       lazyConnect: process.env.REDIS_LAZY_CONNECT !== 'false',
     },
@@ -180,7 +180,7 @@ export function loadWorkerConfig(workerName: string): WorkerConfig {
       failureWindowMs: parseInt(process.env.CIRCUIT_BREAKER_FAILURE_WINDOW || '60000', 10),
     },
     healthCheck: {
-      port: parseInt(process.env.HEALTH_PORT || '3100', 10),
+      port: parseInt(process.env.HEALTH_PORT || '0', 10), // 0 = random available port
       path: process.env.HEALTH_PATH || '/health',
       readyPath: process.env.HEALTH_READY_PATH || '/health/ready',
       livePath: process.env.HEALTH_LIVE_PATH || '/health/live',
@@ -211,7 +211,7 @@ export function getRedisConfig(): RedisConfig {
     password: process.env.REDIS_PASSWORD,
     tls: process.env.REDIS_TLS === 'true',
     db: parseInt(process.env.REDIS_DB || '0', 10),
-    maxRetriesPerRequest: parseInt(process.env.REDIS_MAX_RETRIES || '3', 10),
+    maxRetriesPerRequest: process.env.REDIS_MAX_RETRIES ? parseInt(process.env.REDIS_MAX_RETRIES, 10) : null,
     enableOfflineQueue: process.env.REDIS_OFFLINE_QUEUE === 'true',
     lazyConnect: process.env.REDIS_LAZY_CONNECT !== 'false',
   };
@@ -230,7 +230,7 @@ export function createTestConfig(overrides?: Partial<WorkerConfig>): WorkerConfi
       port: 6379,
       tls: false,
       db: 0,
-      maxRetriesPerRequest: 3,
+      maxRetriesPerRequest: null,
       enableOfflineQueue: false,
       lazyConnect: true,
     },

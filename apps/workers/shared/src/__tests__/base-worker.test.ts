@@ -10,18 +10,55 @@ import { Job } from 'bullmq';
 import pino from 'pino';
 import { BaseWorker, type ComponentHealth } from '../base-worker';
 
-// Mock BullMQ
-vi.mock('bullmq', () => ({
-  Worker: vi.fn().mockImplementation(() => ({
-    on: vi.fn(),
-    close: vi.fn().mockResolvedValue(undefined),
-    pause: vi.fn().mockResolvedValue(undefined),
-    resume: vi.fn().mockResolvedValue(undefined),
-  })),
-  Queue: vi.fn().mockImplementation(() => ({
-    close: vi.fn().mockResolvedValue(undefined),
-  })),
-}));
+// Mock ioredis to prevent actual Redis connections
+vi.mock('ioredis', async () => {
+  const { vi: vitest } = await import('vitest');
+
+  class MockIORedis {
+    ping = vitest.fn().mockResolvedValue('PONG');
+    quit = vitest.fn().mockResolvedValue(undefined);
+    connect = vitest.fn().mockResolvedValue(undefined);
+    disconnect = vitest.fn().mockResolvedValue(undefined);
+    on = vitest.fn();
+    off = vitest.fn();
+    status = 'ready';
+
+    duplicate() {
+      return new MockIORedis();
+    }
+  }
+
+  return {
+    default: MockIORedis,
+  };
+});
+
+// Mock BullMQ with proper class constructors
+vi.mock('bullmq', async () => {
+  const { vi: vitest } = await import('vitest');
+
+  class MockWorker {
+    on = vitest.fn();
+    close = vitest.fn().mockResolvedValue(undefined);
+    pause = vitest.fn().mockResolvedValue(undefined);
+    resume = vitest.fn().mockResolvedValue(undefined);
+  }
+
+  class MockQueue {
+    close = vitest.fn().mockResolvedValue(undefined);
+  }
+
+  class MockQueueEvents {
+    on = vitest.fn();
+    close = vitest.fn().mockResolvedValue(undefined);
+  }
+
+  return {
+    Worker: MockWorker,
+    Queue: MockQueue,
+    QueueEvents: MockQueueEvents,
+  };
+});
 
 // Concrete implementation for testing
 class TestWorker extends BaseWorker<{ data: string }, { result: string }> {
@@ -158,13 +195,18 @@ describe('BaseWorker', () => {
 
 describe('BaseWorker - Error Handling', () => {
   const originalNodeEnv = process.env.NODE_ENV;
+  let testWorker: TestWorker | null = null;
 
   beforeEach(() => {
     process.env.NODE_ENV = 'development';
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     process.env.NODE_ENV = originalNodeEnv;
+    if (testWorker) {
+      await testWorker.stop().catch(() => {});
+      testWorker = null;
+    }
   });
 
   it('should handle onStart errors gracefully', async () => {
@@ -174,8 +216,8 @@ describe('BaseWorker - Error Handling', () => {
       }
     }
 
-    const failingWorker = new FailingStartWorker();
-    await expect(failingWorker.start()).rejects.toThrow('Start failed');
+    testWorker = new FailingStartWorker();
+    await expect(testWorker.start()).rejects.toThrow('Start failed');
   });
 
   it('should handle processJob errors', async () => {
@@ -185,9 +227,9 @@ describe('BaseWorker - Error Handling', () => {
       }
     }
 
-    const failingWorker = new FailingProcessWorker();
+    testWorker = new FailingProcessWorker();
     const mockJob = { id: 'job-1', data: { data: 'test' } } as Job<{ data: string }>;
 
-    await expect(failingWorker['processJob'](mockJob)).rejects.toThrow('Process failed');
+    await expect(testWorker['processJob'](mockJob)).rejects.toThrow('Process failed');
   });
 });

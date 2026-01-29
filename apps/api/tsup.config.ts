@@ -3,7 +3,7 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: ['src/index.ts'],
   format: ['cjs', 'esm'],
-  dts: true,
+  dts: true, // Required for tRPC type exports - api-client depends on AppRouter type
   clean: true,
   external: [
     // Mark all workspace packages as external

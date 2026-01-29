@@ -24,7 +24,7 @@ const nextConfig = {
       bodySizeLimit: '2mb',
     },
     // Optimize package imports
-    optimizePackageImports: ['@intelliflow/ui', 'recharts', 'lucide-react'],
+    optimizePackageImports: ['@intelliflow/ui', 'recharts'],
   },
 
   // Turbopack configuration (Next.js 16+ default bundler)
@@ -129,7 +129,7 @@ const nextConfig = {
             ui: {
               name: 'ui',
               chunks: 'all',
-              test: /[\\/]node_modules[\\/](@intelliflow\/ui|lucide-react)[\\/]/,
+              test: /[\\/]node_modules[\\/](@intelliflow\/ui)[\\/]/,
               priority: 30,
             },
             // Charts library chunk

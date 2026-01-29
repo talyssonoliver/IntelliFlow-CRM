@@ -13,10 +13,9 @@
  * - Cross-tenant access prevention
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   extractTenantContext,
-  createTenantScopedPrisma,
   verifyTenantAccess,
   createTenantWhereClause,
   validateTenantOperation,
@@ -29,9 +28,6 @@ import {
   checkResourceUsage,
   enforceResourceLimit,
   getTenantLimits,
-  rateLimitMiddleware,
-  concurrentRequestMiddleware,
-  resourceLimitMiddleware,
   getAllResourceUsage,
   checkApproachingLimits,
   clearRateLimitState,
@@ -78,18 +74,21 @@ const mockUser = {
   userId: 'user-123',
   email: 'user@test.com',
   role: 'USER',
+  tenantId: 'user-123',
 };
 
 const mockManagerUser = {
   userId: 'manager-456',
   email: 'manager@test.com',
   role: 'MANAGER',
+  tenantId: 'manager-456',
 };
 
 const mockAdminUser = {
   userId: 'admin-789',
   email: 'admin@test.com',
   role: 'ADMIN',
+  tenantId: 'admin-789',
 };
 
 describe('Tenant Context', () => {
@@ -643,11 +642,13 @@ describe('Edge Cases', () => {
         userId: 'user-a',
         email: 'a@test.com',
         role: 'USER',
+        tenantId: 'user-a',
       });
       const tenantB = extractTenantContext({
         userId: 'user-b',
         email: 'b@test.com',
         role: 'MANAGER',
+        tenantId: 'user-b',
       });
 
       expect(tenantA.tenantId).toBe('user-a');

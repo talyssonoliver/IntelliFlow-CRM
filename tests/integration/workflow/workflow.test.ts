@@ -7,12 +7,10 @@
  * @module tests/integration/workflow
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
-// Import actual implementations
+// Import actual implementations using relative paths (vitest aliases don't work in tests/integration)
 import {
-  TemporalWorkflowEngine,
-  WorkflowEngineFactory,
   WorkflowRouter,
   createDefaultWorkflowRouter,
   getCaseEventWorkflowEngine,
@@ -20,35 +18,22 @@ import {
   type IWorkflowEngine,
   type WorkflowHandle,
   type WorkflowStatus,
-  DEFAULT_TEMPORAL_CONFIG,
-} from '@intelliflow/platform';
+} from '../../../packages/platform/src/workflow';
 
 import {
   CASE_EVENT_WORKFLOW_ROUTING,
   CASE_EVENT_TYPES,
-  CaseWorkflowStartedEvent,
-  CaseWorkflowCompletedEvent,
-  CaseWorkflowFailedEvent,
-  CaseApprovalRequiredEvent,
-  CaseEscalatedEvent,
-  CaseId,
   type DomainEventPublisher,
-} from '@intelliflow/domain';
+} from '../../../packages/domain/src';
 
 import {
   CaseEventHandlerRegistry,
   CaseCreatedHandler,
   CaseStatusChangedHandler,
   CasePriorityChangedHandler,
-  CaseDeadlineUpdatedHandler,
-  CaseClosedHandler,
-  CaseTaskAddedHandler,
-  CaseTaskCompletedHandler,
   CaseApprovalRequiredHandler,
   getCaseEventHandlerRegistry,
   resetCaseEventHandlerRegistry,
-  type CaseEventPayload,
-  type EventContext,
   type HandlerDependencies,
 } from '../../../apps/api/src/workflow/handlers/case-handler';
 
@@ -94,7 +79,7 @@ class MockEventPublisher implements DomainEventPublisher {
 
 class MockWorkflowEngine implements IWorkflowEngine {
   readonly engineType: 'temporal' | 'langgraph' | 'bullmq';
-  private workflows = new Map<string, MockWorkflowHandle>();
+  private readonly workflows = new Map<string, MockWorkflowHandle>();
   private healthy = true;
 
   constructor(engineType: 'temporal' | 'langgraph' | 'bullmq' = 'temporal') {
@@ -115,10 +100,11 @@ class MockWorkflowEngine implements IWorkflowEngine {
     return (this.workflows.get(workflowId) as unknown as WorkflowHandle<TOutput>) ?? null;
   }
 
-  async listWorkflows(): Promise<Array<{ id: string; status: WorkflowStatus }>> {
+  async listWorkflows(): Promise<Array<{ id: string; status: WorkflowStatus; definitionId: string }>> {
     return Array.from(this.workflows.entries()).map(([id, handle]) => ({
       id,
       status: handle.status,
+      definitionId: handle.workflowName,
     }));
   }
 
@@ -144,9 +130,9 @@ class MockWorkflowHandle implements WorkflowHandle<unknown> {
   readonly workflowName: string;
   public status: WorkflowStatus = 'running';
   private _result: unknown = null;
-  private signals: Array<{ signalName: string; payload?: unknown }> = [];
+  private readonly signals: Array<{ signalName: string; payload?: unknown }> = [];
 
-  constructor(workflowId: string, workflowName: string, private input: unknown) {
+  constructor(workflowId: string, workflowName: string, private readonly input: unknown) {
     this.workflowId = workflowId;
     this.workflowName = workflowName;
   }
@@ -274,7 +260,7 @@ describe('Workflow Engine', () => {
     });
 
     it('should register routes from CASE_EVENT_WORKFLOW_ROUTING', () => {
-      const routes = router.getAllRoutes();
+      router.getAllRoutes();
 
       // Check that case events are registered
       const caseCreatedRoute = router.getRoute('case.created');
@@ -895,7 +881,7 @@ describe('Complete Workflow Lifecycle', () => {
     }
 
     // Verify all routings are correct
-    for (const { eventType, expectedEngine, actualEngine } of routingResults) {
+    for (const { expectedEngine, actualEngine } of routingResults) {
       expect(actualEngine).toBe(expectedEngine);
     }
   });
@@ -946,7 +932,7 @@ describe('CASE_EVENT_WORKFLOW_ROUTING Configuration', () => {
   it('should have valid engine values', () => {
     const validEngines = ['temporal', 'langgraph', 'bullmq', 'rules'];
 
-    for (const [eventType, engine] of Object.entries(CASE_EVENT_WORKFLOW_ROUTING)) {
+    for (const [, engine] of Object.entries(CASE_EVENT_WORKFLOW_ROUTING)) {
       expect(validEngines).toContain(engine);
     }
   });

@@ -22,6 +22,7 @@ export * from './crm/lead/LeadScore';
 export * from './crm/lead/Email';
 export * from './crm/lead/LeadEvents';
 export * from './crm/lead/LeadRepository';
+export * from './crm/lead/LeadConversionAudit';
 
 // CRM Domain - Contacts
 export * from './crm/contact/Contact';
@@ -98,6 +99,9 @@ export * from './config/ConfigConstants';
 
 // Timeline Domain - Constants
 export * from './timeline/TimelineConstants';
+
+// Platform Domain - IDP Constants (IFC-078)
+export * from './platform/PlatformConstants';
 
 // Future exports (to be implemented)
 // export * from './intelligence/scoring/ScoringService';

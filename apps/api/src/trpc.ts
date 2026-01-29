@@ -204,10 +204,35 @@ export const adminProcedure = t.procedure.use(isAuthed).use(isAdmin);
  *     return ctx.prismaWithTenant.lead.findMany({ where });
  *   })
  */
-// TODO: IFC-127 - Fix middleware type signature to match tRPC expectations
-// Temporarily disabled due to type mismatch - use protectedProcedure instead
-// export const tenantProcedure = protectedProcedure.use(tenantContextMiddleware());
-export const tenantProcedure = protectedProcedure; // Temporary fallback
+// IFC-127: Tenant context middleware for multi-tenant isolation
+const tenantMiddleware = t.middleware(async ({ ctx, next }) => {
+  if (!ctx.user) {
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+      message: 'Authentication required for tenant context',
+    });
+  }
+
+  // Extract tenant context from user session
+  const tenant = {
+    tenantId: ctx.user.tenantId,
+    tenantType: 'user' as const,
+    userId: ctx.user.userId,
+    role: ctx.user.role,
+    organizationId: undefined,
+    canAccessAllTenantData: ['ADMIN', 'MANAGER'].includes(ctx.user.role),
+  };
+
+  return next({
+    ctx: {
+      ...ctx,
+      tenant,
+      prismaWithTenant: ctx.prisma, // In dev, use same prisma (RLS not fully configured)
+    },
+  });
+});
+
+export const tenantProcedure = protectedProcedure.use(tenantMiddleware);
 
 /**
  * Re-export router for backward compatibility

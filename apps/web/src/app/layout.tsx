@@ -4,6 +4,7 @@ import './globals.css';
 import { Providers } from './providers';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Navigation } from '@/components/navigation';
+import { CookieConsentBanner, Toaster } from '@intelliflow/ui';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -85,6 +86,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Navigation />
               <main>{children}</main>
             </div>
+            <Toaster />
+            <CookieConsentBanner
+              privacyPolicyUrl="/privacy"
+              cookiePolicyUrl="/cookies"
+            />
           </Providers>
         </ThemeProvider>
       </body>

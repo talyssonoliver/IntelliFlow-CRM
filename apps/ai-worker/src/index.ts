@@ -5,9 +5,33 @@
 
 import dotenv from 'dotenv';
 import pino from 'pino';
+import path from 'node:path';
+import fs from 'node:fs';
 
-// Load environment variables
-dotenv.config();
+// Load environment variables from multiple .env files
+// Order: .env -> .env.local -> .env.development (later files override earlier)
+function loadEnvFiles() {
+  // Find project root (monorepo root with pnpm-workspace.yaml)
+  let root = process.cwd();
+  while (root !== path.dirname(root)) {
+    if (fs.existsSync(path.join(root, 'pnpm-workspace.yaml'))) break;
+    root = path.dirname(root);
+  }
+
+  const envFiles = [
+    path.join(root, '.env'),
+    path.join(root, '.env.local'),
+    path.join(root, '.env.development'),
+  ];
+
+  for (const envFile of envFiles) {
+    if (fs.existsSync(envFile)) {
+      dotenv.config({ path: envFile });
+    }
+  }
+}
+
+loadEnvFiles();
 
 const logger = pino({
   name: 'ai-worker',
@@ -48,6 +72,22 @@ export {
   NetworkError,
 } from './utils/retry';
 
+// Export worker and jobs (IFC-168)
+export { AIWorker, createAIWorker } from './ai-worker';
+export {
+  AI_WORKER_QUEUES,
+  SCORING_QUEUE,
+  PREDICTION_QUEUE,
+  processScoringJob,
+  processPredictionJob,
+  ScoringJobDataSchema,
+  ScoringJobResultSchema,
+  PredictionJobDataSchema,
+  PredictionJobResultSchema,
+  DEFAULT_SCORING_JOB_OPTIONS,
+  DEFAULT_PREDICTION_JOB_OPTIONS,
+} from './jobs';
+
 // Export types
 export type { AIConfig, AIProvider, ModelName } from './config/ai.config';
 export type { UsageMetrics, CostStatistics } from './utils/cost-tracker';
@@ -62,11 +102,21 @@ export type { QualificationInput, QualificationOutput } from './agents/qualifica
 export type { LoggerContext, LogLevel } from './utils/logger';
 export type { RetryConfig } from './utils/retry';
 
+// Export job types (IFC-168)
+export type {
+  ScoringJobData,
+  ScoringJobResult,
+  PredictionJobData,
+  PredictionJobResult,
+  PredictionType,
+} from './jobs';
+
 /**
- * Initialize the AI Worker
+ * Initialize the AI Worker (legacy mode - library only)
+ * @deprecated Use createAIWorker() for queue-based processing
  */
 async function initializeWorker() {
-  logger.info('🤖 IntelliFlow AI Worker starting...');
+  logger.info('🤖 IntelliFlow AI Worker starting (library mode)...');
 
   try {
     // Validate configuration
@@ -97,7 +147,7 @@ async function initializeWorker() {
     const { qualificationAgent } = await import('./agents/qualification.agent.js');
     logger.info('Qualification agent initialized');
 
-    logger.info('✅ AI Worker initialized successfully');
+    logger.info('✅ AI Worker initialized successfully (library mode)');
 
     // Return public API
     return {
@@ -182,30 +232,51 @@ function setupSignalHandlers() {
 
 /**
  * Main entry point
+ *
+ * Supports two modes:
+ * 1. Queue mode (default): Starts BullMQ worker to process jobs from Redis
+ * 2. Library mode (AI_WORKER_MODE=library): Exports APIs without queue processing
  */
 async function main() {
-  setupSignalHandlers();
+  const mode = process.env.AI_WORKER_MODE || 'queue';
 
-  try {
+  if (mode === 'library') {
+    // Legacy library-only mode
+    setupSignalHandlers();
     await initializeWorker();
+    logger.info('AI Worker running in library mode (no queue processing)');
+    // Keep process alive for library mode
+    await new Promise(() => {});
+  } else {
+    // Queue mode - use the new AIWorker class (IFC-168)
+    logger.info('🤖 Starting AI Worker in queue mode...');
 
-    // Keep the process running
-    logger.info('AI Worker is ready and waiting for tasks...');
+    try {
+      const { createAIWorker } = await import('./ai-worker.js');
+      const worker = await createAIWorker();
 
-    // In a production setup, this would connect to a message queue
-    // or start an HTTP server to receive tasks
-    // For now, we just keep the process alive
-    await new Promise(() => {
-      // Keep alive indefinitely
-    });
-  } catch (error) {
-    logger.error(
-      {
-        error: error instanceof Error ? error.message : String(error),
-      },
-      'Fatal error in main'
-    );
-    process.exit(1);
+      logger.info('AI Worker is ready and processing jobs from queues');
+
+      // The worker handles its own shutdown via BaseWorker
+      // Keep process alive by waiting for worker status
+      await new Promise<void>((resolve) => {
+        const checkStatus = setInterval(() => {
+          const status = worker.getStatus();
+          if (status.state === 'stopped' || status.state === 'error') {
+            clearInterval(checkStatus);
+            resolve();
+          }
+        }, 1000);
+      });
+    } catch (error) {
+      logger.error(
+        {
+          error: error instanceof Error ? error.message : String(error),
+        },
+        'Fatal error starting AI Worker'
+      );
+      process.exit(1);
+    }
   }
 }
 

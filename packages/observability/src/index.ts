@@ -10,8 +10,8 @@
  */
 
 // Internal imports for initObservability function
-import { initTracing as _initTracing } from './tracing';
-import { initMetrics as _initMetrics } from './metrics';
+import { initTracing as _initTracing, shutdownTracing as _shutdownTracing } from './tracing';
+import { initMetrics as _initMetrics, shutdownMetrics as _shutdownMetrics } from './metrics';
 import { initLogger as _initLogger } from './logging';
 
 // Export tracing utilities
@@ -109,18 +109,14 @@ export function initObservability(config: {
   } = config;
 
   // Initialize logging first (so other systems can log)
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const logging = require('./logging') as typeof import('./logging');
-  logging.initLogger({
+  _initLogger({
     name: serviceName,
     level: logLevel,
   });
 
   // Initialize tracing
   if (tracingEnabled) {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const tracing = require('./tracing') as typeof import('./tracing');
-    tracing.initTracing({
+    _initTracing({
       serviceName,
       serviceVersion,
       environment,
@@ -130,9 +126,7 @@ export function initObservability(config: {
 
   // Initialize metrics
   if (metricsEnabled) {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const metricsModule = require('./metrics') as typeof import('./metrics');
-    metricsModule.initMetrics({
+    _initMetrics({
       serviceName,
       serviceVersion,
       environment,
@@ -149,12 +143,7 @@ export function initObservability(config: {
  * Call this on application shutdown to ensure all telemetry is flushed.
  */
 export async function shutdownObservability(): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const tracing = require('./tracing') as typeof import('./tracing');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const metricsModule = require('./metrics') as typeof import('./metrics');
-
-  await Promise.all([tracing.shutdownTracing(), metricsModule.shutdownMetrics()]);
+  await Promise.all([_shutdownTracing(), _shutdownMetrics()]);
 
   console.log('✅ Observability shut down');
 }

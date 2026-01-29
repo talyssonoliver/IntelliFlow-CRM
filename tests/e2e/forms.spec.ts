@@ -29,6 +29,7 @@ test.describe('Lead Form', () => {
       const emailInput = page.locator('input#email');
       await expect(emailInput).toBeVisible();
     });
+  });
 
   test.describe('Form Fields', () => {
     test.beforeEach(async ({ page }) => {

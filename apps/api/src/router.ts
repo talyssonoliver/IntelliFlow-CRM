@@ -10,6 +10,7 @@ import { leadRouter } from './modules/lead/lead.router';
 import { contactRouter } from './modules/contact/contact.router';
 import { accountRouter } from './modules/account/account.router';
 import { opportunityRouter } from './modules/opportunity/opportunity.router';
+import { pipelineConfigRouter } from './modules/opportunity/pipeline-config.router';
 import { taskRouter } from './modules/task/task.router';
 import { ticketRouter } from './modules/ticket/ticket.router';
 import { analyticsRouter } from './modules/analytics/analytics.router';
@@ -21,6 +22,9 @@ import { appointmentsRouter } from './modules/legal/appointments.router';
 import { documentsRouter } from './modules/legal/documents.router';
 import { agentRouter } from './modules/agent/agent.router';
 import { auditRouter } from './modules/security/audit.router';
+import { authRouter } from './modules/auth/auth.router';
+import { billingRouter } from './modules/billing/billing.router';
+import { integrationsRouter } from './modules/integrations/integrations.router';
 
 /**
  * Main application router
@@ -51,16 +55,25 @@ import { auditRouter } from './modules/security/audit.router';
  * - analytics.*    - Dashboard analytics and metrics
  * - ticket.*       - Support ticket management
  *
+ * External Integrations:
+ * - integrations.* - ERP, Payment, Email, Messaging connectors (IFC-099)
+ *
  * Future routers to add:
  * - workflow.*     - Workflow automation
- * - email.*        - Email integration
  */
 export const appRouter = createTRPCRouter({
+  // Authentication & Authorization
+  auth: authRouter,
+
+  // Billing & Subscriptions
+  billing: billingRouter,
+
   // Core CRM entities
   lead: leadRouter,
   contact: contactRouter,
   account: accountRouter,
   opportunity: opportunityRouter,
+  pipelineConfig: pipelineConfigRouter,
   task: taskRouter,
   ticket: ticketRouter,
 
@@ -84,6 +97,9 @@ export const appRouter = createTRPCRouter({
 
   // Real-time subscriptions
   subscriptions: subscriptionRouter,
+
+  // External Integrations (IFC-099)
+  integrations: integrationsRouter,
 });
 
 /**

@@ -15,6 +15,7 @@ import {
 describe('setupGracefulShutdown', () => {
   let mockLogger: pino.Logger;
   let mockExit: ReturnType<typeof vi.spyOn>;
+  let currentHandler: ReturnType<typeof setupGracefulShutdown> | null = null;
 
   beforeEach(() => {
     mockLogger = pino({ level: 'silent' });
@@ -22,9 +23,15 @@ describe('setupGracefulShutdown', () => {
     mockExit = vi.spyOn(process, 'exit').mockImplementation((() => {
       // Don't actually exit, just return
     }) as never);
+    currentHandler = null;
   });
 
   afterEach(() => {
+    // Ensure handler is always cleaned up, even if test fails
+    if (currentHandler) {
+      currentHandler.unregister();
+      currentHandler = null;
+    }
     // Restore only the exit mock, not all mocks
     mockExit.mockRestore();
   });
@@ -32,135 +39,120 @@ describe('setupGracefulShutdown', () => {
   describe('basic setup', () => {
     it('should return a ShutdownHandler object', () => {
       const shutdownFn = vi.fn().mockResolvedValue(undefined);
-      const handler = setupGracefulShutdown(shutdownFn, {
+      currentHandler = setupGracefulShutdown(shutdownFn, {
         timeoutMs: 1000,
         logger: mockLogger,
       });
 
-      expect(handler).toBeDefined();
-      expect(typeof handler.unregister).toBe('function');
-      expect(typeof handler.isShuttingDown).toBe('function');
-      expect(typeof handler.triggerShutdown).toBe('function');
-
-      handler.unregister();
+      expect(currentHandler).toBeDefined();
+      expect(typeof currentHandler.unregister).toBe('function');
+      expect(typeof currentHandler.isShuttingDown).toBe('function');
+      expect(typeof currentHandler.triggerShutdown).toBe('function');
     });
   });
 
   describe('isShuttingDown()', () => {
     it('should return false initially', () => {
       const shutdownFn = vi.fn().mockResolvedValue(undefined);
-      const handler = setupGracefulShutdown(shutdownFn, {
+      currentHandler = setupGracefulShutdown(shutdownFn, {
         timeoutMs: 1000,
         logger: mockLogger,
       });
 
-      expect(handler.isShuttingDown()).toBe(false);
-
-      handler.unregister();
+      expect(currentHandler.isShuttingDown()).toBe(false);
     });
 
     it('should return true after shutdown is triggered', async () => {
       const shutdownFn = vi.fn().mockResolvedValue(undefined);
-      const handler = setupGracefulShutdown(shutdownFn, {
+      currentHandler = setupGracefulShutdown(shutdownFn, {
         timeoutMs: 1000,
         logger: mockLogger,
       });
 
       // Start but don't await to check state
-      const promise = handler.triggerShutdown('test');
+      const promise = currentHandler.triggerShutdown('test');
 
       // Should be shutting down
-      expect(handler.isShuttingDown()).toBe(true);
+      expect(currentHandler.isShuttingDown()).toBe(true);
 
       await promise;
-      handler.unregister();
     });
   });
 
   describe('triggerShutdown()', () => {
     it('should call the shutdown function', async () => {
       const shutdownFn = vi.fn().mockResolvedValue(undefined);
-      const handler = setupGracefulShutdown(shutdownFn, {
+      currentHandler = setupGracefulShutdown(shutdownFn, {
         timeoutMs: 1000,
         logger: mockLogger,
       });
 
-      await handler.triggerShutdown('test');
+      await currentHandler.triggerShutdown('test');
 
       expect(shutdownFn).toHaveBeenCalledTimes(1);
       // Should call process.exit(0) on success
       expect(mockExit).toHaveBeenCalledWith(0);
-
-      handler.unregister();
     });
 
     it('should call process.exit(1) on error', async () => {
       const shutdownFn = vi.fn().mockRejectedValue(new Error('Shutdown failed'));
-      const handler = setupGracefulShutdown(shutdownFn, {
+      currentHandler = setupGracefulShutdown(shutdownFn, {
         timeoutMs: 1000,
         logger: mockLogger,
       });
 
-      await handler.triggerShutdown('test');
+      await currentHandler.triggerShutdown('test');
 
       expect(shutdownFn).toHaveBeenCalledTimes(1);
       expect(mockExit).toHaveBeenCalledWith(1);
-
-      handler.unregister();
     });
 
     it('should be idempotent when called multiple times', async () => {
       const shutdownFn = vi.fn().mockResolvedValue(undefined);
-      const handler = setupGracefulShutdown(shutdownFn, {
+      currentHandler = setupGracefulShutdown(shutdownFn, {
         timeoutMs: 1000,
         logger: mockLogger,
       });
 
-      await handler.triggerShutdown('first');
-      await handler.triggerShutdown('second');
+      await currentHandler.triggerShutdown('first');
+      await currentHandler.triggerShutdown('second');
 
       expect(shutdownFn).toHaveBeenCalledTimes(1);
-
-      handler.unregister();
     });
 
     it('should call onShutdownStart callback', async () => {
       const shutdownFn = vi.fn().mockResolvedValue(undefined);
       const onShutdownStart = vi.fn();
-      const handler = setupGracefulShutdown(shutdownFn, {
+      currentHandler = setupGracefulShutdown(shutdownFn, {
         timeoutMs: 1000,
         logger: mockLogger,
         onShutdownStart,
       });
 
-      await handler.triggerShutdown('test');
+      await currentHandler.triggerShutdown('test');
 
       expect(onShutdownStart).toHaveBeenCalledTimes(1);
-
-      handler.unregister();
     });
 
     it('should call onShutdownComplete callback on success', async () => {
       const shutdownFn = vi.fn().mockResolvedValue(undefined);
       const onShutdownComplete = vi.fn();
-      const handler = setupGracefulShutdown(shutdownFn, {
+      currentHandler = setupGracefulShutdown(shutdownFn, {
         timeoutMs: 1000,
         logger: mockLogger,
         onShutdownComplete,
       });
 
-      await handler.triggerShutdown('test');
+      await currentHandler.triggerShutdown('test');
 
       expect(onShutdownComplete).toHaveBeenCalledTimes(1);
-
-      handler.unregister();
     });
   });
 
   describe('unregister()', () => {
     it('should remove signal handlers', () => {
       const shutdownFn = vi.fn().mockResolvedValue(undefined);
-      const handler = setupGracefulShutdown(shutdownFn, {
+      currentHandler = setupGracefulShutdown(shutdownFn, {
         timeoutMs: 1000,
         logger: mockLogger,
       });
@@ -169,7 +161,9 @@ describe('setupGracefulShutdown', () => {
       const sigintBefore = process.listenerCount('SIGINT');
       const sigtermBefore = process.listenerCount('SIGTERM');
 
-      handler.unregister();
+      currentHandler.unregister();
+      // Clear the reference so afterEach doesn't try to unregister again
+      currentHandler = null;
 
       // Should have one less listener after unregister
       expect(process.listenerCount('SIGINT')).toBe(sigintBefore - 1);

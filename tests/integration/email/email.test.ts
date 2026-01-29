@@ -604,7 +604,11 @@ describe('Attachment Handler', () => {
 
   describe('Filename Sanitization', () => {
     it('should sanitize dangerous filenames', () => {
-      expect(sanitizeFilename('../../../etc/passwd')).toBe('_._.._etc_passwd');
+      // The sanitizeFilename function:
+      // 1. Replaces /\:*?"<>| with _
+      // 2. Collapses .. to .
+      // 3. Removes leading dots
+      expect(sanitizeFilename('../../../etc/passwd')).toBe('_._._etc_passwd');
       expect(sanitizeFilename('file<script>.txt')).toBe('file_script_.txt');
       expect(sanitizeFilename('a:b*c?d"e<f>g|h')).toBe('a_b_c_d_e_f_g_h');
     });
@@ -803,8 +807,16 @@ describe('Email System Integration', () => {
 
   it('should meet deliverability KPI >= 95%', async () => {
     const mockProvider = new MockEmailProvider();
+    // Use high rate limits for testing to avoid rate limiting affecting results
+    const rateLimiter = new EmailRateLimiter({
+      maxPerSecond: 1000,
+      maxPerMinute: 10000,
+      maxPerHour: 100000,
+      maxPerDay: 1000000,
+    });
     const service = new OutboundEmailService({
       providers: [mockProvider],
+      rateLimiter,
     });
 
     // Simulate sending 100 emails
