@@ -24,6 +24,12 @@ export const settingsSidebarConfig: SidebarConfig = {
           href: '/settings/team',
         },
         {
+          id: 'ai',
+          label: 'AI Chains',
+          icon: 'auto_awesome',
+          href: '/settings/ai',
+        },
+        {
           id: 'integrations',
           label: 'Integrations',
           icon: 'extension',

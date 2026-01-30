@@ -19,6 +19,13 @@ const settingsCards = [
     color: 'bg-indigo-500',
   },
   {
+    title: 'AI Chains',
+    description: 'Manage AI chain versions, rollout strategies, and memory budget',
+    href: '/settings/ai',
+    icon: 'auto_awesome',
+    color: 'bg-violet-500',
+  },
+  {
     title: 'Integrations',
     description: 'Connect third-party apps and services to enhance your workflow',
     href: '/settings/integrations',

@@ -1,5 +1,11 @@
 'use client';
 
+/**
+ * @deprecated Use AppSidebar with settingsSidebarConfig instead.
+ * This component is kept for backward compatibility only.
+ * See: apps/web/src/components/sidebar/configs/settings.ts
+ */
+
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@intelliflow/ui';
@@ -24,6 +30,12 @@ const settingsNavItems: SettingsNavItem[] = [
     href: '/settings/team',
     icon: 'group',
     description: 'Manage team members and roles',
+  },
+  {
+    label: 'AI Chains',
+    href: '/settings/ai',
+    icon: 'auto_awesome',
+    description: 'Manage AI chain versions',
   },
   {
     label: 'Integrations',

@@ -1,22 +1,51 @@
-import type { Metadata } from 'next';
-import { SettingsSidebar } from '@/components/settings';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'Settings | IntelliFlow CRM',
-  description: 'Manage your account settings and preferences',
-};
+/**
+ * Settings Layout
+ *
+ * Uses unified AppSidebar pattern with settingsSidebarConfig.
+ * Updated for PG-128 to follow design system guidelines.
+ */
+
+import {
+  SidebarProvider,
+  AppSidebar,
+  SidebarInset,
+  SidebarTrigger,
+  MobileSidebar,
+  settingsSidebarConfig,
+} from '@/components/sidebar';
 
 export default function SettingsLayout({
   children,
 }: {
-  children: React.ReactNode;
+  readonly children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
-      <SettingsSidebar />
-      <main className="flex-1 overflow-y-auto bg-background">
-        {children}
-      </main>
-    </div>
+    <SidebarProvider>
+      <div className="flex min-h-[calc(100vh-4rem)]">
+        {/* Desktop Sidebar */}
+        <AppSidebar config={settingsSidebarConfig} />
+
+        {/* Mobile Sidebar Drawer */}
+        <MobileSidebar config={settingsSidebarConfig} />
+
+        <SidebarInset>
+          <main
+            className="flex flex-1 flex-col h-full min-w-0 overflow-hidden bg-background relative"
+            id="main-content"
+          >
+            {/* Mobile header with sidebar trigger */}
+            <div className="flex items-center gap-3 px-4 py-3 border-b border-border lg:hidden">
+              <SidebarTrigger />
+              <span className="text-sm font-medium text-foreground">Settings</span>
+            </div>
+            <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-3 md:p-4">
+              {children}
+            </div>
+          </main>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   );
 }
