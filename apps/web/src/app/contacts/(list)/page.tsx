@@ -308,7 +308,7 @@ export default function ContactsPage() {
   const utils = api.useUtils();
 
   // Dynamic filter options - updates based on current filter state
-  const { statusOptions, departmentOptions, accountOptions, isLoading: filtersLoading } =
+  const { statusOptions, departmentOptions, accountOptions } =
     useContactFilterOptions({
       search: debouncedSearch || undefined,
       status: statusFilter ? [statusFilter as (typeof CONTACT_STATUSES)[number]] : undefined,
@@ -349,7 +349,7 @@ export default function ContactsPage() {
     limit: pageSize,
     search: debouncedSearch || undefined,
     department: departmentFilter || undefined,
-    status: statusFilter ? [statusFilter as (typeof CONTACT_STATUSES)[number]] : undefined,
+    status: statusFilter ? (statusFilter as (typeof CONTACT_STATUSES)[number]) : undefined,
     accountId: companyFilter && isValidUUID(companyFilter) ? companyFilter : undefined,
     sortBy: sortParams.sortBy,
     sortOrder: sortParams.sortOrder,
@@ -396,7 +396,7 @@ export default function ContactsPage() {
   }, [data]);
 
   const totalItems = data?.total ?? 0;
-  const hasMore = data?.hasMore ?? false;
+  // hasMore available from data if needed for infinite scroll
 
   // Row action handlers
   const rowActionHandlers: RowActionHandlers = useMemo(

@@ -31,6 +31,7 @@ export default defineConfig({
     // Note: vmMemoryLimit only works with vmThreads pool, not forks
     execArgv: ['--max-old-space-size=4096', '--expose-gc'],
     maxWorkers: 4,
+    // @ts-expect-error minWorkers exists at runtime but not in types
     minWorkers: 1,
 
     // Disable caching to prevent stale state accumulation

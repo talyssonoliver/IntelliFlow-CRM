@@ -21,8 +21,8 @@ const steps: Step[] = [
   { id: 'additional', number: 3, label: 'Additional Info' },
 ];
 
-// Contact status type
-type ContactStatus = 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
+// Contact status type - aligned with domain CONTACT_STATUSES
+type ContactStatus = 'ACTIVE' | 'INACTIVE' | 'PROSPECT' | 'CUSTOMER' | 'FORMER_CUSTOMER';
 
 // Form data structure
 interface ContactFormData {
@@ -93,11 +93,13 @@ const departmentOptions = [
   { value: 'other', label: 'Other' },
 ];
 
-// Status options
+// Status options - aligned with domain CONTACT_STATUSES
 const statusOptions: { value: ContactStatus; label: string; description: string }[] = [
   { value: 'ACTIVE', label: 'Active', description: 'Currently engaged contact' },
   { value: 'INACTIVE', label: 'Inactive', description: 'Temporarily not engaged' },
-  { value: 'ARCHIVED', label: 'Archived', description: 'No longer active' },
+  { value: 'PROSPECT', label: 'Prospect', description: 'Potential customer' },
+  { value: 'CUSTOMER', label: 'Customer', description: 'Current customer' },
+  { value: 'FORMER_CUSTOMER', label: 'Former Customer', description: 'No longer a customer' },
 ];
 
 // Toast notification type

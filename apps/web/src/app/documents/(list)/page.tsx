@@ -534,18 +534,26 @@ export default function DocumentsPage() {
       />
 
       {/* Data Table */}
-      <DataTable
-        columns={columns}
-        data={filteredDocuments}
-        isLoading={isLoading}
-        error={error?.message || null}
-        emptyMessage={searchQuery ? 'No documents match your search' : 'No documents found'}
-        emptyIcon="description"
-        onRowClick={handleRowClick}
-        enableRowSelection
-        bulkActions={bulkActions}
-        pageSize={10}
-      />
+      {isLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <div className="text-muted-foreground">Loading documents...</div>
+        </div>
+      ) : error ? (
+        <div className="flex items-center justify-center py-8">
+          <div className="text-destructive">{error.message}</div>
+        </div>
+      ) : (
+        <DataTable
+          columns={columns}
+          data={filteredDocuments}
+          emptyMessage={searchQuery ? 'No documents match your search' : 'No documents found'}
+          emptyIcon="description"
+          onRowClick={handleRowClick}
+          enableRowSelection
+          bulkActions={bulkActions}
+          pageSize={10}
+        />
+      )}
 
       {/* Bulk Archive Confirmation Dialog */}
       <ConfirmationDialog

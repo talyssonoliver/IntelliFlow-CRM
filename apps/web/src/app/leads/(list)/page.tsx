@@ -913,10 +913,6 @@ function StatusBadge({ status }: Readonly<{ status: LeadStatus }>) {
       label: 'Qualified',
       className: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300',
     },
-    NEGOTIATING: {
-      label: 'Negotiating',
-      className: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300',
-    },
     UNQUALIFIED: {
       label: 'Unqualified',
       className: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
