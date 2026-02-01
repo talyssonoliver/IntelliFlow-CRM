@@ -32,6 +32,14 @@ const TEST_UUIDS = {
   contact1: '23456789-0000-4000-8000-000023456789',
   opportunity1: '34567890-0000-4000-8000-000034567890',
   account1: '45678901-0000-4000-8000-000045678901',
+  tenantId: '56789012-0000-4000-8000-000056789012',
+  userId: '67890123-0000-4000-8000-000067890123',
+};
+
+// Standard tenant context for NBA tests (IFC-095 P1 security requirement)
+const TENANT_CONTEXT = {
+  tenantId: TEST_UUIDS.tenantId,
+  userId: TEST_UUIDS.userId,
 };
 
 // Create mock job
@@ -310,11 +318,15 @@ describe('PredictionJob', () => {
       expect(result.entityType).toBe('contact');
       expect(result.entityId).toBe(TEST_UUIDS.contact1);
       expect(result.predictionType).toBe('CHURN_RISK');
-      expect(result.prediction.value).toBe(0.35);
-      expect(result.prediction.confidence).toBe(0.85);
-      expect(result.prediction.explanation).toContain('engagement patterns');
-      expect(result.recommendations).toHaveLength(3);
-      expect(result.recommendations).toContain('Schedule a check-in call');
+      // Real AI chain returns dynamic values - check valid ranges
+      expect(typeof result.prediction.value).toBe('number');
+      expect(result.prediction.value).toBeGreaterThanOrEqual(0);
+      expect(result.prediction.value).toBeLessThanOrEqual(1);
+      expect(result.prediction.confidence).toBeGreaterThanOrEqual(0);
+      expect(result.prediction.confidence).toBeLessThanOrEqual(1);
+      expect(typeof result.prediction.explanation).toBe('string');
+      expect(result.prediction.explanation.length).toBeGreaterThan(0);
+      expect(result.recommendations.length).toBeGreaterThan(0);
     });
 
     it('should include context in churn risk processing', async () => {
@@ -348,6 +360,7 @@ describe('PredictionJob', () => {
         entityType: 'opportunity',
         entityId: TEST_UUIDS.opportunity1,
         predictionType: 'NEXT_BEST_ACTION',
+        context: TENANT_CONTEXT, // IFC-095 P1: Required tenant context
         priority: 5,
       };
 
@@ -357,11 +370,14 @@ describe('PredictionJob', () => {
       expect(result.entityType).toBe('opportunity');
       expect(result.entityId).toBe(TEST_UUIDS.opportunity1);
       expect(result.predictionType).toBe('NEXT_BEST_ACTION');
-      expect(result.prediction.value).toBe('FOLLOW_UP_CALL');
-      expect(result.prediction.confidence).toBe(0.78);
-      expect(result.prediction.explanation).toContain('High engagement');
-      expect(result.recommendations).toHaveLength(3);
-      expect(result.recommendations).toContain('Call within 48 hours');
+      // Real AI agent returns dynamic values - check valid structure
+      expect(typeof result.prediction.value).toBe('string');
+      expect(result.prediction.value.length).toBeGreaterThan(0);
+      expect(result.prediction.confidence).toBeGreaterThanOrEqual(0);
+      expect(result.prediction.confidence).toBeLessThanOrEqual(1);
+      expect(typeof result.prediction.explanation).toBe('string');
+      expect(result.prediction.explanation.length).toBeGreaterThan(0);
+      expect(result.recommendations.length).toBeGreaterThan(0);
     });
 
     it('should return actionable recommendations for NBA', async () => {
@@ -369,14 +385,20 @@ describe('PredictionJob', () => {
         entityType: 'lead',
         entityId: TEST_UUIDS.lead1,
         predictionType: 'NEXT_BEST_ACTION',
+        context: TENANT_CONTEXT, // IFC-095 P1: Required tenant context
         priority: 5,
       };
 
       const job = createMockJob(jobData);
       const result = await processPredictionJob(job);
 
-      expect(result.recommendations).toContain('Prepare ROI case study');
-      expect(result.recommendations).toContain('Discuss expansion options');
+      // Real AI agent returns dynamic recommendations - verify they are actionable strings
+      expect(Array.isArray(result.recommendations)).toBe(true);
+      expect(result.recommendations.length).toBeGreaterThan(0);
+      result.recommendations.forEach((rec: string) => {
+        expect(typeof rec).toBe('string');
+        expect(rec.length).toBeGreaterThan(0);
+      });
     });
   });
 
@@ -399,10 +421,14 @@ describe('PredictionJob', () => {
       expect(result.entityType).toBe('lead');
       expect(result.entityId).toBe(TEST_UUIDS.lead1);
       expect(result.predictionType).toBe('QUALIFICATION');
-      expect(result.prediction.value).toBe('QUALIFIED');
-      expect(result.prediction.confidence).toBe(0.82);
-      expect(result.prediction.explanation).toContain('BANT criteria');
-      expect(result.recommendations).toHaveLength(3);
+      // Real AI chain returns dynamic values - check valid structure
+      expect(typeof result.prediction.value).toBe('string');
+      expect(result.prediction.value.length).toBeGreaterThan(0);
+      expect(result.prediction.confidence).toBeGreaterThanOrEqual(0);
+      expect(result.prediction.confidence).toBeLessThanOrEqual(1);
+      expect(typeof result.prediction.explanation).toBe('string');
+      expect(result.prediction.explanation.length).toBeGreaterThan(0);
+      expect(result.recommendations.length).toBeGreaterThan(0);
     });
 
     it('should return qualification-specific recommendations', async () => {
@@ -416,9 +442,13 @@ describe('PredictionJob', () => {
       const job = createMockJob(jobData);
       const result = await processPredictionJob(job);
 
-      expect(result.recommendations).toContain('Schedule discovery call');
-      expect(result.recommendations).toContain('Send pricing information');
-      expect(result.recommendations).toContain('Assign to sales rep');
+      // Real AI chain returns dynamic recommendations - verify they are actionable strings
+      expect(Array.isArray(result.recommendations)).toBe(true);
+      expect(result.recommendations.length).toBeGreaterThan(0);
+      result.recommendations.forEach((rec: string) => {
+        expect(typeof rec).toBe('string');
+        expect(rec.length).toBeGreaterThan(0);
+      });
     });
   });
 
@@ -481,6 +511,7 @@ describe('PredictionJob', () => {
         entityType: 'lead',
         entityId: TEST_UUIDS.lead1,
         predictionType: 'NEXT_BEST_ACTION',
+        context: TENANT_CONTEXT, // IFC-095 P1: Required tenant context
         priority: 5,
       };
 
@@ -582,6 +613,8 @@ describe('PredictionJob', () => {
           entityType: 'lead',
           entityId: TEST_UUIDS.lead1,
           predictionType,
+          // IFC-095 P1: NEXT_BEST_ACTION requires tenant context
+          context: predictionType === 'NEXT_BEST_ACTION' ? TENANT_CONTEXT : undefined,
           priority: 5,
         };
 

@@ -61,6 +61,22 @@ export {
   createQualificationTask,
 } from './agents/qualification.agent';
 export { createLogger, withContext, withTiming } from './utils/logger';
+
+// IFC-155: Export services for search index management
+export {
+  DocumentIndexer,
+  createDocumentIndexer,
+  type IndexerConfig,
+  type IndexResult,
+  type BatchIndexResult,
+  type ReindexProgress,
+} from './services/document-indexer';
+export {
+  EmbeddingPurgeService,
+  LegalHoldError,
+  createEmbeddingPurgeService,
+  type EmbeddingPurgeResult,
+} from './services/embedding-purge.service';
 export {
   withRetry,
   withTimeout,
@@ -283,8 +299,7 @@ async function main() {
 // Run the worker if this file is executed directly
 // NOSONAR: S7785 - Top-level await not available in CommonJS modules
 if (require.main === module) {
-  // eslint-disable-next-line @typescript-eslint/no-floating-promises
-  (async () => {
+  void (async () => {
     // NOSONAR
     try {
       await main();

@@ -4,7 +4,7 @@ apps/ai-worker/
 │   ├── package.json              # Dependencies and scripts
 │   ├── tsconfig.json             # TypeScript configuration
 │   ├── vitest.config.ts          # Test configuration
-│   ├── .eslintrc.js              # Linting configuration
+│   ├── (root)/eslint.config.mjs  # Shared linting configuration (flat config)
 │   ├── .gitignore                # Git ignore rules
 │   └── .env.example              # Environment template
 │

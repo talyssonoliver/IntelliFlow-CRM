@@ -1248,7 +1248,6 @@ export class RetrievalService {
    * Search documents with ACL check (reserved for IFC-155 - document search)
    * @internal Reserved for future implementation
    */
-  // @ts-ignore TS6133 - Reserved for IFC-155
   private async _searchDocuments(
     config: SearchConfig,
     aclFilter: Record<string, unknown>,

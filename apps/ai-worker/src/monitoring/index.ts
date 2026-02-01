@@ -87,6 +87,19 @@ export type {
   LatencyAlert,
 } from './latency-monitor';
 
+// Chain Monitor (Unified Orchestrator)
+export {
+  ChainMonitor,
+  chainMonitor,
+  createChainMonitor,
+  withMonitoring,
+  sanitizeMetricLabel,
+} from './chain-monitor';
+export type {
+  ChainMonitorConfig,
+  MonitoredResult,
+} from './chain-monitor';
+
 /**
  * Get all Prometheus metrics from monitoring modules
  */

@@ -16,10 +16,19 @@
 import { ChatOpenAI } from '@langchain/openai';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { StructuredOutputParser } from '@langchain/core/output_parsers';
+import type { BaseMessage } from '@langchain/core/messages';
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
 import { costTracker } from '../utils/cost-tracker';
 import pino from 'pino';
+
+/**
+ * Interface for LLM model invocation
+ * Supports both real LangChain models and mock implementations
+ */
+interface LLMModel {
+  invoke(input: BaseMessage[] | string): Promise<{ content: string | unknown[] }>;
+}
 
 // Import domain constants (DRY architecture compliance)
 import {
@@ -88,6 +97,28 @@ export const sentimentResultSchema = z.object({
 
 export type SentimentResult = z.infer<typeof sentimentResultSchema>;
 
+/**
+ * Output schema for LLM parsing (subset of sentimentResultSchema)
+ * Excludes metadata fields that are added post-processing
+ */
+const llmOutputSchema = z.object({
+  sentiment: z.enum(SENTIMENT_LABELS),
+  sentimentScore: z.number(),
+  emotions: z.array(z.object({
+    emotion: z.enum(EMOTION_LABELS),
+    intensity: z.number(),
+  })),
+  primaryEmotion: z.enum(EMOTION_LABELS),
+  urgency: z.enum(URGENCY_LEVELS),
+  urgencyScore: z.number(),
+  keyPhrases: z.array(z.object({
+    phrase: z.string(),
+    sentiment: z.enum(['positive', 'neutral', 'negative']),
+  })),
+  confidence: z.number(),
+  reasoning: z.string(),
+});
+
 // =============================================================================
 // Sentiment Analysis Chain
 // =============================================================================
@@ -98,10 +129,8 @@ export type SentimentResult = z.infer<typeof sentimentResultSchema>;
  * Analyzes text for sentiment, emotions, and urgency with structured output.
  */
 export class SentimentAnalysisChain {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private readonly model: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private readonly parser: StructuredOutputParser<any>;
+  private readonly model: LLMModel;
+  private readonly parser: StructuredOutputParser<typeof llmOutputSchema>;
   private readonly prompt: PromptTemplate;
 
   constructor() {
@@ -139,26 +168,8 @@ export class SentimentAnalysisChain {
       throw new Error(`Provider ${aiConfig.provider} not supported for sentiment analysis`);
     }
 
-    // Create structured output parser
-    const outputSchema = z.object({
-      sentiment: z.enum(SENTIMENT_LABELS),
-      sentimentScore: z.number(),
-      emotions: z.array(z.object({
-        emotion: z.enum(EMOTION_LABELS),
-        intensity: z.number(),
-      })),
-      primaryEmotion: z.enum(EMOTION_LABELS),
-      urgency: z.enum(URGENCY_LEVELS),
-      urgencyScore: z.number(),
-      keyPhrases: z.array(z.object({
-        phrase: z.string(),
-        sentiment: z.enum(['positive', 'neutral', 'negative']),
-      })),
-      confidence: z.number(),
-      reasoning: z.string(),
-    });
-
-    this.parser = StructuredOutputParser.fromZodSchema(outputSchema);
+    // Create structured output parser using module-level schema
+    this.parser = StructuredOutputParser.fromZodSchema(llmOutputSchema);
 
     // Define the analysis prompt
     this.prompt = new PromptTemplate({

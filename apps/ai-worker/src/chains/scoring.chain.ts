@@ -1,5 +1,6 @@
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatOllama } from '@langchain/ollama';
+import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { StructuredOutputParser } from '@langchain/core/output_parsers';
 import { z } from 'zod';
@@ -39,10 +40,8 @@ export type ScoringResult = z.infer<typeof leadScoreSchema>;
  * Uses LangChain to score leads based on multiple factors with structured output
  */
 export class LeadScoringChain {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private readonly model: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private readonly parser: StructuredOutputParser<any>;
+  private readonly model: BaseChatModel;
+  private readonly parser: StructuredOutputParser<typeof leadScoreSchema>;
   private readonly prompt: PromptTemplate;
 
   constructor() {

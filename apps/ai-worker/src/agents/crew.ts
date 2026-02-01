@@ -9,7 +9,7 @@
  * would require additional dependencies and implementation.
  */
 
-import { BaseAgent, AgentResult } from './base.agent';
+import { BaseAgent, AgentResult, AgentTask } from './base.agent';
 import pino from 'pino';
 
 const logger = pino({
@@ -160,14 +160,32 @@ export class Crew {
    * Each agent builds upon the previous agent's output
    */
   private async executeSequential(
-    _task: CrewTask,
-    _results: Map<string, AgentResult>
+    task: CrewTask,
+    results: Map<string, AgentResult>
   ): Promise<void> {
     logger.info('Executing agents sequentially');
 
-    // Stub: Sequential execution requires implementing agent delegation
-    // and context passing between agents in order
-    throw new Error('Sequential execution not yet implemented');
+    let previousOutput: unknown = task.context;
+
+    for (const agent of this.config.agents) {
+      const agentName = agent.getStats().name;
+      const agentTask: AgentTask = {
+        id: `${task.id}-${agentName}`,
+        description: task.description,
+        input: previousOutput,
+        context: { crewTask: task.id, expectedOutput: task.expectedOutput },
+      };
+
+      const result = await agent.execute(agentTask);
+      results.set(agentName, result);
+
+      if (!result.success) {
+        throw new Error(`Agent ${agentName} failed: ${result.error}`);
+      }
+
+      // Pass this agent's output to the next agent
+      previousOutput = result.output;
+    }
   }
 
   /**
@@ -175,13 +193,33 @@ export class Crew {
    * All agents work on the same input simultaneously
    */
   private async executeParallel(
-    _task: CrewTask,
-    _results: Map<string, AgentResult>
+    task: CrewTask,
+    results: Map<string, AgentResult>
   ): Promise<void> {
     logger.info('Executing agents in parallel');
 
-    // Stub: Parallel execution requires Promise.all coordination
-    throw new Error('Parallel execution not yet implemented');
+    const promises = this.config.agents.map(async (agent) => {
+      const agentName = agent.getStats().name;
+      const agentTask: AgentTask = {
+        id: `${task.id}-${agentName}`,
+        description: task.description,
+        input: task.context,
+        context: { crewTask: task.id, expectedOutput: task.expectedOutput },
+      };
+
+      const result = await agent.execute(agentTask);
+      return { name: agentName, result };
+    });
+
+    const outcomes = await Promise.all(promises);
+    outcomes.forEach(({ name, result }) => results.set(name, result));
+
+    // Check if any agent failed
+    const failures = outcomes.filter(({ result }) => !result.success);
+    if (failures.length > 0) {
+      const failedNames = failures.map(({ name }) => name).join(', ');
+      throw new Error(`Agents failed: ${failedNames}`);
+    }
   }
 
   /**
@@ -189,13 +227,73 @@ export class Crew {
    * Manager agent delegates tasks to worker agents
    */
   private async executeHierarchical(
-    _task: CrewTask,
-    _results: Map<string, AgentResult>
+    task: CrewTask,
+    results: Map<string, AgentResult>
   ): Promise<void> {
     logger.info('Executing agents hierarchically');
 
-    // Stub: Hierarchical execution requires manager agent delegation logic
-    throw new Error('Hierarchical execution not yet implemented');
+    if (this.config.agents.length === 0) {
+      return;
+    }
+
+    // First agent is the manager, rest are workers
+    const [manager, ...workers] = this.config.agents;
+    const managerName = manager.getStats().name;
+
+    // Manager analyzes the task and coordinates workers
+    const managerTask: AgentTask = {
+      id: `${task.id}-manager-${managerName}`,
+      description: `Coordinate task: ${task.description}`,
+      input: task.context,
+      context: {
+        role: 'manager',
+        crewTask: task.id,
+        expectedOutput: task.expectedOutput,
+        workers: workers.map((w) => w.getStats().name),
+      },
+    };
+
+    const managerResult = await manager.execute(managerTask);
+    results.set(managerName, managerResult);
+
+    if (!managerResult.success) {
+      throw new Error(`Manager ${managerName} failed: ${managerResult.error}`);
+    }
+
+    // If no workers, we're done
+    if (workers.length === 0) {
+      return;
+    }
+
+    // Workers execute in parallel with manager's output as context
+    const workerPromises = workers.map(async (worker) => {
+      const workerName = worker.getStats().name;
+      const workerTask: AgentTask = {
+        id: `${task.id}-worker-${workerName}`,
+        description: task.description,
+        input: managerResult.output,
+        context: {
+          role: 'worker',
+          crewTask: task.id,
+          expectedOutput: task.expectedOutput,
+          managerOutput: managerResult.output,
+        },
+      };
+
+      const result = await worker.execute(workerTask);
+      return { name: workerName, result };
+    });
+
+    const workerOutcomes = await Promise.all(workerPromises);
+    workerOutcomes.forEach(({ name, result }) => results.set(name, result));
+
+    // Check if any worker failed
+    const failures = workerOutcomes.filter(({ result }) => !result.success);
+    if (failures.length > 0) {
+      const failedNames = failures.map(({ name }) => name).join(', ');
+      logger.warn({ failedWorkers: failedNames }, 'Some workers failed');
+      // Don't throw for worker failures in hierarchical mode - manager succeeded
+    }
   }
 
   /**

@@ -76,7 +76,9 @@ const mockSessionService = {
 // Mock the Supabase functions
 const mockSignIn = vi.fn();
 const mockSignOut = vi.fn();
+const mockSignOutUser = vi.fn();
 const mockGetSession = vi.fn();
+const mockVerifyToken = vi.fn();
 const mockSignInWithOAuth = vi.fn();
 const mockExchangeCodeForSession = vi.fn();
 
@@ -101,7 +103,9 @@ vi.mock('../../../services/session.service', () => ({
 vi.mock('../../../lib/supabase', () => ({
   signIn: (...args: unknown[]) => mockSignIn(...args),
   signOut: (...args: unknown[]) => mockSignOut(...args),
+  signOutUser: (...args: unknown[]) => mockSignOutUser(...args),
   getSession: (...args: unknown[]) => mockGetSession(...args),
+  verifyToken: (...args: unknown[]) => mockVerifyToken(...args),
   signInWithOAuth: (...args: unknown[]) => mockSignInWithOAuth(...args),
   exchangeCodeForSession: (...args: unknown[]) => mockExchangeCodeForSession(...args),
 }));
@@ -194,8 +198,13 @@ describe('authRouter', () => {
       error: null,
     });
     mockSignOut.mockResolvedValue({ error: null });
+    mockSignOutUser.mockResolvedValue({ error: null });
     mockGetSession.mockResolvedValue({
       session: mockSupabaseSession,
+      error: null,
+    });
+    mockVerifyToken.mockResolvedValue({
+      user: mockSupabaseUser,
       error: null,
     });
     mockSignInWithOAuth.mockResolvedValue({
@@ -462,7 +471,7 @@ describe('authRouter', () => {
 
       expect(result.success).toBe(true);
       expect(result.sessionsRevoked).toBe(1);
-      expect(mockSignOut).toHaveBeenCalled();
+      expect(mockSignOutUser).toHaveBeenCalledWith(TEST_UUIDS.user);
       expect(mockSessionService.revokeAllUserSessions).toHaveBeenCalledWith(TEST_UUIDS.user);
       expect(mockAuditLogger.log).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -678,7 +687,30 @@ describe('authRouter', () => {
 
   describe('getStatus', () => {
     it('should return authenticated status when session exists', async () => {
-      const mockContext = createMockContext();
+      // Create context with Authorization header
+      const mockHeaders = new Map([
+        ['Authorization', 'Bearer test-token-123'],
+        ['x-forwarded-for', '127.0.0.1'],
+        ['user-agent', 'Mozilla/5.0 Test Agent'],
+      ]);
+      const mockContext = {
+        prisma: {
+          user: {
+            findUnique: vi.fn().mockResolvedValue({
+              id: TEST_UUIDS.user,
+              email: 'test@example.com',
+              name: 'Test User',
+              role: 'USER',
+            }),
+          },
+        },
+        req: {
+          headers: {
+            get: (key: string) => mockHeaders.get(key) || mockHeaders.get(key.toLowerCase()),
+          },
+        },
+        user: undefined,
+      };
       const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
 
       const result = await caller.getStatus();
@@ -689,12 +721,26 @@ describe('authRouter', () => {
     });
 
     it('should return unauthenticated when no session', async () => {
-      mockGetSession.mockResolvedValueOnce({
-        session: null,
-        error: null,
+      mockVerifyToken.mockResolvedValueOnce({
+        user: null,
+        error: new Error('Invalid token'),
       });
 
-      const mockContext = createMockContext();
+      // Create context with Authorization header but invalid token
+      const mockHeaders = new Map([
+        ['Authorization', 'Bearer invalid-token'],
+        ['x-forwarded-for', '127.0.0.1'],
+        ['user-agent', 'Mozilla/5.0 Test Agent'],
+      ]);
+      const mockContext = {
+        prisma: {},
+        req: {
+          headers: {
+            get: (key: string) => mockHeaders.get(key) || mockHeaders.get(key.toLowerCase()),
+          },
+        },
+        user: undefined,
+      };
       const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
 
       const result = await caller.getStatus();

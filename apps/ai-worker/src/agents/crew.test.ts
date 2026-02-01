@@ -130,7 +130,7 @@ describe('Crew', () => {
   });
 
   describe('execute', () => {
-    it('should return failure for sequential execution (not implemented)', async () => {
+    it('should execute sequential tasks successfully', async () => {
       const crew = new Crew(crewConfig);
 
       const task: CrewTask = {
@@ -141,12 +141,13 @@ describe('Crew', () => {
 
       const result = await crew.execute(task);
 
-      expect(result.success).toBe(false);
-      expect(result.errors).toBeDefined();
-      expect(result.errors?.[0]).toContain('Sequential execution not yet implemented');
+      expect(result.success).toBe(true);
+      expect(result.agentResults.size).toBe(3);
+      expect(result.totalDuration).toBeGreaterThanOrEqual(0);
+      expect(result.errors).toBeUndefined();
     });
 
-    it('should return failure for parallel execution (not implemented)', async () => {
+    it('should execute parallel tasks successfully', async () => {
       const config: CrewConfig = {
         ...crewConfig,
         process: 'parallel',
@@ -162,12 +163,12 @@ describe('Crew', () => {
 
       const result = await crew.execute(task);
 
-      expect(result.success).toBe(false);
-      expect(result.errors).toBeDefined();
-      expect(result.errors?.[0]).toContain('Parallel execution not yet implemented');
+      expect(result.success).toBe(true);
+      expect(result.agentResults.size).toBe(3);
+      expect(result.totalDuration).toBeGreaterThanOrEqual(0);
     });
 
-    it('should return failure for hierarchical execution (not implemented)', async () => {
+    it('should execute hierarchical tasks successfully', async () => {
       const config: CrewConfig = {
         ...crewConfig,
         process: 'hierarchical',
@@ -183,12 +184,12 @@ describe('Crew', () => {
 
       const result = await crew.execute(task);
 
-      expect(result.success).toBe(false);
-      expect(result.errors).toBeDefined();
-      expect(result.errors?.[0]).toContain('Hierarchical execution not yet implemented');
+      expect(result.success).toBe(true);
+      expect(result.agentResults.size).toBe(3); // manager + 2 workers
+      expect(result.totalDuration).toBeGreaterThanOrEqual(0);
     });
 
-    it('should measure execution duration on error', async () => {
+    it('should measure execution duration', async () => {
       const crew = new Crew(crewConfig);
 
       const task: CrewTask = {
@@ -197,14 +198,13 @@ describe('Crew', () => {
         expectedOutput: 'Output',
       };
 
-      try {
-        await crew.execute(task);
-      } catch (error) {
-        expect(error).toBeInstanceOf(Error);
-      }
+      const result = await crew.execute(task);
+
+      expect(result.success).toBe(true);
+      expect(result.totalDuration).toBeGreaterThanOrEqual(0);
     });
 
-    it('should include task context', async () => {
+    it('should include task context in execution', async () => {
       const crew = new Crew(crewConfig);
 
       const task: CrewTask = {
@@ -214,11 +214,93 @@ describe('Crew', () => {
         context: { userId: 'user-123', metadata: { priority: 'high' } },
       };
 
-      try {
-        await crew.execute(task);
-      } catch (error) {
-        expect(error).toBeInstanceOf(Error);
-      }
+      const result = await crew.execute(task);
+
+      expect(result.success).toBe(true);
+      expect(result.agentResults.size).toBe(3);
+    });
+
+    it('should pass output between sequential agents', async () => {
+      const crew = new Crew(crewConfig);
+
+      const task: CrewTask = {
+        id: 'task-seq-001',
+        description: 'Test sequential output passing',
+        expectedOutput: 'Chained output',
+        context: { initialData: 'start' },
+      };
+
+      const result = await crew.execute(task);
+
+      expect(result.success).toBe(true);
+      // Each agent should have processed
+      expect(result.agentResults.has('Agent 1')).toBe(true);
+      expect(result.agentResults.has('Agent 2')).toBe(true);
+      expect(result.agentResults.has('Agent 3')).toBe(true);
+    });
+
+    it('should handle empty agent list in sequential mode', async () => {
+      const config: CrewConfig = {
+        name: 'Empty Crew',
+        description: 'Crew with no agents',
+        agents: [],
+        process: 'sequential',
+      };
+
+      const crew = new Crew(config);
+      const task: CrewTask = {
+        id: 'task-empty-001',
+        description: 'Test empty crew',
+        expectedOutput: 'Nothing',
+      };
+
+      const result = await crew.execute(task);
+
+      expect(result.success).toBe(true);
+      expect(result.agentResults.size).toBe(0);
+    });
+
+    it('should handle empty agent list in hierarchical mode', async () => {
+      const config: CrewConfig = {
+        name: 'Empty Crew',
+        description: 'Crew with no agents',
+        agents: [],
+        process: 'hierarchical',
+      };
+
+      const crew = new Crew(config);
+      const task: CrewTask = {
+        id: 'task-empty-002',
+        description: 'Test empty hierarchical crew',
+        expectedOutput: 'Nothing',
+      };
+
+      const result = await crew.execute(task);
+
+      expect(result.success).toBe(true);
+      expect(result.agentResults.size).toBe(0);
+    });
+
+    it('should execute hierarchical with only manager (no workers)', async () => {
+      const config: CrewConfig = {
+        name: 'Manager Only Crew',
+        description: 'Crew with only one agent (manager)',
+        agents: [mockAgents[0]],
+        process: 'hierarchical',
+      };
+
+      const crew = new Crew(config);
+      const task: CrewTask = {
+        id: 'task-manager-001',
+        description: 'Test manager only',
+        expectedOutput: 'Manager output',
+      };
+
+      const result = await crew.execute(task);
+
+      expect(result.success).toBe(true);
+      expect(result.agentResults.size).toBe(1);
+      expect(result.agentResults.has('Agent 1')).toBe(true);
     });
   });
 
@@ -237,7 +319,7 @@ describe('Crew', () => {
       expect(stats.process).toBe('sequential');
     });
 
-    it('should increment execution count on execute attempts', async () => {
+    it('should increment execution count on execute', async () => {
       const crew = new Crew(crewConfig);
 
       expect(crew.getStats().executionCount).toBe(0);
@@ -248,11 +330,10 @@ describe('Crew', () => {
         expectedOutput: 'Output',
       };
 
-      // Execute will fail but should increment counter
-      await crew.execute(task).catch(() => {});
+      await crew.execute(task);
       expect(crew.getStats().executionCount).toBe(1);
 
-      await crew.execute(task).catch(() => {});
+      await crew.execute(task);
       expect(crew.getStats().executionCount).toBe(2);
     });
   });
@@ -294,21 +375,60 @@ describe('Crew', () => {
   });
 
   describe('CrewResult', () => {
-    it('should return error result on execution failure', async () => {
+    it('should return successful result with all agent results', async () => {
       const crew = new Crew(crewConfig);
 
       const task: CrewTask = {
         id: 'task-007',
-        description: 'Error test',
+        description: 'Result test',
         expectedOutput: 'Output',
       };
 
-      try {
-        await crew.execute(task);
-      } catch (error) {
-        // Expected to throw
-        expect(error).toBeDefined();
+      const result = await crew.execute(task);
+
+      expect(result.success).toBe(true);
+      expect(result.agentResults).toBeInstanceOf(Map);
+      expect(result.totalDuration).toBeGreaterThanOrEqual(0);
+      expect(result.errors).toBeUndefined();
+    });
+
+    it('should handle agent failure and return error result', async () => {
+      // Create a failing agent
+      class FailingAgent extends BaseAgent<any, any> {
+        protected async executeTask(): Promise<any> {
+          throw new Error('Agent execution failed');
+        }
       }
+
+      const failingAgents = [
+        new FailingAgent({
+          name: 'Failing Agent',
+          role: 'Failer',
+          goal: 'Fail',
+          backstory: 'Always fails',
+        }),
+      ];
+
+      const config: CrewConfig = {
+        name: 'Failing Crew',
+        description: 'Crew that fails',
+        agents: failingAgents,
+        process: 'sequential',
+      };
+
+      const crew = new Crew(config);
+
+      const task: CrewTask = {
+        id: 'task-fail-001',
+        description: 'Failure test',
+        expectedOutput: 'Never reached',
+      };
+
+      const result = await crew.execute(task);
+
+      expect(result.success).toBe(false);
+      expect(result.errors).toBeDefined();
+      expect(result.errors?.length).toBeGreaterThan(0);
     });
   });
 

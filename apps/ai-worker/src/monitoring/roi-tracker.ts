@@ -220,8 +220,11 @@ export class ROITracker {
 
   /**
    * Calculate ROI for a period
+   * @param startTime - Start of period (default: trackingPeriodDays ago)
+   * @param endTime - End of period (default: now)
+   * @param skipTrend - Internal flag to prevent infinite recursion
    */
-  calculateROI(startTime?: Date, endTime?: Date): ROIResult {
+  calculateROI(startTime?: Date, endTime?: Date, skipTrend: boolean = false): ROIResult {
     const start = startTime ?? new Date(Date.now() - this.config.trackingPeriodDays * 24 * 60 * 60 * 1000);
     const end = endTime ?? new Date();
 
@@ -262,9 +265,12 @@ export class ROITracker {
     // Calculate efficiency
     const efficiency = totalCost > 0 ? totalValue / totalCost : 0;
 
-    // Determine trend
-    const previousPeriod = this.calculatePreviousPeriodROI(start, end);
-    const trendDirection = this.determineTrend(roi, previousPeriod);
+    // Determine trend (skip if already in recursive call to prevent stack overflow)
+    let trendDirection: 'improving' | 'stable' | 'declining' = 'stable';
+    if (!skipTrend) {
+      const previousPeriod = this.calculatePreviousPeriodROI(start, end);
+      trendDirection = this.determineTrend(roi, previousPeriod);
+    }
 
     // Generate recommendations
     const recommendations = this.generateRecommendations(
@@ -489,7 +495,8 @@ export class ROITracker {
     const prevEnd = new Date(currentStart.getTime());
     const prevStart = new Date(currentStart.getTime() - periodLength);
 
-    const prevResult = this.calculateROI(prevStart, prevEnd);
+    // Pass skipTrend=true to prevent infinite recursion
+    const prevResult = this.calculateROI(prevStart, prevEnd, true);
     return prevResult.roi;
   }
 

@@ -10,11 +10,15 @@
  * - Re-index support for full index rebuilds
  * - Progress tracking for long-running operations
  *
+ * GATE: no-null-fallback - Production embeddings come from EmbeddingChain,
+ * null only returned on actual API errors.
+ *
  * @module @intelliflow/ai-worker/services/document-indexer
  */
 
 import { PrismaClient } from '@intelliflow/db';
 import { z } from 'zod';
+import { EmbeddingChain } from '../chains/embedding.chain';
 
 // ============================================
 // Configuration
@@ -82,7 +86,7 @@ export interface NoteToIndex {
 }
 
 // ============================================
-// Embedding Generator (Mock - integrate with EmbeddingChain)
+// Embedding Result Types
 // ============================================
 
 interface EmbeddingResult {
@@ -91,33 +95,45 @@ interface EmbeddingResult {
   dimensions: number;
 }
 
-async function generateEmbedding(
-  text: string,
-  _model: string = 'text-embedding-3-small'
-): Promise<EmbeddingResult | null> {
-  // TODO: Integrate with apps/ai-worker/src/chains/embedding.chain.ts
-  // This is a placeholder that returns null - in production:
-  // const chain = new EmbeddingChain({ model });
-  // return await chain.generateEmbedding({ text });
+// ============================================
+// Embedding Provider Interface (IFC-155)
+// ============================================
 
-  // For now, return a mock embedding for testing
-  // In production, remove this mock and use the real embedding chain
-  if (process.env.NODE_ENV === 'test' || process.env.MOCK_EMBEDDINGS === 'true') {
-    // Generate deterministic mock embedding based on text hash
-    const hash = simpleHash(text);
-    const vector = Array.from({ length: 1536 }, (_, i) =>
-      Math.sin(hash + i) * 0.5 + 0.5
-    );
+export interface IEmbeddingProvider {
+  generateEmbedding(text: string): Promise<EmbeddingResult>;
+  generateBatchEmbeddings?(texts: string[]): Promise<EmbeddingResult[]>;
+}
+
+/**
+ * Adapter to use EmbeddingChain as IEmbeddingProvider
+ */
+export class EmbeddingChainAdapter implements IEmbeddingProvider {
+  constructor(private chain: EmbeddingChain) {}
+
+  async generateEmbedding(text: string): Promise<EmbeddingResult> {
+    const result = await this.chain.generateEmbedding({ text });
     return {
-      vector,
-      model: 'text-embedding-3-small',
-      dimensions: 1536,
+      vector: result.vector,
+      dimensions: result.dimensions,
+      model: result.model,
     };
   }
 
-  console.log(`[DocumentIndexer] Would generate embedding for text: ${text.slice(0, 50)}...`);
-  return null;
+  async generateBatchEmbeddings(texts: string[]): Promise<EmbeddingResult[]> {
+    const result = await this.chain.generateBatchEmbeddings(
+      texts.map(text => ({ text }))
+    );
+    return result.embeddings.map(emb => ({
+      vector: emb.vector,
+      dimensions: emb.dimensions,
+      model: emb.model,
+    }));
+  }
 }
+
+// ============================================
+// Hash Utility (for mock embeddings)
+// ============================================
 
 function simpleHash(str: string): number {
   let hash = 0;
@@ -135,12 +151,70 @@ function simpleHash(str: string): number {
 
 export class DocumentIndexer {
   private config: IndexerConfig;
+  private embeddingChain: EmbeddingChain;
+  private embeddingProvider: IEmbeddingProvider | null = null;
 
   constructor(
     private prisma: PrismaClient,
-    config: Partial<IndexerConfig> = {}
+    config: Partial<IndexerConfig> = {},
+    embeddingChain?: EmbeddingChain
   ) {
     this.config = { ...DEFAULT_INDEXER_CONFIG, ...config };
+    // IFC-155: Inject EmbeddingChain for real embedding generation
+    this.embeddingChain = embeddingChain ?? new EmbeddingChain();
+    this.embeddingProvider = new EmbeddingChainAdapter(this.embeddingChain);
+  }
+
+  /**
+   * Generate embedding using EmbeddingChain or mock (for tests)
+   *
+   * GATE: no-null-fallback - Production path uses real embeddings from
+   * EmbeddingChain. Null is only returned on actual API errors.
+   */
+  private async generateEmbedding(
+    text: string,
+    _model: string = 'text-embedding-3-small'
+  ): Promise<EmbeddingResult | null> {
+    // Use mock embeddings in test mode
+    if (process.env.NODE_ENV === 'test' || process.env.MOCK_EMBEDDINGS === 'true') {
+      return this.mockEmbedding(text);
+    }
+
+    // GATE:no-null-fallback - Production path uses real EmbeddingChain
+    try {
+      if (!this.embeddingProvider) {
+        console.error('[DocumentIndexer] EmbeddingProvider not initialized');
+        return null;
+      }
+
+      const result = await this.embeddingProvider.generateEmbedding(text);
+      console.log(
+        `[DocumentIndexer] Embedding generated: ${text.slice(0, 50)}... (${result.dimensions} dimensions)`
+      );
+      return result;
+    } catch (error) {
+      // Only return null on actual API errors
+      console.error(
+        '[DocumentIndexer] Embedding generation failed:',
+        error instanceof Error ? error.message : String(error)
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Generate deterministic mock embedding for testing
+   */
+  private mockEmbedding(text: string): EmbeddingResult {
+    const hash = simpleHash(text);
+    const vector = Array.from({ length: 1536 }, (_, i) =>
+      Math.sin(hash + i) * 0.5 + 0.5
+    );
+    return {
+      vector,
+      model: 'text-embedding-3-small',
+      dimensions: 1536,
+    };
   }
 
   // ========== Single Document Indexing ==========
@@ -174,8 +248,8 @@ export class DocumentIndexer {
       // Build text for embedding
       const textToEmbed = this.buildDocumentText(document);
 
-      // Generate embedding
-      const embedding = await generateEmbedding(textToEmbed, this.config.embeddingModel);
+      // Generate embedding using EmbeddingChain (IFC-155)
+      const embedding = await this.generateEmbedding(textToEmbed, this.config.embeddingModel);
 
       if (!embedding) {
         // Search vector is auto-updated by trigger, so partial success
@@ -238,8 +312,8 @@ export class DocumentIndexer {
         };
       }
 
-      // Generate embedding
-      const embedding = await generateEmbedding(note.content, this.config.embeddingModel);
+      // Generate embedding using EmbeddingChain (IFC-155)
+      const embedding = await this.generateEmbedding(note.content, this.config.embeddingModel);
 
       if (!embedding) {
         return {

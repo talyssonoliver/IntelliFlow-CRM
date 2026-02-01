@@ -3,7 +3,16 @@ import { BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messag
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
 import { costTracker } from '../utils/cost-tracker';
+import { countMessagesTokens, countTokens } from '../utils/token-counter';
 import pino from 'pino';
+
+/**
+ * Interface for LLM model invocation
+ * Supports both real LangChain models and mock implementations
+ */
+interface LLMModel {
+  invoke(input: BaseMessage[] | string): Promise<{ content: string | unknown[] }>;
+}
 
 const logger = pino({
   name: 'base-agent',
@@ -17,6 +26,12 @@ export interface AgentContext {
   userId?: string;
   sessionId?: string;
   metadata?: Record<string, unknown>;
+  // Crew-specific context properties
+  crewTask?: string;
+  expectedOutput?: string;
+  role?: 'manager' | 'worker';
+  workers?: string[];
+  managerOutput?: unknown;
 }
 
 /**
@@ -63,8 +78,7 @@ export interface BaseAgentConfig {
  * Provides common functionality for agent execution, error handling, and monitoring
  */
 export abstract class BaseAgent<TInput = unknown, TOutput = unknown> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected model: any;
+  protected model: LLMModel;
   protected config: BaseAgentConfig;
   protected executionCount: number = 0;
 
@@ -89,7 +103,6 @@ export abstract class BaseAgent<TInput = unknown, TOutput = unknown> {
       // Mock provider for testing - no real API calls
       this.model = {
         invoke: async () => ({ content: 'Mock response' }),
-        call: async () => ({ content: 'Mock response' }),
       };
     } else if (aiConfig.provider === 'ollama') {
       // Ollama support - would use dynamic import at runtime:
@@ -249,14 +262,15 @@ You MUST NOT:
       const response = await this.model.invoke(messages);
       const duration = Date.now() - startTime;
 
-      // Track costs for OpenAI
+      // Track costs for OpenAI with accurate token counting
       if (aiConfig.provider === 'openai' && aiConfig.costTracking.enabled) {
-        // Note: Token counting would need to be implemented
-        // This is a placeholder for demonstration
+        const inputTokens = countMessagesTokens(messages, aiConfig.openai.model);
+        const outputTokens = countTokens(response.content as string, aiConfig.openai.model);
+
         costTracker.recordUsage({
           model: aiConfig.openai.model,
-          inputTokens: 0, // Would need actual token counting
-          outputTokens: 0,
+          inputTokens,
+          outputTokens,
           operationType: `agent:${this.config.name}`,
           metadata: {
             duration,
