@@ -67,7 +67,7 @@ export function PublicHeader() {
             <Link href="/sign-in">Sign In</Link>
           </Button>
           <Button asChild>
-            <Link href="/sign-up">Start Free Trial</Link>
+            <Link href="/signup">Start Free Trial</Link>
           </Button>
         </div>
 
@@ -111,7 +111,7 @@ export function PublicHeader() {
                 <Link href="/sign-in">Sign In</Link>
               </Button>
               <Button asChild className="w-full">
-                <Link href="/sign-up">Start Free Trial</Link>
+                <Link href="/signup">Start Free Trial</Link>
               </Button>
             </div>
           </nav>

@@ -140,7 +140,7 @@ export default function FeaturesPage() {
               size="lg"
               className="bg-white text-[#137fec] hover:bg-white/90 min-w-[200px]"
             >
-              <Link href="/sign-up">Start Free Trial</Link>
+              <Link href="/signup">Start Free Trial</Link>
             </Button>
             <Button
               asChild

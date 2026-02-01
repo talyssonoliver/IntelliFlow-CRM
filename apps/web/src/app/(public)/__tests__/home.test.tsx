@@ -23,7 +23,7 @@ describe('PublicHomePage', () => {
     const startTrial = screen.getByRole('link', { name: /start free trial/i });
     const talkToSales = screen.getByRole('link', { name: /talk to sales/i });
 
-    expect(startTrial).toHaveAttribute('href', '/sign-up');
+    expect(startTrial).toHaveAttribute('href', '/signup');
     expect(talkToSales).toHaveAttribute('href', '/contact');
   });
 

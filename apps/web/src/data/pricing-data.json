@@ -18,7 +18,7 @@
         "Mobile apps (iOS & Android)"
       ],
       "cta": "Start Free Trial",
-      "ctaLink": "/sign-up?plan=starter",
+      "ctaLink": "/signup?plan=starter",
       "mostPopular": false,
       "icon": "rocket_launch"
     },
@@ -43,7 +43,7 @@
         "Custom reports"
       ],
       "cta": "Start Free Trial",
-      "ctaLink": "/sign-up?plan=professional",
+      "ctaLink": "/signup?plan=professional",
       "mostPopular": true,
       "icon": "workspace_premium"
     },

@@ -17,7 +17,7 @@
           "subheadline": "IntelliFlow CRM uses machine learning to score leads, automate follow-ups, and provide actionable insights that help your team sell smarter.",
           "primaryCta": {
             "text": "Start Free Trial",
-            "href": "/sign-up?source=lp-ai-crm"
+            "href": "/signup?source=lp-ai-crm"
           },
           "secondaryCta": {
             "text": "Watch Demo",
@@ -114,7 +114,7 @@
           "subtitle": "Join thousands of sales teams using AI to close more deals. No credit card required.",
           "primaryCta": {
             "text": "Start Free Trial",
-            "href": "/sign-up?source=lp-ai-crm"
+            "href": "/signup?source=lp-ai-crm"
           },
           "secondaryCta": {
             "text": "Talk to Sales",
@@ -207,7 +207,7 @@
           "subheadline": "Start free, scale infinitely. Modern CRM designed for fast-moving startups who can't afford to waste time on clunky tools.",
           "primaryCta": {
             "text": "Start Free",
-            "href": "/sign-up?plan=startup"
+            "href": "/signup?plan=startup"
           },
           "secondaryCta": {
             "text": "See Pricing",
@@ -255,7 +255,7 @@
               ],
               "cta": {
                 "text": "Get Started",
-                "href": "/sign-up?plan=free"
+                "href": "/signup?plan=free"
               }
             },
             {
@@ -271,7 +271,7 @@
               ],
               "cta": {
                 "text": "Start Trial",
-                "href": "/sign-up?plan=startup"
+                "href": "/signup?plan=startup"
               },
               "highlighted": true
             },
@@ -299,7 +299,7 @@
           "subtitle": "Start free today. No credit card required.",
           "primaryCta": {
             "text": "Start Free",
-            "href": "/sign-up?plan=startup"
+            "href": "/signup?plan=startup"
           }
         }
       ],

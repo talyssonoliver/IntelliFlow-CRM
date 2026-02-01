@@ -121,7 +121,7 @@ export default function PublicHomePage() {
 
               <div className="flex flex-col sm:flex-row items-center gap-3">
                 <Link
-                  href="/sign-up"
+                  href="/signup"
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#137fec] text-white font-semibold hover:bg-[#0e6ac7] transition-colors focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-[#0f172a]"
                 >
                   <span className="material-symbols-outlined text-lg" aria-hidden="true">
@@ -367,7 +367,7 @@ export default function PublicHomePage() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
-              href="/sign-up"
+              href="/signup"
               className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-white text-[#137fec] font-semibold rounded-lg hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#137fec]"
             >
               <span className="material-symbols-outlined" aria-hidden="true">

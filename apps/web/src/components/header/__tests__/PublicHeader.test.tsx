@@ -112,11 +112,11 @@ describe('PublicHeader', () => {
       expect(signInLinks[0]).toHaveAttribute('href', '/sign-in');
     });
 
-    it('should have Start Free Trial link to /sign-up', () => {
+    it('should have Start Free Trial link to /signup', () => {
       render(<PublicHeader />);
 
       const trialLinks = screen.getAllByRole('link', { name: /start free trial/i });
-      expect(trialLinks[0]).toHaveAttribute('href', '/sign-up');
+      expect(trialLinks[0]).toHaveAttribute('href', '/signup');
     });
   });
 
