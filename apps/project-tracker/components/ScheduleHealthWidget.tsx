@@ -34,22 +34,24 @@ export default function ScheduleHealthWidget({ sprint = 0 }: ScheduleHealthWidge
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const sprintNum = sprint === 'all' ? 0 : sprint;
+    // Pass 'all' as query param for all sprints, otherwise use the sprint number
+    const sprintParam = sprint === 'all' ? 'all' : sprint;
     setLoading(true);
     setError(null);
 
-    fetch(`/api/schedule/calculate?sprint=${sprintNum}`)
+    fetch(`/api/schedule/calculate?sprint=${sprintParam}`)
       .then((res) => res.json())
       .then((result) => {
         if (result.error) {
           setError(result.error);
         } else {
-          // Calculate at-risk tasks (critical path tasks not yet complete)
+          // Calculate at-risk tasks (incomplete critical path tasks)
+          // With planned-date scheduling, "at risk" = incomplete tasks on critical path
           const criticalTasks = Object.values(result.tasks || {}).filter(
             (t: any) => t.isCritical
           );
           const atRiskCount = criticalTasks.filter(
-            (t: any) => t.percentComplete < 100 && t.totalFloat <= 0
+            (t: any) => t.percentComplete < 100
           ).length;
 
           setData({

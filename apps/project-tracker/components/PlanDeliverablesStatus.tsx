@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Icon } from '@/lib/icons';
-import type { PlanDeliverablesVerification, PlanDeliverable, PlanCheckboxItem } from '@/lib/types';
+import type { PlanDeliverablesVerification, PlanCheckboxItem } from '@/lib/types';
 
 interface PlanDeliverablesStatusProps {
   data: PlanDeliverablesVerification | null;

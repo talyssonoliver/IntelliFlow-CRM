@@ -740,6 +740,35 @@ export interface PlanDeliverablesVerification {
   verifiedAt: string;
 }
 
+// =============================================================================
+// COMPLETION GATES ENFORCEMENT TYPES
+// =============================================================================
+
+/**
+ * Status of a single completion gate
+ */
+export interface CompletionGate {
+  name: string;
+  status: 'pass' | 'warn' | 'blocked' | 'pending';
+  details?: string;
+  required: boolean;
+}
+
+/**
+ * Overall completion gates status for enforcement validation
+ * This determines if a task can be marked as "Completed"
+ */
+export interface CompletionGatesStatus {
+  /** True if all gates are pass or warn (no blocked) */
+  allGatesPassed: boolean;
+  /** True if task can be marked as Completed */
+  canComplete: boolean;
+  /** Individual gate statuses */
+  gates: CompletionGate[];
+  /** Reasons why task cannot be completed (if blocked) */
+  blockingReasons: string[];
+}
+
 /**
  * Complete validation summary for a task
  */
@@ -794,4 +823,7 @@ export interface TaskValidationSummary {
     validationsPassed?: number;
     gatesPassed?: number;
   };
+
+  // Completion gates enforcement status
+  completionGates?: CompletionGatesStatus;
 }

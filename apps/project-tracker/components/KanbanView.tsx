@@ -1,6 +1,6 @@
 'use client';
 
-import { Task } from '@/lib/types';
+import { Task, STATUS_GROUPS } from '@/lib/types';
 import { getInitials, truncate } from '@/lib/utils';
 import { ContractTagSummary } from './ContractTagBadge';
 import { parseContractTags, getTagCounts, ContractTagType } from './ContractTagList';
@@ -43,11 +43,11 @@ function getContractStatus(task: Task): {
 
 export default function KanbanView({ tasks, onTaskClick }: KanbanViewProps) {
   const columns = [
-    { id: 'backlog', title: 'Backlog', statuses: ['Backlog', 'In Review'] },
-    { id: 'planned', title: 'Planned', statuses: ['Planned'] },
-    { id: 'inprogress', title: 'In Progress', statuses: ['In Progress', 'Validating'] },
-    { id: 'blocked', title: 'Blocked', statuses: ['Blocked', 'Needs Human', 'Failed'] },
-    { id: 'completed', title: 'Completed', statuses: ['Completed', 'Done'] },
+    { id: 'backlog', title: 'Backlog', statuses: STATUS_GROUPS.backlog as string[] },
+    { id: 'planned', title: 'Planned', statuses: STATUS_GROUPS.planned as string[] },
+    { id: 'inprogress', title: 'In Progress', statuses: STATUS_GROUPS.active as string[] },
+    { id: 'blocked', title: 'Blocked', statuses: STATUS_GROUPS.blocked as string[] },
+    { id: 'completed', title: 'Completed', statuses: STATUS_GROUPS.completed as string[] },
   ];
 
   const getTasksForColumn = (statuses: string[]) => {

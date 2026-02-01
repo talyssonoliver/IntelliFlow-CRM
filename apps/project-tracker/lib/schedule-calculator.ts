@@ -36,6 +36,7 @@ export interface TaskScheduleInput {
   dependencies: ScheduleDependency[];
   constraintType?: 'ASAP' | 'ALAP' | 'SNET' | 'SNLT' | 'FNET' | 'FNLT' | 'MSO' | 'MFO';
   constraintDate?: Date;
+  targetSprint?: number; // Target sprint number for scheduling
   status: string;
 }
 
@@ -255,6 +256,22 @@ export function calculateSchedule(
   const sortedTasks = topologicalSort(tasks);
 
   // =========================================================================
+  // Pre-calculate task positions within each sprint for distribution
+  // =========================================================================
+  const tasksBySpint = new Map<number, TaskScheduleInput[]>();
+  const taskPositionInSprint = new Map<string, number>();
+
+  for (const task of sortedTasks) {
+    const sprint = task.targetSprint ?? 0;
+    if (!tasksBySpint.has(sprint)) {
+      tasksBySpint.set(sprint, []);
+    }
+    const sprintTasks = tasksBySpint.get(sprint)!;
+    taskPositionInSprint.set(task.taskId, sprintTasks.length);
+    sprintTasks.push(task);
+  }
+
+  // =========================================================================
   // Forward Pass: Calculate Early Start and Early Finish
   // =========================================================================
   for (const task of sortedTasks) {
@@ -268,9 +285,41 @@ export function calculateSchedule(
       standardDeviation = pert.standardDeviation;
     }
 
-    // Calculate early start
-    let earlyStart = sprintStart;
+    // Calculate early start - USE PLANNED DATE as primary, dependencies as constraint
+    // This ensures the 2-year project isn't compressed into 2 weeks
+    let earlyStart: Date;
 
+    // Primary: Use planned start date from CSV if available
+    if (task.plannedStart && !isNaN(task.plannedStart.getTime())) {
+      earlyStart = new Date(task.plannedStart);
+    }
+    // Fallback: Calculate from target sprint (each sprint = 2 weeks)
+    // Distribute tasks within the sprint based on their position
+    else if (task.targetSprint !== undefined && task.targetSprint >= 0) {
+      const sprintStartDate = new Date(sprintStart);
+      sprintStartDate.setDate(sprintStartDate.getDate() + (task.targetSprint * 14));
+
+      // Get task position within sprint and distribute across 14 days
+      const sprintTasks = tasksBySpint.get(task.targetSprint) || [];
+      const position = taskPositionInSprint.get(task.taskId) || 0;
+      const totalTasksInSprint = sprintTasks.length;
+
+      // Calculate offset: spread tasks across 12 days (leaving 2 days buffer)
+      // Each task gets an offset based on its position
+      const daysToDistribute = Math.min(12, totalTasksInSprint); // Max 12 days spread
+      const dayOffset = totalTasksInSprint > 1
+        ? Math.floor((position / (totalTasksInSprint - 1)) * daysToDistribute)
+        : 0;
+
+      earlyStart = new Date(sprintStartDate);
+      earlyStart.setDate(earlyStart.getDate() + dayOffset);
+    }
+    // Last resort: Use project start
+    else {
+      earlyStart = new Date(sprintStart);
+    }
+
+    // Dependencies can only DELAY the start, not advance it
     if (task.dependencies.length > 0) {
       for (const dep of task.dependencies) {
         const predecessor = scheduledTasks.get(dep.predecessorId);
@@ -283,7 +332,7 @@ export function calculateSchedule(
       }
     }
 
-    // Apply constraint
+    // Apply explicit constraint if set
     if (task.constraintType && task.constraintDate) {
       switch (task.constraintType) {
         case 'SNET': // Start No Earlier Than
@@ -315,6 +364,22 @@ export function calculateSchedule(
   // =========================================================================
   // Backward Pass: Calculate Late Start and Late Finish
   // =========================================================================
+
+  // For proper CPM, find the maximum early finish (actual project completion date)
+  // This determines the critical path - tasks that drive this date have zero float
+  let maxEarlyFinish = sprintStart;
+  for (const task of sortedTasks) {
+    const scheduled = scheduledTasks.get(task.taskId)!;
+    if (scheduled.earlyFinish > maxEarlyFinish) {
+      maxEarlyFinish = scheduled.earlyFinish;
+    }
+  }
+
+  // For CPM critical path, ALWAYS use maxEarlyFinish as the backward pass start
+  // This identifies tasks on the longest path (critical path) with zero float
+  // sprintEnd is the planned deadline (used only for overdue detection)
+  const projectEndDate = maxEarlyFinish;
+
   const reversedTasks = [...sortedTasks].reverse();
 
   for (const task of reversedTasks) {
@@ -325,7 +390,8 @@ export function calculateSchedule(
       t.dependencies.some((d) => d.predecessorId === task.taskId)
     );
 
-    let lateFinish = sprintEnd;
+    // Tasks with no successors use the project end date
+    let lateFinish = projectEndDate;
 
     if (successors.length > 0) {
       for (const succ of successors) {
@@ -363,12 +429,19 @@ export function calculateSchedule(
   }
 
   // =========================================================================
-  // Float Calculation and Critical Path
+  // Float Calculation
   // =========================================================================
-  const criticalPathTasks: string[] = [];
-  let totalCriticalDuration = 0;
-  let totalCriticalComplete = 0;
 
+  // Build successor map for efficient lookups
+  const successorMap = new Map<string, TaskScheduleInput[]>();
+  for (const task of sortedTasks) {
+    const successors = sortedTasks.filter((t) =>
+      t.dependencies.some((d) => d.predecessorId === task.taskId)
+    );
+    successorMap.set(task.taskId, successors);
+  }
+
+  // Calculate float for all tasks
   for (const task of sortedTasks) {
     const scheduled = scheduledTasks.get(task.taskId)!;
 
@@ -379,9 +452,7 @@ export function calculateSchedule(
     scheduled.totalFloat = totalFloat;
 
     // Free float = min(ES of successors) - EF
-    const successors = sortedTasks.filter((t) =>
-      t.dependencies.some((d) => d.predecessorId === task.taskId)
-    );
+    const successors = successorMap.get(task.taskId) || [];
 
     if (successors.length > 0) {
       const minSuccessorES = Math.min(
@@ -393,10 +464,91 @@ export function calculateSchedule(
     } else {
       scheduled.freeFloat = scheduled.totalFloat;
     }
+  }
 
-    // Critical path: tasks with zero total float
-    if (Math.abs(totalFloat) < 1) {
-      // Allow 1 minute tolerance
+  // =========================================================================
+  // Critical Path Identification (Longest Dependency Chain)
+  // =========================================================================
+  // With planned dates, critical path = longest chain of connected tasks
+  // We use dynamic programming to find the longest path through dependencies
+
+  const criticalPathTasks: string[] = [];
+  let totalCriticalDuration = 0;
+  let totalCriticalComplete = 0;
+
+  // Calculate longest path to each task (in terms of cumulative duration)
+  const longestPathTo = new Map<string, number>();
+  const pathPredecessor = new Map<string, string | null>();
+
+  for (const task of sortedTasks) {
+    const _scheduled = scheduledTasks.get(task.taskId)!;
+    let maxPathLength = 0;
+    let bestPredecessor: string | null = null;
+
+    // Check all dependencies to find the longest incoming path
+    for (const dep of task.dependencies) {
+      const predPath = longestPathTo.get(dep.predecessorId);
+      if (predPath !== undefined) {
+        const predScheduled = scheduledTasks.get(dep.predecessorId);
+        const predDuration = predScheduled ? predScheduled.expectedDuration : 0;
+        const pathLength = predPath + predDuration;
+        if (pathLength > maxPathLength) {
+          maxPathLength = pathLength;
+          bestPredecessor = dep.predecessorId;
+        }
+      }
+    }
+
+    longestPathTo.set(task.taskId, maxPathLength);
+    pathPredecessor.set(task.taskId, bestPredecessor);
+  }
+
+  // Find the task with the longest path (end of critical path)
+  let criticalEndTask: string | null = null;
+  let maxTotalPath = 0;
+
+  for (const task of sortedTasks) {
+    const scheduled = scheduledTasks.get(task.taskId)!;
+    const pathLength = (longestPathTo.get(task.taskId) || 0) + scheduled.expectedDuration;
+    if (pathLength > maxTotalPath) {
+      maxTotalPath = pathLength;
+      criticalEndTask = task.taskId;
+    }
+  }
+
+  // Trace back from end to build critical path
+  const criticalPathSet = new Set<string>();
+  if (criticalEndTask) {
+    let current: string | null = criticalEndTask;
+    while (current) {
+      criticalPathSet.add(current);
+      current = pathPredecessor.get(current) || null;
+    }
+  }
+
+  // Also include tasks with very low float (traditional critical path)
+  // This catches tasks that may not be in the longest chain but are still critical
+  let minFloat = Infinity;
+  for (const task of sortedTasks) {
+    const scheduled = scheduledTasks.get(task.taskId)!;
+    if (scheduled.totalFloat < minFloat && scheduled.totalFloat >= 0) {
+      minFloat = scheduled.totalFloat;
+    }
+  }
+
+  // Include tasks within 1 hour of minimum float
+  const floatThreshold = minFloat + 60;
+  for (const task of sortedTasks) {
+    const scheduled = scheduledTasks.get(task.taskId)!;
+    if (scheduled.totalFloat <= floatThreshold) {
+      criticalPathSet.add(task.taskId);
+    }
+  }
+
+  // Build final critical path list (in topological order)
+  for (const task of sortedTasks) {
+    const scheduled = scheduledTasks.get(task.taskId)!;
+    if (criticalPathSet.has(task.taskId)) {
       scheduled.isCritical = true;
       criticalPathTasks.push(task.taskId);
       totalCriticalDuration += scheduled.expectedDuration;

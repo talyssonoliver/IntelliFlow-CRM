@@ -5,10 +5,81 @@ import path from 'path';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+// Types for k6 raw data
+interface K6Check {
+  name: string;
+  path: string;
+  id: string;
+  passes: number;
+  fails: number;
+}
+
+interface K6Threshold {
+  ok: boolean;
+}
+
+interface K6RawData {
+  timestamp: string;
+  test_type: string;
+  target_vus: number;
+  duration_seconds: number;
+  metrics: {
+    p50_response_time: number | null;
+    p95_response_time: number | null;
+    p99_response_time: number | null;
+    avg_response_time: number | null;
+    requests_per_second: number | null;
+    error_rate: number;
+    total_requests: number | null;
+  };
+  thresholds_passed: boolean;
+  raw_data?: {
+    metrics?: {
+      http_req_duration?: {
+        thresholds?: Record<string, K6Threshold>;
+        values?: {
+          avg?: number;
+          min?: number;
+          max?: number;
+          med?: number;
+          'p(90)'?: number;
+          'p(95)'?: number;
+        };
+      };
+      http_req_failed?: {
+        values?: {
+          rate: number;
+          passes: number;
+          fails: number;
+        };
+      };
+      checks?: {
+        values?: {
+          rate: number;
+          passes: number;
+          fails: number;
+        };
+      };
+    };
+    root_group?: {
+      checks?: K6Check[];
+    };
+    options?: {
+      summaryTrendStats?: string[];
+    };
+    setup_data?: {
+      startTime?: string;
+    };
+  };
+}
+
 export async function GET() {
   try {
     // Read baseline.json from artifacts directory
     const baselinePath = path.join(process.cwd(), '../../artifacts/benchmarks/baseline.json');
+
+    // Also read k6-latest.json for detailed load test data
+    const k6LatestPath = path.join(process.cwd(), '../../artifacts/benchmarks/k6-latest.json');
 
     if (!fs.existsSync(baselinePath)) {
       return NextResponse.json(
@@ -18,6 +89,16 @@ export async function GET() {
     }
 
     const data = JSON.parse(fs.readFileSync(baselinePath, 'utf-8'));
+
+    // Read k6 detailed results if available
+    let k6RawData: K6RawData | null = null;
+    if (fs.existsSync(k6LatestPath)) {
+      try {
+        k6RawData = JSON.parse(fs.readFileSync(k6LatestPath, 'utf-8'));
+      } catch {
+        console.warn('Failed to parse k6-latest.json');
+      }
+    }
 
     // Extract performance metrics from results if available
     const apiResults = data.results?.api || [];
@@ -100,6 +181,54 @@ export async function GET() {
         avg: Math.round(r.avgTime * 100) / 100,
       }));
 
+    // Helper to recursively extract all checks from groups
+    function getAllChecks(group: { checks?: K6Check[]; groups?: { checks?: K6Check[]; groups?: unknown[] }[] }): K6Check[] {
+      const checks: K6Check[] = [];
+      if (group.checks) {
+        checks.push(...group.checks);
+      }
+      if (group.groups) {
+        for (const subGroup of group.groups) {
+          checks.push(...getAllChecks(subGroup as { checks?: K6Check[]; groups?: { checks?: K6Check[]; groups?: unknown[] }[] }));
+        }
+      }
+      return checks;
+    }
+
+    // Extract k6 tested endpoints from ALL checks (including nested groups)
+    const allK6Checks = k6RawData?.raw_data?.root_group ? getAllChecks(k6RawData.raw_data.root_group) : [];
+    const k6TestedEndpoints = allK6Checks
+      .filter(check => check.name.includes('status 200')) // Only count status checks as endpoint tests
+      .map(check => ({
+        name: check.name.replace(' status 200', ''),
+        passes: check.passes,
+        fails: check.fails,
+        total: check.passes + check.fails,
+        success_rate: (check.passes + check.fails) > 0 ? check.passes / (check.passes + check.fails) * 100 : 0,
+      }));
+
+    // Extract k6 test configuration
+    const k6TestConfig = k6RawData ? {
+      test_type: k6RawData.test_type || 'load_test',
+      target_vus: k6RawData.target_vus,
+      duration_seconds: k6RawData.duration_seconds,
+      timestamp: k6RawData.timestamp,
+      thresholds_passed: k6RawData.thresholds_passed,
+      thresholds: k6RawData.raw_data?.metrics?.http_req_duration?.thresholds || {},
+      total_requests: k6RawData.metrics?.total_requests,
+      avg_response_time: k6RawData.metrics?.avg_response_time,
+    } : null;
+
+    // Extract k6 error analysis data
+    const k6ErrorAnalysis = k6RawData ? {
+      total_checks_passed: k6RawData.raw_data?.metrics?.checks?.values?.passes || 0,
+      total_checks_failed: k6RawData.raw_data?.metrics?.checks?.values?.fails || 0,
+      check_success_rate: k6RawData.raw_data?.metrics?.checks?.values?.rate || 1,
+      http_failed_rate: k6RawData.raw_data?.metrics?.http_req_failed?.values?.rate || 0,
+      http_failed_count: k6RawData.raw_data?.metrics?.http_req_failed?.values?.passes || 0, // passes = failed requests in http_req_failed
+      error_rate_percent: k6RawData.metrics?.error_rate || 0,
+    } : null;
+
     // Extract inventory sections
     const response = {
       api_inventory: data.api_inventory || null,
@@ -114,6 +243,10 @@ export async function GET() {
       endpoint_metrics: endpointMetrics,
       // Include raw load test results for detailed display
       load_test_results: loadTestResults || null,
+      // Include detailed k6 data
+      k6_tested_endpoints: k6TestedEndpoints,
+      k6_test_config: k6TestConfig,
+      k6_error_analysis: k6ErrorAnalysis,
       benchmark_status: data.status || 'NOT_RUN',
       environment: data.environment || null,
       last_updated: data.timestamp || new Date().toISOString(),

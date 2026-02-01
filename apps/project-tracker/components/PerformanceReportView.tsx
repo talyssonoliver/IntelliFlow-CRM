@@ -121,6 +121,34 @@ interface EndpointMetric {
   avg: number;
 }
 
+interface K6TestedEndpoint {
+  name: string;
+  passes: number;
+  fails: number;
+  total: number;
+  success_rate: number;
+}
+
+interface K6TestConfig {
+  test_type: string;
+  target_vus: number;
+  duration_seconds: number;
+  timestamp: string;
+  thresholds_passed: boolean;
+  thresholds: Record<string, { ok: boolean }>;
+  total_requests: number | null;
+  avg_response_time: number | null;
+}
+
+interface K6ErrorAnalysis {
+  total_checks_passed: number;
+  total_checks_failed: number;
+  check_success_rate: number;
+  http_failed_rate: number;
+  http_failed_count: number;
+  error_rate_percent: number;
+}
+
 interface PerformanceReportData {
   api_inventory: APIInventory | null;
   database_inventory: DatabaseInventory | null;
@@ -132,6 +160,9 @@ interface PerformanceReportData {
   cache_inventory: CacheInventory | null;
   performance_metrics?: PerformanceMetrics;
   endpoint_metrics?: EndpointMetric[];
+  k6_tested_endpoints?: K6TestedEndpoint[];
+  k6_test_config?: K6TestConfig | null;
+  k6_error_analysis?: K6ErrorAnalysis | null;
   benchmark_status?: string;
   last_updated: string;
 }
@@ -141,6 +172,28 @@ export default function PerformanceReportView() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [isRunningTest, setIsRunningTest] = useState<'quick' | 'comprehensive' | null>(null);
+  const [testOutput, setTestOutput] = useState<string | null>(null);
+
+  const runK6Test = async (testType: 'quick' | 'comprehensive') => {
+    setIsRunningTest(testType);
+    setTestOutput(null);
+    try {
+      const response = await fetch('/api/run-k6-test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ testType }),
+      });
+      const result = await response.json();
+      setTestOutput(result.output || result.error || 'Test completed');
+      // Reload data after test completes
+      await loadData();
+    } catch (err) {
+      setTestOutput(err instanceof Error ? err.message : 'Test failed');
+    } finally {
+      setIsRunningTest(null);
+    }
+  };
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -224,6 +277,92 @@ export default function PerformanceReportView() {
             Refresh
           </button>
         </div>
+      </div>
+
+      {/* k6 Test Runner Section */}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-gray-100 px-6 py-4 border-b flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-700">Load Test Runner</h2>
+            <p className="text-sm text-gray-500">Run k6 load tests against the API</p>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => runK6Test('quick')}
+              disabled={isRunningTest !== null}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                isRunningTest === 'quick'
+                  ? 'bg-blue-400 text-white cursor-wait'
+                  : isRunningTest !== null
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+              }`}
+            >
+              {isRunningTest === 'quick' ? (
+                <>
+                  <span className="animate-spin">⏳</span>
+                  Running Quick...
+                </>
+              ) : (
+                <>
+                  <Icon name="bolt" size="sm" />
+                  Quick Test (8 endpoints)
+                </>
+              )}
+            </button>
+            <button
+              onClick={() => runK6Test('comprehensive')}
+              disabled={isRunningTest !== null}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                isRunningTest === 'comprehensive'
+                  ? 'bg-green-400 text-white cursor-wait'
+                  : isRunningTest !== null
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-green-600 hover:bg-green-700 text-white'
+              }`}
+            >
+              {isRunningTest === 'comprehensive' ? (
+                <>
+                  <span className="animate-spin">⏳</span>
+                  Running Comprehensive...
+                </>
+              ) : (
+                <>
+                  <Icon name="science" size="sm" />
+                  Comprehensive Test (47 endpoints)
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+        {/* Test output log */}
+        {(isRunningTest || testOutput) && (
+          <div className="p-4 bg-gray-900 text-green-400 font-mono text-xs max-h-64 overflow-y-auto">
+            {isRunningTest && !testOutput && (
+              <div className="flex items-center gap-2">
+                <span className="animate-pulse">▶</span>
+                Running {isRunningTest} test... This may take 30-60 seconds.
+              </div>
+            )}
+            {testOutput && (
+              <pre className="whitespace-pre-wrap">{testOutput}</pre>
+            )}
+          </div>
+        )}
+        {/* Last test info */}
+        {data?.k6_test_config && (
+          <div className="px-6 py-3 bg-gray-50 border-t text-sm text-gray-600 flex items-center justify-between">
+            <span>
+              Last test: <strong>{data.k6_test_config.test_type}</strong> at{' '}
+              {new Date(data.k6_test_config.timestamp).toLocaleString()}
+            </span>
+            <span>
+              {data.k6_tested_endpoints?.length || 0} endpoints tested |{' '}
+              {data.k6_test_config.total_requests?.toLocaleString() || 0} requests |{' '}
+              {data.k6_test_config.avg_response_time?.toFixed(1) || '--'}ms avg
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Executive Summary - Performance KPIs */}
@@ -736,8 +875,30 @@ export default function PerformanceReportView() {
             </h2>
           </div>
           <div className="p-6">
+            {/* Coverage Summary */}
+            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-amber-800">Load Test Coverage</span>
+                <span className="text-sm text-amber-700">
+                  {data.k6_tested_endpoints?.length ?? 0} of {data.api_inventory.total_endpoints} endpoints tested
+                </span>
+              </div>
+              <div className="w-full bg-amber-200 rounded-full h-3">
+                <div
+                  className="bg-amber-500 h-3 rounded-full transition-all"
+                  style={{
+                    width: `${((data.k6_tested_endpoints?.length ?? 0) / data.api_inventory.total_endpoints) * 100}%`
+                  }}
+                />
+              </div>
+              <p className="text-xs text-amber-700 mt-2">
+                <strong>Coverage: {(((data.k6_tested_endpoints?.length ?? 0) / data.api_inventory.total_endpoints) * 100).toFixed(1)}%</strong>
+                {' '}| To test all endpoints, add them to <code className="bg-amber-100 px-1 rounded">artifacts/misc/k6/scripts/quick-test.js</code>
+              </p>
+            </div>
+
             <p className="text-gray-600 italic mb-4">
-              Complete API endpoint catalog with benchmark results
+              All {data.api_inventory.total_endpoints} API endpoints with benchmark status
             </p>
             <div className="max-h-96 overflow-y-auto border rounded-lg">
               <table className="w-full text-sm">
@@ -752,60 +913,82 @@ export default function PerformanceReportView() {
                   </tr>
                 </thead>
                 <tbody>
-                  {data.api_inventory.routers.map((router) => (
-                    <Fragment key={router.name}>
-                      <tr className="bg-gray-100">
-                        <td colSpan={5} className="px-4 py-2 font-semibold uppercase text-xs tracking-wide text-gray-700">
-                          {router.name} ({router.endpoints} endpoints)
-                        </td>
-                        <td></td>
-                      </tr>
-                      {[...Array(router.endpoints)].map((_, i) => {
-                        const endpointName = ['list', 'getById', 'create', 'update', 'delete', 'search', 'count', 'export', 'import', 'validate', 'archive', 'restore', 'duplicate', 'merge', 'split', 'transfer', 'assign', 'unassign', 'activate', 'deactivate'][i] || `action${i + 1}`;
-                        const fullEndpointName = `${router.name}-${endpointName}`;
-                        const benchmarkData = data.endpoint_metrics?.find(
-                          (m) => m.name.toLowerCase() === router.name.toLowerCase() ||
-                                 m.name.toLowerCase() === `${router.name}-list`.toLowerCase() ||
-                                 m.name.toLowerCase().includes(router.name.toLowerCase())
-                        );
-                        const isFirstEndpoint = i === 0;
-                        const hasBenchmark = isFirstEndpoint && benchmarkData;
-                        const isQuery = i < router.queries;
-                        const isCritical = i < 2;
-                        return (
-                          <tr key={fullEndpointName} className="border-t hover:bg-gray-50">
-                            <td className="px-4 py-2">
-                              <span className="font-medium">{router.name}.{endpointName}</span>
-                              {isCritical && (
-                                <span className="ml-2 text-xs bg-red-50 text-red-600 px-1.5 py-0.5 rounded">CRITICAL</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-2 text-center">
-                              <span className={`px-2 py-0.5 rounded text-xs ${isQuery ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-                                {isQuery ? 'GET' : 'POST'}
-                              </span>
-                            </td>
-                            <td className="px-4 py-2 text-center">
-                              {hasBenchmark ? `${formatNumber(benchmarkData.p50)}ms` : <span className="text-gray-400">--</span>}
-                            </td>
-                            <td className="px-4 py-2 text-center">
-                              {hasBenchmark ? `${formatNumber(benchmarkData.p95)}ms` : <span className="text-gray-400">--</span>}
-                            </td>
-                            <td className="px-4 py-2 text-center">
-                              {hasBenchmark ? `${Math.round(1000 / benchmarkData.avg)}` : <span className="text-gray-400">--</span>}
-                            </td>
-                            <td className="px-4 py-2 text-center">
-                              {hasBenchmark ? (
-                                <span className="px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">PASS</span>
-                              ) : (
-                                <span className="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600">PENDING</span>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </Fragment>
-                  ))}
+                  {data.api_inventory.routers.map((router) => {
+                    // Get k6 tested endpoint names for matching
+                    const testedEndpointNames = data.k6_tested_endpoints?.map(e =>
+                      e.name.replace(' status 200', '').toLowerCase()
+                    ) || [];
+
+                    return (
+                      <Fragment key={router.name}>
+                        <tr className="bg-gray-100">
+                          <td colSpan={5} className="px-4 py-2 font-semibold uppercase text-xs tracking-wide text-gray-700">
+                            {router.name} ({router.endpoints} endpoints)
+                          </td>
+                          <td></td>
+                        </tr>
+                        {[...Array(router.endpoints)].map((_, i) => {
+                          const endpointName = ['list', 'getById', 'create', 'update', 'delete', 'search', 'count', 'export', 'import', 'validate', 'archive', 'restore', 'duplicate', 'merge', 'split', 'transfer', 'assign', 'unassign', 'activate', 'deactivate'][i] || `action${i + 1}`;
+                          const fullEndpointName = `${router.name}.${endpointName}`;
+
+                          // Check if this endpoint was tested by k6
+                          const isK6Tested = testedEndpointNames.some(name =>
+                            name === fullEndpointName.toLowerCase() ||
+                            name === `${router.name}.${endpointName}`.toLowerCase() ||
+                            (router.name.toLowerCase() === 'health' && i === 0 && name.includes('health')) ||
+                            (router.name.toLowerCase() === 'lead' && endpointName === 'list' && name.includes('lead.list')) ||
+                            (router.name.toLowerCase() === 'contact' && endpointName === 'list' && name.includes('contact.list'))
+                          );
+
+                          // Get benchmark data if available
+                          const benchmarkData = data.endpoint_metrics?.find(
+                            (m) => m.name.toLowerCase() === router.name.toLowerCase() ||
+                                   m.name.toLowerCase() === `${router.name}-${endpointName}`.toLowerCase() ||
+                                   m.name.toLowerCase().includes(router.name.toLowerCase())
+                          );
+                          const isFirstEndpoint = i === 0;
+                          const hasBenchmark = isFirstEndpoint && benchmarkData;
+
+                          const isQuery = i < router.queries;
+                          const isCritical = i < 2;
+
+                          return (
+                            <tr key={fullEndpointName} className="border-t hover:bg-gray-50">
+                              <td className="px-4 py-2">
+                                <span className="font-medium">{fullEndpointName}</span>
+                                {isCritical && (
+                                  <span className="ml-2 text-xs bg-red-50 text-red-600 px-1.5 py-0.5 rounded">CRITICAL</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-2 text-center">
+                                <span className={`px-2 py-0.5 rounded text-xs ${isQuery ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                                  {isQuery ? 'GET' : 'POST'}
+                                </span>
+                              </td>
+                              <td className="px-4 py-2 text-center">
+                                {hasBenchmark ? `${formatNumber(benchmarkData.p50)}ms` : <span className="text-gray-400">--</span>}
+                              </td>
+                              <td className="px-4 py-2 text-center">
+                                {hasBenchmark ? `${formatNumber(benchmarkData.p95)}ms` : <span className="text-gray-400">--</span>}
+                              </td>
+                              <td className="px-4 py-2 text-center">
+                                {hasBenchmark ? `${Math.round(1000 / benchmarkData.avg)}` : <span className="text-gray-400">--</span>}
+                              </td>
+                              <td className="px-4 py-2 text-center">
+                                {isK6Tested ? (
+                                  <span className="px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">TESTED</span>
+                                ) : hasBenchmark ? (
+                                  <span className="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700">BENCHMARKED</span>
+                                ) : (
+                                  <span className="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600">PENDING</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -819,43 +1002,80 @@ export default function PerformanceReportView() {
           <h2 className="text-lg font-semibold text-gray-700">Error Rate Analysis</h2>
         </div>
         <div className="p-6">
-          <p className="text-gray-600 italic mb-4">
-            Expected error categories to monitor - run benchmarks to see actual data
-          </p>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="px-4 py-3 text-left font-semibold text-gray-600">Error Type</th>
-                  <th className="px-4 py-3 text-center font-semibold text-gray-600">Count</th>
-                  <th className="px-4 py-3 text-center font-semibold text-gray-600">Percentage</th>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-600">Primary Cause</th>
-                  <th className="px-4 py-3 text-center font-semibold text-gray-600">Severity</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { type: 'Connection Timeout', cause: 'Network congestion during peak load' },
-                  { type: 'HTTP 429 (Rate Limited)', cause: 'Rate limiter protecting backend' },
-                  { type: 'HTTP 500 (Server Error)', cause: 'Database connection pool exhaustion' },
-                  { type: 'HTTP 503 (Service Unavailable)', cause: 'Brief service restart during test' },
-                ].map((error) => (
-                  <tr key={error.type} className="border-t hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium">{error.type}</td>
-                    <td className="px-4 py-3 text-center text-gray-400">--</td>
-                    <td className="px-4 py-3 text-center text-gray-400">--</td>
-                    <td className="px-4 py-3 text-gray-600">{error.cause}</td>
-                    <td className="px-4 py-3 text-center">
-                      <span className="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600">PENDING</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="mt-4 text-sm text-gray-700">
-            <strong>Total Error Rate: --</strong> - Pending benchmark execution
-          </p>
+          {data.k6_error_analysis ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-gray-50 p-4 rounded-lg text-center">
+                  <div className={`text-3xl font-bold ${data.k6_error_analysis.error_rate_percent === 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {data.k6_error_analysis.error_rate_percent.toFixed(2)}%
+                  </div>
+                  <div className="text-sm text-gray-600 mt-1">Total Error Rate</div>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg text-center">
+                  <div className="text-3xl font-bold text-green-600">
+                    {data.k6_error_analysis.total_checks_passed.toLocaleString()}
+                  </div>
+                  <div className="text-sm text-gray-600 mt-1">Checks Passed</div>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg text-center">
+                  <div className={`text-3xl font-bold ${data.k6_error_analysis.total_checks_failed === 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {data.k6_error_analysis.total_checks_failed.toLocaleString()}
+                  </div>
+                  <div className="text-sm text-gray-600 mt-1">Checks Failed</div>
+                </div>
+              </div>
+
+              {/* Tested Endpoints Results */}
+              {data.k6_tested_endpoints && data.k6_tested_endpoints.length > 0 && (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th className="px-4 py-3 text-left font-semibold text-gray-600">Endpoint Check</th>
+                        <th className="px-4 py-3 text-center font-semibold text-gray-600">Passes</th>
+                        <th className="px-4 py-3 text-center font-semibold text-gray-600">Fails</th>
+                        <th className="px-4 py-3 text-center font-semibold text-gray-600">Success Rate</th>
+                        <th className="px-4 py-3 text-center font-semibold text-gray-600">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.k6_tested_endpoints.map((endpoint) => (
+                        <tr key={endpoint.name} className="border-t hover:bg-gray-50">
+                          <td className="px-4 py-3 font-medium">{endpoint.name}</td>
+                          <td className="px-4 py-3 text-center text-green-600">{endpoint.passes.toLocaleString()}</td>
+                          <td className="px-4 py-3 text-center text-red-600">{endpoint.fails}</td>
+                          <td className="px-4 py-3 text-center">{endpoint.success_rate.toFixed(1)}%</td>
+                          <td className="px-4 py-3 text-center">
+                            <span className={`px-2 py-0.5 rounded text-xs ${
+                              endpoint.fails === 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                            }`}>
+                              {endpoint.fails === 0 ? 'PASS' : 'FAIL'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <p className="mt-4 text-sm text-gray-700">
+                <strong>Check Success Rate: {(data.k6_error_analysis.check_success_rate * 100).toFixed(1)}%</strong>
+                {' '}| HTTP Failed Requests: {data.k6_error_analysis.http_failed_count}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-gray-600 italic mb-4">
+                No load test data available - run k6 benchmark to see actual error analysis
+              </p>
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <p className="text-sm text-amber-800">
+                  <strong>To run load tests:</strong> Execute <code className="bg-amber-100 px-1 rounded">.\artifacts\misc\k6\run-quick-test.ps1</code> from project root
+                </p>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -900,33 +1120,90 @@ export default function PerformanceReportView() {
           <h2 className="text-lg font-semibold text-gray-700">Test Configuration</h2>
         </div>
         <div className="p-6">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="px-4 py-3 text-left font-semibold text-gray-600">Parameter</th>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-600">Value</th>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-600">Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { param: 'Load Testing Tool', value: 'k6 v0.48.0', desc: 'Modern load testing tool by Grafana Labs' },
-                  { param: 'Test Duration', value: '15 minutes', desc: 'Including ramp-up and cool-down phases' },
-                  { param: 'Ramp-up Strategy', value: 'Staged (100 -> 250 -> 500 -> 1000)', desc: 'Gradual user increase to identify breaking points' },
-                  { param: 'Max Virtual Users', value: '1000', desc: 'Sustained for 5 minutes at peak' },
-                  { param: 'Think Time', value: '1-3 seconds', desc: 'Random delay between requests per user' },
-                  { param: 'Target Environment', value: 'Production-like (Docker Compose)', desc: 'API + PostgreSQL + Redis' },
-                ].map((config) => (
-                  <tr key={config.param} className="border-t hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium">{config.param}</td>
-                    <td className="px-4 py-3 text-blue-600">{config.value}</td>
-                    <td className="px-4 py-3 text-gray-600">{config.desc}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {data.k6_test_config ? (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-50">
+                      <th className="px-4 py-3 text-left font-semibold text-gray-600">Parameter</th>
+                      <th className="px-4 py-3 text-left font-semibold text-gray-600">Value</th>
+                      <th className="px-4 py-3 text-left font-semibold text-gray-600">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-t hover:bg-gray-50">
+                      <td className="px-4 py-3 font-medium">Load Testing Tool</td>
+                      <td className="px-4 py-3 text-blue-600">k6 v0.49.0</td>
+                      <td className="px-4 py-3 text-gray-600">Modern load testing tool by Grafana Labs</td>
+                    </tr>
+                    <tr className="border-t hover:bg-gray-50">
+                      <td className="px-4 py-3 font-medium">Test Type</td>
+                      <td className="px-4 py-3 text-blue-600">{data.k6_test_config.test_type.replace(/_/g, ' ')}</td>
+                      <td className="px-4 py-3 text-gray-600">Quick feedback load test</td>
+                    </tr>
+                    <tr className="border-t hover:bg-gray-50">
+                      <td className="px-4 py-3 font-medium">Test Duration</td>
+                      <td className="px-4 py-3 text-blue-600">{data.k6_test_config.duration_seconds} seconds</td>
+                      <td className="px-4 py-3 text-gray-600">Total test execution time</td>
+                    </tr>
+                    <tr className="border-t hover:bg-gray-50">
+                      <td className="px-4 py-3 font-medium">Virtual Users (VUs)</td>
+                      <td className="px-4 py-3 text-blue-600">{data.k6_test_config.target_vus}</td>
+                      <td className="px-4 py-3 text-gray-600">Concurrent simulated users</td>
+                    </tr>
+                    <tr className="border-t hover:bg-gray-50">
+                      <td className="px-4 py-3 font-medium">Total Requests</td>
+                      <td className="px-4 py-3 text-blue-600">{data.k6_test_config.total_requests?.toLocaleString() ?? '--'}</td>
+                      <td className="px-4 py-3 text-gray-600">Total HTTP requests executed</td>
+                    </tr>
+                    <tr className="border-t hover:bg-gray-50">
+                      <td className="px-4 py-3 font-medium">Avg Response Time</td>
+                      <td className="px-4 py-3 text-blue-600">{data.k6_test_config.avg_response_time?.toFixed(2) ?? '--'} ms</td>
+                      <td className="px-4 py-3 text-gray-600">Mean response time across all requests</td>
+                    </tr>
+                    <tr className="border-t hover:bg-gray-50">
+                      <td className="px-4 py-3 font-medium">Test Timestamp</td>
+                      <td className="px-4 py-3 text-blue-600">{new Date(data.k6_test_config.timestamp).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-gray-600">When the test was executed</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Threshold Results */}
+              {Object.keys(data.k6_test_config.thresholds).length > 0 && (
+                <div className="mt-6">
+                  <h3 className="text-md font-semibold text-gray-700 mb-3">Threshold Results</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {Object.entries(data.k6_test_config.thresholds).map(([name, result]) => (
+                      <div key={name} className={`p-3 rounded-lg ${result.ok ? 'bg-green-50' : 'bg-red-50'}`}>
+                        <div className="flex items-center justify-between">
+                          <code className="text-sm font-mono">{name}</code>
+                          <span className={`px-2 py-0.5 rounded text-xs ${
+                            result.ok ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                          }`}>
+                            {result.ok ? 'PASS' : 'FAIL'}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <p className="text-gray-600 italic mb-4">
+                No load test configuration available - run k6 benchmark to see test parameters
+              </p>
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <p className="text-sm text-amber-800">
+                  <strong>To run load tests:</strong> Execute <code className="bg-amber-100 px-1 rounded">.\artifacts\misc\k6\run-quick-test.ps1</code> from project root
+                </p>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -936,52 +1213,109 @@ export default function PerformanceReportView() {
           <h2 className="text-lg font-semibold text-gray-700">Optimization Recommendations</h2>
         </div>
         <div className="p-6">
-          <p className="text-gray-600 italic mb-4">
-            Standard recommendations - will be updated based on actual benchmark results
-          </p>
-          <div className="space-y-4">
-            {[
-              {
-                priority: 'medium',
-                icon: '!',
-                title: 'Increase Database Connection Pool',
-                desc: 'Connection pool reached 85% capacity at peak. Recommend increasing from 100 to 150 connections to provide more headroom for traffic spikes.',
-              },
-              {
-                priority: 'low',
-                icon: 'i',
-                title: 'Enable Query Result Caching',
-                desc: 'Analytics endpoint shows higher latency. Implement Redis caching for aggregated metrics to reduce p99 from 120ms to under 80ms.',
-              },
-              {
-                priority: 'low',
-                icon: 'i',
-                title: 'Add Database Read Replicas',
-                desc: 'For scaling beyond 2000 concurrent users, consider adding PostgreSQL read replicas to distribute query load.',
-              },
-              {
-                priority: 'low',
-                icon: 'i',
-                title: 'Implement API Response Compression',
-                desc: 'Enable gzip compression for JSON responses to reduce bandwidth usage by approximately 70%, improving response times for clients with slower connections.',
-              },
-            ].map((rec) => (
-              <div key={rec.title} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
-                    rec.priority === 'high' ? 'bg-red-500' :
-                    rec.priority === 'medium' ? 'bg-amber-500' : 'bg-blue-500'
-                  }`}
-                >
-                  {rec.icon}
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-800">{rec.title}</h4>
-                  <p className="text-sm text-gray-600 mt-1">{rec.desc}</p>
-                </div>
+          {data.k6_test_config ? (
+            <div className="space-y-4">
+              {/* Generate dynamic recommendations based on actual results */}
+              {(() => {
+                const recommendations = [];
+                const p95 = data.performance_metrics?.p95_response_time;
+                const errorRate = data.k6_error_analysis?.error_rate_percent ?? 0;
+                const rps = data.performance_metrics?.requests_per_second;
+                const vus = data.k6_test_config.target_vus;
+                const testedEndpoints = data.k6_tested_endpoints?.length ?? 0;
+                const totalEndpoints = data.api_inventory?.total_endpoints ?? 0;
+
+                // Coverage recommendation
+                if (testedEndpoints < totalEndpoints * 0.1) {
+                  recommendations.push({
+                    priority: 'high',
+                    icon: '!',
+                    title: 'Expand Load Test Coverage',
+                    desc: `Only ${testedEndpoints} of ${totalEndpoints} endpoints (${((testedEndpoints / totalEndpoints) * 100).toFixed(1)}%) are tested. Add more endpoints to quick-test.js for comprehensive performance coverage.`,
+                  });
+                }
+
+                // Performance recommendations based on actual metrics
+                if (p95 && p95 > 100) {
+                  recommendations.push({
+                    priority: 'medium',
+                    icon: '!',
+                    title: 'Optimize p95 Response Time',
+                    desc: `Current p95 is ${p95.toFixed(1)}ms. Consider database query optimization, response caching, or connection pooling to get under 100ms threshold.`,
+                  });
+                }
+
+                if (errorRate > 1) {
+                  recommendations.push({
+                    priority: 'high',
+                    icon: '!',
+                    title: 'Investigate Error Rate',
+                    desc: `Error rate of ${errorRate.toFixed(2)}% exceeds 1% threshold. Check server logs and increase connection limits if needed.`,
+                  });
+                }
+
+                // VU scaling recommendation
+                if (vus < 50) {
+                  recommendations.push({
+                    priority: 'low',
+                    icon: 'i',
+                    title: 'Increase Load Test Intensity',
+                    desc: `Current test runs with ${vus} VUs. For production readiness, run stress tests with 100-500 VUs to identify scaling limits.`,
+                  });
+                }
+
+                // Success message if all looks good
+                if (recommendations.length === 0 || (p95 && p95 < 100 && errorRate === 0)) {
+                  recommendations.push({
+                    priority: 'success',
+                    icon: '✓',
+                    title: 'Performance Metrics Within Targets',
+                    desc: `p95 response time of ${p95?.toFixed(1) ?? '--'}ms is under 100ms target, with 0% error rate. System performing well under ${vus} concurrent users.`,
+                  });
+                }
+
+                // Request rate observation
+                if (rps) {
+                  recommendations.push({
+                    priority: 'info',
+                    icon: 'i',
+                    title: 'Throughput Analysis',
+                    desc: `Achieved ${rps.toFixed(1)} requests/second with ${vus} VUs. Extrapolating: ~${(rps * 5).toFixed(0)} rps possible with 50 VUs if linear scaling holds.`,
+                  });
+                }
+
+                return recommendations.map((rec) => (
+                  <div key={rec.title} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
+                        rec.priority === 'high' ? 'bg-red-500' :
+                        rec.priority === 'medium' ? 'bg-amber-500' :
+                        rec.priority === 'success' ? 'bg-green-500' :
+                        rec.priority === 'info' ? 'bg-cyan-500' : 'bg-blue-500'
+                      }`}
+                    >
+                      {rec.icon}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-800">{rec.title}</h4>
+                      <p className="text-sm text-gray-600 mt-1">{rec.desc}</p>
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+          ) : (
+            <>
+              <p className="text-gray-600 italic mb-4">
+                Run k6 load tests to generate data-driven recommendations
+              </p>
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <p className="text-sm text-amber-800">
+                  <strong>To get recommendations:</strong> Execute <code className="bg-amber-100 px-1 rounded">.\artifacts\misc\k6\run-quick-test.ps1</code> from project root
+                </p>
               </div>
-            ))}
-          </div>
+            </>
+          )}
         </div>
       </div>
 

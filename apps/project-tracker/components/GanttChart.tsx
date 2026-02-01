@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { clsx } from 'clsx';
 import { Icon } from '@/lib/icons';
 
@@ -85,6 +85,13 @@ function getWeekRange(start: Date, end: Date): { start: Date; end: Date; label: 
   return weeks;
 }
 
+interface PeriodOverview {
+  type: ZoomLevel;
+  start: Date;
+  end: Date;
+  label: string;
+}
+
 export default function GanttChart({
   tasks,
   sprintStart,
@@ -96,7 +103,12 @@ export default function GanttChart({
   const [showDependencies, setShowDependencies] = useState(true);
   const [showFloat, setShowFloat] = useState(true);
   const [hoveredTask, setHoveredTask] = useState<string | null>(null);
+  const [hasScrolledToToday, setHasScrolledToToday] = useState(false);
+  const [headerScrollLeft, setHeaderScrollLeft] = useState(0);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState<PeriodOverview | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const startDate = useMemo(() => new Date(sprintStart), [sprintStart]);
   const endDate = useMemo(() => new Date(sprintEnd), [sprintEnd]);
@@ -112,7 +124,7 @@ export default function GanttChart({
     }
   }, [zoomLevel]);
   const chartWidth = useMemo(() => totalDays * dayWidth, [totalDays, dayWidth]);
-  const chartHeight = useMemo(() => tasks.length * ROW_HEIGHT + HEADER_HEIGHT, [tasks.length]);
+  const chartHeight = useMemo(() => tasks.length * ROW_HEIGHT, [tasks.length]);
 
   // Get position for a date - memoized to depend on dayWidth
   const getXPosition = useCallback((date: Date): number => {
@@ -132,7 +144,7 @@ export default function GanttChart({
     const positions = new Map<string, { x: number; y: number; width: number }>();
     sortedTasks.forEach((task, index) => {
       const x = getXPosition(new Date(task.earlyStart));
-      const y = HEADER_HEIGHT + index * ROW_HEIGHT + (ROW_HEIGHT - TASK_BAR_HEIGHT) / 2;
+      const y = index * ROW_HEIGHT + (ROW_HEIGHT - TASK_BAR_HEIGHT) / 2;
       const width = Math.max(
         dayWidth,
         getXPosition(new Date(task.earlyFinish)) - x
@@ -141,6 +153,125 @@ export default function GanttChart({
     });
     return positions;
   }, [sortedTasks, dayWidth, getXPosition]);
+
+  // Scroll to both X and Y position (for today + current tasks)
+  const scrollToPositionXY = useCallback((xPosition: number, yPosition: number) => {
+    if (scrollContainerRef.current) {
+      const containerWidth = scrollContainerRef.current.clientWidth;
+      const containerHeight = scrollContainerRef.current.clientHeight;
+      const scrollX = Math.max(0, xPosition - containerWidth / 2 + LEFT_PANEL_WIDTH);
+      const scrollY = Math.max(0, yPosition - containerHeight / 3); // Show task in upper third
+      scrollContainerRef.current.scrollTo({
+        left: scrollX,
+        top: scrollY,
+        behavior: 'smooth',
+      });
+    }
+  }, []);
+
+  // Find the first task active around a given date
+  const findTaskIndexForDate = useCallback((targetDate: Date): number => {
+    // First, find tasks that are currently in progress (start <= today <= finish)
+    const activeIndex = sortedTasks.findIndex((task) => {
+      const taskStart = new Date(task.earlyStart);
+      const taskFinish = new Date(task.earlyFinish);
+      return taskStart <= targetDate && targetDate <= taskFinish;
+    });
+    if (activeIndex >= 0) return activeIndex;
+
+    // If no active task, find the first task starting after today
+    const upcomingIndex = sortedTasks.findIndex((task) => {
+      const taskStart = new Date(task.earlyStart);
+      return taskStart > targetDate;
+    });
+    if (upcomingIndex >= 0) return Math.max(0, upcomingIndex - 1); // Show one task before
+
+    // If all tasks are in the past, show the last tasks
+    return Math.max(0, sortedTasks.length - 10);
+  }, [sortedTasks]);
+
+  // Scroll to today's date on initial load (both horizontal and vertical)
+  useEffect(() => {
+    if (!hasScrolledToToday && scrollContainerRef.current && sortedTasks.length > 0) {
+      const today = new Date();
+
+      // If today is within the project range, scroll to today
+      if (today >= startDate && today <= endDate) {
+        const todayX = getXPosition(today);
+        const taskIndex = findTaskIndexForDate(today);
+        const taskY = taskIndex * ROW_HEIGHT;
+        scrollToPositionXY(todayX, taskY);
+      } else if (today > endDate) {
+        // If project is in the past, scroll to the end
+        const taskY = Math.max(0, sortedTasks.length - 10) * ROW_HEIGHT;
+        scrollToPositionXY(chartWidth, taskY);
+      }
+      // If project is in the future, stay at the beginning (default)
+
+      setHasScrolledToToday(true);
+    }
+  }, [hasScrolledToToday, sortedTasks, startDate, endDate, getXPosition, chartWidth, scrollToPositionXY, findTaskIndexForDate]);
+
+  // Reset scroll flag when zoom level changes to re-center
+  useEffect(() => {
+    setHasScrolledToToday(false);
+  }, [zoomLevel]);
+
+  // Handle header click - open modal with period overview
+  const handleHeaderClick = useCallback((xPosition: number, headerInfo?: { label: string; width: number }) => {
+    // Calculate the date at this X position
+    const daysFromStart = Math.floor(xPosition / dayWidth);
+    const periodStartDate = new Date(startDate);
+    periodStartDate.setDate(periodStartDate.getDate() + daysFromStart);
+
+    let periodEndDate: Date;
+    let label: string;
+
+    if (zoomLevel === 'day') {
+      // For day view, the period is just that day
+      periodEndDate = new Date(periodStartDate);
+      label = formatDate(periodStartDate);
+    } else if (zoomLevel === 'week') {
+      // For week view, calculate the week end (7 days)
+      periodEndDate = new Date(periodStartDate);
+      periodEndDate.setDate(periodEndDate.getDate() + 6);
+      if (periodEndDate > endDate) periodEndDate = endDate;
+      label = headerInfo?.label || `Week of ${formatDate(periodStartDate)}`;
+    } else {
+      // For sprint view, calculate sprint end (14 days)
+      periodEndDate = new Date(periodStartDate);
+      periodEndDate.setDate(periodEndDate.getDate() + 13);
+      if (periodEndDate > endDate) periodEndDate = endDate;
+      label = headerInfo?.label || `Sprint ${Math.floor(daysFromStart / 14)}`;
+    }
+
+    setSelectedPeriod({
+      type: zoomLevel,
+      start: periodStartDate,
+      end: periodEndDate,
+      label,
+    });
+    setModalOpen(true);
+  }, [dayWidth, startDate, endDate, zoomLevel]);
+
+  // Get tasks for the selected period
+  const tasksInPeriod = useMemo(() => {
+    if (!selectedPeriod) return [];
+
+    return sortedTasks.filter((task) => {
+      const taskStart = new Date(task.earlyStart);
+      const taskEnd = new Date(task.earlyFinish);
+
+      // Task is in period if it overlaps with the period
+      return taskStart <= selectedPeriod.end && taskEnd >= selectedPeriod.start;
+    });
+  }, [selectedPeriod, sortedTasks]);
+
+  // Close modal
+  const closeModal = useCallback(() => {
+    setModalOpen(false);
+    setSelectedPeriod(null);
+  }, []);
 
   // Time scale headers
   const timeHeaders = useMemo(() => {
@@ -157,32 +288,33 @@ export default function GanttChart({
         width: getDaysBetween(week.start, week.end) * dayWidth + dayWidth,
       }));
     } else {
-      // Sprint view - show months
-      const months: { label: string; x: number; width: number }[] = [];
-      let currentMonth = startDate.getMonth();
-      let monthStart = new Date(startDate);
+      // Sprint view - show sprints (each sprint = 2 weeks = 14 days)
+      const SPRINT_DAYS = 14;
+      const sprints: { label: string; x: number; width: number }[] = [];
+      let sprintNum = 0;
+      let sprintStartDate = new Date(startDate);
 
-      for (const date of getDateRange(startDate, endDate)) {
-        if (date.getMonth() !== currentMonth) {
-          months.push({
-            label: monthStart.toLocaleDateString('en-GB', { month: 'short' }),
-            x: getXPosition(monthStart),
-            width: getXPosition(date) - getXPosition(monthStart),
-          });
-          monthStart = new Date(date);
-          currentMonth = date.getMonth();
-        }
+      while (sprintStartDate <= endDate) {
+        const sprintEndDate = new Date(sprintStartDate);
+        sprintEndDate.setDate(sprintEndDate.getDate() + SPRINT_DAYS - 1);
+
+        const actualEnd = sprintEndDate > endDate ? endDate : sprintEndDate;
+        const sprintDays = getDaysBetween(sprintStartDate, actualEnd) + 1;
+
+        sprints.push({
+          label: `S${sprintNum}`,
+          x: getXPosition(sprintStartDate),
+          width: sprintDays * dayWidth,
+        });
+
+        sprintNum++;
+        sprintStartDate = new Date(sprintEndDate);
+        sprintStartDate.setDate(sprintStartDate.getDate() + 1);
       }
-      // Push last month
-      months.push({
-        label: monthStart.toLocaleDateString('en-GB', { month: 'short' }),
-        x: getXPosition(monthStart),
-        width: chartWidth - getXPosition(monthStart),
-      });
 
-      return months;
+      return sprints;
     }
-  }, [zoomLevel, startDate, endDate, dayWidth, chartWidth, getXPosition]);
+  }, [zoomLevel, startDate, endDate, dayWidth, getXPosition]);
 
   // Render dependency arrows
   const renderDependencyArrows = () => {
@@ -255,6 +387,21 @@ export default function GanttChart({
           </div>
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                const today = new Date();
+                if (today >= startDate && today <= endDate) {
+                  const todayX = getXPosition(today);
+                  const taskIndex = findTaskIndexForDate(today);
+                  const taskY = taskIndex * ROW_HEIGHT;
+                  scrollToPositionXY(todayX, taskY);
+                }
+              }}
+              className="px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
+              title="Scroll to today"
+            >
+              Today
+            </button>
             <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
               <input
                 type="checkbox"
@@ -301,22 +448,73 @@ export default function GanttChart({
         </div>
       </div>
 
-      {/* Chart container */}
-      <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 300px)' }}>
+      {/* Fixed Header Row */}
+      <div className="flex border-b border-gray-200 bg-gray-50">
+        {/* Task column header */}
+        <div
+          className="flex-shrink-0 px-3 flex items-center font-medium text-sm text-gray-700 border-r border-gray-200"
+          style={{ width: LEFT_PANEL_WIDTH, height: HEADER_HEIGHT }}
+        >
+          Task
+        </div>
+        {/* Time headers - scrollable, synced with main content */}
+        <div
+          className="flex-1 overflow-hidden"
+          style={{ height: HEADER_HEIGHT }}
+        >
+          <svg
+            width={chartWidth}
+            height={HEADER_HEIGHT}
+            className="block"
+            style={{ transform: `translateX(-${headerScrollLeft}px)` }}
+          >
+            <rect x={0} y={0} width={chartWidth} height={HEADER_HEIGHT} fill="#f9fafb" />
+            {timeHeaders.map((header, index) => (
+              <g
+                key={index}
+                className="cursor-pointer"
+                onClick={() => handleHeaderClick(header.x, header)}
+              >
+                <rect
+                  x={header.x}
+                  y={0}
+                  width={header.width}
+                  height={HEADER_HEIGHT}
+                  fill="transparent"
+                  stroke="#e5e7eb"
+                  className="hover:fill-blue-50 transition-colors"
+                />
+                <text
+                  x={header.x + header.width / 2}
+                  y={HEADER_HEIGHT / 2 + 5}
+                  textAnchor="middle"
+                  className="text-xs fill-gray-600 pointer-events-none"
+                >
+                  {header.label}
+                </text>
+              </g>
+            ))}
+          </svg>
+        </div>
+      </div>
+
+      {/* Scrollable Chart container */}
+      <div
+        ref={scrollContainerRef}
+        className="overflow-auto"
+        style={{ maxHeight: 'calc(100vh - 350px)' }}
+        onScroll={(e) => {
+          // Update header scroll position to sync with content
+          const target = e.target as HTMLDivElement;
+          setHeaderScrollLeft(target.scrollLeft);
+        }}
+      >
         <div className="flex">
           {/* Left panel - Task names */}
           <div
             className="sticky left-0 z-10 bg-white border-r border-gray-200"
             style={{ width: LEFT_PANEL_WIDTH }}
           >
-            {/* Header */}
-            <div
-              className="border-b border-gray-200 px-3 flex items-center font-medium text-sm text-gray-700 bg-gray-50"
-              style={{ height: HEADER_HEIGHT }}
-            >
-              Task
-            </div>
-
             {/* Task list */}
             {sortedTasks.map((task) => (
               <div
@@ -350,48 +548,17 @@ export default function GanttChart({
           <div className="flex-1">
             <svg
               ref={svgRef}
-              width={chartWidth + LEFT_PANEL_WIDTH}
+              width={chartWidth}
               height={chartHeight}
               className="block"
             >
-              {/* Time scale header */}
-              <g>
-                <rect
-                  x={0}
-                  y={0}
-                  width={chartWidth}
-                  height={HEADER_HEIGHT}
-                  fill="#f9fafb"
-                />
-                {timeHeaders.map((header, index) => (
-                  <g key={index}>
-                    <rect
-                      x={header.x}
-                      y={0}
-                      width={header.width}
-                      height={HEADER_HEIGHT}
-                      fill="none"
-                      stroke="#e5e7eb"
-                    />
-                    <text
-                      x={header.x + header.width / 2}
-                      y={HEADER_HEIGHT / 2 + 5}
-                      textAnchor="middle"
-                      className="text-xs fill-gray-600"
-                    >
-                      {header.label}
-                    </text>
-                  </g>
-                ))}
-              </g>
-
               {/* Grid lines */}
               <g>
                 {timeHeaders.map((header, index) => (
                   <line
                     key={index}
                     x1={header.x}
-                    y1={HEADER_HEIGHT}
+                    y1={0}
                     x2={header.x}
                     y2={chartHeight}
                     stroke="#f3f4f6"
@@ -408,7 +575,7 @@ export default function GanttChart({
                   return (
                     <line
                       x1={todayX}
-                      y1={HEADER_HEIGHT}
+                      y1={0}
                       x2={todayX}
                       y2={chartHeight}
                       stroke="#ef4444"
@@ -422,7 +589,7 @@ export default function GanttChart({
 
               {/* Task bars */}
               {sortedTasks.map((task, index) => {
-                const y = HEADER_HEIGHT + index * ROW_HEIGHT + (ROW_HEIGHT - TASK_BAR_HEIGHT) / 2;
+                const y = index * ROW_HEIGHT + (ROW_HEIGHT - TASK_BAR_HEIGHT) / 2;
                 const startX = getXPosition(new Date(task.earlyStart));
                 const endX = getXPosition(new Date(task.earlyFinish));
                 const width = Math.max(dayWidth, endX - startX);
@@ -454,7 +621,7 @@ export default function GanttChart({
                     {hoveredTask === task.taskId && (
                       <rect
                         x={0}
-                        y={HEADER_HEIGHT + index * ROW_HEIGHT}
+                        y={index * ROW_HEIGHT}
                         width={chartWidth}
                         height={ROW_HEIGHT}
                         fill="#eff6ff"
@@ -546,6 +713,163 @@ export default function GanttChart({
           {formatDate(startDate)} - {formatDate(endDate)} ({totalDays} days)
         </div>
       </div>
+
+      {/* Period Overview Modal */}
+      {modalOpen && selectedPeriod && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={closeModal}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">{selectedPeriod.label}</h3>
+                <p className="text-sm text-gray-500">
+                  {formatDate(selectedPeriod.start)}
+                  {selectedPeriod.start.getTime() !== selectedPeriod.end.getTime() && (
+                    <> - {formatDate(selectedPeriod.end)}</>
+                  )}
+                  {' '}({getDaysBetween(selectedPeriod.start, selectedPeriod.end) + 1} days)
+                </p>
+              </div>
+              <button
+                onClick={closeModal}
+                className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                <Icon name="close" size="md" className="text-gray-500" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="px-6 py-4 overflow-y-auto" style={{ maxHeight: 'calc(80vh - 140px)' }}>
+              {/* Summary Stats */}
+              <div className="grid grid-cols-4 gap-4 mb-6">
+                <div className="bg-blue-50 rounded-lg p-3 text-center">
+                  <div className="text-2xl font-bold text-blue-600">{tasksInPeriod.length}</div>
+                  <div className="text-xs text-blue-600">Total Tasks</div>
+                </div>
+                <div className="bg-red-50 rounded-lg p-3 text-center">
+                  <div className="text-2xl font-bold text-red-600">
+                    {tasksInPeriod.filter((t) => t.isCritical).length}
+                  </div>
+                  <div className="text-xs text-red-600">Critical</div>
+                </div>
+                <div className="bg-green-50 rounded-lg p-3 text-center">
+                  <div className="text-2xl font-bold text-green-600">
+                    {tasksInPeriod.filter((t) => t.percentComplete >= 100).length}
+                  </div>
+                  <div className="text-xs text-green-600">Complete</div>
+                </div>
+                <div className="bg-amber-50 rounded-lg p-3 text-center">
+                  <div className="text-2xl font-bold text-amber-600">
+                    {tasksInPeriod.filter((t) => t.percentComplete > 0 && t.percentComplete < 100).length}
+                  </div>
+                  <div className="text-xs text-amber-600">In Progress</div>
+                </div>
+              </div>
+
+              {/* Task List */}
+              {tasksInPeriod.length > 0 ? (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">Tasks in this period</h4>
+                  {tasksInPeriod.map((task) => (
+                    <div
+                      key={task.taskId}
+                      className={clsx(
+                        'flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors',
+                        task.isCritical ? 'border-red-200 bg-red-50/50' : 'border-gray-200'
+                      )}
+                      onClick={() => {
+                        closeModal();
+                        onTaskClick?.(task.taskId);
+                      }}
+                    >
+                      {/* Status Indicator */}
+                      <div
+                        className={clsx(
+                          'w-3 h-3 rounded-full flex-shrink-0',
+                          task.percentComplete >= 100 ? 'bg-green-500' :
+                          task.isCritical ? 'bg-red-500' :
+                          task.percentComplete > 0 ? 'bg-amber-500' : 'bg-gray-300'
+                        )}
+                      />
+
+                      {/* Task Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className={clsx(
+                            'font-medium text-sm',
+                            task.isCritical ? 'text-red-700' : 'text-gray-900'
+                          )}>
+                            {task.taskId}
+                          </span>
+                          {task.isCritical && (
+                            <span className="px-1.5 py-0.5 text-xs font-medium bg-red-100 text-red-700 rounded">
+                              Critical
+                            </span>
+                          )}
+                        </div>
+                        {task.description && (
+                          <p className="text-xs text-gray-500 truncate">{task.description}</p>
+                        )}
+                      </div>
+
+                      {/* Progress */}
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <div className="w-20">
+                          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div
+                              className={clsx(
+                                'h-full rounded-full transition-all',
+                                task.percentComplete >= 100 ? 'bg-green-500' :
+                                task.isCritical ? 'bg-red-500' : 'bg-blue-500'
+                              )}
+                              style={{ width: `${task.percentComplete}%` }}
+                            />
+                          </div>
+                        </div>
+                        <span className={clsx(
+                          'text-sm font-medium w-12 text-right',
+                          task.percentComplete >= 100 ? 'text-green-600' :
+                          task.isCritical ? 'text-red-600' : 'text-gray-600'
+                        )}>
+                          {task.percentComplete}%
+                        </span>
+                      </div>
+
+                      {/* Dates */}
+                      <div className="text-xs text-gray-400 flex-shrink-0">
+                        {formatDate(new Date(task.earlyStart))}
+                      </div>
+
+                      <Icon name="chevron_right" size="sm" className="text-gray-400" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Icon name="event_busy" size="xl" className="text-gray-300 mb-2" />
+                  <p>No tasks scheduled for this period</p>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-3 border-t border-gray-200 bg-gray-50 flex justify-end">
+              <button
+                onClick={closeModal}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

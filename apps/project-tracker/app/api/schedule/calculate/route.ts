@@ -67,19 +67,47 @@ function loadTaskJsonData(metricsDir: string, taskId: string): TaskJsonData | nu
 }
 
 /**
- * Parse dependencies from CSV Dependencies column
+ * Parse dependencies from CSV Dependency Types column (format: TASK:TYPE+lag)
  */
-function parseDependencies(depsStr: string): ScheduleDependency[] {
+function parseDependencyTypes(depsStr: string): ScheduleDependency[] {
   if (!depsStr || depsStr.trim() === '') return [];
 
   return depsStr.split(',')
     .map(d => d.trim())
     .filter(d => d.length > 0)
-    .map(depId => ({
-      predecessorId: depId,
-      type: 'FS' as const, // Default Finish-to-Start
-      lagMinutes: 0,
-    }));
+    .map(dep => {
+      // Parse format: TASK_ID:TYPE[+/-lag] e.g., "IFC-001:FS+30"
+      const match = dep.match(/^([A-Z]+-[A-Z0-9-]+):?(FS|FF|SS|SF)?([+-]\d+)?$/);
+      if (!match) {
+        // Fallback: just task ID with default FS
+        return {
+          predecessorId: dep.split(':')[0],
+          type: 'FS' as const,
+          lagMinutes: 0,
+        };
+      }
+
+      const [, taskId, type, lag] = match;
+      return {
+        predecessorId: taskId,
+        type: (type || 'FS') as 'FS' | 'FF' | 'SS' | 'SF',
+        lagMinutes: lag ? parseInt(lag, 10) : 0,
+      };
+    });
+}
+
+/**
+ * Parse three-point estimate from CSV "O/M/P" format (e.g., "30/60/120")
+ */
+function parseEstimateString(estimate: string): { optimistic: number; mostLikely: number; pessimistic: number } | null {
+  if (!estimate || estimate.trim() === '') return null;
+  const parts = estimate.split('/').map(p => parseInt(p.trim(), 10));
+  if (parts.length !== 3 || parts.some(isNaN)) return null;
+  return {
+    optimistic: parts[0],
+    mostLikely: parts[1],
+    pessimistic: parts[2],
+  };
 }
 
 /**
@@ -89,13 +117,22 @@ function createTaskInput(
   row: TaskRecord,
   jsonData: TaskJsonData | null
 ): TaskScheduleInput {
-  // Get duration from JSON file, or estimate based on task type
+  // FIRST: Try to get three-point estimate from CSV
+  const estimateStr = row['Estimate (O/M/P)'] || '';
+  const estimate = parseEstimateString(estimateStr);
+
+  // Calculate expected duration using PERT if we have estimate
   let durationMinutes = 60; // Default 1 hour
 
-  if (jsonData?.target_duration_minutes) {
+  if (estimate) {
+    // PERT: Expected = (O + 4M + P) / 6
+    durationMinutes = Math.round(
+      (estimate.optimistic + 4 * estimate.mostLikely + estimate.pessimistic) / 6
+    );
+  } else if (jsonData?.target_duration_minutes) {
     durationMinutes = jsonData.target_duration_minutes;
   } else {
-    // Estimate based on section/task type
+    // Fallback: Estimate based on section/task type
     const section = (row['Section'] || '').toLowerCase();
     const taskId = row['Task ID'] || '';
 
@@ -116,29 +153,56 @@ function createTaskInput(
     }
   }
 
-  // Determine percent complete from status
-  const status = row['Status'] || 'Planned';
-  let percentComplete = 0;
+  // FIRST: Try to get percent complete from CSV column
+  const percentCompleteStr = row['Percent Complete'] || '';
+  let percentComplete = parseInt(percentCompleteStr, 10);
 
-  if (status === 'Completed' || status === 'Done' || jsonData?.status === 'DONE') {
-    percentComplete = 100;
-  } else if (status === 'In Progress') {
-    percentComplete = 50;
-  } else if (status === 'Blocked') {
-    percentComplete = 25;
+  // If CSV column is empty/invalid, derive from status
+  if (isNaN(percentComplete)) {
+    const status = row['Status'] || 'Planned';
+    percentComplete = 0;
+
+    if (status === 'Completed' || status === 'Done' || jsonData?.status === 'DONE') {
+      percentComplete = 100;
+    } else if (status === 'In Progress') {
+      percentComplete = 50;
+    } else if (status === 'Blocked') {
+      percentComplete = 25;
+    }
   }
 
-  // Parse dependencies
-  const dependencies = parseDependencies(row['Dependencies'] || '');
+  // Parse dependencies from Dependency Types column (with :FS notation)
+  // Fall back to Dependencies column if Dependency Types is empty
+  const depTypesStr = row['Dependency Types'] || '';
+  const dependencies = depTypesStr.trim()
+    ? parseDependencyTypes(depTypesStr)
+    : parseDependencyTypes(row['Dependencies'] || '');
+
+  const status = row['Status'] || 'Planned';
+
+  // Get planned dates from CSV only (not from JSON - that's actual/retrospective data)
+  // JSON started_at/completed_at are ACTUAL dates, not PLANNED dates
+  // For scheduling, we use: 1) CSV Planned Start, 2) Target Sprint calculation
+  const plannedStartStr = row['Planned Start'] || '';
+  const plannedFinishStr = row['Planned Finish'] || '';
+
+  const plannedStart = plannedStartStr ? new Date(plannedStartStr) : undefined;
+  const plannedFinish = plannedFinishStr ? new Date(plannedFinishStr) : undefined;
+
+  // Parse target sprint number
+  const targetSprintStr = row['Target Sprint'] || '';
+  const targetSprint = parseInt(targetSprintStr, 10);
 
   return {
     taskId: row['Task ID'],
+    estimate: estimate || undefined,
     durationMinutes,
     percentComplete,
     dependencies,
     status,
-    plannedStart: jsonData?.started_at ? new Date(jsonData.started_at) : undefined,
-    plannedFinish: jsonData?.completed_at ? new Date(jsonData.completed_at) : undefined,
+    plannedStart,
+    plannedFinish,
+    targetSprint: isNaN(targetSprint) ? undefined : targetSprint,
   };
 }
 
@@ -192,83 +256,133 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get sprint dates
+    // Get project/sprint dates
+    // PRIMARY: Use Planned Start/Finish from CSV tasks
+    // FALLBACK: Use sprint summary files if CSV dates not available
     const now = new Date();
-    let sprintStart = new Date();
-    let sprintEnd = new Date();
-    sprintEnd.setDate(sprintEnd.getDate() + 14); // Default 2-week sprint
+    let sprintStart: Date | null = null;
+    let sprintEnd: Date | null = null;
     let isOverdue = false;
 
-    if (isAllSprints) {
-      // For "all sprints", find the full project date range
-      // Get unique sprint numbers from tasks
-      const sprintNumbers = [...new Set(
-        tasks
-          .map((t) => parseInt(t['Target Sprint'] || '0', 10))
-          .filter((n) => !isNaN(n))
-      )].sort((a, b) => a - b);
+    // First, calculate dates from CSV task data (most reliable source)
+    for (const task of tasks) {
+      const plannedStartStr = task['Planned Start'] || '';
+      const plannedFinishStr = task['Planned Finish'] || '';
 
-      // Find earliest start and latest end across all sprints
-      let earliestStart: Date | null = null;
-      let latestEnd: Date | null = null;
+      if (plannedStartStr) {
+        const start = new Date(plannedStartStr);
+        if (!isNaN(start.getTime())) {
+          if (!sprintStart || start < sprintStart) {
+            sprintStart = start;
+          }
+        }
+      }
 
-      for (const sNum of sprintNumbers) {
-        const summaryPath = join(metricsDir, `sprint-${sNum}`, '_summary.json');
+      if (plannedFinishStr) {
+        const finish = new Date(plannedFinishStr);
+        if (!isNaN(finish.getTime())) {
+          if (!sprintEnd || finish > sprintEnd) {
+            sprintEnd = finish;
+          }
+        }
+      }
+    }
+
+    // Fallback: Try sprint summaries if CSV dates not found
+    if (!sprintStart || !sprintEnd) {
+      if (isAllSprints) {
+        const sprintNumbers = [...new Set(
+          tasks
+            .map((t) => parseInt(t['Target Sprint'] || '0', 10))
+            .filter((n) => !isNaN(n))
+        )].sort((a, b) => a - b);
+
+        // For all sprints: only get the start date from summaries
+        // Calculate end date based on max sprint number (summary dates are unreliable)
+        for (const sNum of sprintNumbers) {
+          const summaryPath = join(metricsDir, `sprint-${sNum}`, '_summary.json');
+          if (existsSync(summaryPath)) {
+            try {
+              const summary = JSON.parse(readFileSync(summaryPath, 'utf-8'));
+              const start = summary.started_at ? new Date(summary.started_at) : null;
+
+              // Only use start dates (end dates in summaries have wrong years)
+              if (start && !isNaN(start.getTime())) {
+                if (!sprintStart || start < sprintStart) {
+                  sprintStart = start;
+                }
+              }
+            } catch {
+              // Skip invalid summaries
+            }
+          }
+        }
+
+        // Calculate end date based on max sprint number (2 weeks per sprint)
+        if (!sprintEnd && sprintStart) {
+          const maxSprint = Math.max(...sprintNumbers, 0);
+          sprintEnd = new Date(sprintStart);
+          sprintEnd.setDate(sprintEnd.getDate() + (maxSprint + 2) * 14); // +2 for buffer
+        }
+      } else {
+        const summaryPath = join(metricsDir, `sprint-${sprintNum}`, '_summary.json');
         if (existsSync(summaryPath)) {
           try {
             const summary = JSON.parse(readFileSync(summaryPath, 'utf-8'));
-            const start = summary.started_at ? new Date(summary.started_at) : null;
-            const end = summary.target_date ? new Date(summary.target_date) : null;
-
-            if (start && (!earliestStart || start < earliestStart)) {
-              earliestStart = start;
+            if (!sprintStart && summary.started_at) {
+              sprintStart = new Date(summary.started_at);
             }
-            if (end && (!latestEnd || end > latestEnd)) {
-              latestEnd = end;
+            if (!sprintStart && summary.schedule?.sprint_start_date) {
+              sprintStart = new Date(summary.schedule.sprint_start_date);
+            }
+            if (!sprintEnd && summary.schedule?.sprint_end_date) {
+              sprintEnd = new Date(summary.schedule.sprint_end_date);
+            } else if (!sprintEnd && summary.target_date && /^\d{4}-\d{2}-\d{2}/.test(summary.target_date)) {
+              sprintEnd = new Date(summary.target_date);
             }
           } catch {
-            // Skip invalid summaries
+            // Skip
           }
         }
       }
+    }
 
-      if (earliestStart) sprintStart = earliestStart;
-      if (latestEnd) sprintEnd = latestEnd;
-
-      // Check if overall project is overdue
-      if (sprintEnd < now) {
-        isOverdue = true;
-        sprintEnd = new Date(now);
-        sprintEnd.setDate(sprintEnd.getDate() + 30); // Longer buffer for all sprints
+    // Final fallback: Use reasonable defaults
+    if (!sprintStart) {
+      sprintStart = new Date('2025-12-14'); // Project start
+    }
+    if (!sprintEnd) {
+      sprintEnd = new Date(sprintStart);
+      if (isAllSprints) {
+        // For all sprints, calculate based on max sprint number (2 weeks per sprint)
+        const maxSprint = Math.max(
+          ...tasks.map((t) => parseInt(t['Target Sprint'] || '0', 10)).filter((n) => !isNaN(n)),
+          0
+        );
+        // Add 2 weeks per sprint + buffer
+        sprintEnd.setDate(sprintEnd.getDate() + (maxSprint + 2) * 14);
+      } else {
+        sprintEnd.setDate(sprintEnd.getDate() + 14); // Default 2-week sprint
       }
-    } else {
-      // Single sprint mode
-      const summaryPath = join(metricsDir, `sprint-${sprintNum}`, '_summary.json');
-      if (existsSync(summaryPath)) {
-        try {
-          const summary = JSON.parse(readFileSync(summaryPath, 'utf-8'));
-          if (summary.started_at) {
-            sprintStart = new Date(summary.started_at);
-          }
-          if (summary.schedule?.sprint_start_date) {
-            sprintStart = new Date(summary.schedule.sprint_start_date);
-          }
-          if (summary.schedule?.sprint_end_date) {
-            sprintEnd = new Date(summary.schedule.sprint_end_date);
-          } else if (summary.target_date) {
-            sprintEnd = new Date(summary.target_date);
-          }
+    }
 
-          // Check if sprint is overdue
-          if (sprintEnd < now) {
-            isOverdue = true;
-            sprintEnd = new Date(now);
-            sprintEnd.setDate(sprintEnd.getDate() + 7);
-          }
-        } catch {
-          // Use defaults
-        }
+    // Sanity check: ensure end is after start (fix for bad data with wrong years)
+    if (sprintEnd <= sprintStart) {
+      sprintEnd = new Date(sprintStart);
+      if (isAllSprints) {
+        const maxSprint = Math.max(
+          ...tasks.map((t) => parseInt(t['Target Sprint'] || '0', 10)).filter((n) => !isNaN(n)),
+          0
+        );
+        sprintEnd.setDate(sprintEnd.getDate() + (maxSprint + 2) * 14);
+      } else {
+        sprintEnd.setDate(sprintEnd.getDate() + 14);
       }
+    }
+
+    // Check if overdue (informational only, do NOT modify sprintEnd)
+    if (sprintEnd < now) {
+      isOverdue = true;
     }
 
     // Convert to schedule inputs - load actual data from task JSON files

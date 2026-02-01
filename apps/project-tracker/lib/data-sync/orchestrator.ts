@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import Papa from 'papaparse';
 import { splitSprintPlan } from '../../../../tools/scripts/split-sprint-plan';
 import type { SyncResult, SafeUpdateResult, TaskRecord } from './types';
-import { tryFormatMetricsJson, findTaskFile } from './file-io';
+import { tryFormatMetricsJson } from './file-io';
 import { updateSprintPlanJson, updateTaskRegistry } from './json-generators';
 import { updateIndividualTaskFile } from './task-json-updater';
 import { updatePhaseSummaries, updateSprintSummaryGeneric } from './summary-generators';

@@ -2,7 +2,6 @@
  * File I/O Utilities
  */
 
-import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';

@@ -90,7 +90,7 @@ function isFullTask(task: Task | MinimalTask): task is Task {
   return 'section' in task && 'owner' in task && 'dod' in task;
 }
 
-export default function TaskModal({ task, onClose, onNavigateToTask, isOpen = true, allTasks }: TaskModalProps) {
+export default function TaskModal({ task, onClose, onNavigateToTask, isOpen = true, allTasks: _allTasks }: TaskModalProps) {
   const taskId = getTaskId(task);
 
   // Full task data (fetched from API if not provided)

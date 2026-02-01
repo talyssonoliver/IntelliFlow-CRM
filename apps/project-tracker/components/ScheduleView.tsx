@@ -80,6 +80,7 @@ export default function ScheduleView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCriticalOnly, setShowCriticalOnly] = useState(false);
+  const [criticalPathExpanded, setCriticalPathExpanded] = useState(true);
 
   // Get sprint param for API calls - 'all' or number
   const sprintParam = currentSprint === 'all' ? 'all' : String(currentSprint);
@@ -339,99 +340,116 @@ export default function ScheduleView() {
       {/* Critical Path Summary */}
       {criticalPathData && criticalPathData.criticalPath.taskCount > 0 && (
         <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Icon name="warning" size="lg" className="text-red-500" />
-            Critical Path Tasks
-          </h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-50 text-left">
-                  <th className="px-4 py-2 font-medium text-gray-600">Task ID</th>
-                  <th className="px-4 py-2 font-medium text-gray-600">Description</th>
-                  <th className="px-4 py-2 font-medium text-gray-600">Status</th>
-                  <th className="px-4 py-2 font-medium text-gray-600 text-center">Progress</th>
-                  <th className="px-4 py-2 font-medium text-gray-600 text-right">Duration</th>
-                  <th className="px-4 py-2 font-medium text-gray-600">Early Start</th>
-                  <th className="px-4 py-2 font-medium text-gray-600">Early Finish</th>
-                </tr>
-              </thead>
-              <tbody>
-                {criticalPathData.tasks.map((task) => (
-                  <tr
-                    key={task.taskId}
-                    className={clsx(
-                      'border-t border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors',
-                      task.taskId === criticalPathData.criticalPath.bottleneckTaskId && 'bg-red-50'
-                    )}
-                    onClick={() => handleTaskClick(task.taskId)}
-                  >
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        {task.taskId === criticalPathData.criticalPath.bottleneckTaskId && (
-                          <span title="Bottleneck">
-                            <Icon name="block" size="sm" className="text-red-500" />
-                          </span>
-                        )}
-                        <span className="font-mono text-blue-700">{task.taskId}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-gray-700 max-w-xs truncate">{task.description}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={clsx(
-                          'px-2 py-1 text-xs font-medium rounded-full',
-                          task.status === 'Completed' && 'bg-green-100 text-green-800',
-                          task.status === 'In Progress' && 'bg-blue-100 text-blue-800',
-                          task.status === 'Blocked' && 'bg-red-100 text-red-800',
-                          !['Completed', 'In Progress', 'Blocked'].includes(task.status) &&
-                            'bg-gray-100 text-gray-800'
-                        )}
-                      >
-                        {task.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-red-500 rounded-full"
-                            style={{ width: `${task.percentComplete}%` }}
-                          />
-                        </div>
-                        <span className="text-xs text-gray-600 w-10 text-right">
-                          {task.percentComplete}%
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-right font-mono text-gray-600">
-                      {Math.round(task.expectedDuration / 60 * 10) / 10}h
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {new Date(task.earlyStart).toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {new Date(task.earlyFinish).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {criticalPathData.criticalPath.bottleneckTaskId && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+          <button
+            onClick={() => setCriticalPathExpanded(!criticalPathExpanded)}
+            className="w-full flex items-center justify-between text-left hover:bg-gray-50 -mx-4 -mt-4 px-4 py-4 rounded-t-lg transition-colors"
+          >
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
               <Icon name="warning" size="lg" className="text-red-500" />
-              <div>
-                <span className="text-sm font-medium text-red-800">Current Bottleneck: </span>
-                <span className="text-sm text-red-700 font-mono">
-                  {criticalPathData.criticalPath.bottleneckTaskId}
-                </span>
-                <span className="text-sm text-red-600 ml-2">
-                  - First incomplete task on critical path
-                </span>
+              Critical Path Tasks
+              <span className="text-sm font-normal text-gray-500">
+                ({criticalPathData.criticalPath.taskCount} tasks)
+              </span>
+            </h3>
+            <Icon
+              name={criticalPathExpanded ? 'expand_less' : 'expand_more'}
+              size="lg"
+              className="text-gray-500"
+            />
+          </button>
+          {criticalPathExpanded && (
+            <>
+              <div className="overflow-x-auto mt-4">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-50 text-left">
+                      <th className="px-4 py-2 font-medium text-gray-600">Task ID</th>
+                      <th className="px-4 py-2 font-medium text-gray-600">Description</th>
+                      <th className="px-4 py-2 font-medium text-gray-600">Status</th>
+                      <th className="px-4 py-2 font-medium text-gray-600 text-center">Progress</th>
+                      <th className="px-4 py-2 font-medium text-gray-600 text-right">Duration</th>
+                      <th className="px-4 py-2 font-medium text-gray-600">Early Start</th>
+                      <th className="px-4 py-2 font-medium text-gray-600">Early Finish</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {criticalPathData.tasks.map((task) => (
+                      <tr
+                        key={task.taskId}
+                        className={clsx(
+                          'border-t border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors',
+                          task.taskId === criticalPathData.criticalPath.bottleneckTaskId && 'bg-red-50'
+                        )}
+                        onClick={() => handleTaskClick(task.taskId)}
+                      >
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            {task.taskId === criticalPathData.criticalPath.bottleneckTaskId && (
+                              <span title="Bottleneck">
+                                <Icon name="block" size="sm" className="text-red-500" />
+                              </span>
+                            )}
+                            <span className="font-mono text-blue-700">{task.taskId}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-gray-700 max-w-xs truncate">{task.description}</td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={clsx(
+                              'px-2 py-1 text-xs font-medium rounded-full',
+                              task.status === 'Completed' && 'bg-green-100 text-green-800',
+                              task.status === 'In Progress' && 'bg-blue-100 text-blue-800',
+                              task.status === 'Blocked' && 'bg-red-100 text-red-800',
+                              !['Completed', 'In Progress', 'Blocked'].includes(task.status) &&
+                                'bg-gray-100 text-gray-800'
+                            )}
+                          >
+                            {task.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-red-500 rounded-full"
+                                style={{ width: `${task.percentComplete}%` }}
+                              />
+                            </div>
+                            <span className="text-xs text-gray-600 w-10 text-right">
+                              {task.percentComplete}%
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono text-gray-600">
+                          {Math.round(task.expectedDuration / 60 * 10) / 10}h
+                        </td>
+                        <td className="px-4 py-3 text-gray-600">
+                          {new Date(task.earlyStart).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600">
+                          {new Date(task.earlyFinish).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            </div>
+
+              {criticalPathData.criticalPath.bottleneckTaskId && (
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+                  <Icon name="warning" size="lg" className="text-red-500" />
+                  <div>
+                    <span className="text-sm font-medium text-red-800">Current Bottleneck: </span>
+                    <span className="text-sm text-red-700 font-mono">
+                      {criticalPathData.criticalPath.bottleneckTaskId}
+                    </span>
+                    <span className="text-sm text-red-600 ml-2">
+                      - First incomplete task on critical path
+                    </span>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

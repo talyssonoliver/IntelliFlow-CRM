@@ -12,9 +12,7 @@ import type {
   DODItemResult,
   DocumentPreview,
   EnhancedContextData,
-  STOAVerdict,
   PlanDeliverablesVerification,
-  PlanDeliverable,
   PlanCheckboxItem,
 } from '../../../../../lib/types';
 
@@ -48,6 +46,21 @@ interface Params {
 }
 
 // Attestation file structure from .specify/sprints/sprint-{N}/attestations/{taskId}/attestation.json
+// Completion gates status for enforcement validation
+interface CompletionGate {
+  name: string;
+  status: 'pass' | 'warn' | 'blocked' | 'pending';
+  details?: string;
+  required: boolean;
+}
+
+interface CompletionGatesStatus {
+  allGatesPassed: boolean;
+  canComplete: boolean;
+  gates: CompletionGate[];
+  blockingReasons: string[];
+}
+
 interface RawAttestation {
   task_id?: string;
   run_id?: string;
@@ -700,6 +713,143 @@ function buildValidationItems(attestation: RawAttestation | null): BuildValidati
 }
 
 /**
+ * Build completion gates status to help agents determine if task can be completed
+ * This enforces the mandatory completion gates defined in /exec and /matop-execute
+ */
+function buildCompletionGates(
+  validationItems: BuildValidationItem[],
+  planDeliverables: PlanDeliverablesVerification | null,
+  matop: MATOPExecutionSummary | null,
+  attestation: RawAttestation | null
+): CompletionGatesStatus {
+  const gates: CompletionGate[] = [];
+  const blockingReasons: string[] = [];
+
+  // Gate 1: Plan Checkboxes
+  const checkboxTotal = planDeliverables?.checkboxes?.total ?? 0;
+  const checkboxChecked = planDeliverables?.checkboxes?.checked ?? 0;
+  const checkboxPct = checkboxTotal > 0 ? Math.round((checkboxChecked / checkboxTotal) * 100) : 100;
+
+  let checkboxStatus: 'pass' | 'warn' | 'blocked' | 'pending' = 'pending';
+  if (!planDeliverables?.planExists) {
+    checkboxStatus = 'pending';
+  } else if (checkboxPct === 100) {
+    checkboxStatus = 'pass';
+  } else if (checkboxPct >= 80) {
+    checkboxStatus = 'warn';
+  } else {
+    checkboxStatus = 'blocked';
+    blockingReasons.push(`Plan checkboxes incomplete: ${checkboxChecked}/${checkboxTotal} (${checkboxPct}%)`);
+  }
+
+  gates.push({
+    name: 'Plan Checkboxes',
+    status: checkboxStatus,
+    details: `${checkboxChecked}/${checkboxTotal} (${checkboxPct}%)`,
+    required: true,
+  });
+
+  // Gate 2: Artifact Verification
+  const artifactTotal = planDeliverables?.deliverables?.total ?? 0;
+  const artifactVerified = planDeliverables?.deliverables?.verified ?? 0;
+  const artifactMissing = planDeliverables?.deliverables?.missing ?? 0;
+
+  let artifactStatus: 'pass' | 'warn' | 'blocked' | 'pending' = 'pending';
+  if (artifactTotal === 0) {
+    artifactStatus = 'pending';
+  } else if (artifactMissing === 0) {
+    artifactStatus = 'pass';
+  } else {
+    artifactStatus = 'blocked';
+    blockingReasons.push(`Missing artifacts: ${artifactMissing} files`);
+  }
+
+  gates.push({
+    name: 'Artifact Verification',
+    status: artifactStatus,
+    details: `${artifactVerified}/${artifactTotal} verified`,
+    required: true,
+  });
+
+  // Gate 3: Build Validation (typecheck, tests, lint, build)
+  const typecheckItem = validationItems.find((i) => i.name === 'typecheck');
+  const testsItem = validationItems.find((i) => i.name === 'tests');
+  const lintItem = validationItems.find((i) => i.name === 'lint');
+  const buildItem = validationItems.find((i) => i.name === 'build');
+
+  const buildValidationPassed = [typecheckItem, testsItem, lintItem, buildItem].every(
+    (i) => i?.status === 'pass'
+  );
+  const anyBuildFailed = [typecheckItem, testsItem, lintItem, buildItem].some(
+    (i) => i?.status === 'fail'
+  );
+  const allBuildPending = [typecheckItem, testsItem, lintItem, buildItem].every(
+    (i) => i?.status === 'pending'
+  );
+
+  let buildStatus: 'pass' | 'warn' | 'blocked' | 'pending' = 'pending';
+  if (allBuildPending) {
+    buildStatus = 'pending';
+    blockingReasons.push('Build validation not executed');
+  } else if (buildValidationPassed) {
+    buildStatus = 'pass';
+  } else if (anyBuildFailed) {
+    buildStatus = 'blocked';
+    const failed = [typecheckItem, testsItem, lintItem, buildItem]
+      .filter((i) => i?.status === 'fail')
+      .map((i) => i?.name);
+    blockingReasons.push(`Build validation failed: ${failed.join(', ')}`);
+  } else {
+    buildStatus = 'warn';
+  }
+
+  gates.push({
+    name: 'Build Validation',
+    status: buildStatus,
+    details: buildValidationPassed
+      ? 'typecheck, tests, lint, build all passed'
+      : `${validationItems.filter((i) => i.status === 'pass').length}/4 passed`,
+    required: true,
+  });
+
+  // Gate 4: STOA Gate Pass
+  let stoaStatus: 'pass' | 'warn' | 'blocked' | 'pending' = 'pending';
+  if (!matop) {
+    stoaStatus = 'pending';
+    // Only add as blocking reason if other gates have been executed
+    if (!allBuildPending) {
+      blockingReasons.push('MATOP validation not executed');
+    }
+  } else if (matop.consensusVerdict === 'PASS') {
+    stoaStatus = 'pass';
+  } else if (matop.consensusVerdict === 'WARN') {
+    stoaStatus = 'warn';
+  } else if (matop.consensusVerdict === 'FAIL') {
+    stoaStatus = 'blocked';
+    blockingReasons.push('MATOP consensus verdict: FAIL');
+  }
+
+  gates.push({
+    name: 'STOA Gate Pass',
+    status: stoaStatus,
+    details: matop ? `Consensus: ${matop.consensusVerdict}` : 'Not executed',
+    required: true,
+  });
+
+  // Calculate overall status
+  const allGatesPassed = gates.every((g) => g.status === 'pass' || g.status === 'warn');
+  const anyGateBlocked = gates.some((g) => g.status === 'blocked');
+  const canComplete = allGatesPassed && !anyGateBlocked;
+
+  return {
+    allGatesPassed,
+    canComplete,
+    gates,
+    blockingReasons,
+  };
+}
+
+/**
  * Build enhanced context data from attestation
  */
 function buildEnhancedContext(attestation: RawAttestation | null, taskId: string): EnhancedContextData | null {
@@ -767,7 +917,10 @@ export async function GET(request: Request, { params }: Params) {
     // Build context data
     const context = buildEnhancedContext(attestation, taskId);
 
-    const result: TaskValidationSummary = {
+    // Build completion gates status for enforcement
+    const completionGates = buildCompletionGates(validationItems, planDeliverables, matop, attestation);
+
+    const result: TaskValidationSummary & { completionGates: CompletionGatesStatus } = {
       taskId,
       sprintNumber,
       timestamp: new Date().toISOString(),
@@ -809,6 +962,9 @@ export async function GET(request: Request, { params }: Params) {
         validationsPassed: attestation?.evidence_summary?.validations_passed,
         gatesPassed: attestation?.evidence_summary?.gates_passed,
       },
+
+      // Completion gates enforcement status
+      completionGates,
     };
 
     return NextResponse.json(result, {
