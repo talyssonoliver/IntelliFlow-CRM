@@ -110,6 +110,6 @@ export async function redirectToCheckout(tier: string, billing: 'monthly' | 'ann
   });
 
   if (typeof window !== 'undefined') {
-    window.location.href = `/sign-up?${params}`;
+    window.location.href = `/signup?${params}`;
   }
 }

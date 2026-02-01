@@ -45,7 +45,7 @@ export async function createCheckoutSession(
     params.set('email', options.customerEmail);
   }
 
-  return `/sign-up?${params}`;
+  return `/signup?${params}`;
 }
 
 /**
