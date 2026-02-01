@@ -49,3 +49,9 @@ export * from './billing';
 
 // Platform Metrics Schemas (IFC-078: Platform Engineering Foundation)
 export * from './platform-metrics';
+
+// Auto-Response Schemas (IFC-029: Auto-Response with Approval Gate)
+export * from './auto-response';
+
+// Event Schemas (IFC-150: Domain Events Infrastructure)
+export * from './events';

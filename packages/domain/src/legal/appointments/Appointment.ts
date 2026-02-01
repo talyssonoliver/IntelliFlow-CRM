@@ -83,6 +83,7 @@ interface AppointmentProps {
   attendeeIds: string[];
   linkedCaseIds: CaseId[];
   organizerId: string;
+  tenantId: string;
   notes?: string;
   externalCalendarId?: string;
   reminderMinutes?: number;
@@ -106,6 +107,7 @@ export interface CreateAppointmentProps {
   attendeeIds?: string[];
   linkedCaseIds?: CaseId[];
   organizerId: string;
+  tenantId: string;
   reminderMinutes?: number;
 }
 
@@ -164,6 +166,10 @@ export class Appointment extends AggregateRoot<AppointmentId> {
 
   get organizerId(): string {
     return this.props.organizerId;
+  }
+
+  get tenantId(): string {
+    return this.props.tenantId;
   }
 
   get notes(): string | undefined {
@@ -292,6 +298,7 @@ export class Appointment extends AggregateRoot<AppointmentId> {
       attendeeIds: props.attendeeIds ?? [],
       linkedCaseIds: props.linkedCaseIds ?? [],
       organizerId: props.organizerId,
+      tenantId: props.tenantId,
       reminderMinutes: props.reminderMinutes,
       createdAt: now,
       updatedAt: now,
@@ -658,6 +665,7 @@ export class Appointment extends AggregateRoot<AppointmentId> {
       attendeeIds: [...this.attendeeIds],
       linkedCaseIds: this.linkedCaseIds.map((id) => id.value),
       organizerId: this.organizerId,
+      tenantId: this.tenantId,
       notes: this.notes,
       externalCalendarId: this.externalCalendarId,
       reminderMinutes: this.reminderMinutes,

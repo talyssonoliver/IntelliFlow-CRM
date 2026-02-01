@@ -313,7 +313,7 @@ export class ConflictDetector {
     const totalDuration = durationMinutes + buffer.totalMinutes;
 
     // Start from the beginning of the current hour or start time, whichever is later
-    let currentDate = new Date(startFrom);
+    const currentDate = new Date(startFrom);
     currentDate.setMinutes(0, 0, 0);
 
     const endSearchDate = new Date(startFrom);

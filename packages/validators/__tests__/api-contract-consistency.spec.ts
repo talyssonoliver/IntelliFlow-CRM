@@ -389,13 +389,10 @@ describe('Code-to-Contract Validation', () => {
       const statsEndpoint = endpoints.find(e => e.name === 'stats');
 
       expect(statsEndpoint).toBeDefined();
-      // Currently uses protectedProcedure until RLS is fully configured
-      // TODO: Switch to tenantProcedure after RLS setup is complete
-      expect(statsEndpoint?.procedure).toBe('protectedProcedure');
-      // Note: stats uses direct tenantId filtering (where: { tenantId })
-      // rather than createTenantWhereClause/prismaWithTenant helpers
-      // So hasOwnerFilter is false based on pattern detection
-      expect(statsEndpoint?.hasOwnerFilter).toBe(false);
+      // Uses tenantProcedure with createTenantWhereClause for proper tenant isolation
+      expect(statsEndpoint?.procedure).toBe('tenantProcedure');
+      // stats uses createTenantWhereClause for tenant filtering (hasOwnerFilter=true)
+      expect(statsEndpoint?.hasOwnerFilter).toBe(true);
     });
 
     it('lead.list should use tenantProcedure in code', () => {

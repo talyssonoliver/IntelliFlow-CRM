@@ -103,5 +103,11 @@ export * from './timeline/TimelineConstants';
 // Platform Domain - IDP Constants (IFC-078)
 export * from './platform/PlatformConstants';
 
-// Future exports (to be implemented)
-// export * from './intelligence/scoring/ScoringService';
+// Auto-Response Domain (IFC-029)
+export * from './autoresponse';
+
+// Intelligence Domain (IFC-095)
+export * from './intelligence';
+
+// Security Domain - AI Security Event Types (IFC-125)
+export * from './security/AISecurityEventTypes';
