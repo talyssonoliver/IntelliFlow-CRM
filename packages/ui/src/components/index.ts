@@ -50,3 +50,6 @@ export * from './layout-builder';
 
 // GDPR/Compliance (EXP-ARTIFACTS-002)
 export * from './cookie-consent';
+
+// AI Intelligence Components (IFC-095)
+export * from './intelligence';

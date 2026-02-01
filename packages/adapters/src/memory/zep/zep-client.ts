@@ -168,6 +168,20 @@ export class ZepMemoryAdapter {
   }
 
   /**
+   * Check if the adapter has been initialized
+   */
+  get isInitialized(): boolean {
+    return this.isInitializedFlag;
+  }
+
+  /**
+   * Check if the adapter is using in-memory fallback
+   */
+  get isUsingFallback(): boolean {
+    return this.useFallback;
+  }
+
+  /**
    * Initialize the Zep client
    */
   async initialize(): Promise<void> {
@@ -318,7 +332,8 @@ export class ZepMemoryAdapter {
   async getMemory(sessionId: string, lastN?: number): Promise<ZepMemory> {
     await this.ensureInitialized();
 
-    if (this.useFallback) {
+    // Check if we should use fallback (no API key or at hard limit)
+    if (this.useFallback || this.shouldUseFallback()) {
       return this.getFallbackMemory(sessionId);
     }
 

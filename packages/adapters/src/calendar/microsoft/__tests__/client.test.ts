@@ -166,17 +166,23 @@ describe('MicrosoftCalendarAdapter', () => {
     });
 
     it('should handle rate limiting', async () => {
-      mockFetch.mockResolvedValueOnce({
+      // Mock 4 429 responses to exhaust retries (1 initial + 3 retries)
+      const rateLimitResponse = {
         ok: false,
         status: 429,
         json: async () => ({
           error: {
             code: 'TooManyRequests',
             message: 'Rate limit exceeded',
-            innerError: { retryAfterSeconds: 60 },
+            innerError: { retryAfterSeconds: 1 }, // Short retry for faster tests
           },
         }),
-      });
+      };
+      mockFetch
+        .mockResolvedValueOnce(rateLimitResponse)
+        .mockResolvedValueOnce(rateLimitResponse)
+        .mockResolvedValueOnce(rateLimitResponse)
+        .mockResolvedValueOnce(rateLimitResponse);
 
       const result = await adapter.createEvent(
         mockTokens,
@@ -185,7 +191,7 @@ describe('MicrosoftCalendarAdapter', () => {
       );
 
       expect(result.isFailure).toBe(true);
-    });
+    }, 30000); // Increase timeout to allow for retries
   });
 
   describe('updateEvent', () => {

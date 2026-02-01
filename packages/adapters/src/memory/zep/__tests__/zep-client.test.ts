@@ -79,16 +79,41 @@ describe('ZepMemoryAdapter', () => {
       await expect(adapter.initialize()).resolves.not.toThrow();
     });
 
-    // Note: isInitialized is a private property, not a public method
-    it.skip('should mark as initialized', async () => {
+    it('should mark as initialized', async () => {
       await adapter.initialize();
-      expect(adapter.isInitialized()).toBe(true);
+      expect(adapter.isInitialized).toBe(true);
     });
   });
 
   describe('createSession', () => {
-    // Note: Mock returns 'test-session' but test expects input sessionId
-    it.skip('should create session with metadata', async () => {
+    it('should create session with metadata', async () => {
+      // Update mock to return the input sessionId
+      mockFetch.mockImplementation((url: string, options?: { method?: string; body?: string }) => {
+        if (url.includes('/account/usage')) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ episodes_used: 0 }),
+          });
+        }
+        if (url.includes('/sessions') && options?.method === 'POST') {
+          // Parse the input to get the session_id from request body
+          const body = options?.body ? JSON.parse(options.body) : {};
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({
+              session_id: body.session_id ?? 'test-session',
+              metadata: body.metadata ?? {},
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({}),
+        });
+      });
+
       await adapter.initialize();
 
       const session = await adapter.createSession('session-123', {
@@ -101,15 +126,17 @@ describe('ZepMemoryAdapter', () => {
       expect(session.sessionId).toBe('session-123');
     });
 
-    // Note: Implementation doesn't check initialization state before API call
-    it.skip('should throw if not initialized', async () => {
-      await expect(
-        adapter.createSession('session-123', {
-          userId: 'user-456',
-          chainType: 'SCORING',
-          tenantId: 'tenant-789',
-        })
-      ).rejects.toThrow('Adapter not initialized');
+    it('should auto-initialize if not initialized', async () => {
+      // The implementation auto-initializes via ensureInitialized()
+      // So this test verifies that createSession works even without explicit initialize()
+      const session = await adapter.createSession('auto-init-session', {
+        userId: 'user-456',
+        chainType: 'SCORING',
+        tenantId: 'tenant-789',
+      });
+
+      expect(session).toBeDefined();
+      expect(adapter.isInitialized).toBe(true);
     });
   });
 
@@ -188,46 +215,50 @@ describe('ZepMemoryAdapter', () => {
       expect(budget.used).toBe(1);
     });
 
-    // Note: Mock always returns episodes_used: 0, so adding episodes doesn't increment count in test
-    it.skip('should report warning threshold correctly', async () => {
+    it('should report warning threshold correctly', async () => {
+      // Use a small maxEpisodes value so we hit the threshold quickly
       const limitedAdapter = new ZepMemoryAdapter({
         ...testConfig,
-        maxEpisodes: 100,
-        warningThresholdPercent: 50,
+        maxEpisodes: 10,
+        warningThresholdPercent: 50, // 50% of 10 = 5
+        hardLimitPercent: 90, // 90% of 10 = 9
       });
 
       await limitedAdapter.initialize();
 
-      // Add 50 episodes
-      for (let i = 0; i < 50; i++) {
+      // Add 5 episodes to reach warning threshold
+      for (let i = 0; i < 5; i++) {
         await limitedAdapter.addMemory(`session-${i}`, [
           { role: 'user', content: `Message ${i}` },
         ]);
       }
 
       const budget = await limitedAdapter.getEpisodeBudget();
+      expect(budget.used).toBe(5);
       expect(budget.isWarning).toBe(true);
       expect(budget.isLimited).toBe(false);
     });
 
-    // Note: Mock always returns episodes_used: 0, so adding episodes doesn't increment count in test
-    it.skip('should report hard limit correctly', async () => {
+    it('should report hard limit correctly', async () => {
+      // Use a small maxEpisodes value so we hit the threshold quickly
       const limitedAdapter = new ZepMemoryAdapter({
         ...testConfig,
         maxEpisodes: 10,
-        hardLimitPercent: 90,
+        warningThresholdPercent: 50,
+        hardLimitPercent: 80, // 80% of 10 = 8
       });
 
       await limitedAdapter.initialize();
 
-      // Add 9 episodes (90% of 10)
-      for (let i = 0; i < 9; i++) {
+      // Add 8 episodes to reach hard limit threshold
+      for (let i = 0; i < 8; i++) {
         await limitedAdapter.addMemory(`session-${i}`, [
           { role: 'user', content: `Message ${i}` },
         ]);
       }
 
       const budget = await limitedAdapter.getEpisodeBudget();
+      expect(budget.used).toBe(8);
       expect(budget.isLimited).toBe(true);
     });
   });
@@ -252,42 +283,48 @@ describe('ZepMemoryAdapter', () => {
     });
   });
 
-  // Note: isUsingFallback is a private property, not a public method
-  describe.skip('fallback behavior', () => {
+  describe('fallback behavior', () => {
     it('should use in-memory storage when at limit', async () => {
       const limitedAdapter = new ZepMemoryAdapter({
         ...testConfig,
         maxEpisodes: 5,
-        hardLimitPercent: 80,
+        hardLimitPercent: 80, // 80% of 5 = 4
       });
 
       await limitedAdapter.initialize();
 
-      // Fill up to hard limit
+      // Fill up to hard limit (4 episodes)
       for (let i = 0; i < 4; i++) {
         await limitedAdapter.addMemory(`session-${i}`, [
           { role: 'user', content: `Message ${i}` },
         ]);
       }
 
-      // This should use fallback
+      // After reaching hard limit, should be using fallback
+      // The isLimited flag indicates we're at the limit
+      const budget = await limitedAdapter.getEpisodeBudget();
+      expect(budget.isLimited).toBe(true);
+
+      // This should use fallback (no API call, stored in memory)
       await limitedAdapter.addMemory('session-fallback', [
         { role: 'user', content: 'Fallback message' },
       ]);
 
-      expect(limitedAdapter.isUsingFallback()).toBe(true);
+      // Verify we can retrieve from fallback
+      const memory = await limitedAdapter.getMemory('session-fallback');
+      expect(memory.messages.length).toBeGreaterThan(0);
     });
 
     it('should retrieve from fallback storage', async () => {
       const limitedAdapter = new ZepMemoryAdapter({
         ...testConfig,
         maxEpisodes: 5,
-        hardLimitPercent: 80,
+        hardLimitPercent: 80, // 80% of 5 = 4
       });
 
       await limitedAdapter.initialize();
 
-      // Fill up to hard limit
+      // Fill up to hard limit (4 episodes)
       for (let i = 0; i < 4; i++) {
         await limitedAdapter.addMemory(`session-${i}`, [
           { role: 'user', content: `Message ${i}` },

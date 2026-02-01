@@ -40,5 +40,36 @@ export * from './messaging/teams/client';
 // Email Service Adapter (IFC-144)
 export * from './messaging/email/EmailServiceAdapter';
 
+// Inbound Email Parser (IFC-173) - renamed exports to avoid conflicts with gmail/client
+export {
+  InboundEmailParser,
+  SpamAnalyzer,
+  createInboundEmailParser,
+  inboundEmailParser,
+  parseEmailAddress,
+  parseEmailAddresses,
+  parseMimeBoundary,
+  parseMimeParts,
+  parseHeaders,
+  decodeQuotedPrintable,
+  decodeBase64,
+  extractThreadInfo,
+  isForwardedMessage,
+  isReplyMessage,
+  ParsedEmailSchema,
+  ParsedAttachmentSchema,
+  ParsedEmailAddressSchema,
+  EmailHeadersSchema,
+  type ParsedEmail as InboundParsedEmail,
+  type ParsedAttachment as InboundParsedAttachment,
+  type ParsedEmailAddress,
+  type EmailHeaders,
+  type ThreadInfo,
+  type SpamAnalysis,
+} from './messaging/email/inbound';
+
 // Webhook Service Adapter (IFC-144)
 export * from './messaging/WebhookServiceAdapter';
+
+// Audit Adapters (IFC-125)
+export * from './audit';

@@ -21,6 +21,11 @@
       "types": "./dist/external/*.d.ts",
       "import": "./dist/external/*.mjs",
       "require": "./dist/external/*.js"
+    },
+    "./messaging/email/inbound": {
+      "types": "./dist/messaging/email/inbound.d.ts",
+      "import": "./dist/messaging/email/inbound.mjs",
+      "require": "./dist/messaging/email/inbound.js"
     }
   },
   "scripts": {

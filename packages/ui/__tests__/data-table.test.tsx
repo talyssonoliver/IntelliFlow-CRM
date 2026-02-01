@@ -167,13 +167,13 @@ describe('DataTable', () => {
     it('should show "No results" when data is empty', () => {
       render(<DataTable columns={basicColumns} data={[]} />);
 
-      expect(screen.getByText('No results.')).toBeInTheDocument();
+      expect(screen.getByText('No results found.')).toBeInTheDocument();
     });
 
     it('should show empty state with correct column span', () => {
       render(<DataTable columns={basicColumns} data={[]} />);
 
-      const emptyCell = screen.getByText('No results.').closest('td');
+      const emptyCell = screen.getByText('No results found.').closest('td');
       expect(emptyCell).toHaveAttribute('colspan', '4');
     });
 
@@ -309,14 +309,14 @@ describe('DataTable', () => {
   describe('Row Selection', () => {
     it('should display row selection count', () => {
       const testData = createTestData(5);
-      render(<DataTable columns={selectableColumns} data={testData} />);
+      render(<DataTable columns={selectableColumns} data={testData} enableRowSelection />);
 
       expect(screen.getByText('0 of 5 row(s) selected.')).toBeInTheDocument();
     });
 
     it('should update selection count when row selected', async () => {
       const testData = createTestData(5);
-      render(<DataTable columns={selectableColumns} data={testData} />);
+      render(<DataTable columns={selectableColumns} data={testData} enableRowSelection />);
 
       const firstRowCheckbox = screen.getByTestId('select-row-0');
       await userEvent.click(firstRowCheckbox);
@@ -326,7 +326,7 @@ describe('DataTable', () => {
 
     it('should select multiple rows', async () => {
       const testData = createTestData(5);
-      render(<DataTable columns={selectableColumns} data={testData} />);
+      render(<DataTable columns={selectableColumns} data={testData} enableRowSelection />);
 
       const row1Checkbox = screen.getByTestId('select-row-0');
       const row2Checkbox = screen.getByTestId('select-row-1');
@@ -339,7 +339,7 @@ describe('DataTable', () => {
 
     it('should deselect row when clicked again', async () => {
       const testData = createTestData(5);
-      render(<DataTable columns={selectableColumns} data={testData} />);
+      render(<DataTable columns={selectableColumns} data={testData} enableRowSelection />);
 
       const firstRowCheckbox = screen.getByTestId('select-row-0');
 
@@ -352,7 +352,7 @@ describe('DataTable', () => {
 
     it('should select all page rows when select all clicked', async () => {
       const testData = createTestData(5);
-      render(<DataTable columns={selectableColumns} data={testData} />);
+      render(<DataTable columns={selectableColumns} data={testData} enableRowSelection />);
 
       const selectAllCheckbox = screen.getByTestId('select-all');
       await userEvent.click(selectAllCheckbox);
@@ -362,7 +362,7 @@ describe('DataTable', () => {
 
     it('should deselect all rows when select all clicked again', async () => {
       const testData = createTestData(5);
-      render(<DataTable columns={selectableColumns} data={testData} />);
+      render(<DataTable columns={selectableColumns} data={testData} enableRowSelection />);
 
       const selectAllCheckbox = screen.getByTestId('select-all');
 
@@ -375,7 +375,7 @@ describe('DataTable', () => {
 
     it('should apply selected data-state to selected rows', async () => {
       const testData = createTestData(3);
-      render(<DataTable columns={selectableColumns} data={testData} />);
+      render(<DataTable columns={selectableColumns} data={testData} enableRowSelection />);
 
       const firstRowCheckbox = screen.getByTestId('select-row-0');
       await userEvent.click(firstRowCheckbox);
@@ -387,7 +387,7 @@ describe('DataTable', () => {
 
     it('should show correct selection count with pagination', async () => {
       const testData = createTestData(15);
-      render(<DataTable columns={selectableColumns} data={testData} pageSize={10} />);
+      render(<DataTable columns={selectableColumns} data={testData} pageSize={10} enableRowSelection />);
 
       // Select first row on page 1
       const firstRowCheckbox = screen.getByTestId('select-row-0');
@@ -494,7 +494,7 @@ describe('DataTable', () => {
   describe('Integration', () => {
     it('should maintain selection when navigating pages', async () => {
       const testData = createTestData(15);
-      render(<DataTable columns={selectableColumns} data={testData} pageSize={10} />);
+      render(<DataTable columns={selectableColumns} data={testData} pageSize={10} enableRowSelection />);
 
       // Select first row on page 1
       const firstRowCheckbox = screen.getByTestId('select-row-0');
@@ -520,7 +520,7 @@ describe('DataTable', () => {
 
     it('should show correct selection count across pages', async () => {
       const testData = createTestData(25);
-      render(<DataTable columns={selectableColumns} data={testData} pageSize={10} />);
+      render(<DataTable columns={selectableColumns} data={testData} pageSize={10} enableRowSelection />);
 
       // Select all on page 1
       const selectAll = screen.getByTestId('select-all');
@@ -539,8 +539,8 @@ describe('DataTable', () => {
     it('should handle empty data with pagination controls', () => {
       render(<DataTable columns={basicColumns} data={[]} />);
 
-      expect(screen.getByText('No results.')).toBeInTheDocument();
-      expect(screen.getByText('0 of 0 row(s) selected.')).toBeInTheDocument();
+      expect(screen.getByText('No results found.')).toBeInTheDocument();
+      // Pagination buttons should be disabled with empty data
       expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
       expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
     });
@@ -621,7 +621,9 @@ describe('DataTable', () => {
       const rows = screen.getAllByRole('row');
       expect(rows).toHaveLength(11); // 10 data + 1 header
 
-      expect(screen.getByText('0 of 1000 row(s) selected.')).toBeInTheDocument();
+      // Verify pagination is working (first page data visible)
+      expect(screen.getByText('User 1')).toBeInTheDocument();
+      expect(screen.getByText('User 10')).toBeInTheDocument();
     });
 
     it('should handle columns with no header', () => {

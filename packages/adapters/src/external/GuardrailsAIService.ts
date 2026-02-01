@@ -4,6 +4,17 @@ import {
   LeadScoringInput,
   LeadScoringResult,
 } from '@intelliflow/application';
+import type {
+  AuditLogPort,
+  AISecurityEventInput,
+  AuditLogResult,
+  TenantContext,
+} from '@intelliflow/application';
+import {
+  type AISecurityEventType,
+  AI_EVENT_SEVERITY_MAP,
+  isAISecurityEventType,
+} from '@intelliflow/domain';
 
 /**
  * Guardrails AI Service - IFC-125 Integration
@@ -12,13 +23,17 @@ import {
  * - Input sanitization (prompt injection prevention)
  * - Output redaction (PII protection)
  * - Bias detection (fairness monitoring)
- * - Security event logging
+ * - Security event logging via AuditLogPort
+ *
+ * IMPLEMENTS: IFC-125 (AI Guardrails Audit Logger Integration)
  *
  * Usage:
  * ```typescript
  * const baseAIService = new MockAIService();
- * const protectedAIService = new GuardrailsAIService(baseAIService, {
+ * const auditLogPort = new DurableAuditLogAdapter(prisma, signingKey);
+ * const protectedAIService = new GuardrailsAIService(baseAIService, auditLogPort, {
  *   userId: ctx.user.userId,
+ *   tenantId: ctx.tenantId,
  *   enableBiasDetection: true,
  * });
  * ```
@@ -49,6 +64,12 @@ export interface GuardrailsConfig {
   /** User ID for rate limiting and audit logging */
   userId: string;
 
+  /** Tenant ID for multi-tenancy isolation (required for audit logging) */
+  tenantId: string;
+
+  /** Jurisdiction for GDPR compliance (default: 'GLOBAL') */
+  jurisdiction?: 'EU' | 'UK' | 'US' | 'GLOBAL';
+
   /** Enable bias detection and metrics collection */
   enableBiasDetection?: boolean;
 
@@ -57,6 +78,12 @@ export interface GuardrailsConfig {
 
   /** Log all security events */
   enableLogging?: boolean;
+
+  /** Model ID for ISO 42001 traceability */
+  modelId?: string;
+
+  /** Model version for ISO 42001 traceability */
+  modelVersion?: string;
 }
 
 /**
@@ -74,23 +101,72 @@ export interface LeadScoringBiasCheck {
 }
 
 /**
+ * Options for logging security events
+ */
+interface LogSecurityEventOptions {
+  resourceType?: string;
+  resourceId?: string;
+  inputHash?: string;
+  detectionConfidence?: number;
+}
+
+/**
+ * Simple metrics interface for tracking failures
+ */
+interface MetricsTracker {
+  increment(metric: string): void;
+}
+
+/**
+ * Default no-op metrics tracker
+ */
+const defaultMetrics: MetricsTracker = {
+  increment: () => {},
+};
+
+/**
  * Guardrails AI Service
  * Wraps any AIServicePort with automatic security and fairness checks
  */
 export class GuardrailsAIService implements AIServicePort {
-  private readonly config: Required<GuardrailsConfig>;
+  private readonly config: Required<Omit<GuardrailsConfig, 'modelId' | 'modelVersion' | 'jurisdiction'>> & {
+    modelId?: string;
+    modelVersion?: string;
+    jurisdiction: 'EU' | 'UK' | 'US' | 'GLOBAL';
+  };
   private readonly biasCheckBuffer: LeadScoringBiasCheck[] = [];
+  private readonly metrics: MetricsTracker;
 
+  /**
+   * Create a new GuardrailsAIService.
+   *
+   * @param innerService - The underlying AI service to wrap
+   * @param auditLogPort - Required audit logging port (MUST be provided)
+   * @param config - Configuration options
+   * @throws {Error} If auditLogPort is not provided
+   */
   constructor(
     private readonly innerService: AIServicePort,
+    private readonly auditLogPort: AuditLogPort,
     config: GuardrailsConfig
   ) {
+    // Validate required dependency (Decision 1 from spec)
+    if (!auditLogPort) {
+      throw new Error('AuditLogPort is required for GuardrailsAIService');
+    }
+
     this.config = {
       enableBiasDetection: config.enableBiasDetection ?? true,
       rateLimit: config.rateLimit ?? 10,
       enableLogging: config.enableLogging ?? true,
       userId: config.userId,
+      tenantId: config.tenantId,
+      jurisdiction: config.jurisdiction ?? 'GLOBAL',
+      modelId: config.modelId,
+      modelVersion: config.modelVersion,
     };
+
+    this.metrics = defaultMetrics;
   }
 
   /**
@@ -118,9 +194,11 @@ export class GuardrailsAIService implements AIServicePort {
 
       return Result.ok(safeResult);
     } catch (error) {
-      this.logSecurityEvent('ai_service_error', 'high', {
+      // Log to AuditLogPort instead of just console
+      await this.logSecurityEvent('AI_CHAIN_FAILURE', {
         error: error instanceof Error ? error.message : String(error),
         input: this.sanitizeInputForLogging(input),
+        operation: 'scoreLead',
       });
 
       return Result.fail({
@@ -143,7 +221,7 @@ export class GuardrailsAIService implements AIServicePort {
 
       return result;
     } catch (error) {
-      this.logSecurityEvent('ai_service_error', 'high', {
+      await this.logSecurityEvent('AI_CHAIN_FAILURE', {
         error: error instanceof Error ? error.message : String(error),
         operation: 'qualifyLead',
       });
@@ -175,7 +253,7 @@ export class GuardrailsAIService implements AIServicePort {
 
       return Result.ok(safeEmail);
     } catch (error) {
-      this.logSecurityEvent('ai_service_error', 'high', {
+      await this.logSecurityEvent('AI_CHAIN_FAILURE', {
         error: error instanceof Error ? error.message : String(error),
         operation: 'generateEmail',
         leadId,
@@ -212,6 +290,15 @@ export class GuardrailsAIService implements AIServicePort {
 
     const totalScored = this.biasCheckBuffer.length;
 
+    // Log bias detection result
+    if (result.biasDetected) {
+      await this.logSecurityEvent('AI_BIAS_THRESHOLD_EXCEEDED', {
+        totalScored,
+        violationsCount: result.violations.length,
+        violations: result.violations,
+      });
+    }
+
     // Clear buffer after analysis
     this.biasCheckBuffer.length = 0;
 
@@ -228,6 +315,112 @@ export class GuardrailsAIService implements AIServicePort {
   // ============================================
   // PRIVATE HELPER METHODS
   // ============================================
+
+  /**
+   * Get model ID for audit logging
+   */
+  private getModelId(): string {
+    return this.config.modelId ?? 'guardrails-ai-service';
+  }
+
+  /**
+   * Get model version for audit logging
+   */
+  private getModelVersion(): string {
+    return this.config.modelVersion ?? '1.0.0';
+  }
+
+  /**
+   * Build description for security event
+   */
+  private buildDescription(eventType: AISecurityEventType, details: Record<string, unknown>): string {
+    const baseDescriptions: Record<AISecurityEventType, string> = {
+      'AI_GUARDRAIL_TRIGGERED': 'AI guardrail was triggered during processing',
+      'AI_GUARDRAIL_BYPASSED': 'AI guardrail was bypassed',
+      'AI_GUARDRAIL_TIMEOUT': 'AI guardrail processing timed out',
+      'AI_PROMPT_INJECTION_DETECTED': 'Potential prompt injection attempt detected',
+      'AI_PII_EXPOSURE_BLOCKED': 'PII exposure was blocked in AI output',
+      'AI_TOXIC_CONTENT_BLOCKED': 'Toxic content was blocked in AI output',
+      'AI_HALLUCINATION_DETECTED': 'AI hallucination detected in output',
+      'AI_TOKEN_LIMIT_EXCEEDED': 'AI token limit was exceeded',
+      'AI_COST_THRESHOLD_BREACH': 'AI cost threshold was breached',
+      'AI_RATE_LIMIT_TRIGGERED': 'AI rate limit was triggered',
+      'AI_LOW_CONFIDENCE_OVERRIDE': 'Low confidence AI output was overridden',
+      'AI_CHAIN_FAILURE': 'AI chain processing failed',
+      'AI_OUTPUT_VALIDATION_FAILED': 'AI output validation failed',
+      'AI_MODEL_VERSION_MISMATCH': 'AI model version mismatch detected',
+      'AI_CONSENT_VALIDATION_FAILED': 'AI consent validation failed',
+      'AI_DATA_RETENTION_VIOLATION': 'AI data retention policy was violated',
+      'AI_CROSS_TENANT_ACCESS_ATTEMPT': 'Cross-tenant access attempt detected',
+      'AI_BIAS_THRESHOLD_EXCEEDED': 'AI bias threshold was exceeded',
+    };
+
+    const baseDescription = baseDescriptions[eventType] ?? 'AI security event occurred';
+
+    if (details.operation) {
+      return `${baseDescription} during ${details.operation}`;
+    }
+
+    return baseDescription;
+  }
+
+  /**
+   * Log security event to AuditLogPort
+   *
+   * Replaces the previous console-only logging with proper audit trail persistence.
+   * Implements Decision 1 from STOA spec session - required AuditLogPort dependency.
+   */
+  private async logSecurityEvent(
+    eventType: AISecurityEventType,
+    details: Record<string, unknown>,
+    options: LogSecurityEventOptions = {}
+  ): Promise<AuditLogResult | void> {
+    if (!this.config.enableLogging) return;
+
+    // Get severity from domain constants
+    const severity = isAISecurityEventType(eventType)
+      ? AI_EVENT_SEVERITY_MAP[eventType]
+      : 'MEDIUM';
+
+    // Build the event input for AuditLogPort
+    const event: AISecurityEventInput = {
+      eventType,
+      severity,
+      tenantId: this.config.tenantId,
+      userId: this.config.userId,
+      resourceType: options.resourceType,
+      resourceId: options.resourceId,
+      description: this.buildDescription(eventType, details),
+      metadata: {
+        modelId: this.getModelId(),
+        modelVersion: this.getModelVersion(),
+        guardrailId: 'guardrails-ai-service',
+        guardrailVersion: '1.0.0',
+        inputHash: options.inputHash,
+        detectionConfidence: options.detectionConfidence,
+        processingPurpose: 'AI_GUARDRAIL_ENFORCEMENT',
+        legalBasis: 'LEGITIMATE_INTEREST',
+        details,
+      },
+    };
+
+    // Build tenant context
+    const tenantContext: TenantContext = {
+      tenantId: this.config.tenantId,
+      userId: this.config.userId,
+      jurisdiction: this.config.jurisdiction,
+    };
+
+    // Log to AuditLogPort with error handling
+    try {
+      return await this.auditLogPort.logSecurityEvent(event, tenantContext);
+    } catch (error) {
+      // Track failure metric but don't block AI operations
+      this.metrics.increment('guardrails.audit_log_failure');
+      console.error('[GUARDRAILS] Audit log failed:', error);
+      // Don't rethrow - audit failure shouldn't block AI operations
+    }
+  }
 
   /**
    * Sanitize lead scoring input
@@ -290,7 +483,7 @@ export class GuardrailsAIService implements AIServicePort {
 
     // Log if PII was found
     if (phoneRedacted !== text) {
-      this.logSecurityEvent('pii_redacted', 'medium', {
+      this.logSecurityEvent('AI_PII_EXPOSURE_BLOCKED', {
         context,
         redactionCount: (text.match(/@/g) || []).length,
       });
@@ -352,31 +545,5 @@ export class GuardrailsAIService implements AIServicePort {
         console.error('Bias analysis failed:', err);
       });
     }
-  }
-
-  /**
-   * Log security event
-   */
-  private logSecurityEvent(
-    eventType: string,
-    severity: 'low' | 'medium' | 'high' | 'critical',
-    details: Record<string, unknown>
-  ): void {
-    if (!this.config.enableLogging) return;
-
-    const event = {
-      timestamp: new Date().toISOString(),
-      eventType,
-      severity,
-      userId: this.config.userId,
-      ...details,
-    };
-
-    // In production, send to proper logging infrastructure
-    console.warn('[AI_GUARDRAILS]', event);
-
-    // TODO: Integrate with existing audit logger
-    // import { logSecurityEvent } from '../../../../apps/api/src/shared/prompt-sanitizer';
-    // logSecurityEvent({ userId: this.config.userId, eventType, severity, details });
   }
 }
