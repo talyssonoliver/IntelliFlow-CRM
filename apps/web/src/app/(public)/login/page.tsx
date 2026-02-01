@@ -35,7 +35,6 @@ import {
   AuthBackground,
   AuthCard,
   PasswordInput,
-  TrustIndicators,
 } from '@/components/shared';
 import {
   sanitizeEmail,
@@ -272,9 +271,15 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = async () => {
+    console.log('[LoginPage] handleGoogleLogin called');
+    console.log('[LoginPage] auth object:', auth);
+    console.log('[LoginPage] auth.loginWithOAuth:', auth.loginWithOAuth);
     try {
+      console.log('[LoginPage] Calling auth.loginWithOAuth("google")...');
       await auth.loginWithOAuth('google');
+      console.log('[LoginPage] auth.loginWithOAuth completed');
     } catch (error) {
+      console.error('[LoginPage] Google login error:', error);
       setToast({
         open: true,
         variant: 'destructive',
@@ -285,9 +290,13 @@ export default function LoginPage() {
   };
 
   const handleMicrosoftLogin = async () => {
+    console.log('[LoginPage] handleMicrosoftLogin called');
     try {
+      console.log('[LoginPage] Calling auth.loginWithOAuth("azure")...');
       await auth.loginWithOAuth('azure');
+      console.log('[LoginPage] auth.loginWithOAuth completed');
     } catch (error) {
+      console.error('[LoginPage] Microsoft login error:', error);
       setToast({
         open: true,
         variant: 'destructive',
@@ -329,7 +338,9 @@ export default function LoginPage() {
   // Render
   // ==========================================
 
-  const isLoading = isSubmitting || auth.isLoading;
+  // IFC-007: Only show loading spinner when user is actually submitting the form
+  // Don't show spinner just because auth status is being checked on page load
+  const isLoading = isSubmitting;
 
   // MFA Challenge Step
   if (step === 'mfa') {
@@ -386,8 +397,6 @@ export default function LoginPage() {
           badgeIcon="shield_lock"
           title="Welcome back"
           description="Sign in to your IntelliFlow CRM account"
-          securityBadge="256-bit SSL encryption | WCAG 2.1 AA compliant"
-          footer={<TrustIndicators />}
         >
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Rate limit warning */}

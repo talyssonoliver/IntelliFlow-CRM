@@ -39,6 +39,8 @@ export interface AuthCardProps {
   badge?: string;
   /** Material Symbol icon name for the badge */
   badgeIcon?: string;
+  /** Additional CSS classes for the badge (e.g., responsive visibility) */
+  badgeClassName?: string;
   /** Main title (h1) */
   title: string;
   /** Description text below the title */
@@ -62,6 +64,7 @@ export interface AuthCardProps {
 export function AuthCard({
   badge,
   badgeIcon,
+  badgeClassName,
   title,
   description,
   children,
@@ -81,7 +84,10 @@ export function AuthCard({
       {/* Branding header */}
       <div className="text-center mb-8 space-y-2">
         {badge && (
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-[#7cc4ff] font-medium backdrop-blur-sm text-sm mb-4">
+          <div className={cn(
+            "inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-[#7cc4ff] font-medium backdrop-blur-sm text-sm mb-4",
+            badgeClassName
+          )}>
             {badgeIcon && (
               <span className="material-symbols-outlined text-base" aria-hidden="true">
                 {badgeIcon}

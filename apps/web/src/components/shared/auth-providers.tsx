@@ -80,12 +80,16 @@ export function GoogleSignInButton({
   const [isLoading, setIsLoading] = useState(false);
 
   const handleClick = async () => {
+    console.log('[GoogleSignIn] Button clicked, isLoading:', isLoading, 'disabled:', disabled);
     if (isLoading || disabled) return;
 
     setIsLoading(true);
     try {
+      console.log('[GoogleSignIn] Calling onLogin...');
       await onLogin();
+      console.log('[GoogleSignIn] onLogin completed');
     } catch (error) {
+      console.error('[GoogleSignIn] Error:', error);
       const err = error instanceof Error ? error : new Error('Google sign-in failed');
       onError?.(err);
     } finally {
@@ -149,12 +153,16 @@ export function MicrosoftSignInButton({
   const [isLoading, setIsLoading] = useState(false);
 
   const handleClick = async () => {
+    console.log('[MicrosoftSignIn] Button clicked, isLoading:', isLoading, 'disabled:', disabled);
     if (isLoading || disabled) return;
 
     setIsLoading(true);
     try {
+      console.log('[MicrosoftSignIn] Calling onLogin...');
       await onLogin();
+      console.log('[MicrosoftSignIn] onLogin completed');
     } catch (error) {
+      console.error('[MicrosoftSignIn] Error:', error);
       const err = error instanceof Error ? error : new Error('Microsoft sign-in failed');
       onError?.(err);
     } finally {
@@ -268,13 +276,10 @@ export interface OAuthDividerProps {
  */
 export function OAuthDivider({ text = 'Or continue with' }: OAuthDividerProps) {
   return (
-    <div className="relative">
-      <div className="absolute inset-0 flex items-center">
-        <div className="w-full border-t border-white/10" />
-      </div>
-      <div className="relative flex justify-center text-sm">
-        <span className="px-4 bg-transparent text-slate-400">{text}</span>
-      </div>
+    <div className="flex items-center gap-4">
+      <div className="flex-1 border-t border-white/10" />
+      <span className="text-sm text-slate-400 whitespace-nowrap">{text}</span>
+      <div className="flex-1 border-t border-white/10" />
     </div>
   );
 }

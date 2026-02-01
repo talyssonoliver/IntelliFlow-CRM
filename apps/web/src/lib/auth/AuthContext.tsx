@@ -23,8 +23,10 @@ import {
   useCallback,
   ReactNode,
 } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { trpc } from '../trpc';
+import { useQueryClient } from '@tanstack/react-query';
+import { getSupabaseBrowserClient } from '../supabase-browser';
 
 // ============================================
 // Types
@@ -110,18 +112,24 @@ const AuthContext = createContext<AuthContextType>({
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [state, setState] = useState<AuthState>(initialState);
 
   // tRPC mutations
   const loginMutation = trpc.auth.login.useMutation();
   const logoutMutation = trpc.auth.logout.useMutation();
   const verifyMfaMutation = trpc.auth.verifyMfa.useMutation();
-  const loginWithOAuthMutation = trpc.auth.loginWithOAuth.useMutation();
+  // Note: loginWithOAuth uses Supabase client directly, not tRPC
 
-  // tRPC queries
+  // Check if we just logged out (prevents redirect loop)
+  const isLoggedOutPage = typeof window !== 'undefined' &&
+    window.location.search.includes('logged_out=true');
+
+  // tRPC queries - skip fetching if we just logged out
   const statusQuery = trpc.auth.getStatus.useQuery(undefined, {
     retry: false,
     refetchOnWindowFocus: false,
+    enabled: !isLoggedOutPage, // Don't fetch if we just logged out
   });
 
   // ==========================================
@@ -129,9 +137,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ==========================================
 
   useEffect(() => {
+    // Debug: Log token status on mount
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('accessToken');
+      console.log('[AuthContext] Token in localStorage:', token ? `${token.substring(0, 20)}...` : 'null');
+
+      // Sync token from localStorage to cookie for proxy access
+      if (token) {
+        import('@/lib/shared/session-cleanup').then(({ syncTokenToCookie }) => {
+          syncTokenToCookie(token);
+        });
+      }
+    }
+
+    // If we just logged out, immediately set as not authenticated
+    if (isLoggedOutPage) {
+      console.log('[AuthContext] Logged out page detected, setting unauthenticated');
+      setState((prev) => ({
+        ...prev,
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+      }));
+      return;
+    }
+
+    // IFC-007: Handle all query states to prevent stuck loading spinner
+    // Wait for query to finish (not pending/fetching)
+    if (statusQuery.isPending || statusQuery.isFetching) {
+      console.log('[AuthContext] Query still pending/fetching...');
+      return;
+    }
+
+    console.log('[AuthContext] Query completed:', {
+      isSuccess: statusQuery.isSuccess,
+      isError: statusQuery.isError,
+      data: statusQuery.data,
+      error: statusQuery.error,
+    });
+
     if (statusQuery.isSuccess && statusQuery.data) {
       const data = statusQuery.data;
       if (data.authenticated && 'user' in data && data.user) {
+        console.log('[AuthContext] User authenticated:', data.user);
         setState((prev) => ({
           ...prev,
           user: data.user as AuthUser,
@@ -146,6 +194,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               : null,
         }));
       } else {
+        // Not authenticated - user logged out or no valid token
+        console.log('[AuthContext] Not authenticated - data:', data);
         setState((prev) => ({
           ...prev,
           user: null,
@@ -154,12 +204,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }));
       }
     } else if (statusQuery.isError) {
+      // Query failed - treat as not authenticated
+      console.error('[AuthContext] Query error:', statusQuery.error);
       setState((prev) => ({
         ...prev,
+        user: null,
+        isAuthenticated: false,
         isLoading: false,
       }));
     }
-  }, [statusQuery.isSuccess, statusQuery.isError, statusQuery.data]);
+  }, [statusQuery.isPending, statusQuery.isFetching, statusQuery.isSuccess, statusQuery.isError, statusQuery.data, isLoggedOutPage]);
 
   // ==========================================
   // Auth Methods
@@ -214,6 +268,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Trade-off: localStorage enables SPA auth without server-side sessions.
           if (typeof window !== 'undefined') {
             localStorage.setItem('accessToken', result.session.accessToken);
+            // Sync to cookie for middleware access
+            const { syncTokenToCookie } = await import('@/lib/shared/session-cleanup');
+            syncTokenToCookie(result.session.accessToken);
           }
 
           return true;
@@ -240,22 +297,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /**
    * Login with OAuth provider
+   * Uses the Supabase browser client directly for proper session handling
    */
   const loginWithOAuth = useCallback(
     async (provider: 'google' | 'azure'): Promise<void> => {
       setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
       try {
-        const result = await loginWithOAuthMutation.mutateAsync({
-          provider,
-          redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined,
+        const supabase = getSupabaseBrowserClient();
+        if (!supabase) {
+          throw new Error('Failed to initialize authentication client');
+        }
+
+        const redirectTo = typeof window !== 'undefined'
+          ? `${window.location.origin}/auth/callback`
+          : undefined;
+
+        // Map our provider names to Supabase provider names
+        const supabaseProvider = provider === 'azure' ? 'azure' : 'google';
+
+        console.log('[OAuth] Initiating login with provider:', supabaseProvider, 'redirectTo:', redirectTo);
+
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: supabaseProvider,
+          options: {
+            redirectTo,
+          },
         });
 
-        if (result.url) {
+        console.log('[OAuth] Result:', { url: data?.url ? 'received' : 'null', error: error?.message });
+
+        if (error) {
+          throw error;
+        }
+
+        if (data?.url) {
           // Redirect to OAuth provider
-          window.location.href = result.url;
+          console.log('[OAuth] Redirecting to:', data.url);
+          window.location.href = data.url;
+        } else {
+          console.error('[OAuth] No URL returned from Supabase');
+          setState((prev) => ({
+            ...prev,
+            isLoading: false,
+            error: 'OAuth provider not configured. Please contact support.',
+          }));
         }
       } catch (error) {
+        console.error('[OAuth] Error:', error);
         const message = error instanceof Error ? error.message : 'OAuth login failed';
         setState((prev) => ({
           ...prev,
@@ -264,7 +353,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }));
       }
     },
-    [loginWithOAuthMutation]
+    []
   );
 
   /**
@@ -302,6 +391,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           if (typeof window !== 'undefined') {
             localStorage.setItem('accessToken', result.session.accessToken);
+            // Sync to cookie for middleware access
+            const { syncTokenToCookie } = await import('@/lib/shared/session-cleanup');
+            syncTokenToCookie(result.session.accessToken);
           }
 
           return true;
@@ -326,9 +418,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    *
    * Enhanced logout with comprehensive cleanup (PG-018):
    * 1. Clear all client-side tokens
-   * 2. Broadcast logout to other tabs
-   * 3. Clear React state
-   * 4. Redirect to login
+   * 2. Invalidate React Query cache
+   * 3. Broadcast logout to other tabs
+   * 4. Clear React state
+   * 5. Redirect to login
    */
   const logout = useCallback(async (): Promise<void> => {
     setState((prev) => ({ ...prev, isLoading: true }));
@@ -341,8 +434,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Import and run comprehensive cleanup (PG-018)
       if (typeof window !== 'undefined') {
         try {
-          const { cleanupSession } = await import('@/lib/shared/session-cleanup');
+          const { cleanupSession, clearTokenCookie } = await import('@/lib/shared/session-cleanup');
           const { authBroadcast } = await import('@/lib/broadcast');
+
+          // Clear access token cookie first (for middleware)
+          clearTokenCookie();
 
           // Clear all client-side tokens and data
           await cleanupSession({
@@ -362,8 +458,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.error('Session cleanup error:', cleanupError);
           // Fallback: at least clear accessToken
           localStorage.removeItem('accessToken');
+          document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
         }
       }
+
+      // Clear React Query cache to prevent stale auth data
+      queryClient.removeQueries({ queryKey: [['auth', 'getStatus']] });
+      queryClient.clear();
 
       // Clear state regardless of API result
       setState({
@@ -371,10 +472,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading: false,
       });
 
-      // Redirect to login
+      // Redirect to login with flag to prevent redirect loop
       router.push('/login?logged_out=true');
     }
-  }, [logoutMutation, router]);
+  }, [logoutMutation, router, queryClient]);
 
   /**
    * Refresh session
@@ -450,32 +551,134 @@ export function useAuth(): AuthContextType {
 
 /**
  * Require authentication - redirects to login if not authenticated
+ *
+ * Returns auth state with isLoading=true until authentication is confirmed.
+ * Components using this hook should render a loading state while isLoading is true.
  */
 export function useRequireAuth(): AuthContextType {
   const auth = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!auth.isLoading && !auth.isAuthenticated) {
-      router.push('/login');
-    }
-  }, [auth.isLoading, auth.isAuthenticated, router]);
+    // Check if there's a token in localStorage - if so, wait for auth to complete
+    const hasLocalToken = typeof window !== 'undefined' && !!localStorage.getItem('accessToken');
 
-  return auth;
+    console.log('[useRequireAuth] Checking auth:', {
+      isLoading: auth.isLoading,
+      isAuthenticated: auth.isAuthenticated,
+      user: auth.user?.email,
+      hasLocalToken,
+    });
+
+    // Don't redirect if:
+    // 1. Still loading, OR
+    // 2. Already authenticated, OR
+    // 3. Has a local token (wait for auth query to validate it)
+    if (auth.isLoading) {
+      console.log('[useRequireAuth] Still loading, waiting...');
+      return;
+    }
+
+    if (auth.isAuthenticated) {
+      console.log('[useRequireAuth] User is authenticated, no redirect needed');
+      return;
+    }
+
+    // Only redirect if truly not authenticated AND no local token
+    if (!auth.isAuthenticated && !hasLocalToken) {
+      console.log('[useRequireAuth] Not authenticated and no local token, redirecting to login...');
+      router.replace('/login');
+    } else if (!auth.isAuthenticated && hasLocalToken) {
+      // Has token but not authenticated - token might be invalid or expired
+      // Check if there's an error (invalid token)
+      if (auth.error) {
+        console.log('[useRequireAuth] Auth error with local token, clearing token and redirecting:', auth.error);
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        router.replace('/login');
+      } else {
+        console.log('[useRequireAuth] Has local token but not authenticated yet, waiting for validation...');
+      }
+    }
+  }, [auth.isLoading, auth.isAuthenticated, auth.user, auth.error, router]);
+
+  // Return auth with isLoading=true if not yet authenticated
+  // This ensures components don't render content until auth is confirmed
+  const hasLocalToken = typeof window !== 'undefined' && !!localStorage.getItem('accessToken');
+  return {
+    ...auth,
+    // Keep isLoading true until we confirm authentication (or have no token to validate)
+    isLoading: auth.isLoading || (hasLocalToken && !auth.isAuthenticated),
+  };
 }
 
 /**
  * Redirect if authenticated - for login/signup pages
+ *
+ * Won't redirect if the user just logged out (has logged_out=true query param)
  */
 export function useRedirectIfAuthenticated(redirectTo: string = '/dashboard'): AuthContextType {
   const auth = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Check if user just logged out - don't redirect them back
+  const justLoggedOut = searchParams?.get('logged_out') === 'true';
+
+  // Check if OAuth login just succeeded (fallback mechanism)
+  const oauthLoginSuccess = typeof window !== 'undefined'
+    ? sessionStorage.getItem('oauth_login_success')
+    : null;
+
+  // Debug: Log all search params
+  console.log('[useRedirectIfAuthenticated] Current state:', {
+    isLoading: auth.isLoading,
+    isAuthenticated: auth.isAuthenticated,
+    justLoggedOut,
+    oauthLoginSuccess: !!oauthLoginSuccess,
+    redirectTo,
+    allParams: searchParams?.toString() || 'none',
+  });
 
   useEffect(() => {
-    if (!auth.isLoading && auth.isAuthenticated) {
-      router.push(redirectTo);
+    console.log('[useRedirectIfAuthenticated] useEffect triggered:', {
+      isLoading: auth.isLoading,
+      isAuthenticated: auth.isAuthenticated,
+      justLoggedOut,
+      oauthLoginSuccess: !!oauthLoginSuccess,
+    });
+
+    // Don't redirect if user just logged out
+    if (justLoggedOut) {
+      console.log('[useRedirectIfAuthenticated] User just logged out, not redirecting');
+      return;
     }
-  }, [auth.isLoading, auth.isAuthenticated, router, redirectTo]);
+
+    // If OAuth login just succeeded and we have a token, redirect immediately
+    // This is a fallback in case auth state hasn't updated yet
+    if (oauthLoginSuccess) {
+      const hasToken = typeof window !== 'undefined' && !!localStorage.getItem('accessToken');
+      console.log('[useRedirectIfAuthenticated] OAuth login success flag found, hasToken:', hasToken);
+
+      if (hasToken) {
+        // Clear the flag
+        sessionStorage.removeItem('oauth_login_success');
+        console.log('[useRedirectIfAuthenticated] Redirecting due to OAuth success flag');
+        router.replace(redirectTo);
+        return;
+      }
+    }
+
+    if (!auth.isLoading && auth.isAuthenticated) {
+      console.log('[useRedirectIfAuthenticated] User is authenticated, redirecting to:', redirectTo);
+      // Use replace instead of push to avoid adding to history
+      router.replace(redirectTo);
+    } else {
+      console.log('[useRedirectIfAuthenticated] NOT redirecting:', {
+        reason: auth.isLoading ? 'still loading' : 'not authenticated',
+      });
+    }
+  }, [auth.isLoading, auth.isAuthenticated, router, redirectTo, justLoggedOut, oauthLoginSuccess]);
 
   return auth;
 }

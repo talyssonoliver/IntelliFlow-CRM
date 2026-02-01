@@ -36,6 +36,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { authBroadcast } from '@/lib/broadcast';
 import { cleanupSession } from '@/lib/shared/session-cleanup';
+import { trpc } from '@/lib/trpc';
 
 // ============================================
 // Types
@@ -69,6 +70,9 @@ export function useLogout(): UseLogoutReturn {
   const queryClient = useQueryClient();
   const router = useRouter();
 
+  // Use tRPC mutation for server-side logout
+  const logoutMutation = trpc.auth.logout.useMutation();
+
   // Use ref to track if logout is in progress (for idempotency)
   const logoutInProgress = useRef(false);
 
@@ -101,10 +105,11 @@ export function useLogout(): UseLogoutReturn {
         authBroadcast.broadcast('LOGOUT_EVENT');
       }
 
-      // Step 4: Server notification (best effort, 3s timeout)
+      // Step 4: Server logout via tRPC (best effort, 3s timeout)
+      // IFC-007: Fixed to use tRPC instead of non-existent REST endpoint
       try {
         await Promise.race([
-          fetch('/api/auth/logout', { method: 'POST' }),
+          logoutMutation.mutateAsync(),
           new Promise<never>((_, reject) =>
             setTimeout(() => reject(new Error('Server timeout')), SERVER_TIMEOUT_MS)
           ),
@@ -127,7 +132,7 @@ export function useLogout(): UseLogoutReturn {
       setIsLoggingOut(false);
       logoutInProgress.current = false;
     }
-  }, [queryClient, router]);
+  }, [queryClient, router, logoutMutation]);
 
   return {
     logout,

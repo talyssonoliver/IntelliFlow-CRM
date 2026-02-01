@@ -10,16 +10,19 @@
  * Flow:
  * 1. User clicks SSO button on login page
  * 2. Redirected to OAuth provider (Google/Microsoft)
- * 3. Provider redirects back here with code in URL
- * 4. We exchange code for session
- * 5. Store session and redirect to dashboard
+ * 3. Provider redirects back here with tokens in URL hash
+ * 4. We extract and validate the JWT token directly (no Supabase client)
+ * 5. Store the token and redirect to dashboard
+ *
+ * IMPORTANT: This page deliberately avoids using the Supabase browser client
+ * to prevent any automatic session detection or redirect behavior.
  */
 
-import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState, useRef } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Card } from '@intelliflow/ui';
-import { trpc } from '@/lib/trpc';
 import { storeSessionFingerprint } from '@/lib/shared/login-security';
+import { syncTokenToCookie } from '@/lib/shared/session-cleanup';
 
 // ============================================
 // Types
@@ -40,74 +43,188 @@ interface StatusConfig {
 // ============================================
 
 export default function OAuthCallbackPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [status, setStatus] = useState<CallbackStatus>('loading');
   const [errorMessage, setErrorMessage] = useState<string>('');
 
-  // tRPC mutation for OAuth callback
-  const oauthCallback = trpc.auth.oauthCallback.useMutation();
+  // Ref to track if we've already processed the callback
+  // This prevents double-execution in React Strict Mode from clearing tokens
+  const isProcessingRef = useRef(false);
+  const hasProcessedRef = useRef(false);
 
   useEffect(() => {
+    console.log('[OAuth Callback] ===== useEffect triggered =====');
+    console.log('[OAuth Callback] Full URL:', typeof window !== 'undefined' ? window.location.href : 'SSR');
+    console.log('[OAuth Callback] Hash present:', typeof window !== 'undefined' && window.location.hash ? 'YES' : 'NO');
+
     const handleCallback = async () => {
+      // Prevent double-execution in React Strict Mode
+      if (isProcessingRef.current || hasProcessedRef.current) {
+        console.log('[OAuth Callback] Already processing or processed, skipping...');
+        return;
+      }
+      isProcessingRef.current = true;
+      console.log('[OAuth Callback] Starting to process callback...');
+
       try {
-        // Get OAuth parameters from URL
-        const code = searchParams.get('code');
-        const state = searchParams.get('state');
-        const error = searchParams.get('error');
-        const errorDescription = searchParams.get('error_description');
-        const provider = searchParams.get('provider') as 'google' | 'azure' | null;
+        // Parse the hash params
+        const hashStr = typeof window !== 'undefined' && window.location.hash
+          ? window.location.hash.substring(1)
+          : '';
 
-        // Handle OAuth errors from provider
-        if (error) {
-          setStatus('error');
-          setErrorMessage(errorDescription || `OAuth error: ${error}`);
-          return;
-        }
+        console.log('[OAuth Callback] Hash string length:', hashStr.length);
 
-        // Validate required parameters
-        if (!code) {
-          setStatus('error');
-          setErrorMessage('No authorization code received');
-          return;
-        }
+        if (!hashStr) {
+          console.log('[OAuth Callback] No hash found in URL');
 
-        // Exchange code for session
-        const result = await oauthCallback.mutateAsync({
-          code,
-          state: state || undefined,
-          provider: provider || undefined,
-        });
+          // Check for error in query params
+          const queryError = searchParams?.get('error');
+          const queryErrorDesc = searchParams?.get('error_description');
 
-        if (result.success && result.session) {
-          setStatus('success');
-
-          // Store access token for client-side auth
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('accessToken', result.session.accessToken);
+          if (queryError) {
+            setStatus('error');
+            setErrorMessage(queryErrorDesc || `OAuth error: ${queryError}`);
+            isProcessingRef.current = false;
+            return;
           }
 
-          // Store device fingerprint for session verification
+          setStatus('error');
+          setErrorMessage('No authentication data received. Please try again.');
+          isProcessingRef.current = false;
+          return;
+        }
+
+        const hashParams = new URLSearchParams(hashStr);
+
+        // Check for error in hash
+        const hashError = hashParams.get('error');
+        const hashErrorDesc = hashParams.get('error_description');
+
+        if (hashError) {
+          console.log('[OAuth Callback] Error in hash:', hashError);
+          setStatus('error');
+          setErrorMessage(hashErrorDesc || `OAuth error: ${hashError}`);
+          isProcessingRef.current = false;
+          return;
+        }
+
+        // Get tokens from hash
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+
+        console.log('[OAuth Callback] Hash params:', {
+          hasAccessToken: !!accessToken,
+          hasRefreshToken: !!refreshToken,
+          tokenType: hashParams.get('token_type'),
+          expiresIn: hashParams.get('expires_in'),
+        });
+
+        if (!accessToken) {
+          console.log('[OAuth Callback] No access_token in hash');
+          setStatus('error');
+          setErrorMessage('No access token received from OAuth provider');
+          isProcessingRef.current = false;
+          return;
+        }
+
+        // Decode and validate the JWT payload
+        try {
+          const payloadBase64 = accessToken.split('.')[1];
+          const payload = JSON.parse(atob(payloadBase64));
+
+          console.log('[OAuth Callback] Token payload:', {
+            iss: payload.iss,
+            sub: payload.sub,
+            email: payload.email,
+            aud: payload.aud,
+            exp: payload.exp,
+          });
+
+          // Verify this is a Supabase token
+          if (!payload.iss?.includes('supabase.co')) {
+            console.error('[OAuth Callback] Token is not from Supabase:', payload.iss);
+            setStatus('error');
+            setErrorMessage('Invalid authentication token');
+            isProcessingRef.current = false;
+            return;
+          }
+
+          // Check if token is expired
+          if (payload.exp && Date.now() / 1000 > payload.exp) {
+            console.error('[OAuth Callback] Token is expired');
+            setStatus('error');
+            setErrorMessage('Authentication token expired. Please try again.');
+            isProcessingRef.current = false;
+            return;
+          }
+
+          console.log('[OAuth Callback] Valid Supabase token detected!');
+
+          // Clear any old tokens first
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+
+          // Store the tokens
+          localStorage.setItem('accessToken', accessToken);
+          console.log('[OAuth Callback] Token stored in localStorage');
+
+          if (refreshToken) {
+            localStorage.setItem('refreshToken', refreshToken);
+            console.log('[OAuth Callback] Refresh token stored');
+          }
+
+          // Sync token to cookie for proxy access
+          console.log('[OAuth Callback] Syncing token to cookie...');
+          syncTokenToCookie(accessToken);
+
+          // Verify cookie was set
+          const cookieNames = document.cookie.split(';').map(c => c.trim().split('=')[0]);
+          console.log('[OAuth Callback] Current cookies:', cookieNames.join(', '));
+          console.log('[OAuth Callback] accessToken cookie set:', cookieNames.includes('accessToken'));
+
+          // Store device fingerprint
           storeSessionFingerprint();
 
-          // Redirect to dashboard after brief success state
-          setTimeout(() => {
-            router.push('/dashboard');
-          }, 1500);
-        } else {
+          // Mark as processed
+          hasProcessedRef.current = true;
+
+          // Set a flag indicating OAuth login just succeeded
+          // This helps with redirect if somehow user ends up on login page
+          sessionStorage.setItem('oauth_login_success', Date.now().toString());
+
+          console.log('[OAuth Callback] SUCCESS! Redirecting to dashboard...');
+
+          // Set success status (for visual feedback while redirecting)
+          setStatus('success');
+
+          // Small delay to ensure all storage operations complete
+          await new Promise(resolve => setTimeout(resolve, 100));
+
+          // Use window.location.href for a clean redirect
+          window.location.href = '/dashboard';
+          return;
+
+        } catch (decodeError) {
+          console.error('[OAuth Callback] Failed to decode token:', decodeError);
           setStatus('error');
-          setErrorMessage('Authentication failed');
+          setErrorMessage('Failed to process authentication token');
+          isProcessingRef.current = false;
+          return;
         }
+
       } catch (err) {
+        console.error('[OAuth Callback] Error:', err);
         setStatus('error');
         setErrorMessage(
           err instanceof Error ? err.message : 'An unexpected error occurred'
         );
+        isProcessingRef.current = false;
       }
     };
 
     handleCallback();
-  }, [searchParams, oauthCallback, router]);
+  }, [searchParams]);
 
   // ==========================================
   // Status Configurations

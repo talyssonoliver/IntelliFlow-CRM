@@ -54,6 +54,38 @@ const AUTH_STORAGE_KEYS = [
   'lastActivity',
 ] as const;
 
+// ============================================
+// Token Sync to Cookie (for middleware access)
+// ============================================
+
+/**
+ * Sync access token to a cookie so middleware can access it
+ * Cookies are accessible in Next.js middleware, localStorage is not
+ */
+export function syncTokenToCookie(token: string | null): void {
+  if (typeof document === 'undefined') return;
+
+  if (token) {
+    // Set cookie with the token
+    // HttpOnly is false so JavaScript can read/write it
+    // Secure only in production
+    const isSecure = window.location.protocol === 'https:';
+    const cookieValue = `accessToken=${token}; path=/; max-age=${60 * 60 * 24}; samesite=lax${isSecure ? '; secure' : ''}`;
+    document.cookie = cookieValue;
+  } else {
+    // Clear the cookie
+    document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+  }
+}
+
+/**
+ * Clear the access token cookie
+ */
+export function clearTokenCookie(): void {
+  if (typeof document === 'undefined') return;
+  document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+}
+
 const AUTH_COOKIE_PREFIXES = [
   'auth_',
   'session_',

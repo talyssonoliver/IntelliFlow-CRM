@@ -34,7 +34,6 @@ import {
   OAuthDivider,
   AuthBackground,
   AuthCard,
-  TrustIndicators,
 } from '@/components/shared';
 import { RegistrationForm, type RegistrationFormData } from '@/components/shared/registration-form';
 import {
@@ -253,19 +252,9 @@ function SignUpPageContent() {
           <AuthCard
             badge="INTELLIFLOW"
             badgeIcon="rocket_launch"
+            badgeClassName="hidden md:inline-flex"
             title="Create your account"
             description="Start your free trial today. No credit card required."
-            footer={
-              <p className="text-center text-sm text-slate-400">
-                Already have an account?{' '}
-                <Link
-                  href="/login"
-                  className="text-primary hover:text-primary/80 font-medium transition-colors"
-                >
-                  Sign in
-                </Link>
-              </p>
-            }
           >
             {/* Social Login Options */}
             <SocialLoginGrid
@@ -283,15 +272,17 @@ function SignUpPageContent() {
               isLoading={isSubmitting}
             />
 
-            {/* Trust Indicators */}
-            <div className="mt-6 pt-6 border-t border-slate-700/50">
-              <TrustIndicators
-                items={[
-                  { icon: 'lock', label: '256-bit SSL' },
-                  { icon: 'verified_user', label: 'GDPR Ready' },
-                  { icon: 'schedule', label: '14-day trial' },
-                ]}
-              />
+            {/* Sign in link */}
+            <div className="text-center pt-4 border-t border-white/10">
+              <p className="text-sm text-slate-300">
+                Already have an account?{' '}
+                <Link
+                  href="/login"
+                  className="text-[#7cc4ff] hover:text-[#5ab3ff] font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-[#0f172a] rounded px-1"
+                >
+                  Sign in
+                </Link>
+              </p>
             </div>
           </AuthCard>
 

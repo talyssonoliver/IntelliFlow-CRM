@@ -42,7 +42,14 @@ export function AuthBackground({ children, className }: AuthBackgroundProps) {
   return (
     <main
       className={cn(
-        'relative min-h-screen bg-[#0f172a] flex items-center justify-center overflow-hidden py-12 px-4',
+        // IFC-007: Use min-height for responsive auth pages
+        // - Uses dvh (dynamic viewport height) for mobile keyboard support
+        // - Falls back to vh for older browsers via CSS
+        // - Centers content when it fits, scrolls when content is taller
+        // - py-8 provides breathing room at top/bottom when scrolling
+        // - scroll-pb-32 ensures focused inputs aren't hidden behind keyboard
+        // - Hide scrollbar for cleaner appearance
+        'relative min-h-[calc(100vh-4rem)] min-h-[calc(100dvh-4rem)] bg-[#0f172a] flex items-center justify-center overflow-y-auto px-4 py-8 scroll-pb-32 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
         className
       )}
     >
