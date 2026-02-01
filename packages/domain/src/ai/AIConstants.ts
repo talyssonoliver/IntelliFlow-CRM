@@ -380,6 +380,49 @@ export const URGENCY_LEVELS = [
 export type UrgencyLevel = (typeof URGENCY_LEVELS)[number];
 
 // =============================================================================
+// Churn Risk (IFC-095)
+// =============================================================================
+
+/**
+ * Churn risk levels with severity classification
+ * Used for risk categorization in churn prediction outputs
+ */
+export const CHURN_RISK_LEVELS = [
+  'CRITICAL',
+  'HIGH',
+  'MEDIUM',
+  'LOW',
+  'MINIMAL',
+] as const;
+
+export type ChurnRiskLevel = (typeof CHURN_RISK_LEVELS)[number];
+
+/**
+ * SLA hours mapping per risk level
+ */
+export const CHURN_RISK_SLA_HOURS: Record<ChurnRiskLevel, number> = {
+  CRITICAL: 24,
+  HIGH: 48,
+  MEDIUM: 168,
+  LOW: 336,
+  MINIMAL: 720,
+} as const;
+
+/**
+ * Risk factor impact levels
+ */
+export const RISK_FACTOR_IMPACTS = ['HIGH', 'MEDIUM', 'LOW'] as const;
+
+export type RiskFactorImpact = (typeof RISK_FACTOR_IMPACTS)[number];
+
+/**
+ * Data quality levels for churn prediction inputs
+ */
+export const DATA_QUALITY_LEVELS = ['COMPLETE', 'PARTIAL', 'MINIMAL'] as const;
+
+export type DataQualityLevel = (typeof DATA_QUALITY_LEVELS)[number];
+
+// =============================================================================
 // Next Best Action (IFC-039)
 // =============================================================================
 
