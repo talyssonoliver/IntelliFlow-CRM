@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/dependency-graph.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-01-29T01:33:17.671Z",
+  "last_updated": "2026-02-01T21:39:32.578Z",
   "description": "Cross-sprint dependency tracking for all tasks",
   "nodes": {
     "EXC-INIT-001": {
@@ -723,7 +723,7 @@
     "IFC-027": {
       "task_id": "IFC-027",
       "sprint": 15,
-      "status": "BACKLOG",
+      "status": "DONE",
       "dependencies": [
         "IFC-026"
       ],
@@ -746,7 +746,7 @@
     "IFC-029": {
       "task_id": "IFC-029",
       "sprint": 16,
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "dependencies": [
         "IFC-028"
       ],
@@ -1514,7 +1514,7 @@
     "IFC-095": {
       "task_id": "IFC-095",
       "sprint": 8,
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "dependencies": [
         "IFC-005",
         "IFC-090"
@@ -3265,10 +3265,10 @@
     "IFC-117": {
       "task_id": "IFC-117",
       "sprint": 10,
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "dependencies": [
-        "AUTOMATION-002",
-        "IFC-005"
+        "IFC-005",
+        "AUTOMATION-002"
       ],
       "dependents": [
         "TRACK-004"
@@ -3395,7 +3395,7 @@
     "IFC-125": {
       "task_id": "IFC-125",
       "sprint": 11,
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "dependencies": [
         "IFC-005",
         "IFC-008"
@@ -3436,7 +3436,7 @@
     "IFC-128": {
       "task_id": "IFC-128",
       "sprint": 3,
-      "status": "IN_PROGRESS",
+      "status": "PLANNED",
       "dependencies": [
         "ENV-017-AI"
       ],
@@ -3633,13 +3633,13 @@
     "IFC-144": {
       "task_id": "IFC-144",
       "sprint": 10,
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "dependencies": [
-        "IFC-003",
-        "IFC-106",
         "IFC-137",
+        "IFC-003",
         "IFC-150",
-        "IFC-151"
+        "IFC-151",
+        "IFC-106"
       ],
       "dependents": [
         "IFC-153",
@@ -3719,11 +3719,11 @@
     "IFC-150": {
       "task_id": "IFC-150",
       "sprint": 8,
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "dependencies": [
         "IFC-002",
-        "IFC-098",
-        "IFC-106"
+        "IFC-106",
+        "IFC-098"
       ],
       "dependents": [
         "IFC-141",
@@ -3791,7 +3791,7 @@
     "IFC-155": {
       "task_id": "IFC-155",
       "sprint": 12,
-      "status": "IN_PROGRESS",
+      "status": "PLANNED",
       "dependencies": [
         "ENV-004-AI",
         "IFC-127",
@@ -4132,7 +4132,7 @@
     "PG-128": {
       "task_id": "PG-128",
       "sprint": 14,
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "dependencies": [
         "IFC-086",
         "PG-104"
@@ -4161,8 +4161,8 @@
         "IFC-031"
       ],
       "total_duration_estimate_minutes": 225,
-      "completion_percentage": 86.7,
-      "blocking_status": "IFC-027"
+      "completion_percentage": 93.3,
+      "blocking_status": "IFC-031"
     },
     {
       "name": "Path to IFC-038",
@@ -6958,14 +6958,12 @@
   "blocked_tasks": [
     "PG-020",
     "PG-022",
-    "IFC-067",
     "PG-026",
     "PG-027",
     "PG-028",
     "PG-029",
     "PG-030",
     "IFC-120",
-    "TRACK-004",
     "PG-128",
     "PG-033",
     "PG-034",
@@ -6991,7 +6989,6 @@
     "PG-056",
     "PG-057",
     "IFC-032",
-    "PG-058",
     "PG-060",
     "PG-061",
     "PG-062",
@@ -7007,7 +7004,6 @@
     "PG-072",
     "PG-074",
     "PG-075",
-    "IFC-164",
     "IFC-036",
     "IFC-037",
     "PG-077",
@@ -7056,6 +7052,8 @@
     "PG-121"
   ],
   "ready_to_start": [
+    "IFC-128",
+    "IFC-155",
     "PG-017",
     "PG-019",
     "PG-021",
@@ -7065,16 +7063,17 @@
     "IFC-064",
     "IFC-065",
     "IFC-066",
+    "IFC-067",
     "IFC-068",
     "IFC-069",
     "PG-025",
     "TRACK-001",
     "TRACK-002",
     "TRACK-003",
+    "TRACK-004",
     "TRACK-005",
     "TRACK-006",
     "IFC-174",
-    "IFC-027",
     "PG-032",
     "IFC-029",
     "PG-043",
@@ -7084,6 +7083,7 @@
     "PG-055",
     "PG-126",
     "IFC-070",
+    "PG-058",
     "PG-059",
     "PG-064",
     "PG-065",
@@ -7091,6 +7091,7 @@
     "IFC-087",
     "PG-073",
     "PG-127",
+    "IFC-164",
     "IFC-165",
     "PG-076",
     "PG-079",

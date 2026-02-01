@@ -124,7 +124,7 @@
   },
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-01-29T01:33:17.571Z",
+    "verified_at": "2026-02-01T21:39:32.456Z",
     "required": [
       "ENV-009-AI",
       "ANALYTICS-001"

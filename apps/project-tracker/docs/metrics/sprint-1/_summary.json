@@ -130,16 +130,20 @@
     }
   ],
   "blockers": [],
-  "notes": "13/13 tasks DONE (100%). Last synced: 2026-01-29T01:33:17.608Z",
+  "notes": "13/13 tasks DONE (100%). Last synced: 2026-02-01T21:39:32.498Z",
   "schedule": {
     "sprint_start_date": null,
     "sprint_end_date": "2025-12-21",
     "working_hours_per_day": 8,
     "working_days_per_week": 5,
     "critical_path": {
-      "task_ids": [],
-      "total_duration_minutes": 0,
-      "completion_percentage": 0,
+      "task_ids": [
+        "IFC-002",
+        "IFC-003",
+        "IFC-074"
+      ],
+      "total_duration_minutes": 650,
+      "completion_percentage": 100,
       "bottleneck_task_id": null
     },
     "schedule_variance": {
@@ -147,6 +151,6 @@
       "spi": 1,
       "status": "on_track"
     },
-    "calculated_at": "2026-01-29T01:33:17.674Z"
+    "calculated_at": "2026-02-01T21:39:32.581Z"
   }
 }

@@ -8,12 +8,12 @@
   "task_summary": {
     "total": 8,
     "done": 7,
-    "in_progress": 1,
+    "in_progress": 0,
     "blocked": 0,
     "not_started": 0,
     "failed": 0
   },
-  "notes": "7/8 tasks DONE (88%). Last synced: 2026-01-29T01:33:17.622Z",
+  "notes": "7/8 tasks DONE (88%). Last synced: 2026-02-01T21:39:32.512Z",
   "completed_tasks": [
     {
       "task_id": "IFC-006",
@@ -22,32 +22,32 @@
     },
     {
       "task_id": "IFC-007",
-      "completed_at": "2026-01-29T01:33:17.622Z",
+      "completed_at": "2026-02-01T21:39:32.512Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-011",
-      "completed_at": "2026-01-29T01:33:17.622Z",
+      "completed_at": "2026-02-01T21:39:32.512Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-104",
-      "completed_at": "2026-01-29T01:33:17.622Z",
+      "completed_at": "2026-02-01T21:39:32.512Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-105",
-      "completed_at": "2026-01-29T01:33:17.622Z",
+      "completed_at": "2026-02-01T21:39:32.512Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-107",
-      "completed_at": "2026-01-29T01:33:17.622Z",
+      "completed_at": "2026-02-01T21:39:32.512Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-136",
-      "completed_at": "2026-01-29T01:33:17.622Z",
+      "completed_at": "2026-02-01T21:39:32.512Z",
       "duration_minutes": 15
     }
   ],
@@ -57,16 +57,19 @@
     "working_hours_per_day": 8,
     "working_days_per_week": 5,
     "critical_path": {
-      "task_ids": [],
-      "total_duration_minutes": 0,
-      "completion_percentage": 0,
+      "task_ids": [
+        "IFC-104",
+        "IFC-107"
+      ],
+      "total_duration_minutes": 520,
+      "completion_percentage": 100,
       "bottleneck_task_id": null
     },
     "schedule_variance": {
-      "sv_minutes": -30,
-      "spi": 0.96,
-      "status": "on_track"
+      "sv_minutes": -97,
+      "spi": 0.94,
+      "status": "behind"
     },
-    "calculated_at": "2026-01-29T01:33:17.675Z"
+    "calculated_at": "2026-02-01T21:39:32.582Z"
   }
 }

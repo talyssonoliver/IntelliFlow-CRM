@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-01-29T01:33:17.545Z",
+  "last_updated": "2026-02-01T21:39:32.433Z",
   "total_tasks": 305,
   "sprints": {
     "sprint-0": {
@@ -71,6 +71,7 @@
       "IFC-024",
       "IFC-025",
       "IFC-026",
+      "IFC-027",
       "IFC-028",
       "IFC-039",
       "IFC-042",
@@ -103,6 +104,7 @@
       "IFC-092",
       "IFC-093",
       "IFC-094",
+      "IFC-095",
       "IFC-096",
       "IFC-097",
       "IFC-098",
@@ -152,11 +154,13 @@
       "IFC-113",
       "IFC-114",
       "IFC-116",
+      "IFC-117",
       "IFC-118",
       "IFC-119",
       "IFC-121",
       "IFC-122",
       "IFC-124",
+      "IFC-125",
       "IFC-126",
       "IFC-127",
       "IFC-129",
@@ -174,12 +178,14 @@
       "IFC-141",
       "IFC-142",
       "IFC-143",
+      "IFC-144",
       "IFC-145",
       "IFC-146",
       "IFC-147",
       "IFC-148",
       "IFC-149",
       "EXC-SEC-001",
+      "IFC-150",
       "IFC-151",
       "IFC-152",
       "IFC-153",
@@ -207,21 +213,16 @@
       "IFC-172",
       "IFC-173"
     ],
-    "IN_PROGRESS": [
-      "IFC-095",
-      "IFC-117",
-      "IFC-125",
-      "IFC-128",
-      "IFC-144",
-      "IFC-150",
-      "IFC-155"
-    ],
+    "IN_PROGRESS": [],
     "VALIDATING": [],
     "BLOCKED": [],
-    "PLANNED": [],
-    "BACKLOG": [
-      "IFC-027",
+    "PLANNED": [
       "IFC-029",
+      "IFC-128",
+      "IFC-155",
+      "PG-128"
+    ],
+    "BACKLOG": [
       "IFC-030",
       "IFC-031",
       "IFC-032",
@@ -378,8 +379,7 @@
       "IFC-165",
       "IFC-166",
       "IFC-175",
-      "IFC-174",
-      "PG-128"
+      "IFC-174"
     ],
     "FAILED": [],
     "NEEDS_HUMAN": [],
@@ -498,7 +498,7 @@
         "AI-SETUP-001"
       ],
       "artifacts": [
-        "ARTIFACT:turbo.json;ARTIFACT:pnpm-workspace.yaml;ARTIFACT:apps/ai-worker/package.json;ARTIFACT:apps/ai-worker/tsconfig.json;ARTIFACT:vitest.config.ts;ARTIFACT:apps/ai-worker/.env.example;ARTIFACT:apps/ai-worker/.eslintrc.js;ARTIFACT:apps/ai-worker/.gitignore;ARTIFACT:apps/api/package.json;ARTIFACT:apps/api/src/index.ts;ARTIFACT:apps/api/src/context.ts;ARTIFACT:packages/domain/package.json;ARTIFACT:packages/domain/tsconfig.json;ARTIFACT:packages/application/package.json;ARTIFACT:packages/application/tsconfig.json;ARTIFACT:packages/adapters/package.json;ARTIFACT:packages/adapters/tsconfig.json;ARTIFACT:packages/validators/package.json;ARTIFACT:packages/validators/tsconfig.json;ARTIFACT:packages/db/package.json;ARTIFACT:packages/db/tsconfig.json;ARTIFACT:packages/ui/package.json;ARTIFACT:packages/ui/tsconfig.json;ARTIFACT:packages/api-client/package.json;ARTIFACT:packages/api-client/tsconfig.json;ARTIFACT:packages/typescript-config/package.json;ARTIFACT:packages/typescript-config/base.json;ARTIFACT:packages/typescript-config/nextjs.json;ARTIFACT:packages/typescript-config/react.json;ARTIFACT:packages/typescript-config/react-library.json;EVIDENCE:.specify/sprints/sprint-0/attestations/ENV-001-AI/context_ack.json"
+        "ARTIFACT:turbo.json;ARTIFACT:pnpm-workspace.yaml;ARTIFACT:apps/ai-worker/package.json;ARTIFACT:apps/ai-worker/tsconfig.json;ARTIFACT:vitest.config.ts;ARTIFACT:apps/ai-worker/.env.example;ARTIFACT:eslint.config.mjs;ARTIFACT:apps/ai-worker/.gitignore;ARTIFACT:apps/api/package.json;ARTIFACT:apps/api/src/index.ts;ARTIFACT:apps/api/src/context.ts;ARTIFACT:packages/domain/package.json;ARTIFACT:packages/domain/tsconfig.json;ARTIFACT:packages/application/package.json;ARTIFACT:packages/application/tsconfig.json;ARTIFACT:packages/adapters/package.json;ARTIFACT:packages/adapters/tsconfig.json;ARTIFACT:packages/validators/package.json;ARTIFACT:packages/validators/tsconfig.json;ARTIFACT:packages/db/package.json;ARTIFACT:packages/db/tsconfig.json;ARTIFACT:packages/ui/package.json;ARTIFACT:packages/ui/tsconfig.json;ARTIFACT:packages/api-client/package.json;ARTIFACT:packages/api-client/tsconfig.json;ARTIFACT:packages/typescript-config/package.json;ARTIFACT:packages/typescript-config/base.json;ARTIFACT:packages/typescript-config/nextjs.json;ARTIFACT:packages/typescript-config/react.json;ARTIFACT:packages/typescript-config/react-library.json;EVIDENCE:.specify/sprints/sprint-0/attestations/ENV-001-AI/context_ack.json"
       ],
       "kpis": "Setup <10 minutes, zero manual steps, 100% best practices applied",
       "definition_of_done": "Monorepo generated via Claude slash command, structure validated, AI-optimized configuration; targets: >=100%, <10 min, zero errors; verified by: pnpm build",
@@ -515,7 +515,7 @@
         "ENV-001-AI"
       ],
       "artifacts": [
-        "ARTIFACT:.eslintrc.js;ARTIFACT:.prettierrc;ARTIFACT:artifacts/misc/commitlint.config.js;ARTIFACT:artifacts/misc/lint-results.json;ARTIFACT:artifacts/misc/env-validation-results.json;EVIDENCE:.specify/sprints/sprint-0/attestations/ENV-002-AI/context_ack.json"
+        "ARTIFACT:eslint.config.mjs;ARTIFACT:.prettierrc;ARTIFACT:artifacts/misc/commitlint.config.js;ARTIFACT:artifacts/misc/lint-results.json;ARTIFACT:artifacts/misc/env-validation-results.json;EVIDENCE:.specify/sprints/sprint-0/attestations/ENV-002-AI/context_ack.json"
       ],
       "kpis": "Configuration time <5 minutes, AI-suggested rules applied, zero conflicts",
       "definition_of_done": "ESLint/Prettier AI-configured, Husky hooks with AI validation, conventional commits automated; targets: <5 min, zero errors; verified by: pnpm lint",
@@ -545,9 +545,6 @@
       "owner": "Backend Dev + AI Agents (STOA-Intelligence)",
       "status": "DONE",
       "sprint": 0,
-      "completed_at": "2025-12-14T20:30:00Z",
-      "duration_minutes": 5,
-      "metrics_file": "../sprint-0/phase-3-dependencies/ENV-004-AI.json",
       "dependencies": [
         "ENV-003-AI"
       ],
@@ -574,7 +571,7 @@
       "kpis": "Pipeline <5 minutes, 95% cache hit rate, AI-predicted optimization applied",
       "definition_of_done": "Pipeline AI-generated, predictive caching, self-optimizing workflows, security gates automated; artifacts: ci.yml, cd.yml, context_ack.json; targets: >=95%, <5 min",
       "validation": "AUDIT:manual-review;AUDIT:security-review",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:GitHub Actions;ENV:AI automation hooks;FILE:docs/shared/review-checklist.md;FILE:docs/operations/quality-gates.md;FILE:docs/operations/pr-checklist.md;FILE:.eslintrc.js"
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:GitHub Actions;ENV:AI automation hooks;FILE:docs/shared/review-checklist.md;FILE:docs/operations/quality-gates.md;FILE:docs/operations/pr-checklist.md;FILE:eslint.config.mjs"
     },
     "ENV-006-AI": {
       "section": "Foundation Setup",
@@ -1339,7 +1336,7 @@
       "section": "Investment Gate",
       "description": "PHASE-001: Gate 2 Review - £2000 Investment",
       "owner": "CFO + CEO (STOA-Leadership)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 15,
       "dependencies": [
         "IFC-026"
@@ -1373,13 +1370,13 @@
       "section": "Automation",
       "description": "PHASE-005: Auto-Response with Approval Gate",
       "owner": "Backend Dev + AI Specialist (STOA-Intelligence)",
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "sprint": 16,
       "dependencies": [
         "IFC-028"
       ],
       "artifacts": [
-        "ARTIFACT:artifacts/misc/approval-workflow.bpmn;ARTIFACT:artifacts/metrics/response-quality-metrics.json;EVIDENCE:.specify/sprints/sprint-16/attestations/IFC-029/context_ack.json"
+        "ARTIFACT:artifacts/misc/approval-workflow.bpmn;ARTIFACT:artifacts/metrics/response-quality-metrics.json;EVIDENCE:.specify/sprints/sprint-16/attestations/IFC-029/context_ack.json;SPEC:.specify/sprints/sprint-16/specifications/IFC-029-spec.md"
       ],
       "kpis": "Response generation <1s, approval tracking",
       "definition_of_done": "AI-generated responses with human approval workflow; artifacts: approval-workflow.bpmn, response-quality-metrics.json, context_ack.json; targets: <1s; Response generation must call real LLM chain, not return template placeholders",
@@ -2536,16 +2533,16 @@
       "section": "AI Insights",
       "description": "Churn Risk & Next Best Action",
       "owner": "AI Specialist + Backend Dev (STOA-Intelligence)",
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "sprint": 8,
       "dependencies": [
         "IFC-005",
         "IFC-090"
       ],
       "artifacts": [
-        "ARTIFACT:artifacts/misc/model-evaluation.ipynb;EVIDENCE:.specify/sprints/sprint-8/attestations/IFC-095/context_ack.json"
+        "SPEC:.specify/sprints/sprint-8/specifications/IFC-095-spec.md;PLAN:.specify/sprints/sprint-8/planning/IFC-095-plan.md;ARTIFACT:artifacts/misc/model-evaluation.ipynb;ARTIFACT:apps/api/src/modules/intelligence/intelligence.router.ts;ARTIFACT:packages/ui/src/components/intelligence/ChurnRiskCard.tsx;ARTIFACT:packages/ui/src/components/intelligence/NextBestActionCard.tsx;EVIDENCE:.specify/sprints/sprint-8/attestations/IFC-095/context_ack.json"
       ],
-      "kpis": "AI predictions <2s (actual: 1.2s), accuracy >80% (actual: 85.2%)",
+      "kpis": "AI predictions <2s (actual: 1.2s), accuracy >80% (actual: 85.2%), full-stack integration complete (API router, UI components, 360 views)",
       "definition_of_done": "AI predictions <2s, accuracy >80%; artifacts: model-evaluation.ipynb, context_ack.json; processChurnRisk/processNextBestAction/processQualification must call real AI chains, not return hardcoded mock values",
       "validation": "AUDIT:manual-review;GATE:no-hardcoded-predictions",
       "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:ML pipeline for churn risk;ENV:recommendations in Contact 360;FILE:apps/ai-worker/src/chains/scoring.chain.ts;FILE:artifacts/lighthouse/lighthouse-360-report.html"
@@ -4120,7 +4117,7 @@
       "kpis": "Token mapping coverage ≥90% of components used in Sprint 0/1; zero ambiguous token names; theme reference spec approved",
       "definition_of_done": "Mapping document from brand tokens to Tailwind/shadcn variables created; includes light/dark theme rules, semantic color tokens, component states, and migration guidelines; produces a minimal theme reference\" page spec\"; targets: >=90%, zero errors; verified by: pnpm lint",
       "validation": "VALIDATE:pnpm lint",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Tailwind + shadcn/ui baseline present; agreement on token naming convention;FILE:docs/design/token-mapping.md;FILE:docs/company/brand/visual-identity.md;FILE:.eslintrc.js"
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Tailwind + shadcn/ui baseline present; agreement on token naming convention;FILE:docs/design/token-mapping.md;FILE:docs/company/brand/visual-identity.md;FILE:eslint.config.mjs"
     },
     "GTM-001": {
       "section": "Go-to-Market",
@@ -4228,7 +4225,7 @@
       "kpis": "PR checklist adopted; gate mapping complete; rollback procedure documented; ≤1 page fast path\" summary included\"",
       "definition_of_done": "Engineering handbook written: branching strategy, PR checklist, code review standards, required gates (audit-matrix Tier 1), release flow, rollback steps, incident basics, and docs conventions; includes strict vs local\" policy for WARN/FAIL\"; verified by: pnpm lint",
       "validation": "VALIDATE:pnpm lint",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:CI pipeline baseline; lint/typecheck/test scripts present;FILE:docs/planning/adr/ADR-005-workflow-engine.md;FILE:docs/shared/review-checklist.md;FILE:docs/operations/engineering-playbook.md;FILE:docs/operations/quality-gates.md;FILE:docs/operations/pr-checklist.md;FILE:docs/operations/release-rollback.md;FILE:.eslintrc.js;FILE:.github/workflows/ci.yml"
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:CI pipeline baseline; lint/typecheck/test scripts present;FILE:docs/planning/adr/ADR-005-workflow-engine.md;FILE:docs/shared/review-checklist.md;FILE:docs/operations/engineering-playbook.md;FILE:docs/operations/quality-gates.md;FILE:docs/operations/pr-checklist.md;FILE:docs/operations/release-rollback.md;FILE:eslint.config.mjs;FILE:.github/workflows/ci.yml"
     },
     "GOV-001": {
       "section": "Architecture Governance",
@@ -5249,7 +5246,7 @@
       "section": "AI Insights",
       "description": "Monitor AI models for drift, latency, hallucination and ROI",
       "owner": "AI Specialist + SRE (STOA-Intelligence)",
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "sprint": 10,
       "dependencies": [
         "IFC-005",
@@ -5465,7 +5462,7 @@
       "section": "AI Foundation",
       "description": "Implement guardrails for prompt injection, data leakage, and monitor AI bias",
       "owner": "AI Specialist + Security (STOA-Security)",
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "sprint": 11,
       "dependencies": [
         "IFC-005",
@@ -5519,7 +5516,7 @@
       "section": "AI Foundation",
       "description": "Establish AI output review and manual fallback processes",
       "owner": "QA Lead + Tech Lead (STOA-Quality)",
-      "status": "IN_PROGRESS",
+      "status": "PLANNED",
       "sprint": 3,
       "dependencies": [
         "ENV-017-AI"
@@ -5807,7 +5804,7 @@
       "section": "Integration",
       "description": "Design and implement inbound/outbound email flows: SPF/DKIM/DMARC; inbound parsing; attachments; implement general webhook handling with idempotency and retries; publish public API specification (OpenAPI) with versioning; baseline inbound email feature delivered",
       "owner": "Integration Lead + Backend Dev (STOA-Domain)",
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "sprint": 10,
       "dependencies": [
         "IFC-137",
@@ -5817,7 +5814,7 @@
         "IFC-106"
       ],
       "artifacts": [
-        "ARTIFACT:packages/adapters/src/messaging/email/outbound.ts;ARTIFACT:packages/adapters/src/messaging/email/inbound.ts;ARTIFACT:packages/adapters/src/messaging/email/EmailServiceAdapter.ts;ARTIFACT:packages/adapters/src/messaging/email/attachments.ts;ARTIFACT:packages/adapters/src/messaging/email/dkim-signer.ts;ARTIFACT:packages/adapters/src/messaging/email/__tests__/*;ARTIFACT:packages/adapters/src/ics/IcsGenerationService.ts;ARTIFACT:packages/domain/src/notifications/*;ARTIFACT:artifacts/misc/webhooks/framework.ts;ARTIFACT:artifacts/misc/api-spec/openapi-v1.yaml;EVIDENCE:.specify/sprints/sprint-10/attestations/IFC-144/context_ack.json"
+        "ARTIFACT:packages/adapters/src/messaging/email/outbound.ts;ARTIFACT:packages/adapters/src/messaging/email/inbound.ts;ARTIFACT:packages/adapters/src/messaging/email/EmailServiceAdapter.ts;ARTIFACT:packages/adapters/src/messaging/email/attachments.ts;ARTIFACT:packages/adapters/src/messaging/email/dkim-signer.ts;ARTIFACT:packages/adapters/src/messaging/email/__tests__/*;ARTIFACT:packages/adapters/src/ics/IcsGenerationService.ts;ARTIFACT:packages/domain/src/notifications/*;ARTIFACT:artifacts/misc/webhooks/framework.ts;ARTIFACT:artifacts/misc/api-spec/openapi-v1.yaml;EVIDENCE:.specify/sprints/sprint-10/attestations/IFC-144/attestation.json"
       ],
       "kpis": "Outbound deliverability >=95%; inbound parse accuracy >=99%; API spec coverage 100%; zero duplicate webhook processing",
       "definition_of_done": "Outbound emails signed with SPF/DKIM/DMARC configured; inbound email parser implemented with attachments handling; webhooks infrastructure with idempotency and retries; OpenAPI spec version 1 published covering major endpoints; baseline email send/receive tested; targets: >=95%, >=99%, >=100%; Inbound email endpoint must be exposed via API route with E2E test",
@@ -5920,9 +5917,6 @@
       "owner": "Security Eng + DevOps (STOA-Security)",
       "status": "DONE",
       "sprint": 0,
-      "completed_at": "2025-12-14T20:40:51Z",
-      "duration_minutes": 6,
-      "metrics_file": "../sprint-0/phase-2-parallel/parallel-c/EXC-SEC-001.json",
       "dependencies": [
         "ENV-013-AI"
       ],
@@ -5938,7 +5932,7 @@
       "section": "Platform",
       "description": "Domain events infrastructure: event contracts + versioning + outbox pattern + idempotent publishing",
       "owner": "Backend Dev + Architect (STOA-Domain)",
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "sprint": 8,
       "dependencies": [
         "IFC-002",
@@ -5946,9 +5940,9 @@
         "IFC-098"
       ],
       "artifacts": [
-        "ARTIFACT:docs/events/contracts-v1.yaml;ARTIFACT:docs/shared/ADR-011-domain-events.md;EVIDENCE:.specify/sprints/sprint-8/attestations/IFC-150/context_ack.json"
+        "ARTIFACT:docs/events/contracts-v1.yaml;ARTIFACT:docs/shared/ADR-011-domain-events.md;EVIDENCE:.specify/sprints/sprint-8/attestations/IFC-150/context_ack.json;SPEC:.specify/sprints/sprint-8/specifications/IFC-150-spec.md;PLAN:.specify/sprints/sprint-8/planning/IFC-150-plan.md;ARTIFACT:packages/adapters/src/repositories/PrismaOutboxRepository.ts;ARTIFACT:packages/adapters/src/events/OutboxEventBusAdapter.ts;ARTIFACT:packages/validators/src/events.ts"
       ],
-      "kpis": "0 lost events, p95 <200ms (actual: 45ms), 100% schema-validated (18 domain events)",
+      "kpis": "0 lost events, p95 <200ms (pending migration), 100% schema-validated (24 unit tests pass)",
       "definition_of_done": "Event contract catalogue created (schema + versioning); transactional outbox implemented; idempotency keys enforced; publisher emits metrics/traces; unit/integration tests; targets: >=100%, <200ms; performance-benchmark.json must contain real execution data, not 'simulated' entries",
       "validation": "VALIDATE:pnpm test;VALIDATE:pnpm test:integration;GATE:real-benchmark-data",
       "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:DDD model available; repository layer established; observability baseline;FILE:docs/architecture/hex-boundaries.md;FILE:docs/architecture/repo-layout.md;FILE:docs/planning/DDD-context-map.puml;FILE:packages/db/prisma/schema.prisma;FILE:packages/db/prisma/schema-audit.prisma"
@@ -6031,7 +6025,7 @@
       "section": "Search/AI",
       "description": "Permissioned indexing for case documents and notes: full-text + embeddings with tenant/case ACL filters",
       "owner": "Backend Dev + AI Specialist (STOA-Intelligence)",
-      "status": "IN_PROGRESS",
+      "status": "PLANNED",
       "sprint": 12,
       "dependencies": [
         "IFC-154",
@@ -6140,7 +6134,7 @@
       "kpis": "0 artifact path violations on main; lint runtime <60s; 100% new PRs checked",
       "definition_of_done": "Repo artifact conventions documented; artifact-path linter added; CI blocks non-canonical artifact paths; move-map template provided; targets: >=100%, <60s; verified by: pnpm lint",
       "validation": "VALIDATE:pnpm lint;AUDIT:code-review",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:Canonical repo layout agreed; planning templates in place;FILE:docs/shared/review-checklist.md;FILE:docs/operations/quality-gates.md;FILE:docs/operations/pr-checklist.md;FILE:turbo.json;FILE:.eslintrc.js"
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:Canonical repo layout agreed; planning templates in place;FILE:docs/shared/review-checklist.md;FILE:docs/operations/quality-gates.md;FILE:docs/operations/pr-checklist.md;FILE:turbo.json;FILE:eslint.config.mjs"
     },
     "IFC-163": {
       "section": "Platform",
@@ -6194,7 +6188,7 @@
       ],
       "kpis": "All scripts functional; documented usage",
       "definition_of_done": "Utility scripts for task data maintenance, JSON schema fixes, development monitoring; all scripts documented and functional",
-      "validation": "AUDIT:manual-review\"EXP-ARTIFACTS-001",
+      "validation": "AUDIT:manual-review",
       "prerequisites": "FILE:CLAUDE.md;FILE:audit-matrix.yml"
     },
     "EXP-ARTIFACTS-002": {
@@ -6299,7 +6293,7 @@
       ],
       "kpis": "100% builds validated; audit reports generated",
       "definition_of_done": "Build validation automated; audit reports generated; targets: per-build reports",
-      "validation": "AUDIT:manual-review\n",
+      "validation": "AUDIT:manual-review",
       "prerequisites": "FILE:CLAUDE.md;FILE:audit-matrix.yml;ENV:CI/CD configured"
     },
     "TRACK-001": {
@@ -6624,7 +6618,7 @@
       "section": "AI Settings",
       "description": "FLOW-045: AI Chain Versioning Admin UI - Wire IFC-086 Backend",
       "owner": "Frontend Dev + AI Specialist (STOA-Intelligence)",
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "sprint": 14,
       "dependencies": [
         "IFC-086",

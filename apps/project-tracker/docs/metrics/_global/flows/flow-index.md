@@ -1,8 +1,8 @@
 # IntelliFlow CRM - Flow Index
 
 > **Location**: `apps/project-tracker/docs/metrics/_global/flows/flow-index.md`
-> **Last Updated**: 2025-12-27
-> **Total Flows**: 39
+> **Last Updated**: 2026-01-31
+> **Total Flows**: 42
 
 This document serves as the master index linking all user flows to sitemap routes,
 UI components, and style guide patterns.
@@ -18,8 +18,9 @@ UI components, and style guide patterns.
 | [Relacionamento e Suporte](#relacionamento-e-suporte) | FLOW-011 to FLOW-015 | 2-6 |
 | [Comunicação](#comunicação) | FLOW-016 to FLOW-022 | 5-7 |
 | [Analytics e Insights](#analytics-e-insights) | FLOW-023 to FLOW-028 | 5-9 |
-| [Segurança e Compliance](#segurança-e-compliance) | FLOW-029 to FLOW-033 | 0-3 |
+| [Segurança e Compliance](#segurança-e-compliance) | FLOW-029 to FLOW-033, FLOW-040 | 0-3, 11-12 |
 | [Qualidade e Testes](#qualidade-e-testes) | FLOW-034 to FLOW-038 | 2-4 |
+| [Search & AI](#search--ai) | FLOW-039, FLOW-041 | 12-13 |
 | [AI & Configuration](#ai--configuration) | FLOW-045 | 14 |
 
 ---
@@ -223,11 +224,21 @@ UI components, and style guide patterns.
 **Routes (Sitemap)**:
 - `/deals` → Renewal deals view
 - `/accounts/[id]` → Renewal history
+- `/contacts/[id]` → Contact 360 AI Insights (IFC-095)
+- `/leads/[id]` → Lead 360 AI Insights (IFC-095)
 
 **Key Artifacts**:
 - `apps/web/app/renewals/dashboard/page.tsx`
 - `apps/api/src/services/renewal-identification.service.ts`
 - `apps/ai-worker/src/chains/renewal-strategy.chain.ts`
+
+**AI Intelligence (IFC-095)**:
+- `apps/api/src/modules/intelligence/intelligence.router.ts` - tRPC predictions router
+- `apps/ai-worker/src/chains/churn-risk.chain.ts` - Churn prediction chain
+- `packages/domain/src/intelligence/ChurnRiskScore.ts` - Churn risk value object
+- `packages/domain/src/intelligence/NextBestAction.ts` - NBA value object
+- `packages/ui/src/components/intelligence/ChurnRiskCard.tsx` - Churn risk UI
+- `packages/ui/src/components/intelligence/NextBestActionCard.tsx` - NBA UI
 
 ---
 
@@ -503,6 +514,8 @@ UI components, and style guide patterns.
 | `/deals/new`, `/deals/[id]` | FLOW-008 | Comercial Core |
 | `/deals/[id]` (close) | FLOW-009 | Comercial Core |
 | `/renewals`, `/accounts/[id]` | FLOW-010 | Comercial Core |
+| `/contacts/[id]` (AI Insights) | FLOW-010, IFC-095 | Comercial Core |
+| `/leads/[id]` (AI Insights) | FLOW-010, IFC-095 | Comercial Core |
 | `/tickets`, `/tickets/new` | FLOW-011 | Relacionamento e Suporte |
 | `/tickets/[id]` (routing) | FLOW-012 | Relacionamento e Suporte |
 | `/tickets/[id]` (SLA) | FLOW-013 | Relacionamento e Suporte |
@@ -515,8 +528,11 @@ UI components, and style guide patterns.
 | `/contacts/[id]` (timeline) | FLOW-020 | Comunicação |
 | `/cases/timeline` | FLOW-020 | Comunicação |
 | `/reports/builder` | FLOW-023 | Analytics e Insights |
-| `/ops/monitoring` (backup) | FLOW-030 | Segurança e Compliance |
+| `/ops/monitoring` (backup) | FLOW-030 | Seguranca e Compliance |
 | `/ops/monitoring` (perf) | FLOW-038 | Qualidade e Testes |
+| `/search`, header search | FLOW-039 | Search & AI |
+| `/privacy/dsar` | FLOW-040 | Seguranca e Compliance |
+| `/agent/chat`, `/cases/[id]` (RAG) | FLOW-041 | Search & AI |
 | `/settings/ai` | FLOW-045 | AI & Configuration |
 
 ---
@@ -553,6 +569,107 @@ UI components, and style guide patterns.
 
 ---
 
+## Search & AI
+
+### FLOW-039: Document Search (FTS + Semantic)
+
+| Property | Value |
+|----------|-------|
+| **Priority** | Critical |
+| **Sprint** | 12 |
+| **Category** | Search/AI |
+| **Implementation Task** | **IFC-161** (Planned) |
+
+**Routes (Sitemap)**:
+- `/search` → Search results page [IFC-161]
+- Header search bar → Global search [IFC-161]
+
+**Key Artifacts**:
+- `apps/ai-worker/src/services/retrieval-service.ts` (EXISTS - IFC-155)
+- `apps/ai-worker/src/services/document-indexer.ts` (EXISTS - IFC-155)
+- `apps/api/src/modules/search/search.router.ts` [IFC-161]
+- `apps/web/src/components/search/SearchBar.tsx` [IFC-161]
+- `apps/web/src/app/search/page.tsx` [IFC-161]
+
+**Backend Dependencies (IFC-155)**:
+- RetrievalService with FTS, semantic, and hybrid search
+- DocumentIndexer with embedding generation
+- ACL filtering enforced on all queries
+
+**Implementation Tasks**:
+- IFC-155: Backend retrieval service (COMPLETED)
+- **IFC-161**: Search Router + Frontend UI (PLANNED - Sprint 12)
+
+---
+
+### FLOW-040: DSAR Data Erasure (GDPR Article 17)
+
+| Property | Value |
+|----------|-------|
+| **Priority** | Critical |
+| **Sprint** | 11-12 |
+| **Category** | Seguranca e Compliance |
+| **Implementation Task** | **IFC-162** (Planned) |
+
+**Routes (Sitemap)**:
+- `/privacy/dsar` → DSAR request form [IFC-162]
+- `/privacy/dsar/[requestId]` → Request status [IFC-162]
+
+**Key Artifacts**:
+- `apps/api/src/workflow/dsar-workflow.ts` (EXISTS - IFC-140)
+- `apps/ai-worker/src/services/embedding-purge.service.ts` (EXISTS - IFC-155)
+- `apps/api/src/modules/privacy/dsar.router.ts` [IFC-162]
+- `apps/web/src/app/privacy/dsar/page.tsx` [IFC-162]
+
+**Backend Dependencies (IFC-140, IFC-155)**:
+- DSARWorkflow for erasure processing
+- EmbeddingPurgeService for search index purge
+- Legal hold enforcement
+- Audit logging
+
+**Implementation Tasks**:
+- IFC-140: DSAR Workflow backend (IN PROGRESS)
+- IFC-155: Embedding purge service (COMPLETED)
+- **IFC-162**: Privacy Router + DSAR Form (PLANNED - Sprint 12)
+
+---
+
+### FLOW-041: Case RAG Retrieval (Agent Tool)
+
+| Property | Value |
+|----------|-------|
+| **Priority** | Critical |
+| **Sprint** | 12-13 |
+| **Category** | AI Assistant |
+| **Implementation Task** | **IFC-176** (Planned) |
+
+**Routes (Sitemap)**:
+- `/agent/chat` → Agent chat interface (PARTIAL)
+- `/cases/[id]` → Case detail with RAG sidebar [IFC-176]
+
+**Key Artifacts**:
+- `packages/ai/tools/retrieve-case-context.ts` (EXISTS - IFC-156)
+- `apps/ai-worker/src/services/retrieval-service.ts` (EXISTS - IFC-155)
+- `apps/api/src/shared/prompt-sanitizer.ts` (EXISTS)
+- `docs/agent/case-rag.md` (EXISTS - IFC-156)
+- `apps/web/src/components/agent/CitationCard.tsx` [IFC-176]
+- `apps/web/src/components/agent/SourcePreview.tsx` [IFC-176]
+- `apps/web/src/components/agent/CitationHighlighter.tsx` [IFC-176]
+
+**Backend Dependencies (IFC-156)**:
+- RAG tool with citations and source tracing
+- Prompt injection hardening
+- ACL-constrained retrieval
+
+**Implementation Tasks**:
+- IFC-156: RAG retrieval tool (COMPLETED)
+- IFC-155: Retrieval service backend (COMPLETED)
+- **IFC-176**: Citation UI Components (PLANNED - Sprint 12)
+
+**Implementation Status**: Backend COMPLETE, Frontend PARTIAL
+
+---
+
 ## Related Documents
 
 - **Sitemap**: `docs/design/sitemap.md` - All application routes
@@ -562,3 +679,4 @@ UI components, and style guide patterns.
 - **Sprint Plan**: `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`
 - **Accessibility**: `docs/company/brand/accessibility-patterns.md` - ARIA patterns
 - **Do's and Don'ts**: `docs/company/brand/dos-and-donts.md` - Best practices
+- **Gap Analysis**: `.specify/sprints/sprint-12/attestations/IFC-155/gap-analysis.md` - Implementation gaps

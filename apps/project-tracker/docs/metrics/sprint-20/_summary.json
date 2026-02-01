@@ -14,23 +14,27 @@
     "failed": 0
   },
   "completed_tasks": [],
-  "notes": "0/11 tasks DONE (0%). Last synced: 2026-01-29T01:33:17.653Z",
+  "notes": "0/11 tasks DONE (0%). Last synced: 2026-02-01T21:39:32.555Z",
   "schedule": {
     "sprint_start_date": null,
     "sprint_end_date": null,
     "working_hours_per_day": 8,
     "working_days_per_week": 5,
     "critical_path": {
-      "task_ids": [],
-      "total_duration_minutes": 0,
+      "task_ids": [
+        "PG-073",
+        "PG-074",
+        "PG-075"
+      ],
+      "total_duration_minutes": 520,
       "completion_percentage": 0,
-      "bottleneck_task_id": null
+      "bottleneck_task_id": "PG-073"
     },
     "schedule_variance": {
-      "sv_minutes": -865,
+      "sv_minutes": -2405,
       "spi": 0,
       "status": "critical"
     },
-    "calculated_at": "2026-01-29T01:33:17.683Z"
+    "calculated_at": "2026-02-01T21:39:32.591Z"
   }
 }

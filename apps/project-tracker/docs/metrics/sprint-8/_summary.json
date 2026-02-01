@@ -7,13 +7,13 @@
   "phases": [],
   "task_summary": {
     "total": 8,
-    "done": 6,
-    "in_progress": 2,
+    "done": 8,
+    "in_progress": 0,
     "blocked": 0,
     "not_started": 0,
     "failed": 0
   },
-  "notes": "6/8 tasks DONE (75%). Last synced: 2026-01-29T01:33:17.628Z",
+  "notes": "8/8 tasks DONE (100%). Last synced: 2026-02-01T21:39:32.521Z",
   "completed_tasks": [
     {
       "task_id": "IFC-077",
@@ -21,28 +21,38 @@
       "duration_minutes": 15
     },
     {
+      "task_id": "IFC-095",
+      "completed_at": "2026-02-01T15:42:00.000Z",
+      "duration_minutes": 480
+    },
+    {
+      "task_id": "IFC-150",
+      "completed_at": "2026-02-01T20:30:00.000Z",
+      "duration_minutes": 15
+    },
+    {
       "task_id": "IFC-019",
-      "completed_at": "2026-01-29T01:33:17.628Z",
+      "completed_at": "2026-02-01T21:39:32.521Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-055",
-      "completed_at": "2026-01-29T01:33:17.628Z",
+      "completed_at": "2026-02-01T21:39:32.521Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-094",
-      "completed_at": "2026-01-29T01:33:17.628Z",
+      "completed_at": "2026-02-01T21:39:32.521Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-118",
-      "completed_at": "2026-01-29T01:33:17.628Z",
+      "completed_at": "2026-02-01T21:39:32.521Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-142",
-      "completed_at": "2026-01-29T01:33:17.628Z",
+      "completed_at": "2026-02-01T21:39:32.521Z",
       "duration_minutes": 15
     }
   ],
@@ -52,16 +62,19 @@
     "working_hours_per_day": 8,
     "working_days_per_week": 5,
     "critical_path": {
-      "task_ids": [],
-      "total_duration_minutes": 0,
-      "completion_percentage": 0,
+      "task_ids": [
+        "IFC-095",
+        "IFC-150"
+      ],
+      "total_duration_minutes": 650,
+      "completion_percentage": 100,
       "bottleneck_task_id": null
     },
     "schedule_variance": {
-      "sv_minutes": -60,
-      "spi": 0.91,
-      "status": "behind"
+      "sv_minutes": 0,
+      "spi": 1,
+      "status": "on_track"
     },
-    "calculated_at": "2026-01-29T01:33:17.677Z"
+    "calculated_at": "2026-02-01T21:39:32.585Z"
   }
 }

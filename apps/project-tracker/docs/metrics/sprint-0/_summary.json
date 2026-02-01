@@ -1,7 +1,7 @@
 {
   "sprint": "sprint-0",
   "name": "Foundation & AI Setup",
-  "target_date": "2025-01-17",
+  "target_date": "2026-01-17",
   "started_at": "2025-12-14T20:25:00Z",
   "completed_at": null,
   "phases": [
@@ -284,7 +284,7 @@
       "duration_minutes": 30
     }
   ],
-  "notes": "34/34 tasks DONE (100%). Last synced: 2026-01-29T01:33:17.597Z",
+  "notes": "34/34 tasks DONE (100%). Last synced: 2026-02-01T21:39:32.486Z",
   "section": "Other",
   "dependencies": {
     "all_satisfied": true,
@@ -305,13 +305,24 @@
   },
   "schedule": {
     "sprint_start_date": null,
-    "sprint_end_date": "2025-01-17",
+    "sprint_end_date": "2026-01-17",
     "working_hours_per_day": 8,
     "working_days_per_week": 5,
     "critical_path": {
-      "task_ids": [],
-      "total_duration_minutes": 0,
-      "completion_percentage": 0,
+      "task_ids": [
+        "EXC-INIT-001",
+        "AI-SETUP-001",
+        "ENV-001-AI",
+        "ENV-003-AI",
+        "ENV-004-AI",
+        "ENV-006-AI",
+        "ENV-007-AI",
+        "ENV-010-AI",
+        "AUTOMATION-001",
+        "AUTOMATION-002"
+      ],
+      "total_duration_minutes": 1561,
+      "completion_percentage": 100,
       "bottleneck_task_id": null
     },
     "schedule_variance": {
@@ -319,6 +330,6 @@
       "spi": 1,
       "status": "on_track"
     },
-    "calculated_at": "2026-01-29T01:33:17.673Z"
+    "calculated_at": "2026-02-01T21:39:32.580Z"
   }
 }

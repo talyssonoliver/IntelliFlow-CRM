@@ -7,36 +7,46 @@
   "phases": [],
   "task_summary": {
     "total": 14,
-    "done": 1,
+    "done": 2,
     "in_progress": 0,
     "blocked": 0,
-    "not_started": 13,
+    "not_started": 12,
     "failed": 0
   },
   "completed_tasks": [
     {
+      "task_id": "IFC-027",
+      "completed_at": "2026-01-30T17:30:00.000Z",
+      "duration_minutes": 180
+    },
+    {
       "task_id": "IFC-026",
-      "completed_at": "2026-01-29T01:33:17.648Z",
+      "completed_at": "2026-02-01T21:39:32.547Z",
       "duration_minutes": 15
     }
   ],
-  "notes": "1/14 tasks DONE (7%). Last synced: 2026-01-29T01:33:17.648Z",
+  "notes": "2/14 tasks DONE (14%). Last synced: 2026-02-01T21:39:32.547Z",
   "schedule": {
     "sprint_start_date": null,
     "sprint_end_date": null,
     "working_hours_per_day": 8,
     "working_days_per_week": 5,
     "critical_path": {
-      "task_ids": [],
-      "total_duration_minutes": 0,
+      "task_ids": [
+        "PG-032",
+        "PG-039",
+        "PG-041",
+        "PG-042"
+      ],
+      "total_duration_minutes": 650,
       "completion_percentage": 0,
-      "bottleneck_task_id": null
+      "bottleneck_task_id": "PG-032"
     },
     "schedule_variance": {
-      "sv_minutes": -840,
-      "spi": 0.19,
+      "sv_minutes": -2015,
+      "spi": 0.14,
       "status": "critical"
     },
-    "calculated_at": "2026-01-29T01:33:17.680Z"
+    "calculated_at": "2026-02-01T21:39:32.588Z"
   }
 }

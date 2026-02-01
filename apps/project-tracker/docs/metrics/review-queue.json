@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-01-29T19:54:23.336Z",
+    "generated_at": "2026-02-01T20:18:16.000Z",
     "sprint_scope": 0,
     "total_items": 29
   },
@@ -303,8 +303,7 @@
       "status": "Completed",
       "owner": "Backend Dev",
       "reasons": [
-        "Tier A task - requires explicit validation",
-        "Missing validation.yaml entry"
+        "Tier A task - requires explicit validation"
       ],
       "dependent_count": 2,
       "priority": "critical"

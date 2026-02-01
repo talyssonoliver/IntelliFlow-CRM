@@ -1505,7 +1505,7 @@ ENV-002-AI:
   acceptance_owner: 'DevOps Engineer'
   debt_allowed: no
   evidence_required:
-    - .eslintrc.js
+    - eslint.config.mjs
     - .prettierrc
     - .husky/*
     - artifacts/misc/commitlint.config.js

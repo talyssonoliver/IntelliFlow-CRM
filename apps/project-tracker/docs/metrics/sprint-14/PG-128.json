@@ -4,7 +4,7 @@
   "section": "AI Settings",
   "description": "FLOW-045: AI Chain Versioning Admin UI - Wire IFC-086 Backend",
   "owner": "Frontend Dev + AI Specialist (STOA-Intelligence)",
-  "status": "DONE",
+  "status": "PLANNED",
   "started_at": "2026-01-29T14:30:00.000Z",
   "completed_at": "2026-01-30T18:30:00.000Z",
   "status_history": [
@@ -46,13 +46,14 @@
   ],
   "dependencies": {
     "required": [
-      "IFC-086"
+      "IFC-086",
+      "PG-104"
     ],
-    "verified_at": "2026-01-30T18:30:00.000Z",
+    "verified_at": "2026-02-01T21:39:32.543Z",
     "status": {
       "IFC-086": "Completed"
     },
-    "all_satisfied": true
+    "all_satisfied": false
   },
   "execution": {
     "started_at": "2026-01-29T14:30:00.000Z",
@@ -70,22 +71,11 @@
     "created": [
       "apps/web/src/app/settings/ai/page.tsx",
       "apps/web/src/app/settings/ai/AISettingsContent.tsx",
-      "apps/web/src/app/settings/ai/components/index.ts",
-      "apps/web/src/app/settings/ai/components/ChainVersionCard.tsx",
       "apps/web/src/app/settings/ai/components/ChainVersionsDashboard.tsx",
       "apps/web/src/app/settings/ai/components/ChainVersionsTable.tsx",
-      "apps/web/src/app/settings/ai/components/RollbackConfirmDialog.tsx",
-      "apps/web/src/app/settings/ai/components/VersionAuditLog.tsx",
       "apps/web/src/app/settings/ai/components/ZepBudgetGauge.tsx",
-      "apps/web/src/app/settings/ai/hooks/index.ts",
-      "apps/web/src/app/settings/ai/hooks/useChainVersions.ts",
-      "apps/web/src/app/settings/ai/__tests__/AISettingsContent.test.tsx",
-      "apps/web/src/app/settings/ai/__tests__/components.test.tsx",
-      "apps/web/src/app/settings/ai/components/ChainVersionCard.stories.tsx",
-      "apps/web/src/app/settings/ai/components/ChainVersionsDashboard.stories.tsx",
-      "apps/web/src/app/settings/ai/components/RollbackConfirmDialog.stories.tsx",
-      "apps/web/src/app/settings/ai/components/VersionAuditLog.stories.tsx",
-      "apps/web/src/app/settings/ai/components/ZepBudgetGauge.stories.tsx"
+      "apps/web/src/app/settings/ai/components/VersionAuditLog.tsx",
+      "apps/web/src/app/settings/ai/hooks/useChainVersions.ts"
     ],
     "expected": [
       "apps/web/src/app/settings/ai/page.tsx",
@@ -165,5 +155,8 @@
       "passed": true,
       "notes": "Commit 579e385: feat(web): add AI Chain Versioning Admin UI (PG-128)"
     }
+  ],
+  "dependencies_resolved": [
+    "IFC-086"
   ]
 }

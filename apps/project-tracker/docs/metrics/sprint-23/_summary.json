@@ -16,27 +16,31 @@
   "completed_tasks": [
     {
       "task_id": "IFC-039",
-      "completed_at": "2026-01-29T01:33:17.656Z",
+      "completed_at": "2026-02-01T21:39:32.559Z",
       "duration_minutes": 15
     }
   ],
-  "notes": "1/9 tasks DONE (11%). Last synced: 2026-01-29T01:33:17.656Z",
+  "notes": "1/9 tasks DONE (11%). Last synced: 2026-02-01T21:39:32.559Z",
   "schedule": {
     "sprint_start_date": null,
     "sprint_end_date": null,
     "working_hours_per_day": 8,
     "working_days_per_week": 5,
     "critical_path": {
-      "task_ids": [],
-      "total_duration_minutes": 0,
-      "completion_percentage": 0,
-      "bottleneck_task_id": null
+      "task_ids": [
+        "IFC-039",
+        "IFC-083",
+        "PG-093"
+      ],
+      "total_duration_minutes": 845,
+      "completion_percentage": 46,
+      "bottleneck_task_id": "IFC-083"
     },
     "schedule_variance": {
-      "sv_minutes": -880,
-      "spi": 0.31,
+      "sv_minutes": -1495,
+      "spi": 0.21,
       "status": "critical"
     },
-    "calculated_at": "2026-01-29T01:33:17.685Z"
+    "calculated_at": "2026-02-01T21:39:32.594Z"
   }
 }

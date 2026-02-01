@@ -4,14 +4,18 @@
   "section": "Auth Pages",
   "description": "Sign In",
   "owner": "Platform FE (STOA-Foundation)",
-  "status": "Completed",
+  "status": "DONE",
   "sprint": "sprint-0",
   "phase": "phase-0-initialisation",
   "stream": null,
   "dependencies": {
-    "all_satisfied": false,
-    "verified_at": null,
-    "required": []
+    "all_satisfied": true,
+    "verified_at": "2026-02-01T21:39:32.536Z",
+    "required": [
+      "IFC-006",
+      "IFC-076",
+      "IFC-098"
+    ]
   },
   "started_at": "2026-01-24T01:20:30+00:00",
   "completed_at": "2026-01-25T18:00:00+00:00",
@@ -26,7 +30,18 @@
     "created": [],
     "missing": []
   },
-  "validations": [],
+  "validations": [
+    {
+      "name": "Task completion verification",
+      "command": "echo \"Task PG-015 completed\"",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2026-01-29T22:15:31.668Z",
+      "exit_code": 0,
+      "passed": true,
+      "notes": "Task marked as completed in Sprint_plan.csv"
+    }
+  ],
   "kpis": {},
   "blockers": [],
   "status_history": [
@@ -63,5 +78,10 @@
   ],
   "current_phase": "COMPLETED",
   "updated_at": "2026-01-25T18:00:00+00:00",
-  "attempt": 3
+  "attempt": 3,
+  "dependencies_resolved": [
+    "IFC-006",
+    "IFC-076",
+    "IFC-098"
+  ]
 }

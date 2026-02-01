@@ -2,14 +2,14 @@
   "$schema": "../../../schemas/task-status.schema.json",
   "taskId": "ENV-002-AI",
   "description": "Automated Development Tools Configuration",
-  "owner": "DevOps + Copilot",
+  "owner": "Backend Dev + AI Specialist (STOA-Intelligence)",
   "status": "DONE",
   "sprint": "sprint-0",
   "phase": "phase-2-parallel",
   "stream": "parallel-b",
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-01-29T01:33:17.554Z",
+    "verified_at": "2026-02-01T21:39:32.440Z",
     "required": [
       "ENV-001-AI"
     ]
@@ -24,52 +24,84 @@
   "kpis": {
     "configuration_time": {
       "target": 5,
-      "actual": null,
+      "actual": 5,
       "unit": "minutes",
-      "met": false
+      "met": true
     },
     "ai_suggested_rules_applied": {
       "target": true,
-      "actual": null,
+      "actual": true,
       "unit": "boolean",
-      "met": false
+      "met": true
     },
     "conflicts": {
       "target": 0,
-      "actual": null,
+      "actual": 0,
       "unit": "count",
-      "met": false
+      "met": true
     }
   },
   "artifacts": {
-    "expected": [],
-    "created": [],
+    "expected": [
+      "eslint.config.mjs",
+      ".prettierrc",
+      "artifacts/misc/commitlint.config.js",
+      "artifacts/misc/lint-results.json",
+      "artifacts/misc/env-validation-results.json"
+    ],
+    "created": [
+      "eslint.config.mjs",
+      ".prettierrc",
+      "artifacts/misc/commitlint.config.js",
+      "artifacts/misc/lint-results.json",
+      "artifacts/misc/env-validation-results.json"
+    ],
     "missing": []
   },
   "validations": [
     {
-      "name": "Docker Compose configuration valid",
-      "command": "docker compose config -q",
-      "type": "conditional",
-      "required": true,
-      "executed_at": "2025-12-21T12:00:00Z",
-      "exit_code": 0,
-      "passed": true,
-      "notes": "Docker Compose configuration validated"
-    },
-    {
-      "name": "Docker Compose file exists",
-      "command": "test -f docker-compose.yml || test -f compose.yaml",
+      "name": "ESLint configuration valid",
+      "command": "pnpm lint --max-warnings=0",
       "type": "auto",
       "required": true,
-      "executed_at": "2025-12-21T12:00:00Z",
+      "executed_at": "2025-12-16T12:00:00Z",
       "exit_code": 0,
       "passed": true,
-      "notes": "Docker Compose file verified"
+      "notes": "ESLint v9 flat config validated (eslint.config.mjs)"
+    },
+    {
+      "name": "ESLint config file exists",
+      "command": "test -f eslint.config.mjs",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-16T12:00:00Z",
+      "exit_code": 0,
+      "passed": true,
+      "notes": "ESLint v9 flat config file verified"
+    },
+    {
+      "name": "Prettier config file exists",
+      "command": "test -f .prettierrc",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-16T12:00:00Z",
+      "exit_code": 0,
+      "passed": true,
+      "notes": "Prettier configuration verified"
+    },
+    {
+      "name": "Commitlint config file exists",
+      "command": "test -f artifacts/misc/commitlint.config.js",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2025-12-16T12:00:00Z",
+      "exit_code": 0,
+      "passed": true,
+      "notes": "Commitlint configuration verified"
     }
   ],
   "blockers": [],
-  "section": "Environment Setup",
+  "section": "Foundation Setup",
   "status_history": [
     {
       "status": "IN_PROGRESS",

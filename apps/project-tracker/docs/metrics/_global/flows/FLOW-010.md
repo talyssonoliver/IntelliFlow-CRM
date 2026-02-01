@@ -268,4 +268,14 @@ success_metrics:
 
 - `apps/web/app/renewals/dashboard/page.tsx`
 - `apps/api/src/contracts/renewal.service.ts`
-- `apps/ai-worker/src/churn/predictor.ts`
+- `apps/ai-worker/src/chains/churn-risk.chain.ts` (IFC-095)
+
+**AI Intelligence (IFC-095)**:
+
+- `apps/api/src/modules/intelligence/intelligence.router.ts` - tRPC router for predictions
+- `packages/domain/src/intelligence/ChurnRiskScore.ts` - Churn risk value object
+- `packages/domain/src/intelligence/NextBestAction.ts` - NBA value object
+- `packages/ui/src/components/intelligence/ChurnRiskCard.tsx` - UI component
+- `packages/ui/src/components/intelligence/NextBestActionCard.tsx` - UI component
+- `apps/web/src/app/contacts/[id]/page.tsx` - Contact 360 with AI Insights
+- `apps/web/src/app/leads/[id]/page.tsx` - Lead 360 with AI Insights

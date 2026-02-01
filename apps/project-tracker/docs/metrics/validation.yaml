@@ -1062,3 +1062,36 @@ IFC-119:
       priority: medium
     - description: 'Verify all team members have calendar invites'
       priority: medium
+
+# =============================================================================
+# IFC-044: Unit Tests (Vitest + TDD)
+# Sprint 2 - Testing Infrastructure
+# =============================================================================
+IFC-044:
+  validation_commands:
+    - command: 'test -f apps/api/vitest.config.ts && test -f apps/web/vitest.config.ts'
+      description: 'Vitest configuration files exist for critical apps'
+      type: auto
+      required: true
+    - command: 'test -f artifacts/coverage/coverage-summary.json'
+      description: 'Coverage summary report exists'
+      type: auto
+      required: true
+    - command: 'pnpm test --run --passWithNoTests'
+      description: 'Run all unit tests with Vitest'
+      type: conditional
+      condition: 'test -f package.json'
+      required: false
+      timeout: 300
+  kpi_checks:
+    - metric: 'test_coverage'
+      operator: '>='
+      threshold: 90
+    - metric: 'test_execution_time'
+      operator: '<='
+      threshold: 30
+  manual_checks:
+    - description: 'Verify all business logic has unit test coverage'
+      priority: critical
+    - description: 'Verify TDD workflow adopted by developers'
+      priority: high
