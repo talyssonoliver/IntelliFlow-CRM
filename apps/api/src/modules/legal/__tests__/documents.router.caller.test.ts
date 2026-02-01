@@ -67,24 +67,28 @@ const { mockRepo, mockDocumentInstance, mockDocumentJson } = vi.hoisted(() => {
 });
 
 // Mock the domain and adapter modules
-vi.mock('@intelliflow/domain', () => ({
-  CaseDocument: {
-    create: vi.fn(() => mockDocumentInstance),
-  },
-  AccessLevel: {
-    NONE: 'NONE',
-    VIEW: 'VIEW',
-    COMMENT: 'COMMENT',
-    EDIT: 'EDIT',
-    ADMIN: 'ADMIN',
-  },
-  DocumentClassification: {
-    PUBLIC: 'PUBLIC',
-    INTERNAL: 'INTERNAL',
-    CONFIDENTIAL: 'CONFIDENTIAL',
-    PRIVILEGED: 'PRIVILEGED',
-  },
-}));
+vi.mock('@intelliflow/domain', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@intelliflow/domain')>();
+  return {
+    ...actual,
+    CaseDocument: {
+      create: vi.fn(() => mockDocumentInstance),
+    },
+    AccessLevel: {
+      NONE: 'NONE',
+      VIEW: 'VIEW',
+      COMMENT: 'COMMENT',
+      EDIT: 'EDIT',
+      ADMIN: 'ADMIN',
+    },
+    DocumentClassification: {
+      PUBLIC: 'PUBLIC',
+      INTERNAL: 'INTERNAL',
+      CONFIDENTIAL: 'CONFIDENTIAL',
+      PRIVILEGED: 'PRIVILEGED',
+    },
+  };
+});
 
 vi.mock('@intelliflow/adapters', () => ({
   // Use a proper function constructor (not arrow function) so it works with 'new'
@@ -510,7 +514,7 @@ describe('Documents Router - Caller Tests', () => {
       mockDocumentInstance.toJSON.mockReturnValue({
         ...mockDocumentJson,
         eSignature: { signatureHash: 'hash123' },
-      });
+      } as any);
 
       const result = await caller.sign({
         documentId: TEST_UUIDS.task1,

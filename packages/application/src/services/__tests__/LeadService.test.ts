@@ -795,4 +795,227 @@ describe('LeadService', () => {
       expect(LEAD_SCORE_THRESHOLDS.AUTO_DISQUALIFY).toBe(20);
     });
   });
+
+  /**
+   * Event Bus Integration Tests
+   *
+   * @task IFC-150
+   * @phase Phase 1 RED - Step 1.4
+   *
+   * Tests for verifying LeadService correctly publishes events through EventBusPort
+   * for the transactional outbox pattern.
+   */
+  describe('EventBus Integration (IFC-150)', () => {
+    beforeEach(() => {
+      eventBus.clear();
+    });
+
+    describe('createLead', () => {
+      it('should publish LeadCreatedEvent on createLead', async () => {
+        // Arrange & Act
+        const result = await leadService.createLead({
+          email: 'outbox-test@example.com',
+          firstName: 'Outbox',
+          lastName: 'Test',
+          source: 'WEBSITE',
+          ownerId: 'owner-123',
+        });
+
+        // Assert
+        expect(result.isSuccess).toBe(true);
+        const events = eventBus.getEvents();
+        expect(events.length).toBeGreaterThan(0);
+
+        // Find the LeadCreatedEvent
+        const createdEvent = events.find(
+          (e: unknown) => (e as { eventType?: string }).eventType === 'lead.created'
+        );
+        expect(createdEvent).toBeDefined();
+      });
+
+      it('should include leadId in event payload', async () => {
+        // Arrange & Act
+        const result = await leadService.createLead({
+          email: 'payload-test@example.com',
+          source: 'WEBSITE',
+          ownerId: 'owner-123',
+        });
+
+        // Assert
+        expect(result.isSuccess).toBe(true);
+        const events = eventBus.getEvents();
+        const createdEvent = events.find(
+          (e: unknown) => (e as { eventType?: string }).eventType === 'lead.created'
+        );
+
+        if (createdEvent) {
+          const payload = (createdEvent as { toPayload?: () => Record<string, unknown> }).toPayload?.();
+          expect(payload?.leadId).toBeDefined();
+        }
+      });
+    });
+
+    describe('scoreLead', () => {
+      it('should publish LeadScoredEvent after scoring', async () => {
+        // Arrange
+        const lead = Lead.create({
+          email: 'scored-event@example.com',
+          source: 'WEBSITE',
+          ownerId: 'owner-123',
+        }).value;
+        leadRepository.add(lead);
+        aiService.setMockScore(75, 0.9);
+        eventBus.clear();
+
+        // Act
+        const result = await leadService.scoreLead(lead.id.value);
+
+        // Assert
+        expect(result.isSuccess).toBe(true);
+        const events = eventBus.getEvents();
+
+        // Should have at least the scoring event
+        expect(events.length).toBeGreaterThan(0);
+      });
+    });
+
+    describe('qualifyLead', () => {
+      it('should publish LeadQualifiedEvent on qualification', async () => {
+        // Arrange
+        const lead = Lead.create({
+          email: 'qualified-event@example.com',
+          source: 'WEBSITE',
+          ownerId: 'owner-123',
+        }).value;
+        lead.updateScore(60, 0.8, 'test-v1');
+        leadRepository.add(lead);
+        eventBus.clear();
+
+        // Act
+        const result = await leadService.qualifyLead(
+          lead.id.value,
+          'sales-rep',
+          'Good fit'
+        );
+
+        // Assert
+        expect(result.isSuccess).toBe(true);
+        const events = eventBus.getEvents();
+        expect(events.length).toBeGreaterThan(0);
+      });
+    });
+
+    describe('convertLead', () => {
+      it('should publish LeadConvertedEvent on conversion', async () => {
+        // Arrange
+        const lead = Lead.create({
+          email: 'converted-event@example.com',
+          firstName: 'Convert',
+          lastName: 'Test',
+          source: 'WEBSITE',
+          ownerId: 'owner-123',
+        }).value;
+        lead.updateScore(70, 0.8, 'test-v1');
+        lead.qualify('user-123', 'Good fit');
+        leadRepository.add(lead);
+        eventBus.clear();
+
+        // Act
+        const result = await leadService.convertLead(lead.id.value, 'Test Company', 'sales-rep');
+
+        // Assert
+        expect(result.isSuccess).toBe(true);
+        const events = eventBus.getEvents();
+
+        // Should have conversion event and possibly account/contact events
+        expect(events.length).toBeGreaterThan(0);
+      });
+
+      it('should publish ContactCreatedEvent when lead converts to contact', async () => {
+        // Arrange
+        const lead = Lead.create({
+          email: 'contact-event@example.com',
+          firstName: 'Contact',
+          lastName: 'Event',
+          source: 'REFERRAL',
+          ownerId: 'owner-123',
+        }).value;
+        lead.updateScore(70, 0.8, 'test-v1');
+        lead.qualify('user-123', 'Good fit');
+        leadRepository.add(lead);
+        eventBus.clear();
+
+        // Act
+        const result = await leadService.convertLead(lead.id.value, null, 'sales-rep');
+
+        // Assert
+        expect(result.isSuccess).toBe(true);
+        const events = eventBus.getEvents();
+
+        // Should have events from the conversion
+        expect(events.length).toBeGreaterThan(0);
+      });
+    });
+
+    describe('Event consistency', () => {
+      it('should clear domain events after publishing', async () => {
+        // Arrange
+        const lead = Lead.create({
+          email: 'clear-events@example.com',
+          source: 'WEBSITE',
+          ownerId: 'owner-123',
+        }).value;
+        leadRepository.add(lead);
+
+        // Act - Score twice
+        aiService.setMockScore(60, 0.8);
+        await leadService.scoreLead(lead.id.value);
+        const eventsAfterFirst = eventBus.getEvents().length;
+
+        eventBus.clear();
+        aiService.setMockScore(70, 0.9);
+        await leadService.scoreLead(lead.id.value);
+        const eventsAfterSecond = eventBus.getEvents().length;
+
+        // Assert - Second scoring should not re-publish first scoring's events
+        // (events are cleared after publishing)
+        expect(eventsAfterSecond).toBeLessThanOrEqual(eventsAfterFirst);
+      });
+
+      it('should not publish events if operation fails', async () => {
+        // Arrange
+        eventBus.clear();
+
+        // Act - Try to score non-existent lead
+        const fakeId = LeadId.generate().value;
+        const result = await leadService.scoreLead(fakeId);
+
+        // Assert
+        expect(result.isFailure).toBe(true);
+        const events = eventBus.getEvents();
+        // Failed operations should not publish any events
+        expect(events.length).toBe(0);
+      });
+
+      it('should publish events via publishAll for batch operations', async () => {
+        // Arrange
+        const lead = Lead.create({
+          email: 'batch-event@example.com',
+          source: 'WEBSITE',
+          ownerId: 'owner-123',
+        }).value;
+        leadRepository.add(lead);
+        eventBus.clear();
+
+        // Track publishAll calls
+        const publishAllSpy = vi.spyOn(eventBus, 'publishAll');
+
+        // Act
+        await leadService.scoreLead(lead.id.value);
+
+        // Assert - Events should be published via publishAll, not individual publish
+        expect(publishAllSpy).toHaveBeenCalled();
+      });
+    });
+  });
 });

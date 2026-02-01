@@ -243,6 +243,17 @@ const rateLimitMap = new Map<
   { count: number; resetAt: number }
 >();
 
+/**
+ * Reset rate limit for a user (for testing)
+ */
+export function resetRateLimit(userId?: string): void {
+  if (userId) {
+    rateLimitMap.delete(userId);
+  } else {
+    rateLimitMap.clear();
+  }
+}
+
 export function checkRateLimit(userId: string, maxRequestsPerMinute = 10): boolean {
   const now = Date.now();
   const userLimit = rateLimitMap.get(userId);

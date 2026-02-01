@@ -213,6 +213,14 @@ const tenantMiddleware = t.middleware(async ({ ctx, next }) => {
     });
   }
 
+  // Validate tenantId is present for tenant isolation
+  if (!ctx.user.tenantId) {
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+      message: 'Tenant ID is required for this operation',
+    });
+  }
+
   // Extract tenant context from user session
   const tenant = {
     tenantId: ctx.user.tenantId,

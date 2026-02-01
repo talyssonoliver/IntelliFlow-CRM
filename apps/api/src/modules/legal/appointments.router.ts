@@ -236,6 +236,7 @@ export const appointmentsRouter = createTRPCRouter({
     }
 
     // Create the appointment
+    const tenantId = ctx.user.tenantId;
     const appointment = await ctx.prisma.appointment.create({
       data: {
         title: input.title,
@@ -249,11 +250,12 @@ export const appointmentsRouter = createTRPCRouter({
         recurrence: input.recurrence ? input.recurrence : undefined,
         reminderMinutes: input.reminderMinutes,
         organizerId: ctx.user.userId,
+        tenantId,
         attendees: {
-          create: input.attendeeIds.map((userId) => ({ userId })),
+          create: input.attendeeIds.map((userId) => ({ userId, tenantId })),
         },
         linkedCases: {
-          create: input.linkedCaseIds.map((caseId) => ({ caseId })),
+          create: input.linkedCaseIds.map((caseId) => ({ caseId, tenantId })),
         },
       },
       include: {
@@ -962,6 +964,7 @@ export const appointmentsRouter = createTRPCRouter({
         data: {
           appointmentId: input.appointmentId,
           caseId: input.caseId,
+          tenantId: ctx.user.tenantId,
         },
       });
 
@@ -1032,6 +1035,7 @@ export const appointmentsRouter = createTRPCRouter({
         data: {
           appointmentId: input.appointmentId,
           userId: input.userId,
+          tenantId: ctx.user.tenantId,
         },
       });
 

@@ -66,7 +66,7 @@ const createMockContext = (userId: string = 'user-123') => ({
 
 // Helper to extract the procedure handler
 const getProcedure = (name: string) => {
-  const proc = appointmentsRouter._def.procedures[name];
+  const proc = (appointmentsRouter._def.procedures as Record<string, unknown>)[name];
   return proc;
 };
 

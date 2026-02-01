@@ -41,6 +41,19 @@ function demonstratePrismaTypes() {
     tenantId: 'tenant_123',
     createdAt: new Date(),
     updatedAt: new Date(),
+    // BANT fields
+    bantBudget: null,
+    bantAuthority: null,
+    bantNeed: null,
+    bantTimeline: null,
+    qualificationNotes: null,
+    // Lead 360 fields
+    location: null,
+    website: null,
+    avatarUrl: null,
+    lastContactedAt: null,
+    estimatedValue: null,
+    tags: [],
   };
 
   // TypeScript enforces all required fields

@@ -86,49 +86,40 @@ describe('Lead Router', () => {
 
   describe('getById', () => {
     it('should return lead via LeadService', async () => {
-      const mockDomainLead = {
-        id: { value: TEST_UUIDS.lead1 },
-        email: { value: mockLead.email },
-        firstName: mockLead.firstName,
-        lastName: mockLead.lastName,
-        company: mockLead.company,
-        title: null,
-        phone: mockLead.phone,
-        source: mockLead.source,
-        status: mockLead.status,
-        score: { value: 75, confidence: 0.8, tier: 'warm' as const },
-        ownerId: mockLead.ownerId,
-        createdAt: mockLead.createdAt,
-        updatedAt: mockLead.updatedAt,
-        getDomainEvents: () => [],
-        clearDomainEvents: () => {},
+      // Mock the Prisma findUnique call with related data
+      const mockLeadWithRelations = {
+        ...mockLead,
+        owner: {
+          id: TEST_UUIDS.user1,
+          email: 'user@example.com',
+          name: 'Test User',
+          avatarUrl: null,
+        },
+        activities: [],
+        notes: [],
+        files: [],
+        aiInsight: null,
+        tasks: [],
       };
+
+      prismaMock.lead.findUnique.mockResolvedValue(mockLeadWithRelations as any);
 
       const ctx = createTestContext();
       const callerWithService = leadRouter.createCaller(ctx);
-
-      ctx.services!.lead!.getLeadById = vi.fn().mockResolvedValue({
-        isSuccess: true,
-        isFailure: false,
-        value: mockDomainLead,
-      });
 
       const result = await callerWithService.getById({ id: TEST_UUIDS.lead1 });
 
       expect(result.id).toBe(TEST_UUIDS.lead1);
       expect(result.email).toBe(mockLead.email);
-      expect(ctx.services!.lead!.getLeadById).toHaveBeenCalledWith(TEST_UUIDS.lead1);
+      expect(prismaMock.lead.findUnique).toHaveBeenCalled();
     });
 
     it('should throw NOT_FOUND for non-existent lead', async () => {
+      // Mock Prisma to return null (lead not found)
+      prismaMock.lead.findUnique.mockResolvedValue(null);
+
       const ctx = createTestContext();
       const callerWithService = leadRouter.createCaller(ctx);
-
-      ctx.services!.lead!.getLeadById = vi.fn().mockResolvedValue({
-        isSuccess: false,
-        isFailure: true,
-        error: { code: 'NOT_FOUND_ERROR', message: `Lead not found: ${TEST_UUIDS.nonExistent}` },
-      });
 
       await expect(callerWithService.getById({ id: TEST_UUIDS.nonExistent })).rejects.toThrow(
         expect.objectContaining({
@@ -579,7 +570,7 @@ describe('Lead Router', () => {
           userId: TEST_UUIDS.user1,
           email: 'test@example.com',
           role: 'USER' as const,
-          tenantId: undefined,
+          tenantId: undefined as unknown as string,
         },
       };
       const callerWithoutTenant = leadRouter.createCaller(ctxWithoutTenant);
@@ -867,7 +858,7 @@ describe('Lead Router', () => {
       prismaMock.lead.findUnique.mockResolvedValue(mockLead);
       prismaMock.lead.update.mockResolvedValue({
         ...mockLead,
-        notes: 'Updated notes',
+        status: 'QUALIFIED',
       } as any);
 
       const ctx = createTestContext();
@@ -875,10 +866,10 @@ describe('Lead Router', () => {
 
       const result = await callerWithService.update({
         id: TEST_UUIDS.lead1,
-        notes: 'Updated notes',
+        status: 'QUALIFIED',
       });
 
-      expect(result.notes).toBe('Updated notes');
+      expect(result.status).toBe('QUALIFIED');
       expect(prismaMock.lead.update).toHaveBeenCalled();
     });
 
@@ -889,7 +880,7 @@ describe('Lead Router', () => {
       const callerWithService = leadRouter.createCaller(ctx);
 
       await expect(
-        callerWithService.update({ id: TEST_UUIDS.nonExistent, notes: 'Test' })
+        callerWithService.update({ id: TEST_UUIDS.nonExistent, status: 'CONTACTED' })
       ).rejects.toThrow(
         expect.objectContaining({
           code: 'NOT_FOUND',

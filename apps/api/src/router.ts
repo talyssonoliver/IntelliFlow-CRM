@@ -25,6 +25,10 @@ import { auditRouter } from './modules/security/audit.router';
 import { authRouter } from './modules/auth/auth.router';
 import { billingRouter } from './modules/billing/billing.router';
 import { integrationsRouter } from './modules/integrations/integrations.router';
+import { chainVersionRouter } from './modules/chain-version/chain-version.router';
+import { zepBudgetRouter } from './modules/zep/zep-budget.router';
+import { intelligenceRouter } from './modules/intelligence/intelligence.router';
+import { inboundEmailRouter } from './modules/email/inbound.router';
 
 /**
  * Main application router
@@ -58,6 +62,9 @@ import { integrationsRouter } from './modules/integrations/integrations.router';
  * External Integrations:
  * - integrations.* - ERP, Payment, Email, Messaging connectors (IFC-099)
  *
+ * Email Infrastructure (IFC-144):
+ * - email.*        - Inbound email webhooks and processing
+ *
  * Future routers to add:
  * - workflow.*     - Workflow automation
  */
@@ -86,6 +93,9 @@ export const appRouter = createTRPCRouter({
 
   // AI & Automation
   agent: agentRouter,
+  chainVersion: chainVersionRouter,
+  zepBudget: zepBudgetRouter,
+  intelligence: intelligenceRouter,
 
   // Security & Compliance
   audit: auditRouter,
@@ -100,6 +110,9 @@ export const appRouter = createTRPCRouter({
 
   // External Integrations (IFC-099)
   integrations: integrationsRouter,
+
+  // Email Infrastructure (IFC-144)
+  email: inboundEmailRouter,
 });
 
 /**

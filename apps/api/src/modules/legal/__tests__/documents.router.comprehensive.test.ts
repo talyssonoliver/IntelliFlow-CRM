@@ -95,7 +95,7 @@ const mockPrisma = {
 };
 
 import { documentsRouter } from '../documents.router';
-import { CaseDocument, AccessLevel } from '@intelliflow/domain';
+import { CaseDocument, AccessLevel, DocumentClassification } from '@intelliflow/domain';
 
 // Helper to create mock context
 const createMockContext = (role: string = 'USER', userId: string = 'user-123') => ({
@@ -126,7 +126,7 @@ describe('Documents Router Comprehensive Tests', () => {
       title: 'Test Contract',
       description: 'A test contract document',
       documentType: 'CONTRACT' as const,
-      classification: 'INTERNAL' as const,
+      classification: DocumentClassification.INTERNAL,
       tags: ['test', 'contract'],
       storageKey: 'documents/test-contract.pdf',
       contentHash: 'a'.repeat(64),

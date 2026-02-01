@@ -35,11 +35,13 @@ export function createLoginSuccessEntry(
  * Create security event input for successful login
  */
 export function createLoginSuccessSecurityEvent(
+  tenantId: string,
   options: AuthLogOptions
 ): SecurityEventInput {
   return {
     eventType: 'LOGIN_SUCCESS',
     severity: 'INFO',
+    tenantId,
     actorId: options.userId,
     actorEmail: options.email,
     actorIp: options.ipAddress,
@@ -73,11 +75,13 @@ export function createLoginFailureEntry(
  * Create security event input for failed login
  */
 export function createLoginFailureSecurityEvent(
+  tenantId: string,
   options: AuthLogOptions
 ): SecurityEventInput {
   return {
     eventType: 'LOGIN_FAILURE',
     severity: 'MEDIUM',
+    tenantId,
     actorEmail: options.email,
     actorIp: options.ipAddress,
     description: `Failed login attempt for ${options.email}`,

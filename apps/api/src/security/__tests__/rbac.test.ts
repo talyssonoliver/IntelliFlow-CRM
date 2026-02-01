@@ -548,6 +548,7 @@ describe('RBACService - Database Operations', () => {
   };
 
   const TEST_USER_ID = 'test-user-123';
+  const TEST_TENANT_ID = 'test-tenant-123';
 
   beforeEach(() => {
     mockPrisma = {
@@ -850,7 +851,7 @@ describe('RBACService - Database Operations', () => {
       });
       mockPrisma.userRoleAssignment.upsert.mockResolvedValue({});
 
-      await service.assignRole(TEST_USER_ID, 'MANAGER', 'admin-1');
+      await service.assignRole(TEST_USER_ID, TEST_TENANT_ID, 'MANAGER', 'admin-1');
 
       expect(mockPrisma.userRoleAssignment.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -860,6 +861,7 @@ describe('RBACService - Database Operations', () => {
           create: expect.objectContaining({
             userId: TEST_USER_ID,
             roleId: 'role-1',
+            tenantId: TEST_TENANT_ID,
             assignedBy: 'admin-1',
           }),
         })
@@ -870,7 +872,7 @@ describe('RBACService - Database Operations', () => {
       mockPrisma.rBACRole.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.assignRole(TEST_USER_ID, 'NONEXISTENT', 'admin-1')
+        service.assignRole(TEST_USER_ID, TEST_TENANT_ID, 'NONEXISTENT', 'admin-1')
       ).rejects.toThrow('Role NONEXISTENT not found');
     });
 
@@ -882,7 +884,7 @@ describe('RBACService - Database Operations', () => {
       });
       mockPrisma.userRoleAssignment.upsert.mockResolvedValue({});
 
-      await service.assignRole(TEST_USER_ID, 'MANAGER', 'admin-1', expiresAt);
+      await service.assignRole(TEST_USER_ID, TEST_TENANT_ID, 'MANAGER', 'admin-1', expiresAt);
 
       expect(mockPrisma.userRoleAssignment.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -903,7 +905,7 @@ describe('RBACService - Database Operations', () => {
       await service.getPermissions(TEST_USER_ID, 'USER');
 
       // Assign role
-      await service.assignRole(TEST_USER_ID, 'MANAGER', 'admin-1');
+      await service.assignRole(TEST_USER_ID, TEST_TENANT_ID, 'MANAGER', 'admin-1');
 
       // Next getPermissions should re-fetch (cache cleared)
       // This is tested implicitly - if it didn't clear, the mock wouldn't be called
@@ -958,6 +960,7 @@ describe('RBACService - Database Operations', () => {
 
       await service.setUserPermission(
         TEST_USER_ID,
+        TEST_TENANT_ID,
         'lead:admin',
         true,
         'admin-1',
@@ -970,6 +973,7 @@ describe('RBACService - Database Operations', () => {
             userId_permissionId: { userId: TEST_USER_ID, permissionId: 'perm-1' },
           },
           create: expect.objectContaining({
+            tenantId: TEST_TENANT_ID,
             granted: true,
             reason: 'Special access needed',
             grantedBy: 'admin-1',
@@ -987,6 +991,7 @@ describe('RBACService - Database Operations', () => {
 
       await service.setUserPermission(
         TEST_USER_ID,
+        TEST_TENANT_ID,
         'lead:delete',
         false,
         'admin-1',
@@ -1004,7 +1009,7 @@ describe('RBACService - Database Operations', () => {
       mockPrisma.permission.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.setUserPermission(TEST_USER_ID, 'invalid:permission', true)
+        service.setUserPermission(TEST_USER_ID, TEST_TENANT_ID, 'invalid:permission', true)
       ).rejects.toThrow('Permission invalid:permission not found');
     });
 
@@ -1018,6 +1023,7 @@ describe('RBACService - Database Operations', () => {
 
       await service.setUserPermission(
         TEST_USER_ID,
+        TEST_TENANT_ID,
         'lead:admin',
         true,
         'admin-1',
@@ -1039,7 +1045,7 @@ describe('RBACService - Database Operations', () => {
       });
       mockPrisma.userPermission.upsert.mockResolvedValue({});
 
-      await service.setUserPermission(TEST_USER_ID, 'lead:admin', true);
+      await service.setUserPermission(TEST_USER_ID, TEST_TENANT_ID, 'lead:admin', true);
 
       // Cache should be cleared (tested implicitly)
     });

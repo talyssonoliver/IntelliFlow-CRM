@@ -577,7 +577,7 @@ describe('DeadlineDomainService', () => {
         triggerDate: new Date('2024-01-15'),
         daysCount: 14,
         dayCountType: 'BUSINESS',
-        jurisdiction: 'ENGLAND_WALES',
+        jurisdiction: 'UK' as any, // Test: using UK as jurisdiction
       };
 
       const result = service.computeDeadline(input);
@@ -683,19 +683,19 @@ describe('DeadlineDomainService', () => {
           name: 'Acknowledgement',
           daysCount: 7,
           dayCountType: 'BUSINESS' as const,
-          trigger: 'SERVICE' as const,
+          trigger: 'DISCOVERY_SERVED' as const,
         },
         {
           name: 'Defence',
           daysCount: 14,
           dayCountType: 'BUSINESS' as const,
-          trigger: 'SERVICE' as const,
+          trigger: 'DISCOVERY_SERVED' as const,
         },
         {
           name: 'Reply',
           daysCount: 21,
           dayCountType: 'BUSINESS' as const,
-          trigger: 'SERVICE' as const,
+          trigger: 'DISCOVERY_SERVED' as const,
         },
       ];
 
@@ -718,13 +718,13 @@ describe('DeadlineDomainService', () => {
           name: 'Valid Rule',
           daysCount: 7,
           dayCountType: 'BUSINESS' as const,
-          trigger: 'SERVICE' as const,
+          trigger: 'DISCOVERY_SERVED' as const,
         },
         {
           name: 'Invalid Rule',
           daysCount: -5, // Invalid
           dayCountType: 'BUSINESS' as const,
-          trigger: 'SERVICE' as const,
+          trigger: 'DISCOVERY_SERVED' as const,
         },
       ];
 
@@ -744,13 +744,13 @@ describe('DeadlineDomainService', () => {
           name: 'Invalid Rule 1',
           daysCount: -5,
           dayCountType: 'BUSINESS' as const,
-          trigger: 'SERVICE' as const,
+          trigger: 'DISCOVERY_SERVED' as const,
         },
         {
           name: 'Invalid Rule 2',
           daysCount: -10,
           dayCountType: 'BUSINESS' as const,
-          trigger: 'SERVICE' as const,
+          trigger: 'DISCOVERY_SERVED' as const,
         },
       ];
 
@@ -1087,7 +1087,7 @@ describe('DeadlineDomainService', () => {
         name: 'Valid Rule',
         daysCount: 7,
         dayCountType: 'CALENDAR' as const,
-        trigger: 'SERVICE' as const,
+        trigger: 'DISCOVERY_SERVED' as const,
       };
 
       const customDate = new Date('2024-06-01');

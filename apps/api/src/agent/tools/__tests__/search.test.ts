@@ -24,11 +24,10 @@ vi.mock('../../logger', () => ({
 
 const createMockContext = (overrides?: Partial<AgentAuthContext>): AgentAuthContext => ({
   userId: 'user-123',
-  userEmail: 'user@example.com',
-  role: 'SALES_REP',
-  tenantId: 'tenant-123',
+  userRole: 'SALES_REP',
+  permissions: ['search:lead', 'search:contact', 'search:opportunity'],
   agentSessionId: 'session-123',
-  allowedActionTypes: ['CREATE', 'READ', 'UPDATE', 'DELETE', 'SEARCH'],
+  allowedActionTypes: ['CREATE', 'SEARCH', 'UPDATE', 'DELETE'],
   allowedEntityTypes: ['LEAD', 'CONTACT', 'OPPORTUNITY', 'CASE', 'APPOINTMENT'],
   maxActionsPerSession: 100,
   actionCount: 0,
@@ -97,7 +96,7 @@ describe('Search Agent Tools', () => {
         const input = { query: 'test', limit: 10, offset: 0 };
 
         // Make logger.log throw to simulate error
-        const { agentLogger } = await import('../../logger');
+        const { agentLogger } = await import('../../logger.js');
         vi.mocked(agentLogger.log).mockRejectedValueOnce(new Error('Logger failed'));
 
         const result = await searchLeadsTool.execute(input, context);
@@ -122,7 +121,8 @@ describe('Search Agent Tools', () => {
 
       it('should generate preview with status filter', async () => {
         const context = createMockContext();
-        const input = { status: ['NEW', 'CONTACTED'], limit: 10, offset: 0 };
+        const status: ('NEW' | 'CONTACTED' | 'QUALIFIED' | 'UNQUALIFIED' | 'CONVERTED' | 'LOST')[] = ['NEW', 'CONTACTED'];
+        const input = { status, limit: 10, offset: 0 };
 
         const preview = await searchLeadsTool.generatePreview(input, context);
 
@@ -131,7 +131,8 @@ describe('Search Agent Tools', () => {
 
       it('should generate preview with source filter', async () => {
         const context = createMockContext();
-        const input = { source: ['WEBSITE', 'REFERRAL'], limit: 10, offset: 0 };
+        const source: ('EMAIL' | 'WEBSITE' | 'REFERRAL' | 'SOCIAL' | 'COLD_CALL' | 'EVENT' | 'OTHER')[] = ['WEBSITE', 'REFERRAL'];
+        const input = { source, limit: 10, offset: 0 };
 
         const preview = await searchLeadsTool.generatePreview(input, context);
 
@@ -219,7 +220,7 @@ describe('Search Agent Tools', () => {
         const context = createMockContext();
         const input = { query: 'test', limit: 10, offset: 0 };
 
-        const { agentLogger } = await import('../../logger');
+        const { agentLogger } = await import('../../logger.js');
         vi.mocked(agentLogger.log).mockRejectedValueOnce(new Error('Contact search failed'));
 
         const result = await searchContactsTool.execute(input, context);
@@ -338,7 +339,7 @@ describe('Search Agent Tools', () => {
         const context = createMockContext();
         const input = { query: 'test', limit: 10, offset: 0 };
 
-        const { agentLogger } = await import('../../logger');
+        const { agentLogger } = await import('../../logger.js');
         vi.mocked(agentLogger.log).mockRejectedValueOnce(new Error('Opportunity search failed'));
 
         const result = await searchOpportunitiesTool.execute(input, context);
@@ -361,7 +362,8 @@ describe('Search Agent Tools', () => {
 
       it('should generate preview with stage filter', async () => {
         const context = createMockContext();
-        const input = { stage: ['NEGOTIATION', 'CLOSED_WON'], limit: 10, offset: 0 };
+        const stage: ('PROSPECTING' | 'QUALIFICATION' | 'PROPOSAL' | 'NEGOTIATION' | 'CLOSED_WON' | 'CLOSED_LOST')[] = ['NEGOTIATION', 'CLOSED_WON'];
+        const input = { stage, limit: 10, offset: 0 };
 
         const preview = await searchOpportunitiesTool.generatePreview(input, context);
 
@@ -447,7 +449,8 @@ describe('Search Agent Tools', () => {
     describe('execute', () => {
       it('should search across multiple entity types', async () => {
         const context = createMockContext();
-        const input = { entityTypes: ['LEAD', 'CONTACT', 'OPPORTUNITY'] as const, query: 'test', limit: 20 };
+        const entityTypes: ('LEAD' | 'CONTACT' | 'OPPORTUNITY')[] = ['LEAD', 'CONTACT', 'OPPORTUNITY'];
+        const input = { entityTypes, query: 'test', limit: 20 };
 
         const result = await combinedSearchTool.execute(input, context);
 
@@ -463,7 +466,8 @@ describe('Search Agent Tools', () => {
         const context = createMockContext({
           allowedEntityTypes: ['LEAD'], // Only LEAD allowed
         });
-        const input = { entityTypes: ['LEAD', 'CONTACT'] as const, query: 'test', limit: 20 };
+        const entityTypes: ('LEAD' | 'CONTACT' | 'OPPORTUNITY')[] = ['LEAD', 'CONTACT'];
+        const input = { entityTypes, query: 'test', limit: 20 };
 
         const result = await combinedSearchTool.execute(input, context);
 
@@ -474,7 +478,8 @@ describe('Search Agent Tools', () => {
 
       it('should search only LEAD when requested', async () => {
         const context = createMockContext();
-        const input = { entityTypes: ['LEAD'] as const, query: 'test', limit: 20 };
+        const entityTypes: ('LEAD' | 'CONTACT' | 'OPPORTUNITY')[] = ['LEAD'];
+        const input = { entityTypes, query: 'test', limit: 20 };
 
         const result = await combinedSearchTool.execute(input, context);
 
@@ -486,7 +491,8 @@ describe('Search Agent Tools', () => {
 
       it('should search only CONTACT when requested', async () => {
         const context = createMockContext();
-        const input = { entityTypes: ['CONTACT'] as const, query: 'test', limit: 20 };
+        const entityTypes: ('LEAD' | 'CONTACT' | 'OPPORTUNITY')[] = ['CONTACT'];
+        const input = { entityTypes, query: 'test', limit: 20 };
 
         const result = await combinedSearchTool.execute(input, context);
 
@@ -497,7 +503,8 @@ describe('Search Agent Tools', () => {
 
       it('should search only OPPORTUNITY when requested', async () => {
         const context = createMockContext();
-        const input = { entityTypes: ['OPPORTUNITY'] as const, query: 'test', limit: 20 };
+        const entityTypes: ('LEAD' | 'CONTACT' | 'OPPORTUNITY')[] = ['OPPORTUNITY'];
+        const input = { entityTypes, query: 'test', limit: 20 };
 
         const result = await combinedSearchTool.execute(input, context);
 
@@ -508,9 +515,10 @@ describe('Search Agent Tools', () => {
 
       it('should handle errors gracefully', async () => {
         const context = createMockContext();
-        const input = { entityTypes: ['LEAD'] as const, query: 'test', limit: 20 };
+        const entityTypes: ('LEAD' | 'CONTACT' | 'OPPORTUNITY')[] = ['LEAD'];
+        const input = { entityTypes, query: 'test', limit: 20 };
 
-        const { agentLogger } = await import('../../logger');
+        const { agentLogger } = await import('../../logger.js');
         // First call for searchLeadsTool will succeed, second for combined will fail
         vi.mocked(agentLogger.log)
           .mockResolvedValueOnce(undefined)
@@ -526,7 +534,8 @@ describe('Search Agent Tools', () => {
     describe('generatePreview', () => {
       it('should generate preview for combined search', async () => {
         const context = createMockContext();
-        const input = { entityTypes: ['LEAD', 'CONTACT'] as const, query: 'test query', limit: 20 };
+        const entityTypes: ('LEAD' | 'CONTACT' | 'OPPORTUNITY')[] = ['LEAD', 'CONTACT'];
+        const input = { entityTypes, query: 'test query', limit: 20 };
 
         const preview = await combinedSearchTool.generatePreview(input, context);
 
@@ -540,7 +549,8 @@ describe('Search Agent Tools', () => {
 
       it('should generate preview for all entity types', async () => {
         const context = createMockContext();
-        const input = { entityTypes: ['LEAD', 'CONTACT', 'OPPORTUNITY'] as const, query: 'search all', limit: 20 };
+        const entityTypes: ('LEAD' | 'CONTACT' | 'OPPORTUNITY')[] = ['LEAD', 'CONTACT', 'OPPORTUNITY'];
+        const input = { entityTypes, query: 'search all', limit: 20 };
 
         const preview = await combinedSearchTool.generatePreview(input, context);
 

@@ -229,6 +229,19 @@ export const mockLead = {
   ownerId: TEST_UUIDS.user1,
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
+  // BANT fields
+  bantBudget: null,
+  bantAuthority: null,
+  bantNeed: null,
+  bantTimeline: null,
+  qualificationNotes: null,
+  // Lead 360 fields
+  location: null,
+  website: null,
+  avatarUrl: null,
+  lastContactedAt: null,
+  estimatedValue: null,
+  tags: [],
 };
 
 export const mockContact = {

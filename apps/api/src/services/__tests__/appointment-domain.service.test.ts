@@ -246,18 +246,20 @@ vi.mock('@intelliflow/domain', () => {
 
     checkAvailability: (
       options: {
-        userId: string;
-        startDate: Date;
-        endDate: Date;
-        slotDurationMinutes: number;
+        attendeeId: string;
+        startTime: Date;
+        endTime: Date;
+        minimumSlotMinutes?: number;
+        includeBuffer?: boolean;
       },
       appointments: MockAppointment[]
     ) => {
-      const slots: Array<{ startTime: Date; endTime: Date; available: boolean }> = [];
-      const current = new Date(options.startDate);
+      const slots: Array<{ startTime: Date; endTime: Date; durationMinutes: number }> = [];
+      const slotDuration = options.minimumSlotMinutes ?? 30;
+      const current = new Date(options.startTime);
 
-      while (current < options.endDate) {
-        const slotEnd = new Date(current.getTime() + options.slotDurationMinutes * 60 * 1000);
+      while (current < options.endTime) {
+        const slotEnd = new Date(current.getTime() + slotDuration * 60 * 1000);
 
         // Check if slot conflicts with any appointment
         const hasConflict = appointments.some((apt) => {
@@ -266,13 +268,15 @@ vi.mock('@intelliflow/domain', () => {
           return overlapStart < overlapEnd;
         });
 
-        slots.push({
-          startTime: new Date(current),
-          endTime: slotEnd,
-          available: !hasConflict,
-        });
+        if (!hasConflict) {
+          slots.push({
+            startTime: new Date(current),
+            endTime: slotEnd,
+            durationMinutes: slotDuration,
+          });
+        }
 
-        current.setTime(current.getTime() + options.slotDurationMinutes * 60 * 1000);
+        current.setTime(current.getTime() + slotDuration * 60 * 1000);
       }
 
       return slots;
@@ -344,22 +348,37 @@ vi.mock('@intelliflow/domain', () => {
     },
 
     calculateConflictAccuracy: (
-      detectedConflicts: unknown[],
-      actualConflicts: unknown[]
+      detectedConflicts: Array<{
+        appointmentId: MockAppointmentId;
+        conflictingAppointmentId: MockAppointmentId;
+        overlapMinutes: number;
+        conflictType: 'EXACT' | 'PARTIAL' | 'BUFFER';
+        conflictStart: Date;
+        conflictEnd: Date;
+      }>,
+      actualConflicts: Array<{
+        appointmentId: MockAppointmentId;
+        conflictingAppointmentId: MockAppointmentId;
+        overlapMinutes: number;
+        conflictType: 'EXACT' | 'PARTIAL' | 'BUFFER';
+        conflictStart: Date;
+        conflictEnd: Date;
+      }>
     ) => {
       if (actualConflicts.length === 0) return 100;
 
-      const detectedSet = new Set(detectedConflicts.map((c) => JSON.stringify(c)));
-      const actualSet = new Set(actualConflicts.map((c) => JSON.stringify(c)));
+      // Compare by conflicting appointment ID values
+      const detectedIds = new Set(detectedConflicts.map((c) => c.conflictingAppointmentId.value));
+      const actualIds = new Set(actualConflicts.map((c) => c.conflictingAppointmentId.value));
 
       let correctlyDetected = 0;
-      for (const actual of actualSet) {
-        if (detectedSet.has(actual)) {
+      for (const actualId of actualIds) {
+        if (detectedIds.has(actualId)) {
           correctlyDetected++;
         }
       }
 
-      return (correctlyDetected / actualSet.size) * 100;
+      return (correctlyDetected / actualIds.size) * 100;
     },
   };
 
@@ -386,6 +405,7 @@ describe('AppointmentDomainService', () => {
           appointmentType: 'MEETING',
           location: 'Room A',
           organizerId: 'user-1',
+          tenantId: 'tenant-test',
           attendees: [{ userId: 'user-2' }, { userId: 'user-3' }],
           status: 'SCHEDULED',
           bufferMinutesBefore: 10,
@@ -405,8 +425,9 @@ describe('AppointmentDomainService', () => {
           title: 'Weekly Standup',
           startTime: new Date('2024-01-15T09:00:00Z'),
           endTime: new Date('2024-01-15T09:30:00Z'),
-          appointmentType: 'STANDUP',
+          appointmentType: 'MEETING',
           organizerId: 'user-1',
+          tenantId: 'tenant-test',
           status: 'SCHEDULED',
           bufferMinutesBefore: 0,
           bufferMinutesAfter: 0,
@@ -433,6 +454,7 @@ describe('AppointmentDomainService', () => {
           endTime: new Date('2024-01-15T10:00:00Z'),
           appointmentType: 'MEETING',
           organizerId: 'user-1',
+          tenantId: 'tenant-test',
           status: 'SCHEDULED',
           bufferMinutesBefore: 0,
           bufferMinutesAfter: 0,
@@ -459,6 +481,7 @@ describe('AppointmentDomainService', () => {
           endTime: new Date('2024-01-15T11:00:00Z'),
           appointmentType: 'MEETING',
           organizerId: 'user-1',
+          tenantId: 'tenant-test',
           status: 'SCHEDULED',
           bufferMinutesBefore: 0,
           bufferMinutesAfter: 0,
@@ -488,6 +511,7 @@ describe('AppointmentDomainService', () => {
           endTime: new Date('2024-01-15T11:30:00Z'),
           appointmentType: 'MEETING',
           organizerId: 'user-1',
+          tenantId: 'tenant-test',
           status: 'SCHEDULED',
           bufferMinutesBefore: 0,
           bufferMinutesAfter: 0,
@@ -517,6 +541,7 @@ describe('AppointmentDomainService', () => {
           endTime: new Date('2024-01-15T11:00:00Z'),
           appointmentType: 'MEETING',
           organizerId: 'user-2', // Different user
+          tenantId: 'tenant-test',
           status: 'SCHEDULED',
           bufferMinutesBefore: 0,
           bufferMinutesAfter: 0,
@@ -545,6 +570,7 @@ describe('AppointmentDomainService', () => {
           endTime: new Date('2024-01-15T11:00:00Z'),
           appointmentType: 'MEETING',
           organizerId: 'user-1',
+          tenantId: 'tenant-test',
           status: 'SCHEDULED',
           bufferMinutesBefore: 0,
           bufferMinutesAfter: 0,
@@ -590,10 +616,10 @@ describe('AppointmentDomainService', () => {
   describe('checkAvailability', () => {
     it('should check availability for time range', () => {
       const options = {
-        userId: 'user-1',
-        startDate: new Date('2024-01-15T09:00:00Z'),
-        endDate: new Date('2024-01-15T17:00:00Z'),
-        slotDurationMinutes: 30,
+        attendeeId: 'user-1',
+        startTime: new Date('2024-01-15T09:00:00Z'),
+        endTime: new Date('2024-01-15T17:00:00Z'),
+        minimumSlotMinutes: 30,
       };
 
       const slots = AppointmentDomainService.checkAvailability(options, []);
@@ -603,10 +629,10 @@ describe('AppointmentDomainService', () => {
 
     it('should mark slots with existing appointments as unavailable', () => {
       const options = {
-        userId: 'user-1',
-        startDate: new Date('2024-01-15T09:00:00Z'),
-        endDate: new Date('2024-01-15T17:00:00Z'),
-        slotDurationMinutes: 30,
+        attendeeId: 'user-1',
+        startTime: new Date('2024-01-15T09:00:00Z'),
+        endTime: new Date('2024-01-15T17:00:00Z'),
+        minimumSlotMinutes: 30,
       };
 
       const dbAppointments = [
@@ -617,6 +643,7 @@ describe('AppointmentDomainService', () => {
           endTime: new Date('2024-01-15T11:00:00Z'),
           appointmentType: 'MEETING',
           organizerId: 'user-1',
+          tenantId: 'tenant-test',
           status: 'SCHEDULED',
           bufferMinutesBefore: 0,
           bufferMinutesAfter: 0,
@@ -704,6 +731,7 @@ describe('AppointmentDomainService', () => {
           endTime: new Date('2024-01-15T11:00:00Z'),
           appointmentType: 'MEETING',
           organizerId: 'user-1',
+          tenantId: 'tenant-test',
           status: 'SCHEDULED',
           bufferMinutesBefore: 0,
           bufferMinutesAfter: 0,
@@ -715,6 +743,7 @@ describe('AppointmentDomainService', () => {
           endTime: new Date('2024-01-15T11:30:00Z'),
           appointmentType: 'MEETING',
           organizerId: 'user-1',
+          tenantId: 'tenant-test',
           status: 'SCHEDULED',
           bufferMinutesBefore: 0,
           bufferMinutesAfter: 0,
@@ -736,15 +765,29 @@ describe('AppointmentDomainService', () => {
   });
 
   describe('calculateAccuracy', () => {
+    // Helper to create mock AppointmentConflict - cast to any for test compatibility
+    const createMockConflict = (
+      aptId: string,
+      conflictingAptId: string,
+      conflictType: 'EXACT' | 'PARTIAL' | 'BUFFER' = 'PARTIAL'
+    ): any => ({
+      appointmentId: { value: aptId },
+      conflictingAppointmentId: { value: conflictingAptId },
+      overlapMinutes: 30,
+      conflictType,
+      conflictStart: new Date('2024-01-15T10:00:00Z'),
+      conflictEnd: new Date('2024-01-15T10:30:00Z'),
+    });
+
     it('should calculate conflict detection accuracy', () => {
       const detectedConflicts = [
-        { id: 'conflict-1', type: 'PARTIAL' },
-        { id: 'conflict-2', type: 'EXACT' },
+        createMockConflict('apt-1', 'conflict-1', 'PARTIAL'),
+        createMockConflict('apt-1', 'conflict-2', 'EXACT'),
       ];
 
       const actualConflicts = [
-        { id: 'conflict-1', type: 'PARTIAL' },
-        { id: 'conflict-2', type: 'EXACT' },
+        createMockConflict('apt-1', 'conflict-1', 'PARTIAL'),
+        createMockConflict('apt-1', 'conflict-2', 'EXACT'),
       ];
 
       const accuracy = AppointmentDomainService.calculateAccuracy(
@@ -763,8 +806,13 @@ describe('AppointmentDomainService', () => {
     });
 
     it('should return lower accuracy for missed conflicts', () => {
-      const detectedConflicts = [{ id: 'conflict-1' }];
-      const actualConflicts = [{ id: 'conflict-1' }, { id: 'conflict-2' }];
+      const detectedConflicts = [
+        createMockConflict('apt-1', 'conflict-1', 'PARTIAL'),
+      ];
+      const actualConflicts = [
+        createMockConflict('apt-1', 'conflict-1', 'PARTIAL'),
+        createMockConflict('apt-1', 'conflict-2', 'EXACT'),
+      ];
 
       const accuracy = AppointmentDomainService.calculateAccuracy(
         detectedConflicts,
@@ -994,7 +1042,7 @@ describe('AppointmentDomainService', () => {
         title: 'Daily Standup',
         startTime: new Date('2024-01-15T09:00:00Z'),
         endTime: new Date('2024-01-15T09:15:00Z'),
-        appointmentType: 'STANDUP',
+        appointmentType: 'MEETING',
         organizerId: 'user-1',
         attendeeIds: [],
         recurrence: {

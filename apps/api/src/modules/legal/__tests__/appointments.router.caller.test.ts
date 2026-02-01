@@ -797,10 +797,10 @@ describe('Appointments Router - Caller Tests', () => {
       const caller = appointmentsRouter.createCaller(ctx);
 
       prismaMock.appointment.count.mockResolvedValue(10);
-      prismaMock.appointment.groupBy.mockResolvedValue([
+      (prismaMock.appointment.groupBy as any).mockResolvedValue([
         { status: 'SCHEDULED', _count: 5 },
         { status: 'COMPLETED', _count: 3 },
-      ] as any);
+      ]);
 
       const result = await caller.stats();
 

@@ -12,6 +12,9 @@ describe('AuditLogger', () => {
 
   function createMockPrisma(): PrismaClient {
     return {
+      tenant: {
+        findUnique: vi.fn().mockResolvedValue({ id: TEST_TENANT_ID }),
+      },
       auditLog: {
         create: vi.fn().mockResolvedValue({ id: 'audit-log-123' }),
         findMany: vi.fn().mockResolvedValue([]),
@@ -228,6 +231,7 @@ describe('AuditLogger', () => {
       const eventId = await logger.logSecurityEvent({
         eventType: 'SUSPICIOUS_ACTIVITY',
         severity: 'HIGH',
+        tenantId: TEST_TENANT_ID,
         actorId: 'user-123',
         description: 'Multiple failed login attempts detected',
         details: { attemptCount: 5 },
@@ -243,6 +247,7 @@ describe('AuditLogger', () => {
       await consoleLogger.logSecurityEvent({
         eventType: 'LOGIN_FAILURE',
         severity: 'MEDIUM',
+        tenantId: TEST_TENANT_ID,
         description: 'Failed login attempt',
       });
 
@@ -261,6 +266,7 @@ describe('AuditLogger', () => {
 
       const eventId = await safeLogger.logSecurityEvent({
         eventType: 'LOGIN_FAILURE',
+        tenantId: TEST_TENANT_ID,
         description: 'Test event',
       });
 
@@ -535,6 +541,7 @@ describe('AuditLogger', () => {
       await consoleLogger.logSecurityEvent({
         eventType: 'LOGIN_FAILURE',
         severity: 'CRITICAL',
+        tenantId: TEST_TENANT_ID,
         description: 'Critical event',
       });
 
@@ -567,6 +574,9 @@ describe('queryComprehensive', () => {
 
   beforeEach(() => {
     mockPrisma = {
+      tenant: {
+        findUnique: vi.fn().mockResolvedValue({ id: TEST_TENANT_ID }),
+      },
       auditLog: {
         create: vi.fn().mockResolvedValue({ id: 'audit-log-123' }),
         findMany: vi.fn().mockResolvedValue([]),
@@ -671,6 +681,9 @@ describe('getResourceAuditTrail', () => {
 
   beforeEach(() => {
     mockPrisma = {
+      tenant: {
+        findUnique: vi.fn().mockResolvedValue({ id: TEST_TENANT_ID }),
+      },
       auditLog: {
         create: vi.fn().mockResolvedValue({ id: 'audit-log-123' }),
         findMany: vi.fn().mockResolvedValue([]),
@@ -726,6 +739,9 @@ describe('getActorAuditTrail', () => {
 
   beforeEach(() => {
     mockPrisma = {
+      tenant: {
+        findUnique: vi.fn().mockResolvedValue({ id: TEST_TENANT_ID }),
+      },
       auditLog: {
         create: vi.fn().mockResolvedValue({ id: 'audit-log-123' }),
         findMany: vi.fn().mockResolvedValue([]),
@@ -789,6 +805,9 @@ describe('getPermissionAuditTrail', () => {
 
   beforeEach(() => {
     mockPrisma = {
+      tenant: {
+        findUnique: vi.fn().mockResolvedValue({ id: TEST_TENANT_ID }),
+      },
       auditLog: {
         create: vi.fn().mockResolvedValue({ id: 'audit-log-123' }),
         findMany: vi.fn().mockResolvedValue([]),
@@ -911,6 +930,9 @@ describe('comprehensive entry writing', () => {
 
   beforeEach(() => {
     mockPrisma = {
+      tenant: {
+        findUnique: vi.fn().mockResolvedValue({ id: 'tenant-123' }),
+      },
       auditLog: {
         create: vi.fn().mockResolvedValue({ id: 'audit-log-123' }),
       },
@@ -991,6 +1013,9 @@ describe('getSeverityEmoji - all levels', () => {
 
   beforeEach(() => {
     mockPrisma = {
+      tenant: {
+        findUnique: vi.fn().mockResolvedValue({ id: TEST_TENANT_ID }),
+      },
       securityEvent: {
         create: vi.fn().mockResolvedValue({ id: 'security-event-123' }),
       },
@@ -1006,8 +1031,9 @@ describe('getSeverityEmoji - all levels', () => {
 
   it('should return !!! for CRITICAL severity', async () => {
     await logger.logSecurityEvent({
-      eventType: 'TEST',
+      eventType: 'LOGIN_ATTEMPT',
       severity: 'CRITICAL',
+      tenantId: TEST_TENANT_ID,
       description: 'Critical event',
     });
 
@@ -1018,8 +1044,9 @@ describe('getSeverityEmoji - all levels', () => {
 
   it('should return !! for HIGH severity', async () => {
     await logger.logSecurityEvent({
-      eventType: 'TEST',
+      eventType: 'LOGIN_ATTEMPT',
       severity: 'HIGH',
+      tenantId: TEST_TENANT_ID,
       description: 'High event',
     });
 
@@ -1030,8 +1057,9 @@ describe('getSeverityEmoji - all levels', () => {
 
   it('should return ! for MEDIUM severity', async () => {
     await logger.logSecurityEvent({
-      eventType: 'TEST',
+      eventType: 'LOGIN_ATTEMPT',
       severity: 'MEDIUM',
+      tenantId: TEST_TENANT_ID,
       description: 'Medium event',
     });
 
@@ -1042,8 +1070,9 @@ describe('getSeverityEmoji - all levels', () => {
 
   it('should return - for LOW severity', async () => {
     await logger.logSecurityEvent({
-      eventType: 'TEST',
+      eventType: 'LOGIN_ATTEMPT',
       severity: 'LOW',
+      tenantId: TEST_TENANT_ID,
       description: 'Low event',
     });
 
@@ -1054,8 +1083,9 @@ describe('getSeverityEmoji - all levels', () => {
 
   it('should return * for INFO severity', async () => {
     await logger.logSecurityEvent({
-      eventType: 'TEST',
+      eventType: 'LOGIN_ATTEMPT',
       severity: 'INFO',
+      tenantId: TEST_TENANT_ID,
       description: 'Info event',
     });
 
@@ -1071,6 +1101,9 @@ describe('scheduleFlush - batch size trigger', () => {
 
   beforeEach(() => {
     mockPrisma = {
+      tenant: {
+        findUnique: vi.fn().mockResolvedValue({ id: 'tenant-123' }),
+      },
       auditLog: {
         create: vi.fn().mockResolvedValue({ id: 'audit-log-123' }),
       },
@@ -1129,6 +1162,9 @@ describe('calculateChangedFields - edge cases', () => {
 
   beforeEach(() => {
     mockPrisma = {
+      tenant: {
+        findUnique: vi.fn().mockResolvedValue({ id: 'tenant-123' }),
+      },
       auditLog: {
         create: vi.fn().mockResolvedValue({ id: 'audit-log-123' }),
       },

@@ -132,6 +132,7 @@ export class AppointmentDomainService {
       appointmentType: string;
       location?: string | null;
       organizerId: string;
+      tenantId: string;
       attendees?: Array<{ userId: string }>;
       status: string;
       bufferMinutesBefore: number;
@@ -188,6 +189,7 @@ export class AppointmentDomainService {
           appointmentType: dbApt.appointmentType as AppointmentType,
           location: dbApt.location ?? undefined,
           organizerId: dbApt.organizerId,
+          tenantId: dbApt.tenantId,
           attendeeIds: dbApt.attendees?.map((a) => a.userId) ?? [],
           buffer: bufferResult.value,
           recurrence,

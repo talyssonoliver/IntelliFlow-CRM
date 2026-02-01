@@ -32,11 +32,10 @@ vi.mock('../../approval-workflow', () => ({
 
 const createMockContext = (overrides?: Partial<AgentAuthContext>): AgentAuthContext => ({
   userId: 'user-123',
-  userEmail: 'user@example.com',
-  role: 'SALES_REP',
-  tenantId: 'tenant-123',
+  userRole: 'SALES_REP',
+  permissions: ['case:read', 'case:update', 'appointment:read', 'appointment:update'],
   agentSessionId: 'session-123',
-  allowedActionTypes: ['CREATE', 'READ', 'UPDATE', 'DELETE'],
+  allowedActionTypes: ['CREATE', 'SEARCH', 'UPDATE', 'DELETE'],
   allowedEntityTypes: ['CASE', 'APPOINTMENT', 'CONTACT', 'LEAD'],
   maxActionsPerSession: 100,
   actionCount: 0,
@@ -102,7 +101,7 @@ describe('Update Agent Tools', () => {
 
       it('should reject if UPDATE action type not allowed', async () => {
         const context = createMockContext({
-          allowedActionTypes: ['READ'], // No UPDATE
+          allowedActionTypes: ['SEARCH'], // No UPDATE
         });
         const input = { id: 'case-123', title: 'Updated Title' };
 
@@ -262,7 +261,7 @@ describe('Update Agent Tools', () => {
           updatedAt: new Date(),
         };
 
-        const result = await updateCaseTool.rollback('action-123', executionResult, context);
+        const result = await updateCaseTool.rollback!('action-123', executionResult, context);
 
         expect(result.success).toBe(true);
         expect(result.actionId).toBe('action-123');
@@ -282,10 +281,10 @@ describe('Update Agent Tools', () => {
         };
 
         // Make rollbackStore.add throw
-        const { rollbackStore } = await import('../../approval-workflow');
+        const { rollbackStore } = await import('../../approval-workflow.js');
         vi.mocked(rollbackStore.add).mockRejectedValueOnce(new Error('Rollback failed'));
 
-        const result = await updateCaseTool.rollback('action-123', executionResult, context);
+        const result = await updateCaseTool.rollback!('action-123', executionResult, context);
 
         expect(result.success).toBe(false);
         expect(result.error).toContain('Rollback failed');
@@ -342,7 +341,7 @@ describe('Update Agent Tools', () => {
 
       it('should reject if UPDATE action type not allowed', async () => {
         const context = createMockContext({
-          allowedActionTypes: ['READ'], // No UPDATE
+          allowedActionTypes: ['SEARCH'], // No UPDATE
         });
         const input = { id: 'appt-123', title: 'Updated Meeting' };
 
@@ -501,7 +500,7 @@ describe('Update Agent Tools', () => {
 
       it('should generate preview for appointment type change', async () => {
         const context = createMockContext();
-        const input = { id: 'appt-123', appointmentType: 'VIDEO_CALL' as const };
+        const input = { id: 'appt-123', appointmentType: 'CALL' as const };
 
         const preview = await updateAppointmentTool.generatePreview(input, context);
 
@@ -546,7 +545,7 @@ describe('Update Agent Tools', () => {
           updatedAt: new Date(),
         };
 
-        const result = await updateAppointmentTool.rollback('action-123', executionResult, context);
+        const result = await updateAppointmentTool.rollback!('action-123', executionResult, context);
 
         expect(result.success).toBe(true);
         expect(result.actionId).toBe('action-123');
@@ -566,10 +565,10 @@ describe('Update Agent Tools', () => {
         };
 
         // Make rollbackStore.add throw
-        const { rollbackStore } = await import('../../approval-workflow');
+        const { rollbackStore } = await import('../../approval-workflow.js');
         vi.mocked(rollbackStore.add).mockRejectedValueOnce(new Error('Rollback error'));
 
-        const result = await updateAppointmentTool.rollback('action-123', executionResult, context);
+        const result = await updateAppointmentTool.rollback!('action-123', executionResult, context);
 
         expect(result.success).toBe(false);
         expect(result.error).toContain('Rollback');

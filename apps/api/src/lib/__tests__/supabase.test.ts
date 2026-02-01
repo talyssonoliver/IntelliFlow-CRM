@@ -30,7 +30,7 @@ describe('Supabase Configuration', () => {
       delete process.env.SUPABASE_ANON_KEY;
       delete process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-      const { getConfig } = await import('../supabase');
+      const { getConfig } = await import('../supabase.js');
       const config = getConfig();
 
       expect(config.url).toBe('http://127.0.0.1:54321');
@@ -43,7 +43,7 @@ describe('Supabase Configuration', () => {
       process.env.SUPABASE_ANON_KEY = 'test-anon-key';
       process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-key';
 
-      const { getConfig } = await import('../supabase');
+      const { getConfig } = await import('../supabase.js');
       const config = getConfig();
 
       expect(config.url).toBe('https://test.supabase.co');
@@ -58,7 +58,7 @@ describe('Supabase Configuration', () => {
       delete process.env.SUPABASE_ANON_KEY;
       delete process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-      const { isConfigured } = await import('../supabase');
+      const { isConfigured } = await import('../supabase.js');
 
       expect(isConfigured()).toBe(false);
     });
@@ -69,7 +69,7 @@ describe('Supabase Configuration', () => {
       process.env.SUPABASE_ANON_KEY = 'real-anon-key';
       process.env.SUPABASE_SERVICE_ROLE_KEY = 'real-service-key';
 
-      const { isConfigured } = await import('../supabase');
+      const { isConfigured } = await import('../supabase.js');
 
       expect(isConfigured()).toBe(true);
     });
@@ -81,7 +81,7 @@ describe('Supabase Configuration', () => {
       delete process.env.SUPABASE_ANON_KEY;
       delete process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-      const { isAuthFunctional } = await import('../supabase');
+      const { isAuthFunctional } = await import('../supabase.js');
 
       expect(isAuthFunctional()).toBe(false);
     });
@@ -91,7 +91,7 @@ describe('Supabase Configuration', () => {
       process.env.SUPABASE_ANON_KEY = 'anon-key';
       process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-key';
 
-      const { isAuthFunctional } = await import('../supabase');
+      const { isAuthFunctional } = await import('../supabase.js');
 
       expect(isAuthFunctional()).toBe(true);
     });
@@ -104,7 +104,7 @@ describe('Supabase Configuration', () => {
       process.env.SUPABASE_ANON_KEY = 'anon-key';
       delete process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-      const { getConfig } = await import('../supabase');
+      const { getConfig } = await import('../supabase.js');
       const config = getConfig();
 
       expect(config).toHaveProperty('url');
@@ -131,7 +131,7 @@ describe('Supabase Client Exports', () => {
   });
 
   it('should export supabase client', async () => {
-    const { supabase } = await import('../supabase');
+    const { supabase } = await import('../supabase.js');
 
     expect(supabase).toBeDefined();
     expect(supabase.auth).toBeDefined();
@@ -140,7 +140,7 @@ describe('Supabase Client Exports', () => {
   });
 
   it('should export supabaseAdmin client', async () => {
-    const { supabaseAdmin } = await import('../supabase');
+    const { supabaseAdmin } = await import('../supabase.js');
 
     expect(supabaseAdmin).toBeDefined();
     expect(supabaseAdmin.auth).toBeDefined();
@@ -148,7 +148,7 @@ describe('Supabase Client Exports', () => {
   });
 
   it('should export createAuthenticatedClient function', async () => {
-    const { createAuthenticatedClient } = await import('../supabase');
+    const { createAuthenticatedClient } = await import('../supabase.js');
 
     expect(createAuthenticatedClient).toBeDefined();
     expect(typeof createAuthenticatedClient).toBe('function');
@@ -172,37 +172,37 @@ describe('Supabase Auth Functions', () => {
   });
 
   it('should export signUp function', async () => {
-    const { signUp } = await import('../supabase');
+    const { signUp } = await import('../supabase.js');
     expect(signUp).toBeDefined();
     expect(typeof signUp).toBe('function');
   });
 
   it('should export signIn function', async () => {
-    const { signIn } = await import('../supabase');
+    const { signIn } = await import('../supabase.js');
     expect(signIn).toBeDefined();
     expect(typeof signIn).toBe('function');
   });
 
   it('should export signOut function', async () => {
-    const { signOut } = await import('../supabase');
+    const { signOut } = await import('../supabase.js');
     expect(signOut).toBeDefined();
     expect(typeof signOut).toBe('function');
   });
 
   it('should export getSession function', async () => {
-    const { getSession } = await import('../supabase');
+    const { getSession } = await import('../supabase.js');
     expect(getSession).toBeDefined();
     expect(typeof getSession).toBe('function');
   });
 
   it('should export getUser function', async () => {
-    const { getUser } = await import('../supabase');
+    const { getUser } = await import('../supabase.js');
     expect(getUser).toBeDefined();
     expect(typeof getUser).toBe('function');
   });
 
   it('should export verifyToken function', async () => {
-    const { verifyToken } = await import('../supabase');
+    const { verifyToken } = await import('../supabase.js');
     expect(verifyToken).toBeDefined();
     expect(typeof verifyToken).toBe('function');
   });
@@ -221,13 +221,13 @@ describe('Supabase OAuth Functions', () => {
   });
 
   it('should export signInWithOAuth function', async () => {
-    const { signInWithOAuth } = await import('../supabase');
+    const { signInWithOAuth } = await import('../supabase.js');
     expect(signInWithOAuth).toBeDefined();
     expect(typeof signInWithOAuth).toBe('function');
   });
 
   it('should export exchangeCodeForSession function', async () => {
-    const { exchangeCodeForSession } = await import('../supabase');
+    const { exchangeCodeForSession } = await import('../supabase.js');
     expect(exchangeCodeForSession).toBeDefined();
     expect(typeof exchangeCodeForSession).toBe('function');
   });
@@ -246,19 +246,19 @@ describe('Supabase Realtime Functions', () => {
   });
 
   it('should export subscribeToTable function', async () => {
-    const { subscribeToTable } = await import('../supabase');
+    const { subscribeToTable } = await import('../supabase.js');
     expect(subscribeToTable).toBeDefined();
     expect(typeof subscribeToTable).toBe('function');
   });
 
   it('should export subscribeToLeadScores function', async () => {
-    const { subscribeToLeadScores } = await import('../supabase');
+    const { subscribeToLeadScores } = await import('../supabase.js');
     expect(subscribeToLeadScores).toBeDefined();
     expect(typeof subscribeToLeadScores).toBe('function');
   });
 
   it('should export unsubscribe function', async () => {
-    const { unsubscribe } = await import('../supabase');
+    const { unsubscribe } = await import('../supabase.js');
     expect(unsubscribe).toBeDefined();
     expect(typeof unsubscribe).toBe('function');
   });
@@ -277,25 +277,25 @@ describe('Supabase Vector Search Functions', () => {
   });
 
   it('should export searchLeadsByEmbedding function', async () => {
-    const { searchLeadsByEmbedding } = await import('../supabase');
+    const { searchLeadsByEmbedding } = await import('../supabase.js');
     expect(searchLeadsByEmbedding).toBeDefined();
     expect(typeof searchLeadsByEmbedding).toBe('function');
   });
 
   it('should export searchContactsByEmbedding function', async () => {
-    const { searchContactsByEmbedding } = await import('../supabase');
+    const { searchContactsByEmbedding } = await import('../supabase.js');
     expect(searchContactsByEmbedding).toBeDefined();
     expect(typeof searchContactsByEmbedding).toBe('function');
   });
 
   it('should export updateLeadEmbedding function', async () => {
-    const { updateLeadEmbedding } = await import('../supabase');
+    const { updateLeadEmbedding } = await import('../supabase.js');
     expect(updateLeadEmbedding).toBeDefined();
     expect(typeof updateLeadEmbedding).toBe('function');
   });
 
   it('should export updateContactEmbedding function', async () => {
-    const { updateContactEmbedding } = await import('../supabase');
+    const { updateContactEmbedding } = await import('../supabase.js');
     expect(updateContactEmbedding).toBeDefined();
     expect(typeof updateContactEmbedding).toBe('function');
   });
@@ -314,25 +314,25 @@ describe('Supabase Storage Functions', () => {
   });
 
   it('should export uploadFile function', async () => {
-    const { uploadFile } = await import('../supabase');
+    const { uploadFile } = await import('../supabase.js');
     expect(uploadFile).toBeDefined();
     expect(typeof uploadFile).toBe('function');
   });
 
   it('should export getPublicUrl function', async () => {
-    const { getPublicUrl } = await import('../supabase');
+    const { getPublicUrl } = await import('../supabase.js');
     expect(getPublicUrl).toBeDefined();
     expect(typeof getPublicUrl).toBe('function');
   });
 
   it('should export deleteFile function', async () => {
-    const { deleteFile } = await import('../supabase');
+    const { deleteFile } = await import('../supabase.js');
     expect(deleteFile).toBeDefined();
     expect(typeof deleteFile).toBe('function');
   });
 
   it('should return public URL', async () => {
-    const { getPublicUrl } = await import('../supabase');
+    const { getPublicUrl } = await import('../supabase.js');
 
     const url = getPublicUrl('test-bucket', 'path/to/file.jpg');
 
@@ -356,7 +356,7 @@ describe('Supabase Type Exports', () => {
 
   it('should export Database type structure', async () => {
     // Type-level test - if this compiles, the types are exported correctly
-    const supabaseModule = await import('../supabase');
+    const supabaseModule = await import('../supabase.js');
 
     // These are type exports, we're just verifying the module compiles
     expect(supabaseModule).toBeDefined();

@@ -12,7 +12,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { analyticsRouter } from '../analytics.router';
-import type { UserSession } from '../../../context';
+import type { UserSession, Context } from '../../../context';
+
+// Mock prisma client
+const mockPrisma = {} as Context['prisma'];
 
 // Mock analytics service methods
 const mockAnalyticsService = {
@@ -35,6 +38,7 @@ describe('analyticsRouter', () => {
   describe('getAnalyticsService (via endpoints)', () => {
     it('should throw INTERNAL_SERVER_ERROR when analytics service is not available', async () => {
       const mockContext = {
+        prisma: mockPrisma,
         user: {
           userId: 'user_123',
           email: 'test@example.com',
@@ -47,7 +51,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
       );
 
       await expect(caller.leadStats()).rejects.toThrow(TRPCError);
@@ -59,6 +63,7 @@ describe('analyticsRouter', () => {
 
     it('should throw INTERNAL_SERVER_ERROR when services object is undefined', async () => {
       const mockContext = {
+        prisma: mockPrisma,
         user: {
           userId: 'user_123',
           email: 'test@example.com',
@@ -69,7 +74,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
       );
 
       await expect(caller.leadStats()).rejects.toThrow(TRPCError);
@@ -79,19 +84,20 @@ describe('analyticsRouter', () => {
   describe('getTenantId (via endpoints)', () => {
     it('should throw UNAUTHORIZED when user has no tenantId', async () => {
       const mockContext = {
+        prisma: mockPrisma,
         user: {
           userId: 'user_123',
           email: 'test@example.com',
           role: 'USER',
           tenantId: undefined,
-        } as UserSession,
+        } as unknown as UserSession,
         services: {
           analytics: mockAnalyticsService,
         },
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
       );
 
       await expect(caller.leadStats()).rejects.toThrow(TRPCError);
@@ -103,6 +109,7 @@ describe('analyticsRouter', () => {
 
     it('should throw UNAUTHORIZED when user object is undefined', async () => {
       const mockContext = {
+        prisma: mockPrisma,
         user: undefined,
         services: {
           analytics: mockAnalyticsService,
@@ -110,7 +117,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
       );
 
       await expect(caller.leadStats()).rejects.toThrow(TRPCError);
@@ -135,6 +142,7 @@ describe('analyticsRouter', () => {
       mockAnalyticsService.getDealsWonTrend.mockResolvedValue(mockTrend);
 
       const mockContext = {
+        prisma: mockPrisma,
         user: {
           userId: 'user_123',
           email: 'test@example.com',
@@ -147,7 +155,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
       );
 
       const result = await caller.dealsWonTrend({ months: 6 });
@@ -160,6 +168,7 @@ describe('analyticsRouter', () => {
       mockAnalyticsService.getDealsWonTrend.mockResolvedValue([]);
 
       const mockContext = {
+        prisma: mockPrisma,
         user: {
           userId: 'user_123',
           email: 'test@example.com',
@@ -172,7 +181,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
       );
 
       await caller.dealsWonTrend({});
@@ -184,6 +193,7 @@ describe('analyticsRouter', () => {
       mockAnalyticsService.getDealsWonTrend.mockResolvedValue([]);
 
       const mockContext = {
+        prisma: mockPrisma,
         user: {
           userId: 'user_123',
           email: 'test@example.com',
@@ -196,7 +206,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
       );
 
       // Test minimum value
@@ -227,6 +237,7 @@ describe('analyticsRouter', () => {
       mockAnalyticsService.getGrowthTrend.mockResolvedValue(mockTrends);
 
       const mockContext = {
+        prisma: mockPrisma,
         user: {
           userId: 'user_123',
           email: 'test@example.com',
@@ -239,7 +250,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
       );
 
       const result = await caller.growthTrends({ metric: 'revenue', months: 12 });
@@ -252,6 +263,7 @@ describe('analyticsRouter', () => {
       mockAnalyticsService.getGrowthTrend.mockResolvedValue({ data: [], total: 0, change: 0 });
 
       const mockContext = {
+        prisma: mockPrisma,
         user: {
           userId: 'user_123',
           email: 'test@example.com',
@@ -264,7 +276,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
       );
 
       await caller.growthTrends({ metric: 'leads', months: 6 });
@@ -276,6 +288,7 @@ describe('analyticsRouter', () => {
       mockAnalyticsService.getGrowthTrend.mockResolvedValue({ data: [], total: 0, change: 0 });
 
       const mockContext = {
+        prisma: mockPrisma,
         user: {
           userId: 'user_123',
           email: 'test@example.com',
@@ -288,7 +301,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
       );
 
       await caller.growthTrends({ metric: 'deals', months: 3 });
@@ -300,6 +313,7 @@ describe('analyticsRouter', () => {
       mockAnalyticsService.getGrowthTrend.mockResolvedValue({ data: [], total: 0, change: 0 });
 
       const mockContext = {
+        prisma: mockPrisma,
         user: {
           userId: 'user_123',
           email: 'test@example.com',
@@ -312,7 +326,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
       );
 
       await caller.growthTrends({ metric: 'contacts', months: 9 });
@@ -324,6 +338,7 @@ describe('analyticsRouter', () => {
       mockAnalyticsService.getGrowthTrend.mockResolvedValue({ data: [], total: 0, change: 0 });
 
       const mockContext = {
+        prisma: mockPrisma,
         user: {
           userId: 'user_123',
           email: 'test@example.com',
@@ -336,7 +351,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
       );
 
       await caller.growthTrends({ metric: 'revenue' });
@@ -361,6 +376,7 @@ describe('analyticsRouter', () => {
       mockAnalyticsService.getTrafficSources.mockResolvedValue(mockSources);
 
       const mockContext = {
+        prisma: mockPrisma,
         user: {
           userId: 'user_123',
           email: 'test@example.com',
@@ -373,7 +389,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
       );
 
       const result = await caller.trafficSources();
@@ -386,6 +402,7 @@ describe('analyticsRouter', () => {
       mockAnalyticsService.getTrafficSources.mockResolvedValue([]);
 
       const mockContext = {
+        prisma: mockPrisma,
         user: {
           userId: 'user_123',
           email: 'test@example.com',
@@ -398,7 +415,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
       );
 
       const result = await caller.trafficSources();
@@ -422,6 +439,7 @@ describe('analyticsRouter', () => {
       mockAnalyticsService.getRecentActivity.mockResolvedValue(mockActivities);
 
       const mockContext = {
+        prisma: mockPrisma,
         user: {
           userId: 'user_123',
           email: 'test@example.com',
@@ -434,7 +452,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
       );
 
       const result = await caller.recentActivity({ limit: 10 });
@@ -447,6 +465,7 @@ describe('analyticsRouter', () => {
       mockAnalyticsService.getRecentActivity.mockResolvedValue([]);
 
       const mockContext = {
+        prisma: mockPrisma,
         user: {
           userId: 'user_123',
           email: 'test@example.com',
@@ -459,7 +478,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
       );
 
       await caller.recentActivity({});
@@ -471,6 +490,7 @@ describe('analyticsRouter', () => {
       mockAnalyticsService.getRecentActivity.mockResolvedValue([]);
 
       const mockContext = {
+        prisma: mockPrisma,
         user: {
           userId: 'user_123',
           email: 'test@example.com',
@@ -483,7 +503,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
       );
 
       // Test minimum value
@@ -499,6 +519,7 @@ describe('analyticsRouter', () => {
       mockAnalyticsService.getRecentActivity.mockResolvedValue([]);
 
       const mockContext = {
+        prisma: mockPrisma,
         user: {
           userId: 'user_123',
           email: 'test@example.com',
@@ -511,7 +532,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
       );
 
       const result = await caller.recentActivity({ limit: 10 });
@@ -536,6 +557,7 @@ describe('analyticsRouter', () => {
       mockAnalyticsService.getLeadStats.mockResolvedValue(mockStats);
 
       const mockContext = {
+        prisma: mockPrisma,
         user: {
           userId: 'user_123',
           email: 'test@example.com',
@@ -548,7 +570,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
       );
 
       const result = await caller.leadStats();
@@ -568,6 +590,7 @@ describe('analyticsRouter', () => {
       mockAnalyticsService.getLeadStats.mockResolvedValue(mockStats);
 
       const mockContext = {
+        prisma: mockPrisma,
         user: {
           userId: 'user_123',
           email: 'test@example.com',
@@ -580,7 +603,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
       );
 
       const result = await caller.leadStats();
@@ -599,6 +622,7 @@ describe('analyticsRouter', () => {
       mockAnalyticsService.getLeadStats.mockRejectedValue(new Error('Database connection failed'));
 
       const mockContext = {
+        prisma: mockPrisma,
         user: {
           userId: 'user_123',
           email: 'test@example.com',
@@ -611,7 +635,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
       );
 
       await expect(caller.leadStats()).rejects.toThrow('Database connection failed');
@@ -626,6 +650,7 @@ describe('analyticsRouter', () => {
       );
 
       const mockContext = {
+        prisma: mockPrisma,
         user: {
           userId: 'user_123',
           email: 'test@example.com',
@@ -638,7 +663,7 @@ describe('analyticsRouter', () => {
       };
 
       const caller = analyticsRouter.createCaller(
-        mockContext as Parameters<typeof analyticsRouter.createCaller>[0]
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
       );
 
       await expect(caller.trafficSources()).rejects.toMatchObject({

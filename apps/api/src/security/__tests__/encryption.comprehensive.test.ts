@@ -519,7 +519,7 @@ describe('getEncryptionService with VAULT_ENABLED', () => {
 
     // Re-import to get fresh singleton
     vi.resetModules();
-    const mod = await import('../encryption');
+    const mod = await import('../encryption.js');
     mod.resetEncryptionService();
 
     const service = mod.getEncryptionService();
@@ -533,7 +533,7 @@ describe('getEncryptionService with VAULT_ENABLED', () => {
     process.env.ENCRYPTION_MASTER_KEY = 'test-master-key-32-bytes-long-!!';
 
     vi.resetModules();
-    const mod = await import('../encryption');
+    const mod = await import('../encryption.js');
     mod.resetEncryptionService();
 
     const service = mod.getEncryptionService();

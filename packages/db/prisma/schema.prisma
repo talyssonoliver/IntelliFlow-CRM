@@ -41,6 +41,7 @@ model Tenant {
   conversationRecords  ConversationRecord[]
   pipelineStageConfigs PipelineStageConfig[]
   chainVersions        ChainVersion[]
+  domainEvents         DomainEvent[]
 
   @@index([slug])
   @@index([status])
@@ -744,20 +745,28 @@ model AuditLog {
 }
 
 model DomainEvent {
-  id            String    @id @default(cuid())
+  id            String      @id @default(cuid())
   eventType     String
   aggregateType String
   aggregateId   String
   payload       Json
   metadata      Json?
-  occurredAt    DateTime  @default(now())
+  occurredAt    DateTime    @default(now())
   processedAt   DateTime?
+  publishedAt   DateTime?
   status        EventStatus @default(PENDING)
+  retryCount    Int         @default(0)
+  nextRetryAt   DateTime?
+  lastError     String?
+  tenantId      String
+  tenants       Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([eventType])
   @@index([aggregateType, aggregateId])
   @@index([status])
   @@index([occurredAt])
+  @@index([tenantId])
+  @@index([status, nextRetryAt])
   @@map("domain_events")
 }
 
@@ -766,6 +775,7 @@ enum EventStatus {
   PROCESSING
   PROCESSED
   FAILED
+  DEAD_LETTER
 }
 
 // ============================================

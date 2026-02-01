@@ -806,7 +806,7 @@ describe('getKeyRotationService singleton', () => {
     process.env.VAULT_ENABLED = 'true';
 
     vi.resetModules();
-    const mod = await import('../key-rotation');
+    const mod = await import('../key-rotation.js');
     mod.resetKeyRotationService();
 
     // Can't easily verify the store type, but verify service is created
@@ -821,7 +821,7 @@ describe('getKeyRotationService singleton', () => {
     process.env.KEY_ROTATION_WEBHOOK = 'https://example.com/webhook';
 
     vi.resetModules();
-    const mod = await import('../key-rotation');
+    const mod = await import('../key-rotation.js');
     mod.resetKeyRotationService();
 
     const service = mod.getKeyRotationService();

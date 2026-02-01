@@ -14,7 +14,7 @@
  * - qrcode: For QR code generation (optional, can use URL)
  */
 
-import { randomBytes, createHash } from 'node:crypto';
+import { randomBytes, createHash, createHmac } from 'node:crypto';
 import { PrismaClient } from '@prisma/client';
 
 // ============================================
@@ -83,8 +83,7 @@ function base32Decode(encoded: string): Buffer {
  * Generate HMAC-SHA1
  */
 function hmacSha1(key: Buffer, message: Buffer): Buffer {
-  const crypto = require('node:crypto');
-  const hmac = crypto.createHmac('sha1', key);
+  const hmac = createHmac('sha1', key);
   hmac.update(message);
   return hmac.digest();
 }

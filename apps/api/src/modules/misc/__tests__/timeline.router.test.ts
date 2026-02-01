@@ -274,6 +274,7 @@ describe('Timeline Router', () => {
     it('should aggregate appointments into timeline events', async () => {
       const appointment = {
         id: 'apt-1',
+        tenantId: TEST_UUIDS.tenant,
         title: 'Client Meeting',
         description: 'Discuss proposal',
         startTime: new Date('2024-06-01T10:00:00Z'),
@@ -322,6 +323,7 @@ describe('Timeline Router', () => {
     it('should aggregate agent actions from domain events', async () => {
       const agentEvent = {
         id: 'event-1',
+        tenantId: TEST_UUIDS.tenant,
         eventType: 'AgentActionProposed',
         aggregateType: 'Opportunity',
         aggregateId: TEST_UUIDS.opportunity1,
@@ -519,6 +521,7 @@ describe('Timeline Router', () => {
     it('should return agent actions with pending status', async () => {
       const agentEvent = {
         id: 'event-1',
+        tenantId: TEST_UUIDS.tenant,
         eventType: 'AgentActionProposed',
         aggregateType: 'Opportunity',
         aggregateId: TEST_UUIDS.opportunity1,
@@ -571,6 +574,7 @@ describe('Timeline Router', () => {
     it('should respect limit parameter', async () => {
       const events = Array.from({ length: 20 }, (_, i) => ({
         id: `event-${i}`,
+        tenantId: TEST_UUIDS.tenant,
         eventType: 'AgentActionProposed',
         aggregateType: 'Opportunity',
         aggregateId: TEST_UUIDS.opportunity1,

@@ -27,11 +27,10 @@ vi.mock('../../approval-workflow', () => ({
 
 const createMockContext = (overrides?: Partial<AgentAuthContext>): AgentAuthContext => ({
   userId: 'user-123',
-  userEmail: 'user@example.com',
-  role: 'SALES_REP',
-  tenantId: 'tenant-123',
+  userRole: 'SALES_REP',
+  permissions: ['draft:message', 'create:message'],
   agentSessionId: 'session-123',
-  allowedActionTypes: ['CREATE', 'READ', 'UPDATE', 'DELETE', 'SEARCH', 'DRAFT'],
+  allowedActionTypes: ['CREATE', 'SEARCH', 'UPDATE', 'DELETE', 'DRAFT'],
   allowedEntityTypes: ['LEAD', 'CONTACT', 'ACCOUNT', 'OPPORTUNITY', 'CASE', 'APPOINTMENT', 'MESSAGE'],
   maxActionsPerSession: 100,
   actionCount: 0,
@@ -132,7 +131,7 @@ describe('Draft Message Agent Tool', () => {
 
       it('should return error when DRAFT action not allowed', async () => {
         const context = createMockContext({
-          allowedActionTypes: ['READ', 'SEARCH'],
+          allowedActionTypes: ['SEARCH', 'SEARCH'],
         });
         const input = {
           type: 'EMAIL' as const,
@@ -235,7 +234,7 @@ describe('Draft Message Agent Tool', () => {
       });
 
       it('should handle execution errors gracefully', async () => {
-        const { pendingActionsStore } = await import('../../approval-workflow');
+        const { pendingActionsStore } = await import('../../approval-workflow.js');
         vi.mocked(pendingActionsStore.add).mockRejectedValueOnce(new Error('Store failed'));
 
         const context = createMockContext();
@@ -254,7 +253,7 @@ describe('Draft Message Agent Tool', () => {
       });
 
       it('should handle non-Error exceptions', async () => {
-        const { pendingActionsStore } = await import('../../approval-workflow');
+        const { pendingActionsStore } = await import('../../approval-workflow.js');
         vi.mocked(pendingActionsStore.add).mockRejectedValueOnce('String error');
 
         const context = createMockContext();
@@ -617,7 +616,7 @@ describe('Draft Message Agent Tool', () => {
           createdAt: new Date(),
         };
 
-        const result = await draftMessageTool.rollback('action-123', executionResult, context);
+        const result = await draftMessageTool.rollback!('action-123', executionResult, context);
 
         expect(result.success).toBe(true);
         expect(result.actionId).toBe('action-123');
@@ -637,7 +636,7 @@ describe('Draft Message Agent Tool', () => {
           createdAt: new Date(),
         };
 
-        const result = await draftMessageTool.rollback('action-456', executionResult, context);
+        const result = await draftMessageTool.rollback!('action-456', executionResult, context);
 
         expect(result.success).toBe(true);
       });
@@ -656,7 +655,7 @@ describe('Draft Message Agent Tool', () => {
           createdAt: new Date(),
         };
 
-        const result = await draftMessageTool.rollback('action-789', executionResult, context);
+        const result = await draftMessageTool.rollback!('action-789', executionResult, context);
 
         expect(result.success).toBe(true);
       });
@@ -674,14 +673,14 @@ describe('Draft Message Agent Tool', () => {
           createdAt: new Date(),
         };
 
-        const result = await draftMessageTool.rollback('action-sent', executionResult, context);
+        const result = await draftMessageTool.rollback!('action-sent', executionResult, context);
 
         expect(result.success).toBe(false);
         expect(result.error).toBe('Cannot rollback a message that has already been sent');
       });
 
       it('should handle rollback errors', async () => {
-        const { agentLogger } = await import('../../logger');
+        const { agentLogger } = await import('../../logger.js');
         vi.mocked(agentLogger.log).mockRejectedValueOnce(new Error('Log error'));
 
         const context = createMockContext();
@@ -695,14 +694,14 @@ describe('Draft Message Agent Tool', () => {
           createdAt: new Date(),
         };
 
-        const result = await draftMessageTool.rollback('action-error', executionResult, context);
+        const result = await draftMessageTool.rollback!('action-error', executionResult, context);
 
         expect(result.success).toBe(false);
         expect(result.error).toBe('Log error');
       });
 
       it('should handle non-Error exceptions in rollback', async () => {
-        const { agentLogger } = await import('../../logger');
+        const { agentLogger } = await import('../../logger.js');
         vi.mocked(agentLogger.log).mockRejectedValueOnce({ custom: 'error' });
 
         const context = createMockContext();
@@ -716,7 +715,7 @@ describe('Draft Message Agent Tool', () => {
           createdAt: new Date(),
         };
 
-        const result = await draftMessageTool.rollback('action-custom', executionResult, context);
+        const result = await draftMessageTool.rollback!('action-custom', executionResult, context);
 
         expect(result.success).toBe(false);
         expect(result.error).toBe('Rollback failed');

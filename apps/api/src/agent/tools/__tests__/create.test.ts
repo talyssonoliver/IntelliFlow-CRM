@@ -27,11 +27,10 @@ vi.mock('../../approval-workflow', () => ({
 
 const createMockContext = (overrides?: Partial<AgentAuthContext>): AgentAuthContext => ({
   userId: 'user-123',
-  userEmail: 'user@example.com',
-  role: 'SALES_REP',
-  tenantId: 'tenant-123',
+  userRole: 'SALES_REP',
+  permissions: ['create:lead', 'create:contact', 'create:opportunity', 'create:case', 'create:appointment'],
   agentSessionId: 'session-123',
-  allowedActionTypes: ['CREATE', 'READ', 'UPDATE', 'DELETE', 'SEARCH'],
+  allowedActionTypes: ['CREATE', 'SEARCH', 'UPDATE', 'DELETE'],
   allowedEntityTypes: ['LEAD', 'CONTACT', 'OPPORTUNITY', 'CASE', 'APPOINTMENT'],
   maxActionsPerSession: 100,
   actionCount: 0,
@@ -111,7 +110,7 @@ describe('Create Agent Tools', () => {
 
       it('should return error when CREATE action not allowed', async () => {
         const context = createMockContext({
-          allowedActionTypes: ['READ', 'SEARCH'],
+          allowedActionTypes: ['SEARCH', 'SEARCH'],
         });
         const input = {
           title: 'Test Case',
@@ -143,7 +142,7 @@ describe('Create Agent Tools', () => {
       });
 
       it('should handle execution errors gracefully', async () => {
-        const { pendingActionsStore } = await import('../../approval-workflow');
+        const { pendingActionsStore } = await import('../../approval-workflow.js');
         vi.mocked(pendingActionsStore.add).mockRejectedValueOnce(new Error('Store failed'));
 
         const context = createMockContext();
@@ -160,7 +159,7 @@ describe('Create Agent Tools', () => {
       });
 
       it('should handle non-Error exceptions', async () => {
-        const { pendingActionsStore } = await import('../../approval-workflow');
+        const { pendingActionsStore } = await import('../../approval-workflow.js');
         vi.mocked(pendingActionsStore.add).mockRejectedValueOnce('String error');
 
         const context = createMockContext();
@@ -335,7 +334,7 @@ describe('Create Agent Tools', () => {
           createdAt: new Date(),
         };
 
-        const result = await createCaseTool.rollback('action-123', executionResult, context);
+        const result = await createCaseTool.rollback!('action-123', executionResult, context);
 
         expect(result.success).toBe(true);
         expect(result.actionId).toBe('action-123');
@@ -344,7 +343,7 @@ describe('Create Agent Tools', () => {
       });
 
       it('should handle rollback errors', async () => {
-        const { agentLogger } = await import('../../logger');
+        const { agentLogger } = await import('../../logger.js');
         vi.mocked(agentLogger.log).mockRejectedValueOnce(new Error('Logging failed'));
 
         const context = createMockContext();
@@ -358,14 +357,14 @@ describe('Create Agent Tools', () => {
           createdAt: new Date(),
         };
 
-        const result = await createCaseTool.rollback('action-123', executionResult, context);
+        const result = await createCaseTool.rollback!('action-123', executionResult, context);
 
         expect(result.success).toBe(false);
         expect(result.error).toBe('Logging failed');
       });
 
       it('should handle non-Error exceptions in rollback', async () => {
-        const { agentLogger } = await import('../../logger');
+        const { agentLogger } = await import('../../logger.js');
         vi.mocked(agentLogger.log).mockRejectedValueOnce('String error');
 
         const context = createMockContext();
@@ -379,7 +378,7 @@ describe('Create Agent Tools', () => {
           createdAt: new Date(),
         };
 
-        const result = await createCaseTool.rollback('action-123', executionResult, context);
+        const result = await createCaseTool.rollback!('action-123', executionResult, context);
 
         expect(result.success).toBe(false);
         expect(result.error).toBe('Rollback failed');
@@ -451,7 +450,7 @@ describe('Create Agent Tools', () => {
 
       it('should return error when CREATE action not allowed', async () => {
         const context = createMockContext({
-          allowedActionTypes: ['READ', 'SEARCH'],
+          allowedActionTypes: ['SEARCH', 'SEARCH'],
         });
         const input = getValidInput();
 
@@ -504,7 +503,7 @@ describe('Create Agent Tools', () => {
       });
 
       it('should handle execution errors gracefully', async () => {
-        const { pendingActionsStore } = await import('../../approval-workflow');
+        const { pendingActionsStore } = await import('../../approval-workflow.js');
         vi.mocked(pendingActionsStore.add).mockRejectedValueOnce(new Error('Store error'));
 
         const context = createMockContext();
@@ -517,7 +516,7 @@ describe('Create Agent Tools', () => {
       });
 
       it('should handle non-Error exceptions', async () => {
-        const { pendingActionsStore } = await import('../../approval-workflow');
+        const { pendingActionsStore } = await import('../../approval-workflow.js');
         vi.mocked(pendingActionsStore.add).mockRejectedValueOnce(null);
 
         const context = createMockContext();
@@ -846,7 +845,7 @@ describe('Create Agent Tools', () => {
           createdAt: new Date(),
         };
 
-        const result = await createAppointmentTool.rollback(
+        const result = await createAppointmentTool.rollback!(
           'action-123',
           executionResult,
           context
@@ -859,7 +858,7 @@ describe('Create Agent Tools', () => {
       });
 
       it('should handle rollback errors', async () => {
-        const { agentLogger } = await import('../../logger');
+        const { agentLogger } = await import('../../logger.js');
         vi.mocked(agentLogger.log).mockRejectedValueOnce(new Error('Log error'));
 
         const context = createMockContext();
@@ -874,7 +873,7 @@ describe('Create Agent Tools', () => {
           createdAt: new Date(),
         };
 
-        const result = await createAppointmentTool.rollback(
+        const result = await createAppointmentTool.rollback!(
           'action-123',
           executionResult,
           context
@@ -885,7 +884,7 @@ describe('Create Agent Tools', () => {
       });
 
       it('should handle non-Error exceptions in rollback', async () => {
-        const { agentLogger } = await import('../../logger');
+        const { agentLogger } = await import('../../logger.js');
         vi.mocked(agentLogger.log).mockRejectedValueOnce({ custom: 'error' });
 
         const context = createMockContext();
@@ -900,7 +899,7 @@ describe('Create Agent Tools', () => {
           createdAt: new Date(),
         };
 
-        const result = await createAppointmentTool.rollback(
+        const result = await createAppointmentTool.rollback!(
           'action-123',
           executionResult,
           context

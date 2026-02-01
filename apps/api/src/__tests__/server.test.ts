@@ -133,8 +133,9 @@ describe('tRPC Server - server.ts', () => {
       });
 
       // tRPC flattens nested router procedures with dot notation
-      expect(mainRouter._def.procedures['sub.proc1']).toBeDefined();
-      expect(mainRouter._def.procedures['sub.proc2']).toBeDefined();
+      const procedures = mainRouter._def.procedures as Record<string, unknown>;
+      expect(procedures['sub.proc1']).toBeDefined();
+      expect(procedures['sub.proc2']).toBeDefined();
     });
 
     it('should support flat procedure composition', () => {

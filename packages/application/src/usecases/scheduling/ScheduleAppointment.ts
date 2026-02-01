@@ -21,6 +21,7 @@ export interface ScheduleAppointmentInput {
   appointmentType: AppointmentType;
   location?: string;
   organizerId: string;
+  tenantId: string;
   attendeeIds?: string[];
   linkedCaseIds?: string[];
   bufferMinutesBefore?: number;
@@ -109,6 +110,7 @@ export class ScheduleAppointmentUseCase {
         appointmentType: input.appointmentType,
         location: input.location,
         organizerId: input.organizerId,
+        tenantId: input.tenantId,
         attendeeIds: input.attendeeIds,
         linkedCaseIds,
         buffer,

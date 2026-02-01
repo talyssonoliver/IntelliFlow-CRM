@@ -306,11 +306,29 @@ export async function signIn(email: string, password: string): Promise<SignInRes
 }
 
 /**
- * Sign out the current user
+ * Sign out the current user (client-side only - use signOutUser for server-side)
+ * @deprecated Use signOutUser(userId) for server-side logout
  */
 export async function signOut(): Promise<{ error: Error | null }> {
   const { error } = await supabase.auth.signOut();
   return { error };
+}
+
+/**
+ * Sign out a specific user by ID (server-side admin operation)
+ * IFC-007: Added for proper server-side logout
+ *
+ * Uses Supabase Admin API to invalidate all sessions for a user.
+ * This is the correct way to log out a user from the server side.
+ */
+export async function signOutUser(userId: string): Promise<{ error: Error | null }> {
+  try {
+    // Use admin API to sign out user globally
+    const { error } = await supabaseAdmin.auth.admin.signOut(userId, 'global');
+    return { error };
+  } catch (err) {
+    return { error: err instanceof Error ? err : new Error('Failed to sign out user') };
+  }
 }
 
 /**
@@ -335,8 +353,77 @@ export async function getUser(): Promise<{ user: User | null; error: Error | nul
 export async function verifyToken(
   token: string
 ): Promise<{ user: User | null; error: Error | null }> {
-  const { data, error } = await supabaseAdmin.auth.getUser(token);
-  return { user: data.user, error };
+  console.log('[verifyToken] Attempting to verify token...');
+  console.log('[verifyToken] Using SUPABASE_URL:', SUPABASE_URL);
+  console.log('[verifyToken] Service key configured:', !!SUPABASE_SERVICE_ROLE_KEY);
+  console.log('[verifyToken] Using mock keys:', config.usingMockKeys);
+
+  if (config.usingMockKeys) {
+    console.error('[verifyToken] WARNING: Using mock keys - token verification will fail!');
+    return { user: null, error: new Error('Mock keys cannot verify real tokens') };
+  }
+
+  // Decode and validate token structure
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      console.error('[verifyToken] Invalid token structure - expected 3 parts, got:', parts.length);
+      return { user: null, error: new Error('Invalid token structure') };
+    }
+
+    const payloadBase64 = parts[1];
+    const payload = JSON.parse(Buffer.from(payloadBase64, 'base64').toString());
+
+    console.log('[verifyToken] Token payload:', {
+      iss: payload.iss,
+      sub: payload.sub,
+      email: payload.email,
+      aud: payload.aud,
+      role: payload.role,
+      exp: payload.exp,
+      iat: payload.iat,
+      expDate: payload.exp ? new Date(payload.exp * 1000).toISOString() : 'N/A',
+      isExpired: payload.exp ? Date.now() > payload.exp * 1000 : 'N/A',
+    });
+
+    // Check if token is expired
+    if (payload.exp && Date.now() > payload.exp * 1000) {
+      console.error('[verifyToken] Token has expired');
+      return { user: null, error: new Error('Token has expired') };
+    }
+
+    // Verify issuer matches our Supabase URL
+    const expectedIssuer = `${SUPABASE_URL}/auth/v1`;
+    if (payload.iss && payload.iss !== expectedIssuer) {
+      console.error('[verifyToken] Issuer mismatch!');
+      console.error('[verifyToken] Token issuer:', payload.iss);
+      console.error('[verifyToken] Expected issuer:', expectedIssuer);
+    }
+  } catch (decodeErr) {
+    console.error('[verifyToken] Failed to decode token:', decodeErr);
+    // Don't return error here - let Supabase try to verify anyway
+  }
+
+  try {
+    const { data, error } = await supabaseAdmin.auth.getUser(token);
+
+    console.log('[verifyToken] Supabase response:', {
+      hasData: !!data,
+      hasUser: !!data?.user,
+      userId: data?.user?.id,
+      userEmail: data?.user?.email,
+      errorMessage: error?.message,
+      errorName: error?.name,
+      errorCode: (error as Error & { code?: string })?.code,
+      errorStatus: (error as Error & { status?: number })?.status,
+      fullError: error ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : null,
+    });
+
+    return { user: data.user, error };
+  } catch (unexpectedError) {
+    console.error('[verifyToken] Unexpected error:', unexpectedError);
+    return { user: null, error: unexpectedError instanceof Error ? unexpectedError : new Error('Unknown error') };
+  }
 }
 
 // ============================================

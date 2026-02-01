@@ -71,6 +71,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
       attendeeIds,
       linkedCaseIds,
       organizerId: record.organizerId,
+      tenantId: record.tenantId,
       notes: record.notes ?? undefined,
       externalCalendarId: record.externalCalendarId ?? undefined,
       reminderMinutes: record.reminderMinutes ?? undefined,
@@ -96,6 +97,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
       bufferMinutesAfter: appointment.buffer.afterMinutes,
       recurrence: appointment.recurrence ? appointment.recurrence.toJSON() : null,
       organizerId: appointment.organizerId,
+      tenantId: appointment.tenantId,
       notes: appointment.notes ?? null,
       externalCalendarId: appointment.externalCalendarId ?? null,
       reminderMinutes: appointment.reminderMinutes ?? null,
@@ -122,6 +124,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
           data: appointment.attendeeIds.map((userId) => ({
             appointmentId: data.id,
             userId,
+            tenantId: data.tenantId,
           })),
         });
       }
@@ -136,6 +139,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
           data: appointment.linkedCaseIds.map((caseId) => ({
             appointmentId: data.id,
             caseId: caseId.value,
+            tenantId: data.tenantId,
           })),
         });
       }
@@ -158,6 +162,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
           bufferMinutesAfter: appointment.buffer.afterMinutes,
           recurrence: appointment.recurrence ? appointment.recurrence.toJSON() : null,
           organizerId: appointment.organizerId,
+          tenantId: appointment.tenantId,
           notes: appointment.notes ?? null,
           externalCalendarId: appointment.externalCalendarId ?? null,
           reminderMinutes: appointment.reminderMinutes ?? null,
@@ -182,6 +187,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
             data: appointment.attendeeIds.map((userId) => ({
               appointmentId: data.id,
               userId,
+              tenantId: data.tenantId,
             })),
           });
         }
@@ -196,6 +202,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
             data: appointment.linkedCaseIds.map((caseId) => ({
               appointmentId: data.id,
               caseId: caseId.value,
+              tenantId: data.tenantId,
             })),
           });
         }

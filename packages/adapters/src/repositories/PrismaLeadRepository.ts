@@ -270,4 +270,194 @@ export class PrismaLeadRepository implements LeadRepository {
       })
     );
   }
+
+  /**
+   * IFC-007: Bulk update lead status
+   * Uses updateMany for O(1) batch operation instead of O(n) sequential updates
+   */
+  async bulkUpdateStatus(
+    ids: string[],
+    status: LeadStatus,
+    updatedBy: string
+  ): Promise<{ successful: string[]; failed: Array<{ id: string; error: string }> }> {
+    const successful: string[] = [];
+    const failed: Array<{ id: string; error: string }> = [];
+
+    try {
+      // Verify which leads exist
+      const existingLeads = await this.prisma.lead.findMany({
+        where: { id: { in: ids } },
+        select: { id: true },
+      });
+      const existingIds = new Set(existingLeads.map(l => l.id));
+
+      // Track non-existent IDs
+      for (const id of ids) {
+        if (!existingIds.has(id)) {
+          failed.push({ id, error: 'Lead not found' });
+        }
+      }
+
+      // Batch update existing leads
+      const idsToUpdate = ids.filter(id => existingIds.has(id));
+      if (idsToUpdate.length > 0) {
+        await this.prisma.lead.updateMany({
+          where: { id: { in: idsToUpdate } },
+          data: {
+            status,
+            updatedAt: new Date(),
+          },
+        });
+        successful.push(...idsToUpdate);
+      }
+    } catch (error) {
+      // If batch update fails, all IDs fail
+      for (const id of ids) {
+        if (!failed.find(f => f.id === id)) {
+          failed.push({
+            id,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+        }
+      }
+    }
+
+    return { successful, failed };
+  }
+
+  /**
+   * IFC-007: Bulk delete leads
+   * Uses deleteMany for O(1) batch operation instead of O(n) sequential deletes
+   */
+  async bulkDelete(
+    ids: string[]
+  ): Promise<{ successful: string[]; failed: Array<{ id: string; error: string }> }> {
+    const successful: string[] = [];
+    const failed: Array<{ id: string; error: string }> = [];
+
+    try {
+      // Verify which leads exist before deletion
+      const existingLeads = await this.prisma.lead.findMany({
+        where: { id: { in: ids } },
+        select: { id: true },
+      });
+      const existingIds = new Set(existingLeads.map(l => l.id));
+
+      // Track non-existent IDs
+      for (const id of ids) {
+        if (!existingIds.has(id)) {
+          failed.push({ id, error: 'Lead not found' });
+        }
+      }
+
+      // Batch delete existing leads
+      const idsToDelete = ids.filter(id => existingIds.has(id));
+      if (idsToDelete.length > 0) {
+        await this.prisma.lead.deleteMany({
+          where: { id: { in: idsToDelete } },
+        });
+        successful.push(...idsToDelete);
+      }
+    } catch (error) {
+      // If batch delete fails, all IDs fail
+      for (const id of ids) {
+        if (!failed.find(f => f.id === id)) {
+          failed.push({
+            id,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+        }
+      }
+    }
+
+    return { successful, failed };
+  }
+
+  /**
+   * IFC-007: Bulk convert leads to contacts
+   * Uses transaction with batch operations for O(1) instead of O(n)
+   */
+  async bulkConvert(
+    ids: string[],
+    createAccounts: boolean,
+    userId: string
+  ): Promise<{ successful: string[]; failed: Array<{ id: string; error: string }> }> {
+    return await this.prisma.$transaction(async (tx) => {
+      const successful: string[] = [];
+      const failed: Array<{ id: string; error: string }> = [];
+
+      // Fetch all leads in single query
+      const leads = await tx.lead.findMany({
+        where: { id: { in: ids } },
+      });
+      const existingIds = new Set(leads.map(l => l.id));
+
+      // Track non-existent leads
+      for (const id of ids) {
+        if (!existingIds.has(id)) {
+          failed.push({ id, error: 'Lead not found' });
+        }
+      }
+
+      // Filter valid leads for conversion (not already converted)
+      const validLeads = leads.filter(l => l.status !== 'CONVERTED');
+      const alreadyConverted = leads.filter(l => l.status === 'CONVERTED');
+
+      for (const lead of alreadyConverted) {
+        failed.push({ id: lead.id, error: 'Lead already converted' });
+      }
+
+      if (validLeads.length === 0) {
+        return { successful, failed };
+      }
+
+      // Batch update lead statuses
+      await tx.lead.updateMany({
+        where: { id: { in: validLeads.map(l => l.id) } },
+        data: {
+          status: 'CONVERTED',
+          updatedAt: new Date(),
+        },
+      });
+
+      // Batch create contacts
+      await tx.contact.createMany({
+        data: validLeads.map(lead => ({
+          firstName: lead.firstName || 'Unknown',
+          lastName: lead.lastName || 'Unknown',
+          email: lead.email,
+          phone: lead.phone,
+          company: lead.company,
+          title: lead.title,
+          tenantId: lead.tenantId,
+          ownerId: lead.ownerId || userId,
+          createdBy: userId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })),
+        skipDuplicates: true,
+      });
+
+      // Optionally create accounts
+      if (createAccounts) {
+        const companiesWithLeads = validLeads.filter(l => l.company);
+        if (companiesWithLeads.length > 0) {
+          await tx.account.createMany({
+            data: companiesWithLeads.map(lead => ({
+              name: lead.company!,
+              tenantId: lead.tenantId,
+              ownerId: lead.ownerId || userId,
+              createdBy: userId,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            })),
+            skipDuplicates: true,
+          });
+        }
+      }
+
+      successful.push(...validLeads.map(l => l.id));
+      return { successful, failed };
+    });
+  }
 }

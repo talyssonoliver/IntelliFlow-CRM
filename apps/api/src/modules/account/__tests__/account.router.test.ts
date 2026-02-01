@@ -712,7 +712,7 @@ describe('Account Router', () => {
   describe('service unavailable', () => {
     it('should throw INTERNAL_SERVER_ERROR when account service is not available', async () => {
       const ctxWithoutService = createTestContext();
-      ctxWithoutService.services = { account: undefined as any };
+      ctxWithoutService.services = { account: undefined } as any;
       const callerWithoutService = accountRouter.createCaller(ctxWithoutService);
 
       await expect(callerWithoutService.create({ name: 'Test' })).rejects.toThrow(

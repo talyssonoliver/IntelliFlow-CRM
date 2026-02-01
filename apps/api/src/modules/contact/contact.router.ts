@@ -112,7 +112,7 @@ export const contactRouter = createTRPCRouter({
       });
     }
 
-    // For complex includes, use Prisma to get related data
+    // For complex includes, use Prisma to get related data (Contact 360 view)
     const contactWithRelations = await typedCtx.prismaWithTenant.contact.findUnique({
       where: { id: input.id },
       include: {
@@ -124,7 +124,14 @@ export const contactRouter = createTRPCRouter({
             avatarUrl: true,
           },
         },
-        account: true,
+        account: {
+          select: {
+            id: true,
+            name: true,
+            industry: true,
+            website: true,
+          },
+        },
         lead: {
           select: {
             id: true,
@@ -133,6 +140,18 @@ export const contactRouter = createTRPCRouter({
             score: true,
           },
         },
+        // Contact 360: Activities timeline
+        activities: {
+          orderBy: { timestamp: 'desc' },
+          take: 50,
+        },
+        // Contact 360: Notes
+        notes: {
+          orderBy: { createdAt: 'desc' },
+        },
+        // Contact 360: AI Insights
+        aiInsight: true,
+        // Contact 360: Deals/Opportunities
         opportunities: {
           orderBy: { createdAt: 'desc' },
           include: {
@@ -144,9 +163,24 @@ export const contactRouter = createTRPCRouter({
             },
           },
         },
+        // Contact 360: Tasks
         tasks: {
           where: { status: { not: 'COMPLETED' } },
           orderBy: { dueDate: 'asc' },
+          take: 10,
+        },
+        // Contact 360: Documents
+        documents: {
+          orderBy: { createdAt: 'desc' },
+          take: 20,
+        },
+        // Contact 360: Calendar Events (upcoming meetings)
+        calendarEvents: {
+          where: {
+            startTime: { gte: new Date() },
+          },
+          orderBy: { startTime: 'asc' },
+          take: 5,
         },
       },
     });

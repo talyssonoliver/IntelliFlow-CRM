@@ -406,7 +406,7 @@ describe('KeyRotationService Functional Tests', () => {
   beforeEach(async () => {
     vi.resetModules();
     process.env.ENCRYPTION_MASTER_KEY = 'test-master-key-32-bytes-long-!!';
-    const mod = await import('../key-rotation');
+    const mod = await import('../key-rotation.js');
     KeyRotationService = mod.KeyRotationService;
     getKeyRotationService = mod.getKeyRotationService;
     resetKeyRotationService = mod.resetKeyRotationService;

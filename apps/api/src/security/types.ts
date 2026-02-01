@@ -186,6 +186,7 @@ export interface AuditLogInput {
 export interface SecurityEventInput {
   eventType: SecurityEventType;
   severity?: SecuritySeverity;
+  tenantId: string;
   actorId?: string;
   actorEmail?: string;
   actorIp?: string;

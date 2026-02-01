@@ -11,10 +11,18 @@
  * - Training data export
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { feedbackRouter } from '../feedback.router';
 import type { BaseContext } from '../../../context';
+
+// Type for mock feedback service
+type MockFeedbackService = ReturnType<typeof createMockFeedbackService>;
+
+// Helper to get typed feedback service from context
+function getFeedbackService(ctx: BaseContext): MockFeedbackService {
+  return ctx.services!.feedback as MockFeedbackService;
+}
 
 // Test UUID constants
 const TEST_UUIDS = {
@@ -156,7 +164,7 @@ describe('feedbackRouter', () => {
       const result = await caller.submitSimple(validSimpleFeedback);
 
       expect(result).toEqual(mockFeedback);
-      expect(ctx.services!.feedback.submitSimpleFeedback).toHaveBeenCalledWith(
+      expect(getFeedbackService(ctx).submitSimpleFeedback).toHaveBeenCalledWith(
         validSimpleFeedback,
         TEST_UUIDS.user1,
         TEST_UUIDS.tenant
@@ -168,7 +176,7 @@ describe('feedbackRouter', () => {
       const caller = feedbackRouter.createCaller(ctx);
 
       const thumbsDownFeedback = { ...mockFeedback, feedbackType: 'THUMBS_DOWN' };
-      ctx.services!.feedback.submitSimpleFeedback.mockResolvedValueOnce(thumbsDownFeedback);
+      getFeedbackService(ctx).submitSimpleFeedback.mockResolvedValueOnce(thumbsDownFeedback);
 
       const result = await caller.submitSimple({
         ...validSimpleFeedback,
@@ -210,7 +218,7 @@ describe('feedbackRouter', () => {
       const result = await caller.submitCorrection(validCorrectionInput);
 
       expect(result).toEqual(mockScoreCorrection);
-      expect(ctx.services!.feedback.submitScoreCorrection).toHaveBeenCalledWith(
+      expect(getFeedbackService(ctx).submitScoreCorrection).toHaveBeenCalledWith(
         validCorrectionInput,
         TEST_UUIDS.user1,
         TEST_UUIDS.tenant
@@ -232,7 +240,7 @@ describe('feedbackRouter', () => {
 
       await caller.submitCorrection(inputWithoutReason);
 
-      expect(ctx.services!.feedback.submitScoreCorrection).toHaveBeenCalledWith(
+      expect(getFeedbackService(ctx).submitScoreCorrection).toHaveBeenCalledWith(
         inputWithoutReason,
         TEST_UUIDS.user1,
         TEST_UUIDS.tenant
@@ -252,12 +260,12 @@ describe('feedbackRouter', () => {
       const result = await caller.getForLead({ leadId: TEST_UUIDS.lead1 });
 
       expect(result).toEqual([mockFeedback]);
-      expect(ctx.services!.feedback.getFeedbackForLead).toHaveBeenCalledWith(TEST_UUIDS.lead1);
+      expect(getFeedbackService(ctx).getFeedbackForLead).toHaveBeenCalledWith(TEST_UUIDS.lead1);
     });
 
     it('should return empty array when no feedback exists', async () => {
       const ctx = createFeedbackTestContext();
-      ctx.services!.feedback.getFeedbackForLead.mockResolvedValueOnce([]);
+      getFeedbackService(ctx).getFeedbackForLead.mockResolvedValueOnce([]);
       const caller = feedbackRouter.createCaller(ctx);
 
       const result = await caller.getForLead({ leadId: 'lead_without_feedback' });
@@ -297,7 +305,7 @@ describe('feedbackRouter', () => {
         modelVersion: '1.0.0',
       });
 
-      expect(ctx.services!.feedback.getAnalytics).toHaveBeenCalledWith(
+      expect(getFeedbackService(ctx).getAnalytics).toHaveBeenCalledWith(
         expect.objectContaining({
           modelVersion: '1.0.0',
         })
@@ -314,7 +322,7 @@ describe('feedbackRouter', () => {
         tenantId: 'tenant_456',
       });
 
-      expect(ctx.services!.feedback.getAnalytics).toHaveBeenCalledWith(
+      expect(getFeedbackService(ctx).getAnalytics).toHaveBeenCalledWith(
         expect.objectContaining({
           tenantId: 'tenant_456',
         })
@@ -341,7 +349,7 @@ describe('feedbackRouter', () => {
 
     it('should indicate when retraining is not needed', async () => {
       const ctx = createFeedbackTestContext();
-      ctx.services!.feedback.checkRetrainingNeeded.mockResolvedValueOnce({
+      getFeedbackService(ctx).checkRetrainingNeeded.mockResolvedValueOnce({
         recommended: false,
         reason: 'Model performing well',
         metrics: {
@@ -362,7 +370,7 @@ describe('feedbackRouter', () => {
 
     it('should indicate when more samples needed', async () => {
       const ctx = createFeedbackTestContext();
-      ctx.services!.feedback.checkRetrainingNeeded.mockResolvedValueOnce({
+      getFeedbackService(ctx).checkRetrainingNeeded.mockResolvedValueOnce({
         recommended: false,
         reason: 'Insufficient samples for assessment',
         metrics: {
@@ -400,7 +408,7 @@ describe('feedbackRouter', () => {
       expect(result.exportId).toBeDefined();
       expect(result.records).toBe(100);
       expect(result.downloadUrl).toContain('exports');
-      expect(ctx.services!.feedback.exportTrainingData).toHaveBeenCalledWith(
+      expect(getFeedbackService(ctx).exportTrainingData).toHaveBeenCalledWith(
         '1.0.0',
         expect.any(Date),
         expect.any(Date),
@@ -436,7 +444,7 @@ describe('feedbackRouter', () => {
 
     it('should propagate service errors', async () => {
       const ctx = createFeedbackTestContext();
-      ctx.services!.feedback.submitSimpleFeedback.mockRejectedValueOnce(new Error('Database connection failed'));
+      getFeedbackService(ctx).submitSimpleFeedback.mockRejectedValueOnce(new Error('Database connection failed'));
       const caller = feedbackRouter.createCaller(ctx);
 
       await expect(caller.submitSimple(validInput)).rejects.toThrow('Database connection failed');
@@ -460,7 +468,7 @@ describe('feedbackRouter', () => {
         modelVersion: '1.0.0',
       });
 
-      expect(ctx.services!.feedback.submitSimpleFeedback).toHaveBeenCalledWith(
+      expect(getFeedbackService(ctx).submitSimpleFeedback).toHaveBeenCalledWith(
         expect.any(Object),
         TEST_UUIDS.user1,
         TEST_UUIDS.tenant
@@ -480,7 +488,7 @@ describe('feedbackRouter', () => {
         modelVersion: '1.0.0',
       });
 
-      expect(ctx.services!.feedback.submitScoreCorrection).toHaveBeenCalledWith(
+      expect(getFeedbackService(ctx).submitScoreCorrection).toHaveBeenCalledWith(
         expect.any(Object),
         TEST_UUIDS.user1,
         TEST_UUIDS.tenant

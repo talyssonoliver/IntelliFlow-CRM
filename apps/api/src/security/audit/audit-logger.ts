@@ -129,7 +129,7 @@ export class AuditLogger {
    */
   async logLoginSuccess(tenantId: string, options: AuthLogOptions): Promise<void> {
     await this.log(createLoginSuccessEntry(tenantId, options));
-    await this.logSecurityEvent(createLoginSuccessSecurityEvent(options));
+    await this.logSecurityEvent(createLoginSuccessSecurityEvent(tenantId, options));
   }
 
   /**
@@ -137,7 +137,7 @@ export class AuditLogger {
    */
   async logLoginFailure(tenantId: string, options: AuthLogOptions): Promise<void> {
     await this.log(createLoginFailureEntry(tenantId, options));
-    await this.logSecurityEvent(createLoginFailureSecurityEvent(options));
+    await this.logSecurityEvent(createLoginFailureSecurityEvent(tenantId, options));
   }
 
   /**

@@ -16,11 +16,16 @@
       "types": "./dist/client.d.ts",
       "import": "./dist/client.mjs",
       "require": "./dist/client.js"
+    },
+    "./seed-ids": {
+      "types": "./dist/seed-ids.d.ts",
+      "import": "./dist/seed-ids.mjs",
+      "require": "./dist/seed-ids.js"
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts src/client.ts --format cjs,esm --dts",
-    "dev": "tsup src/index.ts src/client.ts --format cjs,esm --dts --watch",
+    "build": "tsup src/index.ts src/client.ts src/seed-ids.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts src/client.ts src/seed-ids.ts --format cjs,esm --dts --watch",
     "clean": "rm -rf dist .turbo",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
@@ -30,6 +35,8 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:seed": "tsx --env-file=.env prisma/seed.ts",
+    "db:cleanup-legacy": "tsx --env-file=.env prisma/cleanup-legacy-seed-ids.ts",
+    "db:cleanup-legacy:dry-run": "tsx --env-file=.env prisma/cleanup-legacy-seed-ids.ts --dry-run",
     "db:reset": "prisma migrate reset --force",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"src/**/*.ts\"",
@@ -46,6 +53,7 @@
   },
   "devDependencies": {
     "@intelliflow/typescript-config": "workspace:*",
+    "@supabase/supabase-js": "^2.45.0",
     "@types/node": "^20.11.0",
     "prisma": "^5.10.0",
     "tsup": "^8.0.0",

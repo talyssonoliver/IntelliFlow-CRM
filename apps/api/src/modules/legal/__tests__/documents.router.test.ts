@@ -15,7 +15,9 @@ import { documentsRouter } from '../documents.router';
 import { createTRPCRouter, protectedProcedure, router } from '../../../trpc';
 
 // Mock the domain and adapters
-vi.mock('@intelliflow/domain', () => {
+vi.mock('@intelliflow/domain', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@intelliflow/domain')>();
+
   const mockDocument = {
     id: 'doc-123',
     tenantId: 'tenant-1',
@@ -54,6 +56,7 @@ vi.mock('@intelliflow/domain', () => {
   };
 
   return {
+    ...actual,
     CaseDocument: {
       create: vi.fn().mockReturnValue(mockDocument),
     },
@@ -224,7 +227,7 @@ describe('Documents Router - IFC-152', () => {
       ];
 
       mutations.forEach((name) => {
-        expect(documentsRouter._def.procedures[name]).toBeDefined();
+        expect((documentsRouter._def.procedures as Record<string, unknown>)[name]).toBeDefined();
       });
     });
 
@@ -232,7 +235,7 @@ describe('Documents Router - IFC-152', () => {
       const queries = ['getById', 'list', 'getAuditTrail'];
 
       queries.forEach((name) => {
-        expect(documentsRouter._def.procedures[name]).toBeDefined();
+        expect((documentsRouter._def.procedures as Record<string, unknown>)[name]).toBeDefined();
       });
     });
   });

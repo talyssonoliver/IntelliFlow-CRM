@@ -126,7 +126,7 @@ describe('Appointments Router - IFC-137', () => {
       ];
 
       mutations.forEach((name) => {
-        expect(appointmentsRouter._def.procedures[name]).toBeDefined();
+        expect((appointmentsRouter._def.procedures as Record<string, unknown>)[name]).toBeDefined();
       });
     });
 
@@ -140,7 +140,7 @@ describe('Appointments Router - IFC-137', () => {
       ];
 
       queries.forEach((name) => {
-        expect(appointmentsRouter._def.procedures[name]).toBeDefined();
+        expect((appointmentsRouter._def.procedures as Record<string, unknown>)[name]).toBeDefined();
       });
     });
   });

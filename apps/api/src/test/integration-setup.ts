@@ -156,57 +156,12 @@ try {
 }
 
 /**
- * SEED_IDS for easy access in tests
- * Copied from packages/db/prisma/seed.ts - should be kept in sync
+ * SEED_IDS - Imported from single source of truth
+ * @see packages/db/src/seed-ids.ts
  * These are always available regardless of infrastructure state
- * Using UUID format for API compatibility
  */
-export const SEED_IDS = {
-  users: {
-    admin: '00000000-0000-4000-8000-000000000011',
-    manager: '00000000-0000-4000-8000-000000000012',
-    sarahJohnson: '00000000-0000-4000-8000-000000000013',
-    mikeDavis: '00000000-0000-4000-8000-000000000014',
-    emilyDavis: '00000000-0000-4000-8000-000000000015',
-    jamesWilson: '00000000-0000-4000-8000-000000000016',
-    alexMorgan: '00000000-0000-4000-8000-000000000017',
-  },
-  leads: {
-    sarahMiller: '00000000-0000-4000-8000-000000000021',
-    davidChen: '00000000-0000-4000-8000-000000000022',
-    amandaSmith: '00000000-0000-4000-8000-000000000023',
-    jamesWilson: '00000000-0000-4000-8000-000000000024',
-    elenaRodriguez: '00000000-0000-4000-8000-000000000025',
-  },
-  contacts: {
-    sarahMiller: '00000000-0000-4000-8000-000000000031',
-    davidChen: '00000000-0000-4000-8000-000000000032',
-    amandaSmith: '00000000-0000-4000-8000-000000000033',
-    jamesWilson: '00000000-0000-4000-8000-000000000034',
-    elenaRodriguez: '00000000-0000-4000-8000-000000000035',
-    johnSmith: '00000000-0000-4000-8000-000000000036',
-  },
-  accounts: {
-    techCorp: '00000000-0000-4000-8000-000000000041',
-    designCo: '00000000-0000-4000-8000-000000000042',
-    smithConsulting: '00000000-0000-4000-8000-000000000043',
-    globalSoft: '00000000-0000-4000-8000-000000000044',
-    finTech: '00000000-0000-4000-8000-000000000045',
-    acmeCorp: '00000000-0000-4000-8000-000000000046',
-  },
-  opportunities: {
-    enterpriseLicenseAcme: '00000000-0000-4000-8000-000000000051',
-    annualSubscriptionTechStart: '00000000-0000-4000-8000-000000000052',
-    customIntegrationGlobalTech: '00000000-0000-4000-8000-000000000053',
-    platformMigrationDataCorp: '00000000-0000-4000-8000-000000000054',
-  },
-  tasks: {
-    callSarah: '00000000-0000-4000-8000-000000000091',
-    followUpTechCorp: '00000000-0000-4000-8000-000000000092',
-    prepareQ3Report: '00000000-0000-4000-8000-000000000093',
-    callAcmeCorp: '00000000-0000-4000-8000-000000000094',
-  },
-};
+import { SEED_IDS } from '@intelliflow/db/seed-ids';
+export { SEED_IDS };
 
 /**
  * Real services for integration tests (lazy-loaded)

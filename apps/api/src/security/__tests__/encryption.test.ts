@@ -343,7 +343,7 @@ describe('getEncryptionService singleton', () => {
   beforeEach(async () => {
     vi.resetModules();
     process.env.ENCRYPTION_MASTER_KEY = 'test-master-key-32-bytes-long-!!';
-    const mod = await import('../encryption');
+    const mod = await import('../encryption.js');
     getEncryptionService = mod.getEncryptionService;
   });
 

@@ -517,6 +517,7 @@ export class RBACService {
    */
   async assignRole(
     userId: string,
+    tenantId: string,
     roleName: string,
     assignedBy?: string,
     expiresAt?: Date
@@ -536,6 +537,7 @@ export class RBACService {
       create: {
         userId,
         roleId: role.id,
+        tenantId,
         assignedBy,
         expiresAt,
       },
@@ -578,6 +580,7 @@ export class RBACService {
    */
   async setUserPermission(
     userId: string,
+    tenantId: string,
     permissionName: string,
     granted: boolean,
     grantedBy?: string,
@@ -599,6 +602,7 @@ export class RBACService {
       create: {
         userId,
         permissionId: permission.id,
+        tenantId,
         granted,
         grantedBy,
         reason,

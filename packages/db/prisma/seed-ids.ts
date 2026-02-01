@@ -7,5 +7,5 @@
  * For package consumers, use: import { SEED_IDS } from '@intelliflow/db/seed-ids'
  */
 
-export { SEED_IDS } from '../src/seed-ids';
+export { SEED_IDS, LEGACY_STRING_IDS } from '../src/seed-ids';
 export type { SeedIds } from '../src/seed-ids';

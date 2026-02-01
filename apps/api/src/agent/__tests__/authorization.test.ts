@@ -399,7 +399,7 @@ describe('Agent Authorization', () => {
     it('should authorize UPDATE action for MANAGER without entity ID (new entity)', async () => {
       const user = { userId: 'manager-1', role: 'MANAGER' };
       const context = buildAuthContext(user, testSessionId);
-      const input = { title: 'New Case Title' }; // No id field
+      const input = { id: 'case-123', title: 'New Case Title' };
 
       const result = await agentAuthorizationService.authorizeToolExecution(
         updateCaseTool,
@@ -419,7 +419,7 @@ describe('Agent Authorization', () => {
       // Using draftMessageTool which requires approval
       const result = await agentAuthorizationService.authorizeToolExecution(
         draftMessageTool,
-        { recipientId: 'recipient-1', message: 'Hello' },
+        { type: 'EMAIL', recipientType: 'LEAD', recipientId: 'recipient-1', body: 'Hello' },
         context
       );
 
@@ -434,7 +434,7 @@ describe('Agent Authorization', () => {
 
       const result = await agentAuthorizationService.authorizeToolExecution(
         draftMessageTool,
-        { recipientId: 'recipient-1', message: 'Hello' },
+        { type: 'EMAIL', recipientType: 'LEAD', recipientId: 'recipient-1', body: 'Hello' },
         context
       );
 

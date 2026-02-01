@@ -362,9 +362,12 @@ export class DSARWorkflow {
   /**
    * Handle erasure request (Article 17)
    * Anonymize all personal data
+   *
+   * IFC-155: Now includes purge of search indexes and embeddings
    */
   private async handleErasureRequest(requestId: string, dsarRecord: any): Promise<void> {
     const subjectId = dsarRecord.subject_id;
+    const tenantId = dsarRecord.tenant_id;
 
     // Check for legal holds
     const legalHolds = await this.db.legal_holds.findMany({
@@ -381,6 +384,15 @@ export class DSARWorkflow {
       );
     }
 
+    // IFC-155: Purge search indexes BEFORE anonymization
+    // This removes embeddings, FTS vectors, and extracted text atomically
+    // Using raw SQL for cross-package independence
+    const purgeResult = await this.purgeSearchIndexes(subjectId, tenantId, requestId);
+
+    console.log(
+      `[DSAR] Purged search indexes: ${purgeResult.documentsPurged} docs, ${purgeResult.notesPurged} notes`
+    );
+
     // Anonymize data using SQL function
     const tables = ['leads', 'contacts', 'accounts'];
     for (const table of tables) {
@@ -390,7 +402,52 @@ export class DSARWorkflow {
     await this.logDSAREvent(requestId, 'data_erased', {
       subjectId,
       tablesAnonymized: tables,
+      // IFC-155: Include purge results in audit
+      searchIndexesPurged: {
+        documents: purgeResult.documentsPurged,
+        notes: purgeResult.notesPurged,
+        fields: ['embedding', 'search_vector', 'extracted_text', 'content'],
+      },
     });
+  }
+
+  /**
+   * IFC-155: Purge search indexes for GDPR compliance
+   * Atomically removes embeddings, FTS vectors, and extracted text
+   */
+  private async purgeSearchIndexes(
+    subjectId: string,
+    tenantId: string,
+    requestId: string
+  ): Promise<{ documentsPurged: number; notesPurged: number }> {
+    // Purge document embeddings, search vectors, and extracted text
+    const docResult = await this.db.$executeRaw`
+      UPDATE case_documents
+      SET
+        embedding = NULL,
+        search_vector = NULL,
+        extracted_text = '[REDACTED - GDPR]'
+      WHERE created_by = ${subjectId}::text
+        AND tenant_id = ${tenantId}::uuid
+    `;
+
+    // Purge note embeddings, search vectors, and content
+    const noteResult = await this.db.$executeRaw`
+      UPDATE contact_notes
+      SET
+        embedding = NULL,
+        search_vector = NULL,
+        content = '[REDACTED - GDPR]'
+      WHERE author = ${subjectId}::text
+        AND "tenantId" = ${tenantId}
+    `;
+
+    console.log(`[DSAR][IFC-155] Search index purge: ${docResult} docs, ${noteResult} notes for request ${requestId}`);
+
+    return {
+      documentsPurged: Number(docResult),
+      notesPurged: Number(noteResult),
+    };
   }
 
   /**

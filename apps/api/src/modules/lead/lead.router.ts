@@ -75,24 +75,51 @@ export const leadRouter = createTRPCRouter({
   }),
 
   /**
-   * Get a single lead by ID
-   * Uses LeadService for business logic validation
+   * Get a single lead by ID with full Lead 360 data
+   * Returns lead with owner, activities, notes, files, AI insights, and tasks
    * SECURITY: Uses tenantProcedure to enforce tenant isolation
    */
   getById: tenantProcedure.input(z.object({ id: idSchema })).query(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
-    const leadService = getLeadService(ctx);
 
-    const result = await leadService.getLeadById(input.id);
+    const lead = await typedCtx.prismaWithTenant.lead.findUnique({
+      where: { id: input.id },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            avatarUrl: true,
+          },
+        },
+        activities: {
+          orderBy: { timestamp: 'desc' },
+          take: 50,
+        },
+        notes: {
+          orderBy: { createdAt: 'desc' },
+        },
+        files: {
+          orderBy: { uploadedAt: 'desc' },
+        },
+        aiInsight: true,
+        tasks: {
+          where: { status: { not: 'COMPLETED' } },
+          orderBy: { dueDate: 'asc' },
+          take: 10,
+        },
+      },
+    });
 
-    if (result.isFailure) {
+    if (!lead) {
       throw new TRPCError({
         code: 'NOT_FOUND',
-        message: result.error.message,
+        message: `Lead with ID ${input.id} not found`,
       });
     }
 
-    return mapLeadToResponse(result.value);
+    return lead;
   }),
 
   /**
@@ -403,32 +430,29 @@ export const leadRouter = createTRPCRouter({
 
   /**
    * Get lead statistics
-   * Returns tenant-wide statistics (IFC-127: properly isolated by tenant)
+   * Returns statistics filtered by user role (consistent with list procedure)
    *
-   * FIXME: Temporarily using protectedProcedure instead of tenantProcedure
-   * because RLS is not fully configured yet. Switch back to tenantProcedure
-   * when RLS policies are properly set up.
+   * SECURITY: Uses tenantProcedure and createTenantWhereClause for proper isolation
+   * - ADMIN: sees all leads in tenant
+   * - MANAGER: sees their own + team members' leads
+   * - SALES_REP: sees only their own leads
    */
-  stats: protectedProcedure.query(async ({ ctx }) => {
-    const tenantId = ctx.user?.tenantId;
+  stats: tenantProcedure.query(async ({ ctx }) => {
+    const typedCtx = getTenantContext(ctx);
 
-    if (!tenantId) {
-      throw new TRPCError({
-        code: 'UNAUTHORIZED',
-        message: 'Tenant ID not found',
-      });
-    }
+    // Use same filtering as list procedure for consistency
+    const where = createTenantWhereClause(typedCtx.tenant, {});
 
     // Get total count and counts by status
     const [total, byStatus, leads] = await Promise.all([
-      ctx.prisma.lead.count({ where: { tenantId } }),
-      ctx.prisma.lead.groupBy({
+      typedCtx.prismaWithTenant.lead.count({ where }),
+      typedCtx.prismaWithTenant.lead.groupBy({
         by: ['status'],
-        where: { tenantId },
+        where,
         _count: true,
       }),
-      ctx.prisma.lead.findMany({
-        where: { tenantId },
+      typedCtx.prismaWithTenant.lead.findMany({
+        where,
         select: { score: true },
       }),
     ]);
@@ -586,70 +610,140 @@ export const leadRouter = createTRPCRouter({
 
   /**
    * Bulk convert leads to contacts
+   * IFC-007: Optimized to use batch operations O(1) instead of O(n) sequential
    */
   bulkConvert: tenantProcedure
     .input(bulkConvertLeadsSchema)
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
-      const leadService = getLeadService(ctx);
       const { ids, createAccounts } = input;
 
-      const successful: string[] = [];
-      const failed: Array<{ id: string; error: string }> = [];
+      // IFC-007: Use batch operation via transaction
+      // Replaces O(n) sequential calls with O(1) batch queries
+      return await typedCtx.prismaWithTenant.$transaction(async (tx) => {
+        const successful: string[] = [];
+        const failed: Array<{ id: string; error: string }> = [];
 
-      for (const leadId of ids) {
-        try {
-          const result = await leadService.convertLead(
-            leadId,
-            createAccounts ? null : null,
-            typedCtx.tenant.userId
-          );
-          if (result.isSuccess) {
-            successful.push(leadId);
-          } else {
-            failed.push({ id: leadId, error: result.error.message });
+        // Fetch all leads in single query
+        const leads = await tx.lead.findMany({
+          where: { id: { in: ids }, tenantId: typedCtx.tenant.tenantId },
+        });
+        const existingIds = new Set(leads.map(l => l.id));
+
+        // Track non-existent leads
+        for (const id of ids) {
+          if (!existingIds.has(id)) {
+            failed.push({ id, error: 'Lead not found' });
           }
-        } catch (error) {
-          failed.push({
-            id: leadId,
-            error: error instanceof Error ? error.message : 'Unknown error'
-          });
         }
-      }
 
-      return { successful, failed, totalProcessed: ids.length };
+        // Filter valid leads for conversion
+        const validLeads = leads.filter(l => l.status !== 'CONVERTED');
+        const alreadyConverted = leads.filter(l => l.status === 'CONVERTED');
+
+        for (const lead of alreadyConverted) {
+          failed.push({ id: lead.id, error: 'Lead already converted' });
+        }
+
+        if (validLeads.length === 0) {
+          return { successful, failed, totalProcessed: ids.length };
+        }
+
+        // Batch update lead statuses
+        await tx.lead.updateMany({
+          where: { id: { in: validLeads.map(l => l.id) } },
+          data: { status: 'CONVERTED', updatedAt: new Date() },
+        });
+
+        // Batch create contacts
+        await tx.contact.createMany({
+          data: validLeads.map(lead => ({
+            firstName: lead.firstName || 'Unknown',
+            lastName: lead.lastName || 'Unknown',
+            email: lead.email,
+            phone: lead.phone,
+            company: lead.company,
+            title: lead.title,
+            tenantId: lead.tenantId,
+            ownerId: lead.ownerId || typedCtx.tenant.userId,
+            createdBy: typedCtx.tenant.userId,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })),
+          skipDuplicates: true,
+        });
+
+        // Optionally create accounts
+        if (createAccounts) {
+          const leadsWithCompany = validLeads.filter(l => l.company);
+          if (leadsWithCompany.length > 0) {
+            await tx.account.createMany({
+              data: leadsWithCompany.map(lead => ({
+                name: lead.company!,
+                tenantId: lead.tenantId,
+                ownerId: lead.ownerId || typedCtx.tenant.userId,
+                createdBy: typedCtx.tenant.userId,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              })),
+              skipDuplicates: true,
+            });
+          }
+        }
+
+        successful.push(...validLeads.map(l => l.id));
+        return { successful, failed, totalProcessed: ids.length };
+      });
     }),
 
   /**
    * Bulk update lead status
+   * IFC-007: Optimized to use batch operations O(1) instead of O(n) sequential
    */
   bulkUpdateStatus: tenantProcedure
     .input(bulkUpdateLeadStatusSchema)
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
-      const leadService = getLeadService(ctx);
       const { ids, status } = input;
 
+      // IFC-007: Use batch operation
+      // Replaces O(n) sequential calls with O(1) batch queries
       const successful: string[] = [];
       const failed: Array<{ id: string; error: string }> = [];
 
-      for (const leadId of ids) {
-        try {
-          const result = await leadService.changeLeadStatus(
-            leadId,
-            status,
-            typedCtx.tenant.userId
-          );
-          if (result.isSuccess) {
-            successful.push(leadId);
-          } else {
-            failed.push({ id: leadId, error: result.error.message });
+      try {
+        // Verify which leads exist
+        const existingLeads = await typedCtx.prismaWithTenant.lead.findMany({
+          where: { id: { in: ids }, tenantId: typedCtx.tenant.tenantId },
+          select: { id: true },
+        });
+        const existingIds = new Set(existingLeads.map(l => l.id));
+
+        // Track non-existent IDs
+        for (const id of ids) {
+          if (!existingIds.has(id)) {
+            failed.push({ id, error: 'Lead not found' });
           }
-        } catch (error) {
-          failed.push({
-            id: leadId,
-            error: error instanceof Error ? error.message : 'Unknown error'
+        }
+
+        // Batch update existing leads
+        const idsToUpdate = ids.filter(id => existingIds.has(id));
+        if (idsToUpdate.length > 0) {
+          await typedCtx.prismaWithTenant.lead.updateMany({
+            where: { id: { in: idsToUpdate } },
+            data: { status, updatedAt: new Date() },
           });
+          successful.push(...idsToUpdate);
+        }
+      } catch (error) {
+        // If batch update fails, all remaining IDs fail
+        for (const id of ids) {
+          if (!failed.find(f => f.id === id) && !successful.includes(id)) {
+            failed.push({
+              id,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            });
+          }
         }
       }
 
@@ -658,34 +752,50 @@ export const leadRouter = createTRPCRouter({
 
   /**
    * Bulk archive leads (set status to LOST)
+   * IFC-007: Optimized to use batch operations O(1) instead of O(n) sequential
    */
   bulkArchive: tenantProcedure
     .input(bulkArchiveLeadsSchema)
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
-      const leadService = getLeadService(ctx);
       const { ids } = input;
 
+      // IFC-007: Use batch operation (reuses bulkUpdateStatus logic)
       const successful: string[] = [];
       const failed: Array<{ id: string; error: string }> = [];
 
-      for (const leadId of ids) {
-        try {
-          const result = await leadService.changeLeadStatus(
-            leadId,
-            'LOST',
-            typedCtx.tenant.userId
-          );
-          if (result.isSuccess) {
-            successful.push(leadId);
-          } else {
-            failed.push({ id: leadId, error: result.error.message });
+      try {
+        // Verify which leads exist
+        const existingLeads = await typedCtx.prismaWithTenant.lead.findMany({
+          where: { id: { in: ids }, tenantId: typedCtx.tenant.tenantId },
+          select: { id: true },
+        });
+        const existingIds = new Set(existingLeads.map(l => l.id));
+
+        // Track non-existent IDs
+        for (const id of ids) {
+          if (!existingIds.has(id)) {
+            failed.push({ id, error: 'Lead not found' });
           }
-        } catch (error) {
-          failed.push({
-            id: leadId,
-            error: error instanceof Error ? error.message : 'Unknown error'
+        }
+
+        // Batch update existing leads to LOST status
+        const idsToUpdate = ids.filter(id => existingIds.has(id));
+        if (idsToUpdate.length > 0) {
+          await typedCtx.prismaWithTenant.lead.updateMany({
+            where: { id: { in: idsToUpdate } },
+            data: { status: 'LOST', updatedAt: new Date() },
           });
+          successful.push(...idsToUpdate);
+        }
+      } catch (error) {
+        for (const id of ids) {
+          if (!failed.find(f => f.id === id) && !successful.includes(id)) {
+            failed.push({
+              id,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            });
+          }
         }
       }
 
@@ -694,29 +804,49 @@ export const leadRouter = createTRPCRouter({
 
   /**
    * Bulk delete leads
+   * IFC-007: Optimized to use batch operations O(1) instead of O(n) sequential
    */
   bulkDelete: tenantProcedure
     .input(bulkDeleteLeadsSchema)
     .mutation(async ({ ctx, input }) => {
-      const leadService = getLeadService(ctx);
+      const typedCtx = getTenantContext(ctx);
       const { ids } = input;
 
+      // IFC-007: Use batch operation
       const successful: string[] = [];
       const failed: Array<{ id: string; error: string }> = [];
 
-      for (const leadId of ids) {
-        try {
-          const result = await leadService.deleteLead(leadId);
-          if (result.isSuccess) {
-            successful.push(leadId);
-          } else {
-            failed.push({ id: leadId, error: result.error.message });
+      try {
+        // Verify which leads exist before deletion
+        const existingLeads = await typedCtx.prismaWithTenant.lead.findMany({
+          where: { id: { in: ids }, tenantId: typedCtx.tenant.tenantId },
+          select: { id: true },
+        });
+        const existingIds = new Set(existingLeads.map(l => l.id));
+
+        // Track non-existent IDs
+        for (const id of ids) {
+          if (!existingIds.has(id)) {
+            failed.push({ id, error: 'Lead not found' });
           }
-        } catch (error) {
-          failed.push({
-            id: leadId,
-            error: error instanceof Error ? error.message : 'Unknown error'
+        }
+
+        // Batch delete existing leads
+        const idsToDelete = ids.filter(id => existingIds.has(id));
+        if (idsToDelete.length > 0) {
+          await typedCtx.prismaWithTenant.lead.deleteMany({
+            where: { id: { in: idsToDelete } },
           });
+          successful.push(...idsToDelete);
+        }
+      } catch (error) {
+        for (const id of ids) {
+          if (!failed.find(f => f.id === id) && !successful.includes(id)) {
+            failed.push({
+              id,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            });
+          }
         }
       }
 

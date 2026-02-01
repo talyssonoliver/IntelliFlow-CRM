@@ -3,10 +3,34 @@ import { randomUUID } from 'node:crypto';
 import type { AuditLogInput, RequiredAuditLoggerConfig } from './types';
 
 /**
+ * Validate that the tenantId exists in the database
+ * Returns false if tenantId is empty or doesn't exist
+ */
+async function validateTenant(prisma: PrismaClient, tenantId: string): Promise<boolean> {
+  if (!tenantId || tenantId.trim() === '') {
+    return false;
+  }
+
+  try {
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { id: true },
+    });
+    return !!tenant;
+  } catch (error) {
+    console.warn('[AUDIT] Failed to validate tenant:', error);
+    return false;
+  }
+}
+
+/**
  * Write an audit log entry to the database
  *
  * Writes to both the comprehensive AuditLogEntry table (if available)
  * and the basic AuditLog table for backward compatibility.
+ *
+ * If the tenantId is invalid (empty or doesn't exist), logs to console only
+ * to avoid foreign key constraint violations.
  */
 export async function writeEntry(
   prisma: PrismaClient,
@@ -14,6 +38,19 @@ export async function writeEntry(
   config: RequiredAuditLoggerConfig
 ): Promise<string> {
   try {
+    // Validate tenant exists before attempting DB write
+    const tenantValid = await validateTenant(prisma, entry.tenantId);
+
+    if (!tenantValid) {
+      // Log to console only if tenant is invalid
+      const eventId = entry.eventId || randomUUID();
+      console.warn(
+        `[AUDIT] Skipping DB write - invalid tenantId "${entry.tenantId}". ` +
+          `Event: ${entry.action} ${entry.resourceType}/${entry.resourceId} by ${entry.actorId || 'system'}`
+      );
+      return eventId;
+    }
+
     // Try comprehensive table first
     const entryId = await writeComprehensiveEntry(prisma, entry, config);
     if (entryId) {

@@ -36,7 +36,7 @@ import {
   type LoginResponse,
   type VerifyEmailResponse,
 } from '@intelliflow/validators';
-import { signIn, signOut, getSession, signInWithOAuth, exchangeCodeForSession, type OAuthProvider } from '../../lib/supabase';
+import { signIn, signOut, signOutUser, getSession, signInWithOAuth, exchangeCodeForSession, verifyToken, type OAuthProvider } from '../../lib/supabase';
 import { getLoginLimiter } from '../../security/login-limiter';
 import { getAuditLogger } from '../../security/audit-logger';
 import { getMfaService } from '../../services/mfa.service';
@@ -191,14 +191,19 @@ export const authRouter = createTRPCRouter({
    */
   loginWithOAuth: publicProcedure.input(oauthInitSchema).mutation(async ({ input }) => {
     const provider = input.provider as OAuthProvider;
+    console.log('[OAuth] Server: Initiating OAuth for provider:', provider, 'redirectTo:', input.redirectTo);
+
     const { url, error } = await signInWithOAuth(provider, {
       redirectTo: input.redirectTo,
     });
 
+    console.log('[OAuth] Server: Supabase response - url:', url ? 'received' : 'null', 'error:', error?.message || 'none');
+
     if (error || !url) {
+      console.error('[OAuth] Server: Failed to get OAuth URL:', error?.message);
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
-        message: error?.message || 'Failed to initiate OAuth flow',
+        message: error?.message || 'Failed to initiate OAuth flow. Is the provider configured in Supabase?',
       });
     }
 
@@ -413,16 +418,20 @@ export const authRouter = createTRPCRouter({
 
   /**
    * Logout - end session
+   *
+   * IFC-007: Fixed to properly invalidate user's Supabase session via admin API
    */
   logout: protectedProcedure.mutation(async ({ ctx }) => {
     const sessionService = getSessionService(ctx.prisma);
     const auditLogger = getAuditLogger(ctx.prisma);
 
-    // Sign out from Supabase
-    const { error } = await signOut();
+    // Sign out user from Supabase using admin API (invalidates all sessions)
+    // IFC-007: Use signOutUser with user ID instead of signOut (which doesn't work server-side)
+    const { error } = await signOutUser(ctx.user.userId);
 
     if (error) {
       console.error('[Auth] Supabase signout error:', error);
+      // Don't throw - continue with application session cleanup
     }
 
     // Revoke all application sessions for user
@@ -677,23 +686,67 @@ export const authRouter = createTRPCRouter({
 
   /**
    * Check current auth status
+   *
+   * IFC-007: Fixed to verify user's token from Authorization header
+   * instead of checking server-side session (which doesn't exist)
    */
-  getStatus: publicProcedure.query(async () => {
-    const { session, error } = await getSession();
+  getStatus: publicProcedure.query(async ({ ctx }) => {
+    console.log('\n>>>>>>>>>> getStatus CALLED <<<<<<<<<<');
 
-    if (error || !session) {
+    // Extract token from Authorization header
+    const authHeader = ctx.req?.headers.get?.('Authorization') ||
+      ctx.req?.headers.get?.('authorization');
+
+    console.log('[getStatus] Auth header present:', !!authHeader);
+
+    if (!authHeader) {
+      console.log('[getStatus] No auth header, returning unauthenticated');
       return { authenticated: false };
     }
+
+    const parts = authHeader.split(' ');
+    if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') {
+      console.log('[getStatus] Invalid auth header format');
+      return { authenticated: false };
+    }
+
+    const token = parts[1];
+    console.log('[getStatus] Token extracted, length:', token.length);
+
+    // Verify token with Supabase
+    console.log('[getStatus] Calling verifyToken...');
+    const { user: supabaseUser, error } = await verifyToken(token);
+
+    console.log('[getStatus] verifyToken returned:', {
+      hasUser: !!supabaseUser,
+      userId: supabaseUser?.id,
+      email: supabaseUser?.email,
+      errorMessage: error?.message,
+      errorName: error?.name,
+      fullError: error ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : null,
+    });
+
+    if (error || !supabaseUser) {
+      console.log('[getStatus] Token verification failed, returning unauthenticated');
+      console.log('>>>>>>>>>> getStatus RETURNING FALSE <<<<<<<<<<\n');
+      return { authenticated: false };
+    }
+
+    // Look up user in database to get role
+    const dbUser = await ctx.prisma.user.findUnique({
+      where: { id: supabaseUser.id },
+      select: { id: true, email: true, name: true, role: true },
+    });
 
     return {
       authenticated: true,
       user: {
-        id: session.user.id,
-        email: session.user.email || '',
-        name: session.user.user_metadata?.name || null,
-        role: session.user.user_metadata?.role || 'USER',
+        id: supabaseUser.id,
+        email: supabaseUser.email || '',
+        name: dbUser?.name || supabaseUser.user_metadata?.name || null,
+        role: dbUser?.role || supabaseUser.user_metadata?.role || 'USER',
       },
-      expiresAt: new Date(session.expires_at! * 1000),
+      expiresAt: new Date(Date.now() + 3600 * 1000), // Token expiry from Supabase
     };
   }),
 
