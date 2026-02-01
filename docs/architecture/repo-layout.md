@@ -285,7 +285,7 @@ artifacts/
 
 - Root-level configs use standard names: `package.json`, `.gitignore`
 - Environment files: `.env.example`, `.env.local` (never commit actual `.env`)
-- Tool configs: `eslint.config.js`, `prettier.config.js`
+- Tool configs: `eslint.config.mjs`, `.prettierrc`
 
 ### Documentation Files
 

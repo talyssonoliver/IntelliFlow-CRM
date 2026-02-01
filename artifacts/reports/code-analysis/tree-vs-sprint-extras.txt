@@ -108,7 +108,6 @@ Total extras: 1903
 apps (503)
 - apps/ai-worker
 - apps/ai-worker/.env.example
-- apps/ai-worker/.eslintrc.js
 - apps/ai-worker/.gitignore
 - apps/ai-worker/QUICKSTART.md
 - apps/ai-worker/README.md

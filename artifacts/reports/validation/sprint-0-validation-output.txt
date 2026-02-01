@@ -25,7 +25,7 @@ Validating Configuration Files...
 [PASS] tsconfig.json: tsconfig.json exists
 [PASS] vitest.config.ts: vitest.config.ts exists
 [PASS] playwright.config.ts: playwright.config.ts exists
-[PASS] .eslintrc.js: .eslintrc.js exists
+[PASS] eslint.config.mjs: eslint.config.mjs exists
 [PASS] .prettierrc: .prettierrc exists
 [PASS] .gitignore: .gitignore exists
 [PASS] .env.example: .env.example exists

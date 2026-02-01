@@ -67,6 +67,16 @@ export default function OAuthCallbackPage() {
       isProcessingRef.current = true;
       console.log('[OAuth Callback] Starting to process callback...');
 
+      // IMPORTANT: Clear any old tokens immediately to prevent stale token checks
+      // This ensures the AuthProvider doesn't use an expired token while we process the new one
+      if (typeof window !== 'undefined') {
+        console.log('[OAuth Callback] Clearing old tokens to prevent stale auth checks...');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        // Also clear the cookie
+        document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      }
+
       try {
         // Parse the hash params
         const hashStr = typeof window !== 'undefined' && window.location.hash
@@ -161,11 +171,7 @@ export default function OAuthCallbackPage() {
 
           console.log('[OAuth Callback] Valid Supabase token detected!');
 
-          // Clear any old tokens first
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-
-          // Store the tokens
+          // Store the tokens (old tokens already cleared at start of callback)
           localStorage.setItem('accessToken', accessToken);
           console.log('[OAuth Callback] Token stored in localStorage');
 

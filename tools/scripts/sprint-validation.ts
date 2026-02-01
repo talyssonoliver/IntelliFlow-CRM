@@ -762,7 +762,7 @@ const ROOT_ALLOWLIST = [
   '.env.example',
   '.gitignore',
   '.prettierrc',
-  '.eslintrc.js',
+  'eslint.config.mjs',
   'README.md',
   'CLAUDE.md',
   'PLANNING_ANALYSIS.md',

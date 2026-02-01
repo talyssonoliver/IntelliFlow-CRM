@@ -66,6 +66,19 @@ scrape_configs:
     metrics_path: /metrics
     scheme: http
 
+  # IFC-007: k6 performance test metrics
+  # k6 can push metrics to Prometheus via:
+  #   k6 run --out experimental-prometheus-rw=http://localhost:9090/api/v1/write script.js
+  # Or use the statsd output with prometheus-statsd-exporter
+  - job_name: 'k6'
+    static_configs:
+      - targets: ['localhost:5656']
+    metrics_path: /metrics
+    scheme: http
+    scrape_interval: 5s
+    # Note: Only available when k6 is running with --out prometheus
+    # For CI/CD, results are stored as JSON artifacts instead
+
   # Node exporter for host metrics (optional - deploy if needed)
   # - job_name: 'node'
   #   static_configs:

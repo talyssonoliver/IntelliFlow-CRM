@@ -19,7 +19,7 @@ if ($envContent -match 'SUPABASE_ANON_KEY=([^\r\n]+)') {
     $env:SUPABASE_ANON_KEY = $matches[1].Trim()
 }
 
-$env:BASE_URL = "http://127.0.0.1:3000"
+$env:BASE_URL = "http://localhost:3000"
 
 Write-Host "=== k6 Quick Load Test ===" -ForegroundColor Cyan
 Write-Host "SUPABASE_URL: $env:SUPABASE_URL"

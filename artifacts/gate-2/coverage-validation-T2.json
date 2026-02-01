@@ -1,0 +1,22 @@
+{
+  "gate": "coverage",
+  "tranche": "T2",
+  "passed": false,
+  "exitCode": 1,
+  "timestamp": "2026-01-31T20:53:10.150Z",
+  "thresholds": {
+    "overall": 80,
+    "domain": 95,
+    "application": 90
+  },
+  "actual": {
+    "overall": 9.65,
+    "domain": null,
+    "application": null
+  },
+  "gaps": {
+    "overall": 70.35,
+    "domain": null,
+    "application": null
+  }
+}

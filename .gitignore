@@ -291,4 +291,4 @@ ARCHITECTURE_ANALYSIS_SINGLE_SOURCE_OF_TRUTH.md
 
 # Runtime schemas (generated)
 artifacts/schemas/
-apps/project-tracker/docs/metrics/schemas/
+apps/project-tracker/docs/metrics/schemas/logs/

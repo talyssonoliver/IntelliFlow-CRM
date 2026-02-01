@@ -274,32 +274,26 @@ describe('Lead Router Contract Tests', () => {
     });
 
     it('should return lead via LeadService', async () => {
-      const mockDomainLead = {
-        id: { value: TEST_UUIDS.lead1 },
-        email: { value: mockLead.email },
-        firstName: mockLead.firstName,
-        lastName: mockLead.lastName,
-        company: mockLead.company,
-        title: null,
-        phone: mockLead.phone,
-        source: mockLead.source,
-        status: mockLead.status,
-        score: { value: 75, confidence: 0.8, tier: 'warm' as const },
-        ownerId: mockLead.ownerId,
-        createdAt: mockLead.createdAt,
-        updatedAt: mockLead.updatedAt,
-        getDomainEvents: () => [],
-        clearDomainEvents: () => {},
+      // Mock the Prisma findUnique call with related data
+      const mockLeadWithRelations = {
+        ...mockLead,
+        owner: {
+          id: TEST_UUIDS.user1,
+          email: 'user@example.com',
+          name: 'Test User',
+          avatarUrl: null,
+        },
+        activities: [],
+        notes: [],
+        files: [],
+        aiInsight: null,
+        tasks: [],
       };
+
+      prismaMock.lead.findUnique.mockResolvedValue(mockLeadWithRelations as any);
 
       const ctx = createTestContext();
       const callerWithService = leadRouter.createCaller(ctx);
-
-      ctx.services!.lead!.getLeadById = vi.fn().mockResolvedValue({
-        isSuccess: true,
-        isFailure: false,
-        value: mockDomainLead,
-      });
 
       const result = await callerWithService.getById({ id: TEST_UUIDS.lead1 });
 

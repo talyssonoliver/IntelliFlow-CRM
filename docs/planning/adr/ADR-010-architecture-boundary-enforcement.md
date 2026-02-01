@@ -37,7 +37,7 @@ Implement a three-layer enforcement strategy:
 
 1. **Architecture Tests** (`tests/architecture/`) - Comprehensive boundary
    verification using file scanning
-2. **ESLint Rules** (`.eslintrc.js`) - Immediate IDE feedback via
+2. **ESLint Rules** (`eslint.config.mjs`) - Immediate IDE feedback via
    `no-restricted-imports`
 3. **CI Integration** (`.github/workflows/ci.yml`) - Required check blocking
    non-compliant PRs
@@ -82,9 +82,10 @@ Three test files covering each layer:
 
 ### Layer 2: ESLint Rules
 
-Added to `.eslintrc.js` as overrides for specific directories:
+Added to `eslint.config.mjs` (flat config) as overrides for specific directories:
 
 ```javascript
+// eslint.config.mjs (excerpt)
 // Domain layer - most restrictive
 {
   files: ['packages/domain/src/**/*.ts'],

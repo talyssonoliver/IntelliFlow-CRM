@@ -98,7 +98,7 @@ steps:
       - name: lint_check
         tool: eslint
         args: ['**/*.{ts,tsx}', '--format', 'json']
-        config: .eslintrc.json
+        config: eslint.config.mjs
         output: artifacts/reports/eslint-report.json
 
       - name: complexity_analysis

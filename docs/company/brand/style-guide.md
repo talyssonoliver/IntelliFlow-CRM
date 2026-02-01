@@ -12,7 +12,7 @@ Component patterns and implementation guidelines extracted from approved mockups
 | Resource | Location | Purpose |
 |----------|----------|---------|
 | **Visual Identity** | `docs/company/brand/visual-identity.md` | Design tokens (colors, typography) |
-| **Flow Index** | `apps/project-tracker/docs/metrics/_global/flows/flow-index.md` | All 38 user flows |
+| **Flow Index** | `apps/project-tracker/docs/metrics/_global/flows/flow-index.md` | All 39 user flows |
 | **Sitemap** | `docs/design/sitemap.md` | Route → Flow mapping |
 | **Accessibility** | `docs/company/brand/accessibility-patterns.md` | ARIA patterns |
 | **Do's and Don'ts** | `docs/company/brand/dos-and-donts.md` | Best practices |

@@ -140,7 +140,7 @@ def _is_global_trigger(path: str) -> bool:
         "tsconfig.json",
         "vitest.config.ts",
         "playwright.config.ts",
-        ".eslintrc.js",
+        "eslint.config.mjs",
         "eslint.config.js",
         ".prettierrc",
         ".prettierignore",
@@ -294,4 +294,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

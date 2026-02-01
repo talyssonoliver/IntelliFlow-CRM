@@ -11,7 +11,7 @@
  * @module tools/scripts/lib/validation-utils
  */
 
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import * as childProcess from 'node:child_process';
 import type { ExecSyncOptionsWithStringEncoding } from 'node:child_process';
 import { resolve, join } from 'node:path';
@@ -80,8 +80,8 @@ function colorize(text: string, color: keyof typeof COLORS): string {
  * Determine if strict mode is enabled via CLI flag or environment variable.
  */
 export function isStrictMode(): boolean {
-  const args = process.argv.slice(2);
-  const hasFlag = args.includes('--strict') || args.includes('-s');
+  const args = new Set(process.argv.slice(2));
+  const hasFlag = args.has('--strict') || args.has('-s');
   const hasEnv = process.env.VALIDATION_STRICT === '1' || process.env.VALIDATION_STRICT === 'true';
   return hasFlag || hasEnv;
 }
@@ -167,12 +167,12 @@ function formatExecError(error: unknown): string {
   };
 
   const status = typeof maybe.status === 'number' ? `exit ${maybe.status}` : null;
-  const stderr =
-    typeof maybe.stderr === 'string'
-      ? maybe.stderr.trim()
-      : Buffer.isBuffer(maybe.stderr)
-        ? maybe.stderr.toString('utf-8').trim()
-        : null;
+  let stderr: string | null = null;
+  if (typeof maybe.stderr === 'string') {
+    stderr = maybe.stderr.trim();
+  } else if (Buffer.isBuffer(maybe.stderr)) {
+    stderr = maybe.stderr.toString('utf-8').trim();
+  }
 
   return [maybe.message, status, stderr].filter(Boolean).join(' | ');
 }
@@ -197,7 +197,7 @@ function execCommand(
 }
 
 function normalizeRepoPath(filePath: string): string {
-  return filePath.replace(/\\/g, '/').trim();
+  return filePath.replaceAll('\\', '/').trim();
 }
 
 export function listGitTrackedFiles(repoRoot: string): { files: string[]; error?: string } {
@@ -259,7 +259,7 @@ export function listGitIgnoredOrUntrackedFiles(
   if (untracked.error) return { files: [], error: untracked.error };
 
   const merged = [...ignored.files, ...untracked.files];
-  const uniq = Array.from(new Set(merged.map(normalizeRepoPath))).sort();
+  const uniq = Array.from(new Set(merged.map(normalizeRepoPath))).sort((a, b) => a.localeCompare(b));
   return { files: uniq };
 }
 
@@ -377,14 +377,20 @@ function parseCSVLine(line: string): string[] {
   const result: string[] = [];
   let current = '';
   let inQuotes = false;
+  let skipNext = false;
 
   for (let i = 0; i < line.length; i++) {
+    if (skipNext) {
+      skipNext = false;
+      continue;
+    }
+
     const char = line[i];
 
     if (char === '"') {
       if (inQuotes && line[i + 1] === '"') {
         current += '"';
-        i++;
+        skipNext = true;
       } else {
         inQuotes = !inQuotes;
       }
@@ -404,7 +410,7 @@ function parseCSVLine(line: string): string[] {
 // Sprint Completion Check
 // ============================================================================
 
-const COMPLETED_STATUSES = ['Done', 'Completed'];
+const COMPLETED_STATUSES = new Set(['Done', 'Completed']);
 
 export interface CompletionResult {
   isComplete: boolean;
@@ -418,8 +424,8 @@ export interface CompletionResult {
  */
 export function checkSprintCompletion(tasks: SprintTask[], targetSprint: string): CompletionResult {
   const sprintTasks = tasks.filter((t) => String(t['Target Sprint']) === targetSprint);
-  const completedTasks = sprintTasks.filter((t) => COMPLETED_STATUSES.includes(t.Status));
-  const incompleteTasks = sprintTasks.filter((t) => !COMPLETED_STATUSES.includes(t.Status));
+  const completedTasks = sprintTasks.filter((t) => COMPLETED_STATUSES.has(t.Status));
+  const incompleteTasks = sprintTasks.filter((t) => !COMPLETED_STATUSES.has(t.Status));
 
   return {
     isComplete: incompleteTasks.length === 0 && sprintTasks.length > 0,
@@ -446,13 +452,14 @@ export function getHygieneAllowlist(repoRoot: string): string[] {
 
   try {
     const raw = readFileSync(configPath, 'utf-8');
-    const parsed: unknown = JSON.parse(raw.replace(/^\uFEFF/, ''));
+    const parsed: unknown = JSON.parse(raw.replaceAll('\uFEFF', ''));
 
-    const entries = Array.isArray(parsed)
-      ? parsed
-      : parsed && typeof parsed === 'object' && 'allowlist' in (parsed as Record<string, unknown>)
-        ? (parsed as { allowlist: unknown }).allowlist
-        : null;
+    let entries: unknown = null;
+    if (Array.isArray(parsed)) {
+      entries = parsed;
+    } else if (parsed && typeof parsed === 'object' && 'allowlist' in (parsed as Record<string, unknown>)) {
+      entries = (parsed as { allowlist: unknown }).allowlist;
+    }
 
     if (!Array.isArray(entries)) {
       log(
@@ -478,7 +485,7 @@ export function matchForbiddenDocsRuntimeArtifacts(
   forbiddenPatterns: string[] = ['.locks', '.status', 'logs', 'backups', 'artifacts']
 ): string[] {
   const forbiddenSegments = forbiddenPatterns
-    .map((p) => p.replace(/^\/+|\/+$/g, ''))
+    .map((p) => p.replaceAll(/(?:^\/+)|(?:\/+$)/g, ''))
     .filter(Boolean);
   const forbiddenMetricsFileSuffixes = ['.lock', '.log', '.tmp', '.bak', '.heartbeat', '.input'];
 
@@ -520,7 +527,7 @@ export function findIgnoredRuntimeArtifacts(
 
   const all = [...tracked.files, ...notTracked.files];
   const matches = matchForbiddenDocsRuntimeArtifacts(all, forbiddenPatterns);
-  const uniq = Array.from(new Set(matches.map(normalizeRepoPath))).sort();
+  const uniq = Array.from(new Set(matches.map(normalizeRepoPath))).sort((a, b) => a.localeCompare(b));
   return { files: uniq };
 }
 
@@ -534,7 +541,7 @@ export function isAllowedByHygieneAllowlist(
   filePath: string,
   allowlist: string[] = DEFAULT_HYGIENE_ALLOWLIST
 ): boolean {
-  const normalized = filePath.replace(/\\/g, '/');
+  const normalized = filePath.replaceAll('\\', '/');
   return allowlist.some((pattern) => normalized.startsWith(pattern));
 }
 
@@ -788,6 +795,147 @@ export interface AuditMatrixResult {
   gateResult: GateResult;
 }
 
+// Regex patterns for YAML parsing
+const YAML_PATTERNS = {
+  id: /^\s+-\s+id:\s*['"]?([^'"]+)['"]?\s*$/,
+  tier: /^\s+tier:\s*(\d+)\s*$/,
+  enabled: /^\s+enabled:\s*(true|false)\s*$/,
+  required: /^\s+required:\s*(true|false)\s*$/,
+  owner: /^\s+owner:\s*['"]?([^'"]+)['"]?\s*$/,
+  command: /^\s+command:\s*(.+)$/,
+  quoteStrip: /(?:^['"])|(?:['"]$)/g,
+} as const;
+
+/**
+ * Parse a single line of YAML and update the current tool.
+ * Returns a new tool if an id line is matched, otherwise updates the current tool in place.
+ */
+function parseYamlToolLine(line: string, currentTool: Partial<AuditTool> | null): {
+  tool: Partial<AuditTool> | null;
+  finishedTool: AuditTool | null;
+} {
+  const idMatch = YAML_PATTERNS.id.exec(line);
+  if (idMatch) {
+    const finishedTool = currentTool?.id ? (currentTool as AuditTool) : null;
+    return { tool: { id: idMatch[1] }, finishedTool };
+  }
+
+  if (!currentTool) {
+    return { tool: null, finishedTool: null };
+  }
+
+  const tierMatch = YAML_PATTERNS.tier.exec(line);
+  if (tierMatch) {
+    currentTool.tier = Number.parseInt(tierMatch[1], 10);
+    return { tool: currentTool, finishedTool: null };
+  }
+
+  const enabledMatch = YAML_PATTERNS.enabled.exec(line);
+  if (enabledMatch) {
+    currentTool.enabled = enabledMatch[1] === 'true';
+    return { tool: currentTool, finishedTool: null };
+  }
+
+  const requiredMatch = YAML_PATTERNS.required.exec(line);
+  if (requiredMatch) {
+    currentTool.required = requiredMatch[1] === 'true';
+    return { tool: currentTool, finishedTool: null };
+  }
+
+  const ownerMatch = YAML_PATTERNS.owner.exec(line);
+  if (ownerMatch) {
+    currentTool.owner = ownerMatch[1];
+    return { tool: currentTool, finishedTool: null };
+  }
+
+  const commandMatch = YAML_PATTERNS.command.exec(line);
+  if (commandMatch) {
+    const cmd = commandMatch[1].trim();
+    currentTool.command = cmd === 'null' ? null : cmd.replaceAll(YAML_PATTERNS.quoteStrip, '');
+    return { tool: currentTool, finishedTool: null };
+  }
+
+  return { tool: currentTool, finishedTool: null };
+}
+
+/**
+ * Parse audit-matrix.yml content into AuditTool array.
+ */
+function parseAuditMatrixYaml(content: string): AuditTool[] {
+  const tools: AuditTool[] = [];
+  const lines = content.split(/\r?\n/);
+  let currentTool: Partial<AuditTool> | null = null;
+
+  for (const line of lines) {
+    const { tool, finishedTool } = parseYamlToolLine(line, currentTool);
+    if (finishedTool) {
+      tools.push(finishedTool);
+    }
+    currentTool = tool;
+  }
+
+  // Push last tool
+  if (currentTool?.id) {
+    tools.push(currentTool as AuditTool);
+  }
+
+  return tools;
+}
+
+/**
+ * Get existing waiver IDs from the waivers directory.
+ */
+function getExistingWaivers(repoRoot: string): string[] {
+  const waiverDir = join(repoRoot, 'tools/audit/waivers');
+  if (!existsSync(waiverDir)) {
+    return [];
+  }
+
+  try {
+    const waiverFiles = readdirSync(waiverDir, { encoding: 'utf-8' });
+    return waiverFiles.map((f) => f.replace(/\.(json|yaml|yml)$/, ''));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Create gate result for audit matrix waiver check.
+ */
+function createAuditWaiverGateResult(
+  disabledButRequired: AuditTool[],
+  missingWaivers: string[]
+): GateResult {
+  if (disabledButRequired.length === 0) {
+    return {
+      name: 'Audit Matrix Waivers',
+      severity: 'PASS',
+      message: 'All required Tier-1 tools are enabled',
+    };
+  }
+
+  if (missingWaivers.length === 0) {
+    return {
+      name: 'Audit Matrix Waivers',
+      severity: 'PASS',
+      message: `${disabledButRequired.length} disabled required tool(s) have valid waivers`,
+      details: disabledButRequired.map((t) => `${t.id}: waiver exists`),
+    };
+  }
+
+  return {
+    name: 'Audit Matrix Waivers',
+    severity: 'WARN',
+    message: `${missingWaivers.length} required Tier-1 tool(s) are disabled without waivers`,
+    details: [
+      ...missingWaivers.map((id) => `${id}: WAIVER REQUIRED`),
+      '',
+      'To resolve: Either enable the tool or create a waiver file at:',
+      `  tools/audit/waivers/<tool-id>.json`,
+    ],
+  };
+}
+
 /**
  * Parse audit-matrix.yml and check for disabled but required tools.
  * Returns a gate result that WARN/FAILs if required tools are disabled without waivers.
@@ -810,114 +958,18 @@ export function checkAuditMatrixWaivers(repoRoot: string): AuditMatrixResult {
 
   try {
     const content = readFileSync(matrixPath, 'utf-8');
+    const tools = parseAuditMatrixYaml(content);
 
-    // Simple YAML parsing for tool entries
-    const tools: AuditTool[] = [];
-    const lines = content.split(/\r?\n/);
-    let currentTool: Partial<AuditTool> | null = null;
-
-    for (const line of lines) {
-      // Match tool entry start: "  - id: <tool-id>"
-      const idMatch = line.match(/^\s+-\s+id:\s*['"]?([^'"]+)['"]?\s*$/);
-      if (idMatch) {
-        if (currentTool && currentTool.id) {
-          tools.push(currentTool as AuditTool);
-        }
-        currentTool = { id: idMatch[1] };
-        continue;
-      }
-
-      if (!currentTool) continue;
-
-      // Parse tool properties
-      const tierMatch = line.match(/^\s+tier:\s*(\d+)\s*$/);
-      if (tierMatch) {
-        currentTool.tier = parseInt(tierMatch[1], 10);
-        continue;
-      }
-
-      const enabledMatch = line.match(/^\s+enabled:\s*(true|false)\s*$/);
-      if (enabledMatch) {
-        currentTool.enabled = enabledMatch[1] === 'true';
-        continue;
-      }
-
-      const requiredMatch = line.match(/^\s+required:\s*(true|false)\s*$/);
-      if (requiredMatch) {
-        currentTool.required = requiredMatch[1] === 'true';
-        continue;
-      }
-
-      const ownerMatch = line.match(/^\s+owner:\s*['"]?([^'"]+)['"]?\s*$/);
-      if (ownerMatch) {
-        currentTool.owner = ownerMatch[1];
-        continue;
-      }
-
-      const commandMatch = line.match(/^\s+command:\s*(.+)$/);
-      if (commandMatch) {
-        const cmd = commandMatch[1].trim();
-        currentTool.command = cmd === 'null' ? null : cmd.replace(/^['"]|['"]$/g, '');
-        continue;
-      }
-    }
-
-    // Push last tool
-    if (currentTool && currentTool.id) {
-      tools.push(currentTool as AuditTool);
-    }
-
-    // Find Tier 1 tools that are disabled but required
     const disabledButRequired = tools.filter(
       (t) => t.tier === 1 && t.required === true && t.enabled === false
     );
 
-    // Check for waiver files (waiver records would be in a waivers directory)
-    const waiverDir = join(repoRoot, 'tools/audit/waivers');
-    const existingWaivers: string[] = [];
-
-    if (existsSync(waiverDir)) {
-      try {
-        const waiverFiles = require('fs').readdirSync(waiverDir) as string[];
-        existingWaivers.push(
-          ...waiverFiles.map((f: string) => f.replace(/\.(json|yaml|yml)$/, ''))
-        );
-      } catch {
-        // Ignore errors reading waiver directory
-      }
-    }
-
+    const existingWaivers = new Set(getExistingWaivers(repoRoot));
     const missingWaivers = disabledButRequired
-      .filter((t) => !existingWaivers.includes(t.id))
+      .filter((t) => !existingWaivers.has(t.id))
       .map((t) => t.id);
 
-    let gateResult: GateResult;
-    if (disabledButRequired.length === 0) {
-      gateResult = {
-        name: 'Audit Matrix Waivers',
-        severity: 'PASS',
-        message: 'All required Tier-1 tools are enabled',
-      };
-    } else if (missingWaivers.length === 0) {
-      gateResult = {
-        name: 'Audit Matrix Waivers',
-        severity: 'PASS',
-        message: `${disabledButRequired.length} disabled required tool(s) have valid waivers`,
-        details: disabledButRequired.map((t) => `${t.id}: waiver exists`),
-      };
-    } else {
-      gateResult = {
-        name: 'Audit Matrix Waivers',
-        severity: 'WARN', // WARN in default mode, FAIL in strict
-        message: `${missingWaivers.length} required Tier-1 tool(s) are disabled without waivers`,
-        details: [
-          ...missingWaivers.map((id) => `${id}: WAIVER REQUIRED`),
-          '',
-          'To resolve: Either enable the tool or create a waiver file at:',
-          `  tools/audit/waivers/<tool-id>.json`,
-        ],
-      };
-    }
+    const gateResult = createAuditWaiverGateResult(disabledButRequired, missingWaivers);
 
     return {
       tools,

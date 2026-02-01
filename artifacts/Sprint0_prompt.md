@@ -349,20 +349,25 @@ Dependency: ENV-001-AI
 Owner: DevOps + Copilot
 
 ### Tasks
-1. Configure ESLint:
+1. Configure ESLint (flat config):
    ```javascript
-   // .eslintrc.js
-   module.exports = {
-     extends: [
-       'next/core-web-vitals',
-       'plugin:@typescript-eslint/strict',
-       'plugin:security/recommended',
-     ],
-     rules: {
-       '@typescript-eslint/no-explicit-any': 'error',
-       'security/detect-object-injection': 'warn',
+   // eslint.config.mjs (excerpt)
+   import js from '@eslint/js';
+   import tseslint from 'typescript-eslint';
+   import securityPlugin from 'eslint-plugin-security';
+
+   export default [
+     js.configs.recommended,
+     ...tseslint.configs.recommended,
+     {
+       files: ['**/*.ts', '**/*.tsx'],
+       plugins: { security: securityPlugin },
+       rules: {
+         '@typescript-eslint/no-explicit-any': 'error',
+         'security/detect-object-injection': 'warn',
+       },
      },
-   };
+   ];
    ```
 
 2. Configure Prettier:

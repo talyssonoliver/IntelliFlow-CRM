@@ -140,7 +140,7 @@ const KEYWORD_TO_FILES: Record<string, string[]> = {
 
   // Config
   config: ['turbo.json', 'pnpm-workspace.yaml'],
-  eslint: ['.eslintrc.js'],
+  eslint: ['eslint.config.mjs'],
   prettier: ['.prettierrc'],
   typescript: ['tsconfig.json'],
   turbo: ['turbo.json'],

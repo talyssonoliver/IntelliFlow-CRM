@@ -140,13 +140,13 @@ Test files:
 - `application-dependencies.test.ts` - Verifies application layer rules
 - `adapters-dependencies.test.ts` - Verifies adapters implement ports
 
-#### 2. ESLint Import Restrictions (`.eslintrc.js`)
+#### 2. ESLint Import Restrictions (`eslint.config.mjs`)
 
 ESLint `no-restricted-imports` rules provide **immediate feedback** during
 development:
 
 ```javascript
-// Domain layer restrictions (in .eslintrc.js)
+// Domain layer restrictions (in eslint.config.mjs)
 {
   files: ['packages/domain/src/**/*.ts'],
   rules: {

@@ -114,7 +114,7 @@
       "validation_method": "VALIDATE:pnpm lint"
     },
     {
-      "artifacts_to_track": "ARTIFACT:turbo.json;ARTIFACT:pnpm-workspace.yaml;ARTIFACT:apps/ai-worker/package.json;ARTIFACT:apps/ai-worker/tsconfig.json;ARTIFACT:apps/ai-worker/vitest.config.ts;ARTIFACT:apps/ai-worker/.env.example;ARTIFACT:apps/ai-worker/.eslintrc.js;ARTIFACT:apps/ai-worker/.gitignore;ARTIFACT:apps/api/package.json;ARTIFACT:apps/api/src/index.ts;ARTIFACT:apps/api/src/context.ts;EVIDENCE:artifacts/attestations/ENV-001-AI/context_ack.json",
+      "artifacts_to_track": "ARTIFACT:turbo.json;ARTIFACT:pnpm-workspace.yaml;ARTIFACT:apps/ai-worker/package.json;ARTIFACT:apps/ai-worker/tsconfig.json;ARTIFACT:apps/ai-worker/vitest.config.ts;ARTIFACT:apps/ai-worker/.env.example;ARTIFACT:eslint.config.mjs;ARTIFACT:apps/ai-worker/.gitignore;ARTIFACT:apps/api/package.json;ARTIFACT:apps/api/src/index.ts;ARTIFACT:apps/api/src/context.ts;EVIDENCE:artifacts/attestations/ENV-001-AI/context_ack.json",
       "description": "Automated Monorepo Creation",
       "owner": "Tech Lead + Claude Code (STOA-Automation)",
       "section": "Foundation Setup",
@@ -124,7 +124,7 @@
       "validation_method": "VALIDATE:pnpm build"
     },
     {
-      "artifacts_to_track": "ARTIFACT:.eslintrc.js;ARTIFACT:.prettierrc;ARTIFACT:artifacts/misc/commitlint.config.js;ARTIFACT:artifacts/misc/lint-results.json;EVIDENCE:artifacts/attestations/ENV-002-AI/context_ack.json",
+      "artifacts_to_track": "ARTIFACT:eslint.config.mjs;ARTIFACT:.prettierrc;ARTIFACT:artifacts/misc/commitlint.config.js;ARTIFACT:artifacts/misc/lint-results.json;EVIDENCE:artifacts/attestations/ENV-002-AI/context_ack.json",
       "description": "Automated Development Tools Configuration",
       "owner": "Backend Dev + AI Specialist (STOA-Intelligence)",
       "section": "Foundation Setup",

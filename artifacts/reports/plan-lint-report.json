@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-01-29T19:54:23.335Z",
+    "generated_at": "2026-02-01T20:18:15.999Z",
     "schema_version": "1.0.0",
     "sprint_scope": 0
   },
@@ -12,26 +12,16 @@
       "C": 7
     },
     "error_count": 0,
-    "warning_count": 37,
+    "warning_count": 36,
     "review_queue_size": 29,
     "validation_coverage": {
-      "tasks_with_validation": 33,
-      "tasks_without_validation": 1,
-      "coverage_percentage": 97
+      "tasks_with_validation": 34,
+      "tasks_without_validation": 0,
+      "coverage_percentage": 100
     }
   },
   "errors": [],
   "warnings": [
-    {
-      "rule": "MISSING_VALIDATION",
-      "severity": "warning",
-      "message": "Task IFC-044 has no validation commands in validation.yaml",
-      "tasks": [
-        "IFC-044"
-      ],
-      "priority": "high",
-      "section": "Testing"
-    },
     {
       "rule": "AI_TASKS_MVP",
       "severity": "warning",
@@ -202,13 +192,13 @@
     },
     {
       "rule": "WAIVER_EXPIRING",
-      "severity": "warning",
-      "message": "Task AI-SETUP-003 waiver expires in 1 days (2026-01-31)",
+      "severity": "error",
+      "message": "Task AI-SETUP-003 waiver has EXPIRED (2026-01-31)",
       "tasks": [
         "AI-SETUP-003"
       ],
-      "priority": "high",
-      "days_until_expiry": 1
+      "priority": "critical",
+      "days_until_expiry": -2
     },
     {
       "rule": "WAIVER_USED",
@@ -223,12 +213,12 @@
     {
       "rule": "WAIVER_EXPIRING",
       "severity": "warning",
-      "message": "Task ENV-008-AI waiver expires in 29 days (2026-02-28)",
+      "message": "Task ENV-008-AI waiver expires in 26 days (2026-02-28)",
       "tasks": [
         "ENV-008-AI"
       ],
       "priority": "high",
-      "days_until_expiry": 29
+      "days_until_expiry": 26
     },
     {
       "rule": "WAIVER_USED",
@@ -242,13 +232,13 @@
     },
     {
       "rule": "WAIVER_EXPIRING",
-      "severity": "warning",
-      "message": "Task ENV-010-AI waiver expires in 1 days (2026-01-31)",
+      "severity": "error",
+      "message": "Task ENV-010-AI waiver has EXPIRED (2026-01-31)",
       "tasks": [
         "ENV-010-AI"
       ],
-      "priority": "high",
-      "days_until_expiry": 1
+      "priority": "critical",
+      "days_until_expiry": -2
     },
     {
       "rule": "WAIVER_USED",
@@ -262,13 +252,13 @@
     },
     {
       "rule": "WAIVER_EXPIRING",
-      "severity": "warning",
-      "message": "Task ENV-011-AI waiver expires in 1 days (2026-01-31)",
+      "severity": "error",
+      "message": "Task ENV-011-AI waiver has EXPIRED (2026-01-31)",
       "tasks": [
         "ENV-011-AI"
       ],
-      "priority": "high",
-      "days_until_expiry": 1
+      "priority": "critical",
+      "days_until_expiry": -2
     },
     {
       "rule": "WAIVER_USED",
@@ -283,12 +273,12 @@
     {
       "rule": "WAIVER_EXPIRING",
       "severity": "warning",
-      "message": "Task ENV-012-AI waiver expires in 29 days (2026-02-28)",
+      "message": "Task ENV-012-AI waiver expires in 26 days (2026-02-28)",
       "tasks": [
         "ENV-012-AI"
       ],
       "priority": "high",
-      "days_until_expiry": 29
+      "days_until_expiry": 26
     },
     {
       "rule": "WAIVER_USED",
@@ -303,12 +293,12 @@
     {
       "rule": "WAIVER_EXPIRING",
       "severity": "warning",
-      "message": "Task ENV-014-AI waiver expires in 29 days (2026-02-28)",
+      "message": "Task ENV-014-AI waiver expires in 26 days (2026-02-28)",
       "tasks": [
         "ENV-014-AI"
       ],
       "priority": "high",
-      "days_until_expiry": 29
+      "days_until_expiry": 26
     },
     {
       "rule": "WAIVER_USED",
@@ -323,12 +313,12 @@
     {
       "rule": "WAIVER_EXPIRING",
       "severity": "warning",
-      "message": "Task ENV-015-AI waiver expires in 29 days (2026-02-28)",
+      "message": "Task ENV-015-AI waiver expires in 26 days (2026-02-28)",
       "tasks": [
         "ENV-015-AI"
       ],
       "priority": "high",
-      "days_until_expiry": 29
+      "days_until_expiry": 26
     },
     {
       "rule": "WAIVER_USED",
@@ -343,12 +333,12 @@
     {
       "rule": "WAIVER_EXPIRING",
       "severity": "warning",
-      "message": "Task ENV-016-AI waiver expires in 29 days (2026-02-28)",
+      "message": "Task ENV-016-AI waiver expires in 26 days (2026-02-28)",
       "tasks": [
         "ENV-016-AI"
       ],
       "priority": "high",
-      "days_until_expiry": 29
+      "days_until_expiry": 26
     },
     {
       "rule": "WAIVER_USED",
@@ -363,12 +353,12 @@
     {
       "rule": "WAIVER_EXPIRING",
       "severity": "warning",
-      "message": "Task AUTOMATION-001 waiver expires in 29 days (2026-02-28)",
+      "message": "Task AUTOMATION-001 waiver expires in 26 days (2026-02-28)",
       "tasks": [
         "AUTOMATION-001"
       ],
       "priority": "high",
-      "days_until_expiry": 29
+      "days_until_expiry": 26
     },
     {
       "rule": "WAIVER_USED",
@@ -383,12 +373,12 @@
     {
       "rule": "WAIVER_EXPIRING",
       "severity": "warning",
-      "message": "Task AUTOMATION-002 waiver expires in 29 days (2026-02-28)",
+      "message": "Task AUTOMATION-002 waiver expires in 26 days (2026-02-28)",
       "tasks": [
         "AUTOMATION-002"
       ],
       "priority": "high",
-      "days_until_expiry": 29
+      "days_until_expiry": 26
     }
   ],
   "review_queue": [
@@ -690,8 +680,7 @@
       "status": "Completed",
       "owner": "Backend Dev",
       "reasons": [
-        "Tier A task - requires explicit validation",
-        "Missing validation.yaml entry"
+        "Tier A task - requires explicit validation"
       ],
       "dependent_count": 2,
       "priority": "critical"

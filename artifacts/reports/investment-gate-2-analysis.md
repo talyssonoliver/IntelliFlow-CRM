@@ -19,7 +19,7 @@ This document presents the Gate 2 investment analysis for the IntelliFlow CRM pr
 | Sprint 0 Completion | 100% | 100% | ACHIEVED |
 | Tasks Completed | 201 | 201 | ON TRACK |
 | AI Features Implemented | 5+ | 8 | EXCEEDED |
-| Test Coverage | >80% | 90%+ | EXCEEDED |
+| Test Coverage | >80% | 60.49% | **CORRECTED** |
 | E2E Test Suite | Complete | 30+ test cases | ACHIEVED |
 
 ---
@@ -78,12 +78,14 @@ This document presents the Gate 2 investment analysis for the IntelliFlow CRM pr
 
 ### 3.1 Test Coverage
 
+> **CORRECTION (2026-01-30)**: Previous coverage claims were inaccurate. Actual coverage is 60.49%, not 90%+. See Section 8 (Addendum) for details.
+
 | Package | Coverage | Target | Status |
 |---------|----------|--------|--------|
-| Domain | 95%+ | >95% | MET |
-| Application | 90%+ | >90% | MET |
-| API | 85%+ | >85% | MET |
-| Overall | 90%+ | >90% | MET |
+| Domain | ~65% | >95% | **NOT MET** |
+| Application | ~55% | >90% | **NOT MET** |
+| API | ~70% | >85% | **NOT MET** |
+| Overall | 60.49% | >90% | **NOT MET** |
 
 ### 3.2 Code Quality
 
@@ -148,19 +150,26 @@ This document presents the Gate 2 investment analysis for the IntelliFlow CRM pr
 |-----------|----------|----------|--------|
 | AI value demonstrated | Yes | Yes | PASS |
 | Metrics collected | Yes | Yes | PASS |
-| Test coverage >80% | Yes | 90%+ | PASS |
+| Test coverage >80% | Yes | 60.49% | **FAIL** |
 | E2E tests complete | Yes | 30+ cases | PASS |
 | Budget <50% spent | Yes | 27.5% | PASS |
 | No critical blockers | Yes | None | PASS |
 
 ### 6.2 Decision
 
-**RECOMMENDATION: GO**
+**RECOMMENDATION: CONDITIONAL GO**
 
-All Gate 2 criteria have been met or exceeded. The £2000 investment threshold is justified by:
+> **UPDATED (2026-01-30)**: Original recommendation revised to CONDITIONAL following spec session discovery of coverage discrepancy.
+
+Gate 2 investment is approved with **tranche-based release structure**:
+- **T1 (£500)**: Immediate - Remediation plan accepted
+- **T2 (£750)**: +2 weeks - Coverage ≥80%, typecheck green
+- **T3 (£750)**: +4 weeks - Coverage ≥90%, AI accuracy baseline
+
+Key justifications:
 - Strong technical progress (58.6% completion)
 - Proven AI value (8 features implemented)
-- Excellent code quality (90%+ coverage)
+- **Coverage gap identified (60.49% vs 90% target)** - Remediation planned
 - Budget efficiency (only 27.5% spent)
 - Clear ROI projections (140%+ Year 1)
 
@@ -218,6 +227,61 @@ All Gate 2 criteria have been met or exceeded. The £2000 investment threshold i
 
 ---
 
-**Document Revision:** 1.0
-**Last Updated:** 2026-01-06
-**Status:** FINAL FOR REVIEW
+---
+
+## 8. Addendum: Coverage Discrepancy Correction (2026-01-30)
+
+### 8.1 Discovery
+
+During the IFC-027 spec session on 2026-01-29, a multi-agent review discovered a significant discrepancy between documented and actual test coverage metrics:
+
+| Metric | Originally Claimed | Actual Value | Discrepancy |
+|--------|-------------------|--------------|-------------|
+| Overall Coverage | 90%+ | 60.49% | **-29.51%** |
+| Domain Layer | 95%+ | ~65% | **-30%** |
+| Application Layer | 90%+ | ~55% | **-35%** |
+
+### 8.2 Root Cause
+
+The original coverage figures were based on incomplete tooling configuration that did not aggregate all packages correctly. The actual coverage-summary.json reveals the true state.
+
+### 8.3 Impact on Gate 2 Decision
+
+The original **GO** recommendation has been revised to **CONDITIONAL GO** with:
+
+1. **Tranche-based investment release** (£500 / £750 / £750)
+2. **Quality gates** for each tranche
+3. **Remediation timeline** (4 weeks to full compliance)
+
+### 8.4 Remediation Plan
+
+A comprehensive remediation plan has been created:
+- **Location**: `docs/planning/gate-2/remediation-plan.md`
+- **Timeline**: 4 weeks
+- **Target**: Coverage ≥90%, Typecheck green, Benchmarks >95%
+
+### 8.5 Corrective Actions Taken
+
+1. [x] Spec session conducted with multi-agent review (IFC-027)
+2. [x] Discrepancy documented in this addendum
+3. [x] Investment analysis updated with corrected data
+4. [x] Remediation plan created
+5. [x] Validation scripts deployed (tools/scripts/gate-2/)
+6. [x] NPV model documented with explicit assumptions
+7. [ ] Weekly coverage tracking initiated
+8. [ ] T2 conditions met
+9. [ ] T3 conditions met
+
+### 8.6 Lessons Learned
+
+1. **Verify metrics independently** before including in investment decisions
+2. **Multi-agent review** catches discrepancies that single reviewers miss
+3. **Tranche-based releases** mitigate risk from uncertain quality metrics
+4. **Automated validation** prevents future discrepancies
+
+---
+
+**Document Revision:** 2.0
+**Last Updated:** 2026-01-30
+**Status:** CORRECTED - CONDITIONAL APPROVAL
+**Correction Author:** STOA-Quality + STOA-Domain

@@ -50,7 +50,7 @@ You must adhere to the following guidelines while implementing this task: .speci
 - agreement on token naming convention
 - [✗] FILE: `docs/design-system/token-mapping.md`
 - [✓] FILE: `docs/company/brand/visual-identity.md`
-- [✓] FILE: `.eslintrc.js`
+- [✓] FILE: `eslint.config.mjs`
 
 ### Definition of Done
 1. Mapping document from brand tokens to Tailwind/shadcn variables created

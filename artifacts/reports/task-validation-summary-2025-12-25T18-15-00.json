@@ -128,7 +128,7 @@
     "artifacts/misc/pipeline-status.yaml": "ff79883c50a82986e9674589bcd45dbd450db6970ab28afdc0ac6651dc25e43f",
     "turbo.json": "9b95921e1fe1231426b94bfc9823c21f7cb05867f0783ae0dcd900d89841e192",
     "pnpm-workspace.yaml": "39f4b553d3f0f7cae19dd03ba7accebdecea4b920585730b760ff726549ed2df",
-    ".eslintrc.js": "1c9d13551e8930df1ec0a2f50a6183892e3f7f5825cc8e7e735d3d3a0797b473",
+    "eslint.config.mjs": "e8924608a17c9ed4955355397f570d99a8d078cfd3bc285a72c68759cf670ff6",
     ".prettierrc": "2d50e10ea5c2153397bf64231ed54c18e769d7292d238884a9cf533d81708811",
     "docker-compose.yml": "b148dc01f387394c8ac1d15f7d5edcf27dde0073da90a897fbaa6d7047a162c1",
     "supabase/config.toml": "be4b1d70dd0de623a8bd8385c1c51d682410fc9dde1b92bee4a6f2539925944d",

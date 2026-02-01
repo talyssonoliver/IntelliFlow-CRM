@@ -44,6 +44,24 @@ vi.mock('@/lib/broadcast', () => {
 const mockFetch = vi.fn();
 globalThis.fetch = mockFetch;
 
+// Mock trpc
+const mockLogoutMutateAsync = vi.fn().mockResolvedValue({ success: true });
+vi.mock('@/lib/trpc', () => ({
+  trpc: {
+    auth: {
+      logout: {
+        useMutation: () => ({
+          mutateAsync: mockLogoutMutateAsync,
+          mutate: vi.fn(),
+          isLoading: false,
+          isError: false,
+          error: null,
+        }),
+      },
+    },
+  },
+}));
+
 // Create wrapper with QueryClient
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -138,7 +156,7 @@ describe('useLogout', () => {
       expect(authBroadcast.broadcast).toHaveBeenCalledWith('LOGOUT_EVENT');
     });
 
-    it('should attempt server notification', async () => {
+    it('should attempt server notification via tRPC', async () => {
       const { result } = renderHook(() => useLogout(), {
         wrapper: createWrapper(),
       });
@@ -148,9 +166,8 @@ describe('useLogout', () => {
         vi.advanceTimersByTime(100);
       });
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/auth/logout', {
-        method: 'POST',
-      });
+      // Implementation uses tRPC mutation instead of fetch
+      expect(mockLogoutMutateAsync).toHaveBeenCalled();
     });
 
     it('should redirect to /login after completion', async () => {

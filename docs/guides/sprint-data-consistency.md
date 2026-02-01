@@ -21,7 +21,7 @@ We have **2 validation systems** that work together:
    - **Purpose:** Confirms development environment is ready
    - **Validates:** Files, configs, tools, directories exist
    - **Used by:** `pnpm run validate:sprint0`
-   - **Example:** "Check .eslintrc.js exists, Docker running, TypeScript
+  - **Example:** "Check eslint.config.mjs exists, Docker running, TypeScript
      configured"
 
 **Note:** Data consistency (CSV ↔ JSON sync) is automatically validated by

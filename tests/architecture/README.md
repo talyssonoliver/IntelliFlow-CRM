@@ -97,8 +97,8 @@ Any violations will:
 
 ## ESLint Integration
 
-In addition to these tests, ESLint rules in `.eslintrc.js` provide immediate
-feedback during development via `no-restricted-imports`.
+In addition to these tests, ESLint flat-config rules in `eslint.config.mjs`
+provide immediate feedback during development via `no-restricted-imports`.
 
 ## Violation Examples
 
@@ -129,7 +129,7 @@ To add new dependency rules:
 
 1. Update the test file (e.g., `domain-dependencies.test.ts`)
 2. Add the pattern to `FORBIDDEN_DOMAIN_IMPORTS` or equivalent array
-3. Update `.eslintrc.js` with the new pattern for IDE feedback
+3. Update `eslint.config.mjs` with the new pattern for IDE feedback
 4. Run tests locally to verify
 5. Update documentation
 

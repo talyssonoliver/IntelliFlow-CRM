@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-01-29T20:44:14.392Z",
+  "timestamp": "2026-01-29T22:29:03.116Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -2347,13 +2347,13 @@
     ]
   },
   "load_test_results": {
-    "timestamp": "2026-01-29T20:43:43.551Z",
+    "timestamp": "2026-01-29T22:28:51.130Z",
     "target_vus": 10,
     "max_concurrent_users": 10,
-    "requests_per_second": 18.531522248300828,
-    "error_rate": 100,
+    "requests_per_second": 41.3068157471883,
+    "error_rate": 0,
     "p50_response_time": null,
-    "p95_response_time": 330.3659899999997,
+    "p95_response_time": 109.63683499999999,
     "p99_response_time": null,
     "duration_seconds": 30,
     "thresholds_passed": true

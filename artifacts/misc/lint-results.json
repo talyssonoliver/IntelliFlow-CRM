@@ -11,7 +11,7 @@
     "status": "PASS",
     "errors": 0,
     "warnings": 3,
-    "config": ".eslintrc.js"
+    "config": "eslint.config.mjs"
   },
   "prettier": {
     "status": "PASS",

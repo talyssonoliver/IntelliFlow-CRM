@@ -1,0 +1,15 @@
+{
+  "gate": "benchmarks",
+  "passed": true,
+  "exitCode": 0,
+  "timestamp": "2026-01-31T20:53:03.699Z",
+  "threshold": 0.95,
+  "actual": {
+    "successRate": 1,
+    "failureRate": 0,
+    "totalRequests": null,
+    "avgDuration": null,
+    "p95Duration": null
+  },
+  "gap": 0
+}

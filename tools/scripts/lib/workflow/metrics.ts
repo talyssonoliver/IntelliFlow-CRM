@@ -5,7 +5,7 @@
  * Used by /spec-session (start) and /exec (complete) to track full task lifecycle.
  *
  * Metrics are stored in:
- * - apps/project-tracker/docs/metrics/sprint-{N}/phase-*/TASK-ID.json
+ * - apps/project-tracker/docs/metrics/sprint-{N}/phase-{X}/{TASK-ID}.json
  *
  * This ensures the project-tracker dashboard can display accurate metrics.
  */

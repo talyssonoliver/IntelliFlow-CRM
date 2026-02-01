@@ -24,7 +24,7 @@ pipelines:
       - prettier
       - typescript
     config_files:
-      - .eslintrc.js
+      - eslint.config.mjs
       - .prettierrc
       - tsconfig.json
 

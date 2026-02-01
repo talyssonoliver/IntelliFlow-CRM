@@ -63,7 +63,7 @@
       "task_id": "ENV-002-AI",
       "description": "Automated Development Tools Configuration",
       "artifacts_verified": [
-        ".eslintrc.js",
+        "eslint.config.mjs",
         ".prettierrc",
         "artifacts/misc/commitlint.config.js",
         "artifacts/misc/lint-results.json",
