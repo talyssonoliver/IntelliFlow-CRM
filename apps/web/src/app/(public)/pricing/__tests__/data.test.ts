@@ -113,7 +113,8 @@ describe('Pricing Content Data', () => {
 
     it('should have valid CTA links', () => {
       pricingData.tiers.forEach(tier => {
-        expect(tier.ctaLink).toMatch(/^\/(sign-up|contact)/);
+        // CTA links point to /signup or /contact with optional query params
+        expect(tier.ctaLink).toMatch(/^\/(signup|contact)/);
       });
     });
   });

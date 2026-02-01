@@ -85,9 +85,11 @@ describe('SignUpPage', () => {
     it('renders trust indicators', () => {
       render(<SignUpPage />);
 
-      expect(screen.getByText(/256-bit SSL/i)).toBeInTheDocument();
-      expect(screen.getByText(/GDPR Ready/i)).toBeInTheDocument();
-      expect(screen.getByText(/14-day trial/i)).toBeInTheDocument();
+      // Signup page shows free trial info in the description
+      expect(screen.getByText(/free trial/i)).toBeInTheDocument();
+      // Privacy policy and terms links
+      expect(screen.getByRole('link', { name: /privacy policy/i })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /terms of service/i })).toBeInTheDocument();
     });
 
     it('includes link to login page', () => {

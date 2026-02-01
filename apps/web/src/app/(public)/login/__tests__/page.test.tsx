@@ -132,8 +132,8 @@ describe('LoginPage', () => {
     it('renders security badge', () => {
       render(<LoginPage />);
 
-      // Component uses "256-bit SSL encryption | WCAG 2.1 AA compliant" text
-      expect(screen.getByText(/256-bit SSL encryption/i)).toBeInTheDocument();
+      // Login page shows "Secure Access" badge in the header
+      expect(screen.getByText(/secure access/i)).toBeInTheDocument();
     });
   });
 
