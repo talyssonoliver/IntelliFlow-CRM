@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import type { Widget } from '@intelliflow/ui';
 import { widgetRegistry } from '@/components/dashboard/widgets';
+import { useRequireAuth } from '@/lib/auth/AuthContext';
 
 // Default widgets matching the original dashboard layout
 const defaultWidgets: Widget[] = [
@@ -22,6 +23,7 @@ const defaultWidgets: Widget[] = [
 ];
 
 export default function DashboardPage() {
+  const { user, isLoading: authLoading } = useRequireAuth();
   const [widgets, setWidgets] = useState<Widget[]>(defaultWidgets);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -54,6 +56,26 @@ export default function DashboardPage() {
     2: 'row-span-2',
   };
 
+  // Show loading skeleton while auth is being verified
+  if (authLoading) {
+    return (
+      <div className="p-6 lg:p-8 bg-background-light dark:bg-background-dark min-h-[calc(100vh-4rem)]">
+        <div className="animate-pulse space-y-6">
+          <div className="h-4 w-48 bg-slate-200 dark:bg-slate-700 rounded" />
+          <div className="space-y-2">
+            <div className="h-8 w-64 bg-slate-200 dark:bg-slate-700 rounded" />
+            <div className="h-4 w-80 bg-slate-200 dark:bg-slate-700 rounded" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i} className="h-32 bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 lg:p-8 bg-background-light dark:bg-background-dark min-h-[calc(100vh-4rem)]">
       {/* Breadcrumb */}
@@ -70,7 +92,7 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-1">
           <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">Dashboard Overview</h1>
           <p className="text-slate-500 dark:text-slate-400 text-base">
-            Welcome back, Alex. Here&apos;s what&apos;s happening today.
+            Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''}. Here&apos;s what&apos;s happening today.
           </p>
         </div>
         <div className="flex items-center gap-3">

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 // =============================================================================
 // Data
@@ -109,10 +110,15 @@ function getGreetingIcon(hour: number): string {
 }
 
 export function AuthenticatedHomePage() {
+  const { user } = useAuth();
+
   // Get greeting based on time of day
   const hour = new Date().getHours();
   const greeting = getGreeting(hour);
   const greetingIcon = getGreetingIcon(hour);
+
+  // Get user's first name for personalized greeting
+  const firstName = user?.name?.split(' ')[0] || 'there';
 
   return (
     <div className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922]">
@@ -218,7 +224,7 @@ export function AuthenticatedHomePage() {
                 <span className="material-symbols-outlined text-sm">{greetingIcon}</span>
                 <span className="text-sm font-medium uppercase tracking-wide">{greeting}</span>
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-4">Welcome back, Alex!</h1>
+              <h1 className="text-3xl md:text-4xl font-bold mb-4">Welcome back, {firstName}!</h1>
               <p className="text-lg text-blue-50 mb-6 leading-relaxed">
                 You have 3 high-priority tasks pending and 2 new leads assigned to you since yesterday. Your deal closing rate is up by 5% this week!
               </p>

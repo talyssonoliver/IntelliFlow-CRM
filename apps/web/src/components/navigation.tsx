@@ -1,7 +1,9 @@
 'use client';
 
 import * as React from 'react';
+import { usePathname } from 'next/navigation';
 import { Logo, MainNav, MobileNav, SearchBar, UserMenu, Notifications, type NavRoute } from './header';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 const routes: NavRoute[] = [
   { label: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
@@ -14,8 +16,43 @@ const routes: NavRoute[] = [
   { label: 'Reports', href: '/analytics', icon: 'bar_chart' },
 ];
 
+// Public routes that should not show the authenticated navigation
+const PUBLIC_ROUTES = [
+  '/login',
+  '/signup',
+  '/forgot-password',
+  '/reset-password',
+  '/verify-email',
+  '/auth',
+];
+
 export function Navigation() {
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const { isAuthenticated, isLoading } = useAuth();
+  const pathname = usePathname();
+
+  // IFC-007: Don't show authenticated navigation on public routes or when not authenticated
+  const isPublicRoute = PUBLIC_ROUTES.some(route => pathname?.startsWith(route));
+
+  // Debug: Log navigation render decision
+  console.log('[Navigation]', {
+    pathname,
+    isAuthenticated,
+    isLoading,
+    isPublicRoute,
+    willRender: !isPublicRoute && isAuthenticated && !isLoading,
+  });
+
+  // Don't render if on public route or not authenticated
+  // Also don't render while loading to prevent flash
+  if (isPublicRoute || (!isAuthenticated && !isLoading)) {
+    return null;
+  }
+
+  // Don't render while checking auth status (prevents header flash)
+  if (isLoading) {
+    return null;
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-card">

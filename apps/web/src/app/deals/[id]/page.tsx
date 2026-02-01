@@ -5,6 +5,8 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Card, Button } from '@intelliflow/ui';
+import { EntityHeader } from '@/components/shared';
+
 // Material Symbols icon helper component
 const Icon = ({ name, className = '' }: { name: string; className?: string }) => (
   <span className={`material-symbols-outlined ${className}`} aria-hidden="true">
@@ -704,45 +706,45 @@ export default function DealDetailPage() {
   const deal = SAMPLE_DEAL;
 
   return (
-    <main className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-[#0B1116] p-6 md:p-8">
-      <div className=" mx-auto flex flex-col gap-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex flex-col gap-1">
-            {/* Breadcrumb */}
-            <nav className="flex items-center gap-2 text-sm text-slate-500">
-              <Link href="/deals" className="hover:text-primary transition-colors">
-                Deals
-              </Link>
-              <Icon name="chevron_right" className="text-sm" />
-              <span className="text-slate-900 dark:text-slate-200 font-medium">{deal.name}</span>
-            </nav>
-
-            {/* Title */}
-            <div className="flex items-center gap-3 mt-1">
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{deal.name}</h2>
-              <span className="px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-200">
-                #{deal.id}
-              </span>
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-3">
-            <Link href={`/deals/${dealId}/forecast`}>
-              <Button variant="outline" className="gap-2">
-                <Icon name="bar_chart" className="text-base" />
-                Forecast
-              </Button>
-            </Link>
-            <Button variant="outline">Lost</Button>
-            <Button variant="outline">Edit</Button>
-            <Button className="gap-2">
-              <Icon name="check" className="text-base" />
-              Won
-            </Button>
-          </div>
-        </div>
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="mx-auto flex flex-col gap-6">
+        {/* Header using EntityHeader */}
+        <EntityHeader
+          breadcrumbs={[
+            { label: 'Deals', href: '/deals' },
+            { label: deal.name },
+          ]}
+          title={deal.name}
+          entityId={deal.id}
+          badges={[
+            { label: STAGES[deal.stageIndex].label, variant: 'status' },
+            { label: `${deal.probability}%`, variant: 'info' },
+          ]}
+          actions={[
+            {
+              label: 'Forecast',
+              icon: 'bar_chart',
+              variant: 'secondary',
+              href: `/deals/${dealId}/forecast`,
+            },
+            {
+              label: 'Lost',
+              variant: 'secondary',
+              onClick: () => {},
+            },
+            {
+              label: 'Edit',
+              variant: 'secondary',
+              onClick: () => {},
+            },
+            {
+              label: 'Won',
+              icon: 'check',
+              variant: 'primary',
+              onClick: () => {},
+            },
+          ]}
+        />
 
         {/* Stage Progress */}
         <StageProgress currentStageIndex={deal.stageIndex} probability={deal.probability} />
@@ -768,6 +770,6 @@ export default function DealDetailPage() {
           </div>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

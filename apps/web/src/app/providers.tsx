@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { httpBatchLink } from '@trpc/client';
 import { useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { AuthProvider } from '@/lib/auth/AuthContext';
 import { RemindersProvider } from '@/lib/cases/reminders-context';
 
 function getBaseUrl() {
@@ -31,9 +32,23 @@ export function Providers({ children }: { children: React.ReactNode }) {
         httpBatchLink({
           url: `${getBaseUrl()}/api/trpc`,
           headers() {
-            return {
+            // IFC-007: Send Authorization header with JWT token from localStorage
+            const headers: Record<string, string> = {
               'x-trpc-source': 'react',
             };
+
+            // Get access token from localStorage (set during login)
+            if (typeof window !== 'undefined') {
+              const accessToken = localStorage.getItem('accessToken');
+              if (accessToken) {
+                headers['Authorization'] = `Bearer ${accessToken}`;
+                console.log('[tRPC] Sending Authorization header with token:', accessToken.substring(0, 30) + '...');
+              } else {
+                console.log('[tRPC] No accessToken in localStorage');
+              }
+            }
+
+            return headers;
           },
         }),
       ],
@@ -43,9 +58,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <RemindersProvider autoStart={true} checkInterval={60000}>
-          {children}
-        </RemindersProvider>
+        <AuthProvider>
+          <RemindersProvider autoStart={true} checkInterval={60000}>
+            {children}
+          </RemindersProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </trpc.Provider>
   );

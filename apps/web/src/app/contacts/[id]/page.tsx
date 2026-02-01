@@ -2,7 +2,9 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { Card } from '@intelliflow/ui';
+import { useParams } from 'next/navigation';
+import { Card, Skeleton, ChurnRiskCard, NextBestActionCard, type ChurnRiskData, type NextBestActionData, type ChurnRiskLevel, type NBAActionType, type NBAPriority } from '@intelliflow/ui';
+import { api } from '@/lib/api';
 
 // Tab types
 type TabId = 'overview' | 'activity' | 'deals' | 'tickets' | 'documents' | 'notes' | 'ai-insights';
@@ -55,188 +57,124 @@ interface Activity {
   comments?: { user: string; text: string; timestamp: string }[];
 }
 
+// Database activity type enum
+type DBActivityType = 'EMAIL' | 'CALL' | 'MEETING' | 'CHAT' | 'DOCUMENT' | 'DEAL' | 'TICKET' | 'NOTE';
+
+// Map database activity types to UI activity types
+const mapActivityType = (dbType: DBActivityType): ActivityType => {
+  const typeMap: Record<DBActivityType, ActivityType> = {
+    EMAIL: 'email',
+    CALL: 'call',
+    MEETING: 'meeting',
+    CHAT: 'chat',
+    DOCUMENT: 'document',
+    DEAL: 'deal',
+    TICKET: 'ticket',
+    NOTE: 'note',
+  };
+  return typeMap[dbType] || 'note';
+};
+
+// Map sentiment from database to UI
+const mapSentiment = (dbSentiment: string | null): 'positive' | 'neutral' | 'negative' | undefined => {
+  if (!dbSentiment) return undefined;
+  const sentimentMap: Record<string, 'positive' | 'neutral' | 'negative'> = {
+    POSITIVE: 'positive',
+    NEUTRAL: 'neutral',
+    NEGATIVE: 'negative',
+  };
+  return sentimentMap[dbSentiment];
+};
+
+// Default avatars
+const defaultContactAvatar = 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=160&h=160&fit=crop&crop=face';
+const defaultOwnerAvatar = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face';
+
 // Contact status type
 type ContactStatus = 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
 
-// Mock contact data
-const mockContact = {
-  id: '1',
-  firstName: 'Sarah',
-  lastName: 'Jenkins',
-  email: 'sarah.j@techflow.com',
-  phone: '+1 (555) 012-3456',
-  company: 'TechFlow Inc.',
-  title: 'VP of Marketing',
-  department: 'Marketing',
-  location: 'San Francisco, CA',
-  timezone: 'PST (UTC-8)',
-  status: 'ACTIVE' as ContactStatus,
-  isOnline: true,
-  isVIP: true,
-  hasActiveDeal: true,
-  createdAt: '2024-06-15T10:30:00Z',
-  lastContactedAt: '2024-12-20T14:00:00Z',
-  owner: {
-    name: 'Alex Morgan',
-    title: 'Account Executive',
-    avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face',
-  },
-  avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=160&h=160&fit=crop&crop=face',
-  account: {
-    id: 'acc-1',
-    name: 'TechFlow Inc.',
-    industry: 'Technology',
-    website: 'https://techflow.com',
-  },
-  metrics: {
-    totalDeals: 3,
-    totalValue: 125000,
-    openTasks: 2,
-    emailsSent: 45,
-    emailsOpened: 38,
-    meetings: 12,
-  },
-  tags: ['Enterprise', 'Decision Maker', 'Technical'],
-};
+// Contact with relations type (from API)
+interface ContactWithRelations {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
+  phone: string | null;
+  title: string | null;
+  department: string | null;
+  status: string;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  avatarUrl?: string | null;
+  account?: {
+    id: string;
+    name: string;
+    industry: string | null;
+    website: string | null;
+  } | null;
+  owner?: {
+    id: string;
+    name: string | null;
+    email: string;
+    avatarUrl: string | null;
+  } | null;
+  activities?: Array<{
+    id: string;
+    type: string;
+    title: string;
+    description: string | null;
+    timestamp: string | Date;
+    userName: string;
+    metadata: unknown;
+    sentiment: string | null;
+  }>;
+  notes?: Array<{
+    id: string;
+    content: string;
+    author: string;
+    createdAt: string | Date;
+  }>;
+  aiInsight?: {
+    conversionProbability: number;
+    lifetimeValue: number;
+    churnRisk: string;
+    nextBestAction: string | null;
+    sentiment: string | null;
+    engagementScore: number;
+    recommendations: unknown;
+    sentimentTrend: string | null;
+    lastEngagementDays: number;
+  } | null;
+  opportunities?: Array<{
+    id: string;
+    name: string;
+    value: number;
+    stage: string;
+    probability: number;
+    closeDate: string | Date | null;
+  }>;
+  tasks?: Array<{
+    id: string;
+    title: string;
+    dueDate: string | Date | null;
+    priority: string | null;
+    status: string;
+  }>;
+  documents?: Array<{
+    id: string;
+    name: string;
+    fileType: string;
+    createdAt: string | Date;
+  }>;
+  calendarEvents?: Array<{
+    id: string;
+    title: string;
+    startTime: string | Date;
+    endTime: string | Date | null;
+    attendees: string[] | null;
+  }>;
+}
 
-// Comprehensive mock activities with all FLOW-020 types
-const mockActivities: Activity[] = [
-  {
-    id: '1',
-    type: 'email',
-    title: 'Email Opened',
-    description: 'Proposal Follow-up - Q3 Software',
-    timestamp: '2024-12-20T14:00:00Z',
-    user: 'System',
-    metadata: {
-      subject: 'Proposal Follow-up - Q3 Software',
-      preview: 'Hi Sarah, Following up on our conversation about the Q3 software implementation. I wanted to share some additional details about our enterprise pricing...',
-      openCount: 3,
-    },
-    sentiment: 'positive',
-    reactions: [{ emoji: '👍', count: 2, users: ['Alex Morgan', 'Jane Doe'] }],
-  },
-  {
-    id: '2',
-    type: 'meeting',
-    title: 'Meeting Completed',
-    description: 'Q3 Requirements Review - 45 min',
-    timestamp: '2024-12-19T15:00:00Z',
-    user: 'Alex Morgan',
-    metadata: {
-      attendees: ['Sarah Jenkins', 'Alex Morgan', 'Mike Chen'],
-      location: 'Zoom',
-      notes: 'Discussed API integration requirements. Sarah confirmed budget approval for Q1. Need to follow up with technical specifications by EOW.',
-      duration: '45 min',
-    },
-    sentiment: 'positive',
-  },
-  {
-    id: '3',
-    type: 'deal',
-    title: 'Deal Stage Updated',
-    description: 'Moved from Qualification → Negotiation',
-    timestamp: '2024-12-19T10:00:00Z',
-    user: 'Alex Morgan',
-    sentiment: 'positive',
-  },
-  {
-    id: '4',
-    type: 'call',
-    title: 'Call Logged',
-    description: 'Discussed requirements for custom API integration',
-    timestamp: '2024-12-18T10:00:00Z',
-    user: 'Alex Morgan',
-    metadata: {
-      duration: '15 min',
-      outcome: 'connected',
-      recordingUrl: '/recordings/call-123.mp3',
-    },
-    sentiment: 'positive',
-  },
-  {
-    id: '5',
-    type: 'chat',
-    title: 'WhatsApp Message',
-    description: 'Quick follow-up on pricing question',
-    timestamp: '2024-12-17T16:30:00Z',
-    user: 'Sarah Jenkins',
-    metadata: {
-      channel: 'whatsapp',
-      messageCount: 5,
-      preview: 'Thanks for the quick response! The pricing looks good. Can we schedule a call to discuss implementation timeline?',
-    },
-    sentiment: 'positive',
-    reactions: [{ emoji: '✅', count: 1, users: ['Alex Morgan'] }],
-  },
-  {
-    id: '6',
-    type: 'document',
-    title: 'Document Signed',
-    description: 'NDA Agreement signed',
-    timestamp: '2024-12-16T11:00:00Z',
-    user: 'Sarah Jenkins',
-    metadata: {
-      fileName: 'NDA_TechFlow_2024.pdf',
-      fileSize: '245 KB',
-      fileType: 'pdf',
-    },
-    sentiment: 'positive',
-  },
-  {
-    id: '7',
-    type: 'ticket',
-    title: 'Ticket Resolved',
-    description: 'Integration API question resolved',
-    timestamp: '2024-12-15T14:00:00Z',
-    user: 'Support Team',
-    metadata: {
-      ticketId: 'TKT-1234',
-      status: 'Resolved',
-      priority: 'Medium',
-    },
-    sentiment: 'neutral',
-  },
-  {
-    id: '8',
-    type: 'note',
-    title: 'Note Added',
-    description: 'Sarah mentioned they are evaluating 2 other competitors',
-    timestamp: '2024-12-15T16:30:00Z',
-    user: 'Alex Morgan',
-    sentiment: 'neutral',
-    comments: [
-      { user: 'Jane Doe', text: 'Good to know. Should we offer a competitive discount?', timestamp: '2024-12-15T17:00:00Z' },
-    ],
-  },
-  {
-    id: '9',
-    type: 'email',
-    title: 'Email Sent',
-    description: 'Enterprise License Proposal',
-    timestamp: '2024-12-14T09:00:00Z',
-    user: 'Alex Morgan',
-    metadata: {
-      subject: 'Enterprise License Proposal - TechFlow Inc.',
-      preview: 'Dear Sarah, Thank you for your interest in our Enterprise solution. Attached is the detailed proposal we discussed...',
-    },
-    sentiment: 'neutral',
-  },
-  {
-    id: '10',
-    type: 'meeting',
-    title: 'Meeting Scheduled',
-    description: 'Initial Discovery Call',
-    timestamp: '2024-12-10T10:00:00Z',
-    user: 'Alex Morgan',
-    metadata: {
-      attendees: ['Sarah Jenkins', 'Alex Morgan'],
-      location: 'Google Meet',
-      duration: '30 min',
-    },
-    sentiment: 'neutral',
-  },
-];
 
 // Activity type filter options
 const activityTypeFilters: { value: ActivityType | 'all'; label: string; icon: string }[] = [
@@ -251,75 +189,6 @@ const activityTypeFilters: { value: ActivityType | 'all'; label: string; icon: s
   { value: 'note', label: 'Notes', icon: '📝' },
 ];
 
-// Person filter options
-const personFilters = [
-  { value: 'all', label: 'All People' },
-  { value: 'Alex Morgan', label: 'Alex Morgan' },
-  { value: 'Sarah Jenkins', label: 'Sarah Jenkins' },
-  { value: 'System', label: 'System' },
-  { value: 'Support Team', label: 'Support Team' },
-];
-
-// Mock deals data
-const mockDeals = [
-  { id: 'd1', name: 'Enterprise License - Q1 2025', value: 75000, stage: 'Negotiation', probability: 75, closeDate: '2025-01-31' },
-  { id: 'd2', name: 'Professional Services Package', value: 35000, stage: 'Proposal', probability: 50, closeDate: '2025-02-15' },
-  { id: 'd3', name: 'Support Contract Renewal', value: 15000, stage: 'Closed Won', probability: 100, closeDate: '2024-12-01' },
-];
-
-// Mock tasks data
-const mockTasks = [
-  { id: 't1', title: 'Follow up on contract', dueDate: '2024-12-28', priority: 'high', completed: false },
-  { id: 't2', title: 'Schedule tech demo', dueDate: '2024-12-30', priority: 'medium', completed: false },
-  { id: 't3', title: 'Send initial proposal', dueDate: '2024-12-10', priority: 'low', completed: true },
-];
-
-// Mock AI insights
-const mockAIInsights = {
-  conversionProbability: 85,
-  lifetimeValue: 245000,
-  churnRisk: 'Low',
-  nextBestAction: 'Schedule a meeting to discuss contract terms',
-  sentiment: 'Positive',
-  engagementScore: 85,
-  recommendations: [
-    'Contact has high engagement - good time to propose upsell',
-    'Decision maker role identified - include in executive communications',
-    'Optimal contact time: Tuesday-Thursday, 10am-2pm PST',
-  ],
-  // Timeline AI insights
-  quietPeriodAlert: null, // Would be set if no contact in X days
-  sentimentTrend: 'improving', // 'improving' | 'stable' | 'declining'
-  lastEngagementDays: 2,
-};
-
-// Mock notes
-const mockNotes = [
-  { id: 'n1', content: 'Very interested in our enterprise security features. Needs SOC2 compliance documentation.', author: 'Alex Morgan', createdAt: '2024-12-15T16:30:00Z' },
-  { id: 'n2', content: 'Budget approved for Q1. Decision expected by end of January.', author: 'Sarah Jenkins', createdAt: '2024-12-10T11:00:00Z' },
-];
-
-// Mock upcoming event
-const mockUpcoming = {
-  month: 'Oct',
-  day: '24',
-  title: 'Q3 Review',
-  time: '2:00 PM - 3:00 PM',
-  attendees: [
-    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=40&h=40&fit=crop&crop=face',
-    'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
-  ],
-};
-
-const tabs: Tab[] = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'activity', label: 'Activity', count: mockActivities.length },
-  { id: 'deals', label: 'Deals', count: mockDeals.length },
-  { id: 'tickets', label: 'Tickets', count: 1 },
-  { id: 'documents', label: 'Documents', count: 2 },
-  { id: 'notes', label: 'Notes', count: mockNotes.length },
-  { id: 'ai-insights', label: 'AI Insights' },
-];
 
 // Contact Status Badge Component
 function ContactStatusBadge({ status }: { status: ContactStatus }) {
@@ -364,6 +233,19 @@ function ContactStatusBadge({ status }: { status: ContactStatus }) {
 }
 
 export default function Contact360Page() {
+  // Get contact ID from URL params
+  const params = useParams();
+  const contactId = params.id as string;
+
+  // Fetch contact data from API
+  const { data: rawApiContact, isLoading, error } = api.contact.getById.useQuery(
+    { id: contactId },
+    { enabled: !!contactId }
+  );
+
+  // Cast to extended type
+  const apiContact = rawApiContact as ContactWithRelations | undefined;
+
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [activityNote, setActivityNote] = useState('');
   const [expandedActivities, setExpandedActivities] = useState<Set<string>>(new Set());
@@ -371,11 +253,258 @@ export default function Contact360Page() {
   const [personFilter, setPersonFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(5);
-  const contact = mockContact;
+
+  // Transform API data to UI format
+  const contact = useMemo(() => {
+    if (!apiContact) return null;
+
+    return {
+      id: apiContact.id,
+      firstName: apiContact.firstName || '',
+      lastName: apiContact.lastName || '',
+      email: apiContact.email,
+      phone: apiContact.phone || '',
+      company: apiContact.account?.name || '',
+      title: apiContact.title || '',
+      department: apiContact.department || '',
+      location: '', // Not in API yet
+      timezone: '', // Not in API yet
+      status: (apiContact.status || 'ACTIVE') as ContactStatus,
+      isOnline: false,
+      isVIP: false,
+      hasActiveDeal: (apiContact.opportunities?.length || 0) > 0,
+      createdAt: typeof apiContact.createdAt === 'string' ? apiContact.createdAt : apiContact.createdAt.toISOString(),
+      lastContactedAt: typeof apiContact.updatedAt === 'string' ? apiContact.updatedAt : apiContact.updatedAt.toISOString(),
+      avatarUrl: apiContact.avatarUrl || defaultContactAvatar,
+      owner: apiContact.owner ? {
+        name: apiContact.owner.name || 'Unknown',
+        title: 'Account Executive',
+        avatarUrl: apiContact.owner.avatarUrl || defaultOwnerAvatar,
+      } : {
+        name: 'Unassigned',
+        title: '',
+        avatarUrl: defaultOwnerAvatar,
+      },
+      account: apiContact.account ? {
+        id: apiContact.account.id,
+        name: apiContact.account.name,
+        industry: apiContact.account.industry || 'Unknown',
+        website: apiContact.account.website || '',
+      } : null,
+      metrics: {
+        totalDeals: apiContact.opportunities?.length || 0,
+        totalValue: apiContact.opportunities?.reduce((sum, opp) => sum + (opp.value || 0), 0) || 0,
+        openTasks: apiContact.tasks?.filter(t => t.status !== 'COMPLETED').length || 0,
+        emailsSent: apiContact.activities?.filter(a => a.type === 'EMAIL').length || 0,
+        emailsOpened: 0, // Not tracked in current schema
+        meetings: apiContact.activities?.filter(a => a.type === 'MEETING').length || 0,
+      },
+      tags: [], // Not in API yet
+    };
+  }, [apiContact]);
+
+  // Transform activities from API to UI format
+  const activities: Activity[] = useMemo(() => {
+    if (!apiContact?.activities) return [];
+    return apiContact.activities.map((act) => ({
+      id: act.id,
+      type: mapActivityType(act.type as DBActivityType),
+      title: act.title,
+      description: act.description || '',
+      timestamp: typeof act.timestamp === 'string' ? act.timestamp : act.timestamp.toISOString(),
+      user: act.userName,
+      metadata: act.metadata as Activity['metadata'],
+      sentiment: mapSentiment(act.sentiment),
+      reactions: [],
+      comments: [],
+    }));
+  }, [apiContact?.activities]);
+
+  // Transform notes from API
+  const notes = useMemo(() => {
+    if (!apiContact?.notes) return [];
+    return apiContact.notes.map((note) => ({
+      id: note.id,
+      content: note.content,
+      author: note.author,
+      createdAt: typeof note.createdAt === 'string' ? note.createdAt : note.createdAt.toISOString(),
+    }));
+  }, [apiContact?.notes]);
+
+  // Transform deals (opportunities) from API
+  const deals = useMemo(() => {
+    if (!apiContact?.opportunities) return [];
+    return apiContact.opportunities.map((opp) => ({
+      id: opp.id,
+      name: opp.name,
+      value: opp.value,
+      stage: opp.stage,
+      probability: opp.probability,
+      closeDate: opp.closeDate ? (typeof opp.closeDate === 'string' ? opp.closeDate : opp.closeDate.toISOString()) : '',
+    }));
+  }, [apiContact?.opportunities]);
+
+  // Transform tasks from API
+  const tasks = useMemo(() => {
+    if (!apiContact?.tasks) return [];
+    return apiContact.tasks.map((task) => ({
+      id: task.id,
+      title: task.title,
+      dueDate: task.dueDate ? (typeof task.dueDate === 'string' ? task.dueDate : task.dueDate.toISOString()) : '',
+      priority: task.priority?.toLowerCase() || 'medium',
+      completed: task.status === 'COMPLETED',
+    }));
+  }, [apiContact?.tasks]);
+
+  // Transform AI insights from API
+  const aiInsights = useMemo(() => {
+    const insight = apiContact?.aiInsight;
+    if (!insight) {
+      return {
+        conversionProbability: 0,
+        lifetimeValue: 0,
+        churnRisk: 'Unknown',
+        nextBestAction: 'Gather more information about this contact',
+        sentiment: 'Unknown',
+        engagementScore: 0,
+        recommendations: ['No AI recommendations available yet'],
+        quietPeriodAlert: null as string | null,
+        sentimentTrend: null as string | null,
+        lastEngagementDays: 0,
+      };
+    }
+
+    return {
+      conversionProbability: insight.conversionProbability,
+      lifetimeValue: insight.lifetimeValue / 100, // Convert cents to dollars
+      churnRisk: insight.churnRisk,
+      nextBestAction: insight.nextBestAction || 'No action recommended',
+      sentiment: insight.sentiment || 'Neutral',
+      engagementScore: insight.engagementScore,
+      recommendations: (insight.recommendations as string[]) || [],
+      quietPeriodAlert: null,
+      sentimentTrend: insight.sentimentTrend,
+      lastEngagementDays: insight.lastEngagementDays,
+    };
+  }, [apiContact?.aiInsight]);
+
+  // Transform AI insights to ChurnRiskData format (IFC-095)
+  const churnRiskData: ChurnRiskData | null = useMemo(() => {
+    const insight = apiContact?.aiInsight;
+    if (!insight) return null;
+
+    // Map database churn risk level to component format
+    const levelMap: Record<string, ChurnRiskLevel> = {
+      LOW: 'LOW',
+      MEDIUM: 'MEDIUM',
+      HIGH: 'HIGH',
+      CRITICAL: 'CRITICAL',
+      MINIMAL: 'MINIMAL',
+    };
+    const level = levelMap[insight.churnRisk] || 'LOW';
+
+    // Map level to score range
+    const scoreMap: Record<ChurnRiskLevel, number> = {
+      CRITICAL: 90,
+      HIGH: 70,
+      MEDIUM: 50,
+      LOW: 25,
+      MINIMAL: 10,
+    };
+
+    // Map level to SLA hours
+    const slaMap: Record<ChurnRiskLevel, number> = {
+      CRITICAL: 24,
+      HIGH: 48,
+      MEDIUM: 168,
+      LOW: 336,
+      MINIMAL: 720,
+    };
+
+    return {
+      score: scoreMap[level],
+      level,
+      confidence: 0.85, // Default confidence
+      slaHours: slaMap[level],
+      trend: insight.sentimentTrend === 'IMPROVING' ? 'IMPROVING' :
+             insight.sentimentTrend === 'DECLINING' ? 'DECLINING' : 'STABLE',
+      factors: [
+        { factor: 'Engagement Score', impact: insight.engagementScore < 30 ? 'HIGH' : insight.engagementScore < 60 ? 'MEDIUM' : 'LOW', value: `${insight.engagementScore}%` },
+        { factor: 'Days Since Contact', impact: insight.lastEngagementDays > 30 ? 'HIGH' : insight.lastEngagementDays > 14 ? 'MEDIUM' : 'LOW', value: `${insight.lastEngagementDays} days` },
+      ],
+    };
+  }, [apiContact?.aiInsight]);
+
+  // Transform AI insights to NextBestActionData format (IFC-095)
+  const nextBestActionData: NextBestActionData | null = useMemo(() => {
+    const insight = apiContact?.aiInsight;
+    if (!insight || !insight.nextBestAction) return null;
+
+    // Parse action type from next best action string
+    const actionText = insight.nextBestAction.toUpperCase();
+    let actionType: NBAActionType = 'WAIT';
+    if (actionText.includes('CALL')) actionType = 'CALL';
+    else if (actionText.includes('EMAIL')) actionType = 'EMAIL';
+    else if (actionText.includes('MEET')) actionType = 'MEETING';
+    else if (actionText.includes('PROPOSAL')) actionType = 'SEND_PROPOSAL';
+    else if (actionText.includes('DEMO')) actionType = 'SCHEDULE_DEMO';
+    else if (actionText.includes('DISCOUNT')) actionType = 'OFFER_DISCOUNT';
+    else if (actionText.includes('TRAIN')) actionType = 'TRAINING';
+    else if (actionText.includes('ESCALATE')) actionType = 'ESCALATE';
+
+    // Determine priority based on churn risk
+    let priority: NBAPriority = 'MEDIUM';
+    if (insight.churnRisk === 'HIGH' || insight.churnRisk === 'CRITICAL') priority = 'HIGH';
+    else if (insight.churnRisk === 'LOW' || insight.churnRisk === 'MINIMAL') priority = 'LOW';
+
+    return {
+      actionType,
+      title: insight.nextBestAction,
+      priority,
+      rationale: `Based on ${insight.engagementScore}% engagement score and ${insight.churnRisk} churn risk level.`,
+      confidence: 0.85,
+    };
+  }, [apiContact?.aiInsight]);
+
+  // Person filter options derived from activities
+  const personFilters = useMemo(() => {
+    const people = new Set<string>();
+    people.add('all');
+    activities.forEach((act) => people.add(act.user));
+    return Array.from(people).map((person) => ({
+      value: person,
+      label: person === 'all' ? 'All People' : person,
+    }));
+  }, [activities]);
+
+  // Upcoming event from calendar events
+  const upcomingEvent = useMemo(() => {
+    if (!apiContact?.calendarEvents || apiContact.calendarEvents.length === 0) return null;
+    const event = apiContact.calendarEvents[0];
+    const date = new Date(event.startTime);
+    return {
+      month: date.toLocaleDateString('en-US', { month: 'short' }),
+      day: date.getDate().toString(),
+      title: event.title,
+      time: date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+      attendees: event.attendees || [contact?.avatarUrl || defaultContactAvatar, contact?.owner?.avatarUrl || defaultOwnerAvatar],
+    };
+  }, [apiContact?.calendarEvents, contact?.avatarUrl, contact?.owner?.avatarUrl]);
+
+  // Tabs with dynamic counts
+  const tabs: Tab[] = useMemo(() => [
+    { id: 'overview', label: 'Overview' },
+    { id: 'activity', label: 'Activity', count: activities.length },
+    { id: 'deals', label: 'Deals', count: deals.length },
+    { id: 'tickets', label: 'Tickets', count: 0 },
+    { id: 'documents', label: 'Documents', count: apiContact?.documents?.length || 0 },
+    { id: 'notes', label: 'Notes', count: notes.length },
+    { id: 'ai-insights', label: 'AI Insights' },
+  ], [activities.length, deals.length, notes.length, apiContact?.documents?.length]);
 
   // Filter and search activities
   const filteredActivities = useMemo(() => {
-    return mockActivities.filter((activity) => {
+    return activities.filter((activity) => {
       // Type filter
       if (activityTypeFilter !== 'all' && activity.type !== activityTypeFilter) return false;
       // Person filter
@@ -393,11 +522,50 @@ export default function Contact360Page() {
       }
       return true;
     });
-  }, [activityTypeFilter, personFilter, searchQuery]);
+  }, [activities, activityTypeFilter, personFilter, searchQuery]);
 
   // Visible activities (for infinite scroll simulation)
   const visibleActivities = filteredActivities.slice(0, visibleCount);
   const hasMore = visibleCount < filteredActivities.length;
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
+        <div className="mb-6">
+          <Skeleton className="h-4 w-48 mb-2" />
+          <Skeleton className="h-8 w-64" />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1">
+            <Skeleton className="h-64 w-full rounded-xl" />
+          </div>
+          <div className="lg:col-span-2">
+            <Skeleton className="h-96 w-full rounded-xl" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state or no contact data
+  if (error || !contact) {
+    return (
+      <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
+        <Card className="p-8 text-center">
+          <span className="material-symbols-outlined text-5xl text-red-500 mb-4">error</span>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Contact Not Found</h2>
+          <p className="text-slate-500 dark:text-slate-400 mb-4">
+            The contact you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission to view it.
+          </p>
+          <Link href="/contacts" className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors">
+            <span className="material-symbols-outlined text-sm">arrow_back</span>
+            Back to Contacts
+          </Link>
+        </Card>
+      </div>
+    );
+  }
 
   // Toggle activity expansion
   const toggleExpand = (id: string) => {
@@ -724,7 +892,7 @@ export default function Contact360Page() {
               <div className="mb-4">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">{contact.firstName} {contact.lastName}</h2>
                 <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{contact.title}</p>
-                <Link href={`/accounts/${contact.account.id}`} className="flex items-center gap-1 text-[#137fec] text-sm font-medium mt-1 hover:underline">
+                <Link href={`/accounts/${contact.account?.id || ''}`} className="flex items-center gap-1 text-[#137fec] text-sm font-medium mt-1 hover:underline">
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M1 20V10h6V8l5-5 5 5v6h6v10H1ZM3 18h4v-2H3Zm0-4h4v-2H3Zm6 4h4v-6h4v6h-4v-4H9Zm0-8h4V8l-2-2-2 2Z" /></svg>
                   <span>{contact.company}</span>
                 </Link>
@@ -914,18 +1082,18 @@ export default function Contact360Page() {
                 </div>
 
                 {/* AI Insights Banner (Sentiment Trend & Quiet Period Alert) */}
-                {mockAIInsights.sentimentTrend && (
+                {aiInsights.sentimentTrend && (
                   <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800 rounded-lg border border-blue-100 dark:border-slate-700">
                     <div className="w-8 h-8 rounded-full bg-[#137fec]/10 flex items-center justify-center">
                       <svg className="w-4 h-4 text-[#137fec]" viewBox="0 0 24 24" fill="currentColor"><path d="m19 9 1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5z" /></svg>
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-slate-900 dark:text-white">
-                        Sentiment is <span className={getSentimentTrendStyle(mockAIInsights.sentimentTrend)}>{mockAIInsights.sentimentTrend}</span>
+                        Sentiment is <span className={getSentimentTrendStyle(aiInsights.sentimentTrend)}>{aiInsights.sentimentTrend}</span>
                       </p>
-                      <p className="text-xs text-slate-500">Last engagement: {mockAIInsights.lastEngagementDays} days ago</p>
+                      <p className="text-xs text-slate-500">Last engagement: {aiInsights.lastEngagementDays} days ago</p>
                     </div>
-                    {mockAIInsights.quietPeriodAlert && (
+                    {aiInsights.quietPeriodAlert && (
                       <span className="px-2 py-1 rounded bg-yellow-100 text-yellow-700 text-xs font-medium">⚠️ Quiet Period</span>
                     )}
                   </div>
@@ -1048,7 +1216,7 @@ export default function Contact360Page() {
                   <button onClick={() => setActiveTab('activity')} className="text-sm text-[#137fec] hover:underline">View All</button>
                 </div>
                 <div className="space-y-4">
-                  {mockActivities.slice(0, 3).map((activity) => (
+                  {activities.slice(0, 3).map((activity) => (
                     <div key={activity.id} className="flex items-start gap-3">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${getActivityIconBg(activity.type)}`}>
                         {getActivityIcon(activity.type)}
@@ -1091,7 +1259,13 @@ export default function Contact360Page() {
                   </div>
                   <div>
                     <dt className="text-sm text-slate-500 dark:text-slate-400">Account</dt>
-                    <dd className="text-sm font-medium"><Link href={`/accounts/${contact.account.id}`} className="text-[#137fec] hover:underline">{contact.account.name}</Link></dd>
+                    <dd className="text-sm font-medium">
+                      {contact.account ? (
+                        <Link href={`/accounts/${contact.account.id}`} className="text-[#137fec] hover:underline">{contact.account.name}</Link>
+                      ) : (
+                        <span className="text-slate-400">No account</span>
+                      )}
+                    </dd>
                   </div>
                 </dl>
               </Card>
@@ -1101,7 +1275,7 @@ export default function Contact360Page() {
                   <button onClick={() => setActiveTab('deals')} className="text-sm text-[#137fec] hover:underline">View All</button>
                 </div>
                 <div className="space-y-3">
-                  {mockDeals.filter(d => d.stage !== 'Closed Won' && d.stage !== 'Closed Lost').slice(0, 2).map((deal) => (
+                  {deals.filter(d => d.stage !== 'Closed Won' && d.stage !== 'Closed Lost').slice(0, 2).map((deal) => (
                     <div key={deal.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-slate-900 dark:text-white truncate">{deal.name}</p>
@@ -1129,7 +1303,7 @@ export default function Contact360Page() {
                 </button>
               </div>
               <div className="space-y-3">
-                {mockDeals.map((deal) => (
+                {deals.map((deal) => (
                   <div key={deal.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-slate-900 dark:text-white truncate">{deal.name}</p>
@@ -1221,7 +1395,7 @@ export default function Contact360Page() {
                 </button>
               </div>
               <div className="space-y-4">
-                {mockNotes.map((note) => (
+                {notes.map((note) => (
                   <div key={note.id} className="pb-4 border-b border-slate-100 dark:border-slate-800 last:border-0 last:pb-0">
                     <p className="text-sm text-slate-600 dark:text-slate-400">{note.content}</p>
                     <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
@@ -1235,17 +1409,39 @@ export default function Contact360Page() {
             </Card>
           )}
 
-          {/* AI Insights Tab */}
+          {/* AI Insights Tab (IFC-095) */}
           {activeTab === 'ai-insights' && (
             <div className="space-y-6">
+              {/* Churn Risk and Next Best Action Cards */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {churnRiskData && (
+                  <ChurnRiskCard
+                    data={churnRiskData}
+                    title="Churn Risk Assessment"
+                    showFactors={true}
+                    showConfidence={true}
+                    showSLA={true}
+                  />
+                )}
+                {nextBestActionData && (
+                  <NextBestActionCard
+                    data={nextBestActionData}
+                    title="Recommended Action"
+                    showRationale={true}
+                    showConfidence={true}
+                  />
+                )}
+              </div>
+
+              {/* Quick Stats Row */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Card className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                      <svg className="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="currentColor"><path d="m16 6 2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6h-6z" /></svg>
+                      <span className="material-symbols-outlined text-green-600">trending_up</span>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">{mockAIInsights.conversionProbability}%</p>
+                      <p className="text-2xl font-bold text-slate-900 dark:text-white">{aiInsights.conversionProbability}%</p>
                       <p className="text-xs text-slate-500">Conversion Probability</p>
                     </div>
                   </div>
@@ -1253,45 +1449,30 @@ export default function Contact360Page() {
                 <Card className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-[#137fec]/10 flex items-center justify-center">
-                      <svg className="w-5 h-5 text-[#137fec]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
+                      <span className="material-symbols-outlined text-[#137fec]">paid</span>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">${(mockAIInsights.lifetimeValue / 1000).toFixed(0)}k</p>
+                      <p className="text-2xl font-bold text-slate-900 dark:text-white">${(aiInsights.lifetimeValue / 1000).toFixed(0)}k</p>
                       <p className="text-xs text-slate-500">Est. Lifetime Value</p>
                     </div>
                   </div>
                 </Card>
                 <Card className="p-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                      <svg className="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" /></svg>
+                    <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-purple-600">sentiment_satisfied</span>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">{mockAIInsights.churnRisk}</p>
-                      <p className="text-xs text-slate-500">Churn Risk</p>
+                      <p className="text-2xl font-bold text-slate-900 dark:text-white">{aiInsights.engagementScore}%</p>
+                      <p className="text-xs text-slate-500">Engagement Score</p>
                     </div>
                   </div>
                 </Card>
               </div>
-              <Card className="p-6 border-l-4 border-l-[#137fec]">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-[#137fec]/10 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-5 h-5 text-[#137fec]" viewBox="0 0 24 24" fill="currentColor"><path d="m19 9 1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z" /></svg>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-slate-900 dark:text-white">Next Best Action</h4>
-                    <p className="text-slate-600 dark:text-slate-400 mt-1">{mockAIInsights.nextBestAction}</p>
-                    <button className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
-                      Take Action
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M8.025 22 6.25 20.225 14.475 12 6.25 3.775 8.025 2l10 10Z" /></svg>
-                    </button>
-                  </div>
-                </div>
-              </Card>
               <Card className="p-6">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">AI Recommendations</h3>
                 <ul className="space-y-3">
-                  {mockAIInsights.recommendations.map((rec, index) => (
+                  {aiInsights.recommendations.map((rec, index) => (
                     <li key={`rec-${rec.slice(0, 20)}`} className="flex items-start gap-3">
                       <div className="w-6 h-6 rounded-full bg-[#137fec]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                         <span className="text-xs font-medium text-[#137fec]">{index + 1}</span>
@@ -1307,15 +1488,15 @@ export default function Contact360Page() {
                   <div>
                     <div className="flex justify-between mb-1.5">
                       <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Engagement Score</span>
-                      <span className="text-sm font-bold text-[#137fec]">{mockAIInsights.engagementScore}%</span>
+                      <span className="text-sm font-bold text-[#137fec]">{aiInsights.engagementScore}%</span>
                     </div>
                     <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
-                      <div className="bg-[#137fec] h-2 rounded-full" style={{ width: `${mockAIInsights.engagementScore}%` }} />
+                      <div className="bg-[#137fec] h-2 rounded-full" style={{ width: `${aiInsights.engagementScore}%` }} />
                     </div>
                   </div>
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-sm text-slate-600 dark:text-slate-300">Sentiment</span>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">{mockAIInsights.sentiment}</span>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">{aiInsights.sentiment}</span>
                   </div>
                 </div>
               </Card>
@@ -1337,24 +1518,24 @@ export default function Contact360Page() {
               <div>
                 <div className="flex justify-between mb-1.5">
                   <span className="text-sm text-slate-600 dark:text-slate-300">Conversion</span>
-                  <span className="text-sm font-bold text-[#137fec]">{mockAIInsights.conversionProbability}%</span>
+                  <span className="text-sm font-bold text-[#137fec]">{aiInsights.conversionProbability}%</span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
-                  <div className="bg-[#137fec] h-2 rounded-full" style={{ width: `${mockAIInsights.conversionProbability}%` }} />
+                  <div className="bg-[#137fec] h-2 rounded-full" style={{ width: `${aiInsights.conversionProbability}%` }} />
                 </div>
               </div>
               <div>
                 <div className="flex justify-between mb-1.5">
                   <span className="text-sm text-slate-600 dark:text-slate-300">Engagement</span>
-                  <span className="text-sm font-bold text-green-600">{mockAIInsights.engagementScore}%</span>
+                  <span className="text-sm font-bold text-green-600">{aiInsights.engagementScore}%</span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
-                  <div className="bg-green-500 h-2 rounded-full" style={{ width: `${mockAIInsights.engagementScore}%` }} />
+                  <div className="bg-green-500 h-2 rounded-full" style={{ width: `${aiInsights.engagementScore}%` }} />
                 </div>
               </div>
               <div className="flex items-center justify-between pt-2">
                 <span className="text-sm text-slate-600 dark:text-slate-300">Sentiment</span>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">{mockAIInsights.sentiment}</span>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">{aiInsights.sentiment}</span>
               </div>
               <button onClick={() => setActiveTab('ai-insights')} className="w-full mt-2 text-sm text-[#137fec] hover:underline text-center">View Full Analysis</button>
             </div>
@@ -1367,7 +1548,7 @@ export default function Contact360Page() {
               </button>
             </div>
             <div className="space-y-3">
-              {mockTasks.map((task) => (
+              {tasks.map((task) => (
                 <label key={task.id} className={`flex items-start gap-3 group cursor-pointer ${task.completed ? 'opacity-50' : ''}`}>
                   <input type="checkbox" defaultChecked={task.completed} className="rounded border-slate-300 text-[#137fec] focus:ring-[#137fec] mt-1" />
                   <div className="flex-1">
@@ -1388,23 +1569,27 @@ export default function Contact360Page() {
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M19 22v-3h-3v-2h3v-3h2v3h3v2h-3v3ZM5 22q-.825 0-1.412-.587Q3 20.825 3 20V6q0-.825.588-1.412Q4.175 4 5 4h1V2h2v2h6V2h2v2h1q.825 0 1.413.588Q19 5.175 19 6v6h-2V10H5v10h9v2Zm0-14h12V6H5Zm0 0V6v2Z" /></svg>
               </button>
             </div>
-            <div className="flex gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
-              <div className="flex flex-col items-center justify-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded w-12 h-12 flex-shrink-0">
-                <span className="text-[10px] font-bold text-red-500 uppercase">{mockUpcoming.month}</span>
-                <span className="text-lg font-bold text-slate-900 dark:text-white leading-none">{mockUpcoming.day}</span>
-              </div>
-              <div>
-                <p className="text-sm font-bold text-slate-900 dark:text-white">{mockUpcoming.title}</p>
-                <p className="text-xs text-slate-500 mt-0.5">{mockUpcoming.time}</p>
-                <div className="flex -space-x-1.5 mt-1.5">
-                  {mockUpcoming.attendees.map((avatar) => (
-                    <div key={avatar} className="w-5 h-5 rounded-full ring-2 ring-white dark:ring-slate-900 bg-slate-200 overflow-hidden">
-                      <img src={avatar} alt="Attendee" className="w-full h-full object-cover" />
-                    </div>
-                  ))}
+            {upcomingEvent ? (
+              <div className="flex gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+                <div className="flex flex-col items-center justify-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded w-12 h-12 flex-shrink-0">
+                  <span className="text-[10px] font-bold text-red-500 uppercase">{upcomingEvent.month}</span>
+                  <span className="text-lg font-bold text-slate-900 dark:text-white leading-none">{upcomingEvent.day}</span>
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">{upcomingEvent.title}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{upcomingEvent.time}</p>
+                  <div className="flex -space-x-1.5 mt-1.5">
+                    {(upcomingEvent.attendees as string[]).map((avatar) => (
+                      <div key={avatar} className="w-5 h-5 rounded-full ring-2 ring-white dark:ring-slate-900 bg-slate-200 overflow-hidden">
+                        <img src={avatar} alt="Attendee" className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <p className="text-sm text-slate-500 dark:text-slate-400">No upcoming events</p>
+            )}
           </Card>
           <Card className="p-5">
             <div className="flex items-center justify-between mb-4">
@@ -1414,7 +1599,7 @@ export default function Contact360Page() {
               </button>
             </div>
             <div className="space-y-4">
-              {mockNotes.slice(0, 2).map((note) => (
+              {notes.slice(0, 2).map((note) => (
                 <div key={note.id} className="pb-4 border-b border-slate-100 dark:border-slate-800 last:border-0 last:pb-0">
                   <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">{note.content}</p>
                   <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">

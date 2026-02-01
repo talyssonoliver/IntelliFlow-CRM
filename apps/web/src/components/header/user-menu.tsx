@@ -3,6 +3,8 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { cn } from '@intelliflow/ui';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { useLogout } from '@/hooks/useLogout';
 
 interface UserMenuProps {
   user?: {
@@ -15,9 +17,22 @@ interface UserMenuProps {
 }
 
 export function UserMenu({
-  user = { name: 'Alex', email: 'alex@intelliflow.ai', role: 'Admin' },
+  user: propUser,
   className
 }: UserMenuProps) {
+  // IFC-007: Connect to auth context for real user data
+  const { user: authUser } = useAuth();
+  const { logout, isLoggingOut } = useLogout();
+
+  // Use auth context user if available, otherwise fall back to props
+  const user = authUser
+    ? {
+        name: authUser.name || authUser.email.split('@')[0],
+        email: authUser.email,
+        role: authUser.role,
+        avatar: undefined,
+      }
+    : propUser || { name: 'Guest', email: '', role: '' };
   const [isOpen, setIsOpen] = React.useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
 
@@ -139,15 +154,16 @@ export function UserMenu({
           {/* Sign Out */}
           <div className="py-1">
             <button
-              onClick={() => {
+              onClick={async () => {
                 setIsOpen(false);
-                // TODO: Implement sign out
-                console.log('Sign out clicked');
+                // IFC-007: Implement actual logout
+                await logout();
               }}
-              className="flex items-center gap-3 w-full px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+              disabled={isLoggingOut}
+              className="flex items-center gap-3 w-full px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
             >
               <span className="material-symbols-outlined text-lg">logout</span>
-              Sign out
+              {isLoggingOut ? 'Signing out...' : 'Sign out'}
             </button>
           </div>
         </div>
