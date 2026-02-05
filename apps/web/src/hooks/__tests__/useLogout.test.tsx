@@ -18,7 +18,13 @@ vi.mock('next/navigation', () => ({
     push: mockPush,
     replace: vi.fn(),
     back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn(),
   }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => '/',
+  useParams: () => ({}),
 }));
 
 // Mock session-cleanup

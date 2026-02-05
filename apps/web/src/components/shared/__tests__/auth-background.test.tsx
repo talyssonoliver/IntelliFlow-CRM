@@ -39,8 +39,8 @@ describe('AuthBackground', () => {
     );
 
     const main = screen.getByRole('main');
-    // Component uses calc(100vh-4rem) and calc(100dvh-4rem) for responsive viewport handling
-    expect(main).toHaveClass('min-h-[calc(100vh-4rem)]');
+    // Component uses min-h-[calc(100dvh-4rem)] for dynamic viewport height handling
+    expect(main).toHaveClass('min-h-[calc(100dvh-4rem)]');
     expect(main).toHaveClass('bg-[#0f172a]');
   });
 

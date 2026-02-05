@@ -47,6 +47,10 @@ function matchesPattern(path: string, patterns: string[]): boolean {
  * 2. Role-based access control - checks user permissions
  * 3. Session validation - verifies JWT with Supabase
  * 4. Redirect loops prevention - avoids infinite redirects
+ *
+ * NOTE: This proxy checks for accessToken cookie (set by OAuth callback).
+ * The client-side auth (useRequireAuth hook) handles the actual validation.
+ * This proxy provides a lightweight server-side redirect hint only.
  */
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
@@ -66,19 +70,32 @@ export async function proxy(request: NextRequest) {
   // Check if route is protected
   const isProtectedRoute = matchesPattern(path, protectedPatterns);
 
-  // Get session from cookie
+  // Get accessToken from cookie (set by OAuth callback via syncTokenToCookie)
+  // This is a lightweight check - full validation happens client-side
   const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get('session')?.value;
-  const session = await decrypt(sessionCookie);
+  const accessToken = cookieStore.get('accessToken')?.value;
 
-  // Protected route without session -> redirect to login
-  if (isProtectedRoute && !session) {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('redirect', path);
-    return NextResponse.redirect(loginUrl);
+  // Also try to get full session if available
+  const sessionCookie = cookieStore.get('session')?.value;
+  const session = sessionCookie ? await decrypt(sessionCookie) : null;
+
+  const hasValidSession = !!session;
+  const hasAnyAuthArtifact = !!accessToken || !!session;
+
+  console.log(
+    `[Proxy] Path: ${path}, hasAccessToken: ${!!accessToken}, hasSession: ${!!session}, hasValidSession: ${hasValidSession}`
+  );
+
+  // Protected route without auth -> let client-side handle redirect
+  // We don't redirect server-side anymore to avoid the loop
+  // The useRequireAuth hook will handle the redirect properly
+  if (isProtectedRoute && !hasAnyAuthArtifact) {
+    console.log(`[Proxy] Protected route without auth, letting client-side handle: ${path}`);
+    // Don't redirect - let the page load and useRequireAuth will handle it
+    return NextResponse.next();
   }
 
-  // Check role-based access
+  // Check role-based access (only if we have a full session)
   if (isProtectedRoute && session) {
     const requiredRoles = PROTECTED_ROUTES[path];
     if (requiredRoles && !hasRole(session, requiredRoles)) {
@@ -87,16 +104,25 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Authenticated user on public auth pages -> redirect to dashboard
-  if (
-    session &&
-    (path === '/login' || path === '/signup') &&
-    !request.nextUrl.searchParams.has('redirect')
-  ) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+  // Authenticated user on auth pages (login/signup) -> redirect to dashboard
+  // Only if we have a valid session; stale tokens should not redirect
+  // If token exists but session is missing/invalid, clear cookies to break loops
+  if (path === '/login' || path === '/signup') {
+    if (hasValidSession && !request.nextUrl.searchParams.has('logged_out')) {
+      console.log(`[Proxy] Authenticated user on auth page, redirecting to dashboard`);
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+
+    if (accessToken && !hasValidSession) {
+      console.log(`[Proxy] Stale access token without session on auth page, clearing cookies`);
+      const res = NextResponse.next();
+      res.cookies.delete('accessToken');
+      res.cookies.delete('session');
+      return res;
+    }
   }
 
-  // Add user info to headers for server components
+  // Add user info to headers for server components (if session available)
   const response = NextResponse.next();
 
   if (session) {

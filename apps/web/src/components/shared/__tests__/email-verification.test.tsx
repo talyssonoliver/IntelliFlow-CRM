@@ -32,7 +32,13 @@ vi.mock('next/navigation', () => ({
     push: mockPush,
     replace: mockReplace,
     back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn(),
   }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => '/auth/verify-email',
+  useParams: () => ({}),
 }));
 
 // Mock account-activation utilities

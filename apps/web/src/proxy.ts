@@ -20,21 +20,33 @@ const authPages = ['/login', '/signup'];
 export function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
-  // Get access token from cookie
   const accessToken = request.cookies.get('accessToken')?.value;
+  const sessionCookie = request.cookies.get('session')?.value;
+  const session = parseSession(sessionCookie);
+  const hasValidSession = !!session;
 
   // Debug: Log all cookies received
   const allCookies = request.cookies.getAll();
   console.log(`[Proxy] Path: ${path}, Cookies:`, allCookies.map(c => c.name).join(', ') || 'none');
-  console.log(`[Proxy] Has accessToken cookie: ${!!accessToken}`);
+  console.log(
+    `[Proxy] Has accessToken: ${!!accessToken}, hasSession: ${!!sessionCookie}, hasValidSession: ${hasValidSession}`
+  );
 
-  // If user has auth cookie and is on login/signup, redirect to dashboard
+  // If user has a valid session and is on login/signup, redirect to dashboard
   // But not if they just logged out (has logged_out param)
-  if (accessToken && !request.nextUrl.searchParams.has('logged_out')) {
+  if (hasValidSession && !request.nextUrl.searchParams.has('logged_out')) {
     if (authPages.some(page => path === page || path.startsWith(page + '/'))) {
-      console.log(`[Proxy] User has auth cookie, redirecting ${path} to dashboard`);
+      console.log(`[Proxy] Authenticated user on auth page, redirecting to dashboard`);
       return NextResponse.redirect(new URL('/dashboard', request.nextUrl));
     }
+  }
+
+  // If we have a stale accessToken but invalid/expired session, clear cookies to avoid redirect loops
+  if (accessToken && !hasValidSession) {
+    const res = NextResponse.next();
+    res.cookies.delete('accessToken');
+    res.cookies.delete('session');
+    return res;
   }
 
   // For all other cases, let the request through
@@ -46,3 +58,15 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: ['/((?!api|_next/static|_next/image|.*\\.png$|.*\\.ico$|.*\\.svg$).*)'],
 };
+
+function parseSession(raw?: string) {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as { accessToken?: string; expiresAt?: number };
+    if (!parsed.accessToken || !parsed.expiresAt) return null;
+    if (Date.now() > parsed.expiresAt * 1000) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}

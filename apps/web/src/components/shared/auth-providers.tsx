@@ -76,7 +76,7 @@ export function GoogleSignInButton({
   onError,
   disabled = false,
   className = '',
-}: AuthProviderButtonProps) {
+}: Readonly<AuthProviderButtonProps>) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleClick = async () => {
@@ -149,7 +149,7 @@ export function MicrosoftSignInButton({
   onError,
   disabled = false,
   className = '',
-}: AuthProviderButtonProps) {
+}: Readonly<AuthProviderButtonProps>) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleClick = async () => {
@@ -242,7 +242,7 @@ export function SocialLoginGrid({
   onMicrosoftLogin,
   onError,
   disabled = false,
-}: SocialLoginGridProps) {
+}: Readonly<SocialLoginGridProps>) {
   return (
     <div className="grid grid-cols-2 gap-3">
       <GoogleSignInButton
@@ -274,7 +274,7 @@ export interface OAuthDividerProps {
 /**
  * Divider component for separating email login from OAuth
  */
-export function OAuthDivider({ text = 'Or continue with' }: OAuthDividerProps) {
+export function OAuthDivider({ text = 'Or continue with' }: Readonly<OAuthDividerProps>) {
   return (
     <div className="flex items-center gap-4">
       <div className="flex-1 border-t border-white/10" />
@@ -291,7 +291,7 @@ export function OAuthDivider({ text = 'Or continue with' }: OAuthDividerProps) {
 /**
  * Google logo SVG icon
  */
-function GoogleIcon({ className = 'w-5 h-5' }: { className?: string }) {
+function GoogleIcon({ className = 'w-5 h-5' }: Readonly<{ className?: string }>) {
   return (
     <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
       <path
@@ -317,7 +317,7 @@ function GoogleIcon({ className = 'w-5 h-5' }: { className?: string }) {
 /**
  * Microsoft logo SVG icon (colored)
  */
-function MicrosoftIcon({ className = 'w-5 h-5' }: { className?: string }) {
+function MicrosoftIcon({ className = 'w-5 h-5' }: Readonly<{ className?: string }>) {
   return (
     <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
       <path fill="#f35325" d="M1 1h10v10H1z" />

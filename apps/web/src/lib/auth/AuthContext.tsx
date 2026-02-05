@@ -21,12 +21,52 @@ import {
   useState,
   useEffect,
   useCallback,
+  useRef,
   ReactNode,
 } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { trpc } from '../trpc';
 import { useQueryClient } from '@tanstack/react-query';
 import { getSupabaseBrowserClient } from '../supabase-browser';
+
+// ============================================
+// Token Refresh Utilities
+// ============================================
+
+/**
+ * Decode JWT token payload without verifying signature
+ */
+function decodeJwtPayload(token: string): { exp?: number; sub?: string } | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    return JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Check if token needs refresh (expires within threshold)
+ * Default threshold: 5 minutes before expiry
+ */
+function tokenNeedsRefresh(token: string, thresholdMs: number = 5 * 60 * 1000): boolean {
+  const payload = decodeJwtPayload(token);
+  if (!payload?.exp) return true; // If we can't read expiry, assume needs refresh
+
+  const expiryTime = payload.exp * 1000;
+  const now = Date.now();
+  return now >= expiryTime - thresholdMs;
+}
+
+/**
+ * Get token expiry time in milliseconds
+ */
+function getTokenExpiryMs(token: string): number | null {
+  const payload = decodeJwtPayload(token);
+  if (!payload?.exp) return null;
+  return payload.exp * 1000;
+}
 
 // ============================================
 // Types
@@ -37,6 +77,7 @@ export interface AuthUser {
   email: string;
   name: string | null;
   role: string;
+  avatar?: string | null;
 }
 
 export interface AuthSession {
@@ -131,6 +172,138 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refetchOnWindowFocus: false,
     enabled: !isLoggedOutPage, // Don't fetch if we just logged out
   });
+
+  // tRPC mutation for token refresh
+  const refreshTokenMutation = trpc.auth.refreshSession.useMutation();
+
+  // Track refresh timer
+  const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isRefreshingRef = useRef(false);
+
+  /**
+   * Automatic Token Refresh Effect
+   *
+   * Sets up Supabase session sync and automatic token refresh.
+   * This ensures users don't get logged out while actively using the app.
+   */
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (isLoggedOutPage) return;
+
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) return;
+
+    // Sync stored tokens to Supabase so it can auto-refresh
+    const syncTokensToSupabase = async () => {
+      const accessToken = localStorage.getItem('accessToken');
+      const refreshToken = localStorage.getItem('refreshToken');
+
+      if (accessToken && refreshToken) {
+        console.log('[AuthContext] Syncing tokens to Supabase for auto-refresh...');
+        try {
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+
+          if (error) {
+            console.warn('[AuthContext] Failed to sync session to Supabase:', error.message);
+          } else if (data.session) {
+            console.log('[AuthContext] Session synced to Supabase successfully');
+
+            // Update stored tokens if Supabase returned new ones
+            if (data.session.access_token !== accessToken) {
+              console.log('[AuthContext] Supabase returned refreshed tokens, updating storage...');
+              localStorage.setItem('accessToken', data.session.access_token);
+              if (data.session.refresh_token) {
+                localStorage.setItem('refreshToken', data.session.refresh_token);
+              }
+              // Sync to cookie
+              import('@/lib/shared/session-cleanup').then(({ syncTokenToCookie }) => {
+                syncTokenToCookie(data.session!.access_token);
+              });
+            }
+          }
+        } catch (err) {
+          console.error('[AuthContext] Error syncing session to Supabase:', err);
+        }
+      }
+    };
+
+    // Listen for Supabase auth state changes (including token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('[AuthContext] Supabase auth state change:', event);
+
+        if (event === 'TOKEN_REFRESHED' && session) {
+          console.log('[AuthContext] Token refreshed by Supabase, updating storage...');
+
+          // Update stored tokens
+          localStorage.setItem('accessToken', session.access_token);
+          if (session.refresh_token) {
+            localStorage.setItem('refreshToken', session.refresh_token);
+          }
+
+          // Sync to cookie
+          import('@/lib/shared/session-cleanup').then(({ syncTokenToCookie }) => {
+            syncTokenToCookie(session.access_token);
+          });
+
+          // Invalidate auth status query to pick up new token
+          queryClient.invalidateQueries({ queryKey: [['auth', 'getStatus']] });
+        } else if (event === 'SIGNED_OUT') {
+          console.log('[AuthContext] Signed out via Supabase');
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        }
+      }
+    );
+
+    // Initial sync
+    syncTokensToSupabase();
+
+    // Also set up a backup timer-based refresh check
+    const setupRefreshTimer = () => {
+      const accessToken = localStorage.getItem('accessToken');
+      if (!accessToken) return;
+
+      const expiryMs = getTokenExpiryMs(accessToken);
+      if (!expiryMs) return;
+
+      // Calculate time until we should refresh (5 minutes before expiry)
+      const refreshAtMs = expiryMs - 5 * 60 * 1000;
+      const timeUntilRefresh = refreshAtMs - Date.now();
+
+      if (timeUntilRefresh <= 0) {
+        // Token already needs refresh
+        console.log('[AuthContext] Token needs immediate refresh');
+        return;
+      }
+
+      console.log(`[AuthContext] Scheduling token refresh in ${Math.round(timeUntilRefresh / 1000 / 60)} minutes`);
+
+      // Clear existing timer
+      if (refreshTimerRef.current) {
+        clearTimeout(refreshTimerRef.current);
+      }
+
+      // Set timer to trigger Supabase refresh
+      refreshTimerRef.current = setTimeout(() => {
+        console.log('[AuthContext] Timer triggered, requesting token refresh...');
+        supabase.auth.refreshSession();
+      }, timeUntilRefresh);
+    };
+
+    setupRefreshTimer();
+
+    return () => {
+      subscription.unsubscribe();
+      if (refreshTimerRef.current) {
+        clearTimeout(refreshTimerRef.current);
+      }
+    };
+  }, [isLoggedOutPage, queryClient]);
 
   // ==========================================
   // Initialize auth state on mount
@@ -478,15 +651,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [logoutMutation, router, queryClient]);
 
   /**
-   * Refresh session
+   * Refresh session - uses Supabase to refresh tokens
    */
   const refreshSession = useCallback(async (): Promise<void> => {
-    try {
-      await statusQuery.refetch();
-    } catch (error) {
-      console.error('Session refresh error:', error);
+    if (isRefreshingRef.current) {
+      console.log('[AuthContext] Refresh already in progress, skipping...');
+      return;
     }
-  }, [statusQuery]);
+
+    try {
+      isRefreshingRef.current = true;
+      console.log('[AuthContext] Manually refreshing session...');
+
+      const supabase = getSupabaseBrowserClient();
+      if (!supabase) {
+        console.error('[AuthContext] No Supabase client available');
+        return;
+      }
+
+      const { data, error } = await supabase.auth.refreshSession();
+
+      if (error) {
+        console.error('[AuthContext] Session refresh failed:', error.message);
+        // If refresh fails, the token is likely invalid - logout
+        await logout();
+        return;
+      }
+
+      if (data.session) {
+        console.log('[AuthContext] Session refreshed successfully');
+
+        // Update stored tokens
+        localStorage.setItem('accessToken', data.session.access_token);
+        if (data.session.refresh_token) {
+          localStorage.setItem('refreshToken', data.session.refresh_token);
+        }
+
+        // Sync to cookie
+        const { syncTokenToCookie } = await import('@/lib/shared/session-cleanup');
+        syncTokenToCookie(data.session.access_token);
+
+        // Refetch auth status
+        await statusQuery.refetch();
+      }
+    } catch (error) {
+      console.error('[AuthContext] Session refresh error:', error);
+    } finally {
+      isRefreshingRef.current = false;
+    }
+  }, [statusQuery, logout]);
 
   /**
    * Clear error
@@ -558,22 +771,56 @@ export function useAuth(): AuthContextType {
 export function useRequireAuth(): AuthContextType {
   const auth = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const hasRedirectedRef = useRef(false);
+
+  // Check for OAuth success parameter in URL (set by OAuth callback)
+  const oauthParam = searchParams?.get('oauth');
+  const hasOAuthParam = oauthParam === 'success';
 
   useEffect(() => {
+    // Prevent redirect loops - only redirect once per component mount
+    if (hasRedirectedRef.current) {
+      return;
+    }
+
     // Check if there's a token in localStorage - if so, wait for auth to complete
     const hasLocalToken = typeof window !== 'undefined' && !!localStorage.getItem('accessToken');
+
+    // Check for recent redirect to prevent loops (within last 2 seconds)
+    const lastRedirectTime = typeof window !== 'undefined'
+      ? sessionStorage.getItem('auth_redirect_time')
+      : null;
+    const isRecentRedirect = lastRedirectTime && (Date.now() - parseInt(lastRedirectTime, 10)) < 2000;
+
+    // Check for recent OAuth login success (OAuth callback sets this flag)
+    // This prevents redirect during the brief moment when token is stored but auth query hasn't completed
+    const oauthLoginTime = typeof window !== 'undefined'
+      ? sessionStorage.getItem('oauth_login_success')
+      : null;
+    const isRecentOAuthLogin = !!(oauthLoginTime && (Date.now() - parseInt(oauthLoginTime, 10)) < 10000);
+
+    // Also check URL param as backup (in case sessionStorage doesn't work)
+    const isOAuthFlow = isRecentOAuthLogin || hasOAuthParam;
 
     console.log('[useRequireAuth] Checking auth:', {
       isLoading: auth.isLoading,
       isAuthenticated: auth.isAuthenticated,
       user: auth.user?.email,
       hasLocalToken,
+      isRecentRedirect,
+      isRecentOAuthLogin,
+      hasOAuthParam,
+      isOAuthFlow,
+      error: auth.error,
     });
 
     // Don't redirect if:
     // 1. Still loading, OR
     // 2. Already authenticated, OR
-    // 3. Has a local token (wait for auth query to validate it)
+    // 3. Has a local token (wait for auth query to validate it), OR
+    // 4. Recently redirected (prevent loops), OR
+    // 5. OAuth flow in progress (wait for auth to settle)
     if (auth.isLoading) {
       console.log('[useRequireAuth] Still loading, waiting...');
       return;
@@ -581,34 +828,67 @@ export function useRequireAuth(): AuthContextType {
 
     if (auth.isAuthenticated) {
       console.log('[useRequireAuth] User is authenticated, no redirect needed');
+      // Clear any redirect timestamp and OAuth flag since auth is now confirmed
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('auth_redirect_time');
+        sessionStorage.removeItem('oauth_login_success');
+      }
+      // Clean up OAuth param from URL if present
+      if (hasOAuthParam) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('oauth');
+        window.history.replaceState({}, '', url.pathname + url.search);
+      }
       return;
     }
 
-    // Only redirect if truly not authenticated AND no local token
-    if (!auth.isAuthenticated && !hasLocalToken) {
-      console.log('[useRequireAuth] Not authenticated and no local token, redirecting to login...');
-      router.replace('/login');
-    } else if (!auth.isAuthenticated && hasLocalToken) {
-      // Has token but not authenticated - token might be invalid or expired
-      // Check if there's an error (invalid token)
-      if (auth.error) {
-        console.log('[useRequireAuth] Auth error with local token, clearing token and redirecting:', auth.error);
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        router.replace('/login');
-      } else {
-        console.log('[useRequireAuth] Has local token but not authenticated yet, waiting for validation...');
-      }
+    if (isRecentRedirect) {
+      console.log('[useRequireAuth] Recent redirect detected, preventing loop...');
+      return;
     }
-  }, [auth.isLoading, auth.isAuthenticated, auth.user, auth.error, router]);
+
+    // If OAuth flow is in progress and we have a token, wait for auth to complete
+    if (isOAuthFlow && hasLocalToken) {
+      console.log('[useRequireAuth] OAuth flow detected with token, waiting for auth to complete...');
+      return;
+    }
+
+    // If a token exists but auth already determined we're unauthenticated, treat it as expired/invalid.
+    if (hasLocalToken && !auth.isAuthenticated && !auth.isLoading) {
+      console.log('[useRequireAuth] Token present but auth failed; clearing token and redirecting to login');
+      localStorage.removeItem('accessToken');
+      sessionStorage.removeItem('oauth_login_success');
+      sessionStorage.removeItem('auth_redirect_time');
+      hasRedirectedRef.current = true;
+      sessionStorage.setItem('auth_redirect_time', Date.now().toString());
+      router.replace('/login');
+      return;
+    }
+
+    // No token in localStorage - redirect to login
+    console.log('[useRequireAuth] No token in localStorage, redirecting to login...');
+    hasRedirectedRef.current = true;
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('auth_redirect_time', Date.now().toString());
+    }
+    router.replace('/login');
+  }, [auth.isLoading, auth.isAuthenticated, auth.user, auth.error, router, hasOAuthParam]);
+
+  // Check for recent OAuth login to extend loading state
+  const hasLocalToken = typeof window !== 'undefined' && !!localStorage.getItem('accessToken');
+  const oauthLoginTime = typeof window !== 'undefined'
+    ? sessionStorage.getItem('oauth_login_success')
+    : null;
+  const isRecentOAuthLogin = !!(oauthLoginTime && (Date.now() - parseInt(oauthLoginTime, 10)) < 10000);
+  const isOAuthFlow = isRecentOAuthLogin || hasOAuthParam;
 
   // Return auth with isLoading=true if not yet authenticated
   // This ensures components don't render content until auth is confirmed
-  const hasLocalToken = typeof window !== 'undefined' && !!localStorage.getItem('accessToken');
   return {
     ...auth,
     // Keep isLoading true until we confirm authentication (or have no token to validate)
-    isLoading: auth.isLoading || (hasLocalToken && !auth.isAuthenticated),
+    // Also keep loading during OAuth flow to prevent premature content render
+    isLoading: auth.isLoading || (hasLocalToken && !auth.isAuthenticated) || (isOAuthFlow && !auth.isAuthenticated),
   };
 }
 
@@ -625,28 +905,40 @@ export function useRedirectIfAuthenticated(redirectTo: string = '/dashboard'): A
   // Check if user just logged out - don't redirect them back
   const justLoggedOut = searchParams?.get('logged_out') === 'true';
 
-  // Check if OAuth login just succeeded (fallback mechanism)
-  const oauthLoginSuccess = typeof window !== 'undefined'
+  // Check for redirect parameter in URL (e.g., /login?redirect=/dashboard)
+  const urlRedirect = searchParams?.get('redirect');
+  const finalRedirectTo = urlRedirect || redirectTo;
+
+  // Track if we've already redirected to prevent loops
+  const hasRedirectedRef = useRef(false);
+
+  // Check for token in localStorage
+  const hasLocalToken = typeof window !== 'undefined' && !!localStorage.getItem('accessToken');
+
+  // Check for recent OAuth login - if set, we know auth should be valid
+  const oauthLoginTime = typeof window !== 'undefined'
     ? sessionStorage.getItem('oauth_login_success')
     : null;
+  const isRecentOAuthLogin = !!(oauthLoginTime && (Date.now() - parseInt(oauthLoginTime, 10)) < 10000);
 
-  // Debug: Log all search params
+  // Debug: Log current state
   console.log('[useRedirectIfAuthenticated] Current state:', {
     isLoading: auth.isLoading,
     isAuthenticated: auth.isAuthenticated,
     justLoggedOut,
-    oauthLoginSuccess: !!oauthLoginSuccess,
-    redirectTo,
-    allParams: searchParams?.toString() || 'none',
+    hasLocalToken,
+    isRecentOAuthLogin,
+    urlRedirect,
+    finalRedirectTo,
+    hasRedirected: hasRedirectedRef.current,
   });
 
   useEffect(() => {
-    console.log('[useRedirectIfAuthenticated] useEffect triggered:', {
-      isLoading: auth.isLoading,
-      isAuthenticated: auth.isAuthenticated,
-      justLoggedOut,
-      oauthLoginSuccess: !!oauthLoginSuccess,
-    });
+    // Prevent redirect loops - only redirect once per mount
+    if (hasRedirectedRef.current) {
+      console.log('[useRedirectIfAuthenticated] Already redirected, skipping');
+      return;
+    }
 
     // Don't redirect if user just logged out
     if (justLoggedOut) {
@@ -654,31 +946,31 @@ export function useRedirectIfAuthenticated(redirectTo: string = '/dashboard'): A
       return;
     }
 
-    // If OAuth login just succeeded and we have a token, redirect immediately
-    // This is a fallback in case auth state hasn't updated yet
-    if (oauthLoginSuccess) {
-      const hasToken = typeof window !== 'undefined' && !!localStorage.getItem('accessToken');
-      console.log('[useRedirectIfAuthenticated] OAuth login success flag found, hasToken:', hasToken);
-
-      if (hasToken) {
-        // Clear the flag
-        sessionStorage.removeItem('oauth_login_success');
-        console.log('[useRedirectIfAuthenticated] Redirecting due to OAuth success flag');
-        router.replace(redirectTo);
-        return;
-      }
+    // If there was a recent OAuth login and we have a token, redirect immediately
+    // This handles the case where OAuth callback completed successfully
+    if (isRecentOAuthLogin && hasLocalToken) {
+      console.log('[useRedirectIfAuthenticated] Recent OAuth login with token, using window.location to navigate to:', finalRedirectTo);
+      hasRedirectedRef.current = true;
+      // Use window.location.href because router.replace doesn't work reliably
+      window.location.href = finalRedirectTo;
+      return;
     }
 
-    if (!auth.isLoading && auth.isAuthenticated) {
-      console.log('[useRedirectIfAuthenticated] User is authenticated, redirecting to:', redirectTo);
-      // Use replace instead of push to avoid adding to history
-      router.replace(redirectTo);
-    } else {
-      console.log('[useRedirectIfAuthenticated] NOT redirecting:', {
-        reason: auth.isLoading ? 'still loading' : 'not authenticated',
-      });
+    // Wait for auth query to complete before making redirect decisions
+    // This prevents race conditions where token exists but query hasn't validated it
+    if (auth.isLoading) {
+      console.log('[useRedirectIfAuthenticated] Auth still loading, waiting...');
+      return;
     }
-  }, [auth.isLoading, auth.isAuthenticated, router, redirectTo, justLoggedOut, oauthLoginSuccess]);
+
+    // Only redirect if actually authenticated (token validated by query)
+    if (auth.isAuthenticated) {
+      console.log('[useRedirectIfAuthenticated] Auth confirmed, using window.location to navigate to:', finalRedirectTo);
+      hasRedirectedRef.current = true;
+      // Use window.location.href because router.replace doesn't seem to work reliably
+      window.location.href = finalRedirectTo;
+    }
+  }, [auth.isLoading, auth.isAuthenticated, finalRedirectTo, justLoggedOut, hasLocalToken, isRecentOAuthLogin]);
 
   return auth;
 }
