@@ -12,8 +12,15 @@
 import { Job } from 'bullmq';
 import pino from 'pino';
 import { BaseWorker, type ComponentHealth } from '@intelliflow/worker-shared';
+import { PrismaClient } from '@intelliflow/db';
 import { OutboxPoller, InMemoryOutboxRepository, type OutboxRepository } from './outbox/pollOutbox';
 import { EventDispatcher, DOMAIN_EVENT_TYPES, type OutboxEvent } from './outbox/event-dispatcher';
+import {
+  createLeadScoredBridgeHandler,
+  createTaskAssignedBridgeHandler,
+  createSystemEventBridgeHandler,
+  createAIProgressBridgeHandler,
+} from './handlers/subscription-bridge';
 
 // ============================================================================
 // Types
@@ -22,6 +29,8 @@ import { EventDispatcher, DOMAIN_EVENT_TYPES, type OutboxEvent } from './outbox/
 interface EventsWorkerConfig {
   /** Use database repository (default: false, uses in-memory for now) */
   useDatabase?: boolean;
+  /** PrismaClient instance (required when useDatabase is true) */
+  prisma?: PrismaClient;
   /** Polling interval in milliseconds */
   pollIntervalMs?: number;
   /** Batch size for event fetching */
@@ -59,8 +68,20 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
     this.workerConfig = config || {};
     this.eventDispatcher = new EventDispatcher(this.logger);
 
-    // Use in-memory repository by default (replace with Prisma in production)
-    this.repository = new InMemoryOutboxRepository();
+    // Use PrismaOutboxRepository when database mode is enabled and PrismaClient is provided
+    if (config?.useDatabase && config?.prisma) {
+      // Dynamic require to avoid build-time dependency on adapters package types
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { PrismaOutboxRepository } = require('@intelliflow/adapters') as {
+        PrismaOutboxRepository: new (prisma: PrismaClient) => OutboxRepository;
+      };
+      this.repository = new PrismaOutboxRepository(config.prisma);
+      this.logger.info('Using PrismaOutboxRepository for database-backed outbox');
+    } else {
+      // Use in-memory repository for development/testing
+      this.repository = new InMemoryOutboxRepository();
+      this.logger.info('Using InMemoryOutboxRepository (set USE_DATABASE_OUTBOX=true for production)');
+    }
   }
 
   /**
@@ -353,6 +374,41 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
       'notification-created-handler'
     );
 
+    // ========================================================================
+    // Real-Time Subscription Bridge Handlers
+    // ========================================================================
+    // These handlers emit events to the shared EventEmitter so tRPC
+    // subscriptions can push real-time updates to connected clients.
+    // @task IFC-150/IFC-016 Integration
+
+    // Bridge lead.scored events to real-time subscriptions
+    this.eventDispatcher.register(
+      DOMAIN_EVENT_TYPES.LEAD_SCORED,
+      createLeadScoredBridgeHandler(this.logger),
+      'lead-scored-subscription-bridge'
+    );
+
+    // Bridge task.assigned events to real-time subscriptions
+    this.eventDispatcher.register(
+      'task.assigned',
+      createTaskAssignedBridgeHandler(this.logger),
+      'task-assigned-subscription-bridge'
+    );
+
+    // Bridge system events to real-time subscriptions
+    this.eventDispatcher.register(
+      'system.*',
+      createSystemEventBridgeHandler(this.logger),
+      'system-event-subscription-bridge'
+    );
+
+    // Bridge AI progress events to real-time subscriptions
+    this.eventDispatcher.register(
+      'ai.progress',
+      createAIProgressBridgeHandler(this.logger),
+      'ai-progress-subscription-bridge'
+    );
+
     // Wildcard handler for logging all events
     this.eventDispatcher.register(
       '*',
@@ -409,7 +465,13 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
 // Top-Level Execution
 // ============================================================================
 
+// Create PrismaClient if database mode is enabled
+const useDatabase = process.env.USE_DATABASE_OUTBOX === 'true';
+const prismaClient = useDatabase ? new PrismaClient() : undefined;
+
 const worker = new EventsWorker({
+  useDatabase,
+  prisma: prismaClient,
   pollIntervalMs: Number.parseInt(process.env.OUTBOX_POLL_INTERVAL_MS ?? '100', 10),
   batchSize: Number.parseInt(process.env.OUTBOX_BATCH_SIZE ?? '100', 10),
 });
