@@ -1,9 +1,22 @@
 # IntelliFlow CRM - Sitemap
 
 > **Location**: `docs/design/sitemap.md`
-> **Last Updated**: 2025-12-27
-> **Total Pages**: 65+
-> **Total Flows**: 38 (linked)
+> **Last Updated**: 2026-02-02
+> **Total Pages**: 68
+> **Total Flows**: 42 (linked)
+> **Layouts**: 15
+> **API Routers**: 25 (232 procedures)
+
+---
+
+## Quick Links
+
+| Document | Location | Description |
+|----------|----------|-------------|
+| **Page Map & Flows** | `docs/design/PAGE_MAP_AND_FLOWS.md` | Visual flow diagrams |
+| **Integration Backlog** | `docs/design/integration-backlog.md` | Page specs + API requirements (23 tasks) |
+| **tRPC API Routes** | `docs/api/trpc-routes.md` | Complete API inventory |
+| **Flow Index** | `apps/project-tracker/docs/metrics/_global/flows/flow-index.md` | Master flow catalog (42 flows) |
 
 ---
 
@@ -12,6 +25,8 @@
 | Resource | Location | Purpose |
 |----------|----------|---------|
 | **Flow Index** | `apps/project-tracker/docs/metrics/_global/flows/flow-index.md` | Master flow catalog |
+| **Integration Backlog** | `docs/design/integration-backlog.md` | Page specs with API requirements |
+| **UI Flow Mapping** | `docs/design/ui-flow-mapping.md` | Route → Flow → Component cross-reference |
 | **Style Guide** | `docs/company/brand/style-guide.md` | Component patterns |
 | **Visual Identity** | `docs/company/brand/visual-identity.md` | Design tokens |
 | **Accessibility** | `docs/company/brand/accessibility-patterns.md` | ARIA patterns |
@@ -24,309 +39,279 @@
 ```
 intelliflow.com
 │
-├── PUBLIC PAGES (unauthenticated)
+├── PUBLIC PAGES (20 pages) ──────────────── Route Group: (public)
 │   │
-│   ├── / (Home)                          [PG-001] Sprint 11
-│   ├── /features                         [PG-002] Sprint 11
-│   ├── /pricing                          [PG-003] Sprint 11
-│   ├── /about                            [PG-004] Sprint 11
-│   ├── /contact                          [PG-005] Sprint 11
-│   ├── /partners                         [PG-006] Sprint 11
-│   ├── /press                            [PG-007] Sprint 11
-│   ├── /security                         [PG-008] Sprint 11
-│   ├── /status                           [PG-014] Sprint 12
+│   ├── / (Home)                          [PG-001] → Conditional render:
+│   │                                       • Unauth: PublicHomePage
+│   │                                       • Auth: AuthenticatedHomePage
+│   ├── /features                         [PG-002]
+│   ├── /pricing                          [PG-003]
+│   ├── /about                            [PG-004]
+│   ├── /contact                          [PG-005]
+│   ├── /partners                         [PG-006]
+│   ├── /press                            [PG-007]
+│   ├── /security                         [PG-008]
+│   ├── /status                           [PG-014]
 │   │
-│   ├── /blog                             [PG-009] Sprint 12
-│   │   └── /blog/[slug]                  [PG-010] Sprint 12
+│   ├── /blog                             [PG-009]
+│   │   └── /blog/[slug]                  [PG-010] Dynamic blog post
 │   │
-│   ├── /careers                          [PG-011] Sprint 12
-│   │   └── /careers/[id]                 [PG-012] Sprint 12
+│   ├── /careers                          [PG-011]
+│   │   └── /careers/[id]                 [PG-012] Job posting detail
 │   │
-│   ├── /lp/[slug]                        [PG-013] Sprint 12
-│   │   (Landing pages for campaigns)
+│   ├── /lp/[slug]                        [PG-013] Campaign landing pages
 │   │
-│   └── /legal
-│       ├── /legal/privacy
-│       ├── /legal/terms
-│       └── /legal/cookies
+│   ├── /login                            → FLOW-001
+│   ├── /signup                           → FLOW-001
+│   │   └── /signup/success               → FLOW-001 (confirmation)
+│   ├── /forgot-password                  → FLOW-003
+│   ├── /reset-password/[token]           → FLOW-003
+│   └── /logout                           Session termination
 │
-├── AUTH PAGES                            [FLOW-001, FLOW-003]
+├── AUTH CALLBACKS ────────────────────────── Route: /auth/*
 │   │
-│   ├── /login                            [PG-015] Sprint 13 → FLOW-001
-│   ├── /signup                           [PG-016] Sprint 13 → FLOW-001 (registration)
-│   ├── /signup/success                   [PG-017] Sprint 13 → FLOW-001
-│   ├── /forgot-password                  [PG-018] Sprint 13 → FLOW-003
-│   ├── /reset-password                   [PG-019] Sprint 13 → FLOW-003
-│   ├── /verify-email                     [PG-020] Sprint 13 → FLOW-001 (email verification)
-│   └── /sso/callback                     (OAuth callback) → FLOW-001
+│   ├── /auth/callback                    → FLOW-001 (OAuth redirect)
+│   ├── /auth/mfa/verify                  → FLOW-001 (2FA input)
+│   └── /auth/verify-email/[token]        → FLOW-001 (email confirmation)
 │
-├── DASHBOARD (authenticated)             [FLOW-025, FLOW-021]
+├── DASHBOARD ─────────────────────────────── Layout: Root
 │   │
-│   └── /dashboard                        [ENV-009-AI] Sprint 6 → FLOW-025
-│       ├── Stats cards (Leads, Qualified, Avg Score, Converted)
-│       ├── Recent Leads list → FLOW-005
-│       ├── AI Insights panel → FLOW-025
-│       └── Activity Overview timeline → FLOW-020
+│   ├── /dashboard                        → FLOW-025 (main dashboard)
+│   ├── /dashboard/new                    Create custom dashboard
+│   └── /dashboard/customize              Edit dashboard widgets
 │
-├── CORE CRM                              [FLOW-005 to FLOW-016]
+├── CRM CORE: LEADS ──────────────────────── Layout: leads/(list)
 │   │
-│   ├── /leads                            [IFC-014] Sprint 7 → FLOW-005
-│   │   ├── Lead list with filters → FLOW-005
-│   │   ├── /leads/new                    [IFC-004] Sprint 5 → FLOW-005
-│   │   └── /leads/[id] → FLOW-006
-│   │       ├── /leads/[id]/edit → FLOW-006
-│   │       └── /leads/[id]/score         (AI scoring)
-│   │
-│   ├── /contacts                         [IFC-089] Sprint 5 → FLOW-016
-│   │   ├── Contact list with search → FLOW-016
-│   │   ├── /contacts/new → FLOW-016
-│   │   ├── /contacts/import              (Bulk import)
-│   │   └── /contacts/[id]                [IFC-090] Sprint 6 ★ MOCKUP → FLOW-020
-│   │       ├── Overview tab → FLOW-016
-│   │       ├── Activity Timeline tab → FLOW-020
-│   │       ├── Deals tab → FLOW-008
-│   │       ├── Tickets tab → FLOW-011
-│   │       ├── Documents tab
-│   │       ├── AI Insights tab
-│   │       └── /contacts/[id]/edit → FLOW-016
-│   │
-│   ├── /deals                            [IFC-091] Sprint 6 ★ MOCKUP → FLOW-008
-│   │   ├── Pipeline Kanban board → FLOW-008
-│   │   ├── Deals by Stage chart → FLOW-008
-│   │   ├── Revenue chart → FLOW-008
-│   │   ├── /deals/new → FLOW-007
-│   │   └── /deals/[id] → FLOW-008
-│   │       ├── Deal details → FLOW-008
-│   │       ├── /deals/[id]/edit → FLOW-008
-│   │       └── /deals/[id]/forecast      [IFC-092] Sprint 7 → FLOW-024
-│   │
-│   ├── /cases                               → FLOW-020
-│   │   └── /cases/timeline                  [IFC-147] Sprint 6 → FLOW-020
-│   │       └── Case/Deal timeline with deadline engine
-│   │
-│   ├── /accounts → FLOW-016
-│   │   ├── Account list → FLOW-016
-│   │   ├── /accounts/new → FLOW-016
-│   │   └── /accounts/[id] → FLOW-016, FLOW-010
-│   │       └── /accounts/[id]/edit → FLOW-016
-│   │
-│   ├── /tickets                          [IFC-093] Sprint 7 → FLOW-011
-│   │   ├── Ticket list with SLA badges → FLOW-011
-│   │   ├── /tickets/new → FLOW-011
-│   │   └── /tickets/[id] → FLOW-012
-│   │       ├── Ticket details → FLOW-012
-│   │       ├── SLA countdown → FLOW-012
-│   │       └── /tickets/[id]/edit → FLOW-012
-│   │
-│   ├── /tasks → FLOW-019 (meetings/scheduling)
-│   │   ├── Task list → FLOW-019
-│   │   ├── /tasks/new → FLOW-019
-│   │   └── /tasks/[id] → FLOW-019
-│   │
-│   └── /documents                        [IFC-094] Sprint 8
-│       ├── Document list
-│       ├── /documents/upload
-│       ├── /documents/[id]
-│       │   └── Inline preview
-│       └── /documents/sign               (E-signature)
+│   ├── /leads                            → FLOW-005 (list + filters)
+│   │   ├── ?view=my                      My assigned leads
+│   │   ├── ?view=starred                 Bookmarked leads
+│   │   ├── ?view=recent                  Recently viewed
+│   │   ├── ?segment=new-week             New this week
+│   │   ├── ?segment=hot                  Score >80
+│   │   └── ?segment=followup             Needs follow-up
+│   ├── /leads/new                        → FLOW-005 (create form)
+│   └── /leads/[id]                       → FLOW-006 (360° view, NO sidebar)
 │
-├── ANALYTICS & REPORTING                 [FLOW-023]
+├── CRM CORE: CONTACTS ───────────────────── Layout: contacts/(list)
 │   │
-│   ├── /analytics                        [IFC-096] Sprint 9 → FLOW-023
-│   │   ├── Dashboard widgets → FLOW-023
-│   │   ├── /analytics/kpi/[id] → FLOW-023
-│   │   └── /analytics/custom             (Custom reports) → FLOW-023
-│   │
-│   └── /reports → FLOW-023
-│       ├── /reports/custom               [IFC-096] Sprint 9 → FLOW-023
-│       │   └── Drag-and-drop builder → FLOW-023
-│       ├── /reports/export → FLOW-023
-│       │   └── CSV/PDF export → FLOW-023
-│       └── /reports/scheduled → FLOW-023
-│           └── Scheduled report config → FLOW-023
+│   ├── /contacts                         → FLOW-016 (list + search)
+│   ├── /contacts/new                     → FLOW-016 (create form)
+│   └── /contacts/[id]                    → FLOW-020 (profile, NO sidebar)
 │
-├── AI & AUTOMATION                       [FLOW-024 to FLOW-028, FLOW-005]
+├── CRM CORE: DEALS ──────────────────────── Layout: deals/(list), deals/[id]
 │   │
-│   ├── /ai → FLOW-024, FLOW-025, FLOW-026
-│   │   ├── /ai/insights                  [IFC-095] Sprint 8 → FLOW-025
-│   │   │   ├── Churn Risk predictions → FLOW-024
-│   │   │   └── Next Best Action → FLOW-025
-│   │   ├── /ai/explainability            [IFC-023] → FLOW-024
-│   │   │   └── Model explanations → FLOW-024
-│   │   └── /ai/feedback                  [IFC-025] → FLOW-026
-│   │       └── Feedback collection → FLOW-026
-│   │
-│   └── /automation → FLOW-005
-│       ├── /automation/workflows         [IFC-031] → FLOW-005
-│       │   ├── Workflow list → FLOW-005
-│       │   ├── /automation/workflows/new → FLOW-005
-│       │   ├── /automation/workflows/templates → FLOW-005
-│       │   └── /automation/workflows/[id] → FLOW-005
-│       │       └── Visual workflow editor → FLOW-005
-│       └── /automation/rules → FLOW-005
-│           └── Business rules config → FLOW-005
+│   ├── /deals                            → FLOW-007, FLOW-008 (pipeline)
+│   ├── /deals/forecast                   → FLOW-025 (sales forecasting)
+│   └── /deals/[id]                       → FLOW-008 (deal detail)
+│       └── /deals/[id]/forecast          → FLOW-024 (AI probability)
 │
-├── SUPPORT & KNOWLEDGE BASE              [FLOW-011 to FLOW-015, FLOW-017]
+├── CRM CORE: TICKETS ────────────────────── Layout: tickets/(list)
 │   │
-│   ├── /support → FLOW-011, FLOW-014
-│   │   ├── /support/kb                   [IFC-046] → FLOW-014
-│   │   │   ├── Article list → FLOW-014
-│   │   │   └── /support/kb/[id] → FLOW-014
-│   │   ├── /support/chat                 [IFC-047] → FLOW-017
-│   │   │   └── Live chat widget → FLOW-017
-│   │   ├── /support/faq → FLOW-014
-│   │   └── /support/status               [IFC-093] → FLOW-012
-│   │       └── SLA dashboard → FLOW-012
-│   │
-│   └── /help → FLOW-034
-│       ├── /help/getting-started → FLOW-034
-│       ├── /help/guides → FLOW-034
-│       └── /help/api-docs → FLOW-034
+│   ├── /tickets                          → FLOW-011 (queue + SLA badges)
+│   └── /tickets/[id]                     → FLOW-012, FLOW-013 (detail)
 │
-├── ADMIN & SETTINGS                      [FLOW-029 to FLOW-035, FLOW-037]
+├── CRM CORE: DOCUMENTS ──────────────────── Layout: documents/(list)
 │   │
-│   ├── /admin → FLOW-029, FLOW-031
-│   │   ├── /admin/billing                [IFC-054] → FLOW-010
-│   │   │   ├── Subscription management → FLOW-010
-│   │   │   ├── Payment history → FLOW-010
-│   │   │   └── Invoices → FLOW-010
-│   │   │
-│   │   ├── /admin/users                  [IFC-098] → FLOW-029
-│   │   │   ├── User list → FLOW-029
-│   │   │   ├── /admin/users/new → FLOW-029
-│   │   │   └── /admin/users/[id] → FLOW-029
-│   │   │
-│   │   ├── /admin/roles                  [IFC-098] → FLOW-029
-│   │   │   ├── Role list → FLOW-029
-│   │   │   └── Permission matrix → FLOW-029
-│   │   │
-│   │   ├── /admin/audit                  [IFC-098] → FLOW-031
-│   │   │   └── Audit log viewer → FLOW-031
-│   │   │
-│   │   ├── /admin/security               [IFC-098] → FLOW-004, FLOW-033
-│   │   │   ├── Security settings → FLOW-033
-│   │   │   ├── MFA config → FLOW-001
-│   │   │   └── Session management → FLOW-004
-│   │   │
-│   │   ├── /admin/integrations           [IFC-055] → FLOW-036
-│   │   │   ├── Integration marketplace → FLOW-036
-│   │   │   └── /admin/integrations/[id] → FLOW-036
-│   │   │
-│   │   ├── /admin/api-keys               [IFC-081] → FLOW-029
-│   │   │   └── API key management → FLOW-029
-│   │   │
-│   │   ├── /admin/webhooks               [IFC-055] → FLOW-036
-│   │   │   └── Webhook configuration → FLOW-036
-│   │   │
-│   │   ├── /admin/compliance → FLOW-032
-│   │   │   ├── /admin/compliance/gdpr    [IFC-056] → FLOW-032
-│   │   │   └── /admin/compliance/accessibility [IFC-076] → FLOW-032
-│   │   │
-│   │   ├── /admin/features               → FLOW-037
-│   │   │   └── Feature flags management → FLOW-037
-│   │   │
-│   │   └── /admin/system                 [AUTOMATION-002] → FLOW-030
-│   │       └── System health dashboard → FLOW-030
-│   │
-│   └── /settings → FLOW-035
-│       ├── /settings/profile → FLOW-035
-│       ├── /settings/preferences → FLOW-035
-│       ├── /settings/notifications → FLOW-021
-│       ├── /settings/devices → FLOW-004
-│       └── /settings/activity → FLOW-020
+│   ├── /documents                        Document repository
+│   ├── /documents/new                    Upload form
+│   └── /documents/[id]                   Preview + metadata
 │
-└── OPS & OBSERVABILITY (internal)        [FLOW-030, FLOW-033, FLOW-038]
+├── CRM CORE: CASES ──────────────────────── Route: /cases
+│   │
+│   └── /cases/timeline                   → FLOW-020 (deadline engine)
+│
+├── AI & AUTOMATION ──────────────────────── Layout: agent-approvals
+│   │
+│   └── /agent-approvals          [IFC-149] AI action queue
+│
+├── ANALYTICS ────────────────────────────── Layout: analytics/(list)
+│   │
+│   └── /analytics                        → FLOW-023 (charts + KPIs)
+│
+├── SETTINGS ─────────────────────────────── Layout: settings
+│   │
+│   ├── /settings                         Settings overview
+│   ├── /settings/account                 → FLOW-035 (personal settings)
+│   ├── /settings/team                    → FLOW-029 (team members)
+│   ├── /settings/ai                      → FLOW-045 (AI chain versioning)
+│   ├── /settings/integrations            → FLOW-036 (third-party)
+│   ├── /settings/notifications           → FLOW-021 (alert preferences)
+│   ├── /settings/pipeline                Pipeline stage config
+│   └── /settings/security/mfa            → FLOW-001 (2FA setup)
+│
+├── BILLING ──────────────────────────────── Layout: billing
+│   │
+│   ├── /billing                          → FLOW-010 (overview)
+│   ├── /billing/checkout                 Payment processing
+│   ├── /billing/subscriptions            Plan management
+│   ├── /billing/payment-methods          Card management
+│   ├── /billing/invoices                 Invoice list
+│   │   └── /billing/invoices/[id]        Invoice detail
+│   └── /billing/receipts                 Receipt history
+│
+├── GOVERNANCE ───────────────────────────── Layout: governance
+│   │
+│   ├── /governance                       Compliance dashboard
+│   ├── /governance/adr                   ADR registry
+│   ├── /governance/compliance            Standards tracking
+│   ├── /governance/policies              Policy management
+│   └── /governance/quality-reports       Quality assessments
+│       └── /governance/quality-reports/[reportId]  Report detail
+│
+├── NOTIFICATIONS ────────────────────────── Layout: notifications
+│   │
+│   ├── /notifications                    All notifications
+│   └── /notifications/settings           Notification preferences
+│
+└── PROFILE ──────────────────────────────── Route: /profile
     │
-    └── /ops → FLOW-030, FLOW-038
-        ├── /ops/monitoring               [IFC-097] Sprint 9 → FLOW-038
-        │   └── Grafana embed → FLOW-038
-        ├── /ops/traces → FLOW-038
-        │   └── Distributed tracing → FLOW-038
-        ├── /ops/logs → FLOW-031
-        │   └── Log explorer → FLOW-031
-        └── /ops/alerts → FLOW-033
-            └── Alert configuration → FLOW-033
+    └── /profile                          User account details
 ```
 
 ---
 
 ## Page Count by Section
 
-| Section | Pages | Sprint Range |
-|---------|-------|--------------|
-| Public Pages | 14 | 11-12 |
-| Auth Pages | 7 | 13 |
-| Dashboard | 1 | 6 |
-| Core CRM | 25 | 5-8 |
-| Analytics & Reporting | 6 | 9 |
-| AI & Automation | 8 | 8+ |
-| Support & KB | 7 | Various |
-| Admin & Settings | 18 | 5-10 |
-| Ops & Observability | 4 | 9 |
-| **Total** | **~90** | |
+| Section | Pages | Status |
+|---------|-------|--------|
+| Public Pages | 20 | Marketing, auth, blog, careers |
+| Auth Callbacks | 3 | OAuth, MFA, email verify |
+| Dashboard | 3 | Main, new, customize |
+| CRM Core: Leads | 3 | List, new, detail |
+| CRM Core: Contacts | 3 | List, new, detail |
+| CRM Core: Deals | 4 | List, detail, forecast (2) |
+| CRM Core: Tickets | 2 | List, detail |
+| CRM Core: Documents | 3 | List, new, detail |
+| CRM Core: Cases | 1 | Timeline |
+| AI & Automation | 1 | Agent approvals |
+| Analytics | 1 | Dashboard |
+| Settings | 8 | Account, team, AI, integrations, etc. |
+| Billing | 7 | Overview, checkout, subscriptions, etc. |
+| Governance | 6 | ADR, compliance, policies, reports |
+| Notifications | 2 | List, settings |
+| Profile | 1 | User profile |
+| **Total** | **68** | |
 
 ---
 
-## Mockup Priority Matrix
+## Implementation Status
 
-### Must Have (Sprint 6-7)
+### Implemented Pages (68 total)
 
-| Route | Task | Mockup Needed |
-|-------|------|---------------|
-| /contacts/[id] | IFC-090 | `contact-360-view.png` ✅ EXISTS |
-| /deals | IFC-091 | `dashboard-overview.png` ✅ EXISTS |
-| /leads | IFC-014 | `lead-management.png` ❌ NEEDED |
-| /deals/[id]/forecast | IFC-092 | `deal-forecast.png` ❌ NEEDED |
-| /tickets | IFC-093 | `tickets-sla.png` ❌ NEEDED |
+| Category | Route | Status | Flow |
+|----------|-------|--------|------|
+| Public | `/`, `/login`, `/signup`, etc. | ✅ Implemented | FLOW-001 |
+| Dashboard | `/dashboard`, `/dashboard/new` | ✅ Implemented | FLOW-025 |
+| Leads | `/leads`, `/leads/new`, `/leads/[id]` | ✅ Implemented | FLOW-005, FLOW-006 |
+| Contacts | `/contacts`, `/contacts/new`, `/contacts/[id]` | ✅ Implemented | FLOW-016 |
+| Deals | `/deals`, `/deals/[id]`, `/deals/[id]/forecast` | ✅ Implemented | FLOW-007, FLOW-008 |
+| Tickets | `/tickets`, `/tickets/[id]` | ✅ Implemented | FLOW-011, FLOW-012 |
+| Documents | `/documents`, `/documents/new`, `/documents/[id]` | ✅ Implemented | - |
+| Settings | `/settings/*` (8 pages) | ✅ Implemented | FLOW-035, FLOW-045 |
+| Billing | `/billing/*` (7 pages) | ✅ Implemented | FLOW-010 |
+| Governance | `/governance/*` (6 pages) | ✅ Implemented | FLOW-032 |
+| AI | `/agent-approvals` | ✅ Implemented | IFC-149 |
+| Analytics | `/analytics` | ✅ Implemented | FLOW-023 |
 
-### Should Have (Sprint 8-9)
+### Mockup References
 
-| Route | Task | Mockup Needed |
-|-------|------|---------------|
-| /documents | IFC-094 | `documents.png` |
-| /ai/insights | IFC-095 | `ai-insights.png` |
-| /reports/custom | IFC-096 | `report-builder.png` |
-| /ops/monitoring | IFC-097 | `ops-dashboard.png` |
+| Route | Mockup | Location |
+|-------|--------|----------|
+| /contacts/[id] | `contact-360-view.png` | `docs/design/mockups/` |
+| /leads/[id] | `lead-360-view.png` | `docs/design/mockups/` |
+| /deals | `dashboard-overview.png` | `docs/design/mockups/` |
+| /deals/[id]/forecast | `deal-forecast.png` | `docs/design/mockups/` |
 
-### Nice to Have (Sprint 11+)
+### Backend Integration Status
 
-| Route | Task | Mockup Needed |
-|-------|------|---------------|
-| / (Home) | PG-001 | `home-page.png` |
-| /pricing | PG-003 | `pricing-page.png` |
-| /login | PG-015 | `auth-flow.png` |
+| Route | Integration | Required APIs |
+|-------|-------------|---------------|
+| `/` (Auth Home) | 🔴 Hardcoded | `dashboard.getWelcomeSummary`, `feed.getItems`, `ai.getDailyInsights` |
+| `/dashboard` | 🟡 Partial | `dashboard.getMetrics`, `dashboard.getWidgets` |
+| `/leads/*` | 🟢 Integrated | `lead.*` (16 procedures) |
+| `/contacts/*` | 🟢 Integrated | `contact.*` (14 procedures) |
+| `/deals/*` | 🟢 Integrated | `opportunity.*` (7 procedures) |
+| `/deals/[id]/forecast` | 🔴 Hardcoded | `intelligence.getDealForecast` |
+| `/tickets/*` | 🟢 Integrated | `ticket.*` (10 procedures) |
+| `/analytics` | 🟡 Partial | `analytics.*` (5 procedures) |
+| `/billing/*` | 🔴 Hardcoded | `billing.*` (11 procedures) - Stripe integration pending |
+| `/governance/*` | 🟢 Integrated | Local API routes |
+
+**Legend**: 🔴 Hardcoded | 🟡 Partial | 🟢 Integrated
 
 ---
 
 ## Navigation Structure
 
-### Primary Navigation (Sidebar)
-
-```
-┌─────────────────────────┐
-│  IntelliFlow CRM        │
-├─────────────────────────┤
-│  📊 Dashboard           │
-│  👥 Contacts            │
-│  💼 Deals               │
-│  🎫 Tickets             │
-│  📄 Documents           │
-│  📈 Reports             │
-├─────────────────────────┤
-│  🤖 AI Insights         │
-│  ⚡ Automation          │
-├─────────────────────────┤
-│  ⚙️ Settings            │
-│  👤 Admin               │
-└─────────────────────────┘
-```
-
 ### Top Navigation (Header)
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│  [Logo]  [Search...]           [🔔] [❓] [Avatar ▼]          │
-└──────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│ [Logo] Dashboard  Leads  Contacts  Deals  Tickets  Documents  Agent  Reports  [🔍] [🔔] [👤] │
+└──────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Header Navigation Items
+
+| Item | Route | Icon |
+|------|-------|------|
+| Dashboard | `/dashboard` | `dashboard` |
+| Leads | `/leads` | `group` |
+| Contacts | `/contacts` | `person` |
+| Deals | `/deals` | `handshake` |
+| Tickets | `/tickets` | `confirmation_number` |
+| Documents | `/documents` | `description` |
+| Agent Actions | `/agent-approvals` | `smart_toy` |
+| Reports | `/analytics` | `bar_chart` |
+
+### Module Sidebars
+
+Each CRM module has a context-specific sidebar. Sidebar configs are located in:
+`apps/web/src/components/sidebar/configs/`
+
+| Module | Config File | Features |
+|--------|-------------|----------|
+| Leads | `leads.ts` | Views (All, My, Starred, Recent), Segments (Hot, Follow-up) |
+| Contacts | `contacts.ts` | Views, Tags, Lists |
+| Deals | `deals.ts` | Pipeline views, Stages, Forecasts |
+| Tickets | `tickets.ts` | Queues, SLA status, Assignments |
+| Documents | `documents.ts` | Folders, Tags, Recent |
+| Analytics | `analytics.ts` | Dashboards, Reports |
+| Agent Approvals | `agent-approvals.ts` | Pending, Approved, Rejected |
+| Notifications | `notifications.ts` | All, Unread, Mentions |
+| Governance | `governance.ts` | ADR, Compliance, Quality |
+| Settings | `settings.ts` | Account, Team, AI, Integrations |
+| Billing | `billing.ts` | Overview, Subscriptions, Invoices |
+
+### Leads Sidebar Example
+
+```
+Lead Views
+├── All Leads           /leads
+├── My Leads            /leads?view=my
+├── Starred             /leads?view=starred
+└── Recently Viewed     /leads?view=recent
+
+Segments
+├── New This Week       /leads?segment=new-week
+├── Hot Leads (>80)     /leads?segment=hot
+└── Needs Follow-up     /leads?segment=followup
+```
+
+### Settings Sidebar Example
+
+```
+Settings
+├── Account             /settings/account
+├── Team                /settings/team
+├── AI Chains           /settings/ai
+├── Integrations        /settings/integrations
+├── Pipeline            /settings/pipeline
+├── Notifications       /settings/notifications
+└── Security            /settings/security/mfa
+
+More
+└── Governance          /governance
 ```
 
 ---
@@ -351,43 +336,137 @@ All pages follow Next.js 16 App Router convention:
 
 ```
 apps/web/src/app/
-├── (public)/           # Public marketing pages
-│   ├── page.tsx        # Home
-│   ├── features/
-│   ├── pricing/
-│   └── ...
-├── (auth)/             # Auth pages
-│   ├── login/
+├── layout.tsx                    # Root layout (Providers, Navigation)
+│
+├── (public)/                     # PUBLIC ROUTE GROUP (20 pages)
+│   ├── layout.tsx                # Public layout (minimal)
+│   ├── page.tsx                  # / (Home - conditional render)
+│   ├── login/page.tsx            # /login
 │   ├── signup/
-│   └── ...
-├── (app)/              # Authenticated app
-│   ├── dashboard/
-│   ├── contacts/
-│   │   ├── (list)/             # Route group for sidebar pages
-│   │   │   ├── layout.tsx      # Module sidebar layout
-│   │   │   ├── page.tsx        # /contacts (list)
-│   │   │   └── new/
-│   │   │       └── page.tsx    # /contacts/new (create)
-│   │   └── [id]/
-│   │       └── page.tsx        # /contacts/[id] (detail, NO sidebar)
-│   ├── leads/
-│   │   ├── (list)/             # Route group for sidebar pages
-│   │   │   ├── layout.tsx      # Module sidebar layout
-│   │   │   ├── page.tsx        # /leads (list)
-│   │   │   └── new/
-│   │   │       └── page.tsx    # /leads/new (create)
-│   │   └── [id]/
-│   │       └── page.tsx        # /leads/[id] (detail, NO sidebar)
-│   ├── deals/
-│   ├── tickets/
-│   ├── documents/
-│   ├── analytics/
-│   ├── ai/
-│   ├── automation/
-│   ├── admin/
-│   ├── settings/
-│   └── ops/
-└── api/                # API routes
+│   │   ├── page.tsx              # /signup
+│   │   └── success/page.tsx      # /signup/success
+│   ├── forgot-password/page.tsx  # /forgot-password
+│   ├── reset-password/[token]/   # /reset-password/[token]
+│   ├── logout/page.tsx           # /logout
+│   ├── about/page.tsx            # /about
+│   ├── features/page.tsx         # /features
+│   ├── pricing/page.tsx          # /pricing
+│   ├── contact/page.tsx          # /contact
+│   ├── partners/page.tsx         # /partners
+│   ├── press/page.tsx            # /press
+│   ├── security/page.tsx         # /security
+│   ├── status/page.tsx           # /status
+│   ├── blog/
+│   │   ├── page.tsx              # /blog
+│   │   └── [slug]/page.tsx       # /blog/[slug]
+│   ├── careers/
+│   │   ├── page.tsx              # /careers
+│   │   └── [id]/page.tsx         # /careers/[id]
+│   └── lp/[slug]/page.tsx        # /lp/[slug]
+│
+├── auth/                         # AUTH CALLBACKS (3 pages)
+│   ├── callback/page.tsx         # /auth/callback (OAuth)
+│   ├── mfa/verify/page.tsx       # /auth/mfa/verify
+│   └── verify-email/[token]/     # /auth/verify-email/[token]
+│
+├── dashboard/                    # DASHBOARD (3 pages)
+│   ├── page.tsx                  # /dashboard
+│   ├── new/page.tsx              # /dashboard/new
+│   └── customize/page.tsx        # /dashboard/customize
+│
+├── leads/                        # LEADS (3 pages)
+│   ├── (list)/
+│   │   ├── layout.tsx            # Leads sidebar layout
+│   │   ├── page.tsx              # /leads
+│   │   └── new/page.tsx          # /leads/new
+│   └── [id]/page.tsx             # /leads/[id] (NO sidebar)
+│
+├── contacts/                     # CONTACTS (3 pages)
+│   ├── (list)/
+│   │   ├── layout.tsx            # Contacts sidebar layout
+│   │   ├── page.tsx              # /contacts
+│   │   └── new/page.tsx          # /contacts/new
+│   └── [id]/page.tsx             # /contacts/[id] (NO sidebar)
+│
+├── deals/                        # DEALS (4 pages)
+│   ├── (list)/
+│   │   ├── layout.tsx            # Deals sidebar layout
+│   │   └── page.tsx              # /deals
+│   ├── [id]/
+│   │   ├── layout.tsx            # Deal detail layout
+│   │   ├── page.tsx              # /deals/[id]
+│   │   └── forecast/page.tsx     # /deals/[id]/forecast
+│   └── forecast/
+│       ├── layout.tsx            # Forecast layout
+│       └── page.tsx              # /deals/forecast
+│
+├── tickets/                      # TICKETS (2 pages)
+│   ├── (list)/
+│   │   ├── layout.tsx            # Tickets sidebar layout
+│   │   └── page.tsx              # /tickets
+│   └── [id]/page.tsx             # /tickets/[id]
+│
+├── documents/                    # DOCUMENTS (3 pages)
+│   ├── (list)/
+│   │   ├── layout.tsx            # Documents sidebar layout
+│   │   ├── page.tsx              # /documents
+│   │   └── new/page.tsx          # /documents/new
+│   └── [id]/page.tsx             # /documents/[id]
+│
+├── cases/timeline/page.tsx       # /cases/timeline (1 page)
+│
+├── analytics/(list)/             # ANALYTICS (1 page)
+│   ├── layout.tsx
+│   └── page.tsx                  # /analytics
+│
+├── agent-approvals/              # AI AGENT (1 page)
+│   ├── layout.tsx
+│   └── page.tsx                  # /agent-approvals
+│
+├── settings/                     # SETTINGS (8 pages)
+│   ├── layout.tsx                # Settings sidebar layout
+│   ├── page.tsx                  # /settings
+│   ├── account/page.tsx          # /settings/account
+│   ├── team/page.tsx             # /settings/team
+│   ├── ai/page.tsx               # /settings/ai
+│   ├── integrations/page.tsx     # /settings/integrations
+│   ├── notifications/page.tsx    # /settings/notifications
+│   ├── pipeline/page.tsx         # /settings/pipeline
+│   └── security/mfa/page.tsx     # /settings/security/mfa
+│
+├── billing/                      # BILLING (7 pages)
+│   ├── layout.tsx                # Billing sidebar layout
+│   ├── page.tsx                  # /billing
+│   ├── checkout/page.tsx         # /billing/checkout
+│   ├── subscriptions/page.tsx    # /billing/subscriptions
+│   ├── payment-methods/page.tsx  # /billing/payment-methods
+│   ├── invoices/
+│   │   ├── page.tsx              # /billing/invoices
+│   │   └── [id]/page.tsx         # /billing/invoices/[id]
+│   └── receipts/page.tsx         # /billing/receipts
+│
+├── governance/                   # GOVERNANCE (6 pages)
+│   ├── layout.tsx                # Governance sidebar layout
+│   ├── page.tsx                  # /governance
+│   ├── adr/page.tsx              # /governance/adr
+│   ├── compliance/page.tsx       # /governance/compliance
+│   ├── policies/page.tsx         # /governance/policies
+│   └── quality-reports/
+│       ├── page.tsx              # /governance/quality-reports
+│       └── [reportId]/page.tsx   # /governance/quality-reports/[reportId]
+│
+├── notifications/                # NOTIFICATIONS (2 pages)
+│   ├── layout.tsx
+│   ├── page.tsx                  # /notifications
+│   └── settings/page.tsx         # /notifications/settings
+│
+├── profile/page.tsx              # /profile (1 page)
+│
+└── api/                          # API ROUTES (16 routes)
+    ├── trpc/[trpc]/route.ts      # tRPC handler
+    ├── adr/                       # ADR management
+    ├── compliance/                # Compliance APIs
+    └── quality-reports/           # Quality report APIs
 ```
 
 ### Route Group Convention
@@ -406,37 +485,98 @@ This pattern ensures:
 
 ## Routes → Flows Quick Reference
 
-| Route Pattern | Primary Flow | Category |
-|---------------|--------------|----------|
-| `/login`, `/forgot-password`, `/reset-password` | FLOW-001, FLOW-003 | Acesso e Identidade |
-| `/admin/users`, `/admin/roles` | FLOW-002 | Acesso e Identidade |
-| `/workspaces`, `/settings/devices` | FLOW-004 | Acesso e Identidade |
-| `/dashboard` | FLOW-025 | Analytics e Insights |
-| `/leads/*` | FLOW-005, FLOW-006, FLOW-007 | Comercial Core |
-| `/deals/*` | FLOW-007, FLOW-008, FLOW-009 | Comercial Core |
-| `/accounts/[id]` (renewals) | FLOW-010 | Comercial Core |
-| `/tickets/*` | FLOW-011, FLOW-012, FLOW-013, FLOW-014 | Relacionamento e Suporte |
-| `/survey/*`, NPS dashboard | FLOW-015 | Relacionamento e Suporte |
-| `/contacts/*` (email) | FLOW-016 | Comunicação |
-| `/support/chat` | FLOW-017 | Comunicação |
-| `/contacts/[id]` (calls) | FLOW-018 | Comunicação |
-| `/tasks/*` (meetings) | FLOW-019 | Comunicação |
-| `/contacts/[id]` (timeline) | FLOW-020 | Comunicação |
-| `/analytics/*`, `/reports/*` | FLOW-023 | Analytics e Insights |
-| `/ops/monitoring` (backup) | FLOW-030 | Segurança e Compliance |
-| `/admin/*` | FLOW-029 to FLOW-033 | Segurança e Compliance |
-| `/settings/*` | FLOW-035 | Qualidade e Testes |
-| `/ops/*` (performance) | FLOW-038 | Qualidade e Testes |
+### Authentication & Identity (FLOW-001 to FLOW-004)
+
+| Route | Flow | Description |
+|-------|------|-------------|
+| `/login` | FLOW-001 | Login with MFA (SSO, OAuth2, 2FA) |
+| `/signup`, `/signup/success` | FLOW-001 | Registration flow |
+| `/auth/callback` | FLOW-001 | OAuth callback handler |
+| `/auth/mfa/verify` | FLOW-001 | MFA verification |
+| `/auth/verify-email/[token]` | FLOW-001 | Email confirmation |
+| `/forgot-password` | FLOW-003 | Password recovery request |
+| `/reset-password/[token]` | FLOW-003 | Password reset |
+| `/settings/security/mfa` | FLOW-001 | MFA setup |
+| `/settings/team` | FLOW-002 | User management |
+
+### CRM Core (FLOW-005 to FLOW-010)
+
+| Route | Flow | Description |
+|-------|------|-------------|
+| `/leads` | FLOW-005 | Lead list with AI scoring |
+| `/leads/new` | FLOW-005 | Create new lead |
+| `/leads/[id]` | FLOW-006 | Lead 360° view, conversion |
+| `/contacts/*` | FLOW-016 | Contact management |
+| `/contacts/[id]` | FLOW-020 | Activity timeline |
+| `/deals` | FLOW-007 | Pipeline Kanban |
+| `/deals/[id]` | FLOW-008 | Deal details |
+| `/deals/[id]/forecast` | FLOW-024 | AI deal probability |
+| `/deals/forecast` | FLOW-025 | Sales forecasting |
+| `/billing/*` | FLOW-010 | Subscription management |
+
+### Support & Tickets (FLOW-011 to FLOW-015)
+
+| Route | Flow | Description |
+|-------|------|-------------|
+| `/tickets` | FLOW-011 | Ticket creation |
+| `/tickets/[id]` | FLOW-012, FLOW-013 | Routing, SLA management |
+| `/tickets/[id]` (close) | FLOW-014 | Resolution and closure |
+
+### Analytics & AI (FLOW-023 to FLOW-028, FLOW-045)
+
+| Route | Flow | Description |
+|-------|------|-------------|
+| `/dashboard` | FLOW-025 | Main dashboard |
+| `/analytics` | FLOW-023 | Report builder |
+| `/settings/ai` | FLOW-045 | AI chain versioning |
+| `/agent-approvals` | IFC-149 | AI action approvals |
+
+### Security & Compliance (FLOW-029 to FLOW-033)
+
+| Route | Flow | Description |
+|-------|------|-------------|
+| `/governance` | FLOW-032 | Compliance dashboard |
+| `/governance/adr` | FLOW-029 | Architecture decisions |
+| `/governance/compliance` | FLOW-032 | LGPD/GDPR tracking |
+| `/governance/quality-reports` | FLOW-038 | Quality assessments |
 
 ---
 
 ## Related Documents
 
-- **Flow Index**: `apps/project-tracker/docs/metrics/_global/flows/flow-index.md` - Master flow catalog
-- **Page Registry**: `docs/design/page-registry.md` - Detailed page specs with KPIs
-- **Design Mockups**: `docs/design/mockups/` - Visual designs
-- **Sprint Plan**: `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`
-- **Style Guide**: `docs/company/brand/style-guide.md` - Component patterns
-- **Visual Identity**: `docs/company/brand/visual-identity.md` - Design tokens
-- **Accessibility**: `docs/company/brand/accessibility-patterns.md` - ARIA patterns
+### Primary Documentation
+
+| Document | Location | Description |
+|----------|----------|-------------|
+| **Page Map & Flows** | `docs/design/PAGE_MAP_AND_FLOWS.md` | Visual flow diagrams, integration checklist |
+| **tRPC API Routes** | `docs/api/trpc-routes.md` | Complete API inventory (25 routers, 232 procedures) |
+| **Flow Index** | `apps/project-tracker/docs/metrics/_global/flows/flow-index.md` | Master catalog of 42 flows |
+| **Sprint Plan** | `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv` | Task tracking (316 tasks) |
+
+### Design System
+
+| Document | Location | Description |
+|----------|----------|-------------|
+| **Style Guide** | `docs/company/brand/style-guide.md` | Component patterns |
+| **Visual Identity** | `docs/company/brand/visual-identity.md` | Design tokens |
+| **Accessibility** | `docs/company/brand/accessibility-patterns.md` | ARIA patterns |
+| **Do's and Don'ts** | `docs/company/brand/dos-and-donts.md` | Best practices |
+| **Design Mockups** | `docs/design/mockups/` | Visual designs (PNG, HTML) |
+
+### Technical Documentation
+
+| Document | Location | Description |
+|----------|----------|-------------|
+| **ADR Registry** | `docs/planning/adr/` | Architecture Decision Records |
+| **Domain Models** | `docs/domain/` | DDD documentation |
+| **API Docs** | Auto-generated from tRPC | Type-safe API reference |
+
+---
+
+## Document History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0 | 2025-12-27 | Initial sitemap |
+| 2.0 | 2026-02-02 | Updated to 68 pages, 42 flows, 15 layouts. Added accurate route mapping, backend integration status, and file path structure. |
 

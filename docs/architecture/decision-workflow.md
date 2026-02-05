@@ -335,7 +335,7 @@ When reviewing an ARP or ADR, consider:
    - Shows comprehensive trade-off analysis
 
 2. **ADR-002**:
-   [CSV as Source of Truth](../planning/adr/ADR-002-csv-source-of-truth.md)
+   [CSV as Source of Truth](../planning/adr/ADR-012-csv-source-of-truth.md)
    - Example of a tactical decision
    - Demonstrates migration planning
 
