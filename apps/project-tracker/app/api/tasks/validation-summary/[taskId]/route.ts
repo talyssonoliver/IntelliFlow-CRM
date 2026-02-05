@@ -12,6 +12,7 @@ import type {
   DODItemResult,
   DocumentPreview,
   EnhancedContextData,
+  PlanDeliverable,
   PlanDeliverablesVerification,
   PlanCheckboxItem,
 } from '../../../../../lib/types';

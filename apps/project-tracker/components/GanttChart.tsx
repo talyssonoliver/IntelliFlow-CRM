@@ -740,7 +740,7 @@ export default function GanttChart({
                 onClick={closeModal}
                 className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
               >
-                <Icon name="close" size="md" className="text-gray-500" />
+                <Icon name="close" size="lg" className="text-gray-500" />
               </button>
             </div>
 
