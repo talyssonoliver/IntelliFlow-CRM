@@ -17,6 +17,7 @@ import { type LeadStatus } from '@intelliflow/domain';
 import { PageHeader, SearchFilterBar, type FilterOption } from '@/components/shared';
 import { leadStatusOptions } from '@/lib/shared/filter-utils';
 import { api } from '@/lib/api';
+import { useRequireAuth } from '@/lib/auth/AuthContext';
 
 /**
  * Lead List Page - IFC-014: PHASE-002 Next.js 16.0.10 App Router UI
@@ -299,6 +300,9 @@ export default function LeadsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
+  // Require authentication - redirects to login if not authenticated
+  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
+
   // Debounce search for 300ms to avoid excessive API calls
   const debouncedSearch = useDebounce(searchQuery, 300);
 
@@ -319,21 +323,36 @@ export default function LeadsPage() {
   const sortParams = getSortParams(sortOrder);
   const scoreParams = getScoreParams(scoreFilter);
 
-  // Main data query
+  // Main data query - only run when authenticated
   const {
     data,
     isLoading,
     error,
     refetch,
-  } = api.lead.list.useQuery({
-    page: currentPage,
-    limit: pageSize,
-    search: debouncedSearch || undefined,
-    status: statusFilter ? [statusFilter as LeadStatus] : undefined,
-    ...scoreParams,
-    sortBy: sortParams.sortBy,
-    sortOrder: sortParams.sortOrder,
-  });
+  } = api.lead.list.useQuery(
+    {
+      page: currentPage,
+      limit: pageSize,
+      search: debouncedSearch || undefined,
+      status: statusFilter ? [statusFilter as LeadStatus] : undefined,
+      ...scoreParams,
+      sortBy: sortParams.sortBy,
+      sortOrder: sortParams.sortOrder,
+    },
+    { enabled: isAuthenticated && !authLoading }
+  );
+
+  // Check for auth errors
+  const isAuthError = error?.data?.code === 'UNAUTHORIZED' ||
+    error?.message?.toLowerCase().includes('authentication') ||
+    error?.message?.toLowerCase().includes('unauthorized');
+
+  // Redirect to login for auth errors
+  useEffect(() => {
+    if (error && isAuthError && !isLoading && !authLoading) {
+      router.replace('/login');
+    }
+  }, [error, isAuthError, isLoading, authLoading, router]);
 
   // tRPC mutations with query invalidation
   const bulkConvertMutation = api.lead.bulkConvert.useMutation({
@@ -748,8 +767,16 @@ export default function LeadsPage() {
         </div>
       )}
 
-      {/* Error State */}
-      {error && !isLoading && (
+      {/* Redirecting State for Auth Errors */}
+      {error && isAuthError && !isLoading && (
+        <div className="flex flex-col items-center justify-center p-8">
+          <span className="material-symbols-outlined text-[48px] text-slate-400 mb-4 animate-spin">progress_activity</span>
+          <p className="text-slate-600 dark:text-slate-400">Redirecting to login...</p>
+        </div>
+      )}
+
+      {/* Error State for Non-Auth Errors */}
+      {error && !isAuthError && !isLoading && (
         <div className="flex flex-col items-center justify-center p-8 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
           <span className="material-symbols-outlined text-[48px] text-red-500 mb-4">error</span>
           <h3 className="text-lg font-semibold text-red-800 dark:text-red-300 mb-2">
@@ -912,6 +939,10 @@ function StatusBadge({ status }: Readonly<{ status: LeadStatus }>) {
     QUALIFIED: {
       label: 'Qualified',
       className: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300',
+    },
+    NEGOTIATING: {
+      label: 'Negotiating',
+      className: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300',
     },
     UNQUALIFIED: {
       label: 'Unqualified',

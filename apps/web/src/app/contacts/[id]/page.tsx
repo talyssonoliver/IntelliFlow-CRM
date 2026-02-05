@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Card, Skeleton, ChurnRiskCard, NextBestActionCard, type ChurnRiskData, type NextBestActionData, type ChurnRiskLevel, type NBAActionType, type NBAPriority } from '@intelliflow/ui';
 import { api } from '@/lib/api';
+import { useRequireAuth } from '@/lib/auth/AuthContext';
 
 // Tab types
 type TabId = 'overview' | 'activity' | 'deals' | 'tickets' | 'documents' | 'notes' | 'ai-insights';
@@ -235,13 +236,29 @@ function ContactStatusBadge({ status }: { status: ContactStatus }) {
 export default function Contact360Page() {
   // Get contact ID from URL params
   const params = useParams();
+  const router = useRouter();
   const contactId = params.id as string;
+
+  // Require authentication - redirects to login if not authenticated
+  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
 
   // Fetch contact data from API
   const { data: rawApiContact, isLoading, error } = api.contact.getById.useQuery(
     { id: contactId },
-    { enabled: !!contactId }
+    { enabled: isAuthenticated && !authLoading && !!contactId }
   );
+
+  // Check for auth errors
+  const isAuthError = error?.data?.code === 'UNAUTHORIZED' ||
+    error?.message?.toLowerCase().includes('authentication') ||
+    error?.message?.toLowerCase().includes('unauthorized');
+
+  // Redirect to login for auth errors
+  useEffect(() => {
+    if (error && isAuthError && !isLoading && !authLoading) {
+      router.replace('/login');
+    }
+  }, [error, isAuthError, isLoading, authLoading, router]);
 
   // Cast to extended type
   const apiContact = rawApiContact as ContactWithRelations | undefined;
@@ -548,8 +565,20 @@ export default function Contact360Page() {
     );
   }
 
-  // Error state or no contact data
-  if (error || !contact) {
+  // Auth error - show redirecting state
+  if (error && isAuthError) {
+    return (
+      <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
+        <Card className="p-8 text-center">
+          <span className="material-symbols-outlined text-5xl text-slate-400 mb-4 animate-spin">progress_activity</span>
+          <p className="text-slate-500 dark:text-slate-400">Redirecting to login...</p>
+        </Card>
+      </div>
+    );
+  }
+
+  // Error state or no contact data (non-auth errors)
+  if ((error && !isAuthError) || !contact) {
     return (
       <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
         <Card className="p-8 text-center">

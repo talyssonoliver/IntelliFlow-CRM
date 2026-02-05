@@ -244,6 +244,10 @@ export default function CreateNewLeadPage() {
         title: toOptional(formData.jobTitle),
         phone: toOptional(formData.phone),
         source: mapSourceToEnum(formData.source),
+        // Lead 360 fields
+        website: toOptional(formData.website),
+        // Note: location, avatarUrl, lastContactedAt, estimatedValue, tags
+        // can be added to the form UI in the future
       };
 
       await createLead.mutateAsync(leadData);

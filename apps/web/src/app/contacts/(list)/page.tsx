@@ -14,6 +14,7 @@ import {
 } from '@intelliflow/ui';
 import { PageHeader, SearchFilterBar, type FilterOption } from '@/components/shared';
 import { api } from '@/lib/api';
+import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { CONTACT_STATUSES } from '@intelliflow/domain';
 import { useContactFilterOptions, isValidUUID } from '@/hooks/use-dynamic-filters';
 // Design system: Use Material Symbols Outlined instead of Lucide
@@ -294,6 +295,9 @@ export default function ContactsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
+  // Require authentication - redirects to login if not authenticated
+  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
+
   // Debounce search for 300ms to avoid excessive API calls
   const debouncedSearch = useDebounce(searchQuery, 300);
 
@@ -338,22 +342,37 @@ export default function ContactsPage() {
   // Build query parameters
   const sortParams = getSortParams(sortOrder);
 
-  // Main data query
+  // Main data query - only run when authenticated
   const {
     data,
     isLoading,
     error,
     refetch,
-  } = api.contact.list.useQuery({
-    page: currentPage,
-    limit: pageSize,
-    search: debouncedSearch || undefined,
-    department: departmentFilter || undefined,
-    status: statusFilter ? (statusFilter as (typeof CONTACT_STATUSES)[number]) : undefined,
-    accountId: companyFilter && isValidUUID(companyFilter) ? companyFilter : undefined,
-    sortBy: sortParams.sortBy,
-    sortOrder: sortParams.sortOrder,
-  });
+  } = api.contact.list.useQuery(
+    {
+      page: currentPage,
+      limit: pageSize,
+      search: debouncedSearch || undefined,
+      department: departmentFilter || undefined,
+      status: statusFilter ? (statusFilter as (typeof CONTACT_STATUSES)[number]) : undefined,
+      accountId: companyFilter && isValidUUID(companyFilter) ? companyFilter : undefined,
+      sortBy: sortParams.sortBy,
+      sortOrder: sortParams.sortOrder,
+    },
+    { enabled: isAuthenticated && !authLoading }
+  );
+
+  // Check for auth errors
+  const isAuthError = error?.data?.code === 'UNAUTHORIZED' ||
+    error?.message?.toLowerCase().includes('authentication') ||
+    error?.message?.toLowerCase().includes('unauthorized');
+
+  // Redirect to login for auth errors
+  useEffect(() => {
+    if (error && isAuthError && !isLoading && !authLoading) {
+      router.replace('/login');
+    }
+  }, [error, isAuthError, isLoading, authLoading, router]);
 
   // tRPC mutations with query invalidation
   const bulkEmailMutation = api.contact.bulkEmail.useMutation();
@@ -641,8 +660,16 @@ export default function ContactsPage() {
         </div>
       )}
 
-      {/* Error State */}
-      {error && !isLoading && (
+      {/* Redirecting State for Auth Errors */}
+      {error && isAuthError && !isLoading && (
+        <div className="flex flex-col items-center justify-center p-8">
+          <span className="material-symbols-outlined text-5xl text-slate-400 mb-4 animate-spin" aria-hidden="true">progress_activity</span>
+          <p className="text-slate-600 dark:text-slate-400">Redirecting to login...</p>
+        </div>
+      )}
+
+      {/* Error State for Non-Auth Errors */}
+      {error && !isAuthError && !isLoading && (
         <div className="flex flex-col items-center justify-center p-8 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
           <span className="material-symbols-outlined text-5xl text-destructive mb-4" aria-hidden="true">error</span>
           <h3 className="text-lg font-semibold text-red-800 dark:text-red-300 mb-2">

@@ -1,5 +1,16 @@
 'use client';
 
+/**
+ * Dashboard Page
+ *
+ * Analytics dashboard with configurable widget grid displaying:
+ * - Lead and revenue statistics
+ * - Pipeline summary and active deals
+ * - Task management and recent activity
+ *
+ * Task: PG-129 - Dashboard Page
+ */
+
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
@@ -23,7 +34,7 @@ const defaultWidgets: Widget[] = [
 ];
 
 export default function DashboardPage() {
-  const { user, isLoading: authLoading } = useRequireAuth();
+  const { isLoading: authLoading } = useRequireAuth();
   const [widgets, setWidgets] = useState<Widget[]>(defaultWidgets);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -87,14 +98,9 @@ export default function DashboardPage() {
         <span className="text-slate-900 dark:text-white font-medium">Dashboard</span>
       </nav>
 
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">Dashboard Overview</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-base">
-            Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''}. Here&apos;s what&apos;s happening today.
-          </p>
-        </div>
+      {/* Header with Actions */}
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
         <div className="flex items-center gap-3">
           <Link
             href="/dashboard/customize"
@@ -117,7 +123,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Dynamic Widget Grid */}
+      {/* Dashboard Widgets Grid */}
       {isLoaded ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 auto-rows-min">
           {widgets.map((widget) => {

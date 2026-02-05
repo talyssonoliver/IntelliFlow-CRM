@@ -528,7 +528,7 @@ function ActivityTimeline({ activities, dealId }: { activities: ActivityEvent[];
 
                       {event.agentStatus === 'pending_approval' && event.agentActionId && (
                         <Link
-                          href={`/agent-approvals/preview?actionId=${event.agentActionId}`}
+                          href={`/agent-approvals?actionId=${event.agentActionId}`}
                           className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors mt-2"
                         >
                           <Icon name="open_in_new" className="text-xs" />

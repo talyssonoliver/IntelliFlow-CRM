@@ -1,8 +1,10 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Card, Button, Skeleton } from '@intelliflow/ui';
+import { useRequireAuth } from '@/lib/auth/AuthContext';
 import {
   BarChart,
   Bar,
@@ -576,8 +578,28 @@ function ForecastPageSkeleton() {
 // =============================================================================
 
 export default function DealForecastPage() {
+  const router = useRouter();
+
+  // Require authentication - redirects to login if not authenticated
+  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
+
   // Fetch real forecast data from API
-  const { data: forecastData, isLoading, error } = trpc.opportunity.forecast.useQuery();
+  const { data: forecastData, isLoading, error } = trpc.opportunity.forecast.useQuery(
+    undefined,
+    { enabled: isAuthenticated && !authLoading }
+  );
+
+  // Check for auth errors
+  const isAuthError = error?.data?.code === 'UNAUTHORIZED' ||
+    error?.message?.toLowerCase().includes('authentication') ||
+    error?.message?.toLowerCase().includes('unauthorized');
+
+  // Redirect to login for auth errors
+  useEffect(() => {
+    if (error && isAuthError && !isLoading && !authLoading) {
+      router.replace('/login');
+    }
+  }, [error, isAuthError, isLoading, authLoading, router]);
 
   // Get current quarter label
   const currentQuarter = useMemo(() => {
@@ -645,12 +667,24 @@ export default function DealForecastPage() {
   }, [forecastData]);
 
   // Show loading state
-  if (isLoading) {
+  if (isLoading || authLoading) {
     return <ForecastPageSkeleton />;
   }
 
-  // Show error state
-  if (error) {
+  // Show redirecting state for auth errors
+  if (error && isAuthError) {
+    return (
+      <div className="p-4 sm:p-6 lg:p-8">
+        <div className="flex flex-col items-center justify-center min-h-[400px]">
+          <Icon name="progress_activity" className="text-6xl text-slate-400 mb-4 animate-spin" />
+          <p className="text-slate-500 dark:text-slate-400">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state for non-auth errors
+  if (error && !isAuthError) {
     return (
       <div className="p-4 sm:p-6 lg:p-8">
         <div className="flex flex-col items-center justify-center min-h-[400px]">

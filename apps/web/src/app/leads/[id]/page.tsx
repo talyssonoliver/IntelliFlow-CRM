@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Card, Skeleton, ChurnRiskCard, NextBestActionCard, type ChurnRiskData, type NextBestActionData, type ChurnRiskLevel, type NBAActionType, type NBAPriority } from '@intelliflow/ui';
 import { api } from '@/lib/api';
+import { useRequireAuth } from '@/lib/auth/AuthContext';
 
 // Tab types matching Contact360 pattern
 type TabId = 'overview' | 'activity' | 'tasks' | 'notes' | 'emails' | 'files' | 'ai-insights';
@@ -255,13 +256,29 @@ function SourceBadge({ source }: { source: LeadSource }) {
 export default function Lead360Page() {
   // Get lead ID from URL params
   const params = useParams();
+  const router = useRouter();
   const leadId = params.id as string;
+
+  // Require authentication - redirects to login if not authenticated
+  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
 
   // Fetch lead data from API
   const { data: rawApiLead, isLoading, error } = api.lead.getById.useQuery(
     { id: leadId },
-    { enabled: !!leadId }
+    { enabled: isAuthenticated && !authLoading && !!leadId }
   );
+
+  // Check for auth errors
+  const isAuthError = error?.data?.code === 'UNAUTHORIZED' ||
+    error?.message?.toLowerCase().includes('authentication') ||
+    error?.message?.toLowerCase().includes('unauthorized');
+
+  // Redirect to login for auth errors
+  useEffect(() => {
+    if (error && isAuthError && !isLoading && !authLoading) {
+      router.replace('/login');
+    }
+  }, [error, isAuthError, isLoading, authLoading, router]);
 
   // Cast to extended type (will be properly typed after Prisma regeneration)
   const apiLead = rawApiLead as LeadWithRelations | undefined;
@@ -585,8 +602,20 @@ export default function Lead360Page() {
     );
   }
 
-  // Error state or no lead data
-  if (error || !lead) {
+  // Auth error - show redirecting state
+  if (error && isAuthError) {
+    return (
+      <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
+        <Card className="p-8 text-center">
+          <span className="material-symbols-outlined text-5xl text-slate-400 mb-4 animate-spin">progress_activity</span>
+          <p className="text-slate-500 dark:text-slate-400">Redirecting to login...</p>
+        </Card>
+      </div>
+    );
+  }
+
+  // Error state or no lead data (non-auth errors)
+  if ((error && !isAuthError) || !lead) {
     return (
       <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
         <Card className="p-8 text-center">

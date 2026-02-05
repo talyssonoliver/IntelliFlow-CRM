@@ -1,9 +1,10 @@
 'use client';
 
 import * as React from 'react';
-import { useState, useMemo, useCallback, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState, useMemo, useCallback, Suspense, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@intelliflow/ui';
+import { useRequireAuth } from '@/lib/auth/AuthContext';
 // Material Symbols icon helper component
 const Icon = ({ name, className = '' }: { name: string; className?: string }) => (
   <span className={`material-symbols-outlined ${className}`} aria-hidden="true">
@@ -458,7 +459,7 @@ function TimelineEventCard({ event, onClick, isExpanded, onToggleExpand }: Reado
               {/* Agent action: Link to approval preview */}
               {event.type === 'agent_action' && event.status === 'pending_approval' && event.agentActionId && (
                 <Link
-                  href={`/agent-approvals/preview?actionId=${event.agentActionId}`}
+                  href={`/agent-approvals?actionId=${event.agentActionId}`}
                   className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors flex items-center gap-2"
                 >
                   <Icon name="open_in_new" className="text-xs" />
@@ -921,8 +922,12 @@ function transformApiEvent(apiEvent: any): TimelineEvent {
 // Inner Page Content Component (uses searchParams)
 function CaseTimelinePageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const dealId = searchParams.get('dealId');
   const caseId = searchParams.get('caseId') || dealId || 'demo-case-1';
+
+  // Require authentication - redirects to login if not authenticated
+  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
 
   // Get reminders context (optional - works without provider)
   const reminders = useRemindersOptional();
@@ -941,10 +946,22 @@ function CaseTimelinePageContent() {
       includeCompleted: true,
     },
     {
-      enabled: true,
+      enabled: isAuthenticated && !authLoading,
       refetchOnWindowFocus: false,
     }
   );
+
+  // Check for auth errors
+  const isAuthError = error?.data?.code === 'UNAUTHORIZED' ||
+    error?.message?.toLowerCase().includes('authentication') ||
+    error?.message?.toLowerCase().includes('unauthorized');
+
+  // Redirect to login for auth errors
+  useEffect(() => {
+    if (error && isAuthError && !isLoading && !authLoading) {
+      router.replace('/login');
+    }
+  }, [error, isAuthError, isLoading, authLoading, router]);
 
   // Transform API events to component format
   const apiEvents = useMemo(() => {
@@ -1027,7 +1044,16 @@ function CaseTimelinePageContent() {
         </div>
       )}
 
-      {error && (
+      {/* Auth error - show redirecting state */}
+      {error && isAuthError && (
+        <div className="mb-4 p-4 flex items-center justify-center gap-3">
+          <Icon name="progress_activity" className="text-2xl text-slate-400 animate-spin" />
+          <p className="text-slate-600 dark:text-slate-400">Redirecting to login...</p>
+        </div>
+      )}
+
+      {/* Non-auth error - show warning with demo data fallback */}
+      {error && !isAuthError && (
         <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
           <p className="font-medium">Using demo data</p>
           <p className="text-amber-700">API unavailable: {error.message}</p>

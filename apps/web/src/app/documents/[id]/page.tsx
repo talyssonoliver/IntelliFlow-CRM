@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Card } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
+import { useRequireAuth } from '@/lib/auth/AuthContext';
 
 // Tab types
 type TabId = 'overview' | 'versions' | 'access-control' | 'signatures' | 'comments';
@@ -31,19 +32,25 @@ interface ACLEntry {
 
 export default function DocumentDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const documentId = params.id as string;
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [newComment, setNewComment] = useState('');
 
+  // Require authentication - redirects to login if not authenticated
+  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
+
   // Fetch document data
-  const { data: documentData, isLoading, error } = trpc.documents.getById.useQuery({
-    id: documentId,
-  });
+  const { data: documentData, isLoading, error } = trpc.documents.getById.useQuery(
+    { id: documentId },
+    { enabled: isAuthenticated && !authLoading && !!documentId }
+  );
 
   // Fetch audit trail for version history
-  const { data: rawAuditTrail } = trpc.documents.getAuditTrail.useQuery({
-    documentId,
-  });
+  const { data: rawAuditTrail } = trpc.documents.getAuditTrail.useQuery(
+    { documentId },
+    { enabled: isAuthenticated && !authLoading && !!documentId }
+  );
 
   // Map audit trail to UI-friendly format
   // Prisma CaseDocumentAudit has: id, document_id, tenant_id, event_type, user_id, ip_address, user_agent, changes, metadata, created_at
@@ -105,12 +112,36 @@ export default function DocumentDetailPage() {
     });
   }
 
-  if (isLoading) {
+  // Check for auth errors
+  const isAuthError = error?.data?.code === 'UNAUTHORIZED' ||
+    error?.message?.toLowerCase().includes('authentication') ||
+    error?.message?.toLowerCase().includes('unauthorized');
+
+  // Redirect to login for auth errors
+  useEffect(() => {
+    if (error && isAuthError && !isLoading && !authLoading) {
+      router.replace('/login');
+    }
+  }, [error, isAuthError, isLoading, authLoading, router]);
+
+  if (isLoading || authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <span className="material-symbols-outlined text-[64px] text-slate-400 animate-spin">progress_activity</span>
           <p className="mt-4 text-slate-600 dark:text-slate-400">Loading document...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show redirecting state for auth errors
+  if (error && isAuthError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <span className="material-symbols-outlined text-[64px] text-slate-400 animate-spin">progress_activity</span>
+          <p className="mt-4 text-slate-600 dark:text-slate-400">Redirecting to login...</p>
         </div>
       </div>
     );

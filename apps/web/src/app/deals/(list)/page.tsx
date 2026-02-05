@@ -20,6 +20,7 @@ import { Card, cn, Skeleton } from '@intelliflow/ui';
 import { OPPORTUNITY_STAGES, type OpportunityStage } from '@intelliflow/domain';
 import { PageHeader } from '@/components/shared';
 import { trpc } from '@/lib/trpc';
+import { useRequireAuth } from '@/lib/auth/AuthContext';
 import {
   DndContext,
   DragOverlay,
@@ -393,18 +394,36 @@ export default function DealsPage() {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [activeDeal, setActiveDeal] = useState<Deal | null>(null);
 
-  // Fetch opportunities from API
+  // Require authentication - redirects to login if not authenticated
+  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
+
+  // Fetch opportunities from API - only run when authenticated
   const {
     data: opportunitiesData,
     isLoading,
     isError,
     error,
     refetch,
-  } = trpc.opportunity.list.useQuery({
-    limit: 100, // Fetch all for kanban view
-    sortBy: 'createdAt',
-    sortOrder: 'desc',
-  });
+  } = trpc.opportunity.list.useQuery(
+    {
+      limit: 100, // Fetch all for kanban view
+      sortBy: 'createdAt',
+      sortOrder: 'desc',
+    },
+    { enabled: isAuthenticated && !authLoading }
+  );
+
+  // Check for auth errors
+  const isAuthError = error?.data?.code === 'UNAUTHORIZED' ||
+    error?.message?.toLowerCase().includes('authentication') ||
+    error?.message?.toLowerCase().includes('unauthorized');
+
+  // Redirect to login for auth errors
+  useEffect(() => {
+    if (error && isAuthError && !isLoading && !authLoading) {
+      router.replace('/login');
+    }
+  }, [error, isAuthError, isLoading, authLoading, router]);
 
   // Transform API response to Deal format
   useEffect(() => {
@@ -574,12 +593,24 @@ export default function DealsPage() {
   );
 
   // Show loading skeleton
-  if (isLoading) {
+  if (isLoading || authLoading) {
     return <DealsPageSkeleton />;
   }
 
-  // Show error state
-  if (isError) {
+  // Show redirecting state for auth errors
+  if (isError && isAuthError) {
+    return (
+      <Card className="p-6">
+        <div className="flex items-center gap-3">
+          <span className="material-symbols-outlined text-slate-400 text-2xl animate-spin">progress_activity</span>
+          <p className="text-muted-foreground">Redirecting to login...</p>
+        </div>
+      </Card>
+    );
+  }
+
+  // Show error state for non-auth errors
+  if (isError && !isAuthError) {
     return (
       <ErrorDisplay
         message={error?.message ?? 'An unexpected error occurred'}
