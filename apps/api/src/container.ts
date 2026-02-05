@@ -156,6 +156,7 @@ const createServices = (prismaClient: PrismaClient) => {
   const contactService = new ContactService(
     adapters.contactRepository,
     adapters.accountRepository,
+    adapters.leadRepository,
     adapters.eventBus
   );
 

@@ -340,3 +340,110 @@ export const mockAIScore = {
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
 };
+
+/**
+ * Timeline test fixtures (IFC-184)
+ */
+export const mockActivity = {
+  id: generateTestUUID('activity-1'),
+  contactId: TEST_UUIDS.contact1,
+  type: 'call' as const,
+  title: 'Discovery call',
+  description: 'Initial discovery call with prospect',
+  timestamp: new Date('2024-01-15T10:00:00Z'),
+  duration: 30,
+  actorId: TEST_UUIDS.user1,
+  createdAt: new Date('2024-01-15T10:00:00Z'),
+  updatedAt: new Date('2024-01-15T10:00:00Z'),
+};
+
+export const mockNote = {
+  id: generateTestUUID('note-1'),
+  contactId: TEST_UUIDS.contact1,
+  content: 'Important meeting notes from client call',
+  createdById: TEST_UUIDS.user1,
+  createdAt: new Date('2024-01-16T14:00:00Z'),
+  updatedAt: new Date('2024-01-16T14:00:00Z'),
+};
+
+/**
+ * Create mock timeline events for testing
+ * @param count Number of events to create
+ * @param options Configuration for event types and dates
+ */
+export function createMockTimelineEvents(
+  count: number,
+  options: {
+    contactId?: string;
+    types?: Array<'task' | 'note' | 'activity'>;
+    startDate?: Date;
+  } = {}
+) {
+  const {
+    contactId = TEST_UUIDS.contact1,
+    types = ['task', 'note', 'activity'],
+    startDate = new Date('2024-01-01'),
+  } = options;
+
+  const events: Array<{
+    id: string;
+    type: string;
+    title: string;
+    description?: string;
+    timestamp: Date;
+    metadata?: Record<string, unknown>;
+  }> = [];
+
+  for (let i = 0; i < count; i++) {
+    const type = types[i % types.length];
+    const timestamp = new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000); // Add days
+
+    switch (type) {
+      case 'task':
+        events.push({
+          id: `task-${generateTestUUID(`task-${i}`)}`,
+          type: 'task',
+          title: `Task ${i + 1}`,
+          description: `Task description ${i + 1}`,
+          timestamp,
+          metadata: { status: 'PENDING', priority: 'MEDIUM', contactId },
+        });
+        break;
+      case 'note':
+        events.push({
+          id: `note-${generateTestUUID(`note-${i}`)}`,
+          type: 'note',
+          title: 'Note added',
+          description: `Note content ${i + 1}`,
+          timestamp,
+          metadata: { contactId },
+        });
+        break;
+      case 'activity':
+        events.push({
+          id: `activity-${generateTestUUID(`activity-${i}`)}`,
+          type: 'activity',
+          title: `Activity ${i + 1}`,
+          description: `Activity description ${i + 1}`,
+          timestamp,
+          metadata: { contactId, activityType: 'call' },
+        });
+        break;
+    }
+  }
+
+  return events;
+}
+
+/**
+ * Create mock task with contact association for timeline tests
+ */
+export function createMockTaskForContact(contactId: string, overrides: Partial<typeof mockTask> = {}) {
+  return {
+    ...mockTask,
+    id: generateTestUUID(`task-${Date.now()}`),
+    contactId,
+    leadId: null,
+    ...overrides,
+  };
+}

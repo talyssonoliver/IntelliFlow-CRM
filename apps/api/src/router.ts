@@ -29,6 +29,9 @@ import { chainVersionRouter } from './modules/chain-version/chain-version.router
 import { zepBudgetRouter } from './modules/zep/zep-budget.router';
 import { intelligenceRouter } from './modules/intelligence/intelligence.router';
 import { inboundEmailRouter } from './modules/email/inbound.router';
+import { autoResponseRouter } from './modules/autoresponse/autoresponse.router';
+import { homeRouter } from './modules/home/home.router';
+import { notificationsRouter } from './modules/notifications/notifications.router';
 
 /**
  * Main application router
@@ -65,6 +68,10 @@ import { inboundEmailRouter } from './modules/email/inbound.router';
  * Email Infrastructure (IFC-144):
  * - email.*        - Inbound email webhooks and processing
  *
+ * Home & Notifications:
+ * - home.*          - Authenticated home page data (IFC-182)
+ * - notifications.* - Notification inbox and preferences (IFC-183)
+ *
  * Future routers to add:
  * - workflow.*     - Workflow automation
  */
@@ -96,6 +103,7 @@ export const appRouter = createTRPCRouter({
   chainVersion: chainVersionRouter,
   zepBudget: zepBudgetRouter,
   intelligence: intelligenceRouter,
+  autoResponse: autoResponseRouter, // IFC-029: Auto-Response with Approval Gate
 
   // Security & Compliance
   audit: auditRouter,
@@ -113,6 +121,12 @@ export const appRouter = createTRPCRouter({
 
   // Email Infrastructure (IFC-144)
   email: inboundEmailRouter,
+
+  // Home Page (IFC-182)
+  home: homeRouter,
+
+  // Notifications (IFC-183)
+  notifications: notificationsRouter,
 });
 
 /**

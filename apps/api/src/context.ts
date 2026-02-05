@@ -157,8 +157,71 @@ const FALLBACK_USER: UserSession = {
  *
  * Falls back to mock user in development if no valid token is provided
  */
+/**
+ * Create context for WebSocket connections
+ *
+ * Simplified context creation that takes auth header directly,
+ * avoiding the need to convert IncomingMessage to Request.
+ */
+export const createWSContext = async (authHeader?: string): Promise<BaseContext> => {
+  let user: UserSession | null = null;
+  const hadBearerToken = Boolean(authHeader?.startsWith('Bearer '));
+
+  if (authHeader) {
+    const parts = authHeader.split(' ');
+    if (parts.length === 2 && parts[0].toLowerCase() === 'bearer') {
+      const token = parts[1];
+      try {
+        const { user: supabaseUser, error } = await verifyToken(token);
+
+        if (!error && supabaseUser) {
+          const dbUser = await apiPrisma.user.findUnique({
+            where: { id: supabaseUser.id },
+            select: { id: true, email: true, name: true, role: true, tenantId: true },
+          });
+
+          if (dbUser) {
+            user = {
+              userId: dbUser.id,
+              email: dbUser.email,
+              name: dbUser.name ?? undefined,
+              role: dbUser.role,
+              tenantId: dbUser.tenantId,
+            };
+          }
+        }
+      } catch (err) {
+        console.error('[WS Auth] Error verifying token:', err);
+      }
+    }
+  }
+
+  // Fall back to mock user in development
+  if (!user && !hadBearerToken && process.env.NODE_ENV !== 'production') {
+    user = FALLBACK_USER;
+  }
+
+  return {
+    prisma: apiPrisma,
+    container,
+    services: {
+      lead: container.leadService,
+      contact: container.contactService,
+      account: container.accountService,
+      opportunity: container.opportunityService,
+      task: container.taskService,
+      ticket: container.ticketService,
+      analytics: container.analyticsService,
+    },
+    security: container.security,
+    adapters: container.adapters,
+    user,
+  };
+};
+
 export const createContext = async (opts?: { req?: Request; res?: Response }): Promise<BaseContext> => {
   let user: UserSession | null = null;
+  const hadBearerToken = Boolean(opts?.req && extractBearerToken(opts?.req));
 
   // Extract token from Authorization header
   const token = extractBearerToken(opts?.req);
@@ -267,8 +330,8 @@ export const createContext = async (opts?: { req?: Request; res?: Response }): P
     }
   }
 
-  // Fall back to mock user in development if no valid token
-  if (!user && process.env.NODE_ENV !== 'production') {
+  // Fall back to mock user only when no bearer was provided (dev convenience)
+  if (!user && !hadBearerToken && process.env.NODE_ENV !== 'production') {
     user = FALLBACK_USER;
   }
 
