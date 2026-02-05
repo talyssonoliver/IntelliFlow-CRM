@@ -465,3 +465,58 @@ export type NBAActionPriority = (typeof NBA_ACTION_PRIORITIES)[number];
 
 // Re-export chain version constants for centralized access
 export * from './ChainVersionConstants';
+
+// =============================================================================
+// AI Output Review Confidence Thresholds (IFC-128)
+// =============================================================================
+
+/**
+ * AI chain types for confidence threshold configuration
+ */
+export const AI_CHAIN_TYPES = [
+  'LEAD_SCORING',
+  'SENTIMENT_ANALYSIS',
+  'AUTO_RESPONSE',
+  'CHURN_PREDICTION',
+  'EMAIL_GENERATION',
+  'NEXT_BEST_ACTION',
+] as const;
+
+export type AIChainType = (typeof AI_CHAIN_TYPES)[number];
+
+/**
+ * Default confidence threshold for AI outputs
+ * Outputs below this threshold require human review
+ */
+export const DEFAULT_CONFIDENCE_THRESHOLD = 0.85;
+
+/**
+ * Chain-specific confidence thresholds
+ * Higher thresholds for customer-facing outputs, lower for internal analysis
+ */
+export const CHAIN_CONFIDENCE_THRESHOLDS: Record<AIChainType, number> = {
+  LEAD_SCORING: 0.85,
+  SENTIMENT_ANALYSIS: 0.80, // Lower threshold acceptable for internal use
+  AUTO_RESPONSE: 0.90, // Higher for customer-facing
+  CHURN_PREDICTION: 0.85,
+  EMAIL_GENERATION: 0.90, // Higher for customer-facing
+  NEXT_BEST_ACTION: 0.85,
+} as const;
+
+/**
+ * Get the confidence threshold for a specific chain type
+ * Falls back to default threshold if chain type not found
+ */
+export function getConfidenceThreshold(chainType: AIChainType): number {
+  return CHAIN_CONFIDENCE_THRESHOLDS[chainType] ?? DEFAULT_CONFIDENCE_THRESHOLD;
+}
+
+/**
+ * Check if a confidence score requires human review for a given chain type
+ */
+export function requiresHumanReview(
+  confidence: number,
+  chainType: AIChainType
+): boolean {
+  return confidence < getConfidenceThreshold(chainType);
+}

@@ -11,12 +11,15 @@ export {
   type TriggerType,
   type CreateAutoResponseDraftProps,
   type RehydrateAutoResponseDraftProps,
+  type ApprovalDecision,
+  type Escalation,
   // Errors
   InvalidLeadStatusError,
   TenantMismatchError,
   InvalidStatusTransitionError,
   DraftExpiredError,
   ApprovalRequiredError,
+  MaxEscalationsReachedError,
 } from './AutoResponseDraft';
 
 // ID
@@ -39,6 +42,7 @@ export {
   AutoResponseEscalatedEvent,
   AutoResponseInvalidatedEvent,
   AutoResponseSendFailedEvent,
+  AutoResponseEscalationResolvedEvent,
 } from './AutoResponseEvents';
 
 // Repository

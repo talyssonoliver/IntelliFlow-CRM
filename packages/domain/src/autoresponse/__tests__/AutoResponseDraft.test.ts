@@ -9,6 +9,7 @@ import {
   InvalidStatusTransitionError,
   DraftExpiredError,
   ApprovalRequiredError,
+  MaxEscalationsReachedError,
 } from '../AutoResponseDraft';
 import { AutoResponseDraftId } from '../AutoResponseDraftId';
 import { ResponseContent } from '../ResponseContent';
@@ -22,6 +23,7 @@ import {
   AutoResponseEscalatedEvent,
   AutoResponseInvalidatedEvent,
   AutoResponseSendFailedEvent,
+  AutoResponseEscalationResolvedEvent,
 } from '../AutoResponseEvents';
 
 describe('AutoResponseDraft', () => {
@@ -38,6 +40,7 @@ describe('AutoResponseDraft', () => {
     triggerType: 'EMAIL_RECEIVED' as const,
     content: validContent,
     aiConfidence: 0.85,
+    modelVersion: 'openai:gpt-4:v1',
     recipientEmail: 'customer@example.com',
   };
 
@@ -205,6 +208,7 @@ describe('AutoResponseDraft', () => {
         triggerType: 'EMAIL_RECEIVED',
         content: validContent,
         aiConfidence: 0.85,
+        modelVersion: 'openai:gpt-4:v1',
         status: 'PENDING_APPROVAL',
         statusHistory: [
           { status: 'DRAFT', changedAt: now },
@@ -811,6 +815,285 @@ describe('AutoResponseDraft', () => {
       expect(ALLOWED_LEAD_STATUSES).toContain('CONTACTED');
       expect(ALLOWED_LEAD_STATUSES).toContain('QUALIFIED');
       expect(ALLOWED_LEAD_STATUSES).toContain('NURTURING');
+    });
+  });
+
+  // IFC-029: New tests for resolveEscalation
+  describe('resolveEscalation', () => {
+    let draft: AutoResponseDraft;
+
+    beforeEach(() => {
+      const result = AutoResponseDraft.create(validCreateProps);
+      draft = result.value;
+      draft.submitForApproval('approver-123');
+      draft.escalate('approver-123', 'manager-456', 'Need senior review');
+      draft.clearDomainEvents();
+    });
+
+    it('should transition from ESCALATED to PENDING_APPROVAL', () => {
+      const resolveResult = draft.resolveEscalation('manager-456');
+
+      expect(resolveResult.isSuccess).toBe(true);
+      expect(draft.status).toBe('PENDING_APPROVAL');
+    });
+
+    it('should emit AutoResponseEscalationResolvedEvent', () => {
+      draft.resolveEscalation('manager-456', 'Issue addressed');
+
+      const events = draft.domainEvents;
+      expect(events).toHaveLength(1);
+      expect(events[0]).toBeInstanceOf(AutoResponseEscalationResolvedEvent);
+      const event = events[0] as AutoResponseEscalationResolvedEvent;
+      expect(event.resolvedBy).toBe('manager-456');
+      expect(event.resolutionFeedback).toBe('Issue addressed');
+    });
+
+    it('should record resolution feedback', () => {
+      draft.resolveEscalation('manager-456', 'Reviewed and corrected');
+
+      expect(draft.escalation).toBeDefined();
+      expect(draft.escalation!.resolvedAt).toBeInstanceOf(Date);
+      expect(draft.escalation!.resolvedBy).toBe('manager-456');
+      expect(draft.escalation!.resolutionFeedback).toBe('Reviewed and corrected');
+    });
+
+    it('should throw if not in ESCALATED status', () => {
+      // Reset to a fresh draft in DRAFT status
+      const freshResult = AutoResponseDraft.create(validCreateProps);
+      const freshDraft = freshResult.value;
+
+      const resolveResult = freshDraft.resolveEscalation('manager-456');
+
+      expect(resolveResult.isFailure).toBe(true);
+      expect(resolveResult.error).toBeInstanceOf(InvalidStatusTransitionError);
+    });
+
+    it('should throw if draft is expired', () => {
+      vi.useFakeTimers();
+
+      const shortResult = AutoResponseDraft.create({
+        ...validCreateProps,
+        expiryHours: 0,
+      });
+      const shortDraft = shortResult.value;
+      shortDraft.submitForApproval('approver-123');
+      shortDraft.escalate('approver-123', 'manager-456', 'Need review');
+      vi.advanceTimersByTime(1000);
+
+      const resolveResult = shortDraft.resolveEscalation('manager-456');
+
+      expect(resolveResult.isFailure).toBe(true);
+      expect(resolveResult.error).toBeInstanceOf(DraftExpiredError);
+
+      vi.useRealTimers();
+    });
+
+    it('should add to status history', () => {
+      const initialHistoryLength = draft.statusHistory.length;
+
+      draft.resolveEscalation('manager-456', 'Fixed');
+
+      expect(draft.statusHistory.length).toBe(initialHistoryLength + 1);
+      const lastEntry = draft.statusHistory[draft.statusHistory.length - 1];
+      expect(lastEntry.status).toBe('PENDING_APPROVAL');
+      expect(lastEntry.changedBy).toBe('manager-456');
+    });
+  });
+
+  // IFC-029: New tests for escalation limit
+  describe('escalation limit', () => {
+    let draft: AutoResponseDraft;
+
+    beforeEach(() => {
+      const result = AutoResponseDraft.create(validCreateProps);
+      draft = result.value;
+      draft.submitForApproval('approver-123');
+    });
+
+    it('should track escalationCount on escalate()', () => {
+      expect(draft.escalationCount).toBe(0);
+
+      draft.escalate('approver-123', 'manager-456', 'First escalation');
+
+      expect(draft.escalationCount).toBe(1);
+    });
+
+    it('should increment escalationCount on each escalation', () => {
+      // First escalation
+      draft.escalate('approver-123', 'manager-456', 'Escalation 1');
+      expect(draft.escalationCount).toBe(1);
+
+      // Resolve and re-submit for second escalation
+      draft.resolveEscalation('manager-456');
+
+      // Second escalation
+      draft.escalate('approver-123', 'manager-789', 'Escalation 2');
+      expect(draft.escalationCount).toBe(2);
+    });
+
+    it('should throw MaxEscalationsReachedError when count >= 3', () => {
+      // First escalation
+      draft.escalate('approver-123', 'manager-1', 'Escalation 1');
+      draft.resolveEscalation('manager-1');
+
+      // Second escalation
+      draft.escalate('approver-123', 'manager-2', 'Escalation 2');
+      draft.resolveEscalation('manager-2');
+
+      // Third escalation
+      draft.escalate('approver-123', 'manager-3', 'Escalation 3');
+      draft.resolveEscalation('manager-3');
+
+      // Fourth escalation should fail
+      const fourthResult = draft.escalate('approver-123', 'manager-4', 'Escalation 4');
+
+      expect(fourthResult.isFailure).toBe(true);
+      expect(fourthResult.error).toBeInstanceOf(MaxEscalationsReachedError);
+      expect(fourthResult.error.code).toBe('MAX_ESCALATIONS_REACHED');
+    });
+
+    it('should NOT reset escalationCount on resolveEscalation()', () => {
+      draft.escalate('approver-123', 'manager-456', 'Escalation 1');
+      expect(draft.escalationCount).toBe(1);
+
+      draft.resolveEscalation('manager-456');
+
+      // escalationCount should remain at 1, not reset
+      expect(draft.escalationCount).toBe(1);
+    });
+
+    it('should rehydrate with escalationCount', () => {
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+      const rehydrated = AutoResponseDraft.rehydrate({
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        tenantId: 'tenant-123',
+        leadId: 'lead-456',
+        triggerType: 'EMAIL_RECEIVED',
+        content: validContent,
+        aiConfidence: 0.85,
+        modelVersion: 'openai:gpt-4:v1',
+        status: 'PENDING_APPROVAL',
+        statusHistory: [{ status: 'DRAFT', changedAt: now }],
+        escalationCount: 2,
+        createdAt: now,
+        expiresAt,
+        updatedAt: now,
+        recipientEmail: 'customer@example.com',
+      });
+
+      expect(rehydrated.escalationCount).toBe(2);
+    });
+
+    it('should default escalationCount to 0 when not provided in rehydrate', () => {
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+      const rehydrated = AutoResponseDraft.rehydrate({
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        tenantId: 'tenant-123',
+        leadId: 'lead-456',
+        triggerType: 'EMAIL_RECEIVED',
+        content: validContent,
+        aiConfidence: 0.85,
+        modelVersion: 'openai:gpt-4:v1',
+        status: 'PENDING_APPROVAL',
+        statusHistory: [{ status: 'DRAFT', changedAt: now }],
+        createdAt: now,
+        expiresAt,
+        updatedAt: now,
+        recipientEmail: 'customer@example.com',
+      });
+
+      expect(rehydrated.escalationCount).toBe(0);
+    });
+  });
+
+  // IFC-029: New tests for status history cap
+  describe('status history cap', () => {
+    it('should cap status history at 50 entries', () => {
+      const result = AutoResponseDraft.create(validCreateProps);
+      const draft = result.value;
+
+      // Generate 55 status changes by repeatedly escalating and resolving
+      for (let i = 0; i < 25; i++) {
+        draft.submitForApproval(`approver-${i}`);
+        draft.escalate(`approver-${i}`, `manager-${i}`, `Reason ${i}`);
+        // Reset status to allow another cycle (hack for testing)
+        // Instead, we'll just verify the history doesn't exceed 50
+        draft.resolveEscalation(`manager-${i}`);
+      }
+
+      expect(draft.statusHistory.length).toBeLessThanOrEqual(50);
+    });
+
+    it('should remove oldest entry when cap reached', () => {
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+      // Create a draft with 49 history entries
+      const statusHistory = [];
+      for (let i = 0; i < 49; i++) {
+        statusHistory.push({
+          status: 'PENDING_APPROVAL' as const,
+          changedAt: new Date(now.getTime() + i * 1000),
+          changedBy: `user-${i}`,
+          reason: `Entry ${i}`,
+        });
+      }
+
+      const draft = AutoResponseDraft.rehydrate({
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        tenantId: 'tenant-123',
+        leadId: 'lead-456',
+        triggerType: 'EMAIL_RECEIVED',
+        content: validContent,
+        aiConfidence: 0.85,
+        modelVersion: 'openai:gpt-4:v1',
+        status: 'PENDING_APPROVAL',
+        statusHistory,
+        createdAt: now,
+        expiresAt,
+        updatedAt: now,
+        recipientEmail: 'customer@example.com',
+      });
+
+      // Record the first entry reason
+      const firstEntryReason = draft.statusHistory[0].reason;
+      expect(firstEntryReason).toBe('Entry 0');
+
+      // Add 2 more entries (approve which adds 1)
+      draft.approve('approver-123');
+
+      // History should now be at 50
+      expect(draft.statusHistory.length).toBe(50);
+
+      // First entry should still be there since we only added 1
+      expect(draft.statusHistory[0].reason).toBe('Entry 0');
+
+      // Add one more entry via markSent
+      draft.markSent('notification-123');
+
+      // Now the oldest should be removed
+      expect(draft.statusHistory.length).toBe(50);
+      expect(draft.statusHistory[0].reason).toBe('Entry 1'); // Entry 0 was removed
+    });
+
+    it('should maintain chronological order', () => {
+      const result = AutoResponseDraft.create(validCreateProps);
+      const draft = result.value;
+      draft.submitForApproval('approver-123');
+      draft.approve('approver-123');
+
+      const history = draft.statusHistory;
+
+      // Verify chronological order
+      for (let i = 1; i < history.length; i++) {
+        expect(history[i].changedAt.getTime()).toBeGreaterThanOrEqual(
+          history[i - 1].changedAt.getTime()
+        );
+      }
     });
   });
 });

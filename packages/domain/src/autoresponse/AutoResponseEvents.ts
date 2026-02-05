@@ -221,3 +221,29 @@ export class AutoResponseSendFailedEvent extends DomainEvent {
     };
   }
 }
+
+/**
+ * Event: Auto-response escalation was resolved by manager
+ * Added in IFC-029: Transition from ESCALATED -> PENDING_APPROVAL
+ */
+export class AutoResponseEscalationResolvedEvent extends DomainEvent {
+  readonly eventType = 'AutoResponseEscalationResolved';
+
+  constructor(
+    public readonly draftId: string,
+    public readonly tenantId: string,
+    public readonly resolvedBy: string,
+    public readonly resolutionFeedback?: string
+  ) {
+    super();
+  }
+
+  toPayload(): Record<string, unknown> {
+    return {
+      draftId: this.draftId,
+      tenantId: this.tenantId,
+      resolvedBy: this.resolvedBy,
+      resolutionFeedback: this.resolutionFeedback,
+    };
+  }
+}
