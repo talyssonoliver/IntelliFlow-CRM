@@ -13,13 +13,13 @@ The **AI Output Review** feature (IFC-176 to IFC-181) is a **6-layer hexagonal a
 |-------|------|--------|----------|
 | Domain | IFC-128 | COMPLETED | 100% |
 | Validators | IFC-176 | COMPLETED | 100% |
-| Application | IFC-177 | Plan Complete | 50% |
+| Application | IFC-177 | COMPLETED | 100% |
 | Database | IFC-178 | Backlog | 0% |
 | Adapters | IFC-179 | Backlog | 0% |
 | tRPC Router | IFC-180 | Backlog | 0% |
 | Frontend UI | IFC-181 | Backlog | 0% |
 
-**Critical Path**: IFC-177 + IFC-178 (parallel) -> IFC-179 -> IFC-180 -> IFC-181
+**Critical Path**: IFC-178 -> IFC-179 -> IFC-180 -> IFC-181 (IFC-177 complete)
 
 ---
 
@@ -264,15 +264,16 @@ This is a SEPARATE system for email drafts only (already COMPLETED):
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │  IFC-177: Application Layer                                     │
-│  Status: Plan Complete (50%)                                    │
+│  Status: COMPLETED (100%) ✅                                    │
 │                                                                 │
-│  Remaining Work:                                                │
-│  - Implement 6 use cases with tests                             │
-│  - Define repository port interface                             │
-│  - Add RBAC for ai_review resource                              │
-│  - HMAC lock token implementation                               │
+│  Completed Work:                                                │
+│  - 6 use cases implemented (Create, Claim, Approve,             │
+│    Reject, Release, Escalate)                                   │
+│  - IAIOutputReviewRepository port defined                       │
+│  - HMAC lock tokens with timing-safe comparison                 │
+│  - 54 tests passing, 90% line coverage                          │
 │                                                                 │
-│  CAN START IMMEDIATELY (IFC-176 + IFC-128 completed)            │
+│  Completed: 2026-02-05                                          │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -415,7 +416,7 @@ The AI Output Review feature has a **complete hexagonal architecture chain** fro
 ```
 IFC-128 (Domain) ✅
     └── IFC-176 (Validators) ✅
-    └── IFC-177 (Application) ⏳ 50%  ──┐
+    └── IFC-177 (Application) ✅ 100% ──┐
     └── IFC-178 (Database) ⬜ 0%     ──┼──► IFC-179 (Adapters) ⬜ 0%
                                            └──► IFC-180 (tRPC) ⬜ 0%
                                                  └──► IFC-181 (Frontend) ⬜ 0%
@@ -423,9 +424,8 @@ IFC-128 (Domain) ✅
 ```
 
 **Next Actions**:
-1. Complete IFC-177 (Application Layer) - can start now
-2. Start IFC-178 (Database) in parallel
-3. Proceed sequentially: IFC-179 → IFC-180 → IFC-181
+1. Start IFC-178 (Database Schema) - can start now
+2. Proceed sequentially: IFC-179 → IFC-180 → IFC-181
 
 **No orphaned tasks detected** - all chains have complete BE+FE coverage.
 

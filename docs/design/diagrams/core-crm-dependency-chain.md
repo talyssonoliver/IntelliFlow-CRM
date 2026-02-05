@@ -114,7 +114,7 @@ The **Core CRM** domain covers 6 primary entities: Lead, Contact, Account, Oppor
     │  - lead.update  │  │  - contact.CRUD │  │  - account.CRUD │  │  - deal.CRUD    │  │  - task.CRUD    │
     │  - lead.delete  │  │                 │  │                 │  │  - forecast     │  │  - assign       │
     │                 │  │                 │  │                 │  │                 │  │                 │
-    │  COMPLETED ✅   │  │  CREATE: IFC-184│  │  CREATE: IFC-185│  │  CREATE: IFC-186│  │  CREATE: IFC-187│
+    │  COMPLETED ✅   │  │  CREATE: IFC-184│  │  COMPLETED ✅   │  │  CREATE: IFC-186│  │  CREATE: IFC-187│
     │  Sprint 6       │  │                 │  │                 │  │                 │  │                 │
     └────────┬────────┘  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘
              │                    │                    │                    │                    │
@@ -147,7 +147,7 @@ The **Core CRM** domain covers 6 primary entities: Lead, Contact, Account, Oppor
     ╚═══════════════════════════════════════════════════════════════════════════════════════════╝
 
     ┌─────────────────────────┐
-    │    ❌ MISSING           │
+    │    ✅ COMPLETED         │
     │  Ticket Aggregate       │    Need to create complete chain:
     │                         │
     │  Required components:   │    IFC-188: Ticket Domain Entity (Sprint 4)
@@ -231,10 +231,10 @@ The **Core CRM** domain covers 6 primary entities: Lead, Contact, Account, Oppor
 |--------|-----------------|------------------|-----------------|
 | Lead | No | No | None - Complete |
 | Contact | No (domain exists) | YES | Create IFC-184, PG-133 |
-| Account | No (domain exists) | YES | Create IFC-185, PG-134 |
+| Account | No (router done ✅) | YES | Create PG-134 |
 | Opportunity | No (domain exists) | PARTIAL | Create IFC-186, PG-135 |
 | Task | No (domain exists) | YES | Create IFC-187, PG-136 |
-| Ticket | YES (all missing) | YES | Create IFC-188, IFC-189, PG-137 |
+| Ticket | No (domain done ✅) | YES | Create IFC-189, PG-137 |
 
 **Total New Tasks Required: 11**
 - 6 Backend (IFC-184 to IFC-189)
