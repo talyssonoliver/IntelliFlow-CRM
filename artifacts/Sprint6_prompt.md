@@ -522,7 +522,7 @@ Execution Mode: SWARM
 - approval rate and latency tracked
 
 #### Artifacts
-- ARTIFACT:apps/web/app/agent-approvals/preview.tsx;ARTIFACT:apps/web/lib/agent/rollback-service.ts;ARTIFACT:artifacts/misc/analytics/approvals-metrics.csv;EVIDENCE:artifacts/attestations/IFC-149/context_ack.json
+- ARTIFACT:apps/web/app/agent-approvals.tsx;ARTIFACT:apps/web/lib/agent/rollback-service.ts;ARTIFACT:artifacts/misc/analytics/approvals-metrics.csv;EVIDENCE:artifacts/attestations/IFC-149/context_ack.json
 
 
 ### Phase 2: MVP Week 1 (1 tasks) (Sequential)

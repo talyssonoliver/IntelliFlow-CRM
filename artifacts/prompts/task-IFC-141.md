@@ -44,7 +44,7 @@ FILE:artifacts/sprint0/codex-run/Framework.md;FILE:audit-matrix.yml;ENV:Domain e
 - PLAN:.specify/planning/IFC-141.md
 - EVIDENCE:artifacts/attestations/IFC-141/context_pack.md
 - EVIDENCE:artifacts/attestations/IFC-141/context_ack.json
-- ARTIFACT:docs/adr/adr-workflow-decision.md
+- ARTIFACT:docs/planning/adr/ADR-014-workflow-engine-decision.md
 - ARTIFACT:artifacts/misc/events-spec.yaml
 
 ### Validation

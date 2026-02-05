@@ -169,7 +169,7 @@ Execution Mode: SWARM
 | PLAN | .specify/planning/IFC-141.md | Documentation |
 | EVIDENCE | artifacts/attestations/IFC-141/context_pack.md | Completion attestation |
 | EVIDENCE | artifacts/attestations/IFC-141/context_ack.json | Completion attestation |
-| ARTIFACT | docs/adr/adr-workflow-decision.md | Documentation |
+| ARTIFACT | docs/planning/adr/ADR-014-workflow-engine-decision.md | Documentation |
 | ARTIFACT | artifacts/misc/events-spec.yaml | Configuration file |
 
 
@@ -442,7 +442,7 @@ cat artifacts/reports/attestation/sprint-10-latest.json
 | **Tickets** | `/tickets` | Support tickets |
 | **Cases** | `/cases/timeline` | Case timeline |
 | **Analytics** | `/analytics` | Analytics dashboard |
-| **Agent Approvals** | `/agent-approvals/preview` | AI agent approval workflow |
+| **Agent Approvals** | `/agent-approvals` | AI agent approval workflow |
 
 **Development Commands:**
 ```bash

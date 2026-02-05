@@ -359,7 +359,7 @@ cat artifacts/reports/attestation/sprint-12-latest.json
 | **Tickets** | `/tickets` | Support tickets |
 | **Cases** | `/cases/timeline` | Case timeline |
 | **Analytics** | `/analytics` | Analytics dashboard |
-| **Agent Approvals** | `/agent-approvals/preview` | AI agent approval workflow |
+| **Agent Approvals** | `/agent-approvals` | AI agent approval workflow |
 
 **Development Commands:**
 ```bash
