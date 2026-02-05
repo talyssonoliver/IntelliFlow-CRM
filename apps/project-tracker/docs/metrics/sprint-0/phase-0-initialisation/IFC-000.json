@@ -6,7 +6,7 @@
   "owner": "CEO + CTO + CFO",
   "dependencies": {
     "required": [],
-    "verified_at": "2026-02-01T21:39:32.461Z",
+    "verified_at": "2026-02-05T06:57:58.185Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -37,13 +37,13 @@
       "artifacts/reports/business-case.md",
       "artifacts/reports/swot-analysis.xlsx",
       "artifacts/reports/financial-model.md",
-      "docs/planning/ADR-000-feasibility.md"
+      "docs/planning/adr/ADR-000-feasibility.md"
     ],
     "created": [
       "artifacts/reports/business-case.md",
       "artifacts/reports/swot-analysis.xlsx",
       "artifacts/reports/financial-model.md",
-      "docs/planning/ADR-000-feasibility.md"
+      "docs/planning/adr/ADR-000-feasibility.md"
     ],
     "missing": [],
     "notes": "Business case and financial model delivered as markdown for version control and AI accessibility; equivalent content to PDF/Excel formats"

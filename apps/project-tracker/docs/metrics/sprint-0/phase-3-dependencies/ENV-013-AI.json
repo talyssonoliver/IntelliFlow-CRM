@@ -14,7 +14,7 @@
       "ENV-007-AI",
       "ENV-009-AI"
     ],
-    "verified_at": "2026-02-01T21:39:32.452Z",
+    "verified_at": "2026-02-05T06:57:58.174Z",
     "all_satisfied": true
   },
   "status_history": [],
@@ -27,6 +27,9 @@
   "completed_at": "2025-12-19T00:58:54.006Z",
   "target_duration_minutes": 90,
   "actual_duration_minutes": 90,
+  "decision_records": [
+    "docs/planning/adr/ADR-015-security-validation.md"
+  ],
   "kpis": {
     "high_vulnerabilities": {
       "target": 0,

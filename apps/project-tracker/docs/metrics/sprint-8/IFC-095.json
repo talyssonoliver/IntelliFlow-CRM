@@ -32,17 +32,17 @@
       "note": "exec session completed - all AI chains integrated, tests passing"
     },
     {
-      "status": "Specifying",
+      "status": "In Progress",
       "at": "2026-01-31T12:00:00.000Z",
       "note": "Re-running spec session to generate proper multi-agent specification"
     },
     {
-      "status": "Spec Complete",
+      "status": "In Progress",
       "at": "2026-01-31T12:45:00.000Z",
       "note": "Multi-agent spec session completed. All 4 agents (AI-Specialist, Backend-Architect, Domain-Expert, Test-Engineer) approved with conditions. Comprehensive specification generated."
     },
     {
-      "status": "Plan Complete",
+      "status": "In Progress",
       "at": "2026-01-31T14:30:00.000Z",
       "note": "Full-stack TDD execution plan generated with 11 phases (Domain, Validators, API Router, Frontend), 22 files (14 new + 8 modified), PERT estimate ~10.5 hours. Ready for /exec session."
     },
@@ -52,17 +52,17 @@
       "note": "exec session started - implementing full-stack integration with TDD"
     },
     {
-      "status": "Specifying",
+      "status": "In Progress",
       "at": "2026-02-01T10:00:00.000Z",
       "note": "Re-running spec session to update specification with remaining work: input sanitizer, job idempotency, prediction router, frontend integration, mandatory tenantId enforcement"
     },
     {
-      "status": "Spec Complete",
+      "status": "In Progress",
       "at": "2026-02-01T10:30:00.000Z",
       "note": "Updated spec session completed. Documented: 75% complete (164 tests passing), remaining P1 (tenant isolation fix), P2 (utilities, router), P3 (frontend) work identified. 4/4 agents approved with conditions."
     },
     {
-      "status": "Plan Complete",
+      "status": "In Progress",
       "at": "2026-02-01T11:00:00.000Z",
       "note": "Updated TDD execution plan generated with 6 phases (P1 Security Fix, Input Sanitizer, Job Idempotency, Prediction Router, Schema Alignment, Validation), ~6 hours PERT estimate. Ready for /exec session."
     },

@@ -1389,7 +1389,7 @@ IFC-000:
   evidence_required:
     - artifacts/reports/business-case.pdf
     - artifacts/reports/swot-analysis.xlsx
-    - docs/planning/ADR-000-feasibility.md
+    - docs/planning/adr/ADR-000-feasibility.md
   acceptance_criteria:
     - Business case document reviewed and approved
     - SWOT analysis covers all key risks
