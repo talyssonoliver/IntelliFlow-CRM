@@ -21,3 +21,6 @@ export * from './NotificationService';
 
 // File Ingestion (IFC-125)
 export * from './IngestionOrchestrator';
+
+// Auto-Response Service (IFC-029)
+export * from './AutoResponseService';

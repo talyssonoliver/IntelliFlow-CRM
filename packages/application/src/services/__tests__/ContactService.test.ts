@@ -12,20 +12,23 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { ContactService } from '../ContactService';
 import { InMemoryContactRepository } from '../../../../adapters/src/repositories/InMemoryContactRepository';
 import { InMemoryAccountRepository } from '../../../../adapters/src/repositories/InMemoryAccountRepository';
+import { InMemoryLeadRepository } from '../../../../adapters/src/repositories/InMemoryLeadRepository';
 import { InMemoryEventBus } from '../../../../adapters/src/external/InMemoryEventBus';
 import { Contact, Account, ContactId } from '@intelliflow/domain';
 
 describe('ContactService', () => {
   let contactRepository: InMemoryContactRepository;
   let accountRepository: InMemoryAccountRepository;
+  let leadRepository: InMemoryLeadRepository;
   let eventBus: InMemoryEventBus;
   let service: ContactService;
 
   beforeEach(() => {
     contactRepository = new InMemoryContactRepository();
     accountRepository = new InMemoryAccountRepository();
+    leadRepository = new InMemoryLeadRepository();
     eventBus = new InMemoryEventBus();
-    service = new ContactService(contactRepository, accountRepository, eventBus);
+    service = new ContactService(contactRepository, accountRepository, leadRepository, eventBus);
   });
 
   describe('createContact()', () => {

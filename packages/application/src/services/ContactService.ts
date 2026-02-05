@@ -8,6 +8,8 @@ import {
   ContactRepository,
   AccountRepository,
   AccountId,
+  LeadRepository,
+  LeadId,
   CreateContactProps,
   ContactSearchParams,
   ContactSearchResult,
@@ -53,6 +55,7 @@ export class ContactService {
   constructor(
     private readonly contactRepository: ContactRepository,
     private readonly accountRepository: AccountRepository,
+    private readonly leadRepository: LeadRepository,
     private readonly eventBus: EventBusPort
   ) {}
 
@@ -257,6 +260,96 @@ export class ContactService {
     const disassociateResult = contact.disassociateFromAccount(disassociatedBy);
     if (disassociateResult.isFailure) {
       return Result.fail(disassociateResult.error);
+    }
+
+    try {
+      await this.contactRepository.save(contact);
+    } catch (error) {
+      return Result.fail(new PersistenceError('Failed to save contact'));
+    }
+
+    await this.publishEvents(contact);
+
+    return Result.ok(contact);
+  }
+
+  /**
+   * Link contact to a lead (IFC-184)
+   * This is for retroactive association, distinct from lead conversion.
+   */
+  async linkToLead(
+    contactId: string,
+    leadId: string,
+    linkedBy: string
+  ): Promise<Result<Contact, DomainError>> {
+    const contactIdResult = ContactId.create(contactId);
+    if (contactIdResult.isFailure) {
+      return Result.fail(contactIdResult.error);
+    }
+
+    const leadIdResult = LeadId.create(leadId);
+    if (leadIdResult.isFailure) {
+      return Result.fail(leadIdResult.error);
+    }
+
+    const [contact, lead] = await Promise.all([
+      this.contactRepository.findById(contactIdResult.value),
+      this.leadRepository.findById(leadIdResult.value),
+    ]);
+
+    if (!contact) {
+      return Result.fail(new NotFoundError(`Contact not found: ${contactId}`));
+    }
+
+    if (!lead) {
+      return Result.fail(new NotFoundError(`Lead not found: ${leadId}`));
+    }
+
+    // Validate tenant isolation - contact and lead must be in same tenant
+    if (contact.tenantId !== lead.tenantId) {
+      return Result.fail(new ValidationError('Contact and Lead must belong to the same tenant'));
+    }
+
+    const linkResult = contact.linkToLead(leadId, linkedBy);
+    if (linkResult.isFailure) {
+      return Result.fail(linkResult.error);
+    }
+
+    try {
+      await this.contactRepository.save(contact);
+    } catch (error) {
+      // Handle race condition on unique constraint
+      if (error instanceof Error && error.message.includes('Unique constraint')) {
+        return Result.fail(new ValidationError('Lead is already linked to another contact'));
+      }
+      return Result.fail(new PersistenceError('Failed to save contact'));
+    }
+
+    await this.publishEvents(contact);
+
+    return Result.ok(contact);
+  }
+
+  /**
+   * Unlink contact from lead (IFC-184)
+   */
+  async unlinkFromLead(
+    contactId: string,
+    unlinkedBy: string
+  ): Promise<Result<Contact, DomainError>> {
+    const contactIdResult = ContactId.create(contactId);
+    if (contactIdResult.isFailure) {
+      return Result.fail(contactIdResult.error);
+    }
+
+    const contact = await this.contactRepository.findById(contactIdResult.value);
+    if (!contact) {
+      return Result.fail(new NotFoundError(`Contact not found: ${contactId}`));
+    }
+
+    const unlinkResult = contact.unlinkFromLead(unlinkedBy);
+    if (unlinkResult.isFailure) {
+      return Result.fail(unlinkResult.error);
     }
 
     try {

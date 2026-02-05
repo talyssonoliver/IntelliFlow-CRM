@@ -12,3 +12,4 @@ export * from './CaseDocumentRepositoryPort';
 export * from './AnalyticsRepositoryPort';
 export * from './TicketRepositoryPort';
 export * from './LeadConversionAuditRepositoryPort';
+export * from './AIOutputReviewRepositoryPort';

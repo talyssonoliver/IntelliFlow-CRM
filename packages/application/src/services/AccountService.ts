@@ -474,6 +474,304 @@ export class AccountService {
     return Result.ok(undefined);
   }
 
+  // =========================================================================
+  // IFC-185: New methods for Account router endpoints
+  // =========================================================================
+
+  /**
+   * Get contacts associated with an account
+   * Supports cursor-based pagination for performance
+   */
+  async getAccountContacts(
+    accountId: string,
+    tenantId: string,
+    options: {
+      limit: number;
+      cursor?: string;
+      status?: string[];
+    }
+  ): Promise<Result<{
+    contacts: Array<{
+      id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone?: string;
+      status: string;
+      createdAt: Date;
+    }>;
+    nextCursor?: string;
+    total: number;
+  }, DomainError>> {
+    // Validate account ID
+    const accountIdResult = AccountId.create(accountId);
+    if (accountIdResult.isFailure) {
+      return Result.fail(accountIdResult.error);
+    }
+
+    // Verify account exists
+    const account = await this.accountRepository.findById(accountIdResult.value);
+    if (!account) {
+      return Result.fail(new NotFoundError(`Account with ID ${accountId} not found`));
+    }
+
+    // Verify tenant isolation
+    if (account.tenantId !== tenantId) {
+      return Result.fail(new NotFoundError(`Account with ID ${accountId} not found`));
+    }
+
+    // Get contacts for account
+    const contacts = await this.contactRepository.findByAccountId(accountId);
+
+    // Apply status filter if provided
+    let filteredContacts = contacts;
+    if (options.status && options.status.length > 0) {
+      filteredContacts = contacts.filter(c =>
+        options.status!.includes(c.status)
+      );
+    }
+
+    // Apply cursor-based pagination
+    let startIndex = 0;
+    if (options.cursor) {
+      const cursorIndex = filteredContacts.findIndex(c => c.id.toString() === options.cursor);
+      if (cursorIndex !== -1) {
+        startIndex = cursorIndex + 1;
+      }
+    }
+
+    const paginatedContacts = filteredContacts.slice(startIndex, startIndex + options.limit + 1);
+    const hasMore = paginatedContacts.length > options.limit;
+    const results = hasMore ? paginatedContacts.slice(0, -1) : paginatedContacts;
+
+    return Result.ok({
+      contacts: results.map(c => ({
+        id: c.id.toString(),
+        firstName: c.firstName,
+        lastName: c.lastName,
+        email: c.email.toValue(),
+        phone: c.phone?.toValue(),
+        status: c.status,
+        createdAt: c.createdAt,
+      })),
+      nextCursor: hasMore ? results[results.length - 1]?.id.toString() : undefined,
+      total: filteredContacts.length,
+    });
+  }
+
+  /**
+   * Get opportunities associated with an account
+   * Supports cursor-based pagination and stage filtering
+   */
+  async getAccountOpportunities(
+    accountId: string,
+    tenantId: string,
+    options: {
+      limit: number;
+      cursor?: string;
+      stage?: string[];
+    }
+  ): Promise<Result<{
+    opportunities: Array<{
+      id: string;
+      name: string;
+      stage: string;
+      value: number;
+      probability: number;
+      expectedCloseDate?: Date;
+      createdAt: Date;
+    }>;
+    nextCursor?: string;
+    total: number;
+    summary: {
+      totalValue: number;
+      weightedValue: number;
+      stageBreakdown: Record<string, number>;
+    };
+  }, DomainError>> {
+    // Validate account ID
+    const accountIdResult = AccountId.create(accountId);
+    if (accountIdResult.isFailure) {
+      return Result.fail(accountIdResult.error);
+    }
+
+    // Verify account exists
+    const account = await this.accountRepository.findById(accountIdResult.value);
+    if (!account) {
+      return Result.fail(new NotFoundError(`Account with ID ${accountId} not found`));
+    }
+
+    // Verify tenant isolation
+    if (account.tenantId !== tenantId) {
+      return Result.fail(new NotFoundError(`Account with ID ${accountId} not found`));
+    }
+
+    // Get opportunities for account
+    const opportunities = await this.opportunityRepository.findByAccountId(accountId);
+
+    // Apply stage filter if provided
+    let filteredOpportunities = opportunities;
+    if (options.stage && options.stage.length > 0) {
+      filteredOpportunities = opportunities.filter(o =>
+        options.stage!.includes(o.stage)
+      );
+    }
+
+    // Calculate summary
+    const totalValue = filteredOpportunities.reduce((sum, o) => sum + o.value.amount, 0);
+    const weightedValue = filteredOpportunities.reduce(
+      (sum, o) => sum + (o.value.amount * o.probability.value / 100),
+      0
+    );
+    const stageBreakdown = filteredOpportunities.reduce((acc, o) => {
+      acc[o.stage] = (acc[o.stage] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Apply cursor-based pagination
+    let startIndex = 0;
+    if (options.cursor) {
+      const cursorIndex = filteredOpportunities.findIndex(o => o.id.toString() === options.cursor);
+      if (cursorIndex !== -1) {
+        startIndex = cursorIndex + 1;
+      }
+    }
+
+    const paginatedOpportunities = filteredOpportunities.slice(startIndex, startIndex + options.limit + 1);
+    const hasMore = paginatedOpportunities.length > options.limit;
+    const results = hasMore ? paginatedOpportunities.slice(0, -1) : paginatedOpportunities;
+
+    return Result.ok({
+      opportunities: results.map(o => ({
+        id: o.id.toString(),
+        name: o.name,
+        stage: o.stage,
+        value: o.value.amount,
+        probability: o.probability.value,
+        expectedCloseDate: o.expectedCloseDate,
+        createdAt: o.createdAt,
+      })),
+      nextCursor: hasMore ? results[results.length - 1]?.id.toString() : undefined,
+      total: filteredOpportunities.length,
+      summary: { totalValue, weightedValue, stageBreakdown },
+    });
+  }
+
+  /**
+   * Get activity feed for an account
+   * Aggregates activities from contacts and opportunities
+   */
+  async getAccountActivity(
+    accountId: string,
+    tenantId: string,
+    options: {
+      limit: number;
+      cursor?: string;
+      types?: string[];
+    }
+  ): Promise<Result<{
+    activities: Array<{
+      id: string;
+      type: string;
+      description: string;
+      entityType: 'CONTACT' | 'OPPORTUNITY';
+      entityId: string;
+      entityName: string;
+      createdAt: Date;
+    }>;
+    nextCursor?: string;
+  }, DomainError>> {
+    // Validate account ID
+    const accountIdResult = AccountId.create(accountId);
+    if (accountIdResult.isFailure) {
+      return Result.fail(accountIdResult.error);
+    }
+
+    // Verify account exists
+    const account = await this.accountRepository.findById(accountIdResult.value);
+    if (!account) {
+      return Result.fail(new NotFoundError(`Account with ID ${accountId} not found`));
+    }
+
+    // Verify tenant isolation
+    if (account.tenantId !== tenantId) {
+      return Result.fail(new NotFoundError(`Account with ID ${accountId} not found`));
+    }
+
+    // Get contacts and opportunities for activity aggregation
+    const [contacts, opportunities] = await Promise.all([
+      this.contactRepository.findByAccountId(accountId),
+      this.opportunityRepository.findByAccountId(accountId),
+    ]);
+
+    // Build activity feed from domain entities
+    // Note: In a full implementation, this would query ActivityEvent and ContactActivity tables
+    // For now, we return account-level activity based on entity creation/updates
+    const activities: Array<{
+      id: string;
+      type: string;
+      description: string;
+      entityType: 'CONTACT' | 'OPPORTUNITY';
+      entityId: string;
+      entityName: string;
+      createdAt: Date;
+    }> = [];
+
+    // Add contact activities
+    for (const contact of contacts) {
+      activities.push({
+        id: `contact-${contact.id.toString()}`,
+        type: 'CONTACT_CREATED',
+        description: `Contact ${contact.firstName} ${contact.lastName} added`,
+        entityType: 'CONTACT',
+        entityId: contact.id.toString(),
+        entityName: `${contact.firstName} ${contact.lastName}`,
+        createdAt: contact.createdAt,
+      });
+    }
+
+    // Add opportunity activities
+    for (const opportunity of opportunities) {
+      activities.push({
+        id: `opportunity-${opportunity.id.toString()}`,
+        type: 'OPPORTUNITY_CREATED',
+        description: `Opportunity ${opportunity.name} created`,
+        entityType: 'OPPORTUNITY',
+        entityId: opportunity.id.toString(),
+        entityName: opportunity.name,
+        createdAt: opportunity.createdAt,
+      });
+    }
+
+    // Sort by date descending
+    activities.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    // Apply type filter if provided
+    let filteredActivities = activities;
+    if (options.types && options.types.length > 0) {
+      filteredActivities = activities.filter(a => options.types!.includes(a.type));
+    }
+
+    // Apply cursor-based pagination
+    let startIndex = 0;
+    if (options.cursor) {
+      const cursorDate = new Date(options.cursor);
+      const cursorIndex = filteredActivities.findIndex(a => a.createdAt < cursorDate);
+      if (cursorIndex !== -1) {
+        startIndex = cursorIndex;
+      }
+    }
+
+    const paginatedActivities = filteredActivities.slice(startIndex, startIndex + options.limit + 1);
+    const hasMore = paginatedActivities.length > options.limit;
+    const results = hasMore ? paginatedActivities.slice(0, -1) : paginatedActivities;
+
+    return Result.ok({
+      activities: results,
+      nextCursor: hasMore ? results[results.length - 1]?.createdAt.toISOString() : undefined,
+    });
+  }
+
   private async publishEvents(account: Account): Promise<void> {
     const events = account.getDomainEvents();
     if (events.length > 0) {

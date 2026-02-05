@@ -48,7 +48,7 @@ describe('Domain Services Integration', () => {
       eventBus
     );
 
-    contactService = new ContactService(contactRepository, accountRepository, eventBus);
+    contactService = new ContactService(contactRepository, accountRepository, leadRepository, eventBus);
 
     accountService = new AccountService(
       accountRepository,

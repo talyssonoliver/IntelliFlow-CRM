@@ -527,7 +527,8 @@ export class LeadService {
     const validTransitions: Record<LeadStatus, LeadStatus[]> = {
       NEW: ['CONTACTED', 'QUALIFIED', 'UNQUALIFIED', 'LOST'],
       CONTACTED: ['QUALIFIED', 'UNQUALIFIED', 'LOST'],
-      QUALIFIED: ['CONVERTED', 'LOST'],
+      QUALIFIED: ['NEGOTIATING', 'CONVERTED', 'LOST'],
+      NEGOTIATING: ['CONVERTED', 'LOST'], // In negotiation phase
       UNQUALIFIED: ['CONTACTED', 'LOST'], // Can be re-engaged
       CONVERTED: [], // Terminal state
       LOST: ['NEW'], // Can be reopened
