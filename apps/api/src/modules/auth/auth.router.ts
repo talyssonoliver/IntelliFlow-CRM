@@ -163,6 +163,7 @@ export const authRouter = createTRPCRouter({
           email: user.email || input.email,
           name: user.user_metadata?.name || null,
           role: user.user_metadata?.role || 'USER',
+          avatar: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
         },
         session: {
           accessToken: session.access_token,
@@ -735,7 +736,7 @@ export const authRouter = createTRPCRouter({
     // Look up user in database to get role
     const dbUser = await ctx.prisma.user.findUnique({
       where: { id: supabaseUser.id },
-      select: { id: true, email: true, name: true, role: true },
+      select: { id: true, email: true, name: true, role: true, avatarUrl: true },
     });
 
     return {
@@ -745,6 +746,11 @@ export const authRouter = createTRPCRouter({
         email: supabaseUser.email || '',
         name: dbUser?.name || supabaseUser.user_metadata?.name || null,
         role: dbUser?.role || supabaseUser.user_metadata?.role || 'USER',
+        avatar:
+          dbUser?.avatarUrl ||
+          supabaseUser.user_metadata?.avatar_url ||
+          supabaseUser.user_metadata?.picture ||
+          null,
       },
       expiresAt: new Date(Date.now() + 3600 * 1000), // Token expiry from Supabase
     };

@@ -351,8 +351,8 @@ export const intelligenceRouter = createTRPCRouter({
       const aiInsight = await ctx.prisma.leadAIInsight.upsert({
         where: { leadId },
         create: {
-          leadId,
           tenantId: typedCtx.tenant.tenantId,
+          leadId,
           churnRisk: updateData.churnRisk ?? 'LOW',
           conversionProbability: updateData.conversionProbability ?? 0,
           estimatedValue: updateData.estimatedValue ?? 0,
@@ -407,8 +407,8 @@ export const intelligenceRouter = createTRPCRouter({
       const aiInsight = await ctx.prisma.contactAIInsight.upsert({
         where: { contactId },
         create: {
-          contactId,
           tenantId: typedCtx.tenant.tenantId,
+          contactId,
           churnRisk: updateData.churnRisk ?? 'LOW',
           conversionProbability: updateData.conversionProbability ?? 0,
           lifetimeValue: updateData.lifetimeValue ?? 0,

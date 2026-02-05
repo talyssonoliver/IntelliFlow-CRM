@@ -73,6 +73,7 @@ const mockConversation = {
 // Mock message record with proper enum types
 const mockMessage = {
   id: TEST_MESSAGE_ID,
+  tenantId: TEST_TENANT_ID,
   conversationId: TEST_CONVERSATION_ID,
   role: 'USER' as const,
   content: 'Hello, I need help',
@@ -98,6 +99,7 @@ const mockMessage = {
 // Mock tool call record with proper enum types
 const mockToolCall = {
   id: TEST_TOOL_CALL_ID,
+  tenantId: TEST_TENANT_ID,
   conversationId: TEST_CONVERSATION_ID,
   messageId: null,
   toolName: 'searchLeads',

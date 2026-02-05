@@ -336,6 +336,7 @@ export const conversationRouter = createTRPCRouter({
         // Create message
         ctx.prisma.messageRecord.create({
           data: {
+            tenantId: ctx.user.tenantId,
             conversationId: input.conversationId,
             role: input.role,
             content: input.content,
@@ -392,6 +393,7 @@ export const conversationRouter = createTRPCRouter({
       const [toolCall] = await ctx.prisma.$transaction([
         ctx.prisma.toolCallRecord.create({
           data: {
+            tenantId: ctx.user.tenantId,
             conversationId: input.conversationId,
             messageId: input.messageId,
             toolName: input.toolName,

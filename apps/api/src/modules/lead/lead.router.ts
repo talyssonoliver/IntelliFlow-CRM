@@ -93,13 +93,16 @@ export const leadRouter = createTRPCRouter({
             avatarUrl: true,
           },
         },
+        // Lead 360: Activities timeline
         activities: {
           orderBy: { timestamp: 'desc' },
           take: 50,
         },
+        // Lead 360: Notes
         notes: {
           orderBy: { createdAt: 'desc' },
         },
+        // Lead 360: Files
         files: {
           orderBy: { uploadedAt: 'desc' },
         },

@@ -586,7 +586,7 @@ describe('Draft Message Agent Tool', () => {
 
       it('should have no warnings for normal short email with unsubscribe', async () => {
         const context = createMockContext();
-        const scheduledFor = new Date('2026-02-02T14:00:00'); // Business hours
+        const scheduledFor = new Date('2026-02-09T14:00:00'); // Business hours, future date
         const input = {
           type: 'EMAIL' as const,
           recipientType: 'LEAD' as const,

@@ -962,9 +962,9 @@ export const appointmentsRouter = createTRPCRouter({
 
       await ctx.prisma.appointmentCase.create({
         data: {
+          tenantId: ctx.user.tenantId,
           appointmentId: input.appointmentId,
           caseId: input.caseId,
-          tenantId: ctx.user.tenantId,
         },
       });
 
@@ -1033,9 +1033,9 @@ export const appointmentsRouter = createTRPCRouter({
 
       await ctx.prisma.appointmentAttendee.create({
         data: {
+          tenantId: ctx.user.tenantId,
           appointmentId: input.appointmentId,
           userId: input.userId,
-          tenantId: ctx.user.tenantId,
         },
       });
 

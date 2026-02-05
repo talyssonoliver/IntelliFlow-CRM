@@ -18,6 +18,7 @@ import {
   ticketQuerySchema,
   addResponseSchema,
   idSchema,
+  ticketStatusSchema,
 } from '@intelliflow/validators/ticket';
 import { type Context } from '../../context';
 import {
@@ -241,7 +242,7 @@ export const ticketRouter = createTRPCRouter({
   bulkUpdateStatus: tenantProcedure
     .input(z.object({
       ticketIds: z.array(z.string()),
-      status: z.enum(['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED']),
+      status: ticketStatusSchema,
     }))
     .mutation(async ({ ctx, input }) => {
       const ticketService = getTicketService(ctx);
