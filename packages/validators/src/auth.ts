@@ -51,6 +51,7 @@ export const loginResponseSchema = z.object({
       email: emailSchema,
       name: z.string().nullable(),
       role: z.string(),
+      avatar: z.string().url().nullable().optional(),
     })
     .optional(),
   session: z

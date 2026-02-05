@@ -67,3 +67,133 @@ export const accountListResponseSchema = z.object({
 });
 
 export type AccountListResponse = z.infer<typeof accountListResponseSchema>;
+
+// =========================================================================
+// IFC-185: Input/Output schemas for new Account router endpoints
+// =========================================================================
+
+// Import existing status/stage schemas from their canonical locations
+import { contactStatusSchema } from './contact';
+import { opportunityStageSchema } from './opportunity';
+
+// Re-export for convenience when importing from account module
+export { contactStatusSchema as accountContactStatusSchema } from './contact';
+export { opportunityStageSchema as accountOpportunityStageSchema } from './opportunity';
+
+// Activity type enum for filtering (account-specific)
+export const accountActivityTypeSchema = z.enum([
+  'CONTACT_CREATED',
+  'CONTACT_UPDATED',
+  'OPPORTUNITY_CREATED',
+  'OPPORTUNITY_UPDATED',
+  'STAGE_CHANGED',
+  'EMAIL_SENT',
+  'CALL_MADE',
+  'MEETING_SCHEDULED',
+  'NOTE_ADDED',
+]);
+
+export type AccountActivityType = z.infer<typeof accountActivityTypeSchema>;
+
+// -------------------------------------------------------------------------
+// getContacts endpoint schemas
+// -------------------------------------------------------------------------
+
+export const getAccountContactsInputSchema = z.object({
+  accountId: idSchema,
+  limit: z.number().int().min(1).max(100).default(20),
+  cursor: idSchema.optional(),
+  status: z.array(contactStatusSchema).optional(),
+});
+
+export type GetAccountContactsInput = z.infer<typeof getAccountContactsInputSchema>;
+
+export const accountContactSchema = z.object({
+  id: idSchema,
+  firstName: z.string(),
+  lastName: z.string(),
+  email: z.string().email(),
+  phone: z.string().optional(),
+  status: contactStatusSchema,
+  createdAt: z.coerce.date(),
+});
+
+export const getAccountContactsOutputSchema = z.object({
+  contacts: z.array(accountContactSchema),
+  nextCursor: idSchema.optional(),
+  total: z.number().int().nonnegative(),
+});
+
+export type GetAccountContactsOutput = z.infer<typeof getAccountContactsOutputSchema>;
+
+// -------------------------------------------------------------------------
+// getOpportunities endpoint schemas
+// -------------------------------------------------------------------------
+
+export const getAccountOpportunitiesInputSchema = z.object({
+  accountId: idSchema,
+  limit: z.number().int().min(1).max(100).default(20),
+  cursor: idSchema.optional(),
+  stage: z.array(opportunityStageSchema).optional(),
+});
+
+export type GetAccountOpportunitiesInput = z.infer<typeof getAccountOpportunitiesInputSchema>;
+
+export const accountOpportunitySchema = z.object({
+  id: idSchema,
+  name: z.string(),
+  stage: opportunityStageSchema,
+  value: z.number(),
+  probability: z.number().min(0).max(100),
+  expectedCloseDate: z.coerce.date().optional(),
+  createdAt: z.coerce.date(),
+});
+
+export const opportunitySummarySchema = z.object({
+  totalValue: z.number(),
+  weightedValue: z.number(),
+  stageBreakdown: z.record(z.string(), z.number()),
+});
+
+export const getAccountOpportunitiesOutputSchema = z.object({
+  opportunities: z.array(accountOpportunitySchema),
+  nextCursor: idSchema.optional(),
+  total: z.number().int().nonnegative(),
+  summary: opportunitySummarySchema,
+});
+
+export type GetAccountOpportunitiesOutput = z.infer<typeof getAccountOpportunitiesOutputSchema>;
+
+// -------------------------------------------------------------------------
+// getActivity endpoint schemas
+// -------------------------------------------------------------------------
+
+export const getAccountActivityInputSchema = z.object({
+  accountId: idSchema,
+  limit: z.number().int().min(1).max(50).default(20),
+  cursor: z.string().datetime().optional(),
+  types: z.array(accountActivityTypeSchema).optional(),
+});
+
+export type GetAccountActivityInput = z.infer<typeof getAccountActivityInputSchema>;
+
+export const accountActivitySchema = z.object({
+  id: z.string(),
+  type: accountActivityTypeSchema,
+  description: z.string(),
+  entityType: z.enum(['CONTACT', 'OPPORTUNITY']),
+  entityId: idSchema,
+  entityName: z.string(),
+  performedBy: z.object({
+    id: idSchema,
+    name: z.string(),
+  }).optional(),
+  createdAt: z.coerce.date(),
+});
+
+export const getAccountActivityOutputSchema = z.object({
+  activities: z.array(accountActivitySchema),
+  nextCursor: z.string().datetime().optional(),
+});
+
+export type GetAccountActivityOutput = z.infer<typeof getAccountActivityOutputSchema>;

@@ -55,3 +55,12 @@ export * from './auto-response';
 
 // Event Schemas (IFC-150: Domain Events Infrastructure)
 export * from './events';
+
+// Home Page Schemas (IFC-182: Home Page Router)
+export * from './home';
+
+// Notifications Schemas (IFC-183: Notifications Router)
+export * from './notifications';
+
+// AI Output Review Schemas (IFC-176)
+export * from './ai-review';

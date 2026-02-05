@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { emailSchema, phoneSchema, idSchema, paginationSchema, nameSchema } from './common';
-import { LEAD_STATUSES, LEAD_SOURCES } from '@intelliflow/domain';
+import { LEAD_STATUSES, LEAD_SOURCES, LEAD_ACTIVITY_TYPES } from '@intelliflow/domain';
 
 // Re-export common schemas used by API routers
 export { idSchema } from './common';
@@ -8,9 +8,11 @@ export { idSchema } from './common';
 // Enums - derived from domain constants (single source of truth)
 export const leadSourceSchema = z.enum(LEAD_SOURCES);
 export const leadStatusSchema = z.enum(LEAD_STATUSES);
+export const leadActivityTypeSchema = z.enum(LEAD_ACTIVITY_TYPES);
 
 export type LeadSource = z.infer<typeof leadSourceSchema>;
 export type LeadStatus = z.infer<typeof leadStatusSchema>;
+export type LeadActivityType = z.infer<typeof leadActivityTypeSchema>;
 
 // Base lead fields schema (DRY - used by create and update)
 const baseLeadFieldsSchema = z.object({
@@ -21,6 +23,13 @@ const baseLeadFieldsSchema = z.object({
   title: nameSchema.optional(),
   phone: phoneSchema,
   source: leadSourceSchema,
+  // Lead 360 fields
+  location: z.string().max(200).optional(),
+  website: z.string().max(200).optional(),
+  avatarUrl: z.string().url().max(500).optional(),
+  lastContactedAt: z.coerce.date().optional(),
+  estimatedValue: z.number().int().min(0).optional(), // In cents
+  tags: z.array(z.string().max(50)).max(20).optional(),
 });
 
 // Create Lead Schema - uses base fields with source default
