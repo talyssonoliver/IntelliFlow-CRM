@@ -30,6 +30,7 @@ import {
   cn,
 } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
+import { useAuth } from '@/lib/auth/AuthContext';
 import {
   formatCurrency,
   formatBillingDate,
@@ -57,9 +58,13 @@ interface BillingPortalProps {
  * Subscription Overview Card
  */
 function SubscriptionOverviewCard() {
-  const { data: subscription, isLoading } = trpc.billing.getSubscription.useQuery();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { data: subscription, isLoading } = trpc.billing.getSubscription.useQuery(
+    undefined,
+    { enabled: isAuthenticated && !authLoading }
+  );
 
-  if (isLoading) {
+  if (isLoading || authLoading) {
     return (
       <Card>
         <CardHeader>
@@ -198,9 +203,13 @@ function SubscriptionOverviewCard() {
  * Payment Method Section
  */
 function PaymentMethodSection() {
-  const { data: paymentMethods, isLoading } = trpc.billing.getPaymentMethods.useQuery();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { data: paymentMethods, isLoading } = trpc.billing.getPaymentMethods.useQuery(
+    undefined,
+    { enabled: isAuthenticated && !authLoading }
+  );
 
-  if (isLoading) {
+  if (isLoading || authLoading) {
     return (
       <Card>
         <CardHeader>
@@ -272,9 +281,13 @@ function PaymentMethodSection() {
  * Usage Metrics Section
  */
 function UsageMetricsSection() {
-  const { data: usage, isLoading } = trpc.billing.getUsageMetrics.useQuery();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { data: usage, isLoading } = trpc.billing.getUsageMetrics.useQuery(
+    undefined,
+    { enabled: isAuthenticated && !authLoading }
+  );
 
-  if (isLoading) {
+  if (isLoading || authLoading) {
     return (
       <Card>
         <CardHeader>
@@ -359,10 +372,14 @@ function UsageBar({ label, current, limit, suffix = '' }: UsageBarProps) {
  * Invoice History Table
  */
 function InvoiceHistoryTable() {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [page, setPage] = React.useState(1);
-  const { data, isLoading } = trpc.billing.listInvoices.useQuery({ page, limit: 5 });
+  const { data, isLoading } = trpc.billing.listInvoices.useQuery(
+    { page, limit: 5 },
+    { enabled: isAuthenticated && !authLoading }
+  );
 
-  if (isLoading) {
+  if (isLoading || authLoading) {
     return (
       <Card>
         <CardHeader>

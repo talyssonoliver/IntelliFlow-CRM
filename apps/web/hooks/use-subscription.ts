@@ -1,8 +1,14 @@
 /**
  * Real-time Subscription Hook
  *
- * Provides real-time updates for leads, contacts, and activities using
- * Supabase Realtime with optimistic UI updates.
+ * Provides real-time updates for leads, contacts, and activities.
+ *
+ * UPDATED: Now supports two backends:
+ * - tRPC WebSocket (default) - Uses tRPC subscriptions over WebSocket
+ * - Supabase Realtime (legacy) - Uses postgres_changes subscription
+ *
+ * The tRPC backend is preferred as it integrates with the existing tRPC
+ * infrastructure and provides better type safety.
  *
  * IFC-016: Real-time Subscriptions
  * KPIs: <100ms latency, connection stable
@@ -12,6 +18,23 @@
 
 import { useEffect, useCallback, useRef, useState } from 'react';
 import { createClient, RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+
+// Import tRPC subscription hooks
+import {
+  useLeadScoredSubscription as useTrpcLeadScoredSubscription,
+  useTaskAssignedSubscription as useTrpcTaskAssignedSubscription,
+  useSystemEventSubscription as useTrpcSystemEventSubscription,
+  useRealtimeHealth as useTrpcRealtimeHealth,
+  type ConnectionStatus,
+  type SubscriptionMetrics,
+} from '@/hooks/use-trpc-subscriptions';
+
+// Re-export types from tRPC subscriptions
+export type { ConnectionStatus, SubscriptionMetrics };
+
+// Configuration: Set to 'trpc' to use tRPC WebSocket, 'supabase' for Supabase Realtime
+const SUBSCRIPTION_BACKEND: 'trpc' | 'supabase' =
+  (process.env.NEXT_PUBLIC_SUBSCRIPTION_BACKEND as 'trpc' | 'supabase') || 'trpc';
 
 // Types for subscription events
 export type SubscriptionEvent = 'INSERT' | 'UPDATE' | 'DELETE' | '*';
@@ -41,13 +64,10 @@ export interface SubscriptionOptions<T> {
   debug?: boolean;
 }
 
-export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
+// Note: ConnectionStatus is imported from tRPC subscriptions
+// SubscriptionMetrics is also imported but extended below for Supabase-specific fields
 
-interface SubscriptionMetrics {
-  messagesReceived: number;
-  averageLatency: number;
-  lastMessageAt: number | null;
-  connectionUptime: number;
+interface SupabaseSubscriptionMetrics extends SubscriptionMetrics {
   reconnectCount: number;
 }
 
@@ -92,11 +112,12 @@ export function useSubscription<T = unknown>(options: SubscriptionOptions<T>) {
   } = options;
 
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
-  const [metrics, setMetrics] = useState<SubscriptionMetrics>({
+  const [metrics, setMetrics] = useState<SupabaseSubscriptionMetrics>({
     messagesReceived: 0,
     averageLatency: 0,
     lastMessageAt: null,
     connectionUptime: 0,
+    errors: 0,
     reconnectCount: 0,
   });
 
@@ -369,6 +390,19 @@ interface LeadRecord {
 export function useLeadScoreSubscription(options: LeadScoreSubscriptionOptions = {}) {
   const { leadId, onScoreChange } = options;
 
+  // Use tRPC subscription when configured
+  if (SUBSCRIPTION_BACKEND === 'trpc') {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    return useTrpcLeadScoredSubscription({
+      leadId,
+      onData: (event) => {
+        onScoreChange?.(event.score, event.leadId);
+      },
+    });
+  }
+
+  // Fallback to Supabase Realtime
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   return useSubscription<LeadRecord>({
     table: 'lead',
     events: ['UPDATE'],
@@ -453,10 +487,21 @@ export function useActivitySubscription(options: ActivitySubscriptionOptions = {
  * ```
  */
 export function useRealtimeHealth() {
+  // Use tRPC health check when configured
+  if (SUBSCRIPTION_BACKEND === 'trpc') {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    return useTrpcRealtimeHealth();
+  }
+
+  // Fallback to Supabase Realtime health check
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const [isHealthy, setIsHealthy] = useState(true);
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const [latency, setLatency] = useState<number | null>(null);
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const [lastPing, setLastPing] = useState<number | null>(null);
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
     const checkHealth = async () => {
       const start = Date.now();
@@ -502,3 +547,23 @@ export function useRealtimeHealth() {
 
 // Export supabase client for direct use if needed
 export { supabase };
+
+// Re-export tRPC subscription hooks for direct access
+export {
+  useTrpcLeadScoredSubscription,
+  useTrpcTaskAssignedSubscription,
+  useTrpcSystemEventSubscription,
+  useTrpcRealtimeHealth,
+};
+
+// Export the tRPC-specific hooks with cleaner names
+export {
+  useLeadScoredSubscription,
+  useTaskAssignedSubscription,
+  useSystemEventSubscription,
+  useAIProgressSubscription,
+  useAllSubscriptions,
+} from '@/hooks/use-trpc-subscriptions';
+
+// Export backend configuration for consumers that need to know which backend is active
+export const REALTIME_BACKEND = SUBSCRIPTION_BACKEND;

@@ -27,6 +27,7 @@ import {
   cn,
 } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
+import { useAuth } from '@/lib/auth/AuthContext';
 import {
   getCardDisplayInfo,
   sortPaymentMethods,
@@ -642,6 +643,7 @@ function RemoveCardDialog({
 // ============================================
 
 export function PaymentMethods({ className }: PaymentMethodsProps) {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const utils = trpc.useUtils();
 
   // State
@@ -652,7 +654,10 @@ export function PaymentMethods({ className }: PaymentMethodsProps) {
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // tRPC queries and mutations
-  const { data: paymentMethods, isLoading, error } = trpc.billing.getPaymentMethods.useQuery();
+  const { data: paymentMethods, isLoading, error } = trpc.billing.getPaymentMethods.useQuery(
+    undefined,
+    { enabled: isAuthenticated && !authLoading }
+  );
 
   const updatePaymentMethodMutation = trpc.billing.updatePaymentMethod.useMutation({
     onSuccess: () => {

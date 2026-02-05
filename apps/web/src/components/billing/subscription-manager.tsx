@@ -11,6 +11,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { trpc } from '@/lib/trpc';
+import { useAuth } from '@/lib/auth/AuthContext';
 import {
   Card,
   CardContent,
@@ -635,6 +636,8 @@ export function SubscriptionManager({
   subscription: externalSubscription,
   onPlanChange,
 }: SubscriptionManagerProps) {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+
   // State
   const [interval, setInterval] = useState<BillingInterval>('monthly');
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
@@ -647,7 +650,7 @@ export function SubscriptionManager({
     data: fetchedSubscription,
     isLoading: isLoadingSubscription,
   } = trpc.billing.getSubscription.useQuery(undefined, {
-    enabled: !externalSubscription,
+    enabled: !externalSubscription && isAuthenticated && !authLoading,
   });
 
   // Cast tRPC response to our Subscription type (dates come as ISO strings)
