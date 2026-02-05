@@ -213,6 +213,9 @@ model Contact {
   @@index([ownerId])
   @@index([accountId])
   @@index([tenantId])
+  // IFC-185: Composite indexes for Account router performance
+  @@index([accountId, tenantId])
+  @@index([accountId, createdAt(sort: Desc)])
   @@map("contacts")
 }
 
@@ -276,6 +279,10 @@ model Opportunity {
   @@index([accountId])
   @@index([tenantId])
   @@index([expectedCloseDate])
+  // IFC-185: Composite indexes for Account router performance
+  @@index([accountId, tenantId])
+  @@index([accountId, stage])
+  @@index([accountId, createdAt(sort: Desc)])
   @@map("opportunities")
 }
 
@@ -403,6 +410,8 @@ model ActivityEvent {
   @@index([opportunityId])
   @@index([type])
   @@index([timestamp])
+  // IFC-185: Composite index for Account router getActivity performance
+  @@index([opportunityId, timestamp(sort: Desc)])
   @@map("activity_events")
 }
 
@@ -497,6 +506,8 @@ model ContactActivity {
   @@index([contactId])
   @@index([type])
   @@index([timestamp])
+  // IFC-185: Composite index for Account router getActivity performance
+  @@index([contactId, timestamp(sort: Desc)])
   @@map("contact_activities")
 }
 
@@ -546,6 +557,8 @@ model Task {
   @@index([ownerId])
   @@index([tenantId])
   @@index([dueDate])
+  @@index([contactId])
+  @@index([contactId, createdAt(sort: Desc)])
   @@map("tasks")
 }
 

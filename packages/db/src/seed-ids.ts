@@ -43,6 +43,10 @@ function seedUUID(entityPrefix: string, index: number): string {
 }
 
 export const SEED_IDS = {
+  // Tenant must come first - used by all other entities
+  tenant: {
+    default: seedUUID('00', 1),                   // 00000000-0000-4000-8000-000000000001
+  },
   users: {
     admin: seedUUID('01', 1),                    // 00000000-0000-4000-8000-000000000101
     manager: seedUUID('01', 2),                  // 00000000-0000-4000-8000-000000000102
@@ -489,6 +493,15 @@ export const SEED_IDS = {
   leadAIInsights: {
     marcusReed: seedUUID('56', 1),               // 00000000-0000-4000-8000-000000005601
     sarahMiller: seedUUID('56', 2),
+  },
+  // Auto-Response Drafts for IFC-029 (Agent Approvals page)
+  autoResponseDrafts: {
+    pendingEmail: seedUUID('57', 1),             // 00000000-0000-4000-8000-000000005701
+    pendingFollowUp: seedUUID('57', 2),          // 00000000-0000-4000-8000-000000005702
+    approved: seedUUID('57', 3),                 // 00000000-0000-4000-8000-000000005703
+    rejected: seedUUID('57', 4),                 // 00000000-0000-4000-8000-000000005704
+    escalated: seedUUID('57', 5),                // 00000000-0000-4000-8000-000000005705
+    sent: seedUUID('57', 6),                     // 00000000-0000-4000-8000-000000005706
   },
 } as const;
 

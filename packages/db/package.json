@@ -49,6 +49,7 @@
     "seed": "tsx --env-file=.env prisma/seed.ts"
   },
   "dependencies": {
+    "@intelliflow/domain": "workspace:*",
     "@prisma/client": "^5.10.0"
   },
   "devDependencies": {

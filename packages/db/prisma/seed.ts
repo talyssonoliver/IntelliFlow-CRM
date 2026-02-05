@@ -52,6 +52,15 @@ import {
   InsightStatus,
   HealthStatus,
   AlertStatus,
+  // Audit log enums (ADR-008 consolidation)
+  ActorType,
+  AuditAction,
+  // Auto-Response enums (IFC-029)
+  AutoResponseStatus,
+  AutoResponseTrigger,
+  // Appointment enums (IFC-182)
+  AppointmentStatus,
+  AppointmentType,
 } from '@prisma/client';
 
 // Import SEED_IDS from the single source of truth
@@ -409,7 +418,7 @@ async function cleanDatabase() {
   await prisma.aIScore.deleteMany({
     where: { id: { startsWith: SEED_UUID_PREFIX } },
   });
-  await prisma.auditLog.deleteMany({
+  await prisma.auditLogEntry.deleteMany({
     where: { id: { startsWith: SEED_UUID_PREFIX } },
   });
   await prisma.domainEvent.deleteMany({
@@ -445,6 +454,10 @@ async function cleanDatabase() {
   // Also delete contacts owned by seed users (test-created)
   await prisma.contact.deleteMany({
     where: { ownerId: { startsWith: SEED_UUID_PREFIX } },
+  });
+  // Auto-Response Drafts (depends on leads) - IFC-029
+  await prisma.autoResponseDraft.deleteMany({
+    where: { id: { startsWith: SEED_UUID_PREFIX } },
   });
   await prisma.lead.deleteMany({
     where: { id: { startsWith: SEED_UUID_PREFIX } },
@@ -1277,6 +1290,7 @@ async function seedLeadAIInsights(tenantId: string) {
     {
       id: SEED_IDS.leadAIInsights.marcusReed,
       leadId: SEED_IDS.leads.marcusReed,
+      tenantId,
       conversionProbability: 72,
       estimatedValue: 85000,
       churnRisk: ChurnRisk.LOW,
@@ -1290,8 +1304,6 @@ async function seedLeadAIInsights(tenantId: string) {
         'Company size matches ICP - consider enterprise pricing',
         'Multi-warehouse interest aligns with our core feature set',
       ],
-      icpMatch: 'High match. Company size fits our ideal customer profile (ICP).',
-      tenantId,
     },
   ];
 
@@ -1304,6 +1316,263 @@ async function seedLeadAIInsights(tenantId: string) {
   }
 
   console.log(`✅ Created ${insights.length} lead AI insights`);
+}
+
+// =============================================================================
+// Auto-Response Drafts Seed Function (IFC-029: Agent Approvals)
+// =============================================================================
+
+async function seedAutoResponseDrafts(tenantId: string) {
+  console.log('📧 Seeding auto-response drafts...');
+  const now = new Date();
+  const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+  const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+  const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+  const oneDayFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+  const drafts = [
+    // PENDING_APPROVAL - awaiting user decision
+    {
+      id: SEED_IDS.autoResponseDrafts.pendingEmail,
+      tenantId,
+      leadId: SEED_IDS.leads.sarahMiller,
+      recipientEmail: 'sarah@techcorp.com',
+      subject: 'Re: Product Demo Request',
+      body: `Hi Sarah,
+
+Thank you for your interest in IntelliFlow CRM! I'd be happy to schedule a demo to show you how our AI-powered lead management can help TechCorp.
+
+Based on your inquiry, I think you'd particularly benefit from seeing:
+- Our automated lead scoring system
+- Real-time pipeline analytics
+- Integration capabilities with your existing tools
+
+Would any of the following times work for a 30-minute demo call?
+- Tuesday at 2:00 PM EST
+- Wednesday at 10:00 AM EST
+- Thursday at 3:00 PM EST
+
+Looking forward to connecting!
+
+Best regards,
+The IntelliFlow Team`,
+      triggerType: AutoResponseTrigger.EMAIL_RECEIVED,
+      aiConfidence: 0.89,
+      modelVersion: 'gpt-4o-mini-2024-07-18',
+      status: AutoResponseStatus.PENDING_APPROVAL,
+      version: 1,
+      expiresAt: oneDayFromNow,
+      statusHistory: JSON.stringify([
+        { status: 'DRAFT', timestamp: twoHoursAgo.toISOString(), actor: 'system' },
+        { status: 'PENDING_APPROVAL', timestamp: oneHourAgo.toISOString(), actor: 'system' },
+      ]),
+      createdAt: twoHoursAgo,
+      updatedAt: oneHourAgo,
+    },
+    // PENDING_APPROVAL - follow-up email
+    {
+      id: SEED_IDS.autoResponseDrafts.pendingFollowUp,
+      tenantId,
+      leadId: SEED_IDS.leads.davidChen,
+      recipientEmail: 'd.chen@designco.com',
+      subject: 'Following Up: Your CRM Requirements',
+      body: `Hi David,
+
+I wanted to follow up on your recent inquiry about CRM solutions for DesignCo.
+
+I noticed you were particularly interested in:
+- Creative project tracking
+- Client relationship management
+- Proposal and contract automation
+
+I've prepared a customized overview that addresses these specific needs. Would you have 15 minutes this week to discuss?
+
+Best regards,
+The IntelliFlow Team`,
+      triggerType: AutoResponseTrigger.FORM_SUBMIT,
+      aiConfidence: 0.82,
+      modelVersion: 'gpt-4o-mini-2024-07-18',
+      status: AutoResponseStatus.PENDING_APPROVAL,
+      version: 1,
+      expiresAt: oneDayFromNow,
+      statusHistory: JSON.stringify([
+        { status: 'DRAFT', timestamp: oneHourAgo.toISOString(), actor: 'system' },
+        { status: 'PENDING_APPROVAL', timestamp: now.toISOString(), actor: 'system' },
+      ]),
+      createdAt: oneHourAgo,
+      updatedAt: now,
+    },
+    // APPROVED - approved but not yet sent
+    {
+      id: SEED_IDS.autoResponseDrafts.approved,
+      tenantId,
+      leadId: SEED_IDS.leads.amandaSmith,
+      recipientEmail: 'amanda@smithconsulting.com',
+      subject: 'Re: Consulting Partnership Opportunity',
+      body: `Hi Amanda,
+
+Thank you for reaching out about a potential consulting partnership!
+
+We're always excited to work with experienced consultants who can help our clients get the most out of IntelliFlow.
+
+I'd love to schedule a call to discuss:
+- Partnership program details
+- Commission structures
+- Training and certification options
+
+Please let me know your availability.
+
+Best regards,
+The IntelliFlow Team`,
+      triggerType: AutoResponseTrigger.EMAIL_RECEIVED,
+      aiConfidence: 0.91,
+      modelVersion: 'gpt-4o-mini-2024-07-18',
+      status: AutoResponseStatus.APPROVED,
+      version: 2,
+      expiresAt: oneDayFromNow,
+      statusHistory: JSON.stringify([
+        { status: 'DRAFT', timestamp: oneDayAgo.toISOString(), actor: 'system' },
+        { status: 'PENDING_APPROVAL', timestamp: oneDayAgo.toISOString(), actor: 'system' },
+        { status: 'APPROVED', timestamp: twoHoursAgo.toISOString(), actor: SEED_IDS.users.manager },
+      ]),
+      approvalDecision: JSON.stringify({
+        decision: 'APPROVED',
+        decidedBy: SEED_IDS.users.manager,
+        decidedAt: twoHoursAgo.toISOString(),
+        reason: 'Good tone and accurate information',
+      }),
+      createdAt: oneDayAgo,
+      updatedAt: twoHoursAgo,
+    },
+    // REJECTED - user rejected the draft
+    {
+      id: SEED_IDS.autoResponseDrafts.rejected,
+      tenantId,
+      leadId: SEED_IDS.leads.jamesWilson,
+      recipientEmail: 'j.wilson@globalsoft.com',
+      subject: 'Re: Enterprise Pricing Inquiry',
+      body: `Dear Mr. Wilson,
+
+Thank you for your interest in IntelliFlow's enterprise solutions.
+
+Our enterprise tier includes advanced features such as...`,
+      triggerType: AutoResponseTrigger.EMAIL_RECEIVED,
+      aiConfidence: 0.75,
+      modelVersion: 'gpt-4o-mini-2024-07-18',
+      status: AutoResponseStatus.REJECTED,
+      version: 1,
+      expiresAt: oneDayFromNow,
+      statusHistory: JSON.stringify([
+        { status: 'DRAFT', timestamp: twoDaysAgo.toISOString(), actor: 'system' },
+        { status: 'PENDING_APPROVAL', timestamp: twoDaysAgo.toISOString(), actor: 'system' },
+        { status: 'REJECTED', timestamp: oneDayAgo.toISOString(), actor: SEED_IDS.users.admin },
+      ]),
+      approvalDecision: JSON.stringify({
+        decision: 'REJECTED',
+        decidedBy: SEED_IDS.users.admin,
+        decidedAt: oneDayAgo.toISOString(),
+        reason: 'Too formal - needs more personalized approach for VP-level contact',
+      }),
+      createdAt: twoDaysAgo,
+      updatedAt: oneDayAgo,
+    },
+    // ESCALATED - needs manager review
+    {
+      id: SEED_IDS.autoResponseDrafts.escalated,
+      tenantId,
+      leadId: SEED_IDS.leads.elenaRodriguez,
+      recipientEmail: 'elena@fintech.io',
+      subject: 'Re: Custom Integration Requirements',
+      body: `Hi Elena,
+
+Thank you for sharing your integration requirements. I understand FinTech.io needs:
+- Custom API integrations
+- Real-time data sync
+- SOC2 compliance documentation
+
+Given the technical complexity, I've escalated this to our solutions architect team for a more detailed response.
+
+We'll get back to you within 24 hours with a comprehensive proposal.
+
+Best regards,
+The IntelliFlow Team`,
+      triggerType: AutoResponseTrigger.EMAIL_RECEIVED,
+      aiConfidence: 0.68,
+      modelVersion: 'gpt-4o-mini-2024-07-18',
+      status: AutoResponseStatus.ESCALATED,
+      version: 1,
+      expiresAt: oneDayFromNow,
+      statusHistory: JSON.stringify([
+        { status: 'DRAFT', timestamp: oneHourAgo.toISOString(), actor: 'system' },
+        { status: 'PENDING_APPROVAL', timestamp: oneHourAgo.toISOString(), actor: 'system' },
+        { status: 'ESCALATED', timestamp: now.toISOString(), actor: SEED_IDS.users.sarahJohnson },
+      ]),
+      escalation: JSON.stringify({
+        escalatedBy: SEED_IDS.users.sarahJohnson,
+        escalatedTo: SEED_IDS.users.manager,
+        escalatedAt: now.toISOString(),
+        reason: 'Complex technical requirements - needs solutions architect review',
+      }),
+      escalationCount: 1,
+      createdAt: oneHourAgo,
+      updatedAt: now,
+    },
+    // SENT - successfully sent
+    {
+      id: SEED_IDS.autoResponseDrafts.sent,
+      tenantId,
+      leadId: SEED_IDS.leads.marcusReed,
+      recipientEmail: 'marcus@summitsystems.com',
+      subject: 'Re: Multi-Warehouse Inventory Tracking',
+      body: `Hi Marcus,
+
+Thank you for your inquiry about multi-warehouse inventory tracking!
+
+IntelliFlow CRM offers comprehensive inventory management with:
+- Real-time stock levels across multiple locations
+- Automated reorder notifications
+- Transfer tracking between warehouses
+
+I'd be happy to schedule a demo focused on these features. Would Wednesday at 2 PM work for you?
+
+Best regards,
+The IntelliFlow Team`,
+      triggerType: AutoResponseTrigger.FORM_SUBMIT,
+      aiConfidence: 0.94,
+      modelVersion: 'gpt-4o-mini-2024-07-18',
+      status: AutoResponseStatus.SENT,
+      version: 2,
+      expiresAt: twoDaysAgo, // Already expired (was sent)
+      statusHistory: JSON.stringify([
+        { status: 'DRAFT', timestamp: threeDaysAgo.toISOString(), actor: 'system' },
+        { status: 'PENDING_APPROVAL', timestamp: threeDaysAgo.toISOString(), actor: 'system' },
+        { status: 'APPROVED', timestamp: twoDaysAgo.toISOString(), actor: SEED_IDS.users.admin },
+        { status: 'SENT', timestamp: twoDaysAgo.toISOString(), actor: 'system' },
+      ]),
+      approvalDecision: JSON.stringify({
+        decision: 'APPROVED',
+        decidedBy: SEED_IDS.users.admin,
+        decidedAt: twoDaysAgo.toISOString(),
+        reason: 'Great response - addresses their specific needs',
+      }),
+      sentAt: twoDaysAgo,
+      messageId: 'msg_abc123def456',
+      createdAt: threeDaysAgo,
+      updatedAt: twoDaysAgo,
+    },
+  ];
+
+  for (const draft of drafts) {
+    await prisma.autoResponseDraft.upsert({
+      where: { id: draft.id },
+      update: draft,
+      create: draft,
+    });
+  }
+
+  console.log(`✅ Created ${drafts.length} auto-response drafts`);
 }
 
 async function seedContacts(tenantId: string) {
@@ -1773,7 +2042,6 @@ async function seedOpportunities(tenantId: string) {
 async function seedSLAPolicies(tenantId: string) {
   console.log('📋 Seeding SLA policies...');
 
-  // Note: Using raw SQL since Prisma schema is out of sync with database (missing tenantId)
   const policies = [
     {
       id: SEED_IDS.slaPolicy.default,
@@ -2117,59 +2385,72 @@ async function seedAIScores(tenantId: string) {
 }
 
 async function seedAuditLogs(tenantId: string) {
-  console.log('📝 Seeding audit logs...');
+  console.log('📝 Seeding audit log entries...');
 
   // NOSONAR: Hardcoded private IPs (192.168.x.x) are safe here - this is mock seed data
   // for development/testing only. These are RFC 1918 private addresses, not real user IPs.
-  const auditLogs = [
+  // Using consolidated AuditLogEntry table per ADR-008
+  const auditLogEntries = [
     {
       id: SEED_IDS.auditLogs.create,
-      action: 'CREATE',
-      entityType: 'Lead',
-      entityId: SEED_IDS.leads.sarahMiller,
-      oldValue: Prisma.JsonNull,
-      newValue: { status: LeadStatus.QUALIFIED, score: 85 },
+      eventType: 'LeadCreated',
+      eventId: `event-${SEED_IDS.auditLogs.create}`,
+      actorType: ActorType.USER,
+      actorId: SEED_IDS.users.sarahJohnson,
+      resourceType: 'Lead',
+      resourceId: SEED_IDS.leads.sarahMiller,
+      action: AuditAction.CREATE,
+      beforeState: Prisma.JsonNull,
+      afterState: { status: LeadStatus.QUALIFIED, score: 85 },
+      changedFields: ['status', 'score'],
       ipAddress: '192.168.1.100', // NOSONAR - mock seed data
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-      userId: SEED_IDS.users.sarahJohnson,
       tenantId,
     },
     {
       id: SEED_IDS.auditLogs.opportunityCreate,
-      action: 'CREATE',
-      entityType: 'Opportunity',
-      entityId: SEED_IDS.opportunities.acmeCorpSoftwareLicense,
-      oldValue: Prisma.JsonNull,
-      newValue: { stage: OpportunityStage.PROPOSAL, value: 125000 },
+      eventType: 'OpportunityCreated',
+      eventId: `event-${SEED_IDS.auditLogs.opportunityCreate}`,
+      actorType: ActorType.USER,
+      actorId: SEED_IDS.users.janeDoe,
+      resourceType: 'Opportunity',
+      resourceId: SEED_IDS.opportunities.acmeCorpSoftwareLicense,
+      action: AuditAction.CREATE,
+      beforeState: Prisma.JsonNull,
+      afterState: { stage: OpportunityStage.PROPOSAL, value: 125000 },
+      changedFields: ['stage', 'value'],
       ipAddress: '192.168.1.101', // NOSONAR - mock seed data
       userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
-      userId: SEED_IDS.users.janeDoe,
       tenantId,
     },
     {
       id: SEED_IDS.auditLogs.update,
-      action: 'UPDATE',
-      entityType: 'Opportunity',
-      entityId: SEED_IDS.opportunities.teamLicenseStartupXYZ,
-      oldValue: { stage: OpportunityStage.NEGOTIATION },
-      newValue: { stage: OpportunityStage.CLOSED_WON },
+      eventType: 'OpportunityStageChanged',
+      eventId: `event-${SEED_IDS.auditLogs.update}`,
+      actorType: ActorType.USER,
+      actorId: SEED_IDS.users.mikeDavis,
+      resourceType: 'Opportunity',
+      resourceId: SEED_IDS.opportunities.teamLicenseStartupXYZ,
+      action: AuditAction.UPDATE,
+      beforeState: { stage: OpportunityStage.NEGOTIATION },
+      afterState: { stage: OpportunityStage.CLOSED_WON },
+      changedFields: ['stage'],
       ipAddress: '192.168.1.102', // NOSONAR - mock seed data
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-      userId: SEED_IDS.users.mikeDavis,
       tenantId,
     },
   ];
 
-  for (const auditLog of auditLogs) {
-    await prisma.auditLog.upsert({
-      where: { id: auditLog.id },
-      update: auditLog,
-      create: auditLog,
+  for (const entry of auditLogEntries) {
+    await prisma.auditLogEntry.upsert({
+      where: { id: entry.id },
+      update: entry,
+      create: entry,
     });
   }
 
-  console.log(`✅ Created ${auditLogs.length} audit logs`);
-  return auditLogs;
+  console.log(`✅ Created ${auditLogEntries.length} audit log entries`);
+  return auditLogEntries;
 }
 
 async function seedDomainEvents(tenantId: string) {
@@ -2277,7 +2558,7 @@ async function seedDealProducts(tenantId: string) {
   return products;
 }
 
-async function seedDealFiles() {
+async function seedDealFiles(tenantId: string) {
   console.log('📁 Seeding deal files...');
 
   // Data from apps/web/src/app/deals/[id]/page.tsx lines 146-149
@@ -2291,6 +2572,7 @@ async function seedDealFiles() {
       opportunityId: SEED_IDS.opportunities.acmeCorpSoftwareLicense,
       uploadedById: SEED_IDS.users.janeDoe,
       uploadedAt: new Date('2024-12-15'),
+      tenantId,
     },
     {
       id: SEED_IDS.dealFiles.requirementsDoc,
@@ -2301,6 +2583,7 @@ async function seedDealFiles() {
       opportunityId: SEED_IDS.opportunities.acmeCorpSoftwareLicense,
       uploadedById: SEED_IDS.users.janeDoe,
       uploadedAt: new Date('2024-12-10'),
+      tenantId,
     },
   ];
 
@@ -2316,7 +2599,7 @@ async function seedDealFiles() {
   return files;
 }
 
-async function seedDealActivities() {
+async function seedDealActivities(tenantId: string) {
   console.log('📋 Seeding deal activities...');
 
   const now = new Date();
@@ -2337,6 +2620,7 @@ async function seedDealActivities() {
       agentStatus: AgentActionStatus.PENDING_APPROVAL,
       opportunityId: SEED_IDS.opportunities.acmeCorpSoftwareLicense,
       userId: SEED_IDS.users.janeDoe,
+      tenantId,
     },
     {
       id: SEED_IDS.dealActivities.emailProposal,
@@ -2349,6 +2633,7 @@ async function seedDealActivities() {
       attachmentType: 'pdf',
       opportunityId: SEED_IDS.opportunities.acmeCorpSoftwareLicense,
       userId: SEED_IDS.users.janeDoe,
+      tenantId,
     },
     {
       id: SEED_IDS.dealActivities.agentMeeting,
@@ -2363,6 +2648,7 @@ async function seedDealActivities() {
       agentStatus: AgentActionStatus.APPROVED,
       opportunityId: SEED_IDS.opportunities.acmeCorpSoftwareLicense,
       userId: SEED_IDS.users.janeDoe,
+      tenantId,
     },
     {
       id: SEED_IDS.dealActivities.callRobert,
@@ -2373,6 +2659,7 @@ async function seedDealActivities() {
       dateLabel: 'yesterday',
       opportunityId: SEED_IDS.opportunities.acmeCorpSoftwareLicense,
       userId: SEED_IDS.users.janeDoe,
+      tenantId,
     },
     {
       id: SEED_IDS.dealActivities.stageChange,
@@ -2384,6 +2671,7 @@ async function seedDealActivities() {
       stageTo: 'Proposal',
       opportunityId: SEED_IDS.opportunities.acmeCorpSoftwareLicense,
       userId: SEED_IDS.users.janeDoe,
+      tenantId,
     },
   ];
 
@@ -2399,7 +2687,7 @@ async function seedDealActivities() {
   return activities;
 }
 
-async function seedTicketActivities() {
+async function seedTicketActivities(tenantId: string) {
   console.log('💬 Seeding ticket activities...');
 
   const now = new Date();
@@ -2418,6 +2706,7 @@ async function seedTicketActivities() {
       authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face',
       channel: TicketChannel.EMAIL,
       ticketId: SEED_IDS.tickets.systemOutage,
+      tenantId,
     },
     {
       id: SEED_IDS.ticketActivities.systemPriority,
@@ -2431,6 +2720,7 @@ async function seedTicketActivities() {
       systemEventType: 'priority_assigned',
       systemEventData: { newPriority: 'High' },
       ticketId: SEED_IDS.tickets.systemOutage,
+      tenantId,
     },
     {
       id: SEED_IDS.ticketActivities.agentReply,
@@ -2443,6 +2733,7 @@ async function seedTicketActivities() {
       authorAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face',
       channel: TicketChannel.PORTAL,
       ticketId: SEED_IDS.tickets.systemOutage,
+      tenantId,
     },
     {
       id: SEED_IDS.ticketActivities.priorityChange,
@@ -2456,6 +2747,7 @@ async function seedTicketActivities() {
       systemEventType: 'priority_change',
       systemEventData: { newPriority: 'Critical' },
       ticketId: SEED_IDS.tickets.systemOutage,
+      tenantId,
     },
     {
       id: SEED_IDS.ticketActivities.internalNote,
@@ -2467,6 +2759,7 @@ async function seedTicketActivities() {
       authorRole: 'DevOps',
       channel: TicketChannel.PORTAL,
       ticketId: SEED_IDS.tickets.systemOutage,
+      tenantId,
     },
     {
       id: SEED_IDS.ticketActivities.slaBreach,
@@ -2479,6 +2772,7 @@ async function seedTicketActivities() {
       channel: TicketChannel.SYSTEM,
       systemEventType: 'sla_breach',
       ticketId: SEED_IDS.tickets.systemOutage,
+      tenantId,
     },
   ];
 
@@ -2494,7 +2788,7 @@ async function seedTicketActivities() {
   return activities;
 }
 
-async function seedTicketAttachments() {
+async function seedTicketAttachments(tenantId: string) {
   console.log('📎 Seeding ticket attachments...');
 
   // Data from apps/web/src/app/tickets/[id]/page.tsx lines 789-791
@@ -2507,6 +2801,7 @@ async function seedTicketAttachments() {
       fileType: FileType.PDF,
       ticketId: SEED_IDS.tickets.systemOutage,
       uploadedById: SEED_IDS.users.davidKim,
+      tenantId,
     },
     {
       id: SEED_IDS.ticketAttachments.screenshot,
@@ -2516,6 +2811,7 @@ async function seedTicketAttachments() {
       fileType: FileType.IMAGE,
       ticketId: SEED_IDS.tickets.systemOutage,
       uploadedById: SEED_IDS.users.davidKim,
+      tenantId,
     },
     {
       id: SEED_IDS.ticketAttachments.devopsAnalysis,
@@ -2525,6 +2821,7 @@ async function seedTicketAttachments() {
       fileType: FileType.DOCX,
       ticketId: SEED_IDS.tickets.systemOutage,
       uploadedById: SEED_IDS.users.mikeRoss,
+      tenantId,
     },
   ];
 
@@ -2614,16 +2911,17 @@ async function seedAdditionalUsersAndAccounts(tenantId: string) {
   console.log('✅ Created 2 additional users, 1 account, 1 contact');
 }
 
-async function seedAgentActions() {
+async function seedAgentActions(tenantId: string) {
   console.log('🤖 Seeding agent actions...');
 
   const now = new Date();
 
-  // Data from apps/web/src/app/agent-approvals/preview/page.tsx lines 45-154
+  // Data from apps/web/src/app/agent-approvals/page.tsx lines 45-154
   const agentActions = [
     {
       id: SEED_IDS.agentActions.leadUpdate,
       actionType: 'lead_update',
+      tenantId,
       description: 'Update lead score and status based on engagement analysis',
       aiReasoning: 'Lead opened 5 emails (100% open rate), visited pricing page 3 times, and downloaded enterprise whitepaper. Company size (500+ employees) matches ideal customer profile.',
       confidenceScore: 85,
@@ -2651,6 +2949,7 @@ async function seedAgentActions() {
     {
       id: SEED_IDS.agentActions.emailDraft,
       actionType: 'email_draft',
+      tenantId,
       description: 'Send personalized follow-up email based on demo engagement',
       aiReasoning: 'Contact attended 45-minute demo, asked 8 questions about API integrations, and requested pricing information. Optimal follow-up timing is 5 days post-demo based on historical conversion data.',
       confidenceScore: 78,
@@ -2678,6 +2977,7 @@ async function seedAgentActions() {
     {
       id: SEED_IDS.agentActions.dealStageChange,
       actionType: 'deal_stage_change',
+      tenantId,
       description: 'Advance deal to negotiation stage with updated probability',
       aiReasoning: "Prospect verbally agreed to terms in last meeting (sentiment analysis: positive). Legal team CC'd on latest email suggests contract review in progress. Similar deals at this stage have 75% close rate.",
       confidenceScore: 92,
@@ -2704,6 +3004,7 @@ async function seedAgentActions() {
     {
       id: SEED_IDS.agentActions.taskCreate,
       actionType: 'task_create',
+      tenantId,
       description: 'Create follow-up task for high-intent lead',
       aiReasoning: 'Lead visited pricing page 5 times in last 24 hours and spent 12 minutes on comparison chart. Urgency signals suggest ready for sales conversation.',
       confidenceScore: 68,
@@ -2912,7 +3213,7 @@ async function seedContactActivities(tenantId: string) {
   return activities;
 }
 
-async function seedDashboardActivities() {
+async function seedDashboardActivities(tenantId: string) {
   console.log('📊 Seeding dashboard recent activities...');
 
   // Data from apps/web/src/components/dashboard/widgets/RecentActivityWidget.tsx
@@ -2928,6 +3229,7 @@ async function seedDashboardActivities() {
       timestamp: new Date(now.getTime() - 2 * 60 * 1000), // 2 minutes ago
       dateLabel: 'today',
       userId: SEED_IDS.additionalUsers.aliceSmith,
+      tenantId,
     },
     {
       id: SEED_IDS.dashboardActivities.bobActivity,
@@ -2937,6 +3239,7 @@ async function seedDashboardActivities() {
       timestamp: new Date(now.getTime() - 60 * 60 * 1000), // 1 hour ago
       dateLabel: 'today',
       userId: SEED_IDS.additionalUsers.bobJones,
+      tenantId,
     },
   ];
 
@@ -3087,7 +3390,7 @@ async function seedCalendarEvents(tenantId: string) {
   console.log(`✅ Created ${events.length} calendar events`);
 }
 
-async function seedTeamMessages() {
+async function seedTeamMessages(tenantId: string) {
   console.log('💬 Seeding team messages...');
 
   const now = new Date();
@@ -3102,6 +3405,7 @@ async function seedTeamMessages() {
       message: 'Just closed the deal with TechCorp!',
       channel: 'general',
       createdAt: new Date(now.getTime() - 5 * 60 * 1000), // 5 minutes ago
+      tenantId,
     },
     {
       id: SEED_IDS.teamMessages.mikeGreatWork,
@@ -3111,6 +3415,7 @@ async function seedTeamMessages() {
       message: 'Great work team!',
       channel: 'general',
       createdAt: new Date(now.getTime() - 12 * 60 * 1000), // 12 minutes ago
+      tenantId,
     },
     {
       id: SEED_IDS.teamMessages.emilyMeetingNotes,
@@ -3120,6 +3425,7 @@ async function seedTeamMessages() {
       message: 'Meeting notes uploaded',
       channel: 'general',
       createdAt: new Date(now.getTime() - 60 * 60 * 1000), // 1 hour ago
+      tenantId,
     },
   ];
 
@@ -3134,7 +3440,7 @@ async function seedTeamMessages() {
   console.log(`✅ Created ${messages.length} team messages`);
 }
 
-async function seedPipelineSnapshots() {
+async function seedPipelineSnapshots(tenantId: string) {
   console.log('📊 Seeding pipeline snapshots...');
 
   const snapshotDate = new Date();
@@ -3149,6 +3455,7 @@ async function seedPipelineSnapshots() {
       percentage: 15,
       color: 'bg-ds-primary',
       snapshotDate,
+      tenantId,
     },
     {
       id: SEED_IDS.pipelineSnapshots.proposal,
@@ -3158,6 +3465,7 @@ async function seedPipelineSnapshots() {
       percentage: 40,
       color: 'bg-indigo-500',
       snapshotDate,
+      tenantId,
     },
     {
       id: SEED_IDS.pipelineSnapshots.negotiation,
@@ -3167,6 +3475,7 @@ async function seedPipelineSnapshots() {
       percentage: 25,
       color: 'bg-amber-500',
       snapshotDate,
+      tenantId,
     },
     {
       id: SEED_IDS.pipelineSnapshots.closedWon,
@@ -3176,6 +3485,7 @@ async function seedPipelineSnapshots() {
       percentage: 20,
       color: 'bg-green-500',
       snapshotDate,
+      tenantId,
     },
   ];
 
@@ -3190,7 +3500,7 @@ async function seedPipelineSnapshots() {
   console.log(`✅ Created ${stages.length} pipeline snapshots`);
 }
 
-async function seedTrafficSources() {
+async function seedTrafficSources(tenantId: string) {
   console.log('📈 Seeding traffic sources...');
 
   const snapshotDate = new Date();
@@ -3199,6 +3509,7 @@ async function seedTrafficSources() {
   const sources = [
     {
       id: SEED_IDS.trafficSources.direct,
+      tenantId,
       name: 'Direct',
       percentage: 35,
       color: 'bg-ds-primary',
@@ -3206,6 +3517,7 @@ async function seedTrafficSources() {
     },
     {
       id: SEED_IDS.trafficSources.organic,
+      tenantId,
       name: 'Organic',
       percentage: 28,
       color: 'bg-emerald-500',
@@ -3213,6 +3525,7 @@ async function seedTrafficSources() {
     },
     {
       id: SEED_IDS.trafficSources.referral,
+      tenantId,
       name: 'Referral',
       percentage: 22,
       color: 'bg-amber-500',
@@ -3220,6 +3533,7 @@ async function seedTrafficSources() {
     },
     {
       id: SEED_IDS.trafficSources.social,
+      tenantId,
       name: 'Social',
       percentage: 15,
       color: 'bg-violet-500',
@@ -3238,7 +3552,7 @@ async function seedTrafficSources() {
   console.log(`✅ Created ${sources.length} traffic sources`);
 }
 
-async function seedGrowthMetrics() {
+async function seedGrowthMetrics(tenantId: string) {
   console.log('📈 Seeding growth metrics...');
 
   const currentYear = new Date().getFullYear();
@@ -3250,6 +3564,7 @@ async function seedGrowthMetrics() {
 
   const metrics = months.map((month, index) => ({
     id: SEED_IDS.growthMetrics[monthIds[index] as keyof typeof SEED_IDS.growthMetrics],
+    tenantId,
     month,
     year: currentYear,
     value: dataPoints[index],
@@ -3382,7 +3697,7 @@ async function seedRelatedTickets() {
   console.log(`✅ Created ${related.length} related tickets`);
 }
 
-async function seedTicketAIInsights() {
+async function seedTicketAIInsights(tenantId: string) {
   console.log('🤖 Seeding ticket AI insights...');
 
   // Data from apps/web/src/app/tickets/[id]/page.tsx (SAMPLE_TICKET.aiInsights)
@@ -3409,7 +3724,7 @@ async function seedTicketAIInsights() {
   console.log('✅ Created 1 ticket AI insight');
 }
 
-async function seedSalesPerformance() {
+async function seedSalesPerformance(tenantId: string) {
   console.log('🏆 Seeding sales performance...');
 
   const snapshotDate = new Date();
@@ -3741,7 +4056,7 @@ async function seedTeamMembers() {
 }
 
 // FLOW-016: Email Communication
-async function seedEmailTemplates() {
+async function seedEmailTemplates(tenantId: string) {
   console.log('📧 Seeding email templates...');
 
   const templates = [
@@ -3785,7 +4100,7 @@ async function seedEmailTemplates() {
   console.log(`✅ Created ${templates.length} email templates`);
 }
 
-async function seedEmailRecords() {
+async function seedEmailRecords(tenantId: string) {
   console.log('📨 Seeding email records...');
 
   const emails = [
@@ -3845,7 +4160,7 @@ async function seedEmailRecords() {
 }
 
 // FLOW-017: Chat Integration
-async function seedChatConversations() {
+async function seedChatConversations(tenantId: string) {
   console.log('💬 Seeding chat conversations...');
 
   const conversations = [
@@ -3889,12 +4204,13 @@ async function seedChatConversations() {
   console.log(`✅ Created ${conversations.length} chat conversations`);
 }
 
-async function seedChatMessages() {
+async function seedChatMessages(tenantId: string) {
   console.log('💭 Seeding chat messages...');
 
   const messages = [
     {
       id: SEED_IDS.chatMessages.msg1,
+      tenantId,
       conversationId: SEED_IDS.chatConversations.supportChat1,
       senderId: SEED_IDS.additionalContacts.sarahJenkins,
       senderName: 'Sarah Jenkins',
@@ -3903,6 +4219,7 @@ async function seedChatMessages() {
     },
     {
       id: SEED_IDS.chatMessages.msg2,
+      tenantId,
       conversationId: SEED_IDS.chatConversations.supportChat1,
       senderId: SEED_IDS.users.emilyDavis,
       senderName: 'Emily Davis',
@@ -3911,6 +4228,7 @@ async function seedChatMessages() {
     },
     {
       id: SEED_IDS.chatMessages.msg3,
+      tenantId,
       conversationId: SEED_IDS.chatConversations.whatsappInquiry,
       senderId: SEED_IDS.contacts.sarahMiller,
       senderName: 'Sarah Miller',
@@ -3931,7 +4249,7 @@ async function seedChatMessages() {
 }
 
 // FLOW-018: Call Recording
-async function seedCallRecords() {
+async function seedCallRecords(tenantId: string) {
   console.log('📞 Seeding call records...');
 
   const calls = [
@@ -3995,7 +4313,7 @@ async function seedCallRecords() {
 }
 
 // FLOW-021: Document Management
-async function seedDocuments() {
+async function seedDocuments(tenantId: string) {
   console.log('📄 Seeding documents...');
 
   const documents = [
@@ -4284,7 +4602,7 @@ async function seedCaseDocuments() {
 }
 
 // FLOW-015: Customer Feedback (NPS/CSAT)
-async function seedFeedbackSurveys() {
+async function seedFeedbackSurveys(tenantId: string) {
   console.log('📊 Seeding feedback surveys...');
 
   const surveys = [
@@ -4382,7 +4700,7 @@ async function seedDealRenewals(tenantId: string) {
   console.log(`✅ Created ${renewals.length} deal renewals`);
 }
 
-async function seedAccountHealthScores() {
+async function seedAccountHealthScores(tenantId: string) {
   console.log('💚 Seeding account health scores...');
 
   const healthScores = [
@@ -4454,12 +4772,13 @@ async function seedAccountHealthScores() {
 }
 
 // FLOW-012: Agent Skills & Routing
-async function seedAgentSkills() {
+async function seedAgentSkills(tenantId: string) {
   console.log('🎯 Seeding agent skills...');
 
   const skills = [
     {
       id: SEED_IDS.agentSkills.sarahTechnical,
+      tenantId,
       userId: SEED_IDS.users.sarahJohnson,
       userName: 'Sarah Johnson',
       skillName: 'Technical Sales',
@@ -4698,12 +5017,13 @@ async function seedSLABreaches() {
   console.log(`✅ Created ${breaches.length} SLA breaches`);
 }
 
-async function seedEscalationHistory() {
+async function seedEscalationHistory(tenantId: string) {
   console.log('📈 Seeding escalation history...');
 
   const escalations = [
     {
       id: SEED_IDS.escalationHistory.outageEscalation,
+      tenantId,
       ticketId: SEED_IDS.tickets.systemOutage,
       fromUserId: SEED_IDS.users.emilyDavis,
       fromUserName: 'Emily Davis',
@@ -4716,6 +5036,7 @@ async function seedEscalationHistory() {
     },
     {
       id: SEED_IDS.escalationHistory.billingEscalation,
+      tenantId,
       ticketId: SEED_IDS.tickets.billingInquiry,
       fromUserId: SEED_IDS.users.mikeDavis,
       fromUserName: 'Mike Davis',
@@ -5021,12 +5342,13 @@ async function seedKPIDefinitions() {
   console.log(`✅ Created ${kpis.length} KPI definitions`);
 }
 
-async function seedReportDefinitions() {
+async function seedReportDefinitions(tenantId: string) {
   console.log('📈 Seeding report definitions...');
 
   const reports = [
     {
       id: SEED_IDS.reportDefinitions.salesPipeline,
+      tenantId,
       name: 'Sales Pipeline Report',
       description: 'Weekly overview of sales pipeline and deal progression',
       category: 'sales',
@@ -5040,6 +5362,7 @@ async function seedReportDefinitions() {
     },
     {
       id: SEED_IDS.reportDefinitions.supportMetrics,
+      tenantId,
       name: 'Support Metrics Report',
       description: 'Daily support ticket metrics and SLA compliance',
       category: 'support',
@@ -5052,6 +5375,7 @@ async function seedReportDefinitions() {
     },
     {
       id: SEED_IDS.reportDefinitions.revenueAnalysis,
+      tenantId,
       name: 'Revenue Analysis',
       description: 'Monthly revenue breakdown by segment and product',
       category: 'finance',
@@ -5078,12 +5402,13 @@ async function seedReportDefinitions() {
 }
 
 // FLOW-024: AI Insights
-async function seedAIInsights() {
+async function seedAIInsights(tenantId: string) {
   console.log('🤖 Seeding AI insights...');
 
   const insights = [
     {
       id: SEED_IDS.aiInsights.dealRiskAcme,
+      tenantId,
       type: 'prediction',
       category: 'risk',
       title: 'Deal at Risk: Acme Corp Enterprise License',
@@ -5101,6 +5426,7 @@ async function seedAIInsights() {
     },
     {
       id: SEED_IDS.aiInsights.churnRiskTechCorp,
+      tenantId,
       type: 'prediction',
       category: 'risk',
       title: 'Churn Risk Alert: TechCorp',
@@ -5120,6 +5446,7 @@ async function seedAIInsights() {
     },
     {
       id: SEED_IDS.aiInsights.upsellOpportunity,
+      tenantId,
       type: 'recommendation',
       category: 'sales',
       title: 'Upsell Opportunity: GlobalSoft',
@@ -5286,12 +5613,13 @@ async function seedPerformanceMetrics() {
 }
 
 // FLOW-034: Webhooks
-async function seedWebhookEndpoints() {
+async function seedWebhookEndpoints(tenantId: string) {
   console.log('🔗 Seeding webhook endpoints...');
 
   const endpoints = [
     {
       id: SEED_IDS.webhookEndpoints.slackNotifications,
+      tenantId,
       name: 'Slack Notifications',
       url: 'https://hooks.slack.com/services/T00/B00/XXXX',
       events: ['deal.won', 'deal.lost', 'ticket.escalated'],
@@ -5301,6 +5629,7 @@ async function seedWebhookEndpoints() {
     },
     {
       id: SEED_IDS.webhookEndpoints.zapierIntegration,
+      tenantId,
       name: 'Zapier Integration',
       url: 'https://hooks.zapier.com/hooks/catch/123456/abcdef/',
       events: ['lead.created', 'contact.updated', 'deal.stage_changed'],
@@ -5310,6 +5639,7 @@ async function seedWebhookEndpoints() {
     },
     {
       id: SEED_IDS.webhookEndpoints.customCRM,
+      tenantId,
       name: 'Legacy CRM Sync',
       url: 'https://legacy-crm.example.com/api/webhooks/intelliflow',
       events: ['contact.created', 'contact.updated', 'deal.created'],
@@ -5331,12 +5661,13 @@ async function seedWebhookEndpoints() {
 }
 
 // FLOW-035, FLOW-036: API Management
-async function seedAPIKeys() {
+async function seedAPIKeys(tenantId: string) {
   console.log('🔑 Seeding API keys...');
 
   const keys = [
     {
       id: SEED_IDS.apiKeys.mobileApp,
+      tenantId,
       name: 'Mobile App API Key',
       keyHash: 'sha256_mobile_app_key_hash_placeholder',
       keyPrefix: 'if_mob_',
@@ -5349,6 +5680,7 @@ async function seedAPIKeys() {
     },
     {
       id: SEED_IDS.apiKeys.integration,
+      tenantId,
       name: 'Integration API Key',
       keyHash: 'sha256_integration_key_hash_placeholder',
       keyPrefix: 'if_int_',
@@ -5361,6 +5693,7 @@ async function seedAPIKeys() {
     },
     {
       id: SEED_IDS.apiKeys.internal,
+      tenantId,
       name: 'Internal Services Key',
       keyHash: 'sha256_internal_key_hash_placeholder',
       keyPrefix: 'if_srv_',
@@ -5424,26 +5757,369 @@ async function seedAPIVersions() {
 async function getDefaultTenant() {
   console.log('🏢 Getting default tenant...');
 
-  // Try to find the existing default tenant (created by migration)
+  // Use deterministic ID from SEED_IDS to match FALLBACK_USER in API context
+  // This ensures seeded data is visible in development mode
+  const expectedId = SEED_IDS.tenant.default;
+
+  // Check if tenant with correct ID already exists
   let tenant = await prisma.tenant.findUnique({
-    where: { slug: 'default' },
+    where: { id: expectedId },
   });
 
-  // If found, return it; otherwise, create it (for fresh databases)
   if (tenant) {
-    console.log('✅ Found existing default tenant');
+    console.log(`✅ Found existing default tenant (ID: ${tenant.id})`);
     return tenant;
   }
 
+  // Check if there's a tenant with slug 'default' but wrong ID
+  const existingBySlug = await prisma.tenant.findUnique({
+    where: { slug: 'default' },
+  });
+
+  if (existingBySlug && existingBySlug.id !== expectedId) {
+    console.log(`⚠️  Found tenant with slug 'default' but wrong ID (${existingBySlug.id})`);
+    console.log(`   Updating tenant ID to match expected ID (${expectedId})`);
+
+    // Update the tenant ID using raw SQL (Prisma doesn't support PK updates)
+    // This will cascade to all related records via foreign key constraints
+    await prisma.$executeRawUnsafe(`
+      UPDATE tenants SET id = $1 WHERE id = $2
+    `, expectedId, existingBySlug.id);
+
+    // Fetch the updated tenant
+    tenant = await prisma.tenant.findUnique({
+      where: { id: expectedId },
+    });
+
+    if (tenant) {
+      console.log(`✅ Updated tenant ID to ${tenant.id}`);
+      return tenant;
+    }
+  }
+
+  // Create tenant with deterministic ID if nothing exists
   tenant = await prisma.tenant.create({
     data: {
+      id: expectedId,
       name: 'Default Organization',
       slug: 'default',
       status: 'ACTIVE',
     },
   });
-  console.log('✅ Created default tenant');
+
+  console.log(`✅ Created default tenant (ID: ${tenant.id})`);
   return tenant;
+}
+
+// =============================================================================
+// Home Page Seed Data (IFC-182)
+// Uses relative dates to ensure data shows on home page
+// =============================================================================
+
+async function seedHomePageData(tenantId: string) {
+  console.log('🏠 Seeding home page data with recent dates...');
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+  const twoDaysAgo = new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000);
+  const threeDaysAgo = new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000);
+  const oneWeekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const twoWeeksAgo = new Date(today.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+  // Get the first user to assign as owner
+  const user = await prisma.user.findFirst({
+    where: { tenantId },
+  });
+
+  if (!user) {
+    console.log('⚠️  No users found, skipping home page seed data');
+    return;
+  }
+
+  // 1. Create recent HIGH priority tasks (for welcome message)
+  const recentTasks = [
+    {
+      id: 'home-task-1',
+      title: 'Follow up with Acme Corp on proposal',
+      description: 'Send updated pricing and schedule demo call',
+      status: TaskStatus.IN_PROGRESS,
+      priority: TaskPriority.HIGH,
+      dueDate: new Date(today.getTime() + 24 * 60 * 60 * 1000), // tomorrow
+      ownerId: user.id,
+      tenantId,
+    },
+    {
+      id: 'home-task-2',
+      title: 'Prepare quarterly review presentation',
+      description: 'Compile Q4 metrics and forecasts',
+      status: TaskStatus.PENDING,
+      priority: TaskPriority.HIGH,
+      dueDate: new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000), // 2 days
+      ownerId: user.id,
+      tenantId,
+    },
+    {
+      id: 'home-task-3',
+      title: 'Review contract with legal team',
+      description: 'Get approval for TechCorp enterprise deal',
+      status: TaskStatus.PENDING,
+      priority: TaskPriority.HIGH,
+      dueDate: today, // due today
+      ownerId: user.id,
+      tenantId,
+    },
+  ];
+
+  for (const task of recentTasks) {
+    await prisma.task.upsert({
+      where: { id: task.id },
+      update: task,
+      create: task,
+    });
+  }
+  console.log(`  ✅ Created ${recentTasks.length} high-priority tasks`);
+
+  // 2. Create recent opportunities with CLOSED_WON (for deal trend)
+  const account = await prisma.account.findFirst({ where: { tenantId } });
+
+  if (account) {
+    const recentDeals = [
+      {
+        id: 'home-deal-1',
+        name: 'CloudSync Enterprise License',
+        stage: OpportunityStage.CLOSED_WON,
+        value: 75000,
+        probability: 100,
+        closedAt: twoDaysAgo,
+        expectedCloseDate: twoDaysAgo,
+        accountId: account.id,
+        ownerId: user.id,
+        tenantId,
+      },
+      {
+        id: 'home-deal-2',
+        name: 'DataFlow Analytics Subscription',
+        stage: OpportunityStage.CLOSED_WON,
+        value: 45000,
+        probability: 100,
+        closedAt: threeDaysAgo,
+        expectedCloseDate: threeDaysAgo,
+        accountId: account.id,
+        ownerId: user.id,
+        tenantId,
+      },
+      {
+        id: 'home-deal-3',
+        name: 'SecureVault Implementation',
+        stage: OpportunityStage.CLOSED_WON,
+        value: 120000,
+        probability: 100,
+        closedAt: oneWeekAgo,
+        expectedCloseDate: oneWeekAgo,
+        accountId: account.id,
+        ownerId: user.id,
+        tenantId,
+      },
+    ];
+
+    for (const deal of recentDeals) {
+      await prisma.opportunity.upsert({
+        where: { id: deal.id },
+        update: deal,
+        create: deal,
+      });
+    }
+    console.log(`  ✅ Created ${recentDeals.length} recent closed deals`);
+  }
+
+  // 3. Create recent audit log entries (for activity feed)
+  const recentAuditLogs = [
+    {
+      id: 'home-audit-1',
+      eventType: 'DealClosed',
+      eventId: `event-home-audit-1-${Date.now()}`,
+      actorType: ActorType.USER,
+      actorId: user.id,
+      resourceType: 'Opportunity',
+      resourceId: 'home-deal-1',
+      action: AuditAction.UPDATE,
+      beforeState: { stage: 'NEGOTIATION' },
+      afterState: { stage: 'CLOSED_WON', value: 75000 },
+      changedFields: ['stage'],
+      ipAddress: '192.168.1.100',
+      userAgent: 'Mozilla/5.0',
+      tenantId,
+      createdAt: twoDaysAgo,
+    },
+    {
+      id: 'home-audit-2',
+      eventType: 'TaskCompleted',
+      eventId: `event-home-audit-2-${Date.now()}`,
+      actorType: ActorType.USER,
+      actorId: user.id,
+      resourceType: 'Task',
+      resourceId: 'home-task-1',
+      action: AuditAction.UPDATE,
+      beforeState: { status: 'IN_PROGRESS' },
+      afterState: { status: 'COMPLETED' },
+      changedFields: ['status'],
+      ipAddress: '192.168.1.100',
+      userAgent: 'Mozilla/5.0',
+      tenantId,
+      createdAt: yesterday,
+    },
+    {
+      id: 'home-audit-3',
+      eventType: 'LeadQualified',
+      eventId: `event-home-audit-3-${Date.now()}`,
+      actorType: ActorType.AI,
+      actorId: 'ai-scoring-engine',
+      resourceType: 'Lead',
+      resourceId: SEED_IDS.leads.sarahMiller,
+      action: AuditAction.UPDATE,
+      beforeState: { status: 'NEW', score: 45 },
+      afterState: { status: 'QUALIFIED', score: 92 },
+      changedFields: ['status', 'score'],
+      ipAddress: null,
+      userAgent: 'IntelliFlow AI Engine',
+      tenantId,
+      createdAt: yesterday,
+    },
+    {
+      id: 'home-audit-4',
+      eventType: 'EmailSent',
+      eventId: `event-home-audit-4-${Date.now()}`,
+      actorType: ActorType.USER,
+      actorId: user.id,
+      resourceType: 'Email',
+      resourceId: 'email-001',
+      action: AuditAction.CREATE,
+      beforeState: Prisma.JsonNull,
+      afterState: { subject: 'Follow-up: Proposal Review', to: 'contact@acmecorp.com' },
+      changedFields: ['subject', 'to', 'body'],
+      ipAddress: '192.168.1.100',
+      userAgent: 'Mozilla/5.0',
+      tenantId,
+      createdAt: new Date(now.getTime() - 2 * 60 * 60 * 1000), // 2 hours ago
+    },
+    {
+      id: 'home-audit-5',
+      eventType: 'CallLogged',
+      eventId: `event-home-audit-5-${Date.now()}`,
+      actorType: ActorType.USER,
+      actorId: user.id,
+      resourceType: 'Call',
+      resourceId: 'call-001',
+      action: AuditAction.CREATE,
+      beforeState: Prisma.JsonNull,
+      afterState: { duration: 1800, outcome: 'Scheduled follow-up demo' },
+      changedFields: ['duration', 'outcome', 'notes'],
+      ipAddress: '192.168.1.100',
+      userAgent: 'Mozilla/5.0',
+      tenantId,
+      createdAt: new Date(now.getTime() - 4 * 60 * 60 * 1000), // 4 hours ago
+    },
+  ];
+
+  for (const log of recentAuditLogs) {
+    await prisma.auditLogEntry.upsert({
+      where: { id: log.id },
+      update: log,
+      create: log,
+    });
+  }
+  console.log(`  ✅ Created ${recentAuditLogs.length} recent audit log entries`);
+
+  // 4. Create appointments for today (for welcome stats)
+  const todayAppointments = [
+    {
+      id: 'home-appt-1',
+      title: 'Product Demo - TechCorp',
+      description: 'Show new analytics features',
+      startTime: new Date(today.getTime() + 10 * 60 * 60 * 1000), // 10 AM today
+      endTime: new Date(today.getTime() + 11 * 60 * 60 * 1000), // 11 AM today
+      status: AppointmentStatus.CONFIRMED,
+      type: AppointmentType.MEETING,
+      location: 'Zoom',
+      organizerId: user.id,
+      tenantId,
+    },
+    {
+      id: 'home-appt-2',
+      title: 'Weekly Team Standup',
+      description: 'Review pipeline and blockers',
+      startTime: new Date(today.getTime() + 14 * 60 * 60 * 1000), // 2 PM today
+      endTime: new Date(today.getTime() + 14.5 * 60 * 60 * 1000), // 2:30 PM today
+      status: AppointmentStatus.CONFIRMED,
+      type: AppointmentType.MEETING,
+      location: 'Conference Room A',
+      organizerId: user.id,
+      tenantId,
+    },
+  ];
+
+  for (const appt of todayAppointments) {
+    await prisma.appointment.upsert({
+      where: { id: appt.id },
+      update: appt,
+      create: appt,
+    });
+  }
+  console.log(`  ✅ Created ${todayAppointments.length} appointments for today`);
+
+  // 5. Create user preferences with pinned items
+  const existingPrefs = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { preferences: true },
+  });
+
+  const pinnedItems = [
+    {
+      entityType: 'lead',
+      entityId: SEED_IDS.leads.sarahMiller,
+      title: 'Sarah Miller - Hot Lead',
+      subtitle: 'Score: 92',
+      url: `/leads/${SEED_IDS.leads.sarahMiller}`,
+      pinnedAt: yesterday.toISOString(),
+      position: 0,
+    },
+    {
+      entityType: 'opportunity',
+      entityId: 'home-deal-1',
+      title: 'CloudSync Enterprise',
+      subtitle: '$75,000 - Won',
+      url: '/deals/home-deal-1',
+      pinnedAt: twoDaysAgo.toISOString(),
+      position: 1,
+    },
+    {
+      entityType: 'report',
+      entityId: 'weekly-pipeline',
+      title: 'Weekly Pipeline Report',
+      url: '/reports/weekly-pipeline',
+      pinnedAt: oneWeekAgo.toISOString(),
+      position: 2,
+    },
+  ];
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      preferences: {
+        ...(typeof existingPrefs?.preferences === 'object' ? existingPrefs.preferences : {}),
+        pinnedItems,
+        dailyGoal: {
+          type: 'revenue',
+          targetValue: 5000,
+          label: 'Daily Revenue Target',
+        },
+      },
+    },
+  });
+  console.log(`  ✅ Created ${pinnedItems.length} pinned items for user`);
+
+  console.log('✅ Home page seed data complete');
 }
 
 // =============================================================================
@@ -5479,6 +6155,8 @@ async function main() {
     await seedLeadNotes(tenantId);
     await seedLeadFiles(tenantId);
     await seedLeadAIInsights(tenantId);
+    // Auto-Response Drafts for IFC-029 (Agent Approvals page)
+    await seedAutoResponseDrafts(tenantId);
     await seedContacts(tenantId);
     await seedOpportunities(tenantId);
     await seedSLAPolicies(tenantId);
@@ -5495,13 +6173,13 @@ async function main() {
       await seedDealProducts(tenantId);
     } catch (e) { console.warn('⚠️  seedDealProducts failed:', (e as Error).message?.slice(0, 100)); }
     try {
-      await seedDealFiles();
+      await seedDealFiles(tenantId);
     } catch (e) { console.warn('⚠️  seedDealFiles failed:', (e as Error).message?.slice(0, 100)); }
     try {
-      await seedDealActivities();
+      await seedDealActivities(tenantId);
     } catch (e) { console.warn('⚠️  seedDealActivities failed:', (e as Error).message?.slice(0, 100)); }
     try {
-      await seedTicketActivities();
+      await seedTicketActivities(tenantId);
     } catch (e) { console.warn('⚠️  seedTicketActivities failed:', (e as Error).message?.slice(0, 100)); }
     try {
       await seedTicketAttachments();
@@ -5639,6 +6317,9 @@ async function main() {
     try { await seedAPIKeys(); } catch (e) { console.warn('⚠️  seedAPIKeys failed:', (e as Error).message?.slice(0, 100)); }
     try { await seedAPIVersions(); } catch (e) { console.warn('⚠️  seedAPIVersions failed:', (e as Error).message?.slice(0, 100)); }
 
+    // IFC-182: Home Page Data (uses relative dates for recent activity)
+    try { await seedHomePageData(tenantId); } catch (e) { console.warn('⚠️  seedHomePageData failed:', (e as Error).message?.slice(0, 100)); }
+
     console.log('\n✨ Database seeding completed successfully!\n');
     console.log('📊 Summary (matching UI mockups + ALL 38 FLOWS):');
     console.log('');
@@ -5663,7 +6344,7 @@ async function main() {
     console.log('  - 3 ticket attachments (error logs, screenshot, DevOps analysis)');
     console.log('');
     console.log('  ADDITIONAL UI DATA:');
-    console.log('  - 4 agent actions (AI approval queue from agent-approvals/preview)');
+    console.log('  - 4 agent actions (AI approval queue from agent-approvals)');
     console.log('  - 10 contact activities (from contacts/[id] detail page)');
     console.log('  - 2 dashboard activities (from RecentActivityWidget)');
     console.log('');

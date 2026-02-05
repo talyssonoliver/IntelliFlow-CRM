@@ -17,7 +17,7 @@ export type {
   Task,
   Ticket,
   AIScore,
-  AuditLog,
+  AuditLogEntry,
   DomainEvent,
   Appointment,
   AppointmentAttendee,
