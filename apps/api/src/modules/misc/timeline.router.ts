@@ -469,40 +469,41 @@ export const timelineRouter = createTRPCRouter({
 
     // =========================================================================
     // 3. Fetch Audit Log Entries (for status changes, stage changes, etc.)
+    // Using consolidated AuditLogEntry table per ADR-008
     // =========================================================================
     if (shouldIncludeType('status_change') || shouldIncludeType('stage_change') || shouldIncludeType('audit')) {
       const auditWhere: any = {};
 
       if (effectiveOpportunityId) {
         auditWhere.OR = [
-          { entityType: 'Opportunity', entityId: effectiveOpportunityId },
-          { entityType: 'Deal', entityId: effectiveOpportunityId },
-          { entityType: 'Case', entityId: effectiveOpportunityId },
+          { resourceType: 'Opportunity', resourceId: effectiveOpportunityId },
+          { resourceType: 'Deal', resourceId: effectiveOpportunityId },
+          { resourceType: 'Case', resourceId: effectiveOpportunityId },
         ];
       }
 
       if (Object.keys(dateFilter).length > 0) {
-        auditWhere.createdAt = dateFilter;
+        auditWhere.timestamp = dateFilter;
       }
 
-      const auditLogs = await ctx.prisma.auditLog.findMany({
+      const auditLogs = await ctx.prisma.auditLogEntry.findMany({
         where: auditWhere,
         include: {
           user: {
             select: { id: true, name: true, email: true, avatarUrl: true },
           },
         },
-        orderBy: { createdAt: sortOrder },
+        orderBy: { timestamp: sortOrder },
         take: 100, // Limit audit entries
       });
 
       for (const log of auditLogs) {
         let eventType: TimelineEventTypeValue = 'audit';
 
-        // Determine specific event type based on action
-        if (log.action.toLowerCase().includes('stage')) {
+        // Determine specific event type based on eventType
+        if (log.eventType.toLowerCase().includes('stage')) {
           eventType = 'stage_change';
-        } else if (log.action.toLowerCase().includes('status')) {
+        } else if (log.eventType.toLowerCase().includes('status')) {
           eventType = 'status_change';
         }
 
@@ -510,24 +511,24 @@ export const timelineRouter = createTRPCRouter({
           events.push({
             id: `audit-${log.id}`,
             type: eventType,
-            title: log.action,
-            description: null,
-            timestamp: log.createdAt,
+            title: log.eventType,
+            description: log.actionReason,
+            timestamp: log.timestamp,
             priority: null,
-            entityType: log.entityType,
-            entityId: log.entityId,
+            entityType: log.resourceType,
+            entityId: log.resourceId,
             actor: log.user
               ? {
                   id: log.user.id,
                   name: log.user.name,
                   email: log.user.email,
                   avatarUrl: log.user.avatarUrl,
-                  isAgent: false,
+                  isAgent: log.actorType === 'AI_AGENT',
                 }
               : null,
             metadata: {
-              oldValue: log.oldValue,
-              newValue: log.newValue,
+              oldValue: log.beforeState,
+              newValue: log.afterState,
               ipAddress: log.ipAddress,
             },
             isOverdue: false,
