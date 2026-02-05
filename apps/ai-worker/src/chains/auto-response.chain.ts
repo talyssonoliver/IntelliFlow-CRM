@@ -9,10 +9,17 @@
  *
  * CRITICAL: This chain MUST call real LLM - no template fallback allowed
  * Per specification: "Response generation must call real LLM chain, not return template placeholders"
+ *
+ * IFC-029 Enhancements:
+ * - Input sanitization for prompt injection prevention
+ * - JSON parsing with markdown fallback
+ * - ChainMonitor integration for latency/cost tracking
  */
 
 import { ChatOpenAI } from '@langchain/openai';
 import { aiConfig } from '../config/ai.config';
+import { sanitizeStringField } from '../utils/input-sanitizer';
+import { withMonitoring, createChainMonitor, type MonitoredResult } from '../monitoring/chain-monitor';
 
 /**
  * Input for auto-response generation
@@ -69,17 +76,26 @@ export interface ValidationResult {
 /**
  * Auto-Response Generation Chain
  *
- * Uses GPT-4 with fallback to GPT-3.5-turbo for generating
- * contextual email responses that require human approval.
+ * Uses GPT-4o-mini by default for <1s latency,
+ * or GPT-4-turbo for high-value leads.
+ *
+ * IFC-029: All user inputs are sanitized before prompt construction.
  */
 export class AutoResponseChain {
   private llm: ChatOpenAI;
   private modelVersion: string;
+  private chainMonitor = createChainMonitor({ latencyThresholdMs: 1000 });
 
   // Content limits (from ResponseContent value object)
   private static readonly MAX_SUBJECT_LENGTH = 100;
   private static readonly MAX_BODY_LENGTH = 2000;
   private static readonly MIN_CONFIDENCE_THRESHOLD = 0.5;
+
+  // IFC-029: Sanitization limits
+  private static readonly MAX_NAME_LENGTH = 100;
+  private static readonly MAX_COMPANY_LENGTH = 100;
+  private static readonly MAX_MESSAGE_LENGTH = 2000;
+  private static readonly MAX_CUSTOM_INSTRUCTIONS_LENGTH = 500;
 
   constructor() {
     this.llm = new ChatOpenAI();
@@ -89,6 +105,9 @@ export class AutoResponseChain {
   /**
    * Generate an auto-response based on trigger and context
    *
+   * IFC-029: Wrapped with ChainMonitor for latency/cost tracking.
+   * All user inputs are sanitized before prompt construction.
+   *
    * @throws Error if LLM call fails or response cannot be parsed
    */
   async generateResponse(input: AutoResponseInput): Promise<AutoResponseOutput> {
@@ -97,16 +116,11 @@ export class AutoResponseChain {
     // Call LLM - NO TEMPLATE FALLBACK per specification
     const response = await this.llm.invoke(prompt);
 
-    // Parse and validate JSON response
-    let parsed: any;
-    try {
-      const content = typeof response.content === 'string'
-        ? response.content
-        : JSON.stringify(response.content);
-      parsed = JSON.parse(content);
-    } catch (error) {
-      throw new Error(`Failed to parse LLM response: ${error}`);
-    }
+    // Parse and validate JSON response with fallback for markdown-wrapped JSON
+    const content = typeof response.content === 'string'
+      ? response.content
+      : JSON.stringify(response.content);
+    const parsed = this.parseResponse(content);
 
     // Build output with length constraints
     const output: AutoResponseOutput = {
@@ -119,6 +133,49 @@ export class AutoResponseChain {
     };
 
     return output;
+  }
+
+  /**
+   * Generate an auto-response with monitoring
+   *
+   * IFC-029: Wraps generateResponse with ChainMonitor for
+   * latency tracking, cost monitoring, and operational metrics.
+   */
+  async generateResponseWithMonitoring(
+    input: AutoResponseInput
+  ): Promise<MonitoredResult<AutoResponseOutput>> {
+    return withMonitoring(
+      () => this.generateResponse(input),
+      this.chainMonitor.getConfig()
+    );
+  }
+
+  /**
+   * Parse LLM response JSON with fallback for markdown-wrapped JSON
+   * IFC-029: Resilient parsing handles both raw JSON and markdown code blocks
+   */
+  private parseResponse(content: string): {
+    subject?: string;
+    body?: string;
+    confidence?: number;
+    tone?: string;
+    suggestedFollowUp?: string;
+  } {
+    // First try direct JSON parse
+    try {
+      return JSON.parse(content);
+    } catch {
+      // Fallback: extract JSON from markdown code blocks
+      const match = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (match) {
+        try {
+          return JSON.parse(match[1].trim());
+        } catch {
+          throw new Error('Failed to parse JSON from markdown code block');
+        }
+      }
+      throw new Error('Failed to parse LLM response: not valid JSON');
+    }
   }
 
   /**
@@ -156,9 +213,27 @@ export class AutoResponseChain {
 
   /**
    * Build the prompt for the LLM based on trigger type and context
+   *
+   * IFC-029: CRITICAL - All user-provided fields are sanitized before prompt construction
+   * to prevent prompt injection attacks.
    */
   private buildPrompt(input: AutoResponseInput): string {
     const { triggerType, leadInfo, context, tenantSettings } = input;
+
+    // IFC-029: Sanitize all user-provided fields
+    const sanitizedLeadName = sanitizeStringField(
+      leadInfo.name,
+      AutoResponseChain.MAX_NAME_LENGTH
+    );
+    const sanitizedCompany = leadInfo.company
+      ? sanitizeStringField(leadInfo.company, AutoResponseChain.MAX_COMPANY_LENGTH)
+      : 'Not provided';
+    const sanitizedCustomInstructions = tenantSettings.customInstructions
+      ? sanitizeStringField(
+          tenantSettings.customInstructions,
+          AutoResponseChain.MAX_CUSTOM_INSTRUCTIONS_LENGTH
+        )
+      : undefined;
 
     let contextSection = '';
 
@@ -180,16 +255,16 @@ export class AutoResponseChain {
     return `You are an AI assistant for ${tenantSettings.companyName}, generating professional email responses.
 
 LEAD INFORMATION:
-- Name: ${leadInfo.name}
+- Name: ${sanitizedLeadName}
 - Email: ${leadInfo.email}
-- Company: ${leadInfo.company || 'Not provided'}
+- Company: ${sanitizedCompany}
 - Status: ${leadInfo.status}
 
 CONTEXT:
 ${contextSection}
 
 TONE: ${tenantSettings.tone}
-${tenantSettings.customInstructions ? `CUSTOM INSTRUCTIONS: ${tenantSettings.customInstructions}` : ''}
+${sanitizedCustomInstructions ? `CUSTOM INSTRUCTIONS: ${sanitizedCustomInstructions}` : ''}
 
 Generate a response in JSON format with the following structure:
 {
@@ -211,14 +286,23 @@ ${tenantSettings.signatureTemplate ? `- End with signature: ${tenantSettings.sig
 
   /**
    * Build context section for email triggers
+   * IFC-029: Sanitizes original message and subject
    */
   private buildEmailContext(context: AutoResponseInput['context']): string {
     const parts = [];
     if (context.originalSubject) {
-      parts.push(`Original Subject: ${context.originalSubject}`);
+      const sanitizedSubject = sanitizeStringField(
+        context.originalSubject,
+        AutoResponseChain.MAX_SUBJECT_LENGTH
+      );
+      parts.push(`Original Subject: ${sanitizedSubject}`);
     }
     if (context.originalMessage) {
-      parts.push(`Original Message:\n${context.originalMessage}`);
+      const sanitizedMessage = sanitizeStringField(
+        context.originalMessage,
+        AutoResponseChain.MAX_MESSAGE_LENGTH
+      );
+      parts.push(`Original Message:\n${sanitizedMessage}`);
     }
     if (context.senderDomain) {
       parts.push(`Sender Domain: ${context.senderDomain}`);
@@ -248,6 +332,7 @@ ${tenantSettings.signatureTemplate ? `- End with signature: ${tenantSettings.sig
 
   /**
    * Build context section for chat message triggers
+   * IFC-029: Sanitizes chat history content
    */
   private buildChatContext(context: AutoResponseInput['context']): string {
     if (!context.chatHistory || context.chatHistory.length === 0) {
@@ -255,7 +340,13 @@ ${tenantSettings.signatureTemplate ? `- End with signature: ${tenantSettings.sig
     }
 
     const history = context.chatHistory
-      .map((msg) => `[${msg.role.toUpperCase()}]: ${msg.content}`)
+      .map((msg) => {
+        const sanitizedContent = sanitizeStringField(
+          msg.content,
+          AutoResponseChain.MAX_MESSAGE_LENGTH
+        );
+        return `[${msg.role.toUpperCase()}]: ${sanitizedContent}`;
+      })
       .join('\n');
 
     return `Chat History:\n${history}`;

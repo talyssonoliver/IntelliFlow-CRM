@@ -111,15 +111,30 @@ export function loadAIConfig(): AIConfig {
 /**
  * Model pricing (USD per 1K tokens)
  * Used for cost tracking
+ *
+ * IFC-029: Added GPT-4o-mini pricing for <1s latency auto-response
  */
 export const MODEL_PRICING = {
   'gpt-4-turbo-preview': {
     input: 0.01,
     output: 0.03,
   },
+  'gpt-4-turbo': {
+    input: 0.01,
+    output: 0.03,
+  },
   'gpt-4': {
     input: 0.03,
     output: 0.06,
+  },
+  // IFC-029: GPT-4o-mini for <1s auto-response latency
+  'gpt-4o-mini': {
+    input: 0.00015,
+    output: 0.0006,
+  },
+  'gpt-4o': {
+    input: 0.0025,
+    output: 0.01,
   },
   'gpt-3.5-turbo': {
     input: 0.0005,
