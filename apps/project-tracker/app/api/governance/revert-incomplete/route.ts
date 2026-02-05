@@ -57,9 +57,13 @@ function parseArtifactsWithPrefixes(artifactsStr: string): {
     .map((a) => a.trim())
     .filter((a) => a.length > 0 && a !== '-');
 
+  // Prefixes that represent file paths to validate
+  const pathPrefixes = ['ARTIFACT:', 'SPEC:', 'PLAN:', 'CONTEXT:', 'PRD:'] as const;
+
   for (const item of items) {
-    if (item.startsWith('ARTIFACT:')) {
-      const path = item.replace('ARTIFACT:', '').trim();
+    const pathPrefix = pathPrefixes.find((prefix) => item.startsWith(prefix));
+    if (pathPrefix) {
+      const path = item.slice(pathPrefix.length).trim();
       if (path) result.artifacts.push(path);
     } else if (item.startsWith('EVIDENCE:')) {
       const path = item.replace('EVIDENCE:', '').trim();

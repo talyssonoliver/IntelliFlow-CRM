@@ -85,7 +85,7 @@ function parseDependencies(deps: string): string[] {
 }
 
 // Prefixes that represent file paths to validate
-const PATH_PREFIXES = ['ARTIFACT:', 'EVIDENCE:', 'SPEC:', 'PLAN:', 'CONTEXT:'] as const;
+const PATH_PREFIXES = ['ARTIFACT:', 'EVIDENCE:', 'SPEC:', 'PLAN:', 'CONTEXT:', 'PRD:'] as const;
 // Prefixes that are metadata/commands, not file paths
 const METADATA_PREFIXES = ['VALIDATE:', 'GATE:', 'AUDIT:', 'FILE:', 'ENV:', 'POLICY:'] as const;
 
@@ -95,11 +95,12 @@ interface ParsedArtifacts {
   specs: string[]; // SPEC: paths (specification files)
   plans: string[]; // PLAN: paths (planning files)
   contexts: string[]; // CONTEXT: paths (hydrated context files)
+  prds: string[]; // PRD: paths (product requirement documents)
   raw: string[]; // All items for backward compatibility
 }
 
 function parseArtifactsWithPrefixes(artifactsStr: string): ParsedArtifacts {
-  const result: ParsedArtifacts = { artifacts: [], evidence: [], specs: [], plans: [], contexts: [], raw: [] };
+  const result: ParsedArtifacts = { artifacts: [], evidence: [], specs: [], plans: [], contexts: [], prds: [], raw: [] };
 
   if (
     !artifactsStr ||
@@ -133,6 +134,8 @@ function parseArtifactsWithPrefixes(artifactsStr: string): ParsedArtifacts {
           result.plans.push(path);
         } else if (pathPrefix === 'CONTEXT:') {
           result.contexts.push(path);
+        } else if (pathPrefix === 'PRD:') {
+          result.prds.push(path);
         }
       }
     }
@@ -315,7 +318,8 @@ export async function GET(request: Request) {
 
       // Only check completed tasks for mismatches
       const hasPathsToCheck = parsed.artifacts.length > 0 || parsed.evidence.length > 0 ||
-                              parsed.specs.length > 0 || parsed.plans.length > 0 || parsed.contexts.length > 0;
+                              parsed.specs.length > 0 || parsed.plans.length > 0 || parsed.contexts.length > 0 ||
+                              parsed.prds.length > 0;
       if (isCompleted && hasPathsToCheck) {
         const missingArtifacts: string[] = [];
         const missingEvidence: string[] = [];
@@ -357,6 +361,14 @@ export async function GET(request: Request) {
           const exists = await checkArtifactExists(context);
           if (!exists) {
             missingArtifacts.push(`CONTEXT:${context}`);
+          }
+        }
+
+        // Check PRD: paths
+        for (const prd of parsed.prds) {
+          const exists = await checkArtifactExists(prd);
+          if (!exists) {
+            missingArtifacts.push(`PRD:${prd}`);
           }
         }
 
