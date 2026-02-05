@@ -71,7 +71,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
       attendeeIds,
       linkedCaseIds,
       organizerId: record.organizerId,
-      tenantId: record.tenantId,
+      tenantId: (record as { tenantId?: string }).tenantId ?? 'default',
       notes: record.notes ?? undefined,
       externalCalendarId: record.externalCalendarId ?? undefined,
       reminderMinutes: record.reminderMinutes ?? undefined,

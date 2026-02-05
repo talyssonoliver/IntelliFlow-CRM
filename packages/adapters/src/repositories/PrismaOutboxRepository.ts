@@ -68,6 +68,7 @@ function mapPrismaStatus(status: EventStatus): OutboxEventStatus {
     PROCESSED: 'published',
     FAILED: 'failed',
     DEAD_LETTER: 'dead_letter',
+    ARCHIVED: 'published', // Archived events are treated as published/completed
   };
   return mapping[status];
 }

@@ -13,6 +13,14 @@ export * from './PrismaAppointmentRepository';
 export * from './PrismaCaseDocumentRepository';
 export * from './PrismaNotificationRepository';
 export * from './PrismaNotificationPreferenceRepository';
+export * from './PrismaAutoResponseDraftRepository';
+
+// AI Output Review Repository (IFC-179)
+export { PrismaAIOutputReviewRepository } from './PrismaAIOutputReviewRepository';
+// Note: OptimisticLockError is exported from PrismaAutoResponseDraftRepository
+
+// Outbox pattern (domain events)
+export * from './PrismaOutboxRepository';
 
 // In-memory implementations (testing)
 export * from './InMemoryLeadRepository';
