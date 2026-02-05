@@ -72,6 +72,7 @@ export const accountRouter = createTRPCRouter({
 
   /**
    * Get a single account by ID
+   * Includes tenant isolation check to prevent cross-tenant data access
    */
   getById: tenantProcedure.input(z.object({ id: idSchema })).query(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
@@ -83,6 +84,15 @@ export const accountRouter = createTRPCRouter({
       throw new TRPCError({
         code: 'NOT_FOUND',
         message: result.error.message,
+      });
+    }
+
+    // CRITICAL: Tenant isolation check - prevent cross-tenant data access
+    const account = result.value;
+    if (account.tenantId !== typedCtx.tenant.tenantId) {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'Access denied to resource from different tenant',
       });
     }
 
@@ -183,12 +193,28 @@ export const accountRouter = createTRPCRouter({
 
   /**
    * Update an account
+   * Includes tenant isolation check before modification
    */
   update: tenantProcedure.input(updateAccountSchema).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
     const accountService = getAccountService(ctx);
 
     const { id, ...data } = input;
+
+    // CRITICAL: Verify account belongs to tenant before update
+    const existingResult = await accountService.getAccountById(id);
+    if (existingResult.isFailure) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: existingResult.error.message,
+      });
+    }
+    if (existingResult.value.tenantId !== typedCtx.tenant.tenantId) {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'Access denied to resource from different tenant',
+      });
+    }
 
     // Convert WebsiteUrl Value Object to string for service
     const updateData: {
@@ -220,6 +246,12 @@ export const accountRouter = createTRPCRouter({
           message: result.error.message,
         });
       }
+      if (errorCode === 'UNAUTHORIZED_ERROR') {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: result.error.message,
+        });
+      }
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: result.error.message,
@@ -231,10 +263,26 @@ export const accountRouter = createTRPCRouter({
 
   /**
    * Delete an account
+   * Includes tenant isolation check before deletion
    */
   delete: tenantProcedure.input(z.object({ id: idSchema })).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
     const accountService = getAccountService(ctx);
+
+    // CRITICAL: Verify account belongs to tenant before deletion
+    const existingResult = await accountService.getAccountById(input.id);
+    if (existingResult.isFailure) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: existingResult.error.message,
+      });
+    }
+    if (existingResult.value.tenantId !== typedCtx.tenant.tenantId) {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'Access denied to resource from different tenant',
+      });
+    }
 
     const result = await accountService.deleteAccount(input.id);
 
@@ -244,6 +292,12 @@ export const accountRouter = createTRPCRouter({
         const isNotFound = result.error.message.includes('not found');
         throw new TRPCError({
           code: isNotFound ? 'NOT_FOUND' : 'PRECONDITION_FAILED',
+          message: result.error.message,
+        });
+      }
+      if (errorCode === 'UNAUTHORIZED_ERROR') {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
           message: result.error.message,
         });
       }
