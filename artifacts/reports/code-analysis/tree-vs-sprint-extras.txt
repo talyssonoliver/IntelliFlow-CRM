@@ -1282,9 +1282,9 @@ docs (114)
 - docs/plan-governance.md
 - docs/planning
 - docs/planning/adr
-- docs/planning/adr/ADR-002-csv-source-of-truth.md
+- docs/planning/adr/ADR-012-csv-source-of-truth.md
 - docs/planning/adr/ADR-002-domain-driven-design.md
-- docs/planning/adr/ADR-003-sprint-scoped-validation.md
+- docs/planning/adr/ADR-013-sprint-scoped-validation.md
 - docs/planning/adr/ADR-003-type-safe-api-design.md
 - docs/planning/adr/ADR-009-zero-trust-security.md
 - docs/planning/adr/ADR-010-architecture-boundary-enforcement.md

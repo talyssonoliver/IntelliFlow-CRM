@@ -151,7 +151,7 @@
       "files_verified": [
         "packages/platform/src/workflow/engine.ts",
         "packages/platform/src/workflow/rules-engine.ts",
-        "docs/adr/adr-workflow-decision.md",
+        "docs/planning/adr/ADR-014-workflow-engine-decision.md",
         "artifacts/misc/workflow-comparison-matrix.md"
       ],
       "status": "COMPLETE"

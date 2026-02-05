@@ -354,7 +354,7 @@
       "validation_method": "VALIDATE:pnpm lint;AUDIT:security-review"
     },
     {
-      "artifacts_to_track": "ARTIFACT:artifacts/reports/business-case.md;ARTIFACT:artifacts/reports/swot-analysis.md;ARTIFACT:artifacts/reports/financial-model.md;ARTIFACT:docs/planning/ADR-000-feasibility.md;EVIDENCE:artifacts/attestations/IFC-000/context_ack.json",
+      "artifacts_to_track": "ARTIFACT:artifacts/reports/business-case.md;ARTIFACT:artifacts/reports/swot-analysis.md;ARTIFACT:artifacts/reports/financial-model.md;ARTIFACT:docs/planning/adr/ADR-000-feasibility.md;EVIDENCE:artifacts/attestations/IFC-000/context_ack.json",
       "description": "IntelliFlow CRM Feasibility Assessment",
       "owner": "CEO + CTO + CFO (STOA-Leadership)",
       "section": "Planning",
@@ -1674,7 +1674,7 @@
       "validation_method": "AUDIT:manual-review;VALIDATE:pnpm test"
     },
     {
-      "artifacts_to_track": "SPEC:.specify/specifications/IFC-141.md;PLAN:.specify/planning/IFC-141.md;EVIDENCE:artifacts/attestations/IFC-141/context_pack.md;EVIDENCE:artifacts/attestations/IFC-141/context_ack.json;ARTIFACT:docs/adr/adr-workflow-decision.md;ARTIFACT:artifacts/misc/events-spec.yaml",
+      "artifacts_to_track": "SPEC:.specify/specifications/IFC-141.md;PLAN:.specify/planning/IFC-141.md;EVIDENCE:artifacts/attestations/IFC-141/context_pack.md;EVIDENCE:artifacts/attestations/IFC-141/context_ack.json;ARTIFACT:docs/planning/adr/ADR-014-workflow-engine-decision.md;ARTIFACT:artifacts/misc/events-spec.yaml",
       "description": "Evaluate n8n; custom engine; and Temporal; document decision via ADR; build event-driven minimal rules engine and integrate selected workflow engine",
       "owner": "Tech Lead + Backend Dev + Product Manager (STOA-Domain)",
       "section": "Workflow",
@@ -1754,7 +1754,7 @@
       "validation_method": "VALIDATE:pnpm test;VALIDATE:pnpm test:integration"
     },
     {
-      "artifacts_to_track": "ARTIFACT:apps/web/src/app/agent-approvals/preview/page.tsx;ARTIFACT:apps/web/src/lib/agent/index.ts;ARTIFACT:apps/web/src/lib/agent/rollback-service.ts;ARTIFACT:artifacts/misc/analytics/approvals-metrics.csv;EVIDENCE:artifacts/attestations/IFC-149/context_ack.json",
+      "artifacts_to_track": "ARTIFACT:apps/web/src/app/agent-approvals/page.tsx;ARTIFACT:apps/web/src/lib/agent/index.ts;ARTIFACT:apps/web/src/lib/agent/rollback-service.ts;ARTIFACT:artifacts/misc/analytics/approvals-metrics.csv;EVIDENCE:artifacts/attestations/IFC-149/context_ack.json",
       "description": "Implement action preview and rollback UI for agent-initiated changes; integrated with approval flows",
       "owner": "Frontend Dev + AI Specialist (STOA-Intelligence)",
       "section": "AI Assistant",

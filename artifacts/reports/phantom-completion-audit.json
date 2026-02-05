@@ -256,7 +256,7 @@
         "artifacts/reports/business-case.md",
         "artifacts/reports/swot-analysis.md",
         "artifacts/reports/financial-model.md",
-        "docs/planning/ADR-000-feasibility.md",
+        "docs/planning/adr/ADR-000-feasibility.md",
         "artifacts/attestations/IFC-000/context_ack.json"
       ]
     },
