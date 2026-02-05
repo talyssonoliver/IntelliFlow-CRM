@@ -120,3 +120,55 @@ export class ContactConvertedFromLeadEvent extends DomainEvent {
     };
   }
 }
+
+/**
+ * Event: Contact was manually linked to a lead (IFC-184)
+ * Distinct from ContactConvertedFromLeadEvent which fires at creation time.
+ * This event fires when an existing contact is linked to an existing lead.
+ */
+export class ContactLinkedToLeadEvent extends DomainEvent {
+  readonly eventType = 'contact.linked_to_lead';
+
+  constructor(
+    public readonly contactId: ContactId,
+    public readonly leadId: string,
+    public readonly linkedBy: string,
+    public readonly linkedAt: Date = new Date()
+  ) {
+    super();
+  }
+
+  toPayload(): Record<string, unknown> {
+    return {
+      contactId: this.contactId.value,
+      leadId: this.leadId,
+      linkedBy: this.linkedBy,
+      linkedAt: this.linkedAt.toISOString(),
+    };
+  }
+}
+
+/**
+ * Event: Contact was unlinked from a lead (IFC-184)
+ */
+export class ContactUnlinkedFromLeadEvent extends DomainEvent {
+  readonly eventType = 'contact.unlinked_from_lead';
+
+  constructor(
+    public readonly contactId: ContactId,
+    public readonly previousLeadId: string,
+    public readonly unlinkedBy: string,
+    public readonly unlinkedAt: Date = new Date()
+  ) {
+    super();
+  }
+
+  toPayload(): Record<string, unknown> {
+    return {
+      contactId: this.contactId.value,
+      previousLeadId: this.previousLeadId,
+      unlinkedBy: this.unlinkedBy,
+      unlinkedAt: this.unlinkedAt.toISOString(),
+    };
+  }
+}

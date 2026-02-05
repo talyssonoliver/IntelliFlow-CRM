@@ -17,6 +17,7 @@ export const LEAD_STATUSES = [
   'NEW',
   'CONTACTED',
   'QUALIFIED',
+  'NEGOTIATING',
   'UNQUALIFIED',
   'CONVERTED',
   'LOST',
@@ -64,6 +65,13 @@ interface LeadProps {
   tenantId: string;
   createdAt: Date;
   updatedAt: Date;
+  // Lead 360 fields
+  location?: string;
+  website?: string;
+  avatarUrl?: string;
+  lastContactedAt?: Date;
+  estimatedValue?: number; // In cents
+  tags?: string[];
 }
 
 export interface CreateLeadProps {
@@ -76,6 +84,13 @@ export interface CreateLeadProps {
   source?: LeadSource;
   ownerId: string;
   tenantId: string;
+  // Lead 360 fields
+  location?: string;
+  website?: string;
+  avatarUrl?: string;
+  lastContactedAt?: Date;
+  estimatedValue?: number; // In cents
+  tags?: string[];
 }
 
 /**
@@ -147,6 +162,31 @@ export class Lead extends AggregateRoot<LeadId> {
     return this.props.updatedAt;
   }
 
+  // Lead 360 fields
+  get location(): string | undefined {
+    return this.props.location;
+  }
+
+  get website(): string | undefined {
+    return this.props.website;
+  }
+
+  get avatarUrl(): string | undefined {
+    return this.props.avatarUrl;
+  }
+
+  get lastContactedAt(): Date | undefined {
+    return this.props.lastContactedAt;
+  }
+
+  get estimatedValue(): number | undefined {
+    return this.props.estimatedValue;
+  }
+
+  get tags(): string[] | undefined {
+    return this.props.tags;
+  }
+
   get isConverted(): boolean {
     return this.props.status === 'CONVERTED';
   }
@@ -194,6 +234,13 @@ export class Lead extends AggregateRoot<LeadId> {
       tenantId: props.tenantId,
       createdAt: now,
       updatedAt: now,
+      // Lead 360 fields
+      location: props.location,
+      website: props.website,
+      avatarUrl: props.avatarUrl,
+      lastContactedAt: props.lastContactedAt,
+      estimatedValue: props.estimatedValue,
+      tags: props.tags,
     });
 
     lead.addDomainEvent(new LeadCreatedEvent(leadId, emailResult.value, lead.source, lead.ownerId));

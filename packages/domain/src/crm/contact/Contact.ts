@@ -9,6 +9,8 @@ import {
   ContactAccountAssociatedEvent,
   ContactAccountDisassociatedEvent,
   ContactConvertedFromLeadEvent,
+  ContactLinkedToLeadEvent,
+  ContactUnlinkedFromLeadEvent,
 } from './ContactEvents';
 
 // Canonical enum values - single source of truth (IFC-089)
@@ -38,6 +40,20 @@ export class ContactNotAssociatedWithAccountError extends DomainError {
   readonly code = 'CONTACT_NOT_ASSOCIATED_WITH_ACCOUNT';
   constructor() {
     super('Contact is not associated with any account');
+  }
+}
+
+export class ContactAlreadyLinkedToLeadError extends DomainError {
+  readonly code = 'CONTACT_ALREADY_LINKED_TO_LEAD';
+  constructor(existingLeadId: string) {
+    super(`Contact is already linked to lead ${existingLeadId}`);
+  }
+}
+
+export class ContactNotLinkedToLeadError extends DomainError {
+  readonly code = 'CONTACT_NOT_LINKED_TO_LEAD';
+  constructor() {
+    super('Contact is not linked to any lead');
   }
 }
 
@@ -163,6 +179,10 @@ export class Contact extends AggregateRoot<ContactId> {
   }
 
   get isConvertedFromLead(): boolean {
+    return this.props.leadId !== undefined;
+  }
+
+  get hasLinkedLead(): boolean {
     return this.props.leadId !== undefined;
   }
 
@@ -427,6 +447,57 @@ export class Contact extends AggregateRoot<ContactId> {
 
     this.addDomainEvent(
       new ContactAccountDisassociatedEvent(this.id, previousAccountId, disassociatedBy)
+    );
+
+    return Result.ok(undefined);
+  }
+
+  /**
+   * Link contact to an existing lead (IFC-184)
+   * This is for retroactive association, distinct from lead conversion.
+   * @param leadId - The lead ID to link to
+   * @param linkedBy - The user performing the action
+   * @returns Result indicating success or failure
+   */
+  linkToLead(
+    leadId: string,
+    linkedBy: string
+  ): Result<void, ContactAlreadyLinkedToLeadError> {
+    // Idempotent: already linked to same lead
+    if (this.props.leadId === leadId) {
+      return Result.ok(undefined);
+    }
+
+    // Conflict: linked to different lead
+    if (this.props.leadId && this.props.leadId !== leadId) {
+      return Result.fail(new ContactAlreadyLinkedToLeadError(this.props.leadId));
+    }
+
+    this.props.leadId = leadId;
+    this.props.updatedAt = new Date();
+
+    this.addDomainEvent(new ContactLinkedToLeadEvent(this.id, leadId, linkedBy));
+
+    return Result.ok(undefined);
+  }
+
+  /**
+   * Unlink contact from its associated lead (IFC-184)
+   * @param unlinkedBy - The user performing the action
+   * @returns Result indicating success or failure
+   */
+  unlinkFromLead(unlinkedBy: string): Result<void, ContactNotLinkedToLeadError> {
+    // Idempotent: already unlinked
+    if (!this.props.leadId) {
+      return Result.ok(undefined);
+    }
+
+    const previousLeadId = this.props.leadId;
+    this.props.leadId = undefined;
+    this.props.updatedAt = new Date();
+
+    this.addDomainEvent(
+      new ContactUnlinkedFromLeadEvent(this.id, previousLeadId, unlinkedBy)
     );
 
     return Result.ok(undefined);

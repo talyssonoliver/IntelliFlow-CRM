@@ -23,6 +23,7 @@ export * from './crm/lead/Email';
 export * from './crm/lead/LeadEvents';
 export * from './crm/lead/LeadRepository';
 export * from './crm/lead/LeadConversionAudit';
+export * from './crm/lead/LeadActivityConstants';
 
 // CRM Domain - Contacts
 export * from './crm/contact/Contact';
@@ -90,6 +91,9 @@ export * from './ai/AIConstants';
 
 // AI Domain - Feedback Events
 export * from './ai/FeedbackEvents';
+
+// AI Domain - Output Review (IFC-128)
+export * from './ai/review';
 
 // Auth Domain - Constants
 export * from './auth/AuthConstants';
