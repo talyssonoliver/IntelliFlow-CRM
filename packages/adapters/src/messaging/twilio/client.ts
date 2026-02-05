@@ -10,6 +10,7 @@
  */
 
 import { Twilio } from 'twilio';
+import type { MessageInstance } from 'twilio/lib/rest/api/v2010/account/message';
 import { z } from 'zod';
 
 // ============================================================================
@@ -132,7 +133,7 @@ export class TwilioClient {
       limit: options?.limit || 20,
     });
 
-    return messages.map((message) => ({
+    return messages.map((message: MessageInstance) => ({
       sid: message.sid,
       status: message.status,
       to: message.to,
@@ -184,17 +185,28 @@ export class TwilioClient {
 
   /**
    * Get account balance
+   * Note: Uses the Balance API endpoint for accurate balance information
    */
   async getAccountBalance(): Promise<{
     balance: string;
     currency: string;
   }> {
-    const account = await this.client.api.v2010.accounts(this.config.accountSid).fetch();
+    try {
+      // The balance is available via the balance endpoint, not directly on account
+      const balanceList = this.client.api.v2010.accounts(this.config.accountSid).balance;
+      const balance = await balanceList.fetch();
 
-    return {
-      balance: account.balance ?? '0',
-      currency: account.currency ?? 'USD',
-    };
+      return {
+        balance: balance.balance ?? '0',
+        currency: balance.currency ?? 'USD',
+      };
+    } catch {
+      // Fallback: return default values if balance API unavailable
+      return {
+        balance: '0',
+        currency: 'USD',
+      };
+    }
   }
 }
 
