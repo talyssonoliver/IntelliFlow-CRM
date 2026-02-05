@@ -15,7 +15,7 @@ describe('AuditLogger', () => {
       tenant: {
         findUnique: vi.fn().mockResolvedValue({ id: TEST_TENANT_ID }),
       },
-      auditLog: {
+      auditLogEntry: {
         create: vi.fn().mockResolvedValue({ id: 'audit-log-123' }),
         findMany: vi.fn().mockResolvedValue([]),
         count: vi.fn().mockResolvedValue(0),
@@ -75,7 +75,7 @@ describe('AuditLogger', () => {
       });
 
       expect(logId).toBe('audit-log-123');
-      expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+      expect(mockPrisma.auditLogEntry.create).toHaveBeenCalled();
     });
 
     it('should include before and after state', async () => {
@@ -89,11 +89,11 @@ describe('AuditLogger', () => {
         afterState: { status: 'QUALIFIED' },
       });
 
-      expect(mockPrisma.auditLog.create).toHaveBeenCalledWith(
+      expect(mockPrisma.auditLogEntry.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            oldValue: { status: 'NEW' },
-            newValue: { status: 'QUALIFIED' },
+            beforeState: { status: 'NEW' },
+            afterState: { status: 'QUALIFIED' },
           }),
         })
       );
@@ -129,7 +129,7 @@ describe('AuditLogger', () => {
 
       expect(logId).toBeDefined();
       // Create should not be called immediately
-      expect(mockPrisma.auditLog.create).not.toHaveBeenCalled();
+      expect(mockPrisma.auditLogEntry.create).not.toHaveBeenCalled();
     });
 
     it('should include IP address and user agent', async () => {
@@ -143,7 +143,7 @@ describe('AuditLogger', () => {
         userAgent: 'Mozilla/5.0',
       });
 
-      expect(mockPrisma.auditLog.create).toHaveBeenCalledWith(
+      expect(mockPrisma.auditLogEntry.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             ipAddress: '192.168.1.1',
@@ -162,7 +162,7 @@ describe('AuditLogger', () => {
         afterState: { status: 'QUALIFIED', name: 'Test Lead' },
       });
 
-      expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+      expect(mockPrisma.auditLogEntry.create).toHaveBeenCalled();
     });
 
     it('should include request context', async () => {
@@ -177,7 +177,7 @@ describe('AuditLogger', () => {
         },
       });
 
-      expect(mockPrisma.auditLog.create).toHaveBeenCalledWith(
+      expect(mockPrisma.auditLogEntry.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             ipAddress: '192.168.1.1',
@@ -193,7 +193,7 @@ describe('AuditLogger', () => {
         beforeState: { id: 'lead-123', name: 'Deleted Lead' },
       });
 
-      expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+      expect(mockPrisma.auditLogEntry.create).toHaveBeenCalled();
     });
 
     it('should default actorType to USER', async () => {
@@ -201,7 +201,7 @@ describe('AuditLogger', () => {
         actorId: 'user-123',
       });
 
-      expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+      expect(mockPrisma.auditLogEntry.create).toHaveBeenCalled();
     });
   });
 
@@ -214,7 +214,7 @@ describe('AuditLogger', () => {
         reason: 'User does not have delete permission',
       });
 
-      expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+      expect(mockPrisma.auditLogEntry.create).toHaveBeenCalled();
     });
 
     it('should include default reason if not provided', async () => {
@@ -222,7 +222,7 @@ describe('AuditLogger', () => {
         actorId: 'user-123',
       });
 
-      expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+      expect(mockPrisma.auditLogEntry.create).toHaveBeenCalled();
     });
   });
 
@@ -284,7 +284,7 @@ describe('AuditLogger', () => {
         mfaUsed: true,
       });
 
-      expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+      expect(mockPrisma.auditLogEntry.create).toHaveBeenCalled();
       expect(mockPrisma.securityEvent.create).toHaveBeenCalled();
     });
 
@@ -295,7 +295,7 @@ describe('AuditLogger', () => {
         failureReason: 'Invalid password',
       });
 
-      expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+      expect(mockPrisma.auditLogEntry.create).toHaveBeenCalled();
       expect(mockPrisma.securityEvent.create).toHaveBeenCalled();
     });
 
@@ -306,7 +306,7 @@ describe('AuditLogger', () => {
         mfaUsed: true,
       });
 
-      expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+      expect(mockPrisma.auditLogEntry.create).toHaveBeenCalled();
     });
   });
 
@@ -317,7 +317,7 @@ describe('AuditLogger', () => {
         successCount: 3,
       });
 
-      expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+      expect(mockPrisma.auditLogEntry.create).toHaveBeenCalled();
     });
 
     it('should log bulk delete operation', async () => {
@@ -326,7 +326,7 @@ describe('AuditLogger', () => {
         successCount: 2,
       });
 
-      expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+      expect(mockPrisma.auditLogEntry.create).toHaveBeenCalled();
     });
 
     it('should log partial success when there are failures', async () => {
@@ -336,7 +336,7 @@ describe('AuditLogger', () => {
         failureCount: 1,
       });
 
-      expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+      expect(mockPrisma.auditLogEntry.create).toHaveBeenCalled();
     });
 
     it('should log export operation', async () => {
@@ -345,17 +345,17 @@ describe('AuditLogger', () => {
         metadata: { format: 'csv' },
       });
 
-      expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+      expect(mockPrisma.auditLogEntry.create).toHaveBeenCalled();
     });
   });
 
   describe('query', () => {
     it('should query logs with filters', async () => {
-      (mockPrisma.auditLog.findMany as any).mockResolvedValue([
+      (mockPrisma.auditLogEntry.findMany as any).mockResolvedValue([
         { id: 'log-1', action: 'CREATE' },
         { id: 'log-2', action: 'UPDATE' },
       ]);
-      (mockPrisma.auditLog.count as any).mockResolvedValue(2);
+      (mockPrisma.auditLogEntry.count as any).mockResolvedValue(2);
 
       const result = await logger.query({
         resourceType: 'lead',
@@ -365,7 +365,7 @@ describe('AuditLogger', () => {
 
       expect(result.entries).toHaveLength(2);
       expect(result.total).toBe(2);
-      expect(mockPrisma.auditLog.findMany).toHaveBeenCalled();
+      expect(mockPrisma.auditLogEntry.findMany).toHaveBeenCalled();
     });
 
     it('should filter by date range', async () => {
@@ -374,10 +374,10 @@ describe('AuditLogger', () => {
         endDate: new Date(2025, 0, 31),
       });
 
-      expect(mockPrisma.auditLog.findMany).toHaveBeenCalledWith(
+      expect(mockPrisma.auditLogEntry.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            createdAt: expect.objectContaining({
+            timestamp: expect.objectContaining({
               gte: new Date(2025, 0, 1),
               lte: new Date(2025, 0, 31),
             }),
@@ -392,7 +392,7 @@ describe('AuditLogger', () => {
         offset: 100,
       });
 
-      expect(mockPrisma.auditLog.findMany).toHaveBeenCalledWith(
+      expect(mockPrisma.auditLogEntry.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           take: 50,
           skip: 100,
@@ -403,7 +403,7 @@ describe('AuditLogger', () => {
     it('should use default limit if not specified', async () => {
       await logger.query({});
 
-      expect(mockPrisma.auditLog.findMany).toHaveBeenCalledWith(
+      expect(mockPrisma.auditLogEntry.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           take: 100,
           skip: 0,
@@ -439,7 +439,7 @@ describe('AuditLogger', () => {
       // Manually flush
       await asyncLogger.flush();
 
-      expect(mockPrisma.auditLog.create).toHaveBeenCalledTimes(2);
+      expect(mockPrisma.auditLogEntry.create).toHaveBeenCalledTimes(2);
     });
 
     it('should not throw on empty buffer', async () => {
@@ -455,7 +455,7 @@ describe('AuditLogger', () => {
       });
 
       // Make create fail
-      (mockPrisma.auditLog.create as any).mockRejectedValueOnce(new Error('DB Error'));
+      (mockPrisma.auditLogEntry.create as any).mockRejectedValueOnce(new Error('DB Error'));
 
       await asyncLogger.log({
         tenantId: TEST_TENANT_ID,
@@ -492,7 +492,7 @@ describe('AuditLogger', () => {
 
       await asyncLogger.shutdown();
 
-      expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+      expect(mockPrisma.auditLogEntry.create).toHaveBeenCalled();
     });
   });
 
@@ -503,7 +503,7 @@ describe('AuditLogger', () => {
         afterState: { name: 'Test', status: 'QUALIFIED' },
       });
 
-      expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+      expect(mockPrisma.auditLogEntry.create).toHaveBeenCalled();
     });
 
     it('should detect removed fields', async () => {
@@ -512,7 +512,7 @@ describe('AuditLogger', () => {
         afterState: { name: 'Test' },
       });
 
-      expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+      expect(mockPrisma.auditLogEntry.create).toHaveBeenCalled();
     });
 
     it('should detect modified fields', async () => {
@@ -521,7 +521,7 @@ describe('AuditLogger', () => {
         afterState: { name: 'New Name', score: 75 },
       });
 
-      expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+      expect(mockPrisma.auditLogEntry.create).toHaveBeenCalled();
     });
 
     it('should handle deeply nested objects', async () => {
@@ -530,7 +530,7 @@ describe('AuditLogger', () => {
         afterState: { contact: { name: 'John', phone: '456' } },
       });
 
-      expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+      expect(mockPrisma.auditLogEntry.create).toHaveBeenCalled();
     });
   });
 
@@ -553,7 +553,7 @@ describe('AuditLogger', () => {
 
   describe('error handling', () => {
     it('should throw when database write fails', async () => {
-      (mockPrisma.auditLog.create as any).mockRejectedValueOnce(new Error('DB Error'));
+      (mockPrisma.auditLogEntry.create as any).mockRejectedValueOnce(new Error('DB Error'));
 
       await expect(
         logger.log({
@@ -576,11 +576,6 @@ describe('queryComprehensive', () => {
     mockPrisma = {
       tenant: {
         findUnique: vi.fn().mockResolvedValue({ id: TEST_TENANT_ID }),
-      },
-      auditLog: {
-        create: vi.fn().mockResolvedValue({ id: 'audit-log-123' }),
-        findMany: vi.fn().mockResolvedValue([]),
-        count: vi.fn().mockResolvedValue(0),
       },
       auditLogEntry: {
         create: vi.fn().mockResolvedValue({ id: 'audit-entry-123' }),
@@ -640,38 +635,15 @@ describe('queryComprehensive', () => {
     );
   });
 
-  it('should fall back to basic query when auditLogEntry table is undefined', async () => {
-    const prismaWithoutEntry = {
-      ...mockPrisma,
-      auditLogEntry: undefined,
-    } as unknown as PrismaClient;
+  it('should throw error when database query fails', async () => {
+    const dbError = new Error('DB Error');
+    (mockPrisma.auditLogEntry.findMany as any).mockRejectedValueOnce(dbError);
 
-    const safeLogger = new AuditLogger(prismaWithoutEntry, { consoleLog: false });
-
-    const result = await safeLogger.queryComprehensive({
-      resourceType: 'lead',
-    });
-
-    expect(result).toBeDefined();
-    expect(mockPrisma.auditLog.findMany).toHaveBeenCalled();
-  });
-
-  it('should fall back to basic query on error', async () => {
-    (mockPrisma.auditLogEntry.findMany as any).mockRejectedValueOnce(new Error('DB Error'));
-
-    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
-
-    const result = await logger.queryComprehensive({
-      resourceType: 'lead',
-    });
-
-    expect(result).toBeDefined();
-    expect(debugSpy).toHaveBeenCalledWith(
-      '[AUDIT] Comprehensive query failed, falling back to basic:',
-      expect.any(Error)
-    );
-
-    debugSpy.mockRestore();
+    await expect(
+      logger.queryComprehensive({
+        resourceType: 'lead',
+      })
+    ).rejects.toThrow('DB Error');
   });
 });
 
@@ -683,11 +655,6 @@ describe('getResourceAuditTrail', () => {
     mockPrisma = {
       tenant: {
         findUnique: vi.fn().mockResolvedValue({ id: TEST_TENANT_ID }),
-      },
-      auditLog: {
-        create: vi.fn().mockResolvedValue({ id: 'audit-log-123' }),
-        findMany: vi.fn().mockResolvedValue([]),
-        count: vi.fn().mockResolvedValue(0),
       },
       auditLogEntry: {
         findMany: vi.fn().mockResolvedValue([
@@ -741,11 +708,6 @@ describe('getActorAuditTrail', () => {
     mockPrisma = {
       tenant: {
         findUnique: vi.fn().mockResolvedValue({ id: TEST_TENANT_ID }),
-      },
-      auditLog: {
-        create: vi.fn().mockResolvedValue({ id: 'audit-log-123' }),
-        findMany: vi.fn().mockResolvedValue([]),
-        count: vi.fn().mockResolvedValue(0),
       },
       auditLogEntry: {
         findMany: vi.fn().mockResolvedValue([
@@ -807,11 +769,6 @@ describe('getPermissionAuditTrail', () => {
     mockPrisma = {
       tenant: {
         findUnique: vi.fn().mockResolvedValue({ id: TEST_TENANT_ID }),
-      },
-      auditLog: {
-        create: vi.fn().mockResolvedValue({ id: 'audit-log-123' }),
-        findMany: vi.fn().mockResolvedValue([]),
-        count: vi.fn().mockResolvedValue(0),
       },
       auditLogEntry: {
         findMany: vi.fn().mockResolvedValue([
@@ -892,35 +849,11 @@ describe('getPermissionAuditTrail', () => {
     );
   });
 
-  it('should return empty when auditLogEntry table is undefined', async () => {
-    const prismaWithoutEntry = {
-      ...mockPrisma,
-      auditLogEntry: undefined,
-    } as unknown as PrismaClient;
+  it('should throw error when database query fails', async () => {
+    const dbError = new Error('DB Error');
+    (mockPrisma.auditLogEntry.findMany as any).mockRejectedValueOnce(dbError);
 
-    const safeLogger = new AuditLogger(prismaWithoutEntry, { consoleLog: false });
-
-    const result = await safeLogger.getPermissionAuditTrail();
-
-    expect(result.entries).toEqual([]);
-    expect(result.total).toBe(0);
-  });
-
-  it('should handle errors gracefully', async () => {
-    (mockPrisma.auditLogEntry.findMany as any).mockRejectedValueOnce(new Error('DB Error'));
-
-    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
-
-    const result = await logger.getPermissionAuditTrail();
-
-    expect(result.entries).toEqual([]);
-    expect(result.total).toBe(0);
-    expect(debugSpy).toHaveBeenCalledWith(
-      '[AUDIT] Permission audit trail query failed:',
-      expect.any(Error)
-    );
-
-    debugSpy.mockRestore();
+    await expect(logger.getPermissionAuditTrail()).rejects.toThrow('DB Error');
   });
 });
 
@@ -932,9 +865,6 @@ describe('comprehensive entry writing', () => {
     mockPrisma = {
       tenant: {
         findUnique: vi.fn().mockResolvedValue({ id: 'tenant-123' }),
-      },
-      auditLog: {
-        create: vi.fn().mockResolvedValue({ id: 'audit-log-123' }),
       },
       auditLogEntry: {
         create: vi.fn().mockResolvedValue({ id: 'audit-entry-123' }),
@@ -982,27 +912,26 @@ describe('comprehensive entry writing', () => {
     );
   });
 
-  it('should fall back to basic AuditLog when comprehensive write fails', async () => {
-    (mockPrisma.auditLogEntry.create as any).mockRejectedValueOnce(new Error('Comprehensive table error'));
+  it('should throw error when audit log write fails', async () => {
+    const dbError = new Error('Database write error');
+    (mockPrisma.auditLogEntry.create as any).mockRejectedValueOnce(dbError);
 
-    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    const logId = await logger.log({
-      tenantId: 'tenant-123',
-      eventType: 'LeadCreated',
-      action: 'CREATE',
-      resourceType: 'lead',
-      resourceId: 'lead-123',
-    });
+    await expect(
+      logger.log({
+        tenantId: TEST_TENANT_ID,
+        eventType: 'LeadCreated',
+        action: 'CREATE',
+        resourceType: 'lead',
+        resourceId: 'lead-123',
+      })
+    ).rejects.toThrow('Database write error');
 
-    expect(logId).toBe('audit-log-123');
-    expect(mockPrisma.auditLog.create).toHaveBeenCalled();
-    expect(debugSpy).toHaveBeenCalledWith(
-      '[AUDIT] Comprehensive entry failed, falling back to basic:',
-      expect.any(Error)
-    );
+    expect(mockPrisma.auditLogEntry.create).toHaveBeenCalled();
+    expect(errorSpy).toHaveBeenCalledWith('[AUDIT] Failed to write audit log:', dbError);
 
-    debugSpy.mockRestore();
+    errorSpy.mockRestore();
   });
 });
 
@@ -1104,10 +1033,9 @@ describe('scheduleFlush - batch size trigger', () => {
       tenant: {
         findUnique: vi.fn().mockResolvedValue({ id: 'tenant-123' }),
       },
-      auditLog: {
+      auditLogEntry: {
         create: vi.fn().mockResolvedValue({ id: 'audit-log-123' }),
       },
-      auditLogEntry: undefined,
     } as unknown as PrismaClient;
   });
 
@@ -1147,12 +1075,12 @@ describe('scheduleFlush - batch size trigger', () => {
     });
 
     // Not flushed yet
-    expect(mockPrisma.auditLog.create).not.toHaveBeenCalled();
+    expect(mockPrisma.auditLogEntry.create).not.toHaveBeenCalled();
 
     // Manual flush should write all entries
     await logger.flush();
 
-    expect(mockPrisma.auditLog.create).toHaveBeenCalledTimes(3);
+    expect(mockPrisma.auditLogEntry.create).toHaveBeenCalledTimes(3);
   });
 });
 
@@ -1165,10 +1093,9 @@ describe('calculateChangedFields - edge cases', () => {
       tenant: {
         findUnique: vi.fn().mockResolvedValue({ id: 'tenant-123' }),
       },
-      auditLog: {
+      auditLogEntry: {
         create: vi.fn().mockResolvedValue({ id: 'audit-log-123' }),
       },
-      auditLogEntry: undefined,
     } as unknown as PrismaClient;
     logger = new AuditLogger(mockPrisma, { consoleLog: false });
   });
@@ -1184,7 +1111,7 @@ describe('calculateChangedFields - edge cases', () => {
       afterState: undefined,
     });
 
-    expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+    expect(mockPrisma.auditLogEntry.create).toHaveBeenCalled();
   });
 
   it('should return all after keys when only after state exists', async () => {
@@ -1193,7 +1120,7 @@ describe('calculateChangedFields - edge cases', () => {
       afterState: { name: 'Test', status: 'NEW' },
     });
 
-    expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+    expect(mockPrisma.auditLogEntry.create).toHaveBeenCalled();
   });
 
   it('should return all before keys when only before state exists', async () => {
@@ -1202,7 +1129,7 @@ describe('calculateChangedFields - edge cases', () => {
       afterState: undefined,
     });
 
-    expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+    expect(mockPrisma.auditLogEntry.create).toHaveBeenCalled();
   });
 });
 

@@ -26,8 +26,8 @@ async function validateTenant(prisma: PrismaClient, tenantId: string): Promise<b
 /**
  * Write an audit log entry to the database
  *
- * Writes to both the comprehensive AuditLogEntry table (if available)
- * and the basic AuditLog table for backward compatibility.
+ * Per ADR-008, writes to the consolidated AuditLogEntry table.
+ * This is the single source of truth for audit logs.
  *
  * If the tenantId is invalid (empty or doesn't exist), logs to console only
  * to avoid foreign key constraint violations.
@@ -51,47 +51,7 @@ export async function writeEntry(
       return eventId;
     }
 
-    // Try comprehensive table first
-    const entryId = await writeComprehensiveEntry(prisma, entry, config);
-    if (entryId) {
-      return entryId;
-    }
-
-    // Fall back to basic AuditLog table
-    const auditLog = await prisma.auditLog.create({
-      data: {
-        action: entry.action,
-        entityType: entry.resourceType,
-        entityId: entry.resourceId,
-        oldValue: entry.beforeState as object | undefined,
-        newValue: entry.afterState as object | undefined,
-        ipAddress: entry.ipAddress,
-        userAgent: entry.userAgent,
-        userId: entry.actorId || 'system',
-        tenantId: entry.tenantId,
-      },
-    });
-
-    return auditLog.id;
-  } catch (error) {
-    console.error('[AUDIT] Failed to write audit log:', error);
-    throw error;
-  }
-}
-
-/**
- * Write to the comprehensive AuditLogEntry table
- */
-async function writeComprehensiveEntry(
-  prisma: PrismaClient,
-  entry: AuditLogInput,
-  config: RequiredAuditLoggerConfig
-): Promise<string | null> {
-  try {
-    if (!prisma.auditLogEntry) {
-      return null;
-    }
-
+    // Write to consolidated AuditLogEntry table
     const auditLogEntry = await prisma.auditLogEntry.create({
       data: {
         tenantId: entry.tenantId,
@@ -127,7 +87,7 @@ async function writeComprehensiveEntry(
 
     return auditLogEntry.id;
   } catch (error) {
-    console.debug('[AUDIT] Comprehensive entry failed, falling back to basic:', error);
-    return null;
+    console.error('[AUDIT] Failed to write audit log:', error);
+    throw error;
   }
 }

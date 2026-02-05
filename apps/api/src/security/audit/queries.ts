@@ -30,67 +30,48 @@ export interface QueryResult {
 }
 
 /**
- * Query audit logs from the comprehensive AuditLogEntry table
+ * Query audit logs from the consolidated AuditLogEntry table
+ * Per ADR-008, this is the single source of truth for audit logs.
  */
 export async function queryComprehensive(
   prisma: PrismaClient,
   filters: QueryFilters
 ): Promise<QueryResult> {
-  try {
-    if (!prisma.auditLogEntry) {
-      return queryBasic(prisma, filters);
-    }
+  const where = buildWhereClause(filters);
 
-    const where = buildWhereClause(filters);
+  const [entries, total] = await Promise.all([
+    prisma.auditLogEntry.findMany({
+      where,
+      orderBy: { timestamp: 'desc' },
+      take: filters.limit ?? 100,
+      skip: filters.offset ?? 0,
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            avatarUrl: true,
+          },
+        },
+      },
+    }),
+    prisma.auditLogEntry.count({ where }),
+  ]);
 
-    const [entries, total] = await Promise.all([
-      prisma.auditLogEntry.findMany({
-        where,
-        orderBy: { timestamp: 'desc' },
-        take: filters.limit ?? 100,
-        skip: filters.offset ?? 0,
-      }),
-      prisma.auditLogEntry.count({ where }),
-    ]);
-
-    return { entries, total };
-  } catch (error) {
-    console.debug('[AUDIT] Comprehensive query failed, falling back to basic:', error);
-    return queryBasic(prisma, filters);
-  }
+  return { entries, total };
 }
 
 /**
- * Query audit logs from basic AuditLog table (backward compatibility)
+ * Query audit logs (alias for queryComprehensive)
+ * @deprecated Use queryComprehensive directly
  */
 export async function queryBasic(
   prisma: PrismaClient,
   filters: QueryFilters
 ): Promise<QueryResult> {
-  const where: Record<string, unknown> = {};
-
-  if (filters.resourceType) where.entityType = filters.resourceType;
-  if (filters.resourceId) where.entityId = filters.resourceId;
-  if (filters.actorId) where.userId = filters.actorId;
-  if (filters.action) where.action = filters.action;
-
-  if (filters.startDate || filters.endDate) {
-    where.createdAt = {};
-    if (filters.startDate) (where.createdAt as Record<string, Date>).gte = filters.startDate;
-    if (filters.endDate) (where.createdAt as Record<string, Date>).lte = filters.endDate;
-  }
-
-  const [entries, total] = await Promise.all([
-    prisma.auditLog.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      take: filters.limit ?? 100,
-      skip: filters.offset ?? 0,
-    }),
-    prisma.auditLog.count({ where }),
-  ]);
-
-  return { entries, total };
+  // Redirect to comprehensive query - no more separate basic table
+  return queryComprehensive(prisma, filters);
 }
 
 /**
@@ -147,38 +128,39 @@ export async function getPermissionAuditTrail(
     offset?: number;
   } = {}
 ): Promise<QueryResult> {
-  try {
-    if (!prisma.auditLogEntry) {
-      return { entries: [], total: 0 };
-    }
+  const where: Record<string, unknown> = {
+    requiredPermission: { not: null },
+  };
 
-    const where: Record<string, unknown> = {
-      requiredPermission: { not: null },
-    };
+  if (options.actorId) where.actorId = options.actorId;
+  if (options.resourceType) where.resourceType = options.resourceType;
+  if (options.permissionDeniedOnly) where.permissionGranted = false;
 
-    if (options.actorId) where.actorId = options.actorId;
-    if (options.resourceType) where.resourceType = options.resourceType;
-    if (options.permissionDeniedOnly) where.permissionGranted = false;
-
-    if (options.startDate || options.endDate) {
-      where.timestamp = {};
-      if (options.startDate) (where.timestamp as Record<string, Date>).gte = options.startDate;
-      if (options.endDate) (where.timestamp as Record<string, Date>).lte = options.endDate;
-    }
-
-    const [entries, total] = await Promise.all([
-      prisma.auditLogEntry.findMany({
-        where,
-        orderBy: { timestamp: 'desc' },
-        take: options.limit ?? 100,
-        skip: options.offset ?? 0,
-      }),
-      prisma.auditLogEntry.count({ where }),
-    ]);
-
-    return { entries, total };
-  } catch (error) {
-    console.debug('[AUDIT] Permission audit trail query failed:', error);
-    return { entries: [], total: 0 };
+  if (options.startDate || options.endDate) {
+    where.timestamp = {};
+    if (options.startDate) (where.timestamp as Record<string, Date>).gte = options.startDate;
+    if (options.endDate) (where.timestamp as Record<string, Date>).lte = options.endDate;
   }
+
+  const [entries, total] = await Promise.all([
+    prisma.auditLogEntry.findMany({
+      where,
+      orderBy: { timestamp: 'desc' },
+      take: options.limit ?? 100,
+      skip: options.offset ?? 0,
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            avatarUrl: true,
+          },
+        },
+      },
+    }),
+    prisma.auditLogEntry.count({ where }),
+  ]);
+
+  return { entries, total };
 }

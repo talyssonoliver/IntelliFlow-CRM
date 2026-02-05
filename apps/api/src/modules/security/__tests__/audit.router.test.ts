@@ -34,19 +34,39 @@ describe('Audit Router', () => {
     });
   }
 
-  // Mock audit log data
+  // Mock audit log data (AuditLogEntry schema per ADR-008)
+  // Using partial mock that matches the Prisma findMany response shape
   const mockAuditLog = {
     id: 'audit-log-1',
-    userId: TEST_UUIDS.user1,
     tenantId: TEST_UUIDS.tenant,
-    action: 'CREATE',
-    entityType: 'lead',
-    entityId: TEST_UUIDS.lead1,
-    oldValue: null,
-    newValue: JSON.stringify({ name: 'New Lead' }),
+    eventType: 'lead.created',
+    eventVersion: 'v1',
+    eventId: 'evt-123',
+    timestamp: new Date('2025-01-15T10:00:00Z'),
+    actorType: 'USER' as const,
+    actorId: TEST_UUIDS.user1,
+    actorEmail: 'test@example.com',
+    actorRole: 'USER',
+    resourceType: 'lead',
+    resourceId: TEST_UUIDS.lead1,
+    resourceName: 'Test Lead',
+    action: 'CREATE' as const,
+    actionResult: 'SUCCESS' as const,
+    actionReason: null,
+    beforeState: null,
+    afterState: { name: 'New Lead' },
+    changedFields: ['name'],
     ipAddress: '192.168.1.1',
     userAgent: 'Test Agent',
-    createdAt: new Date('2025-01-15T10:00:00Z'),
+    requestId: 'req-123',
+    traceId: 'trace-123',
+    sessionId: 'sess-123',
+    dataClassification: 'INTERNAL' as const,
+    retentionExpiresAt: null,
+    requiredPermission: 'lead:create',
+    permissionGranted: true,
+    permissionDeniedReason: null,
+    metadata: null,
     user: {
       id: TEST_UUIDS.user1,
       email: 'test@example.com',
@@ -59,14 +79,16 @@ describe('Audit Router', () => {
     {
       ...mockAuditLog,
       id: 'audit-log-2',
-      action: 'UPDATE',
-      createdAt: new Date('2025-01-15T11:00:00Z'),
+      eventType: 'lead.updated',
+      action: 'UPDATE' as const,
+      timestamp: new Date('2025-01-15T11:00:00Z'),
     },
     {
       ...mockAuditLog,
       id: 'audit-log-3',
-      action: 'DELETE',
-      createdAt: new Date('2025-01-15T12:00:00Z'),
+      eventType: 'lead.deleted',
+      action: 'DELETE' as const,
+      timestamp: new Date('2025-01-15T12:00:00Z'),
     },
   ];
 
@@ -78,8 +100,8 @@ describe('Audit Router', () => {
     it('should allow manager to search audit logs', async () => {
       const caller = auditRouter.createCaller(createManagerContext());
 
-      prismaMock.auditLog.findMany.mockResolvedValue(mockAuditLogs);
-      prismaMock.auditLog.count.mockResolvedValue(3);
+      prismaMock.auditLogEntry.findMany.mockResolvedValue(mockAuditLogs);
+      prismaMock.auditLogEntry.count.mockResolvedValue(3);
 
       const result = await caller.search({ limit: 100, offset: 0 });
 
@@ -91,8 +113,8 @@ describe('Audit Router', () => {
     it('should allow admin to search audit logs', async () => {
       const caller = auditRouter.createCaller(createAdminContext());
 
-      prismaMock.auditLog.findMany.mockResolvedValue(mockAuditLogs);
-      prismaMock.auditLog.count.mockResolvedValue(3);
+      prismaMock.auditLogEntry.findMany.mockResolvedValue(mockAuditLogs);
+      prismaMock.auditLogEntry.count.mockResolvedValue(3);
 
       const result = await caller.search({ limit: 100, offset: 0 });
 
@@ -108,15 +130,15 @@ describe('Audit Router', () => {
     it('should filter by resourceType', async () => {
       const caller = auditRouter.createCaller(createManagerContext());
 
-      prismaMock.auditLog.findMany.mockResolvedValue([mockAuditLog]);
-      prismaMock.auditLog.count.mockResolvedValue(1);
+      prismaMock.auditLogEntry.findMany.mockResolvedValue([mockAuditLog]);
+      prismaMock.auditLogEntry.count.mockResolvedValue(1);
 
       await caller.search({ resourceType: 'lead', limit: 100, offset: 0 });
 
-      expect(prismaMock.auditLog.findMany).toHaveBeenCalledWith(
+      expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            entityType: 'lead',
+            resourceType: 'lead',
           }),
         })
       );
@@ -125,15 +147,15 @@ describe('Audit Router', () => {
     it('should filter by resourceId', async () => {
       const caller = auditRouter.createCaller(createManagerContext());
 
-      prismaMock.auditLog.findMany.mockResolvedValue([mockAuditLog]);
-      prismaMock.auditLog.count.mockResolvedValue(1);
+      prismaMock.auditLogEntry.findMany.mockResolvedValue([mockAuditLog]);
+      prismaMock.auditLogEntry.count.mockResolvedValue(1);
 
       await caller.search({ resourceId: TEST_UUIDS.lead1, limit: 100, offset: 0 });
 
-      expect(prismaMock.auditLog.findMany).toHaveBeenCalledWith(
+      expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            entityId: TEST_UUIDS.lead1,
+            resourceId: TEST_UUIDS.lead1,
           }),
         })
       );
@@ -142,15 +164,15 @@ describe('Audit Router', () => {
     it('should filter by actorId', async () => {
       const caller = auditRouter.createCaller(createManagerContext());
 
-      prismaMock.auditLog.findMany.mockResolvedValue([mockAuditLog]);
-      prismaMock.auditLog.count.mockResolvedValue(1);
+      prismaMock.auditLogEntry.findMany.mockResolvedValue([mockAuditLog]);
+      prismaMock.auditLogEntry.count.mockResolvedValue(1);
 
       await caller.search({ actorId: TEST_UUIDS.user1, limit: 100, offset: 0 });
 
-      expect(prismaMock.auditLog.findMany).toHaveBeenCalledWith(
+      expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            userId: TEST_UUIDS.user1,
+            actorId: TEST_UUIDS.user1,
           }),
         })
       );
@@ -159,12 +181,12 @@ describe('Audit Router', () => {
     it('should filter by action', async () => {
       const caller = auditRouter.createCaller(createManagerContext());
 
-      prismaMock.auditLog.findMany.mockResolvedValue([mockAuditLog]);
-      prismaMock.auditLog.count.mockResolvedValue(1);
+      prismaMock.auditLogEntry.findMany.mockResolvedValue([mockAuditLog]);
+      prismaMock.auditLogEntry.count.mockResolvedValue(1);
 
       await caller.search({ action: 'CREATE', limit: 100, offset: 0 });
 
-      expect(prismaMock.auditLog.findMany).toHaveBeenCalledWith(
+      expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             action: 'CREATE',
@@ -178,15 +200,15 @@ describe('Audit Router', () => {
       const startDate = new Date('2025-01-01');
       const endDate = new Date('2025-01-31');
 
-      prismaMock.auditLog.findMany.mockResolvedValue(mockAuditLogs);
-      prismaMock.auditLog.count.mockResolvedValue(3);
+      prismaMock.auditLogEntry.findMany.mockResolvedValue(mockAuditLogs);
+      prismaMock.auditLogEntry.count.mockResolvedValue(3);
 
       await caller.search({ startDate, endDate, limit: 100, offset: 0 });
 
-      expect(prismaMock.auditLog.findMany).toHaveBeenCalledWith(
+      expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            createdAt: {
+            timestamp: {
               gte: startDate,
               lte: endDate,
             },
@@ -198,12 +220,12 @@ describe('Audit Router', () => {
     it('should support pagination with offset', async () => {
       const caller = auditRouter.createCaller(createManagerContext());
 
-      prismaMock.auditLog.findMany.mockResolvedValue([mockAuditLogs[2]]);
-      prismaMock.auditLog.count.mockResolvedValue(3);
+      prismaMock.auditLogEntry.findMany.mockResolvedValue([mockAuditLogs[2]]);
+      prismaMock.auditLogEntry.count.mockResolvedValue(3);
 
       const result = await caller.search({ limit: 1, offset: 2 });
 
-      expect(prismaMock.auditLog.findMany).toHaveBeenCalledWith(
+      expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           take: 1,
           skip: 2,
@@ -215,8 +237,8 @@ describe('Audit Router', () => {
     it('should indicate hasMore when more results exist', async () => {
       const caller = auditRouter.createCaller(createManagerContext());
 
-      prismaMock.auditLog.findMany.mockResolvedValue([mockAuditLog]);
-      prismaMock.auditLog.count.mockResolvedValue(10);
+      prismaMock.auditLogEntry.findMany.mockResolvedValue([mockAuditLog]);
+      prismaMock.auditLogEntry.count.mockResolvedValue(10);
 
       const result = await caller.search({ limit: 1, offset: 0 });
 
@@ -226,14 +248,14 @@ describe('Audit Router', () => {
     it('should order by createdAt descending', async () => {
       const caller = auditRouter.createCaller(createManagerContext());
 
-      prismaMock.auditLog.findMany.mockResolvedValue(mockAuditLogs);
-      prismaMock.auditLog.count.mockResolvedValue(3);
+      prismaMock.auditLogEntry.findMany.mockResolvedValue(mockAuditLogs);
+      prismaMock.auditLogEntry.count.mockResolvedValue(3);
 
       await caller.search({ limit: 100, offset: 0 });
 
-      expect(prismaMock.auditLog.findMany).toHaveBeenCalledWith(
+      expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          orderBy: { createdAt: 'desc' },
+          orderBy: { timestamp: 'desc' },
         })
       );
     });
@@ -241,12 +263,12 @@ describe('Audit Router', () => {
     it('should include user information', async () => {
       const caller = auditRouter.createCaller(createManagerContext());
 
-      prismaMock.auditLog.findMany.mockResolvedValue(mockAuditLogs);
-      prismaMock.auditLog.count.mockResolvedValue(3);
+      prismaMock.auditLogEntry.findMany.mockResolvedValue(mockAuditLogs);
+      prismaMock.auditLogEntry.count.mockResolvedValue(3);
 
       await caller.search({ limit: 100, offset: 0 });
 
-      expect(prismaMock.auditLog.findMany).toHaveBeenCalledWith(
+      expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           include: {
             user: {
@@ -266,7 +288,7 @@ describe('Audit Router', () => {
     it('should return audit trail for a specific resource', async () => {
       const caller = auditRouter.createCaller(createTestContext());
 
-      prismaMock.auditLog.findMany.mockResolvedValue(mockAuditLogs);
+      prismaMock.auditLogEntry.findMany.mockResolvedValue(mockAuditLogs);
 
       const result = await caller.getByResource({
         resourceType: 'lead',
@@ -274,11 +296,11 @@ describe('Audit Router', () => {
       });
 
       expect(result).toHaveLength(3);
-      expect(prismaMock.auditLog.findMany).toHaveBeenCalledWith(
+      expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
-            entityType: 'lead',
-            entityId: TEST_UUIDS.lead1,
+            resourceType: 'lead',
+            resourceId: TEST_UUIDS.lead1,
           },
         })
       );
@@ -287,7 +309,7 @@ describe('Audit Router', () => {
     it('should respect limit parameter', async () => {
       const caller = auditRouter.createCaller(createTestContext());
 
-      prismaMock.auditLog.findMany.mockResolvedValue([mockAuditLog]);
+      prismaMock.auditLogEntry.findMany.mockResolvedValue([mockAuditLog]);
 
       await caller.getByResource({
         resourceType: 'lead',
@@ -295,7 +317,7 @@ describe('Audit Router', () => {
         limit: 10,
       });
 
-      expect(prismaMock.auditLog.findMany).toHaveBeenCalledWith(
+      expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           take: 10,
         })
@@ -305,14 +327,14 @@ describe('Audit Router', () => {
     it('should use default limit of 50', async () => {
       const caller = auditRouter.createCaller(createTestContext());
 
-      prismaMock.auditLog.findMany.mockResolvedValue(mockAuditLogs);
+      prismaMock.auditLogEntry.findMany.mockResolvedValue(mockAuditLogs);
 
       await caller.getByResource({
         resourceType: 'lead',
         resourceId: TEST_UUIDS.lead1,
       });
 
-      expect(prismaMock.auditLog.findMany).toHaveBeenCalledWith(
+      expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           take: 50,
         })
@@ -322,16 +344,16 @@ describe('Audit Router', () => {
     it('should order by createdAt descending', async () => {
       const caller = auditRouter.createCaller(createTestContext());
 
-      prismaMock.auditLog.findMany.mockResolvedValue(mockAuditLogs);
+      prismaMock.auditLogEntry.findMany.mockResolvedValue(mockAuditLogs);
 
       await caller.getByResource({
         resourceType: 'contact',
         resourceId: TEST_UUIDS.contact1,
       });
 
-      expect(prismaMock.auditLog.findMany).toHaveBeenCalledWith(
+      expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          orderBy: { createdAt: 'desc' },
+          orderBy: { timestamp: 'desc' },
         })
       );
     });
@@ -341,17 +363,17 @@ describe('Audit Router', () => {
     it('should return current user activity log', async () => {
       const caller = auditRouter.createCaller(createTestContext());
 
-      prismaMock.auditLog.findMany.mockResolvedValue(mockAuditLogs);
-      prismaMock.auditLog.count.mockResolvedValue(3);
+      prismaMock.auditLogEntry.findMany.mockResolvedValue(mockAuditLogs);
+      prismaMock.auditLogEntry.count.mockResolvedValue(3);
 
       const result = await caller.getMyActivity({ limit: 50, offset: 0 });
 
       expect(result.logs).toHaveLength(3);
       expect(result.total).toBe(3);
-      expect(prismaMock.auditLog.findMany).toHaveBeenCalledWith(
+      expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
-            userId: TEST_UUIDS.user1,
+            actorId: TEST_UUIDS.user1,
           },
         })
       );
@@ -360,12 +382,12 @@ describe('Audit Router', () => {
     it('should support pagination', async () => {
       const caller = auditRouter.createCaller(createTestContext());
 
-      prismaMock.auditLog.findMany.mockResolvedValue([mockAuditLog]);
-      prismaMock.auditLog.count.mockResolvedValue(10);
+      prismaMock.auditLogEntry.findMany.mockResolvedValue([mockAuditLog]);
+      prismaMock.auditLogEntry.count.mockResolvedValue(10);
 
       const result = await caller.getMyActivity({ limit: 5, offset: 5 });
 
-      expect(prismaMock.auditLog.findMany).toHaveBeenCalledWith(
+      expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           take: 5,
           skip: 5,
@@ -377,12 +399,12 @@ describe('Audit Router', () => {
     it('should use default limit and offset', async () => {
       const caller = auditRouter.createCaller(createTestContext());
 
-      prismaMock.auditLog.findMany.mockResolvedValue(mockAuditLogs);
-      prismaMock.auditLog.count.mockResolvedValue(3);
+      prismaMock.auditLogEntry.findMany.mockResolvedValue(mockAuditLogs);
+      prismaMock.auditLogEntry.count.mockResolvedValue(3);
 
       await caller.getMyActivity({});
 
-      expect(prismaMock.auditLog.findMany).toHaveBeenCalledWith(
+      expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           take: 50,
           skip: 0,
@@ -393,14 +415,14 @@ describe('Audit Router', () => {
     it('should order by createdAt descending', async () => {
       const caller = auditRouter.createCaller(createTestContext());
 
-      prismaMock.auditLog.findMany.mockResolvedValue(mockAuditLogs);
-      prismaMock.auditLog.count.mockResolvedValue(3);
+      prismaMock.auditLogEntry.findMany.mockResolvedValue(mockAuditLogs);
+      prismaMock.auditLogEntry.count.mockResolvedValue(3);
 
       await caller.getMyActivity({});
 
-      expect(prismaMock.auditLog.findMany).toHaveBeenCalledWith(
+      expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          orderBy: { createdAt: 'desc' },
+          orderBy: { timestamp: 'desc' },
         })
       );
     });
@@ -408,15 +430,15 @@ describe('Audit Router', () => {
 
   describe('getSecurityEvents', () => {
     const securityLogs = [
-      { ...mockAuditLog, id: 'sec-1', action: 'LOGIN' },
-      { ...mockAuditLog, id: 'sec-2', action: 'LOGIN_FAILED' },
-      { ...mockAuditLog, id: 'sec-3', action: 'PERMISSION_DENIED' },
+      { ...mockAuditLog, id: 'sec-1', eventType: 'auth.login', action: 'LOGIN' as const },
+      { ...mockAuditLog, id: 'sec-2', eventType: 'auth.login_failed', action: 'LOGIN_FAILED' as const },
+      { ...mockAuditLog, id: 'sec-3', eventType: 'auth.permission_denied', action: 'PERMISSION_DENIED' as const },
     ];
 
     it('should return security events for admin', async () => {
       const caller = auditRouter.createCaller(createAdminContext());
 
-      prismaMock.auditLog.findMany.mockResolvedValue(securityLogs);
+      prismaMock.auditLogEntry.findMany.mockResolvedValue(securityLogs);
 
       const result = await caller.getSecurityEvents({});
 
@@ -426,11 +448,11 @@ describe('Audit Router', () => {
     it('should filter by security-related actions', async () => {
       const caller = auditRouter.createCaller(createAdminContext());
 
-      prismaMock.auditLog.findMany.mockResolvedValue(securityLogs);
+      prismaMock.auditLogEntry.findMany.mockResolvedValue(securityLogs);
 
       await caller.getSecurityEvents({});
 
-      expect(prismaMock.auditLog.findMany).toHaveBeenCalledWith(
+      expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             action: {
@@ -458,14 +480,14 @@ describe('Audit Router', () => {
       const startDate = new Date('2025-01-01');
       const endDate = new Date('2025-01-31');
 
-      prismaMock.auditLog.findMany.mockResolvedValue(securityLogs);
+      prismaMock.auditLogEntry.findMany.mockResolvedValue(securityLogs);
 
       await caller.getSecurityEvents({ startDate, endDate });
 
-      expect(prismaMock.auditLog.findMany).toHaveBeenCalledWith(
+      expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            createdAt: {
+            timestamp: {
               gte: startDate,
               lte: endDate,
             },
@@ -477,11 +499,11 @@ describe('Audit Router', () => {
     it('should respect limit parameter', async () => {
       const caller = auditRouter.createCaller(createAdminContext());
 
-      prismaMock.auditLog.findMany.mockResolvedValue(securityLogs);
+      prismaMock.auditLogEntry.findMany.mockResolvedValue(securityLogs);
 
       await caller.getSecurityEvents({ limit: 50 });
 
-      expect(prismaMock.auditLog.findMany).toHaveBeenCalledWith(
+      expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           take: 50,
         })
@@ -498,23 +520,23 @@ describe('Audit Router', () => {
         { action: 'DELETE', _count: 25 },
       ],
       byResource: [
-        { entityType: 'lead', _count: 50 },
-        { entityType: 'contact', _count: 30 },
-        { entityType: 'account', _count: 20 },
+        { resourceType: 'lead', _count: 50 },
+        { resourceType: 'contact', _count: 30 },
+        { resourceType: 'account', _count: 20 },
       ],
       byUser: [
-        { userId: TEST_UUIDS.user1, _count: 60 },
-        { userId: TEST_UUIDS.admin1, _count: 40 },
+        { actorId: TEST_UUIDS.user1, _count: 60 },
+        { actorId: TEST_UUIDS.admin1, _count: 40 },
       ],
     };
 
     it('should return audit statistics for admin', async () => {
       const caller = auditRouter.createCaller(createAdminContext());
 
-      prismaMock.auditLog.count.mockResolvedValue(mockStats.total);
-      (prismaMock.auditLog.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockStats.byAction);
-      (prismaMock.auditLog.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockStats.byResource);
-      (prismaMock.auditLog.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockStats.byUser);
+      prismaMock.auditLogEntry.count.mockResolvedValue(mockStats.total);
+      (prismaMock.auditLogEntry.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockStats.byAction);
+      (prismaMock.auditLogEntry.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockStats.byResource);
+      (prismaMock.auditLogEntry.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockStats.byUser);
 
       const result = await caller.getStats({});
 
@@ -549,14 +571,14 @@ describe('Audit Router', () => {
       const startDate = new Date('2025-01-01');
       const endDate = new Date('2025-01-31');
 
-      prismaMock.auditLog.count.mockResolvedValue(50);
-      (prismaMock.auditLog.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+      prismaMock.auditLogEntry.count.mockResolvedValue(50);
+      (prismaMock.auditLogEntry.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
 
       await caller.getStats({ startDate, endDate });
 
-      expect(prismaMock.auditLog.count).toHaveBeenCalledWith({
+      expect(prismaMock.auditLogEntry.count).toHaveBeenCalledWith({
         where: {
-          createdAt: {
+          timestamp: {
             gte: startDate,
             lte: endDate,
           },
@@ -567,15 +589,15 @@ describe('Audit Router', () => {
     it('should return top 10 users by activity', async () => {
       const caller = auditRouter.createCaller(createAdminContext());
 
-      prismaMock.auditLog.count.mockResolvedValue(mockStats.total);
-      (prismaMock.auditLog.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+      prismaMock.auditLogEntry.count.mockResolvedValue(mockStats.total);
+      (prismaMock.auditLogEntry.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
 
       await caller.getStats({});
 
       // Check that groupBy for users was called with take: 10
-      expect(prismaMock.auditLog.groupBy).toHaveBeenCalledWith(
+      expect(prismaMock.auditLogEntry.groupBy).toHaveBeenCalledWith(
         expect.objectContaining({
-          by: ['userId'],
+          by: ['actorId'],
           take: 10,
         })
       );

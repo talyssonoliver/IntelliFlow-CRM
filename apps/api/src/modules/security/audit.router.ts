@@ -2,6 +2,7 @@
  * Audit Router
  *
  * Provides tRPC endpoints for querying and managing audit logs.
+ * Uses consolidated AuditLogEntry table per ADR-008.
  *
  * IMPLEMENTS: IFC-098 (RBAC/ABAC & Audit Trail)
  *
@@ -21,7 +22,8 @@ const searchAuditLogsSchema = z.object({
   resourceType: z.string().optional(),
   resourceId: z.string().optional(),
   actorId: z.string().optional(),
-  action: z.string().optional(),
+  eventType: z.string().optional(),
+  action: z.enum(['CREATE', 'UPDATE', 'DELETE', 'READ', 'LOGIN', 'LOGOUT', 'LOGIN_FAILED', 'PASSWORD_RESET', 'PERMISSION_DENIED']).optional(),
   startDate: z.date().optional(),
   endDate: z.date().optional(),
   limit: z.number().min(1).max(1000).default(100),
@@ -60,31 +62,34 @@ export const auditRouter = createTRPCRouter({
     const where: Record<string, unknown> = {};
 
     if (input.resourceType) {
-      where.entityType = input.resourceType;
+      where.resourceType = input.resourceType;
     }
     if (input.resourceId) {
-      where.entityId = input.resourceId;
+      where.resourceId = input.resourceId;
     }
     if (input.actorId) {
-      where.userId = input.actorId;
+      where.actorId = input.actorId;
+    }
+    if (input.eventType) {
+      where.eventType = input.eventType;
     }
     if (input.action) {
       where.action = input.action;
     }
     if (input.startDate || input.endDate) {
-      where.createdAt = {};
+      where.timestamp = {};
       if (input.startDate) {
-        (where.createdAt as Record<string, Date>).gte = input.startDate;
+        (where.timestamp as Record<string, Date>).gte = input.startDate;
       }
       if (input.endDate) {
-        (where.createdAt as Record<string, Date>).lte = input.endDate;
+        (where.timestamp as Record<string, Date>).lte = input.endDate;
       }
     }
 
     const [logs, total] = await Promise.all([
-      ctx.prisma.auditLog.findMany({
+      ctx.prisma.auditLogEntry.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { timestamp: 'desc' },
         take: input.limit,
         skip: input.offset,
         include: {
@@ -97,7 +102,7 @@ export const auditRouter = createTRPCRouter({
           },
         },
       }),
-      ctx.prisma.auditLog.count({ where }),
+      ctx.prisma.auditLogEntry.count({ where }),
     ]);
 
     return {
@@ -113,12 +118,12 @@ export const auditRouter = createTRPCRouter({
    * Requires: Read access to the resource
    */
   getByResource: protectedProcedure.input(getByResourceSchema).query(async ({ ctx, input }) => {
-    const logs = await ctx.prisma.auditLog.findMany({
+    const logs = await ctx.prisma.auditLogEntry.findMany({
       where: {
-        entityType: input.resourceType,
-        entityId: input.resourceId,
+        resourceType: input.resourceType,
+        resourceId: input.resourceId,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { timestamp: 'desc' },
       take: input.limit,
       include: {
         user: {
@@ -146,16 +151,16 @@ export const auditRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const [logs, total] = await Promise.all([
-        ctx.prisma.auditLog.findMany({
+        ctx.prisma.auditLogEntry.findMany({
           where: {
-            userId: ctx.user.userId,
+            actorId: ctx.user.userId,
           },
-          orderBy: { createdAt: 'desc' },
+          orderBy: { timestamp: 'desc' },
           take: input.limit,
           skip: input.offset,
         }),
-        ctx.prisma.auditLog.count({
-          where: { userId: ctx.user.userId },
+        ctx.prisma.auditLogEntry.count({
+          where: { actorId: ctx.user.userId },
         }),
       ]);
 
@@ -170,8 +175,7 @@ export const auditRouter = createTRPCRouter({
    * Get security events (admin only)
    */
   getSecurityEvents: adminProcedure.input(getSecurityEventsSchema).query(async ({ ctx, input }) => {
-    // Note: SecurityEvent model would need to be added to Prisma schema
-    // For now, return audit logs with security-related actions
+    // Security-related actions (AuditAction enum values)
     const securityActions = [
       'LOGIN',
       'LOGOUT',
@@ -185,18 +189,18 @@ export const auditRouter = createTRPCRouter({
     };
 
     if (input.startDate || input.endDate) {
-      where.createdAt = {};
+      where.timestamp = {};
       if (input.startDate) {
-        (where.createdAt as Record<string, Date>).gte = input.startDate;
+        (where.timestamp as Record<string, Date>).gte = input.startDate;
       }
       if (input.endDate) {
-        (where.createdAt as Record<string, Date>).lte = input.endDate;
+        (where.timestamp as Record<string, Date>).lte = input.endDate;
       }
     }
 
-    const logs = await ctx.prisma.auditLog.findMany({
+    const logs = await ctx.prisma.auditLogEntry.findMany({
       where,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { timestamp: 'desc' },
       take: input.limit,
       include: {
         user: {
@@ -226,34 +230,34 @@ export const auditRouter = createTRPCRouter({
       const where: Record<string, unknown> = {};
 
       if (input.startDate || input.endDate) {
-        where.createdAt = {};
+        where.timestamp = {};
         if (input.startDate) {
-          (where.createdAt as Record<string, Date>).gte = input.startDate;
+          (where.timestamp as Record<string, Date>).gte = input.startDate;
         }
         if (input.endDate) {
-          (where.createdAt as Record<string, Date>).lte = input.endDate;
+          (where.timestamp as Record<string, Date>).lte = input.endDate;
         }
       }
 
       const [total, byAction, byResource, byUser] = await Promise.all([
-        ctx.prisma.auditLog.count({ where }),
-        ctx.prisma.auditLog.groupBy({
+        ctx.prisma.auditLogEntry.count({ where }),
+        ctx.prisma.auditLogEntry.groupBy({
           by: ['action'],
           where,
           _count: true,
         }),
-        ctx.prisma.auditLog.groupBy({
-          by: ['entityType'],
+        ctx.prisma.auditLogEntry.groupBy({
+          by: ['resourceType'],
           where,
           _count: true,
         }),
-        ctx.prisma.auditLog.groupBy({
-          by: ['userId'],
+        ctx.prisma.auditLogEntry.groupBy({
+          by: ['actorId'],
           where,
           _count: true,
           orderBy: {
             _count: {
-              userId: 'desc',
+              actorId: 'desc',
             },
           },
           take: 10,
@@ -271,13 +275,13 @@ export const auditRouter = createTRPCRouter({
         ),
         byResource: byResource.reduce(
           (acc, item) => {
-            acc[item.entityType] = item._count;
+            acc[item.resourceType] = item._count;
             return acc;
           },
           {} as Record<string, number>
         ),
         topUsers: byUser.map((item) => ({
-          userId: item.userId,
+          userId: item.actorId,
           count: item._count,
         })),
       };
