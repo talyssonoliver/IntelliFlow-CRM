@@ -785,4 +785,304 @@ describe('Contact Router', () => {
       );
     });
   });
+
+  /**
+   * IFC-184: linkToLead tests
+   */
+  describe('linkToLead', () => {
+    it('should link contact to lead successfully', async () => {
+      const linkedContact = createMockDomainContact({
+        leadId: TEST_UUIDS.lead1,
+        hasLinkedLead: true,
+      });
+
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      ctx.services!.contact!.linkToLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: linkedContact,
+      });
+
+      const result = await caller.linkToLead({
+        contactId: TEST_UUIDS.contact1,
+        leadId: TEST_UUIDS.lead1,
+      });
+
+      expect(result.leadId).toBe(TEST_UUIDS.lead1);
+      expect(ctx.services!.contact!.linkToLead).toHaveBeenCalledWith(
+        TEST_UUIDS.contact1,
+        TEST_UUIDS.lead1,
+        expect.any(String)
+      );
+    });
+
+    it('should throw NOT_FOUND if contact does not exist', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      ctx.services!.contact!.linkToLead = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { message: `Contact not found: ${TEST_UUIDS.nonExistent}` },
+      });
+
+      await expect(
+        caller.linkToLead({ contactId: TEST_UUIDS.nonExistent, leadId: TEST_UUIDS.lead1 })
+      ).rejects.toThrow(
+        expect.objectContaining({
+          code: 'NOT_FOUND',
+        })
+      );
+    });
+
+    it('should throw NOT_FOUND if lead does not exist', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      ctx.services!.contact!.linkToLead = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { message: `Lead not found: ${TEST_UUIDS.nonExistent}` },
+      });
+
+      await expect(
+        caller.linkToLead({ contactId: TEST_UUIDS.contact1, leadId: TEST_UUIDS.nonExistent })
+      ).rejects.toThrow(
+        expect.objectContaining({
+          code: 'NOT_FOUND',
+        })
+      );
+    });
+
+    it('should throw CONFLICT if contact already linked to different lead', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      ctx.services!.contact!.linkToLead = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { message: 'Contact is already linked to lead other-lead-id' },
+      });
+
+      await expect(
+        caller.linkToLead({ contactId: TEST_UUIDS.contact1, leadId: TEST_UUIDS.lead1 })
+      ).rejects.toThrow(
+        expect.objectContaining({
+          code: 'CONFLICT',
+        })
+      );
+    });
+  });
+
+  /**
+   * IFC-184: unlinkFromLead tests
+   */
+  describe('unlinkFromLead', () => {
+    it('should unlink contact from lead successfully', async () => {
+      const unlinkedContact = createMockDomainContact({
+        leadId: null,
+        hasLinkedLead: false,
+      });
+
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      ctx.services!.contact!.unlinkFromLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: unlinkedContact,
+      });
+
+      const result = await caller.unlinkFromLead({ contactId: TEST_UUIDS.contact1 });
+
+      expect(result.leadId).toBeNull();
+    });
+
+    it('should be idempotent - return success if already unlinked', async () => {
+      const unlinkedContact = createMockDomainContact({
+        leadId: null,
+        hasLinkedLead: false,
+      });
+
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      ctx.services!.contact!.unlinkFromLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: unlinkedContact,
+      });
+
+      const result = await caller.unlinkFromLead({ contactId: TEST_UUIDS.contact1 });
+
+      expect(result.leadId).toBeNull();
+    });
+  });
+
+  /**
+   * IFC-184: getTimeline tests
+   */
+  describe('getTimeline', () => {
+    it('should return timeline events for contact', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      // Mock contact exists
+      prismaMock.contact.findUnique.mockResolvedValue({
+        ...mockContact,
+        id: TEST_UUIDS.contact1,
+        leadId: null,
+        tenantId: TEST_UUIDS.tenant,
+      });
+
+      // Mock tasks
+      prismaMock.task.findMany.mockResolvedValue([
+        {
+          ...mockTask,
+          id: 'task-1',
+          contactId: TEST_UUIDS.contact1,
+          title: 'Follow up',
+          createdAt: new Date('2024-01-15'),
+          owner: { id: TEST_UUIDS.user1, name: 'Test User' },
+        },
+      ]);
+
+      // Mock notes query (returns empty as it's a raw query)
+      prismaMock.$queryRaw.mockResolvedValue([]);
+
+      const result = await caller.getTimeline({
+        contactId: TEST_UUIDS.contact1,
+        limit: 20,
+      });
+
+      expect(result.events).toBeDefined();
+      expect(Array.isArray(result.events)).toBe(true);
+      expect(result.nextCursor).toBeDefined();
+      expect(result.totalCount).toBeDefined();
+    });
+
+    it('should throw NOT_FOUND if contact does not exist', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      prismaMock.contact.findUnique.mockResolvedValue(null);
+
+      await expect(
+        caller.getTimeline({ contactId: TEST_UUIDS.nonExistent })
+      ).rejects.toThrow(
+        expect.objectContaining({
+          code: 'NOT_FOUND',
+          message: 'Contact not found',
+        })
+      );
+    });
+
+    it('should return empty events for contact with no timeline data', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      prismaMock.contact.findUnique.mockResolvedValue({
+        ...mockContact,
+        id: TEST_UUIDS.contact1,
+        leadId: null,
+        tenantId: TEST_UUIDS.tenant,
+      });
+
+      prismaMock.task.findMany.mockResolvedValue([]);
+      prismaMock.$queryRaw.mockResolvedValue([]);
+
+      const result = await caller.getTimeline({ contactId: TEST_UUIDS.contact1 });
+
+      expect(result.events).toHaveLength(0);
+      expect(result.nextCursor).toBeNull();
+      expect(result.totalCount).toBe(0);
+    });
+
+    it('should support pagination with cursor', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      prismaMock.contact.findUnique.mockResolvedValue({
+        ...mockContact,
+        id: TEST_UUIDS.contact1,
+        leadId: null,
+        tenantId: TEST_UUIDS.tenant,
+      });
+
+      // First page
+      prismaMock.task.findMany.mockResolvedValue([
+        {
+          ...mockTask,
+          id: 'task-1',
+          contactId: TEST_UUIDS.contact1,
+          createdAt: new Date('2024-01-15'),
+          owner: { id: TEST_UUIDS.user1, name: 'Test User' },
+        },
+      ]);
+      prismaMock.$queryRaw.mockResolvedValue([]);
+
+      const result = await caller.getTimeline({
+        contactId: TEST_UUIDS.contact1,
+        limit: 1,
+      });
+
+      expect(result.events.length).toBeLessThanOrEqual(1);
+    });
+
+    it('should filter by date range', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      prismaMock.contact.findUnique.mockResolvedValue({
+        ...mockContact,
+        id: TEST_UUIDS.contact1,
+        leadId: null,
+        tenantId: TEST_UUIDS.tenant,
+      });
+
+      prismaMock.task.findMany.mockResolvedValue([]);
+      prismaMock.$queryRaw.mockResolvedValue([]);
+
+      const result = await caller.getTimeline({
+        contactId: TEST_UUIDS.contact1,
+        fromDate: new Date('2024-01-01'),
+        toDate: new Date('2024-12-31'),
+      });
+
+      expect(result.events).toBeDefined();
+      expect(prismaMock.task.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            contactId: TEST_UUIDS.contact1,
+            createdAt: expect.objectContaining({
+              gte: expect.any(Date),
+              lte: expect.any(Date),
+            }),
+          }),
+        })
+      );
+    });
+
+    it('should meet <1000ms KPI target', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      prismaMock.contact.findUnique.mockResolvedValue({
+        ...mockContact,
+        id: TEST_UUIDS.contact1,
+        leadId: null,
+        tenantId: TEST_UUIDS.tenant,
+      });
+
+      prismaMock.task.findMany.mockResolvedValue([]);
+      prismaMock.$queryRaw.mockResolvedValue([]);
+
+      const result = await caller.getTimeline({ contactId: TEST_UUIDS.contact1 });
+
+      expect(result.meetsKpi).toBe(true);
+      expect(result.durationMs).toBeLessThan(1000);
+    });
+  });
 });

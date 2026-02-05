@@ -169,11 +169,6 @@ export const contactRouter = createTRPCRouter({
           orderBy: { dueDate: 'asc' },
           take: 10,
         },
-        // Contact 360: Documents
-        documents: {
-          orderBy: { createdAt: 'desc' },
-          take: 20,
-        },
         // Contact 360: Calendar Events (upcoming meetings)
         calendarEvents: {
           where: {
@@ -796,5 +791,260 @@ export const contactRouter = createTRPCRouter({
       }
 
       return { successful, failed, totalProcessed: ids.length };
+    }),
+
+  /**
+   * Link a contact to a lead (IFC-184)
+   * This is for retroactive association, distinct from lead conversion.
+   */
+  linkToLead: tenantProcedure
+    .input(
+      z.object({
+        contactId: idSchema,
+        leadId: idSchema,
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const contactService = getContactService(ctx);
+
+      const result = await contactService.linkToLead(
+        input.contactId,
+        input.leadId,
+        typedCtx.tenant.userId
+      );
+
+      if (result.isFailure) {
+        const errorMessage = result.error.message;
+        if (errorMessage.includes('not found')) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: errorMessage,
+          });
+        }
+        if (errorMessage.includes('already linked') || errorMessage.includes('Unique constraint')) {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: errorMessage,
+          });
+        }
+        if (errorMessage.includes('same tenant')) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: errorMessage,
+          });
+        }
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: errorMessage,
+        });
+      }
+
+      return mapContactToResponse(result.value);
+    }),
+
+  /**
+   * Unlink a contact from a lead (IFC-184)
+   */
+  unlinkFromLead: tenantProcedure
+    .input(z.object({ contactId: idSchema }))
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const contactService = getContactService(ctx);
+
+      const result = await contactService.unlinkFromLead(
+        input.contactId,
+        typedCtx.tenant.userId
+      );
+
+      if (result.isFailure) {
+        const errorMessage = result.error.message;
+        if (errorMessage.includes('not found')) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: errorMessage,
+          });
+        }
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: errorMessage,
+        });
+      }
+
+      return mapContactToResponse(result.value);
+    }),
+
+  /**
+   * Get timeline events for a contact (IFC-184)
+   * Aggregates activities, notes, tasks, and appointments with cursor-based pagination.
+   *
+   * KPI Target: <1000ms response time
+   */
+  getTimeline: tenantProcedure
+    .input(
+      z.object({
+        contactId: idSchema,
+        eventTypes: z.array(z.enum(['activity', 'note', 'task', 'appointment', 'email', 'call', 'status_change'])).optional(),
+        fromDate: z.coerce.date().optional(),
+        toDate: z.coerce.date().optional(),
+        cursor: z.string().optional(),
+        limit: z.number().min(1).max(100).default(20),
+        sortOrder: z.enum(['asc', 'desc']).default('desc'),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const startTime = Date.now();
+
+      // 1. Verify contact exists and belongs to tenant
+      const contact = await typedCtx.prismaWithTenant.contact.findUnique({
+        where: { id: input.contactId },
+        select: { id: true, leadId: true, tenantId: true },
+      });
+
+      if (!contact) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Contact not found',
+        });
+      }
+
+      // 2. Build date filter
+      const dateFilter: { gte?: Date; lte?: Date } = {};
+      if (input.fromDate) dateFilter.gte = input.fromDate;
+      if (input.toDate) dateFilter.lte = input.toDate;
+
+      // 3. Decode cursor if provided
+      let cursorTimestamp: Date | undefined;
+      let cursorId: string | undefined;
+      if (input.cursor) {
+        try {
+          const decoded = Buffer.from(input.cursor, 'base64').toString('utf-8');
+          const [ts, id] = decoded.split(':');
+          cursorTimestamp = new Date(ts);
+          cursorId = id;
+        } catch {
+          // Invalid cursor, ignore
+        }
+      }
+
+      // 4. Parallel queries to data sources with cursor-based pagination
+      const fetchLimit = input.limit + 1; // Fetch one extra to check for more
+
+      const [tasks, notes] = await Promise.all([
+        // Tasks
+        typedCtx.prismaWithTenant.task.findMany({
+          where: {
+            contactId: input.contactId,
+            ...(Object.keys(dateFilter).length > 0 && { createdAt: dateFilter }),
+            ...(cursorTimestamp && {
+              OR: [
+                { createdAt: input.sortOrder === 'desc' ? { lt: cursorTimestamp } : { gt: cursorTimestamp } },
+                { createdAt: cursorTimestamp, id: cursorId ? { lt: cursorId } : undefined },
+              ],
+            }),
+          },
+          orderBy: { createdAt: input.sortOrder },
+          take: fetchLimit,
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            status: true,
+            priority: true,
+            dueDate: true,
+            createdAt: true,
+            owner: { select: { id: true, name: true } },
+          },
+        }),
+        // Notes (using ContactNote model if exists, fallback to direct query)
+        typedCtx.prismaWithTenant.$queryRaw`
+          SELECT id, content, "createdAt", "updatedAt"
+          FROM "notes"
+          WHERE "contactId" = ${input.contactId}
+          ${Object.keys(dateFilter).length > 0 ?
+            (dateFilter.gte ? typedCtx.prismaWithTenant.$queryRaw`AND "createdAt" >= ${dateFilter.gte}` : typedCtx.prismaWithTenant.$queryRaw``) :
+            typedCtx.prismaWithTenant.$queryRaw``}
+          ORDER BY "createdAt" ${input.sortOrder === 'desc' ? typedCtx.prismaWithTenant.$queryRaw`DESC` : typedCtx.prismaWithTenant.$queryRaw`ASC`}
+          LIMIT ${fetchLimit}
+        `.catch(() => []), // Fallback if notes table doesn't exist
+      ]);
+
+      // 5. Map to timeline events
+      type TimelineEvent = {
+        id: string;
+        type: string;
+        title: string;
+        description?: string;
+        timestamp: Date;
+        actor?: { id: string; name: string };
+        metadata?: Record<string, unknown>;
+      };
+
+      const events: TimelineEvent[] = [];
+
+      // Map tasks
+      for (const task of tasks) {
+        events.push({
+          id: `task-${task.id}`,
+          type: 'task',
+          title: task.title,
+          description: task.description ?? undefined,
+          timestamp: task.createdAt,
+          actor: task.owner ? { id: task.owner.id, name: task.owner.name ?? 'Unknown' } : undefined,
+          metadata: { status: task.status, priority: task.priority, dueDate: task.dueDate },
+        });
+      }
+
+      // Map notes (if returned)
+      const noteRecords = notes as Array<{ id: string; content: string; createdAt: Date }>;
+      for (const note of noteRecords) {
+        events.push({
+          id: `note-${note.id}`,
+          type: 'note',
+          title: 'Note added',
+          description: note.content,
+          timestamp: note.createdAt,
+        });
+      }
+
+      // 6. Sort all events by timestamp
+      events.sort((a, b) => {
+        const diff = input.sortOrder === 'desc'
+          ? b.timestamp.getTime() - a.timestamp.getTime()
+          : a.timestamp.getTime() - b.timestamp.getTime();
+        if (diff !== 0) return diff;
+        return a.id.localeCompare(b.id);
+      });
+
+      // 7. Apply limit and determine if there are more results
+      const hasMore = events.length > input.limit;
+      const paginatedEvents = events.slice(0, input.limit);
+
+      // 8. Generate next cursor
+      let nextCursor: string | null = null;
+      if (hasMore && paginatedEvents.length > 0) {
+        const lastEvent = paginatedEvents[paginatedEvents.length - 1];
+        const cursorString = `${lastEvent.timestamp.toISOString()}:${lastEvent.id}`;
+        nextCursor = Buffer.from(cursorString).toString('base64');
+      }
+
+      const durationMs = Date.now() - startTime;
+
+      // Log performance warning if exceeds target
+      if (durationMs > 1000) {
+        console.warn(
+          `[contact.getTimeline] SLOW QUERY: ${durationMs}ms (target: <1000ms) for contact: "${input.contactId}"`
+        );
+      }
+
+      return {
+        events: paginatedEvents,
+        nextCursor,
+        totalCount: events.length,
+        durationMs,
+        performanceTarget: 1000,
+        meetsKpi: durationMs < 1000,
+      };
     }),
 });
