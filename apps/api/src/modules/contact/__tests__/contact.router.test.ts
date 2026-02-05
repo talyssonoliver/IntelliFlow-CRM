@@ -937,7 +937,7 @@ describe('Contact Router', () => {
         tenantId: TEST_UUIDS.tenant,
       });
 
-      // Mock tasks
+      // Mock tasks (cast to any - Prisma mock doesn't type include/select relations)
       prismaMock.task.findMany.mockResolvedValue([
         {
           ...mockTask,
@@ -946,7 +946,7 @@ describe('Contact Router', () => {
           title: 'Follow up',
           createdAt: new Date('2024-01-15'),
           owner: { id: TEST_UUIDS.user1, name: 'Test User' },
-        },
+        } as any,
       ]);
 
       // Mock notes query (returns empty as it's a raw query)
@@ -1011,7 +1011,7 @@ describe('Contact Router', () => {
         tenantId: TEST_UUIDS.tenant,
       });
 
-      // First page
+      // First page (cast to any - Prisma mock doesn't type include/select relations)
       prismaMock.task.findMany.mockResolvedValue([
         {
           ...mockTask,
@@ -1019,7 +1019,7 @@ describe('Contact Router', () => {
           contactId: TEST_UUIDS.contact1,
           createdAt: new Date('2024-01-15'),
           owner: { id: TEST_UUIDS.user1, name: 'Test User' },
-        },
+        } as any,
       ]);
       prismaMock.$queryRaw.mockResolvedValue([]);
 

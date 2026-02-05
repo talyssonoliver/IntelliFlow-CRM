@@ -97,3 +97,65 @@ export const contactListResponseSchema = z.object({
 });
 
 export type ContactListResponse = z.infer<typeof contactListResponseSchema>;
+
+// IFC-184: Link/Unlink Lead Schemas
+export const linkToLeadSchema = z.object({
+  contactId: idSchema,
+  leadId: idSchema,
+});
+
+export type LinkToLeadInput = z.infer<typeof linkToLeadSchema>;
+
+export const unlinkFromLeadSchema = z.object({
+  contactId: idSchema,
+});
+
+export type UnlinkFromLeadInput = z.infer<typeof unlinkFromLeadSchema>;
+
+// IFC-184: Contact Timeline Schema
+export const contactTimelineSchema = z.object({
+  contactId: idSchema,
+  eventTypes: z.array(z.enum(['activity', 'note', 'task', 'appointment', 'email', 'call', 'status_change'])).optional(),
+  fromDate: z.coerce.date().optional(),
+  toDate: z.coerce.date().optional(),
+  cursor: z.string().optional(),
+  limit: z.number().min(1).max(100).default(20),
+  sortOrder: z.enum(['asc', 'desc']).default('desc'),
+});
+
+export type ContactTimelineInput = z.infer<typeof contactTimelineSchema>;
+
+// Contact Timeline Event Type
+export const contactTimelineEventTypeSchema = z.enum([
+  'activity',
+  'note',
+  'task',
+  'appointment',
+  'email',
+  'call',
+  'meeting',
+  'status_change',
+]);
+
+export type ContactTimelineEventType = z.infer<typeof contactTimelineEventTypeSchema>;
+
+// Contact Timeline Event Schema
+export const contactTimelineEventSchema = z.object({
+  id: z.string(),
+  type: contactTimelineEventTypeSchema,
+  timestamp: z.coerce.date(),
+  title: z.string(),
+  description: z.string().optional(),
+  metadata: z.record(z.unknown()).optional(),
+});
+
+export type ContactTimelineEvent = z.infer<typeof contactTimelineEventSchema>;
+
+// Contact Timeline Response Schema
+export const contactTimelineResponseSchema = z.object({
+  events: z.array(contactTimelineEventSchema),
+  totalCount: z.number().int().nonnegative(),
+  nextCursor: z.string().nullable(),
+  durationMs: z.number().optional(),
+  meetsKpi: z.boolean().optional(),
+});

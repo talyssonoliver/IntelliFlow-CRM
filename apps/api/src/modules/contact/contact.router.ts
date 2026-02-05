@@ -20,6 +20,9 @@ import {
   updateContactSchema,
   contactQuerySchema,
   idSchema,
+  linkToLeadSchema,
+  unlinkFromLeadSchema,
+  contactTimelineSchema,
 } from '@intelliflow/validators/contact';
 import {
   bulkEmailContactsSchema,
@@ -798,12 +801,7 @@ export const contactRouter = createTRPCRouter({
    * This is for retroactive association, distinct from lead conversion.
    */
   linkToLead: tenantProcedure
-    .input(
-      z.object({
-        contactId: idSchema,
-        leadId: idSchema,
-      })
-    )
+    .input(linkToLeadSchema)
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const contactService = getContactService(ctx);
@@ -847,7 +845,7 @@ export const contactRouter = createTRPCRouter({
    * Unlink a contact from a lead (IFC-184)
    */
   unlinkFromLead: tenantProcedure
-    .input(z.object({ contactId: idSchema }))
+    .input(unlinkFromLeadSchema)
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const contactService = getContactService(ctx);
@@ -881,17 +879,7 @@ export const contactRouter = createTRPCRouter({
    * KPI Target: <1000ms response time
    */
   getTimeline: tenantProcedure
-    .input(
-      z.object({
-        contactId: idSchema,
-        eventTypes: z.array(z.enum(['activity', 'note', 'task', 'appointment', 'email', 'call', 'status_change'])).optional(),
-        fromDate: z.coerce.date().optional(),
-        toDate: z.coerce.date().optional(),
-        cursor: z.string().optional(),
-        limit: z.number().min(1).max(100).default(20),
-        sortOrder: z.enum(['asc', 'desc']).default('desc'),
-      })
-    )
+    .input(contactTimelineSchema)
     .query(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const startTime = Date.now();
