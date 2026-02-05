@@ -1,3 +1,5 @@
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Set `NEXT_OUTPUT=standalone` for Docker/CI builds (Windows requires symlink support)
@@ -7,7 +9,7 @@ const nextConfig = {
   reactStrictMode: true,
 
   // Configure server external packages (fix Prisma in monorepo)
-  serverExternalPackages: ['@prisma/client', '@prisma/engines'],
+  serverExternalPackages: ['@prisma/client', '.prisma/client', '@prisma/engines'],
 
   // Compiler options
   compiler: {
@@ -29,6 +31,7 @@ const nextConfig = {
 
   // Turbopack configuration (Next.js 16+ default bundler)
   turbopack: {
+    root: path.resolve(__dirname, '../../'), // Monorepo root (absolute path)
     rules: {
       // Add support for SVG imports (equivalent to @svgr/webpack)
       '*.svg': {

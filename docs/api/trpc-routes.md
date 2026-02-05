@@ -1,6 +1,6 @@
 # tRPC API Routes
 
-> **Last Updated**: 2026-02-02
+> **Last Updated**: 2026-02-05
 > **API Version**: 2.0.0
 
 ## API Inventory Summary
@@ -8,8 +8,8 @@
 | Metric | Count |
 |--------|-------|
 | **Total Routers** | 25 |
-| **Total Procedures** | 232 |
-| **Queries** | 110 |
+| **Total Procedures** | 235 |
+| **Queries** | 113 |
 | **Mutations** | 122 |
 
 ---
@@ -155,7 +155,7 @@ apps/api/src/
 | `bulkExport` | mutation | Export contacts to CSV/Excel |
 | `bulkDelete` | mutation | Delete multiple contacts |
 
-#### `account` Router (7 procedures)
+#### `account` Router (10 procedures)
 
 | Procedure | Type | Description |
 |-----------|------|-------------|
@@ -166,6 +166,9 @@ apps/api/src/
 | `delete` | mutation | Soft delete account |
 | `stats` | query | Get account statistics (contacts, revenue, deals) |
 | `filterOptions` | query | Get available filter options for account list |
+| `getContacts` | query | Get contacts associated with account (cursor pagination, status filter) |
+| `getOpportunities` | query | Get opportunities for account with summary (value, weighted, stage breakdown) |
+| `getActivity` | query | Get merged activity feed from contacts and opportunities |
 
 #### `opportunity` Router (7 procedures)
 
@@ -534,7 +537,7 @@ apps/api/src/
 | Category | Routers | Procedures | Description |
 |----------|---------|------------|-------------|
 | **Auth** | 1 | 14 | Authentication, MFA, sessions |
-| **CRM Core** | 6 | 62 | Lead, Contact, Account, Opportunity, Task, Ticket |
+| **CRM Core** | 6 | 65 | Lead, Contact, Account, Opportunity, Task, Ticket |
 | **AI/Automation** | 7 | 74 | Agent, Conversation, Intelligence, Chains, Experiments |
 | **Legal** | 3 | 36 | Appointments, Documents, Cases |
 | **Communication** | 2 | 8 | Email webhooks, file upload |
@@ -543,7 +546,7 @@ apps/api/src/
 | **Security** | 1 | 6 | Audit logs |
 | **Integrations** | 1 | 6 | External connectors |
 | **System** | 4 | 22 | Health, system, timeline, subscriptions |
-| **Total** | **25** | **232** | |
+| **Total** | **25** | **235** | |
 
 ---
 
@@ -737,5 +740,6 @@ describe('Leads Router', () => {
 
 | Date | Version | Changes |
 |------|---------|---------|
+| 2026-02-05 | 2.1.0 | IFC-185: Added account.getContacts, getOpportunities, getActivity (235 procedures) |
 | 2026-02-02 | 2.0.0 | Complete API inventory update (25 routers, 232 procedures) |
 | 2025-12-15 | 1.0.0 | Initial API documentation |
