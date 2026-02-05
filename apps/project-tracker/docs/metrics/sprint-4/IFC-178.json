@@ -4,7 +4,7 @@
   "section": "AI Foundation",
   "description": "AI Output Review - Database Schema (Prisma models)",
   "owner": "Backend Dev (STOA-Quality)",
-  "status": "BACKLOG",
+  "status": "DONE",
   "sprint": "sprint-4",
   "started_at": "2026-02-04T19:30:00.000Z",
   "completed_at": "2026-02-04T19:56:00.000Z",
@@ -70,8 +70,8 @@
       }
     ],
     "pending": [],
-    "all_satisfied": false,
-    "verified_at": "2026-02-05T18:08:30.235Z",
+    "all_satisfied": true,
+    "verified_at": "2026-02-05T21:31:13.254Z",
     "required": [
       "IFC-128"
     ]

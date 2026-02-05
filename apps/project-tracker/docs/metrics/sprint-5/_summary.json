@@ -10,10 +10,10 @@
     "done": 8,
     "in_progress": 0,
     "blocked": 0,
-    "not_started": 6,
+    "not_started": 4,
     "failed": 0
   },
-  "notes": "8/14 tasks DONE (57%). Last synced: 2026-02-05T06:57:58.344Z",
+  "notes": "8/14 tasks DONE (57%). Last synced: 2026-02-05T21:31:13.316Z",
   "completed_tasks": [
     {
       "task_id": "IFC-179",
@@ -22,37 +22,37 @@
     },
     {
       "task_id": "IFC-089",
-      "completed_at": "2026-02-05T06:57:58.344Z",
+      "completed_at": "2026-02-05T21:31:13.316Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-098",
-      "completed_at": "2026-02-05T06:57:58.344Z",
+      "completed_at": "2026-02-05T21:31:13.316Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-111",
-      "completed_at": "2026-02-05T06:57:58.344Z",
+      "completed_at": "2026-02-05T21:31:13.316Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-112",
-      "completed_at": "2026-02-05T06:57:58.344Z",
+      "completed_at": "2026-02-05T21:31:13.316Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-130",
-      "completed_at": "2026-02-05T06:57:58.344Z",
+      "completed_at": "2026-02-05T21:31:13.316Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-138",
-      "completed_at": "2026-02-05T06:57:58.344Z",
+      "completed_at": "2026-02-05T21:31:13.316Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-147",
-      "completed_at": "2026-02-05T06:57:58.344Z",
+      "completed_at": "2026-02-05T21:31:13.316Z",
       "duration_minutes": 15
     }
   ],
@@ -68,14 +68,14 @@
         "IFC-180"
       ],
       "total_duration_minutes": 650,
-      "completion_percentage": 70,
+      "completion_percentage": 76,
       "bottleneck_task_id": "IFC-180"
     },
     "schedule_variance": {
-      "sv_minutes": -1625,
-      "spi": 0.55,
+      "sv_minutes": -1566,
+      "spi": 0.56,
       "status": "critical"
     },
-    "calculated_at": "2026-02-05T06:57:58.378Z"
+    "calculated_at": "2026-02-05T21:31:13.337Z"
   }
 }

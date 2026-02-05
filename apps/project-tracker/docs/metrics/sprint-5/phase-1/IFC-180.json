@@ -1,0 +1,70 @@
+{
+  "$schema": "../../../schemas/task-status.schema.json",
+  "task_id": "IFC-180",
+  "section": "AI Foundation",
+  "description": "AI Output Review - tRPC Router (API endpoints)",
+  "owner": "Backend Dev (STOA-Quality)",
+  "status": "Spec Complete",
+  "started_at": "2026-02-05T14:00:00.000Z",
+  "completed_at": null,
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-01-01T00:00:00.000Z",
+      "note": "Initial status"
+    },
+    {
+      "status": "Specifying",
+      "at": "2026-02-05T14:00:00.000Z",
+      "note": "spec session started"
+    },
+    {
+      "status": "Spec Complete",
+      "at": "2026-02-05T21:45:00.000Z",
+      "note": "spec session completed - 4 agents reached consensus (100%)"
+    }
+  ],
+  "dependencies": {
+    "required": [
+      "IFC-179"
+    ],
+    "verified": [
+      {
+        "task_id": "IFC-179",
+        "status": "Completed",
+        "verified_at": "2026-02-05T14:00:00.000Z"
+      }
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-02-05T21:31:13.313Z"
+  },
+  "execution": {
+    "started_at": null,
+    "executor": "Claude Code /spec-session",
+    "agents": [
+      "Backend-Architect",
+      "Domain-Expert",
+      "Test-Engineer",
+      "Security-Lead"
+    ],
+    "retry_count": 0
+  },
+  "artifacts": {
+    "created": [
+      {
+        "path": ".specify/sprints/sprint-5/specifications/IFC-180-spec.md",
+        "created_at": "2026-02-05T21:45:00.000Z"
+      },
+      {
+        "path": ".specify/sprints/sprint-5/specifications/IFC-180-discussion.md",
+        "created_at": "2026-02-05T21:45:00.000Z"
+      }
+    ]
+  },
+  "validations": [],
+  "kpis": [],
+  "blockers": [],
+  "dependencies_resolved": [
+    "IFC-179"
+  ]
+}

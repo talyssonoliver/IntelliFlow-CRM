@@ -1,0 +1,74 @@
+{
+  "$schema": "../../../schemas/task-status.schema.json",
+  "task_id": "IFC-186",
+  "section": "Core CRM",
+  "description": "Deal/Opportunity tRPC Router - CRUD pipeline stages probability history products",
+  "owner": "Backend Dev (STOA-Domain)",
+  "status": "PLANNED",
+  "started_at": "2026-02-05T14:00:00.000Z",
+  "completed_at": null,
+  "dependencies": {
+    "task_ids": [
+      "IFC-104",
+      "IFC-107",
+      "IFC-003"
+    ],
+    "verified_at": "2026-02-05T21:31:13.314Z",
+    "all_met": true,
+    "all_satisfied": true,
+    "required": [
+      "IFC-104",
+      "IFC-107",
+      "IFC-003"
+    ]
+  },
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-01-01T00:00:00.000Z",
+      "note": "Initial status"
+    },
+    {
+      "status": "Specifying",
+      "at": "2026-02-05T14:00:00.000Z",
+      "note": "spec session started"
+    }
+  ],
+  "execution": {
+    "started_at": "2026-02-05T14:00:00.000Z",
+    "executor": "Claude Code /spec-session",
+    "agents": [
+      "Backend-Architect",
+      "Data-Engineer",
+      "Domain-Expert",
+      "Test-Engineer"
+    ],
+    "retry_count": 0
+  },
+  "artifacts": {
+    "created": [],
+    "expected": [
+      ".specify/sprints/sprint-5/specifications/IFC-186-spec.md",
+      ".specify/sprints/sprint-5/specifications/IFC-186-discussion.md"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-5/specifications/IFC-186-spec.md",
+      ".specify/sprints/sprint-5/specifications/IFC-186-discussion.md"
+    ]
+  },
+  "kpis": {
+    "targets": {
+      "endpoint_latency": "<200ms",
+      "test_coverage": ">=90%",
+      "pipeline_optimized": true
+    },
+    "actual": {}
+  },
+  "blockers": [],
+  "notes": "",
+  "dependencies_resolved": [
+    "IFC-104",
+    "IFC-107",
+    "IFC-003"
+  ]
+}
