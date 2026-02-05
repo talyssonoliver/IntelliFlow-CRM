@@ -1,6 +1,7 @@
 'use client';
 
 import { trpc } from '@/lib/trpc';
+import { useAuth } from '@/lib/auth/AuthContext';
 import type { WidgetProps } from './index';
 
 interface DealsWonData {
@@ -10,9 +11,13 @@ interface DealsWonData {
 }
 
 export function DealsWonWidget(_props: WidgetProps) {
-  const { data: chartData, isLoading } = trpc.analytics.dealsWonTrend.useQuery({ months: 6 });
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { data: chartData, isLoading } = trpc.analytics.dealsWonTrend.useQuery(
+    { months: 6 },
+    { enabled: isAuthenticated && !authLoading }
+  );
 
-  if (isLoading) {
+  if (isLoading || authLoading) {
     return (
       <div className="p-6 h-full flex flex-col animate-pulse">
         <div className="flex items-center justify-between mb-6">

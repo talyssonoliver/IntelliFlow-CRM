@@ -1,209 +1,631 @@
 'use client';
 
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { trpc } from '@/lib/trpc';
+
+// Activity feed type filter options
+const FEED_FILTER_OPTIONS = [
+  { value: 'all', label: 'All Activity', icon: 'list' },
+  { value: 'mention', label: 'Mentions', icon: 'alternate_email' },
+  { value: 'call', label: 'Calls', icon: 'call' },
+  { value: 'email', label: 'Emails', icon: 'mail' },
+  { value: 'task', label: 'Tasks', icon: 'task_alt' },
+  { value: 'deal', label: 'Deals', icon: 'handshake' },
+  { value: 'lead', label: 'Leads', icon: 'person_add' },
+] as const;
 
 // =============================================================================
-// Data
+// Types (inferred from tRPC to handle date serialization)
 // =============================================================================
 
-const aiInsights = [
-  {
-    id: 'insight-deal-risk',
-    type: 'warning',
-    icon: 'warning',
-    iconBg: 'bg-amber-100 dark:bg-amber-900/30',
-    iconColor: 'text-amber-600 dark:text-amber-400',
-    title: 'Deal at Risk: TechCorp Enterprise',
-    description:
-      'Last interaction was 14 days ago. Sentiment analysis of recent emails suggests hesitation.',
-    action: 'Suggested Action: Schedule a check-in call.',
-  },
-  {
-    id: 'insight-opportunity',
-    type: 'opportunity',
-    icon: 'trending_up',
-    iconBg: 'bg-emerald-100 dark:bg-emerald-900/30',
-    iconColor: 'text-emerald-600 dark:text-emerald-400',
-    title: 'Opportunity Detected',
-    description: 'Contact "Sarah Jenkins" viewed pricing page 3 times today.',
-    action: 'Suggested Action: Send personalized pricing breakdown.',
-  },
-];
+// tRPC serializes Date as string over JSON, so we use serialized versions
+type SerializedAIInsight = {
+  id: string;
+  type: 'warning' | 'opportunity' | 'reminder' | 'achievement';
+  title: string;
+  description: string;
+  suggestedAction?: string | null;
+  entityType?: string | null;
+  entityId?: string | null;
+  actionUrl?: string | null;
+  priority: 'low' | 'medium' | 'high';
+  createdAt: string;
+};
 
-const feedItems = [
-  {
-    id: 1,
-    type: 'mention',
-    initials: 'JD',
-    initialsBg: 'bg-blue-100 dark:bg-blue-900',
-    initialsText: 'text-blue-600 dark:text-blue-300',
-    title: 'John Doe mentioned you in a note',
-    time: '10m ago',
-    description: '"@Alex could you review the contract terms for the Globex deal before I send it out?"',
-    attachment: { name: 'Globex_Contract_Draft_v2.pdf', icon: 'picture_as_pdf' },
-    showActions: true,
-  },
-  {
-    id: 2,
-    type: 'call',
-    icon: 'call_received',
-    iconBg: 'bg-emerald-100 dark:bg-emerald-900',
-    iconColor: 'text-emerald-600 dark:text-emerald-300',
-    title: 'Inbound Call Logged',
-    time: '1h ago',
-    description: 'Call with Mike Ross (Pearson Specter). Duration: 12m 45s.',
-    badges: [
-      { id: 'badge-interested', label: 'Interested', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' },
-      { id: 'badge-followup', label: 'Follow-up Required', color: 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300' },
-    ],
-  },
-  {
-    id: 3,
-    type: 'system',
-    initials: 'AI',
-    initialsBg: 'bg-purple-100 dark:bg-purple-900',
-    initialsText: 'text-purple-600 dark:text-purple-300',
-    title: 'System Notification',
-    time: '2h ago',
-    description: "Your weekly performance report is ready. You've achieved 108% of your target this week.",
-    link: { label: 'View Report', href: '#' },
-  },
-];
+type SerializedActivityFeedItem = {
+  id: string;
+  type: 'mention' | 'call' | 'email' | 'task' | 'deal' | 'lead' | 'system' | 'ai';
+  title: string;
+  description: string;
+  timestamp: string;
+  relativeTime: string;
+  actor?: {
+    id: string;
+    name: string;
+    avatarUrl?: string | null;
+    initials: string;
+  } | null;
+  attachment?: {
+    name: string;
+    type: string;
+    url?: string;
+  } | null;
+  badges?: {
+    id: string;
+    label: string;
+    variant: 'success' | 'warning' | 'info' | 'default';
+  }[];
+  actionUrl?: string | null;
+  isActionable: boolean;
+};
 
-const quickActions = [
-  { id: 'action-call', icon: 'add_call', label: 'Log Call', color: 'bg-blue-50 dark:bg-blue-900/30 text-blue-600' },
-  { id: 'action-email', icon: 'mail', label: 'Email', color: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600' },
-  { id: 'action-meeting', icon: 'event', label: 'Meeting', color: 'bg-amber-50 dark:bg-amber-900/30 text-amber-600' },
-  { id: 'action-task', icon: 'task', label: 'Task', color: 'bg-purple-50 dark:bg-purple-900/30 text-purple-600' },
-];
+type SerializedDailyGoal = {
+  id: string;
+  type: 'revenue' | 'calls' | 'meetings' | 'tasks' | 'custom';
+  label: string;
+  targetValue: number;
+  currentValue: number;
+  unit: string;
+  progress: number;
+  remainingToTarget: number;
+  remainingFormatted: string;
+};
 
-const pinnedItems = [
-  { id: 'pinned-q4-strategy', icon: 'folder_special', iconBg: 'bg-orange-100 dark:bg-orange-900/30', iconColor: 'text-orange-600', title: 'Q4 Marketing Strategy', subtitle: 'Modified yesterday' },
-  { id: 'pinned-vip-clients', icon: 'contacts', iconBg: 'bg-blue-100 dark:bg-blue-900/30', iconColor: 'text-blue-600', title: 'VIP Clients List', subtitle: '24 contacts' },
-];
+type SerializedPinnedItem = {
+  id: string;
+  entityType: 'lead' | 'contact' | 'account' | 'opportunity' | 'document' | 'report' | 'list';
+  entityId: string;
+  title: string;
+  subtitle?: string | null;
+  icon?: string | null;
+  url: string;
+  pinnedAt: string;
+  position: number;
+};
 
-const navLinks = [
-  { label: 'Dashboard', href: '/dashboard', active: true },
-  { label: 'Leads', href: '/leads' },
-  { label: 'Contacts', href: '/contacts' },
-  { label: 'Deals', href: '/deals' },
-  { label: 'Tickets', href: '/tickets' },
-  { label: 'Documents', href: '/documents' },
-  { label: 'Agent Actions', href: '/agent-approvals/preview' },
-  { label: 'Reports', href: '/analytics' },
-];
-
-// =============================================================================
-// Component
-// =============================================================================
-
-function getGreeting(hour: number): string {
-  if (hour < 12) return 'Good Morning';
-  if (hour < 18) return 'Good Afternoon';
-  return 'Good Evening';
+interface QuickAction {
+  id: string;
+  icon: string;
+  label: string;
+  color: string;
+  href: string;
 }
+
+interface InsightIconStyle {
+  icon: string;
+  iconBg: string;
+  iconColor: string;
+}
+
+interface ActivityIconStyle {
+  initials?: string;
+  icon?: string;
+  bg: string;
+  color: string;
+}
+
+// =============================================================================
+// Static Data (Quick Actions - no API needed)
+// =============================================================================
+
+const quickActions: QuickAction[] = [
+  { id: 'action-call', icon: 'add_call', label: 'Log Call', color: 'bg-blue-50 dark:bg-blue-900/30 text-blue-600', href: '/calls/new' },
+  { id: 'action-email', icon: 'mail', label: 'Email', color: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600', href: '/emails/compose' },
+  { id: 'action-meeting', icon: 'event', label: 'Meeting', color: 'bg-amber-50 dark:bg-amber-900/30 text-amber-600', href: '/calendar/new' },
+  { id: 'action-task', icon: 'task', label: 'Task', color: 'bg-purple-50 dark:bg-purple-900/30 text-purple-600', href: '/tasks/new' },
+];
+
+// =============================================================================
+// Helper Functions
+// =============================================================================
 
 function getGreetingIcon(hour: number): string {
-  if (hour < 18) return 'wb_sunny';
-  return 'nights_stay';
+  return hour < 18 ? 'wb_sunny' : 'nights_stay';
 }
 
-export function AuthenticatedHomePage() {
-  const { user } = useAuth();
+function getInsightIcon(type: string): InsightIconStyle {
+  const iconMap: Record<string, InsightIconStyle> = {
+    warning: { icon: 'warning', iconBg: 'bg-amber-100 dark:bg-amber-900/30', iconColor: 'text-amber-600 dark:text-amber-400' },
+    opportunity: { icon: 'trending_up', iconBg: 'bg-emerald-100 dark:bg-emerald-900/30', iconColor: 'text-emerald-600 dark:text-emerald-400' },
+    reminder: { icon: 'schedule', iconBg: 'bg-blue-100 dark:bg-blue-900/30', iconColor: 'text-blue-600 dark:text-blue-400' },
+    achievement: { icon: 'emoji_events', iconBg: 'bg-purple-100 dark:bg-purple-900/30', iconColor: 'text-purple-600 dark:text-purple-400' },
+  };
+  return iconMap[type] || { icon: 'info', iconBg: 'bg-slate-100 dark:bg-slate-800', iconColor: 'text-slate-600 dark:text-slate-400' };
+}
 
-  // Get greeting based on time of day
+function getActivityIcon(type: string): ActivityIconStyle {
+  const iconMap: Record<string, ActivityIconStyle> = {
+    mention: { bg: 'bg-blue-100 dark:bg-blue-900', color: 'text-blue-600 dark:text-blue-300' },
+    call: { icon: 'call_received', bg: 'bg-emerald-100 dark:bg-emerald-900', color: 'text-emerald-600 dark:text-emerald-300' },
+    email: { icon: 'mail', bg: 'bg-indigo-100 dark:bg-indigo-900', color: 'text-indigo-600 dark:text-indigo-300' },
+    task: { icon: 'task_alt', bg: 'bg-amber-100 dark:bg-amber-900', color: 'text-amber-600 dark:text-amber-300' },
+    deal: { icon: 'handshake', bg: 'bg-green-100 dark:bg-green-900', color: 'text-green-600 dark:text-green-300' },
+    lead: { icon: 'person_add', bg: 'bg-cyan-100 dark:bg-cyan-900', color: 'text-cyan-600 dark:text-cyan-300' },
+    ai: { initials: 'AI', bg: 'bg-purple-100 dark:bg-purple-900', color: 'text-purple-600 dark:text-purple-300' },
+  };
+  return iconMap[type] || { icon: 'notifications', bg: 'bg-slate-100 dark:bg-slate-800', color: 'text-slate-600 dark:text-slate-400' };
+}
+
+function getPinnedItemIcon(entityType: string): InsightIconStyle {
+  const iconMap: Record<string, InsightIconStyle> = {
+    document: { icon: 'folder_special', iconBg: 'bg-orange-100 dark:bg-orange-900/30', iconColor: 'text-orange-600' },
+    contact: { icon: 'contacts', iconBg: 'bg-blue-100 dark:bg-blue-900/30', iconColor: 'text-blue-600' },
+    list: { icon: 'contacts', iconBg: 'bg-blue-100 dark:bg-blue-900/30', iconColor: 'text-blue-600' },
+    lead: { icon: 'person', iconBg: 'bg-cyan-100 dark:bg-cyan-900/30', iconColor: 'text-cyan-600' },
+    opportunity: { icon: 'attach_money', iconBg: 'bg-green-100 dark:bg-green-900/30', iconColor: 'text-green-600' },
+    report: { icon: 'assessment', iconBg: 'bg-purple-100 dark:bg-purple-900/30', iconColor: 'text-purple-600' },
+  };
+  return iconMap[entityType] || { icon: 'push_pin', iconBg: 'bg-slate-100 dark:bg-slate-800', iconColor: 'text-slate-600' };
+}
+
+function pluralize(count: number, singular: string): string {
+  return count === 1 ? singular : `${singular}s`;
+}
+
+type StatsPeriod = 'today' | 'yesterday' | 'this_week' | 'this_month' | 'all_time';
+
+function getPeriodLabel(period: StatsPeriod | undefined): string {
+  const labels: Record<StatsPeriod, string> = {
+    today: 'today',
+    yesterday: 'since yesterday',
+    this_week: 'this week',
+    this_month: 'this month',
+    all_time: 'in total',
+  };
+  return period ? labels[period] : 'since yesterday'; // default fallback
+}
+
+function getTrendPeriodLabel(period: StatsPeriod | undefined): string {
+  const labels: Record<StatsPeriod, string> = {
+    today: 'today',
+    yesterday: 'since yesterday',
+    this_week: 'this week',
+    this_month: 'this month',
+    all_time: 'overall',
+  };
+  return period ? labels[period] : 'this week'; // default fallback
+}
+
+interface WelcomeStats {
+  highPriorityTasksCount: number;
+  newLeadsCount: number;
+  newLeadsPeriod?: StatsPeriod; // optional for backwards compatibility
+  dealClosingRateTrend: number;
+  dealsTrendPeriod?: StatsPeriod; // optional for backwards compatibility
+}
+
+function buildWelcomeMessage(stats: WelcomeStats | undefined): string {
+  if (!stats) return "Here's what's happening today.";
+
+  const parts: string[] = [];
+
+  if (stats.highPriorityTasksCount > 0) {
+    parts.push(`${stats.highPriorityTasksCount} high-priority ${pluralize(stats.highPriorityTasksCount, 'task')} pending`);
+  }
+  if (stats.newLeadsCount > 0) {
+    const periodLabel = getPeriodLabel(stats.newLeadsPeriod);
+    parts.push(`${stats.newLeadsCount} new ${pluralize(stats.newLeadsCount, 'lead')} assigned to you ${periodLabel}`);
+  }
+
+  // Build the deal trend suffix
+  let trendSuffix = '';
+  const trendPeriod = getTrendPeriodLabel(stats.dealsTrendPeriod);
+  if (stats.dealClosingRateTrend > 0) {
+    trendSuffix = ` Your deal closing rate is up by ${stats.dealClosingRateTrend}% ${trendPeriod}!`;
+  } else if (stats.dealClosingRateTrend < 0) {
+    trendSuffix = ` Your deal closing rate is down by ${Math.abs(stats.dealClosingRateTrend)}% ${trendPeriod}.`;
+  }
+
+  if (parts.length === 0 && !trendSuffix) return "Here's what's happening today.";
+  if (parts.length === 0) return `Great news!${trendSuffix}`;
+
+  const mainParts = parts.join(' and ');
+  return `You have ${mainParts}.${trendSuffix}`;
+}
+
+// =============================================================================
+// Loading Skeleton Components
+// =============================================================================
+
+function InsightsSkeleton() {
+  return (
+    <>
+      {[1, 2].map((i) => (
+        <div key={i} className="flex gap-4 p-3 animate-pulse">
+          <div className="w-10 h-10 rounded-lg bg-slate-200 dark:bg-slate-700" />
+          <div className="flex-1">
+            <div className="h-4 w-48 bg-slate-200 dark:bg-slate-700 rounded mb-2" />
+            <div className="h-3 w-full bg-slate-200 dark:bg-slate-700 rounded" />
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
+function FeedSkeleton() {
+  return (
+    <>
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="p-5 animate-pulse">
+          <div className="flex gap-3">
+            <div className="size-10 rounded-full bg-slate-200 dark:bg-slate-700" />
+            <div className="flex-1">
+              <div className="h-4 w-48 bg-slate-200 dark:bg-slate-700 rounded mb-2" />
+              <div className="h-3 w-full bg-slate-200 dark:bg-slate-700 rounded" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
+function GoalSkeleton() {
+  return (
+    <div className="animate-pulse">
+      <div className="w-32 h-32 mx-auto rounded-full bg-slate-200 dark:bg-slate-700 mb-4" />
+      <div className="h-4 w-3/4 mx-auto bg-slate-200 dark:bg-slate-700 rounded" />
+    </div>
+  );
+}
+
+function PinnedSkeleton() {
+  return (
+    <>
+      {[1, 2].map((i) => (
+        <div key={i} className="flex items-center gap-3 p-2 animate-pulse">
+          <div className="size-8 rounded bg-slate-200 dark:bg-slate-700" />
+          <div className="flex-1">
+            <div className="h-4 w-32 bg-slate-200 dark:bg-slate-700 rounded mb-1" />
+            <div className="h-3 w-20 bg-slate-200 dark:bg-slate-700 rounded" />
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
+// =============================================================================
+// Section Components
+// =============================================================================
+
+interface InsightCardProps {
+  insight: SerializedAIInsight;
+}
+
+function InsightCard({ insight }: Readonly<InsightCardProps>) {
+  const iconStyle = getInsightIcon(insight.type);
+  return (
+    <Link
+      href={insight.actionUrl || '#'}
+      className="flex gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer border border-transparent hover:border-slate-100 dark:hover:border-slate-700"
+    >
+      <div className={`shrink-0 ${iconStyle.iconBg} ${iconStyle.iconColor} rounded-lg p-2 h-fit`}>
+        <span className="material-symbols-outlined">{iconStyle.icon}</span>
+      </div>
+      <div>
+        <h4 className="font-semibold text-slate-800 dark:text-slate-200 text-sm">{insight.title}</h4>
+        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+          {insight.description}
+          {insight.suggestedAction && (
+            <span className="font-medium text-[#137fec]"> Suggested Action: {insight.suggestedAction}</span>
+          )}
+        </p>
+      </div>
+    </Link>
+  );
+}
+
+interface InsightsSectionProps {
+  isLoading: boolean;
+  insights: SerializedAIInsight[] | undefined;
+}
+
+function InsightsSection({ isLoading, insights }: Readonly<InsightsSectionProps>) {
+  if (isLoading) {
+    return <InsightsSkeleton />;
+  }
+
+  if (!insights || insights.length === 0) {
+    return <p className="text-sm text-slate-500 dark:text-slate-400 p-3">No insights at this time.</p>;
+  }
+
+  return (
+    <>
+      {insights.map((insight) => (
+        <InsightCard key={insight.id} insight={insight} />
+      ))}
+    </>
+  );
+}
+
+interface FeedItemCardProps {
+  item: SerializedActivityFeedItem;
+}
+
+function FeedItemCard({ item }: Readonly<FeedItemCardProps>) {
+  const iconStyle = getActivityIcon(item.type);
+  const showInitials = item.actor?.initials || iconStyle.initials;
+
+  return (
+    <div className="p-5 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+      <div className="flex gap-3">
+        {showInitials ? (
+          <div className={`size-10 rounded-full ${iconStyle.bg} flex items-center justify-center ${iconStyle.color} font-bold shrink-0`}>
+            {item.actor?.initials || iconStyle.initials}
+          </div>
+        ) : (
+          <div className={`size-10 rounded-full ${iconStyle.bg} flex items-center justify-center ${iconStyle.color} shrink-0`}>
+            <span className="material-symbols-outlined">{iconStyle.icon}</span>
+          </div>
+        )}
+        <div className="flex-1">
+          <div className="flex justify-between items-start">
+            <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{item.title}</p>
+            <span className="text-xs text-slate-400 whitespace-nowrap">{item.relativeTime}</span>
+          </div>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{item.description}</p>
+          {item.actionUrl && (
+            <Link href={item.actionUrl} className="mt-2 text-sm text-[#137fec] font-medium hover:underline inline-block">
+              View Details
+            </Link>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface FeedSectionProps {
+  isLoading: boolean;
+  items: SerializedActivityFeedItem[] | undefined;
+  hasMore: boolean | undefined;
+  onLoadMore?: () => void;
+  isLoadingMore?: boolean;
+}
+
+function FeedSection({ isLoading, items, hasMore, onLoadMore, isLoadingMore }: Readonly<FeedSectionProps>) {
+  if (isLoading) {
+    return <FeedSkeleton />;
+  }
+
+  if (!items || items.length === 0) {
+    return (
+      <div className="p-8 text-center text-slate-500 dark:text-slate-400">
+        <span className="material-symbols-outlined text-4xl mb-2">inbox</span>
+        <p>No recent activity</p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {items.map((item) => (
+        <FeedItemCard key={item.id} item={item} />
+      ))}
+      {hasMore && (
+        <div className="p-4 border-t border-[#e2e8f0] dark:border-[#334155] text-center">
+          <button
+            onClick={onLoadMore}
+            disabled={isLoadingMore}
+            className="text-sm font-medium text-slate-500 hover:text-[#137fec] transition-colors disabled:opacity-50"
+          >
+            {isLoadingMore ? (
+              <span className="flex items-center gap-2 justify-center">
+                <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
+                Loading...
+              </span>
+            ) : (
+              'Load More Updates'
+            )}
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+
+interface GoalSectionProps {
+  isLoading: boolean;
+  goal: SerializedDailyGoal | undefined;
+}
+
+function GoalSection({ isLoading, goal }: Readonly<GoalSectionProps>) {
+  if (isLoading) {
+    return <GoalSkeleton />;
+  }
+
+  const progress = goal?.progress || 0;
+  const remaining = goal?.remainingFormatted || '$0';
+
+  return (
+    <>
+      <div className="relative w-32 h-32 mx-auto mb-4">
+        <svg className="size-full -rotate-90" viewBox="0 0 36 36">
+          <path
+            className="text-slate-100 dark:text-slate-800"
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+          />
+          <path
+            className="text-[#137fec]"
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+            fill="none"
+            stroke="currentColor"
+            strokeDasharray={`${progress}, 100`}
+            strokeWidth="3"
+          />
+        </svg>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+          <span className="text-2xl font-bold text-slate-900 dark:text-white">{progress}%</span>
+          <p className="text-[10px] text-slate-500 uppercase font-semibold">Goal Reached</p>
+        </div>
+      </div>
+      <p className="text-sm text-center text-slate-600 dark:text-slate-400">
+        You need <span className="font-bold text-slate-900 dark:text-white">{remaining}</span> more to hit today&apos;s target.
+      </p>
+    </>
+  );
+}
+
+interface PinnedItemCardProps {
+  item: SerializedPinnedItem;
+  isEditMode?: boolean;
+  onUnpin?: (entityType: string, entityId: string) => void;
+}
+
+function PinnedItemCard({ item, isEditMode, onUnpin }: Readonly<PinnedItemCardProps>) {
+  const customIcon = item.icon;
+  const iconStyle = customIcon
+    ? { icon: customIcon, iconBg: 'bg-slate-100 dark:bg-slate-800', iconColor: 'text-slate-600' }
+    : getPinnedItemIcon(item.entityType);
+
+  if (isEditMode) {
+    return (
+      <div className="flex items-center gap-3 p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+        <div className={`size-8 rounded ${iconStyle.iconBg} ${iconStyle.iconColor} flex items-center justify-center`}>
+          <span className="material-symbols-outlined text-lg">{iconStyle.icon}</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">{item.title}</p>
+          {item.subtitle && <p className="text-xs text-slate-400">{item.subtitle}</p>}
+        </div>
+        <button
+          onClick={() => onUnpin?.(item.entityType, item.entityId)}
+          className="p-1 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+          title="Unpin item"
+        >
+          <span className="material-symbols-outlined text-lg">close</span>
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={item.url}
+      className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors group"
+    >
+      <div className={`size-8 rounded ${iconStyle.iconBg} ${iconStyle.iconColor} flex items-center justify-center`}>
+        <span className="material-symbols-outlined text-lg">{iconStyle.icon}</span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate group-hover:text-[#137fec]">{item.title}</p>
+        {item.subtitle && <p className="text-xs text-slate-400">{item.subtitle}</p>}
+      </div>
+    </Link>
+  );
+}
+
+interface PinnedSectionProps {
+  isLoading: boolean;
+  items: SerializedPinnedItem[] | undefined;
+  isEditMode?: boolean;
+  onUnpin?: (entityType: string, entityId: string) => void;
+}
+
+function PinnedSection({ isLoading, items, isEditMode, onUnpin }: Readonly<PinnedSectionProps>) {
+  if (isLoading) {
+    return <PinnedSkeleton />;
+  }
+
+  if (!items || items.length === 0) {
+    return <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-4">No pinned items</p>;
+  }
+
+  return (
+    <>
+      {items.map((item) => (
+        <PinnedItemCard key={item.id} item={item} isEditMode={isEditMode} onUnpin={onUnpin} />
+      ))}
+    </>
+  );
+}
+
+// =============================================================================
+// Main Component
+// =============================================================================
+
+export function AuthenticatedHomePage() {
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const hour = new Date().getHours();
-  const greeting = getGreeting(hour);
   const greetingIcon = getGreetingIcon(hour);
 
-  // Get user's first name for personalized greeting
-  const firstName = user?.name?.split(' ')[0] || 'there';
+  // Local state
+  const [feedCursor, setFeedCursor] = useState<string | undefined>(undefined);
+  const [feedItems, setFeedItems] = useState<SerializedActivityFeedItem[]>([]);
+  const [feedFilter, setFeedFilter] = useState<string>('all');
+  const [showFeedFilterMenu, setShowFeedFilterMenu] = useState(false);
+  const [isPinnedEditMode, setIsPinnedEditMode] = useState(false);
+
+  // Only fetch data when authenticated
+  const queryEnabled = isAuthenticated && !authLoading;
+
+  // Fetch data from tRPC
+  const { data: welcomeData, isLoading: welcomeLoading } = trpc.home.getWelcomeSummary.useQuery(
+    undefined,
+    { enabled: queryEnabled }
+  );
+  const { data: insightsData, isLoading: insightsLoading } = trpc.home.getAIInsights.useQuery(
+    undefined,
+    { enabled: queryEnabled }
+  );
+  const { data: feedData, isLoading: feedLoading, isFetching: feedFetching } = trpc.home.getActivityFeed.useQuery(
+    { limit: 5, cursor: feedCursor, types: feedFilter === 'all' ? undefined : [feedFilter as any] },
+    { enabled: queryEnabled }
+  );
+  const { data: goalData, isLoading: goalLoading } = trpc.home.getDailyGoal.useQuery(
+    undefined,
+    { enabled: queryEnabled }
+  );
+  const { data: pinnedData, isLoading: pinnedLoading, refetch: refetchPinned } = trpc.home.getPinnedItems.useQuery(
+    undefined,
+    { enabled: queryEnabled }
+  );
+
+  // Mutations
+  const unpinMutation = trpc.home.unpinItem.useMutation({
+    onSuccess: () => {
+      refetchPinned();
+    },
+  });
+
+  // Callbacks
+  const handleLoadMore = useCallback(() => {
+    if (feedData?.nextCursor) {
+      setFeedCursor(feedData.nextCursor);
+    }
+  }, [feedData?.nextCursor]);
+
+  const handleFeedFilterChange = useCallback((filter: string) => {
+    setFeedFilter(filter);
+    setFeedCursor(undefined);
+    setShowFeedFilterMenu(false);
+  }, []);
+
+  const handleUnpin = useCallback((entityType: string, entityId: string) => {
+    unpinMutation.mutate({ entityType: entityType as any, entityId });
+  }, [unpinMutation]);
+
+  // Merge feed items for infinite scroll
+  const displayedFeedItems = feedCursor ? [...feedItems, ...(feedData?.items || [])] : feedData?.items;
+
+  // Update accumulated items when new data arrives
+  if (feedData?.items && feedCursor && !feedItems.includes(feedData.items[0])) {
+    setFeedItems((prev) => [...prev, ...feedData.items]);
+  }
+
+  const firstName = welcomeData?.userName || user?.name?.split(' ')[0] || 'there';
+  const greeting = welcomeData?.greeting || 'Welcome';
+  const welcomeMessage = buildWelcomeMessage(welcomeData?.stats);
 
   return (
     <div className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922]">
-      {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1e2936]">
-        <div className="flex h-16 items-center px-4 lg:px-6">
-          {/* Logo */}
-          <div className="mr-8">
-            <Link href="/dashboard" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded bg-[#137fec] flex items-center justify-center flex-shrink-0">
-                <span className="material-symbols-outlined text-white text-xl">grid_view</span>
-              </div>
-              <span className="text-lg font-bold text-slate-900 dark:text-white hidden sm:inline">IntelliFlow CRM</span>
-            </Link>
-          </div>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  link.active
-                    ? 'bg-[#137fec]/10 text-[#137fec]'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-
-          {/* Spacer */}
-          <div className="flex-1" />
-
-          {/* Search */}
-          <div className="hidden md:flex items-center mr-4">
-            <div className="relative w-64">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-lg text-slate-400 dark:text-slate-500">
-                search
-              </span>
-              <input
-                type="search"
-                placeholder="Search..."
-                className="w-full pl-10 pr-4 py-2 text-sm border border-[#e2e8f0] dark:border-[#334155] rounded-lg bg-[#f6f7f8] dark:bg-[#101922] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent"
-              />
-            </div>
-          </div>
-
-          {/* Notifications */}
-          <button
-            className="relative p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-            aria-label="Notifications (3 unread)"
-          >
-            <span className="material-symbols-outlined text-xl">notifications</span>
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
-          </button>
-
-          {/* User Menu */}
-          <div className="relative ml-2">
-            <button
-              className="flex items-center gap-2 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              aria-expanded="false"
-              aria-haspopup="true"
-            >
-              <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
-                <span className="text-sm font-medium text-slate-500 dark:text-slate-400">A</span>
-              </div>
-              <span className="hidden sm:inline text-sm font-medium text-slate-900 dark:text-white">Alex</span>
-              <span className="material-symbols-outlined text-lg text-slate-400 dark:text-slate-500">expand_more</span>
-            </button>
-          </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            className="lg:hidden ml-4 p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-            aria-label="Toggle menu"
-          >
-            <span className="material-symbols-outlined text-xl">menu</span>
-          </button>
-        </div>
-      </header>
-
-      {/* Main Content */}
       <main className="relative">
         {/* Subtle grid background pattern */}
         <div
@@ -225,18 +647,23 @@ export function AuthenticatedHomePage() {
                 <span className="text-sm font-medium uppercase tracking-wide">{greeting}</span>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold mb-4">Welcome back, {firstName}!</h1>
-              <p className="text-lg text-blue-50 mb-6 leading-relaxed">
-                You have 3 high-priority tasks pending and 2 new leads assigned to you since yesterday. Your deal closing rate is up by 5% this week!
-              </p>
+              {welcomeLoading ? (
+                <div className="h-6 w-3/4 bg-white/20 rounded animate-pulse" />
+              ) : (
+                <p className="text-lg text-blue-50 mb-6 leading-relaxed">{welcomeMessage}</p>
+              )}
               <div className="flex flex-wrap gap-3">
-                <button className="bg-white text-[#137fec] hover:bg-blue-50 px-4 py-2 rounded-lg font-semibold text-sm transition-colors shadow-sm flex items-center gap-2">
-                  <span className="material-symbols-outlined text-lg">calendar_today</span>{' '}View Schedule
-                </button>
+                <Link
+                  href="/calendar"
+                  className="bg-white text-[#137fec] hover:bg-blue-50 px-4 py-2 rounded-lg font-semibold text-sm transition-colors shadow-sm flex items-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-lg">calendar_today</span> View Schedule
+                </Link>
                 <Link
                   href="/dashboard"
                   className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-colors backdrop-blur-sm flex items-center gap-2"
                 >
-                  <span className="material-symbols-outlined text-lg">dashboard</span>{' '}Go to Dashboard
+                  <span className="material-symbols-outlined text-lg">dashboard</span> Go to Dashboard
                 </Link>
               </div>
             </div>
@@ -251,25 +678,10 @@ export function AuthenticatedHomePage() {
                   <span className="material-symbols-outlined text-indigo-600 dark:text-indigo-400">auto_awesome</span>
                   <h3 className="font-bold text-slate-800 dark:text-slate-100">AI Daily Insights</h3>
                 </div>
-                <button className="text-xs font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400">View All</button>
+                <Link href="/ai/insights" className="text-xs font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 hover:underline">View All</Link>
               </div>
               <div className="p-4 grid gap-4">
-                {aiInsights.map((insight) => (
-                  <div
-                    key={insight.id}
-                    className="flex gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer border border-transparent hover:border-slate-100 dark:hover:border-slate-700"
-                  >
-                    <div className={`shrink-0 ${insight.iconBg} ${insight.iconColor} rounded-lg p-2 h-fit`}>
-                      <span className="material-symbols-outlined">{insight.icon}</span>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-slate-800 dark:text-slate-200 text-sm">{insight.title}</h4>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                        {insight.description} <span className="font-medium text-[#137fec]">{insight.action}</span>
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                <InsightsSection isLoading={insightsLoading} insights={insightsData?.insights} />
               </div>
             </div>
 
@@ -278,15 +690,16 @@ export function AuthenticatedHomePage() {
               <h3 className="font-bold text-slate-900 dark:text-white mb-4">Quick Actions</h3>
               <div className="grid grid-cols-2 gap-3">
                 {quickActions.map((action) => (
-                  <button
+                  <Link
                     key={action.id}
+                    href={action.href}
                     className="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors gap-2 group"
                   >
                     <div className={`p-2 ${action.color} rounded-full group-hover:scale-110 transition-transform`}>
                       <span className="material-symbols-outlined">{action.icon}</span>
                     </div>
                     <span className="text-xs font-medium text-slate-600 dark:text-slate-300">{action.label}</span>
-                  </button>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -295,75 +708,52 @@ export function AuthenticatedHomePage() {
             <div className="col-span-1 md:col-span-2 lg:col-span-3 row-span-2 bg-white dark:bg-[#1e2936] rounded-xl border border-[#e2e8f0] dark:border-[#334155] shadow-sm">
               <div className="p-5 border-b border-[#e2e8f0] dark:border-[#334155] flex justify-between items-center">
                 <h3 className="font-bold text-slate-900 dark:text-white">Your Feed</h3>
-                <button className="p-1 text-slate-400 hover:text-[#137fec] transition-colors rounded">
-                  <span className="material-symbols-outlined text-[20px]">filter_list</span>
-                </button>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowFeedFilterMenu(!showFeedFilterMenu)}
+                    className={`p-1 transition-colors rounded flex items-center gap-1 ${
+                      feedFilter !== 'all' ? 'text-[#137fec]' : 'text-slate-400 hover:text-[#137fec]'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">filter_list</span>
+                    {feedFilter !== 'all' && (
+                      <span className="text-xs font-medium">
+                        {FEED_FILTER_OPTIONS.find(o => o.value === feedFilter)?.label}
+                      </span>
+                    )}
+                  </button>
+                  {showFeedFilterMenu && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setShowFeedFilterMenu(false)} />
+                      <div className="absolute right-0 top-full mt-1 z-20 bg-white dark:bg-[#1e2936] border border-[#e2e8f0] dark:border-[#334155] rounded-lg shadow-lg py-1 min-w-[160px]">
+                        {FEED_FILTER_OPTIONS.map((option) => (
+                          <button
+                            key={option.value}
+                            onClick={() => handleFeedFilterChange(option.value)}
+                            className={`w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors ${
+                              feedFilter === option.value ? 'text-[#137fec] font-medium' : 'text-slate-700 dark:text-slate-300'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-lg">{option.icon}</span>
+                            {option.label}
+                            {feedFilter === option.value && (
+                              <span className="material-symbols-outlined text-sm ml-auto">check</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
               <div className="divide-y divide-[#e2e8f0] dark:divide-[#334155]">
-                {feedItems.map((item) => (
-                  <div key={item.id} className="p-5 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                    <div className="flex gap-3">
-                      {item.initials ? (
-                        <div className={`size-10 rounded-full ${item.initialsBg} flex items-center justify-center ${item.initialsText} font-bold shrink-0`}>
-                          {item.initials}
-                        </div>
-                      ) : (
-                        <div className={`size-10 rounded-full ${item.iconBg} flex items-center justify-center ${item.iconColor} shrink-0`}>
-                          <span className="material-symbols-outlined">{item.icon}</span>
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start">
-                          <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{item.title}</p>
-                          <span className="text-xs text-slate-400 whitespace-nowrap">{item.time}</span>
-                        </div>
-                        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{item.description}</p>
-
-                        {item.attachment && (
-                          <div className="mt-3 bg-slate-50 dark:bg-slate-800 rounded border border-[#e2e8f0] dark:border-[#334155] p-2 flex items-center gap-3">
-                            <div className="bg-white dark:bg-slate-700 p-1.5 rounded text-red-500">
-                              <span className="material-symbols-outlined text-sm">{item.attachment.icon}</span>
-                            </div>
-                            <span className="text-sm text-slate-700 dark:text-slate-300 font-medium">{item.attachment.name}</span>
-                          </div>
-                        )}
-
-                        {item.badges && (
-                          <div className="mt-2 flex gap-2">
-                            {item.badges.map((badge) => (
-                              <span
-                                key={badge.id}
-                                className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${badge.color}`}
-                              >
-                                {badge.label}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-
-                        {item.showActions && (
-                          <div className="flex gap-3 mt-3">
-                            <button className="text-xs font-semibold text-slate-500 hover:text-[#137fec] flex items-center gap-1">
-                              <span className="material-symbols-outlined text-[16px]">reply</span> Reply
-                            </button>
-                            <button className="text-xs font-semibold text-slate-500 hover:text-[#137fec] flex items-center gap-1">
-                              <span className="material-symbols-outlined text-[16px]">thumb_up</span> Like
-                            </button>
-                          </div>
-                        )}
-
-                        {item.link && (
-                          <Link href={item.link.href} className="mt-2 text-sm text-[#137fec] font-medium hover:underline inline-block">
-                            {item.link.label}
-                          </Link>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="p-4 border-t border-[#e2e8f0] dark:border-[#334155] text-center">
-                <button className="text-sm font-medium text-slate-500 hover:text-[#137fec] transition-colors">Load More Updates</button>
+                <FeedSection
+                  isLoading={feedLoading}
+                  items={displayedFeedItems}
+                  hasMore={feedData?.hasMore}
+                  onLoadMore={handleLoadMore}
+                  isLoadingMore={feedFetching && !!feedCursor}
+                />
               </div>
             </div>
 
@@ -371,60 +761,34 @@ export function AuthenticatedHomePage() {
             <div className="col-span-1 bg-white dark:bg-[#1e2936] rounded-xl border border-[#e2e8f0] dark:border-[#334155] shadow-sm p-5">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-slate-900 dark:text-white">Today&apos;s Focus</h3>
-                <span className="text-xs font-medium bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-slate-600 dark:text-slate-400">Sales</span>
+                <span className="text-xs font-medium bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-slate-600 dark:text-slate-400">
+                  {goalData?.goal.label || 'Sales'}
+                </span>
               </div>
-              <div className="relative w-32 h-32 mx-auto mb-4">
-                <svg className="size-full -rotate-90" viewBox="0 0 36 36">
-                  <path
-                    className="text-slate-100 dark:text-slate-800"
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                  />
-                  <path
-                    className="text-[#137fec]"
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeDasharray="75, 100"
-                    strokeWidth="3"
-                  />
-                </svg>
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
-                  <span className="text-2xl font-bold text-slate-900 dark:text-white">75%</span>
-                  <p className="text-[10px] text-slate-500 uppercase font-semibold">Goal Reached</p>
-                </div>
-              </div>
-              <p className="text-sm text-center text-slate-600 dark:text-slate-400">
-                You need <span className="font-bold text-slate-900 dark:text-white">$1,200</span> more to hit today&apos;s target.
-              </p>
+              <GoalSection isLoading={goalLoading} goal={goalData?.goal} />
             </div>
 
             {/* Pinned - colSpan: 1 */}
             <div className="col-span-1 bg-white dark:bg-[#1e2936] rounded-xl border border-[#e2e8f0] dark:border-[#334155] shadow-sm p-5">
               <div className="flex justify-between items-center mb-3">
                 <h3 className="font-bold text-slate-900 dark:text-white">Pinned</h3>
-                <button className="text-slate-400 hover:text-[#137fec]">
-                  <span className="material-symbols-outlined text-sm">edit</span>
+                <button
+                  onClick={() => setIsPinnedEditMode(!isPinnedEditMode)}
+                  className={`transition-colors ${isPinnedEditMode ? 'text-[#137fec]' : 'text-slate-400 hover:text-[#137fec]'}`}
+                  title={isPinnedEditMode ? 'Done editing' : 'Edit pinned items'}
+                >
+                  <span className="material-symbols-outlined text-sm">
+                    {isPinnedEditMode ? 'check' : 'edit'}
+                  </span>
                 </button>
               </div>
               <div className="space-y-3">
-                {pinnedItems.map((item) => (
-                  <Link
-                    key={item.id}
-                    href="#"
-                    className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors group"
-                  >
-                    <div className={`size-8 rounded ${item.iconBg} ${item.iconColor} flex items-center justify-center`}>
-                      <span className="material-symbols-outlined text-lg">{item.icon}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate group-hover:text-[#137fec]">{item.title}</p>
-                      <p className="text-xs text-slate-400">{item.subtitle}</p>
-                    </div>
-                  </Link>
-                ))}
+                <PinnedSection
+                  isLoading={pinnedLoading}
+                  items={pinnedData?.items}
+                  isEditMode={isPinnedEditMode}
+                  onUnpin={handleUnpin}
+                />
               </div>
             </div>
           </div>
@@ -434,9 +798,7 @@ export function AuthenticatedHomePage() {
       {/* Footer */}
       <footer className="border-t border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1e2936]">
         <div className="px-4 sm:px-6 lg:px-8 xl:px-12 py-12 max-w-[1800px] mx-auto">
-          {/* Main Footer Content */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-8">
-            {/* Brand Column */}
             <div className="col-span-2 md:col-span-4 lg:col-span-1">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 rounded bg-[#137fec] flex items-center justify-center flex-shrink-0">
@@ -447,7 +809,6 @@ export function AuthenticatedHomePage() {
               <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
                 AI-powered CRM with modern automation and governance-grade validation
               </p>
-              {/* Social Links */}
               <div className="flex items-center gap-3">
                 <a href="https://twitter.com/intelliflow" target="_blank" rel="noopener noreferrer" className="text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors" aria-label="Twitter">
                   <span className="text-sm font-medium">X</span>
@@ -460,8 +821,6 @@ export function AuthenticatedHomePage() {
                 </a>
               </div>
             </div>
-
-            {/* Product */}
             <div>
               <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Product</h3>
               <ul className="space-y-3">
@@ -471,8 +830,6 @@ export function AuthenticatedHomePage() {
                 <li><Link href="/integrations" className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors">Integrations</Link></li>
               </ul>
             </div>
-
-            {/* Company */}
             <div>
               <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Company</h3>
               <ul className="space-y-3">
@@ -482,8 +839,6 @@ export function AuthenticatedHomePage() {
                 <li><Link href="/press" className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors">Press</Link></li>
               </ul>
             </div>
-
-            {/* Resources */}
             <div>
               <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Resources</h3>
               <ul className="space-y-3">
@@ -493,8 +848,6 @@ export function AuthenticatedHomePage() {
                 <li><a href="https://status.intelliflow.ai" className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors">Status</a></li>
               </ul>
             </div>
-
-            {/* Legal */}
             <div>
               <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Legal</h3>
               <ul className="space-y-3">
@@ -505,8 +858,6 @@ export function AuthenticatedHomePage() {
               </ul>
             </div>
           </div>
-
-          {/* Bottom Bar */}
           <div className="pt-8 border-t border-[#e2e8f0] dark:border-[#334155]">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-sm text-slate-600 dark:text-slate-400">&copy; 2025 IntelliFlow CRM. All rights reserved.</p>

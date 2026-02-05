@@ -6,7 +6,17 @@ import { AppHeader } from '../AppHeader';
 
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn(),
+  }),
   usePathname: vi.fn(() => '/dashboard'),
+  useSearchParams: () => new URLSearchParams(),
+  useParams: () => ({}),
 }));
 
 // Mock next/link
@@ -101,7 +111,7 @@ describe('AppHeader', () => {
       expect(screen.getByRole('link', { name: /deals/i })).toHaveAttribute('href', '/deals');
       expect(screen.getByRole('link', { name: /tickets/i })).toHaveAttribute('href', '/tickets');
       expect(screen.getByRole('link', { name: /documents/i })).toHaveAttribute('href', '/documents');
-      expect(screen.getByRole('link', { name: /agent actions/i })).toHaveAttribute('href', '/agent-approvals/preview');
+      expect(screen.getByRole('link', { name: /agent actions/i })).toHaveAttribute('href', '/agent-approvals');
       expect(screen.getByRole('link', { name: /reports/i })).toHaveAttribute('href', '/analytics');
     });
 

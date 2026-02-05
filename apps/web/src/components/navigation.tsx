@@ -12,7 +12,7 @@ const routes: NavRoute[] = [
   { label: 'Deals', href: '/deals', icon: 'handshake' },
   { label: 'Tickets', href: '/tickets', icon: 'confirmation_number' },
   { label: 'Documents', href: '/documents', icon: 'description' },
-  { label: 'Agent Actions', href: '/agent-approvals/preview', icon: 'smart_toy' }, // IFC-149: AI Agent approvals
+  { label: 'Agent Actions', href: '/agent-approvals', icon: 'smart_toy' }, // IFC-149: AI Agent approvals
   { label: 'Reports', href: '/analytics', icon: 'bar_chart' },
 ];
 

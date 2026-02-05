@@ -8,7 +8,17 @@ import { PublicHeader } from '../PublicHeader';
 const mockUsePathname = vi.fn(() => '/');
 
 vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn(),
+  }),
   usePathname: () => mockUsePathname(),
+  useSearchParams: () => new URLSearchParams(),
+  useParams: () => ({}),
 }));
 
 // Mock next/link - preserve className for styling tests

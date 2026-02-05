@@ -1,12 +1,17 @@
 'use client';
 
 import { trpc } from '@/lib/trpc';
+import { useAuth } from '@/lib/auth/AuthContext';
 import type { WidgetProps } from './index';
 
 export function TotalLeadsWidget(_props: WidgetProps) {
-  const { data: stats, isLoading, error } = trpc.lead.stats.useQuery();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { data: stats, isLoading, error } = trpc.lead.stats.useQuery(
+    undefined,
+    { enabled: isAuthenticated && !authLoading }
+  );
 
-  if (isLoading) {
+  if (isLoading || authLoading) {
     return (
       <div className="p-6 h-full flex flex-col animate-pulse">
         <div className="flex items-start justify-between">

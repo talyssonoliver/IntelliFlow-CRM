@@ -1,6 +1,7 @@
 'use client';
 
 import { trpc } from '@/lib/trpc';
+import { useAuth } from '@/lib/auth/AuthContext';
 import type { WidgetProps } from './index';
 
 interface TrafficSourceData {
@@ -10,9 +11,13 @@ interface TrafficSourceData {
 }
 
 export function TrafficSourcesWidget(_props: WidgetProps) {
-  const { data: sources, isLoading } = trpc.analytics.trafficSources.useQuery();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { data: sources, isLoading } = trpc.analytics.trafficSources.useQuery(
+    undefined,
+    { enabled: isAuthenticated && !authLoading }
+  );
 
-  if (isLoading) {
+  if (isLoading || authLoading) {
     return (
       <div className="p-5 h-full flex flex-col animate-pulse">
         <div className="h-6 w-32 rounded bg-slate-200 dark:bg-slate-700 mb-4" />

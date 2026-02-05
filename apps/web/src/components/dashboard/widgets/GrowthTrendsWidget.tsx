@@ -1,6 +1,7 @@
 'use client';
 
 import { trpc } from '@/lib/trpc';
+import { useAuth } from '@/lib/auth/AuthContext';
 import type { WidgetProps } from './index';
 
 interface GrowthTrendData {
@@ -10,12 +11,13 @@ interface GrowthTrendData {
 }
 
 export function GrowthTrendsWidget(_props: WidgetProps) {
-  const { data: trendData, isLoading } = trpc.analytics.growthTrends.useQuery({
-    metric: 'revenue',
-    months: 12,
-  });
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { data: trendData, isLoading } = trpc.analytics.growthTrends.useQuery(
+    { metric: 'revenue', months: 12 },
+    { enabled: isAuthenticated && !authLoading }
+  );
 
-  if (isLoading) {
+  if (isLoading || authLoading) {
     return (
       <div className="p-5 h-full flex flex-col animate-pulse">
         <div className="flex items-center justify-between mb-4">
