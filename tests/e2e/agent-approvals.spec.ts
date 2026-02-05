@@ -20,10 +20,10 @@ import { test, expect } from '@playwright/test';
 test.describe('Agent Approvals Preview Page', () => {
   test.describe('Page Loading', () => {
     test('should load agent approvals preview page', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Verify page loads with correct title
-      await expect(page).toHaveURL(/agent-approvals\/preview/);
+      await expect(page).toHaveURL(/agent-approvals/);
 
       // Verify main heading is present
       const heading = page.locator('h1:has-text("Agent Approvals")');
@@ -31,7 +31,7 @@ test.describe('Agent Approvals Preview Page', () => {
     });
 
     test('should display page description', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Verify description text
       const description = page.locator('text=Review and approve AI agent-initiated changes');
@@ -39,7 +39,7 @@ test.describe('Agent Approvals Preview Page', () => {
     });
 
     test('should display metrics cards', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Verify metrics cards are present
       const metricsLabels = [
@@ -59,7 +59,7 @@ test.describe('Agent Approvals Preview Page', () => {
 
   test.describe('Filter Functionality', () => {
     test('should display filter buttons', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Verify filter buttons are present
       const filterLabels = ['All', 'Pending', 'Approved', 'Rejected', 'Rolled back', 'Expired'];
@@ -71,7 +71,7 @@ test.describe('Agent Approvals Preview Page', () => {
     });
 
     test('should filter actions by status', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Click pending filter
       await page.click('button:has-text("Pending")');
@@ -82,7 +82,7 @@ test.describe('Agent Approvals Preview Page', () => {
     });
 
     test('should show all actions when All filter is selected', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Click All filter
       await page.click('button:has-text("All")');
@@ -95,7 +95,7 @@ test.describe('Agent Approvals Preview Page', () => {
 
   test.describe('Action Cards', () => {
     test('should display action cards with correct structure', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Verify action cards are present (mock data should show 4 actions)
       const actionCards = page.locator('[role="button"]').filter({ hasText: 'Agent' });
@@ -103,7 +103,7 @@ test.describe('Agent Approvals Preview Page', () => {
     });
 
     test('should display pending badge for pending actions', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Click pending filter to show only pending
       await page.click('button:has-text("Pending")');
@@ -114,7 +114,7 @@ test.describe('Agent Approvals Preview Page', () => {
     });
 
     test('should display confidence score', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Verify confidence score is displayed (85%, 78%, etc. from mock data)
       const confidenceScores = page.locator('text=/\\d+%/');
@@ -122,7 +122,7 @@ test.describe('Agent Approvals Preview Page', () => {
     });
 
     test('should display agent name', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Verify agent names from mock data
       const agentNames = [
@@ -146,7 +146,7 @@ test.describe('Agent Approvals Preview Page', () => {
     });
 
     test('should display expiration time for pending actions', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Verify expiration indicator is shown
       const expiresText = page.locator('text=/Expires in/').first();
@@ -158,7 +158,7 @@ test.describe('Agent Approvals Preview Page', () => {
 
   test.describe('Action Expansion', () => {
     test('should expand action card on click', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Get the first action card
       const firstCard = page.locator('[role="button"][aria-expanded]').first();
@@ -172,7 +172,7 @@ test.describe('Agent Approvals Preview Page', () => {
     });
 
     test('should display diff view when expanded', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Expand first card
       const firstCard = page.locator('[role="button"][aria-expanded]').first();
@@ -190,7 +190,7 @@ test.describe('Agent Approvals Preview Page', () => {
     });
 
     test('should display AI reasoning when expanded', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Expand first card
       const firstCard = page.locator('[role="button"][aria-expanded]').first();
@@ -202,7 +202,7 @@ test.describe('Agent Approvals Preview Page', () => {
     });
 
     test('should collapse action card on second click', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       const firstCard = page.locator('[role="button"][aria-expanded]').first();
 
@@ -223,7 +223,7 @@ test.describe('Agent Approvals Preview Page', () => {
 
   test.describe('Approval Actions', () => {
     test('should display approve and reject buttons for pending actions', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Expand first pending action
       const firstCard = page.locator('[role="button"][aria-expanded]').first();
@@ -239,7 +239,7 @@ test.describe('Agent Approvals Preview Page', () => {
     });
 
     test('should display modify button for pending actions', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Expand first pending action
       const firstCard = page.locator('[role="button"][aria-expanded]').first();
@@ -251,7 +251,7 @@ test.describe('Agent Approvals Preview Page', () => {
     });
 
     test('should approve action when clicking approve', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Expand first action
       const firstCard = page.locator('[role="button"][aria-expanded]').first();
@@ -270,7 +270,7 @@ test.describe('Agent Approvals Preview Page', () => {
     });
 
     test('should show reject form when clicking reject', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Click pending filter first
       await page.click('button:has-text("Pending")');
@@ -293,7 +293,7 @@ test.describe('Agent Approvals Preview Page', () => {
     });
 
     test('should reject action with feedback', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Click pending filter
       await page.click('button:has-text("Pending")');
@@ -320,7 +320,7 @@ test.describe('Agent Approvals Preview Page', () => {
     });
 
     test('should disable confirm rejection without feedback', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Click pending filter
       await page.click('button:has-text("Pending")');
@@ -340,7 +340,7 @@ test.describe('Agent Approvals Preview Page', () => {
 
   test.describe('Rollback Functionality', () => {
     test('should display rollback button for approved actions', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // First approve an action
       const firstCard = page.locator('[role="button"][aria-expanded]').first();
@@ -362,7 +362,7 @@ test.describe('Agent Approvals Preview Page', () => {
     });
 
     test('should show rollback form when clicking rollback', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // First approve an action
       const firstCard = page.locator('[role="button"][aria-expanded]').first();
@@ -392,7 +392,7 @@ test.describe('Agent Approvals Preview Page', () => {
 
   test.describe('Metrics Tracking', () => {
     test('should update approval count after approving', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Get initial approved count
       const approvedCard = page.locator('text=Approved').first();
@@ -411,7 +411,7 @@ test.describe('Agent Approvals Preview Page', () => {
     });
 
     test('should track pending action count', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Verify pending count badge in header
       const pendingBadge = page.locator('text=/\\d+ pending/');
@@ -423,7 +423,7 @@ test.describe('Agent Approvals Preview Page', () => {
 
   test.describe('Empty States', () => {
     test('should show empty state message when no actions match filter', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Click expired filter (should have no actions initially)
       await page.click('button:has-text("Expired")');
@@ -436,7 +436,7 @@ test.describe('Agent Approvals Preview Page', () => {
 
   test.describe('History Link', () => {
     test('should display action history section', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Scroll to bottom
       await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
@@ -452,7 +452,7 @@ test.describe('Agent Approvals Preview Page', () => {
 
   test.describe('Refresh Functionality', () => {
     test('should have refresh button', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Verify refresh button exists
       const refreshButton = page.locator('button:has-text("Refresh")');
@@ -460,7 +460,7 @@ test.describe('Agent Approvals Preview Page', () => {
     });
 
     test('should animate refresh icon when loading', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Click refresh
       const refreshButton = page.locator('button:has-text("Refresh")');
@@ -473,7 +473,7 @@ test.describe('Agent Approvals Preview Page', () => {
 
   test.describe('Accessibility', () => {
     test('should have proper ARIA attributes on expandable cards', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Verify action cards have aria-expanded
       const expandableCards = page.locator('[aria-expanded]');
@@ -481,7 +481,7 @@ test.describe('Agent Approvals Preview Page', () => {
     });
 
     test('should be keyboard navigable', async ({ page }) => {
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
 
       // Tab to first interactive element
       await page.keyboard.press('Tab');
@@ -497,7 +497,7 @@ test.describe('Agent Approvals Preview Page', () => {
     test('should load page within acceptable time', async ({ page }) => {
       const startTime = Date.now();
 
-      await page.goto('/agent-approvals/preview');
+      await page.goto('/agent-approvals');
       await page.waitForLoadState('load');
 
       const loadTime = Date.now() - startTime;

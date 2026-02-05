@@ -31,7 +31,7 @@ import { gotoAndWait, measureLoadTime, waitForContentStable } from '../utils/ai-
 
 test.describe('Agent Approval Workflow - Extended', () => {
   test.beforeEach(async ({ page }) => {
-    await gotoAndWait(page, '/agent-approvals/preview');
+    await gotoAndWait(page, '/agent-approvals');
   });
 
   test.describe('Page Loading', () => {
@@ -39,7 +39,7 @@ test.describe('Agent Approval Workflow - Extended', () => {
       // Skip Firefox and webkit - cold start performance differs significantly
       test.skip(browserName === 'firefox' || browserName === 'webkit', 'Non-chromium cold start differs');
 
-      const loadTime = await measureLoadTime(page, '/agent-approvals/preview');
+      const loadTime = await measureLoadTime(page, '/agent-approvals');
 
       // PERF-1: Page should load in < 3 seconds
       expect(loadTime).toBeLessThan(3000);

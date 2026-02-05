@@ -93,7 +93,7 @@ test.describe('AI Components Visual Regression', () => {
   test.describe('Agent Action Components', () => {
     test('agent action card collapsed should match snapshot', async ({ page }) => {
       // VR-3: Visual snapshot captured for agent action card (collapsed)
-      await gotoAndWait(page, '/agent-approvals/preview');
+      await gotoAndWait(page, '/agent-approvals');
       await page.waitForTimeout(500);
 
       const actionCard = page.locator('[role="button"][aria-expanded="false"]').first();
@@ -113,7 +113,7 @@ test.describe('AI Components Visual Regression', () => {
 
     test('agent action card expanded should match snapshot', async ({ page }) => {
       // VR-4: Visual snapshot captured for agent action card (expanded)
-      await gotoAndWait(page, '/agent-approvals/preview');
+      await gotoAndWait(page, '/agent-approvals');
 
       const actionCard = page.locator('button[aria-expanded]').first();
       await actionCard.click();
@@ -135,7 +135,7 @@ test.describe('AI Components Visual Regression', () => {
 
     test('diff view component should match snapshot', async ({ page }) => {
       // VR-5: Visual snapshot captured for diff view component
-      await gotoAndWait(page, '/agent-approvals/preview');
+      await gotoAndWait(page, '/agent-approvals');
 
       const actionCard = page.locator('button[aria-expanded]').first();
       await actionCard.click();
@@ -155,7 +155,7 @@ test.describe('AI Components Visual Regression', () => {
   test.describe('Metrics Dashboard', () => {
     test('metrics dashboard should match snapshot', async ({ page }) => {
       // VR-6: Visual snapshot captured for metrics dashboard
-      await gotoAndWait(page, '/agent-approvals/preview');
+      await gotoAndWait(page, '/agent-approvals');
       await page.waitForTimeout(500);
 
       // Target the metrics grid
@@ -180,7 +180,7 @@ test.describe('AI Components Visual Regression', () => {
     });
 
     test('filter button group should match snapshot', async ({ page }) => {
-      await gotoAndWait(page, '/agent-approvals/preview');
+      await gotoAndWait(page, '/agent-approvals');
       await page.waitForTimeout(500);
 
       const filterGroup = page.locator('[data-testid="filter-buttons"]');
@@ -200,7 +200,7 @@ test.describe('AI Components Visual Regression', () => {
       // This is implicitly tested by all above tests using maxDiffPixelRatio: 0.01
       // This test serves as documentation and explicit verification
 
-      await gotoAndWait(page, '/agent-approvals/preview');
+      await gotoAndWait(page, '/agent-approvals');
 
       // Verify that the page loads correctly for snapshot testing
       await expect(page.locator('body')).toBeVisible();
@@ -210,7 +210,7 @@ test.describe('AI Components Visual Regression', () => {
   test.describe('Responsive Snapshots', () => {
     test('mobile view of agent approvals should match snapshot', async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 });
-      await gotoAndWait(page, '/agent-approvals/preview');
+      await gotoAndWait(page, '/agent-approvals');
       await page.waitForTimeout(500);
 
       await expect(page).toHaveScreenshot('agent-approvals-mobile.png', {
@@ -222,7 +222,7 @@ test.describe('AI Components Visual Regression', () => {
 
     test('tablet view of agent approvals should match snapshot', async ({ page }) => {
       await page.setViewportSize({ width: 768, height: 1024 });
-      await gotoAndWait(page, '/agent-approvals/preview');
+      await gotoAndWait(page, '/agent-approvals');
       await page.waitForTimeout(500);
 
       await expect(page).toHaveScreenshot('agent-approvals-tablet.png', {
