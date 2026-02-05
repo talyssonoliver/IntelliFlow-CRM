@@ -24,40 +24,31 @@
 import { z } from 'zod';
 import { observable } from '@trpc/server/observable';
 import { createTRPCRouter, publicProcedure, protectedProcedure } from '../trpc';
-import { EventEmitter } from 'events';
+import {
+  getRealtimeEmitter,
+  REALTIME_CHANNELS,
+  type LeadScoredEvent,
+  type TaskAssignedEvent,
+  type SystemEvent,
+  type AIProgressEvent,
+  // Re-export emit functions from platform for API consumers
+  emitLeadScored,
+  emitTaskAssigned,
+  emitSystemEvent,
+  emitAIProgress,
+} from '@intelliflow/platform';
 
 /**
- * Event Emitter for pub/sub pattern
+ * Shared EventEmitter from @intelliflow/platform
  *
- * In production, replace this with:
- * - Redis Pub/Sub for multi-instance deployments
+ * This allows both API and events-worker to share the same EventEmitter
+ * for real-time subscriptions in a single-process deployment.
+ *
+ * For multi-instance deployments, replace with:
+ * - Redis Pub/Sub for cross-instance communication
  * - RabbitMQ for complex event routing
- * - Server-Sent Events (SSE) for one-way streams
  */
-const eventEmitter = new EventEmitter();
-
-/**
- * Event types for type-safe event handling
- */
-type LeadScoredEvent = {
-  leadId: string;
-  score: number;
-  confidence: number;
-  timestamp: Date;
-};
-
-type TaskAssignedEvent = {
-  taskId: string;
-  assigneeId: string;
-  title: string;
-  dueDate: Date;
-};
-
-type SystemEvent = {
-  type: 'info' | 'warning' | 'error';
-  message: string;
-  timestamp: Date;
-};
+const eventEmitter = getRealtimeEmitter();
 
 /**
  * Subscription Router
@@ -100,11 +91,11 @@ export const subscriptionRouter = createTRPCRouter({
           }
         };
 
-        eventEmitter.on('lead:scored', handler);
+        eventEmitter.on(REALTIME_CHANNELS.LEAD_SCORED, handler);
 
         // Cleanup on unsubscribe
         return () => {
-          eventEmitter.off('lead:scored', handler);
+          eventEmitter.off(REALTIME_CHANNELS.LEAD_SCORED, handler);
         };
       });
     }),
@@ -126,10 +117,10 @@ export const subscriptionRouter = createTRPCRouter({
         }
       };
 
-      eventEmitter.on('task:assigned', handler);
+      eventEmitter.on(REALTIME_CHANNELS.TASK_ASSIGNED, handler);
 
       return () => {
-        eventEmitter.off('task:assigned', handler);
+        eventEmitter.off(REALTIME_CHANNELS.TASK_ASSIGNED, handler);
       };
     });
   }),
@@ -150,10 +141,10 @@ export const subscriptionRouter = createTRPCRouter({
         emit.next(event);
       };
 
-      eventEmitter.on('system:event', handler);
+      eventEmitter.on(REALTIME_CHANNELS.SYSTEM_EVENT, handler);
 
       return () => {
-        eventEmitter.off('system:event', handler);
+        eventEmitter.off(REALTIME_CHANNELS.SYSTEM_EVENT, handler);
       };
     });
   }),
@@ -183,10 +174,10 @@ export const subscriptionRouter = createTRPCRouter({
           }
         };
 
-        eventEmitter.on('ai:progress', handler);
+        eventEmitter.on(REALTIME_CHANNELS.AI_PROGRESS, handler);
 
         return () => {
-          eventEmitter.off('ai:progress', handler);
+          eventEmitter.off(REALTIME_CHANNELS.AI_PROGRESS, handler);
         };
       });
     }),
@@ -218,67 +209,19 @@ export const subscriptionRouter = createTRPCRouter({
 });
 
 /**
- * Helper Functions to Emit Events
+ * Re-exported Emit Functions from @intelliflow/platform
  *
  * These functions are used by other parts of the API to trigger subscription updates.
  * Call these from mutations to notify subscribers of changes.
+ *
+ * - emitLeadScored: Emit when AI scores a lead
+ * - emitTaskAssigned: Emit when a task is assigned
+ * - emitSystemEvent: Emit system-wide notifications
+ * - emitAIProgress: Emit AI processing progress
+ *
+ * @see @intelliflow/platform/realtime for function signatures
  */
-
-/**
- * Emit a lead scored event
- *
- * Call this after AI scores a lead to notify all subscribers.
- *
- * @example
- * await scoreLeadWithAI(leadId);
- * emitLeadScored({ leadId, score: 85, confidence: 0.92 });
- */
-export function emitLeadScored(event: LeadScoredEvent) {
-  eventEmitter.emit('lead:scored', event);
-}
-
-/**
- * Emit a task assigned event
- *
- * Call this when a task is assigned to a user.
- *
- * @example
- * await createTask({ assigneeId: userId, ... });
- * emitTaskAssigned({ taskId, assigneeId: userId, title, dueDate });
- */
-export function emitTaskAssigned(event: TaskAssignedEvent) {
-  eventEmitter.emit('task:assigned', event);
-}
-
-/**
- * Emit a system event
- *
- * Call this for system-wide notifications.
- *
- * @example
- * emitSystemEvent({
- *   type: 'warning',
- *   message: 'Scheduled maintenance in 1 hour',
- * });
- */
-export function emitSystemEvent(event: Omit<SystemEvent, 'timestamp'>) {
-  eventEmitter.emit('system:event', { ...event, timestamp: new Date() });
-}
-
-/**
- * Emit AI progress update
- *
- * Call this during long-running AI jobs to show progress.
- *
- * @example
- * for (let i = 0; i <= 100; i += 10) {
- *   await processChunk(i);
- *   emitAIProgress({ jobId, progress: i, status: `Processing ${i}%` });
- * }
- */
-export function emitAIProgress(event: { jobId: string; progress: number; status: string }) {
-  eventEmitter.emit('ai:progress', event);
-}
+export { emitLeadScored, emitTaskAssigned, emitSystemEvent, emitAIProgress };
 
 /**
  * CLIENT-SIDE USAGE EXAMPLE
