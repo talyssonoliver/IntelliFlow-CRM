@@ -488,11 +488,6 @@ export const timelineRouter = createTRPCRouter({
 
       const auditLogs = await ctx.prisma.auditLogEntry.findMany({
         where: auditWhere,
-        include: {
-          user: {
-            select: { id: true, name: true, email: true, avatarUrl: true },
-          },
-        },
         orderBy: { timestamp: sortOrder },
         take: 100, // Limit audit entries
       });
@@ -517,12 +512,12 @@ export const timelineRouter = createTRPCRouter({
             priority: null,
             entityType: log.resourceType,
             entityId: log.resourceId,
-            actor: log.user
+            actor: log.actorId
               ? {
-                  id: log.user.id,
-                  name: log.user.name,
-                  email: log.user.email,
-                  avatarUrl: log.user.avatarUrl,
+                  id: log.actorId,
+                  name: log.actorEmail ?? log.actorId,
+                  email: log.actorEmail ?? null,
+                  avatarUrl: null,
                   isAgent: log.actorType === 'AI_AGENT',
                 }
               : null,

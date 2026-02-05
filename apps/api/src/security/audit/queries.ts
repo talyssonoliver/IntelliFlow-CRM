@@ -45,16 +45,6 @@ export async function queryComprehensive(
       orderBy: { timestamp: 'desc' },
       take: filters.limit ?? 100,
       skip: filters.offset ?? 0,
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            avatarUrl: true,
-          },
-        },
-      },
     }),
     prisma.auditLogEntry.count({ where }),
   ]);
@@ -148,16 +138,6 @@ export async function getPermissionAuditTrail(
       orderBy: { timestamp: 'desc' },
       take: options.limit ?? 100,
       skip: options.offset ?? 0,
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            avatarUrl: true,
-          },
-        },
-      },
     }),
     prisma.auditLogEntry.count({ where }),
   ]);

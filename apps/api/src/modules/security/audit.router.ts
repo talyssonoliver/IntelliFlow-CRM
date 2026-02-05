@@ -92,15 +92,6 @@ export const auditRouter = createTRPCRouter({
         orderBy: { timestamp: 'desc' },
         take: input.limit,
         skip: input.offset,
-        include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-              name: true,
-            },
-          },
-        },
       }),
       ctx.prisma.auditLogEntry.count({ where }),
     ]);
@@ -125,15 +116,6 @@ export const auditRouter = createTRPCRouter({
       },
       orderBy: { timestamp: 'desc' },
       take: input.limit,
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            name: true,
-          },
-        },
-      },
     });
 
     return logs;
@@ -202,15 +184,6 @@ export const auditRouter = createTRPCRouter({
       where,
       orderBy: { timestamp: 'desc' },
       take: input.limit,
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            name: true,
-          },
-        },
-      },
     });
 
     return logs;

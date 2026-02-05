@@ -65,6 +65,7 @@ model User {
   avatarUrl        String?
   role             UserRole  @default(USER)
   stripeCustomerId String?   @unique // Stripe customer ID for billing
+  preferences      Json?     // User preferences (pinned items, dashboard settings)
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
@@ -101,18 +102,24 @@ enum UserRole {
 // ============================================
 
 model Lead {
-  id            String      @id @default(cuid())
-  email         String
-  firstName     String?
-  lastName      String?
-  company       String?
-  title         String?
-  phone         String?
-  source        LeadSource  @default(WEBSITE)
-  status        LeadStatus  @default(NEW)
-  score         Int         @default(0)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id              String      @id @default(cuid())
+  email           String
+  firstName       String?
+  lastName        String?
+  company         String?
+  title           String?
+  phone           String?
+  source          LeadSource  @default(WEBSITE)
+  status          LeadStatus  @default(NEW)
+  score           Int         @default(0)
+  location        String?
+  website         String?
+  avatarUrl       String?
+  lastContactedAt DateTime?
+  estimatedValue  Int?        @default(0)
+  tags            String[]    @default([])
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
   // Multi-tenancy
   tenantId      String
@@ -123,7 +130,11 @@ model Lead {
   owner         User        @relation(fields: [ownerId], references: [id])
   contact       Contact?
   aiScores      AIScore[]
+  aiInsight     LeadAIInsight?
   tasks         Task[]
+  activities    LeadActivity[]
+  notes         LeadNote[]
+  files         LeadFile[]
 
   // AI Embedding for semantic search
   embedding     Unsupported("vector(1536)")?
@@ -136,6 +147,54 @@ model Lead {
   @@index([tenantId])
   @@index([createdAt])
   @@map("leads")
+}
+
+/// Lead activity timeline entry (Lead 360)
+model LeadActivity {
+  id          String   @id @default(cuid())
+  leadId      String
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  type        String   // e.g., 'email', 'call', 'meeting', 'note', 'status_change'
+  description String?
+  metadata    Json?
+  timestamp   DateTime @default(now())
+  performedBy String?
+
+  @@index([leadId])
+  @@index([timestamp])
+  @@map("lead_activities")
+}
+
+/// Lead notes (Lead 360)
+model LeadNote {
+  id        String   @id @default(cuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  content   String   @db.Text
+  authorId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([leadId])
+  @@index([createdAt])
+  @@map("lead_notes")
+}
+
+/// Lead file attachments (Lead 360)
+model LeadFile {
+  id         String   @id @default(cuid())
+  leadId     String
+  lead       Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  filename   String
+  url        String
+  mimeType   String?
+  size       Int?
+  uploadedBy String?
+  uploadedAt DateTime @default(now())
+
+  @@index([leadId])
+  @@index([uploadedAt])
+  @@map("lead_files")
 }
 
 enum LeadSource {
@@ -152,6 +211,7 @@ enum LeadStatus {
   NEW
   CONTACTED
   QUALIFIED
+  NEGOTIATING
   UNQUALIFIED
   CONVERTED
   LOST
@@ -668,6 +728,9 @@ model MessageRecord {
   confidence       Float?
   createdAt        DateTime  @default(now())
 
+  // Multi-tenancy
+  tenantId         String?
+
   // Conversation relation
   conversationId   String
   conversation     ConversationRecord @relation(fields: [conversationId], references: [id], onDelete: Cascade)
@@ -675,6 +738,7 @@ model MessageRecord {
   // Tool calls relation
   toolCalls        ToolCallRecord[]
 
+  @@index([tenantId])
   @@index([conversationId])
   @@index([role])
   @@index([createdAt])
@@ -711,6 +775,9 @@ model ToolCallRecord {
   rollbackData        Json?     // Data for reversing the operation
   createdAt           DateTime  @default(now())
 
+  // Multi-tenancy
+  tenantId            String?
+
   // Relations
   conversationId      String
   conversation        ConversationRecord @relation(fields: [conversationId], references: [id], onDelete: Cascade)
@@ -718,6 +785,7 @@ model ToolCallRecord {
   messageId           String?
   message             MessageRecord? @relation(fields: [messageId], references: [id], onDelete: SetNull)
 
+  @@index([tenantId])
   @@index([conversationId])
   @@index([messageId])
   @@index([toolName])
@@ -789,6 +857,7 @@ enum EventStatus {
   PROCESSED
   FAILED
   DEAD_LETTER
+  ARCHIVED
 }
 
 // ============================================
@@ -829,11 +898,15 @@ model Appointment {
   completedAt         DateTime?
   cancellationReason  String?
 
+  // Multi-tenancy
+  tenantId            String
+
   // Relations
   organizerId         String
   attendees           AppointmentAttendee[]
   linkedCases         AppointmentCase[]
 
+  @@index([tenantId])
   @@index([organizerId])
   @@index([status])
   @@index([startTime])
@@ -849,10 +922,12 @@ model AppointmentAttendee {
   appointmentId String
   appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
   userId        String
+  tenantId      String
   createdAt     DateTime    @default(now())
 
   @@unique([appointmentId, userId])
   @@index([userId])
+  @@index([tenantId])
   @@map("appointment_attendees")
 }
 
@@ -861,10 +936,12 @@ model AppointmentCase {
   appointmentId String
   appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
   caseId        String
+  tenantId      String
   createdAt     DateTime    @default(now())
 
   @@unique([appointmentId, caseId])
   @@index([caseId])
+  @@index([tenantId])
   @@map("appointment_cases")
 }
 
@@ -895,6 +972,9 @@ model SecurityEvent {
   eventType       String          // login, logout, permission_denied, role_change, etc.
   severity        SecuritySeverity @default(INFO)
 
+  // Multi-tenancy
+  tenantId        String?
+
   // Actor
   actorId         String?
   actorEmail      String?
@@ -916,6 +996,7 @@ model SecurityEvent {
   @@index([eventType])
   @@index([actorId])
   @@index([severity])
+  @@index([tenantId])
   @@index([createdAt])
   @@map("security_events")
 }
@@ -1411,6 +1492,7 @@ model UserRoleAssignment {
   userId    String
   roleId    String
   role      RBACRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  tenantId  String
 
   // Assignment metadata
   assignedBy String?
@@ -1420,6 +1502,7 @@ model UserRoleAssignment {
   @@unique([userId, roleId])
   @@index([userId])
   @@index([roleId])
+  @@index([tenantId])
   @@map("user_role_assignments")
 }
 
@@ -1431,6 +1514,7 @@ model UserPermission {
   userId       String
   permissionId String
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  tenantId     String
 
   // Grant or deny this permission
   granted      Boolean  @default(true)
@@ -1446,6 +1530,7 @@ model UserPermission {
   @@unique([userId, permissionId])
   @@index([userId])
   @@index([permissionId])
+  @@index([tenantId])
   @@map("user_permissions")
 }
 
@@ -1477,11 +1562,36 @@ model ContactNote {
   @@map("contact_notes")
 }
 
+/// AI insights for leads (from lead 360 view / IFC-095)
+model LeadAIInsight {
+  id                    String    @id @default(cuid())
+  leadId                String    @unique
+  lead                  Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  tenantId              String
+  conversionProbability Int       // 0-100
+  estimatedValue        Int       // In cents
+  churnRisk             ChurnRisk @default(LOW)
+  nextBestAction        String?
+  sentiment             String?   // 'Positive', 'Neutral', 'Negative'
+  engagementScore       Int       // 0-100
+  recommendations       Json?     // Array of recommendation strings
+  sentimentTrend        String?   // 'improving', 'stable', 'declining'
+  lastEngagementDays    Int       @default(0)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([churnRisk])
+  @@index([conversionProbability])
+  @@index([tenantId])
+  @@map("lead_ai_insights")
+}
+
 /// AI insights for contacts (from contact 360 view)
 model ContactAIInsight {
   id                    String   @id @default(cuid())
   contactId             String   @unique
   contact               Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  tenantId              String
   conversionProbability Int      // 0-100
   lifetimeValue         Int      // In cents
   churnRisk             ChurnRisk @default(LOW)
@@ -1496,13 +1606,122 @@ model ContactAIInsight {
 
   @@index([churnRisk])
   @@index([conversionProbability])
+  @@index([tenantId])
   @@map("contact_ai_insights")
 }
 
 enum ChurnRisk {
+  MINIMAL
   LOW
   MEDIUM
   HIGH
+  CRITICAL
+}
+
+/// AI output type for review queue (IFC-178)
+enum AIOutputType {
+  LEAD_SCORING
+  SENTIMENT_ANALYSIS
+  AUTO_RESPONSE
+  CHURN_PREDICTION
+  EMAIL_GENERATION
+  NEXT_BEST_ACTION
+}
+
+/// Review status for AI output review queue (IFC-178)
+enum ReviewStatus {
+  PENDING
+  IN_REVIEW
+  APPROVED
+  REJECTED
+  ESCALATED
+  EXPIRED
+}
+
+/// Review decision for AI output reviews (IFC-178)
+enum ReviewDecision {
+  APPROVED
+  REJECTED_QUALITY
+  REJECTED_ACCURACY
+  REJECTED_SAFETY
+  ESCALATED
+}
+
+/// AI Output Review queue for human-in-the-loop (IFC-179)
+model AIOutputReview {
+  id              String          @id @default(cuid())
+  tenantId        String
+  outputType      AIOutputType
+  outputPayload   Json
+  confidence      Int
+  status          ReviewStatus    @default(PENDING)
+  slaDeadline     DateTime
+  escalationDepth Int             @default(0)
+  lockedBy        String?
+  lockedAt        DateTime?
+  lockExpiresAt   DateTime?
+  reviewerId      String?
+  reviewDecision  ReviewDecision?
+  reviewNotes     String?
+  version         Int             @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([outputType])
+  @@index([slaDeadline])
+  @@index([lockedBy])
+  @@map("ai_output_reviews")
+}
+
+/// Auto-response trigger types (IFC-029)
+enum AutoResponseTrigger {
+  EMAIL_RECEIVED
+  FORM_SUBMIT
+  CHAT_MESSAGE
+  MANUAL
+}
+
+/// Auto-response draft statuses (IFC-029)
+enum AutoResponseStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  INVALIDATED
+  SENT
+  FAILED
+  ESCALATED
+}
+
+/// Auto-response draft for human-in-the-loop email review (IFC-029)
+model AutoResponseDraft {
+  id               String                @id @default(cuid())
+  tenantId         String
+  leadId           String
+  recipientEmail   String
+  subject          String
+  body             String
+  aiConfidence     Float
+  modelVersion     String
+  triggerType       AutoResponseTrigger
+  status           AutoResponseStatus    @default(DRAFT)
+  expiresAt        DateTime
+  statusHistory    Json                  @default("[]")
+  approvalDecision Json?
+  escalation       Json?
+  escalationCount  Int                   @default(0)
+  version          Int                   @default(0)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  @@index([tenantId])
+  @@index([leadId])
+  @@index([status])
+  @@index([triggerType])
+  @@index([expiresAt])
+  @@map("auto_response_drafts")
 }
 
 /// Calendar events for upcoming events widget

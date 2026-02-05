@@ -125,6 +125,7 @@ export class PrismaAIOutputReviewRepository implements IAIOutputReviewRepository
     reviewerId: string | null;
     reviewDecision: PrismaReviewDecision | null;
     reviewNotes: string | null;
+    updatedAt: Date;
   } {
     return {
       id: review.id.toValue(),
@@ -141,6 +142,7 @@ export class PrismaAIOutputReviewRepository implements IAIOutputReviewRepository
       reviewerId: review.reviewerId ?? null,
       reviewDecision: review.reviewDecision as PrismaReviewDecision ?? null,
       reviewNotes: review.reviewNotes ?? null,
+      updatedAt: new Date(),
     };
   }
 
