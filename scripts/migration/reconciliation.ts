@@ -116,8 +116,8 @@ async function getEntityCounts(prisma: PrismaClient): Promise<Record<string, num
   } catch { counts.Task = 0; }
 
   try {
-    counts.AuditLog = await prisma.auditLog.count();
-  } catch { counts.AuditLog = 0; }
+    counts.AuditLogEntry = await prisma.auditLogEntry.count();
+  } catch { counts.AuditLogEntry = 0; }
 
   try {
     counts.AIScore = await prisma.aIScore.count();
