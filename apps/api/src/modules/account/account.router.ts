@@ -17,6 +17,9 @@ import {
   updateAccountSchema,
   accountQuerySchema,
   idSchema,
+  getAccountContactsInputSchema,
+  getAccountOpportunitiesInputSchema,
+  getAccountActivityInputSchema,
 } from '@intelliflow/validators/account';
 import { mapAccountToResponse } from '../../shared/mappers';
 import { type Context } from '../../context';
@@ -432,5 +435,95 @@ export const accountRouter = createTRPCRouter({
             count: o._count,
           })),
       };
+    }),
+
+  /**
+   * Get contacts associated with an account (IFC-185)
+   * Supports cursor-based pagination and status filtering
+   */
+  getContacts: tenantProcedure
+    .input(getAccountContactsInputSchema)
+    .query(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const accountService = getAccountService(ctx);
+
+      const result = await accountService.getAccountContacts(
+        input.accountId,
+        typedCtx.tenant.tenantId,
+        {
+          limit: input.limit,
+          cursor: input.cursor,
+          status: input.status,
+        }
+      );
+
+      if (result.isFailure) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: result.error.message,
+        });
+      }
+
+      return result.value;
+    }),
+
+  /**
+   * Get opportunities associated with an account (IFC-185)
+   * Supports cursor-based pagination, stage filtering, and summary calculation
+   */
+  getOpportunities: tenantProcedure
+    .input(getAccountOpportunitiesInputSchema)
+    .query(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const accountService = getAccountService(ctx);
+
+      const result = await accountService.getAccountOpportunities(
+        input.accountId,
+        typedCtx.tenant.tenantId,
+        {
+          limit: input.limit,
+          cursor: input.cursor,
+          stage: input.stage,
+        }
+      );
+
+      if (result.isFailure) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: result.error.message,
+        });
+      }
+
+      return result.value;
+    }),
+
+  /**
+   * Get activity feed for an account (IFC-185)
+   * Aggregates contact and opportunity activities sorted by date descending
+   */
+  getActivity: tenantProcedure
+    .input(getAccountActivityInputSchema)
+    .query(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const accountService = getAccountService(ctx);
+
+      const result = await accountService.getAccountActivity(
+        input.accountId,
+        typedCtx.tenant.tenantId,
+        {
+          limit: input.limit,
+          cursor: input.cursor,
+          types: input.types,
+        }
+      );
+
+      if (result.isFailure) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: result.error.message,
+        });
+      }
+
+      return result.value;
     }),
 });

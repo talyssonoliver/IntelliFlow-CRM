@@ -33,6 +33,7 @@ const createMockDomainAccount = (overrides: Record<string, unknown> = {}) => ({
   revenue: 5000000,
   description: 'A technology company',
   ownerId: TEST_UUIDS.user1,
+  tenantId: 'test-tenant-id',
   createdAt: new Date(),
   updatedAt: new Date(),
   getDomainEvents: () => [],
@@ -247,6 +248,13 @@ describe('Account Router', () => {
         revenue: 2000000,
       });
 
+      // Mock getAccountById for tenant isolation check
+      ctx.services!.account!.getAccountById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainAccount,
+      });
+
       ctx.services!.account!.updateAccountInfo = vi.fn().mockResolvedValue({
         isSuccess: true,
         isFailure: false,
@@ -263,7 +271,7 @@ describe('Account Router', () => {
     });
 
     it('should throw NOT_FOUND when updating non-existent account', async () => {
-      ctx.services!.account!.updateAccountInfo = vi.fn().mockResolvedValue({
+      ctx.services!.account!.getAccountById = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
         error: { code: 'NOT_FOUND_ERROR', message: `Account not found: ${TEST_UUIDS.nonExistent}` },
@@ -277,6 +285,14 @@ describe('Account Router', () => {
     });
 
     it('should throw CONFLICT when updating to duplicate name', async () => {
+      const mockDomainAccount = createMockDomainAccount();
+
+      ctx.services!.account!.getAccountById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainAccount,
+      });
+
       ctx.services!.account!.updateAccountInfo = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
@@ -293,6 +309,14 @@ describe('Account Router', () => {
 
   describe('delete', () => {
     it('should delete account without related records', async () => {
+      const mockDomainAccount = createMockDomainAccount();
+
+      ctx.services!.account!.getAccountById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainAccount,
+      });
+
       ctx.services!.account!.deleteAccount = vi.fn().mockResolvedValue({
         isSuccess: true,
         isFailure: false,
@@ -307,6 +331,14 @@ describe('Account Router', () => {
     });
 
     it('should throw PRECONDITION_FAILED if account has contacts', async () => {
+      const mockDomainAccount = createMockDomainAccount();
+
+      ctx.services!.account!.getAccountById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainAccount,
+      });
+
       ctx.services!.account!.deleteAccount = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
@@ -322,6 +354,14 @@ describe('Account Router', () => {
     });
 
     it('should throw PRECONDITION_FAILED if account has active opportunities', async () => {
+      const mockDomainAccount = createMockDomainAccount();
+
+      ctx.services!.account!.getAccountById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainAccount,
+      });
+
       ctx.services!.account!.deleteAccount = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
@@ -337,7 +377,7 @@ describe('Account Router', () => {
     });
 
     it('should throw NOT_FOUND for non-existent account', async () => {
-      ctx.services!.account!.deleteAccount = vi.fn().mockResolvedValue({
+      ctx.services!.account!.getAccountById = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
         error: { code: 'NOT_FOUND_ERROR', message: `Account not found: ${TEST_UUIDS.nonExistent}` },
@@ -651,6 +691,14 @@ describe('Account Router', () => {
 
   describe('update - additional error handling', () => {
     it('should throw INTERNAL_SERVER_ERROR for unknown errors', async () => {
+      const mockDomainAccount = createMockDomainAccount();
+
+      ctx.services!.account!.getAccountById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainAccount,
+      });
+
       ctx.services!.account!.updateAccountInfo = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
@@ -668,6 +716,12 @@ describe('Account Router', () => {
     it('should handle website as string', async () => {
       const mockDomainAccount = createMockDomainAccount({
         website: 'https://updated.com',
+      });
+
+      ctx.services!.account!.getAccountById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainAccount,
       });
 
       ctx.services!.account!.updateAccountInfo = vi.fn().mockResolvedValue({
@@ -694,6 +748,14 @@ describe('Account Router', () => {
 
   describe('delete - additional error handling', () => {
     it('should throw INTERNAL_SERVER_ERROR for unknown errors', async () => {
+      const mockDomainAccount = createMockDomainAccount();
+
+      ctx.services!.account!.getAccountById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainAccount,
+      });
+
       ctx.services!.account!.deleteAccount = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
@@ -729,6 +791,706 @@ describe('Account Router', () => {
       const callerWithoutServices = accountRouter.createCaller(ctxWithoutServices);
 
       await expect(callerWithoutServices.getById({ id: TEST_UUIDS.account1 })).rejects.toThrow(
+        expect.objectContaining({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Account service not available',
+        })
+      );
+    });
+  });
+
+  // ===========================================================================
+  // IFC-185: New endpoint tests - getContacts, getOpportunities, getActivity
+  // ===========================================================================
+
+  describe('getContacts', () => {
+    it('should return contacts for valid account', async () => {
+      const mockContacts = [
+        {
+          id: TEST_UUIDS.contact1,
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane@example.com',
+          phone: '+1234567891',
+          status: 'ACTIVE',
+          createdAt: new Date('2024-01-01'),
+        },
+        {
+          id: TEST_UUIDS.contact2,
+          firstName: 'Bob',
+          lastName: 'Jones',
+          email: 'bob@example.com',
+          status: 'ACTIVE',
+          createdAt: new Date('2024-01-02'),
+        },
+      ];
+
+      ctx.services!.account!.getAccountContacts = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: {
+          contacts: mockContacts,
+          nextCursor: undefined,
+          total: 2,
+        },
+      });
+
+      const result = await caller.getContacts({
+        accountId: TEST_UUIDS.account1,
+      });
+
+      expect(result.contacts).toHaveLength(2);
+      expect(result.total).toBe(2);
+      expect(result.nextCursor).toBeUndefined();
+      expect(ctx.services!.account!.getAccountContacts).toHaveBeenCalledWith(
+        TEST_UUIDS.account1,
+        'test-tenant-id',
+        expect.objectContaining({ limit: 20 })
+      );
+    });
+
+    it('should return empty array for account with no contacts', async () => {
+      ctx.services!.account!.getAccountContacts = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: {
+          contacts: [],
+          nextCursor: undefined,
+          total: 0,
+        },
+      });
+
+      const result = await caller.getContacts({
+        accountId: TEST_UUIDS.account1,
+      });
+
+      expect(result.contacts).toHaveLength(0);
+      expect(result.total).toBe(0);
+    });
+
+    it('should paginate with cursor correctly', async () => {
+      const mockContacts = Array.from({ length: 10 }, (_, i) => ({
+        id: `contact-${i}`,
+        firstName: `First${i}`,
+        lastName: `Last${i}`,
+        email: `user${i}@example.com`,
+        status: 'ACTIVE',
+        createdAt: new Date(`2024-01-${(i + 1).toString().padStart(2, '0')}`),
+      }));
+
+      ctx.services!.account!.getAccountContacts = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: {
+          contacts: mockContacts,
+          nextCursor: 'contact-9',
+          total: 30,
+        },
+      });
+
+      const result = await caller.getContacts({
+        accountId: TEST_UUIDS.account1,
+        limit: 10,
+      });
+
+      expect(result.contacts).toHaveLength(10);
+      expect(result.nextCursor).toBe('contact-9');
+      expect(result.total).toBe(30);
+    });
+
+    it('should respect limit parameter', async () => {
+      ctx.services!.account!.getAccountContacts = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: {
+          contacts: [{ id: 'c1', firstName: 'A', lastName: 'B', email: 'a@b.com', status: 'ACTIVE', createdAt: new Date() }],
+          nextCursor: 'c1',
+          total: 50,
+        },
+      });
+
+      const result = await caller.getContacts({
+        accountId: TEST_UUIDS.account1,
+        limit: 1,
+      });
+
+      expect(ctx.services!.account!.getAccountContacts).toHaveBeenCalledWith(
+        TEST_UUIDS.account1,
+        'test-tenant-id',
+        expect.objectContaining({ limit: 1 })
+      );
+      expect(result.contacts).toHaveLength(1);
+    });
+
+    it('should filter by status when provided', async () => {
+      ctx.services!.account!.getAccountContacts = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: {
+          contacts: [{ id: 'c1', firstName: 'A', lastName: 'B', email: 'a@b.com', status: 'ACTIVE', createdAt: new Date() }],
+          nextCursor: undefined,
+          total: 1,
+        },
+      });
+
+      await caller.getContacts({
+        accountId: TEST_UUIDS.account1,
+        status: ['ACTIVE'],
+      });
+
+      expect(ctx.services!.account!.getAccountContacts).toHaveBeenCalledWith(
+        TEST_UUIDS.account1,
+        'test-tenant-id',
+        expect.objectContaining({ status: ['ACTIVE'] })
+      );
+    });
+
+    it('should filter by multiple statuses', async () => {
+      ctx.services!.account!.getAccountContacts = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: { contacts: [], nextCursor: undefined, total: 0 },
+      });
+
+      await caller.getContacts({
+        accountId: TEST_UUIDS.account1,
+        status: ['ACTIVE', 'INACTIVE'],
+      });
+
+      expect(ctx.services!.account!.getAccountContacts).toHaveBeenCalledWith(
+        TEST_UUIDS.account1,
+        'test-tenant-id',
+        expect.objectContaining({ status: ['ACTIVE', 'INACTIVE'] })
+      );
+    });
+
+    it('should return NOT_FOUND for non-existent account', async () => {
+      ctx.services!.account!.getAccountContacts = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: 'Account not found' },
+      });
+
+      await expect(
+        caller.getContacts({ accountId: TEST_UUIDS.nonExistent })
+      ).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
+      );
+    });
+
+    it('should reject access to account from different tenant', async () => {
+      ctx.services!.account!.getAccountContacts = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: 'Account not found' },
+      });
+
+      await expect(
+        caller.getContacts({ accountId: TEST_UUIDS.account1 })
+      ).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
+      );
+    });
+
+    it('should pass cursor to service', async () => {
+      ctx.services!.account!.getAccountContacts = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: { contacts: [], nextCursor: undefined, total: 0 },
+      });
+
+      await caller.getContacts({
+        accountId: TEST_UUIDS.account1,
+        cursor: TEST_UUIDS.contact1,
+      });
+
+      expect(ctx.services!.account!.getAccountContacts).toHaveBeenCalledWith(
+        TEST_UUIDS.account1,
+        'test-tenant-id',
+        expect.objectContaining({ cursor: TEST_UUIDS.contact1 })
+      );
+    });
+  });
+
+  describe('getOpportunities', () => {
+    it('should return opportunities for valid account', async () => {
+      const mockOpps = [
+        {
+          id: TEST_UUIDS.opportunity1,
+          name: 'Enterprise Deal',
+          stage: 'PROPOSAL',
+          value: 50000,
+          probability: 60,
+          expectedCloseDate: new Date('2024-12-31'),
+          createdAt: new Date('2024-01-01'),
+        },
+      ];
+
+      ctx.services!.account!.getAccountOpportunities = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: {
+          opportunities: mockOpps,
+          nextCursor: undefined,
+          total: 1,
+          summary: {
+            totalValue: 50000,
+            weightedValue: 30000,
+            stageBreakdown: { PROPOSAL: 1 },
+          },
+        },
+      });
+
+      const result = await caller.getOpportunities({
+        accountId: TEST_UUIDS.account1,
+      });
+
+      expect(result.opportunities).toHaveLength(1);
+      expect(result.total).toBe(1);
+      expect(result.summary.totalValue).toBe(50000);
+      expect(result.summary.weightedValue).toBe(30000);
+      expect(result.summary.stageBreakdown).toEqual({ PROPOSAL: 1 });
+    });
+
+    it('should return empty array for account with no opportunities', async () => {
+      ctx.services!.account!.getAccountOpportunities = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: {
+          opportunities: [],
+          nextCursor: undefined,
+          total: 0,
+          summary: { totalValue: 0, weightedValue: 0, stageBreakdown: {} },
+        },
+      });
+
+      const result = await caller.getOpportunities({
+        accountId: TEST_UUIDS.account1,
+      });
+
+      expect(result.opportunities).toHaveLength(0);
+      expect(result.total).toBe(0);
+      expect(result.summary.totalValue).toBe(0);
+    });
+
+    it('should calculate summary correctly', async () => {
+      const mockOpps = [
+        { id: 'o1', name: 'Deal A', stage: 'PROPOSAL', value: 10000, probability: 50, createdAt: new Date() },
+        { id: 'o2', name: 'Deal B', stage: 'QUALIFICATION', value: 20000, probability: 25, createdAt: new Date() },
+      ];
+
+      ctx.services!.account!.getAccountOpportunities = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: {
+          opportunities: mockOpps,
+          nextCursor: undefined,
+          total: 2,
+          summary: {
+            totalValue: 30000,
+            weightedValue: 10000, // 10000*0.5 + 20000*0.25
+            stageBreakdown: { PROPOSAL: 1, QUALIFICATION: 1 },
+          },
+        },
+      });
+
+      const result = await caller.getOpportunities({
+        accountId: TEST_UUIDS.account1,
+      });
+
+      expect(result.summary.totalValue).toBe(30000);
+      expect(result.summary.weightedValue).toBe(10000);
+      expect(result.summary.stageBreakdown.PROPOSAL).toBe(1);
+      expect(result.summary.stageBreakdown.QUALIFICATION).toBe(1);
+    });
+
+    it('should filter by stage when provided', async () => {
+      ctx.services!.account!.getAccountOpportunities = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: {
+          opportunities: [],
+          nextCursor: undefined,
+          total: 0,
+          summary: { totalValue: 0, weightedValue: 0, stageBreakdown: {} },
+        },
+      });
+
+      await caller.getOpportunities({
+        accountId: TEST_UUIDS.account1,
+        stage: ['QUALIFICATION'],
+      });
+
+      expect(ctx.services!.account!.getAccountOpportunities).toHaveBeenCalledWith(
+        TEST_UUIDS.account1,
+        'test-tenant-id',
+        expect.objectContaining({ stage: ['QUALIFICATION'] })
+      );
+    });
+
+    it('should paginate with cursor correctly', async () => {
+      ctx.services!.account!.getAccountOpportunities = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: {
+          opportunities: [{ id: 'o1', name: 'D', stage: 'PROPOSAL', value: 100, probability: 50, createdAt: new Date() }],
+          nextCursor: 'o1',
+          total: 20,
+          summary: { totalValue: 100, weightedValue: 50, stageBreakdown: { PROPOSAL: 1 } },
+        },
+      });
+
+      const result = await caller.getOpportunities({
+        accountId: TEST_UUIDS.account1,
+        limit: 1,
+        cursor: TEST_UUIDS.opportunity1,
+      });
+
+      expect(ctx.services!.account!.getAccountOpportunities).toHaveBeenCalledWith(
+        TEST_UUIDS.account1,
+        'test-tenant-id',
+        expect.objectContaining({ cursor: TEST_UUIDS.opportunity1, limit: 1 })
+      );
+      expect(result.nextCursor).toBe('o1');
+    });
+
+    it('should return NOT_FOUND for non-existent account', async () => {
+      ctx.services!.account!.getAccountOpportunities = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: 'Account not found' },
+      });
+
+      await expect(
+        caller.getOpportunities({ accountId: TEST_UUIDS.nonExistent })
+      ).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
+      );
+    });
+
+    it('should reject access to account from different tenant', async () => {
+      ctx.services!.account!.getAccountOpportunities = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: 'Account not found' },
+      });
+
+      await expect(
+        caller.getOpportunities({ accountId: TEST_UUIDS.account2 })
+      ).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
+      );
+    });
+  });
+
+  describe('getActivity', () => {
+    it('should merge contact and opportunity activities', async () => {
+      const mockActivities = [
+        {
+          id: 'act-1',
+          type: 'CONTACT_CREATED',
+          description: 'Contact Jane Smith added',
+          entityType: 'CONTACT' as const,
+          entityId: TEST_UUIDS.contact1,
+          entityName: 'Jane Smith',
+          createdAt: new Date('2024-01-02'),
+        },
+        {
+          id: 'act-2',
+          type: 'OPPORTUNITY_CREATED',
+          description: 'Opportunity Enterprise Deal created',
+          entityType: 'OPPORTUNITY' as const,
+          entityId: TEST_UUIDS.opportunity1,
+          entityName: 'Enterprise Deal',
+          createdAt: new Date('2024-01-01'),
+        },
+      ];
+
+      ctx.services!.account!.getAccountActivity = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: {
+          activities: mockActivities,
+          nextCursor: undefined,
+        },
+      });
+
+      const result = await caller.getActivity({
+        accountId: TEST_UUIDS.account1,
+      });
+
+      expect(result.activities).toHaveLength(2);
+      expect(result.activities[0].entityType).toBe('CONTACT');
+      expect(result.activities[1].entityType).toBe('OPPORTUNITY');
+    });
+
+    it('should sort by createdAt descending', async () => {
+      const earlier = new Date('2024-01-01');
+      const later = new Date('2024-01-15');
+
+      ctx.services!.account!.getAccountActivity = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: {
+          activities: [
+            {
+              id: 'act-2',
+              type: 'CONTACT_CREATED',
+              description: 'Newer activity',
+              entityType: 'CONTACT' as const,
+              entityId: TEST_UUIDS.contact1,
+              entityName: 'Jane Smith',
+              createdAt: later,
+            },
+            {
+              id: 'act-1',
+              type: 'OPPORTUNITY_CREATED',
+              description: 'Older activity',
+              entityType: 'OPPORTUNITY' as const,
+              entityId: TEST_UUIDS.opportunity1,
+              entityName: 'Enterprise Deal',
+              createdAt: earlier,
+            },
+          ],
+          nextCursor: undefined,
+        },
+      });
+
+      const result = await caller.getActivity({
+        accountId: TEST_UUIDS.account1,
+      });
+
+      expect(result.activities[0].createdAt).toEqual(later);
+      expect(result.activities[1].createdAt).toEqual(earlier);
+    });
+
+    it('should filter by activity type', async () => {
+      ctx.services!.account!.getAccountActivity = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: {
+          activities: [{
+            id: 'act-1',
+            type: 'CONTACT_CREATED',
+            description: 'Contact added',
+            entityType: 'CONTACT' as const,
+            entityId: TEST_UUIDS.contact1,
+            entityName: 'Jane Smith',
+            createdAt: new Date(),
+          }],
+          nextCursor: undefined,
+        },
+      });
+
+      await caller.getActivity({
+        accountId: TEST_UUIDS.account1,
+        types: ['CONTACT_CREATED'],
+      });
+
+      expect(ctx.services!.account!.getAccountActivity).toHaveBeenCalledWith(
+        TEST_UUIDS.account1,
+        'test-tenant-id',
+        expect.objectContaining({ types: ['CONTACT_CREATED'] })
+      );
+    });
+
+    it('should paginate correctly across merged results', async () => {
+      const activities = Array.from({ length: 10 }, (_, i) => ({
+        id: `act-${i}`,
+        type: i % 2 === 0 ? 'CONTACT_CREATED' : 'OPPORTUNITY_CREATED',
+        description: `Activity ${i}`,
+        entityType: (i % 2 === 0 ? 'CONTACT' : 'OPPORTUNITY') as 'CONTACT' | 'OPPORTUNITY',
+        entityId: `entity-${i}`,
+        entityName: `Entity ${i}`,
+        createdAt: new Date(2024, 0, 10 - i),
+      }));
+
+      ctx.services!.account!.getAccountActivity = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: {
+          activities,
+          nextCursor: activities[9].createdAt.toISOString(),
+        },
+      });
+
+      const result = await caller.getActivity({
+        accountId: TEST_UUIDS.account1,
+        limit: 10,
+      });
+
+      expect(result.activities).toHaveLength(10);
+      expect(result.nextCursor).toBeDefined();
+    });
+
+    it('should return NOT_FOUND for non-existent account', async () => {
+      ctx.services!.account!.getAccountActivity = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: 'Account not found' },
+      });
+
+      await expect(
+        caller.getActivity({ accountId: TEST_UUIDS.nonExistent })
+      ).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
+      );
+    });
+
+    it('should reject access to account from different tenant', async () => {
+      ctx.services!.account!.getAccountActivity = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: 'Account not found' },
+      });
+
+      await expect(
+        caller.getActivity({ accountId: TEST_UUIDS.account2 })
+      ).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
+      );
+    });
+
+    it('should pass cursor to service for pagination', async () => {
+      const cursorDate = new Date('2024-01-05').toISOString();
+
+      ctx.services!.account!.getAccountActivity = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: { activities: [], nextCursor: undefined },
+      });
+
+      await caller.getActivity({
+        accountId: TEST_UUIDS.account1,
+        cursor: cursorDate,
+      });
+
+      expect(ctx.services!.account!.getAccountActivity).toHaveBeenCalledWith(
+        TEST_UUIDS.account1,
+        'test-tenant-id',
+        expect.objectContaining({ cursor: cursorDate })
+      );
+    });
+
+    it('should return empty activities for account with no activity', async () => {
+      ctx.services!.account!.getAccountActivity = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: { activities: [], nextCursor: undefined },
+      });
+
+      const result = await caller.getActivity({
+        accountId: TEST_UUIDS.account1,
+      });
+
+      expect(result.activities).toHaveLength(0);
+      expect(result.nextCursor).toBeUndefined();
+    });
+  });
+
+  describe('account router tenant isolation (IFC-185)', () => {
+    it('should reject getContacts for different tenant account', async () => {
+      ctx.services!.account!.getAccountContacts = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: 'Account not found' },
+      });
+
+      await expect(
+        caller.getContacts({ accountId: TEST_UUIDS.account2 })
+      ).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
+      );
+    });
+
+    it('should reject getOpportunities for different tenant account', async () => {
+      ctx.services!.account!.getAccountOpportunities = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: 'Account not found' },
+      });
+
+      await expect(
+        caller.getOpportunities({ accountId: TEST_UUIDS.account2 })
+      ).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
+      );
+    });
+
+    it('should reject getActivity for different tenant account', async () => {
+      ctx.services!.account!.getAccountActivity = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: 'Account not found' },
+      });
+
+      await expect(
+        caller.getActivity({ accountId: TEST_UUIDS.account2 })
+      ).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
+      );
+    });
+
+    it('should not leak data through error messages', async () => {
+      ctx.services!.account!.getAccountContacts = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: 'Account not found' },
+      });
+
+      try {
+        await caller.getContacts({ accountId: TEST_UUIDS.account2 });
+      } catch (e: any) {
+        // Error should be generic "Account not found", not "Account belongs to different tenant"
+        expect(e.message).toBe('Account not found');
+        expect(e.message).not.toContain('tenant');
+      }
+    });
+  });
+
+  describe('getContacts - service unavailable', () => {
+    it('should throw INTERNAL_SERVER_ERROR when service unavailable for getContacts', async () => {
+      const ctxWithoutService = createTestContext();
+      ctxWithoutService.services = { account: undefined } as any;
+      const callerWithoutService = accountRouter.createCaller(ctxWithoutService);
+
+      await expect(
+        callerWithoutService.getContacts({ accountId: TEST_UUIDS.account1 })
+      ).rejects.toThrow(
+        expect.objectContaining({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Account service not available',
+        })
+      );
+    });
+  });
+
+  describe('getOpportunities - service unavailable', () => {
+    it('should throw INTERNAL_SERVER_ERROR when service unavailable for getOpportunities', async () => {
+      const ctxWithoutService = createTestContext();
+      ctxWithoutService.services = { account: undefined } as any;
+      const callerWithoutService = accountRouter.createCaller(ctxWithoutService);
+
+      await expect(
+        callerWithoutService.getOpportunities({ accountId: TEST_UUIDS.account1 })
+      ).rejects.toThrow(
+        expect.objectContaining({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Account service not available',
+        })
+      );
+    });
+  });
+
+  describe('getActivity - service unavailable', () => {
+    it('should throw INTERNAL_SERVER_ERROR when service unavailable for getActivity', async () => {
+      const ctxWithoutService = createTestContext();
+      ctxWithoutService.services = { account: undefined } as any;
+      const callerWithoutService = accountRouter.createCaller(ctxWithoutService);
+
+      await expect(
+        callerWithoutService.getActivity({ accountId: TEST_UUIDS.account1 })
+      ).rejects.toThrow(
         expect.objectContaining({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Account service not available',
