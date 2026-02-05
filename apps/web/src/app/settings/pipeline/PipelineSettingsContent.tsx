@@ -17,8 +17,10 @@
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Card, Button, Skeleton } from '@intelliflow/ui';
 import { usePipelineConfig, type PipelineStage } from '@/hooks/usePipelineConfig';
+import { useRequireAuth } from '@/lib/auth/AuthContext';
 
 // Predefined color palette for selection (brand-aligned)
 const COLOR_PALETTE = [
@@ -42,6 +44,11 @@ const COLOR_PALETTE = [
 const PROTECTED_STAGES = ['CLOSED_WON', 'CLOSED_LOST'];
 
 export default function PipelineSettingsContent() {
+  const router = useRouter();
+
+  // Require authentication - redirects to login if not authenticated
+  const { isLoading: authLoading } = useRequireAuth();
+
   const {
     stages: apiStages,
     isLoading,
@@ -51,6 +58,18 @@ export default function PipelineSettingsContent() {
     isSaving,
     isResetting,
   } = usePipelineConfig();
+
+  // Check for auth errors
+  const isAuthError = error?.data?.code === 'UNAUTHORIZED' ||
+    error?.message?.toLowerCase().includes('authentication') ||
+    error?.message?.toLowerCase().includes('unauthorized');
+
+  // Redirect to login for auth errors
+  useEffect(() => {
+    if (error && isAuthError && !isLoading && !authLoading) {
+      router.replace('/login');
+    }
+  }, [error, isAuthError, isLoading, authLoading, router]);
 
   // Local state for editing (optimistic updates)
   const [localStages, setLocalStages] = useState<PipelineStage[]>([]);
@@ -151,8 +170,22 @@ export default function PipelineSettingsContent() {
     );
   }
 
-  // Error state
-  if (error) {
+  // Auth error - show redirecting state
+  if (error && isAuthError) {
+    return (
+      <div className="settings_pipeline_page">
+        <div className="max-w-3xl">
+          <Card className="p-6 flex items-center gap-3">
+            <span className="material-symbols-outlined text-slate-400 animate-spin">progress_activity</span>
+            <p className="text-muted-foreground">Redirecting to login...</p>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Non-auth error state
+  if (error && !isAuthError) {
     return (
       <div className="settings_pipeline_page">
         <div className="max-w-3xl">

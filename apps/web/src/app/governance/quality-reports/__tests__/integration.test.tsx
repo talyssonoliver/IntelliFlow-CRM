@@ -110,8 +110,13 @@ vi.mock('next/navigation', () => ({
     push: vi.fn(),
     replace: vi.fn(),
     prefetch: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
   }),
   usePathname: () => '/governance/quality-reports',
+  useSearchParams: () => new URLSearchParams(),
+  useParams: () => ({}),
 }));
 
 // Mock Next.js Link component

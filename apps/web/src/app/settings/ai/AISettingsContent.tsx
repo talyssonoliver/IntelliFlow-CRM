@@ -14,8 +14,10 @@
  * Pattern: Follows PipelineSettingsContent structure
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useRequireAuth } from '@/lib/auth/AuthContext';
 import {
   Card,
   Button,
@@ -44,6 +46,11 @@ import {
 type TabValue = 'overview' | 'versions' | 'memory' | 'audit';
 
 export default function AISettingsContent() {
+  const router = useRouter();
+
+  // Require authentication - redirects to login if not authenticated
+  const { isLoading: authLoading } = useRequireAuth();
+
   // State
   const [activeTab, setActiveTab] = useState<TabValue>('overview');
   const [selectedChainType, setSelectedChainType] = useState<ChainType | 'all'>('all');
@@ -147,8 +154,33 @@ export default function AISettingsContent() {
     setActionVersion(null);
   }, [actionVersion, rollbackVersion]);
 
-  // Error state
-  if (error) {
+  // Check for auth errors
+  const isAuthError = error?.message?.toLowerCase().includes('authentication') ||
+    error?.message?.toLowerCase().includes('unauthorized');
+
+  // Redirect to login for auth errors
+  useEffect(() => {
+    if (error && isAuthError && !isLoading && !authLoading) {
+      router.replace('/login');
+    }
+  }, [error, isAuthError, isLoading, authLoading, router]);
+
+  // Auth error - show redirecting state
+  if (error && isAuthError) {
+    return (
+      <div className="settings_ai_page">
+        <div className="max-w-5xl">
+          <Card className="p-6 flex items-center gap-3">
+            <span className="material-symbols-outlined text-slate-400 animate-spin">progress_activity</span>
+            <p className="text-muted-foreground">Redirecting to login...</p>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Non-auth error state
+  if (error && !isAuthError) {
     return (
       <div className="settings_ai_page">
         <div className="max-w-5xl">

@@ -87,9 +87,9 @@ describe('SignUpPage', () => {
 
       // Signup page shows free trial info in the description
       expect(screen.getByText(/free trial/i)).toBeInTheDocument();
-      // Privacy policy and terms links
-      expect(screen.getByRole('link', { name: /privacy policy/i })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: /terms of service/i })).toBeInTheDocument();
+      // Privacy policy and terms links (may appear multiple times)
+      expect(screen.getAllByRole('link', { name: /privacy policy/i }).length).toBeGreaterThan(0);
+      expect(screen.getAllByRole('link', { name: /terms of service/i }).length).toBeGreaterThan(0);
     });
 
     it('includes link to login page', () => {
