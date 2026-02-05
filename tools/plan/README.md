@@ -240,7 +240,7 @@ The linter uses sprint scope to filter validation:
 
 ## Related Documentation
 
-- [ADR-002: CSV as Source of Truth](../../docs/planning/adr/ADR-002-csv-source-of-truth.md)
-- [ADR-003: Sprint-Scoped Validation](../../docs/planning/adr/ADR-003-sprint-scoped-validation.md)
+- [ADR-012: CSV as Source of Truth](../../docs/planning/adr/ADR-012-csv-source-of-truth.md)
+- [ADR-013: Sprint-Scoped Validation](../../docs/planning/adr/ADR-013-sprint-scoped-validation.md)
 - [Sprint Plan CSV](../../apps/project-tracker/docs/metrics/_global/Sprint_plan.csv)
 - [Data Sync Documentation](../../apps/project-tracker/docs/DATA_SYNC.md)

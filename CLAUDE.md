@@ -529,6 +529,44 @@ test('domain has no infrastructure dependencies', () => {
 
 Breaking these tests will fail CI.
 
+### Dependency Chain Documentation
+
+**Location**: `docs/design/diagrams/`
+
+All 36 entities/features have documented dependency chains showing the hexagonal architecture implementation path:
+
+```
+Domain → Validators → Application → Database → Adapters → API → UI
+```
+
+**Master Document**: `docs/design/diagrams/complete-dependency-chains.md`
+- Contains all 36 dependency chains with ASCII diagrams
+- Shows task IDs, status indicators (✅/⏳/⬜), and dependencies
+- Links to domain-specific files for detailed reference
+
+**Domain-Specific Files**:
+| File | Chains |
+|------|--------|
+| `core-crm-dependency-chain.md` | Lead, Contact, Account, Opportunity, Task, Ticket |
+| `legal-scheduling-dependency-chain.md` | Case, Appointment, Document, Email |
+| `ai-intelligence-dependency-chain.md` | AI Scoring, Agents, RAG, NBA, Monitoring, etc. |
+| `ai-output-review-dependency-chain.md` | Review Queue, Review API, Feedback Loop |
+| `security-platform-dependency-chain.md` | RBAC/Audit, Analytics |
+| `auth-public-pages-dependency-chain.md` | Home Page, Notifications |
+| `platform-infrastructure-dependency-chain.md` | Workflow Engine, Multi-Tenancy, Caching, etc. |
+| `integrations-dependency-chain.md` | Webhooks, Observability |
+| `business-workflows-dependency-chain.md` | Lead Qualification, Routing, DSAR, Legal Workflows |
+
+**When to Update**:
+- When completing a task from Sprint_plan.csv → Mark as ✅ in dependency chain
+- When starting a task → Mark as ⏳ with progress percentage
+- When adding new entities/features → Add new dependency chain diagram
+
+**Workflow Integration**:
+- `/spec-session`: Validates dependency chain exists before spec generation
+- `/plan-session`: Ensures plan follows hexagonal layer order
+- `/exec`: Updates dependency chain status on task completion
+
 ## AI-Assisted Development
 
 This project is optimized for AI-assisted development:
@@ -1007,6 +1045,8 @@ $sprint0 | Group-Object Status | Select-Object Name, Count
 - **ADRs**: Architecture decisions in `docs/planning/adr/`
 - **API Docs**: Auto-generated from tRPC routers (run `pnpm run docs:api`)
 - **Domain Docs**: Docusaurus site at `docs/`
+- **Dependency Chains**: `docs/design/diagrams/complete-dependency-chains.md` - Hexagonal
+  architecture implementation paths for all 36 entities/features
 - **Dependency Graph**: Task dependencies tracked in CSV `Dependencies` column
 
 ## Critical Development Rules
