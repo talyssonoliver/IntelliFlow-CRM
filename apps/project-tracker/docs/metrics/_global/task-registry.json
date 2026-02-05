@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-02-05T06:57:58.142Z",
+  "last_updated": "2026-02-05T21:31:13.177Z",
   "total_tasks": 305,
   "sprints": {
     "sprint-0": {
@@ -218,7 +218,9 @@
       "IFC-177",
       "IFC-178",
       "IFC-179",
-      "IFC-184"
+      "IFC-184",
+      "IFC-185",
+      "IFC-188"
     ],
     "IN_PROGRESS": [
       "IFC-182",
@@ -229,8 +231,8 @@
     "PLANNED": [
       "IFC-155",
       "PG-128",
-      "IFC-185",
-      "IFC-188"
+      "IFC-180",
+      "IFC-186"
     ],
     "BACKLOG": [
       "IFC-030",
@@ -390,13 +392,11 @@
       "IFC-166",
       "IFC-175",
       "IFC-174",
-      "IFC-180",
       "IFC-181",
       "IFC-183",
       "PG-130",
       "PG-131",
       "PG-132",
-      "IFC-186",
       "IFC-187",
       "IFC-189",
       "IFC-190",
@@ -1377,10 +1377,10 @@
         "IFC-026"
       ],
       "artifacts": [
-        "ARTIFACT:artifacts/reports/investment-gate-2-analysis.xlsx;ARTIFACT:artifacts/reports/ai-roi-report.pdf;ARTIFACT:artifacts/misc/customer-feedback.docx;ARTIFACT:artifacts/misc/board-presentation.pptx;EVIDENCE:.specify/sprints/sprint-15/attestations/IFC-027/context_ack.json"
+        "ARTIFACT:artifacts/reports/investment-gate-2-analysis.md;ARTIFACT:artifacts/reports/ai-roi-report.md;ARTIFACT:artifacts/misc/customer-feedback.md;ARTIFACT:artifacts/misc/board-presentation.md;EVIDENCE:.specify/sprints/sprint-15/attestations/IFC-027/context_ack.json"
       ],
       "kpis": "AI adds measurable value, ROI positive",
-      "definition_of_done": "Expand/maintain decision on AI features; artifacts: investment-gate-2-analysis.xlsx, ai-roi-report.pdf, customer-feedback.docx",
+      "definition_of_done": "Expand/maintain decision on AI features; artifacts: investment-gate-2-analysis.md, ai-roi-report.md, customer-feedback.md",
       "validation": "AUDIT:manual-review",
       "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:AI value demonstrated;ENV:metrics collected;FILE:docs/shared/review-checklist.md;FILE:docs/operations/quality-gates.md;FILE:artifacts/misc/playwright-report/index.html"
     },
@@ -1399,7 +1399,7 @@
       "kpis": "Complex workflows supported, state persistent",
       "definition_of_done": "Visual workflow engine with conditional logic; artifacts: state-machine-tests.ts, IFC-028-delivery.md, context_ack.json",
       "validation": "AUDIT:manual-review",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:LangGraph evaluated;ENV:state machines designed;FILE:docs/planning/adr/ADR-005-workflow-engine.md;FILE:artifacts/reports/investment-gate-2-analysis.xlsx"
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:LangGraph evaluated;ENV:state machines designed;FILE:docs/planning/adr/ADR-005-workflow-engine.md;FILE:artifacts/reports/investment-gate-2-analysis.md"
     },
     "IFC-029": {
       "section": "Automation",
@@ -6741,13 +6741,13 @@
       "section": "AI Foundation",
       "description": "AI Output Review - tRPC Router (API endpoints)",
       "owner": "Backend Dev (STOA-Quality)",
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "sprint": 5,
       "dependencies": [
         "IFC-179"
       ],
       "artifacts": [
-        "ARTIFACT:apps/api/src/modules/ai-review/ai-review.router.ts;ARTIFACT:apps/api/src/modules/ai-review/__tests__/ai-review.router.test.ts;EVIDENCE:.specify/sprints/sprint-5/attestations/IFC-180/context_ack.json"
+        "ARTIFACT:apps/api/src/modules/ai-review/ai-review.router.ts;ARTIFACT:apps/api/src/modules/ai-review/__tests__/ai-review.router.test.ts;SPEC:.specify/sprints/sprint-5/specifications/IFC-180-spec.md;EVIDENCE:.specify/sprints/sprint-5/attestations/IFC-180/context_ack.json"
       ],
       "kpis": "All endpoints working; auth enforced; response <200ms",
       "definition_of_done": "review.list, review.get, review.claim, review.approve, review.reject, review.escalate, review.stats endpoints; authentication/authorization; verified by: pnpm test",
@@ -6901,7 +6901,7 @@
       "section": "Core CRM",
       "description": "Account tRPC Router - CRUD hierarchy contacts opportunities activity feed",
       "owner": "Backend Dev (STOA-Domain)",
-      "status": "PLANNED",
+      "status": "DONE",
       "sprint": 4,
       "dependencies": [
         "IFC-103",
@@ -6909,7 +6909,7 @@
         "IFC-003"
       ],
       "artifacts": [
-        "ARTIFACT:apps/api/src/modules/account/account.router.ts;ARTIFACT:apps/api/src/modules/account/__tests__/account.router.test.ts;SPEC:.specify/sprints/sprint-4/specifications/IFC-185-spec.md;EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-185/context_ack.json"
+        "ARTIFACT:apps/api/src/modules/account/account.router.ts;ARTIFACT:apps/api/src/modules/account/__tests__/account.router.test.ts;SPEC:.specify/sprints/sprint-4/specifications/IFC-185-spec.md;PLAN:.specify/sprints/sprint-4/planning/IFC-185-plan.md;EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-185/context_ack.json"
       ],
       "kpis": "All endpoints <200ms; test coverage >=90%; wired to router.ts",
       "definition_of_done": "account.list, account.get, account.create, account.update, account.delete, account.getContacts, account.getOpportunities, account.getHierarchy, account.getActivity endpoints; verified by: pnpm test",
@@ -6920,7 +6920,7 @@
       "section": "Core CRM",
       "description": "Deal/Opportunity tRPC Router - CRUD pipeline stages probability history products",
       "owner": "Backend Dev (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "sprint": 5,
       "dependencies": [
         "IFC-104",
@@ -6958,14 +6958,14 @@
       "section": "Core CRM",
       "description": "Ticket Domain Entity - Aggregate with SLA priority escalation categories customer linking",
       "owner": "Backend Dev (STOA-Domain)",
-      "status": "PLANNED",
+      "status": "DONE",
       "sprint": 4,
       "dependencies": [
         "IFC-002",
         "IFC-003"
       ],
       "artifacts": [
-        "ARTIFACT:packages/domain/src/crm/ticket/Ticket.ts;ARTIFACT:packages/domain/src/crm/ticket/TicketId.ts;ARTIFACT:packages/domain/src/crm/ticket/TicketEvents.ts;ARTIFACT:packages/domain/src/crm/ticket/TicketRepository.ts;ARTIFACT:packages/domain/src/crm/ticket/index.ts;ARTIFACT:packages/validators/src/__tests__/ticket.test.ts;EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-188/context_ack.json"
+        "ARTIFACT:packages/domain/src/crm/ticket/Ticket.ts;ARTIFACT:packages/domain/src/crm/ticket/TicketId.ts;ARTIFACT:packages/domain/src/crm/ticket/TicketEvents.ts;ARTIFACT:packages/domain/src/crm/ticket/TicketRepository.ts;ARTIFACT:packages/domain/src/crm/ticket/index.ts;ARTIFACT:packages/validators/src/__tests__/ticket.test.ts;EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-188/completion.json"
       ],
       "kpis": "Aggregate follows DDD patterns; validators derive from domain constants; tests passing",
       "definition_of_done": "Ticket aggregate with TicketId VO, TicketStatus enum, TicketPriority enum, SLAStatus, Category, Assignee, Customer link; Zod validators; repository interface; verified by: pnpm test",
@@ -7133,13 +7133,13 @@
       "description": "Document Manager Page - Upload viewer version history ACL management search",
       "owner": "Frontend Dev (STOA-Domain)",
       "status": "BACKLOG",
-      "sprint": 8,
+      "sprint": 13,
       "dependencies": [
         "IFC-152",
         "IFC-153"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/documents/page.tsx;ARTIFACT:apps/web/src/app/documents/[id]/page.tsx;ARTIFACT:apps/web/src/components/documents/DocumentList.tsx;ARTIFACT:apps/web/src/components/documents/DocumentUpload.tsx;ARTIFACT:apps/web/src/components/documents/DocumentViewer.tsx;ARTIFACT:apps/web/src/components/documents/VersionHistory.tsx;EVIDENCE:.specify/sprints/sprint-8/attestations/PG-140/context_ack.json"
+        "ARTIFACT:apps/web/src/app/documents/page.tsx;ARTIFACT:apps/web/src/app/documents/[id]/page.tsx;ARTIFACT:apps/web/src/components/documents/DocumentList.tsx;ARTIFACT:apps/web/src/components/documents/DocumentUpload.tsx;ARTIFACT:apps/web/src/components/documents/DocumentViewer.tsx;ARTIFACT:apps/web/src/components/documents/VersionHistory.tsx;EVIDENCE:.specify/sprints/sprint-13/attestations/PG-140/context_ack.json"
       ],
       "kpis": "List loads <500ms; upload works; viewer renders PDFs; versions navigable; search fast; Lighthouse >=90",
       "definition_of_done": "Response <500ms, Lighthouse >=90; DocumentList, DocumentUpload, DocumentViewer, VersionHistory, ACLManager, DocumentSearch components; verified by: pnpm test",
@@ -7151,12 +7151,12 @@
       "description": "Email Compose & History Page - Thread view compose attachments templates",
       "owner": "Frontend Dev (STOA-Domain)",
       "status": "BACKLOG",
-      "sprint": 8,
+      "sprint": 11,
       "dependencies": [
         "IFC-144"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/email/page.tsx;ARTIFACT:apps/web/src/app/email/[id]/page.tsx;ARTIFACT:apps/web/src/components/email/EmailList.tsx;ARTIFACT:apps/web/src/components/email/EmailThread.tsx;ARTIFACT:apps/web/src/components/email/EmailCompose.tsx;ARTIFACT:apps/web/src/components/email/AttachmentManager.tsx;EVIDENCE:.specify/sprints/sprint-8/attestations/PG-141/context_ack.json"
+        "ARTIFACT:apps/web/src/app/email/page.tsx;ARTIFACT:apps/web/src/app/email/[id]/page.tsx;ARTIFACT:apps/web/src/components/email/EmailList.tsx;ARTIFACT:apps/web/src/components/email/EmailThread.tsx;ARTIFACT:apps/web/src/components/email/EmailCompose.tsx;ARTIFACT:apps/web/src/components/email/AttachmentManager.tsx;EVIDENCE:.specify/sprints/sprint-11/attestations/PG-141/context_ack.json"
       ],
       "kpis": "List loads <500ms; compose works; attachments upload; templates apply; Lighthouse >=90",
       "definition_of_done": "Response <500ms, Lighthouse >=90; EmailList, EmailThread, EmailCompose, AttachmentManager, TemplateSelector, RecipientPicker components; verified by: pnpm test",

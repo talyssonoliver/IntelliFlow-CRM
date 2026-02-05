@@ -190,10 +190,10 @@
       "Dependencies": "IFC-179",
       "Pre-requisites": "FILE:packages/adapters/src/persistence/PrismaAIOutputReviewRepository.ts;FILE:packages/application/src/usecases/ai-review/index.ts;FILE:apps/api/src/trpc.ts",
       "Definition of Done": "review.list, review.get, review.claim, review.approve, review.reject, review.escalate, review.stats endpoints; authentication/authorization; verified by: pnpm test",
-      "Status": "Backlog",
+      "Status": "Spec Complete",
       "KPIs": "All endpoints working; auth enforced; response <200ms",
       "Target Sprint": "5",
-      "Artifacts To Track": "ARTIFACT:apps/api/src/modules/ai-review/ai-review.router.ts;ARTIFACT:apps/api/src/modules/ai-review/__tests__/ai-review.router.test.ts;EVIDENCE:.specify/sprints/sprint-5/attestations/IFC-180/context_ack.json",
+      "Artifacts To Track": "ARTIFACT:apps/api/src/modules/ai-review/ai-review.router.ts;ARTIFACT:apps/api/src/modules/ai-review/__tests__/ai-review.router.test.ts;SPEC:.specify/sprints/sprint-5/specifications/IFC-180-spec.md;EVIDENCE:.specify/sprints/sprint-5/attestations/IFC-180/context_ack.json",
       "Validation Method": "VALIDATE:pnpm test;AUDIT:code-review"
     },
     {
@@ -959,11 +959,11 @@
       "Owner": "CFO + CEO (STOA-Leadership)",
       "Dependencies": "IFC-026",
       "Pre-requisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:AI value demonstrated;ENV:metrics collected;FILE:docs/shared/review-checklist.md;FILE:docs/operations/quality-gates.md;FILE:artifacts/misc/playwright-report/index.html",
-      "Definition of Done": "Expand/maintain decision on AI features; artifacts: investment-gate-2-analysis.xlsx, ai-roi-report.pdf, customer-feedback.docx",
+      "Definition of Done": "Expand/maintain decision on AI features; artifacts: investment-gate-2-analysis.md, ai-roi-report.md, customer-feedback.md",
       "Status": "Completed",
       "KPIs": "AI adds measurable value, ROI positive",
       "Target Sprint": "15",
-      "Artifacts To Track": "ARTIFACT:artifacts/reports/investment-gate-2-analysis.xlsx;ARTIFACT:artifacts/reports/ai-roi-report.pdf;ARTIFACT:artifacts/misc/customer-feedback.docx;ARTIFACT:artifacts/misc/board-presentation.pptx;EVIDENCE:.specify/sprints/sprint-15/attestations/IFC-027/context_ack.json",
+      "Artifacts To Track": "ARTIFACT:artifacts/reports/investment-gate-2-analysis.md;ARTIFACT:artifacts/reports/ai-roi-report.md;ARTIFACT:artifacts/misc/customer-feedback.md;ARTIFACT:artifacts/misc/board-presentation.md;EVIDENCE:.specify/sprints/sprint-15/attestations/IFC-027/context_ack.json",
       "Validation Method": "AUDIT:manual-review"
     },
     {
@@ -1102,7 +1102,7 @@
       "Description": "PHASE-005: Workflow Engine with LangGraph",
       "Owner": "Backend Dev + Architect (STOA-Domain)",
       "Dependencies": "IFC-027",
-      "Pre-requisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:LangGraph evaluated;ENV:state machines designed;FILE:docs/planning/adr/ADR-005-workflow-engine.md;FILE:artifacts/reports/investment-gate-2-analysis.xlsx",
+      "Pre-requisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:LangGraph evaluated;ENV:state machines designed;FILE:docs/planning/adr/ADR-005-workflow-engine.md;FILE:artifacts/reports/investment-gate-2-analysis.md",
       "Definition of Done": "Visual workflow engine with conditional logic; artifacts: state-machine-tests.ts, IFC-028-delivery.md, context_ack.json",
       "Status": "Completed",
       "KPIs": "Complex workflows supported, state persistent",
@@ -2674,10 +2674,10 @@
       "Dependencies": "IFC-103,IFC-107,IFC-003",
       "Pre-requisites": "FILE:packages/domain/src/crm/account/Account.ts;FILE:packages/adapters/src/repositories/PrismaAccountRepository.ts;FILE:apps/api/src/router.ts;FILE:docs/architecture/hex-boundaries.md",
       "Definition of Done": "account.list, account.get, account.create, account.update, account.delete, account.getContacts, account.getOpportunities, account.getHierarchy, account.getActivity endpoints; verified by: pnpm test",
-      "Status": "Spec Complete",
+      "Status": "Completed",
       "KPIs": "All endpoints <200ms; test coverage >=90%; wired to router.ts",
       "Target Sprint": "4",
-      "Artifacts To Track": "ARTIFACT:apps/api/src/modules/account/account.router.ts;ARTIFACT:apps/api/src/modules/account/__tests__/account.router.test.ts;SPEC:.specify/sprints/sprint-4/specifications/IFC-185-spec.md;EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-185/context_ack.json",
+      "Artifacts To Track": "ARTIFACT:apps/api/src/modules/account/account.router.ts;ARTIFACT:apps/api/src/modules/account/__tests__/account.router.test.ts;SPEC:.specify/sprints/sprint-4/specifications/IFC-185-spec.md;PLAN:.specify/sprints/sprint-4/planning/IFC-185-plan.md;EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-185/context_ack.json",
       "Validation Method": "VALIDATE:pnpm test;GATE:coverage-gte-90"
     },
     {
@@ -2688,7 +2688,7 @@
       "Dependencies": "IFC-104,IFC-107,IFC-003",
       "Pre-requisites": "FILE:packages/domain/src/crm/opportunity/Opportunity.ts;FILE:packages/adapters/src/repositories/PrismaOpportunityRepository.ts;FILE:apps/api/src/router.ts;FILE:docs/architecture/hex-boundaries.md",
       "Definition of Done": "deal.list, deal.get, deal.create, deal.update, deal.delete, deal.moveStage, deal.getHistory, deal.getProducts, deal.getPipeline, deal.getForecast endpoints; verified by: pnpm test",
-      "Status": "Backlog",
+      "Status": "Specifying",
       "KPIs": "All endpoints <200ms; test coverage >=90%; pipeline view optimized",
       "Target Sprint": "5",
       "Artifacts To Track": "ARTIFACT:apps/api/src/modules/opportunity/opportunity.router.ts;ARTIFACT:apps/api/src/modules/opportunity/__tests__/opportunity.router.test.ts;EVIDENCE:.specify/sprints/sprint-5/attestations/IFC-186/context_ack.json",
@@ -2716,10 +2716,10 @@
       "Dependencies": "IFC-002,IFC-003",
       "Pre-requisites": "FILE:packages/domain/src/index.ts;FILE:packages/validators/src/index.ts;FILE:packages/domain/src/support/TicketConstants.ts;FILE:docs/architecture/hex-boundaries.md",
       "Definition of Done": "Ticket aggregate with TicketId VO, TicketStatus enum, TicketPriority enum, SLAStatus, Category, Assignee, Customer link; Zod validators; repository interface; verified by: pnpm test",
-      "Status": "Spec Complete",
+      "Status": "Completed",
       "KPIs": "Aggregate follows DDD patterns; validators derive from domain constants; tests passing",
       "Target Sprint": "4",
-      "Artifacts To Track": "ARTIFACT:packages/domain/src/crm/ticket/Ticket.ts;ARTIFACT:packages/domain/src/crm/ticket/TicketId.ts;ARTIFACT:packages/domain/src/crm/ticket/TicketEvents.ts;ARTIFACT:packages/domain/src/crm/ticket/TicketRepository.ts;ARTIFACT:packages/domain/src/crm/ticket/index.ts;ARTIFACT:packages/validators/src/__tests__/ticket.test.ts;EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-188/context_ack.json",
+      "Artifacts To Track": "ARTIFACT:packages/domain/src/crm/ticket/Ticket.ts;ARTIFACT:packages/domain/src/crm/ticket/TicketId.ts;ARTIFACT:packages/domain/src/crm/ticket/TicketEvents.ts;ARTIFACT:packages/domain/src/crm/ticket/TicketRepository.ts;ARTIFACT:packages/domain/src/crm/ticket/index.ts;ARTIFACT:packages/validators/src/__tests__/ticket.test.ts;EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-188/completion.json",
       "Validation Method": "VALIDATE:pnpm test;AUDIT:code-review"
     },
     {
@@ -5474,8 +5474,8 @@
       "Definition of Done": "Response <500ms, Lighthouse >=90; DocumentList, DocumentUpload, DocumentViewer, VersionHistory, ACLManager, DocumentSearch components; verified by: pnpm test",
       "Status": "Backlog",
       "KPIs": "List loads <500ms; upload works; viewer renders PDFs; versions navigable; search fast; Lighthouse >=90",
-      "Target Sprint": "8",
-      "Artifacts To Track": "ARTIFACT:apps/web/src/app/documents/page.tsx;ARTIFACT:apps/web/src/app/documents/[id]/page.tsx;ARTIFACT:apps/web/src/components/documents/DocumentList.tsx;ARTIFACT:apps/web/src/components/documents/DocumentUpload.tsx;ARTIFACT:apps/web/src/components/documents/DocumentViewer.tsx;ARTIFACT:apps/web/src/components/documents/VersionHistory.tsx;EVIDENCE:.specify/sprints/sprint-8/attestations/PG-140/context_ack.json",
+      "Target Sprint": "13",
+      "Artifacts To Track": "ARTIFACT:apps/web/src/app/documents/page.tsx;ARTIFACT:apps/web/src/app/documents/[id]/page.tsx;ARTIFACT:apps/web/src/components/documents/DocumentList.tsx;ARTIFACT:apps/web/src/components/documents/DocumentUpload.tsx;ARTIFACT:apps/web/src/components/documents/DocumentViewer.tsx;ARTIFACT:apps/web/src/components/documents/VersionHistory.tsx;EVIDENCE:.specify/sprints/sprint-13/attestations/PG-140/context_ack.json",
       "Validation Method": "VALIDATE:pnpm test;GATE:lighthouse-gte-90"
     }
   ],
@@ -5490,8 +5490,8 @@
       "Definition of Done": "Response <500ms, Lighthouse >=90; EmailList, EmailThread, EmailCompose, AttachmentManager, TemplateSelector, RecipientPicker components; verified by: pnpm test",
       "Status": "Backlog",
       "KPIs": "List loads <500ms; compose works; attachments upload; templates apply; Lighthouse >=90",
-      "Target Sprint": "8",
-      "Artifacts To Track": "ARTIFACT:apps/web/src/app/email/page.tsx;ARTIFACT:apps/web/src/app/email/[id]/page.tsx;ARTIFACT:apps/web/src/components/email/EmailList.tsx;ARTIFACT:apps/web/src/components/email/EmailThread.tsx;ARTIFACT:apps/web/src/components/email/EmailCompose.tsx;ARTIFACT:apps/web/src/components/email/AttachmentManager.tsx;EVIDENCE:.specify/sprints/sprint-8/attestations/PG-141/context_ack.json",
+      "Target Sprint": "11",
+      "Artifacts To Track": "ARTIFACT:apps/web/src/app/email/page.tsx;ARTIFACT:apps/web/src/app/email/[id]/page.tsx;ARTIFACT:apps/web/src/components/email/EmailList.tsx;ARTIFACT:apps/web/src/components/email/EmailThread.tsx;ARTIFACT:apps/web/src/components/email/EmailCompose.tsx;ARTIFACT:apps/web/src/components/email/AttachmentManager.tsx;EVIDENCE:.specify/sprints/sprint-11/attestations/PG-141/context_ack.json",
       "Validation Method": "VALIDATE:pnpm test;GATE:lighthouse-gte-90"
     }
   ],

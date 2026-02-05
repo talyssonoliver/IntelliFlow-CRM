@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/dependency-graph.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-02-05T06:57:58.349Z",
+  "last_updated": "2026-02-05T21:31:13.319Z",
   "description": "Cross-sprint dependency tracking for all tasks",
   "nodes": {
     "EXC-INIT-001": {
@@ -4234,7 +4234,7 @@
     "IFC-180": {
       "task_id": "IFC-180",
       "sprint": 5,
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "dependencies": [
         "IFC-179"
       ],
@@ -4330,11 +4330,11 @@
     "IFC-185": {
       "task_id": "IFC-185",
       "sprint": 4,
-      "status": "PLANNED",
+      "status": "DONE",
       "dependencies": [
-        "IFC-003",
         "IFC-103",
-        "IFC-107"
+        "IFC-107",
+        "IFC-003"
       ],
       "dependents": [
         "PG-134"
@@ -4343,7 +4343,7 @@
     "IFC-186": {
       "task_id": "IFC-186",
       "sprint": 5,
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "dependencies": [
         "IFC-003",
         "IFC-104",
@@ -4369,7 +4369,7 @@
     "IFC-188": {
       "task_id": "IFC-188",
       "sprint": 4,
-      "status": "PLANNED",
+      "status": "DONE",
       "dependencies": [
         "IFC-002",
         "IFC-003"
@@ -4466,7 +4466,7 @@
     },
     "PG-140": {
       "task_id": "PG-140",
-      "sprint": 8,
+      "sprint": 13,
       "status": "BACKLOG",
       "dependencies": [
         "IFC-152",
@@ -4476,7 +4476,7 @@
     },
     "PG-141": {
       "task_id": "PG-141",
-      "sprint": 8,
+      "sprint": 11,
       "status": "BACKLOG",
       "dependencies": [
         "IFC-144"
@@ -7652,21 +7652,21 @@
       "from_task": "IFC-152",
       "to_task": "PG-140",
       "from_sprint": 11,
-      "to_sprint": 8,
+      "to_sprint": 13,
       "dependency_type": "REQUIRED"
     },
     {
       "from_task": "IFC-153",
       "to_task": "PG-140",
       "from_sprint": 12,
-      "to_sprint": 8,
+      "to_sprint": 13,
       "dependency_type": "REQUIRED"
     },
     {
       "from_task": "IFC-144",
       "to_task": "PG-141",
       "from_sprint": 10,
-      "to_sprint": 8,
+      "to_sprint": 11,
       "dependency_type": "REQUIRED"
     },
     {
@@ -7727,8 +7727,6 @@
     }
   ],
   "blocked_tasks": [
-    "IFC-189",
-    "PG-134",
     "IFC-181",
     "PG-135",
     "PG-136",
@@ -7831,15 +7829,14 @@
     "PG-121"
   ],
   "ready_to_start": [
-    "IFC-185",
-    "IFC-188",
     "IFC-180",
     "IFC-186",
     "IFC-187",
+    "IFC-189",
     "PG-133",
+    "PG-134",
     "PG-138",
     "PG-139",
-    "PG-140",
     "PG-141",
     "IFC-155",
     "PG-017",
@@ -7849,6 +7846,7 @@
     "PG-024",
     "PG-104",
     "IFC-183",
+    "PG-140",
     "IFC-062",
     "IFC-064",
     "IFC-065",
