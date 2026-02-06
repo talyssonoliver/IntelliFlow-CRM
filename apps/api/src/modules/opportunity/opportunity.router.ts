@@ -17,7 +17,15 @@ import {
   updateOpportunitySchema,
   opportunityQuerySchema,
   idSchema,
+  moveStageSchema,
+  opportunityHistoryQuerySchema,
+  opportunityProductsQuerySchema,
+  opportunityPipelineQuerySchema,
+  DEFAULT_STAGE_NAMES,
+  DEFAULT_STAGE_COLORS,
+  DEFAULT_STAGE_PROBABILITIES,
 } from '@intelliflow/validators/opportunity';
+import { OPPORTUNITY_STAGES } from '@intelliflow/domain';
 import { mapOpportunityToResponse } from '../../shared/mappers';
 import { type Context } from '../../context';
 import {
@@ -271,6 +279,136 @@ export const opportunityRouter = createTRPCRouter({
     }
 
     return { success: true, id: input.id };
+  }),
+
+  /**
+   * Move opportunity to a new pipeline stage
+   * Routes to appropriate service method based on target stage:
+   * - CLOSED_WON → markAsWon()
+   * - CLOSED_LOST → markAsLost(reason)
+   * - Others → changeStage()
+   */
+  moveStage: tenantProcedure.input(moveStageSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const opportunityService = getOpportunityService(ctx);
+
+    let result;
+    if (input.targetStage === 'CLOSED_WON') {
+      result = await opportunityService.markAsWon(input.id, typedCtx.tenant.userId);
+    } else if (input.targetStage === 'CLOSED_LOST') {
+      result = await opportunityService.markAsLost(input.id, input.reason || '', typedCtx.tenant.userId);
+    } else {
+      result = await opportunityService.changeStage(input.id, input.targetStage, typedCtx.tenant.userId);
+    }
+
+    if (result.isFailure) {
+      const errorCode = result.error.code;
+      if (errorCode === 'NOT_FOUND_ERROR') {
+        throw new TRPCError({ code: 'NOT_FOUND', message: result.error.message });
+      }
+      throw new TRPCError({ code: 'BAD_REQUEST', message: result.error.message });
+    }
+
+    return mapOpportunityToResponse(result.value);
+  }),
+
+  /**
+   * Get activity history for an opportunity with cursor pagination
+   * Uses composite index [opportunityId, timestamp(sort: Desc)] on ActivityEvent
+   */
+  getHistory: tenantProcedure.input(opportunityHistoryQuerySchema).query(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const where: any = { opportunityId: input.opportunityId };
+
+    if (input.types && input.types.length > 0) {
+      where.type = { in: input.types };
+    }
+    if (input.cursor) {
+      where.timestamp = { lt: new Date(input.cursor) };
+    }
+
+    const events = await typedCtx.prismaWithTenant.activityEvent.findMany({
+      where,
+      orderBy: { timestamp: 'desc' },
+      take: input.limit + 1,
+    });
+
+    const hasMore = events.length > input.limit;
+    const items = hasMore ? events.slice(0, input.limit) : events;
+
+    return {
+      items,
+      nextCursor: hasMore ? items[items.length - 1].timestamp.toISOString() : null,
+      hasMore,
+    };
+  }),
+
+  /**
+   * Get deal products (line items) for an opportunity
+   * DealProduct tenant isolation via parent opportunity FK
+   */
+  getProducts: tenantProcedure.input(opportunityProductsQuerySchema).query(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+
+    const products = await typedCtx.prismaWithTenant.dealProduct.findMany({
+      where: { opportunityId: input.opportunityId },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const totalValue = products.reduce(
+      (sum, p) => sum + Number(p.totalPrice),
+      0
+    );
+
+    return { products, totalValue };
+  }),
+
+  /**
+   * Get pipeline visualization data
+   * Combines stage configuration with opportunity aggregation
+   */
+  getPipeline: tenantProcedure.input(opportunityPipelineQuerySchema).query(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+
+    const [stageConfigs, byStage] = await Promise.all([
+      typedCtx.prismaWithTenant.pipelineStageConfig.findMany({
+        where: { tenantId: typedCtx.tenant.tenantId },
+        orderBy: { order: 'asc' },
+      }),
+      typedCtx.prismaWithTenant.opportunity.groupBy({
+        by: ['stage'],
+        _count: true,
+        _sum: { value: true },
+        _avg: { probability: true },
+      }),
+    ]);
+
+    const configMap = new Map(stageConfigs.map(c => [c.stageKey, c]));
+
+    const stages = OPPORTUNITY_STAGES
+      .filter(stage => input.includeClosedStages || !['CLOSED_WON', 'CLOSED_LOST'].includes(stage))
+      .map((stageKey, index) => {
+        const config = configMap.get(stageKey);
+        const data = byStage.find(s => s.stage === stageKey);
+        return {
+          stageKey,
+          displayName: config?.displayName || DEFAULT_STAGE_NAMES[stageKey] || stageKey,
+          color: config?.color || DEFAULT_STAGE_COLORS[stageKey] || '#6366f1',
+          order: config?.order ?? index,
+          count: data?._count ?? 0,
+          totalValue: data?._sum?.value?.toString() || '0',
+          weightedValue: data
+            ? Math.round(Number(data._sum?.value || 0) * (data._avg?.probability || 0) / 100).toString()
+            : '0',
+          probability: config?.probability ?? DEFAULT_STAGE_PROBABILITIES[stageKey] ?? 0,
+        };
+      })
+      .sort((a, b) => a.order - b.order);
+
+    const totalOpportunities = byStage.reduce((sum, s) => sum + s._count, 0);
+    const totalPipelineValue = byStage.reduce((sum, s) => sum + Number(s._sum?.value || 0), 0);
+
+    return { stages, totalOpportunities, totalPipelineValue: totalPipelineValue.toString() };
   }),
 
   /**

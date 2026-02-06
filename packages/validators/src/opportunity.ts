@@ -89,6 +89,55 @@ export const opportunityListResponseSchema = z.object({
 export type OpportunityListResponse = z.infer<typeof opportunityListResponseSchema>;
 
 // ============================================
+// Stage Transition & History Schemas (IFC-186)
+// ============================================
+
+/**
+ * Schema for moving an opportunity to a new pipeline stage
+ * Routes to changeStage/markAsWon/markAsLost based on targetStage
+ */
+export const moveStageSchema = z.object({
+  id: idSchema,
+  targetStage: opportunityStageSchema,
+  reason: z.string().min(10).max(1000).optional(),
+});
+
+export type MoveStageInput = z.infer<typeof moveStageSchema>;
+
+/**
+ * Schema for querying opportunity activity history with cursor pagination
+ */
+export const opportunityHistoryQuerySchema = z.object({
+  opportunityId: idSchema,
+  limit: z.number().int().min(1).max(100).default(20),
+  cursor: z.string().datetime().optional(),
+  types: z.array(z.enum([
+    'EMAIL', 'CALL', 'MEETING', 'NOTE', 'TASK',
+    'STAGE_CHANGE', 'AGENT_ACTION', 'SYSTEM',
+  ])).optional(),
+});
+
+export type OpportunityHistoryQueryInput = z.infer<typeof opportunityHistoryQuerySchema>;
+
+/**
+ * Schema for querying deal products (line items)
+ */
+export const opportunityProductsQuerySchema = z.object({
+  opportunityId: idSchema,
+});
+
+export type OpportunityProductsQueryInput = z.infer<typeof opportunityProductsQuerySchema>;
+
+/**
+ * Schema for querying pipeline visualization data
+ */
+export const opportunityPipelineQuerySchema = z.object({
+  includeClosedStages: z.boolean().default(false),
+});
+
+export type OpportunityPipelineQueryInput = z.infer<typeof opportunityPipelineQuerySchema>;
+
+// ============================================
 // Pipeline Stage Configuration
 // ============================================
 

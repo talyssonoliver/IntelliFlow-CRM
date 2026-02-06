@@ -469,4 +469,376 @@ describe('Opportunity Router', () => {
       expect(result.weightedValue).toBe('0');
     });
   });
+
+  // ============================================
+  // IFC-186: New endpoints
+  // ============================================
+
+  describe('moveStage', () => {
+    it('should move opportunity to valid next stage', async () => {
+      const mockDomainOpp = createMockDomainOpportunity({
+        stage: 'NEGOTIATION',
+        probability: { value: 80 },
+      });
+
+      ctx.services!.opportunity!.changeStage = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainOpp,
+      });
+
+      const result = await caller.moveStage({
+        id: TEST_UUIDS.opportunity1,
+        targetStage: 'NEGOTIATION',
+      });
+
+      expect(result.stage).toBe('NEGOTIATION');
+      expect(ctx.services!.opportunity!.changeStage).toHaveBeenCalledWith(
+        TEST_UUIDS.opportunity1,
+        'NEGOTIATION',
+        expect.any(String)
+      );
+    });
+
+    it('should mark as won when targetStage is CLOSED_WON', async () => {
+      const mockDomainOpp = createMockDomainOpportunity({
+        stage: 'CLOSED_WON',
+        probability: { value: 100 },
+        isClosed: true,
+        isWon: true,
+      });
+
+      ctx.services!.opportunity!.markAsWon = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainOpp,
+      });
+
+      const result = await caller.moveStage({
+        id: TEST_UUIDS.opportunity1,
+        targetStage: 'CLOSED_WON',
+      });
+
+      expect(result.isWon).toBe(true);
+      expect(ctx.services!.opportunity!.markAsWon).toHaveBeenCalledWith(
+        TEST_UUIDS.opportunity1,
+        expect.any(String)
+      );
+    });
+
+    it('should mark as lost when targetStage is CLOSED_LOST with reason', async () => {
+      const mockDomainOpp = createMockDomainOpportunity({
+        stage: 'CLOSED_LOST',
+        probability: { value: 0 },
+        isClosed: true,
+        isLost: true,
+      });
+
+      ctx.services!.opportunity!.markAsLost = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainOpp,
+      });
+
+      const result = await caller.moveStage({
+        id: TEST_UUIDS.opportunity1,
+        targetStage: 'CLOSED_LOST',
+        reason: 'Lost to competitor pricing',
+      });
+
+      expect(result.isLost).toBe(true);
+      expect(ctx.services!.opportunity!.markAsLost).toHaveBeenCalledWith(
+        TEST_UUIDS.opportunity1,
+        'Lost to competitor pricing',
+        expect.any(String)
+      );
+    });
+
+    it('should reject invalid stage transition with BAD_REQUEST', async () => {
+      ctx.services!.opportunity!.changeStage = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid stage transition' },
+      });
+
+      await expect(
+        caller.moveStage({ id: TEST_UUIDS.opportunity1, targetStage: 'PROPOSAL' })
+      ).rejects.toThrow(
+        expect.objectContaining({ code: 'BAD_REQUEST' })
+      );
+    });
+
+    it('should throw NOT_FOUND for non-existent opportunity', async () => {
+      ctx.services!.opportunity!.changeStage = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: 'Opportunity not found' },
+      });
+
+      await expect(
+        caller.moveStage({ id: TEST_UUIDS.nonExistent, targetStage: 'NEGOTIATION' })
+      ).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
+      );
+    });
+
+    it('should throw BAD_REQUEST for CLOSED_LOST without reason', async () => {
+      ctx.services!.opportunity!.markAsLost = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: 'Reason is required and must be at least 10 characters' },
+      });
+
+      await expect(
+        caller.moveStage({ id: TEST_UUIDS.opportunity1, targetStage: 'CLOSED_LOST', reason: '' })
+      ).rejects.toThrow(
+        expect.objectContaining({ code: 'BAD_REQUEST' })
+      );
+    });
+  });
+
+  describe('getHistory', () => {
+    const mockEvents = [
+      { id: 'evt-1', opportunityId: TEST_UUIDS.opportunity1, type: 'STAGE_CHANGE', timestamp: new Date('2024-06-15T10:00:00Z'), data: {} },
+      { id: 'evt-2', opportunityId: TEST_UUIDS.opportunity1, type: 'NOTE', timestamp: new Date('2024-06-14T10:00:00Z'), data: {} },
+      { id: 'evt-3', opportunityId: TEST_UUIDS.opportunity1, type: 'CALL', timestamp: new Date('2024-06-13T10:00:00Z'), data: {} },
+    ];
+
+    it('should return paginated activity events', async () => {
+      (prismaMock.activityEvent as any).findMany.mockResolvedValue(mockEvents);
+
+      const result = await caller.getHistory({
+        opportunityId: TEST_UUIDS.opportunity1,
+        limit: 20,
+      });
+
+      expect(result.items).toHaveLength(3);
+      expect(result.hasMore).toBe(false);
+      expect(result.nextCursor).toBeNull();
+    });
+
+    it('should support cursor-based pagination with hasMore', async () => {
+      // Return limit+1 items to trigger hasMore
+      const manyEvents = Array.from({ length: 21 }, (_, i) => ({
+        id: `evt-${i}`,
+        opportunityId: TEST_UUIDS.opportunity1,
+        type: 'NOTE',
+        timestamp: new Date(Date.now() - i * 3600000),
+        data: {},
+      }));
+
+      (prismaMock.activityEvent as any).findMany.mockResolvedValue(manyEvents);
+
+      const result = await caller.getHistory({
+        opportunityId: TEST_UUIDS.opportunity1,
+        limit: 20,
+      });
+
+      expect(result.items).toHaveLength(20);
+      expect(result.hasMore).toBe(true);
+      expect(result.nextCursor).toBeTruthy();
+    });
+
+    it('should filter by event type', async () => {
+      (prismaMock.activityEvent as any).findMany.mockResolvedValue([]);
+
+      await caller.getHistory({
+        opportunityId: TEST_UUIDS.opportunity1,
+        types: ['STAGE_CHANGE', 'NOTE'],
+      });
+
+      expect((prismaMock.activityEvent as any).findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            type: { in: ['STAGE_CHANGE', 'NOTE'] },
+          }),
+        })
+      );
+    });
+
+    it('should return empty items for opportunity with no events', async () => {
+      (prismaMock.activityEvent as any).findMany.mockResolvedValue([]);
+
+      const result = await caller.getHistory({
+        opportunityId: TEST_UUIDS.opportunity1,
+      });
+
+      expect(result.items).toEqual([]);
+      expect(result.hasMore).toBe(false);
+      expect(result.nextCursor).toBeNull();
+    });
+
+    it('should apply cursor timestamp for pagination', async () => {
+      (prismaMock.activityEvent as any).findMany.mockResolvedValue([]);
+
+      await caller.getHistory({
+        opportunityId: TEST_UUIDS.opportunity1,
+        cursor: '2024-06-15T10:00:00.000Z',
+      });
+
+      expect((prismaMock.activityEvent as any).findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            timestamp: { lt: new Date('2024-06-15T10:00:00.000Z') },
+          }),
+        })
+      );
+    });
+  });
+
+  describe('getProducts', () => {
+    it('should return products with calculated total value', async () => {
+      const mockProducts = [
+        { id: 'prod-1', opportunityId: TEST_UUIDS.opportunity1, name: 'Product A', quantity: 2, unitPrice: new Prisma.Decimal(10000), totalPrice: new Prisma.Decimal(25000), createdAt: new Date() },
+        { id: 'prod-2', opportunityId: TEST_UUIDS.opportunity1, name: 'Product B', quantity: 1, unitPrice: new Prisma.Decimal(15000), totalPrice: new Prisma.Decimal(15000), createdAt: new Date() },
+      ];
+
+      (prismaMock.dealProduct as any).findMany.mockResolvedValue(mockProducts);
+
+      const result = await caller.getProducts({
+        opportunityId: TEST_UUIDS.opportunity1,
+      });
+
+      expect(result.products).toHaveLength(2);
+      expect(result.totalValue).toBe(40000);
+    });
+
+    it('should return empty array with totalValue=0 when no products', async () => {
+      (prismaMock.dealProduct as any).findMany.mockResolvedValue([]);
+
+      const result = await caller.getProducts({
+        opportunityId: TEST_UUIDS.opportunity1,
+      });
+
+      expect(result.products).toEqual([]);
+      expect(result.totalValue).toBe(0);
+    });
+
+    it('should order products by createdAt ascending', async () => {
+      (prismaMock.dealProduct as any).findMany.mockResolvedValue([]);
+
+      await caller.getProducts({
+        opportunityId: TEST_UUIDS.opportunity1,
+      });
+
+      expect((prismaMock.dealProduct as any).findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: { createdAt: 'asc' },
+        })
+      );
+    });
+
+    it('should calculate totalValue as sum of all totalPrice', async () => {
+      const mockProducts = [
+        { id: 'prod-1', totalPrice: new Prisma.Decimal(10000), createdAt: new Date() },
+        { id: 'prod-2', totalPrice: new Prisma.Decimal(20000), createdAt: new Date() },
+        { id: 'prod-3', totalPrice: new Prisma.Decimal(30000), createdAt: new Date() },
+      ];
+
+      (prismaMock.dealProduct as any).findMany.mockResolvedValue(mockProducts);
+
+      const result = await caller.getProducts({
+        opportunityId: TEST_UUIDS.opportunity1,
+      });
+
+      expect(result.totalValue).toBe(60000);
+    });
+  });
+
+  describe('getPipeline', () => {
+    const mockStageConfigs = [
+      { stageKey: 'PROSPECTING', displayName: 'Prospecting', color: '#94a3b8', order: 0, probability: 10, tenantId: 'test-tenant-id' },
+      { stageKey: 'QUALIFICATION', displayName: 'Qualification', color: '#60a5fa', order: 1, probability: 20, tenantId: 'test-tenant-id' },
+      { stageKey: 'NEEDS_ANALYSIS', displayName: 'Needs Analysis', color: '#38bdf8', order: 2, probability: 30, tenantId: 'test-tenant-id' },
+      { stageKey: 'PROPOSAL', displayName: 'Proposal', color: '#fb923c', order: 3, probability: 70, tenantId: 'test-tenant-id' },
+      { stageKey: 'NEGOTIATION', displayName: 'Negotiation', color: '#facc15', order: 4, probability: 80, tenantId: 'test-tenant-id' },
+    ];
+
+    const mockGroupBy = [
+      { stage: 'PROSPECTING', _count: 5, _sum: { value: new Prisma.Decimal(100000) }, _avg: { probability: 10 } },
+      { stage: 'PROPOSAL', _count: 3, _sum: { value: new Prisma.Decimal(200000) }, _avg: { probability: 70 } },
+    ];
+
+    it('should return stages with opportunity counts and values', async () => {
+      (prismaMock.pipelineStageConfig as any).findMany.mockResolvedValue(mockStageConfigs);
+      vi.mocked(prismaMock.opportunity.groupBy).mockResolvedValue(
+        mockGroupBy as unknown as Awaited<ReturnType<typeof prismaMock.opportunity.groupBy>>
+      );
+
+      const result = await caller.getPipeline({});
+
+      expect(result.stages.length).toBe(5); // Excludes CLOSED_WON, CLOSED_LOST
+      expect(result.totalOpportunities).toBe(8); // 5 + 3
+      const prospecting = result.stages.find(s => s.stageKey === 'PROSPECTING');
+      expect(prospecting?.count).toBe(5);
+      expect(prospecting?.totalValue).toBe('100000');
+    });
+
+    it('should exclude closed stages by default', async () => {
+      (prismaMock.pipelineStageConfig as any).findMany.mockResolvedValue(mockStageConfigs);
+      vi.mocked(prismaMock.opportunity.groupBy).mockResolvedValue(
+        mockGroupBy as unknown as Awaited<ReturnType<typeof prismaMock.opportunity.groupBy>>
+      );
+
+      const result = await caller.getPipeline({});
+
+      const stageKeys = result.stages.map(s => s.stageKey);
+      expect(stageKeys).not.toContain('CLOSED_WON');
+      expect(stageKeys).not.toContain('CLOSED_LOST');
+    });
+
+    it('should include closed stages when includeClosedStages=true', async () => {
+      const allConfigs = [
+        ...mockStageConfigs,
+        { stageKey: 'CLOSED_WON', displayName: 'Closed Won', color: '#22c55e', order: 5, probability: 100, tenantId: 'test-tenant-id' },
+        { stageKey: 'CLOSED_LOST', displayName: 'Closed Lost', color: '#ef4444', order: 6, probability: 0, tenantId: 'test-tenant-id' },
+      ];
+
+      (prismaMock.pipelineStageConfig as any).findMany.mockResolvedValue(allConfigs);
+      vi.mocked(prismaMock.opportunity.groupBy).mockResolvedValue(
+        mockGroupBy as unknown as Awaited<ReturnType<typeof prismaMock.opportunity.groupBy>>
+      );
+
+      const result = await caller.getPipeline({ includeClosedStages: true });
+
+      const stageKeys = result.stages.map(s => s.stageKey);
+      expect(stageKeys).toContain('CLOSED_WON');
+      expect(stageKeys).toContain('CLOSED_LOST');
+      expect(result.stages.length).toBe(7);
+    });
+
+    it('should handle empty pipeline (zero opportunities)', async () => {
+      (prismaMock.pipelineStageConfig as any).findMany.mockResolvedValue([]);
+      vi.mocked(prismaMock.opportunity.groupBy).mockResolvedValue(
+        [] as unknown as Awaited<ReturnType<typeof prismaMock.opportunity.groupBy>>
+      );
+
+      const result = await caller.getPipeline({});
+
+      expect(result.totalOpportunities).toBe(0);
+      expect(result.totalPipelineValue).toBe('0');
+      result.stages.forEach(s => {
+        expect(s.count).toBe(0);
+        expect(s.totalValue).toBe('0');
+      });
+    });
+
+    it('should use stage config for display names and colors', async () => {
+      const customConfigs = [
+        { stageKey: 'PROSPECTING', displayName: 'Lead Generation', color: '#ff0000', order: 0, probability: 15, tenantId: 'test-tenant-id' },
+      ];
+
+      (prismaMock.pipelineStageConfig as any).findMany.mockResolvedValue(customConfigs);
+      vi.mocked(prismaMock.opportunity.groupBy).mockResolvedValue(
+        [] as unknown as Awaited<ReturnType<typeof prismaMock.opportunity.groupBy>>
+      );
+
+      const result = await caller.getPipeline({});
+
+      const prospecting = result.stages.find(s => s.stageKey === 'PROSPECTING');
+      expect(prospecting?.displayName).toBe('Lead Generation');
+      expect(prospecting?.color).toBe('#ff0000');
+      expect(prospecting?.probability).toBe(15);
+    });
+  });
 });

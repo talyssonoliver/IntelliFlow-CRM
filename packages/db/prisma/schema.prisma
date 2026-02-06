@@ -42,6 +42,7 @@ model Tenant {
   pipelineStageConfigs PipelineStageConfig[]
   chainVersions        ChainVersion[]
   domainEvents         DomainEvent[]
+  aiOutputReviews      AIOutputReview[]
 
   @@index([slug])
   @@index([status])
@@ -81,6 +82,7 @@ model User {
   tasks               Task[]
   aiScores            AIScore[]
   auditLogs           AuditLog[]
+  auditLogEntries     AuditLogEntry[]
   conversationRecords ConversationRecord[]
 
   @@index([email])
@@ -1267,6 +1269,7 @@ model AuditLogEntry {
   actorId             String?         // user_id, agent_id, or null for system
   actorEmail          String?
   actorRole           String?         // Role at time of action (for RBAC audit)
+  user                User?           @relation(fields: [actorId], references: [id], onDelete: SetNull)
 
   // Resource information
   resourceType        String          // 'lead', 'contact', 'account', 'opportunity', 'task'
@@ -1653,7 +1656,7 @@ model AIOutputReview {
   tenantId        String
   outputType      AIOutputType
   outputPayload   Json
-  confidence      Int
+  confidence      Float
   status          ReviewStatus    @default(PENDING)
   slaDeadline     DateTime
   escalationDepth Int             @default(0)
@@ -1663,9 +1666,13 @@ model AIOutputReview {
   reviewerId      String?
   reviewDecision  ReviewDecision?
   reviewNotes     String?
-  version         Int             @default(0)
+  version         Int             @default(1)
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
+
+  // Relations
+  tenant          Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  auditEntries    AIOutputReviewAudit[]
 
   @@index([tenantId])
   @@index([status])
@@ -1673,6 +1680,25 @@ model AIOutputReview {
   @@index([slaDeadline])
   @@index([lockedBy])
   @@map("ai_output_reviews")
+}
+
+/// Audit trail for AI Output Reviews (IFC-178)
+model AIOutputReviewAudit {
+  id          String    @id @default(cuid())
+  reviewId    String
+  eventType   String
+  actorId     String?
+  actorType   ActorType @default(USER)
+  metadata    Json?
+  timestamp   DateTime  @default(now())
+
+  // Relations
+  review      AIOutputReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@index([reviewId])
+  @@index([actorId])
+  @@index([timestamp])
+  @@map("ai_output_review_audit")
 }
 
 /// Auto-response trigger types (IFC-029)
