@@ -30,6 +30,7 @@ import { zepBudgetRouter } from './modules/zep/zep-budget.router';
 import { intelligenceRouter } from './modules/intelligence/intelligence.router';
 import { inboundEmailRouter } from './modules/email/inbound.router';
 import { autoResponseRouter } from './modules/autoresponse/autoresponse.router';
+import { aiReviewRouter } from './modules/ai-review/ai-review.router';
 import { homeRouter } from './modules/home/home.router';
 import { notificationsRouter } from './modules/notifications/notifications.router';
 
@@ -104,6 +105,7 @@ export const appRouter = createTRPCRouter({
   zepBudget: zepBudgetRouter,
   intelligence: intelligenceRouter,
   autoResponse: autoResponseRouter, // IFC-029: Auto-Response with Approval Gate
+  aiReview: aiReviewRouter, // IFC-180: AI Output Review
 
   // Security & Compliance
   audit: auditRouter,
