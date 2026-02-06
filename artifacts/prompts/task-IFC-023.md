@@ -33,7 +33,7 @@ FILE:artifacts/sprint0/codex-run/Framework.md;FILE:audit-matrix.yml;POLICY:Scori
 2. artifacts: user-test-results.pdf, context_ack.json
 
 ### Artifacts to Track
-- ARTIFACT:artifacts/reports/user-test-results.pdf
+- ARTIFACT:artifacts/reports/user-test-results.md
 - EVIDENCE:artifacts/attestations/IFC-023/context_ack.json
 
 ### Validation
