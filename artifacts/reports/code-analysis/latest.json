@@ -1,20 +1,2440 @@
 {
-  "timestamp": "2026-01-09T23:13:08.223Z",
+  "timestamp": "2026-02-05T22:18:21.270Z",
   "knip": {
-    "success": false,
-    "error": "Command failed: npx knip --reporter json --exclude unlisted,unresolved\nnpm warn Unknown env config \"global-bin-dir\". This will stop working in the next major version of npm.\nnode:internal/modules/run_main:122\r\n    triggerUncaughtException(\r\n    ^\r\n\r\nTypeError [ERR_INVALID_ARG_VALUE]: The argument 'path' must be a string, Uint8Array, or URL without null bytes. Received 'C:\\\\taly\\\\intelliFlow-CRM\\\\!**\\\\��N\\x00U\\x00L\\x00\\r\\x00'\r\n    at Object.lstat (node:fs:1633:10)\r\n    at Object.read (C:\\taly\\intelliFlow-CRM\\node_modules\\.pnpm\\@nodelib+fs.stat@2.0.5\\node_modules\\@nodelib\\fs.stat\\out\\providers\\async.js:5:17)\r\n    at ReaderStream.stat [as _stat] (C:\\taly\\intelliFlow-CRM\\node_modules\\.pnpm\\@nodelib+fs.stat@2.0.5\\node_modules\\@nodelib\\fs.stat\\out\\index.js:13:11)\r\n    at C:\\taly\\intelliFlow-CRM\\node_modules\\.pnpm\\fast-glob@3.3.3\\node_modules\\fast-glob\\out\\readers\\stream.js:49:18\r\n    at new Promise (<anonymous>)\r\n    at ReaderStream._getStat (C:\\taly\\intelliFlow-CRM\\node_modules\\.pnpm\\fast-glob@3.3.3\\node_modules\\fast-glob\\out\\readers\\stream.js:48:16)\r\n    at ReaderStream._getEntry (C:\\taly\\intelliFlow-CRM\\node_modules\\.pnpm\\fast-glob@3.3.3\\node_modules\\fast-glob\\out\\readers\\stream.js:38:21)\r\n    at stream._write (C:\\taly\\intelliFlow-CRM\\node_modules\\.pnpm\\fast-glob@3.3.3\\node_modules\\fast-glob\\out\\readers\\stream.js:20:25)\r\n    at doWrite (node:internal/streams/writable:598:12)\r\n    at clearBuffer (node:internal/streams/writable:783:7) {\r\n  code: 'ERR_INVALID_ARG_VALUE'\r\n}\r\n\r\nNode.js v22.14.0\r\n"
+    "success": true,
+    "data": {
+      "files": [
+        "artifacts/benchmarks/generate-performance-report.ts",
+        "artifacts/benchmarks/integrate-k6-results.ts",
+        "artifacts/benchmarks/run-accuracy-benchmark.ts",
+        "artifacts/benchmarks/run-baseline-benchmark.ts",
+        "apps/workers/notifications-worker/src/channels/sms.ts",
+        "apps/workers/events-worker/src/config.ts",
+        "packages/adapters/src/events/event-metadata.ts",
+        "packages/adapters/src/events/OutboxEventBusAdapter.ts",
+        "packages/adapters/src/webhooks/outbound.ts",
+        "packages/adapters/src/memory/zep/index.ts",
+        "packages/adapters/src/messaging/slack/index.ts",
+        "packages/adapters/src/messaging/twilio/client.ts",
+        "packages/adapters/src/payments/stripe/index.ts",
+        "packages/adapters/src/payments/paypal/index.ts",
+        "packages/application/src/services/ChainVersionService.ts",
+        "packages/application/src/services/ConversationSearchService.ts",
+        "packages/application/src/services/ExperimentService.ts",
+        "packages/application/src/services/FeedbackService.ts",
+        "packages/db/prisma/apply-direct.ts",
+        "packages/db/prisma/apply-full.ts",
+        "packages/db/prisma/apply-schema-v2.ts",
+        "packages/db/prisma/apply-schema.ts",
+        "packages/db/prisma/check-db.ts",
+        "packages/db/prisma/schema-audit.prisma",
+        "packages/db/prisma/seed-home-page.ts",
+        "packages/db/prisma/seed-ids.ts",
+        "packages/ui/src/lib/icon-mapping.ts",
+        "packages/domain/src/platform/index.ts",
+        "apps/web/lib/documents/timeline-event-model.ts",
+        "apps/web/lib/tickets/index.ts",
+        "apps/web/lib/tickets/sla-notifications.ts",
+        "apps/web/lib/tickets/use-sla-notifications.ts",
+        "apps/web/src/test-utils/auth-mocks.ts",
+        "apps/web/src/test-utils/index.ts",
+        "apps/web/src/components/billing/index.ts",
+        "apps/web/src/components/pricing/pricing-calculator.tsx",
+        "apps/web/src/components/settings/index.ts",
+        "apps/web/src/components/settings/settings-sidebar.tsx",
+        "apps/web/src/lib/auth/index.ts",
+        "apps/web/src/lib/pricing/stripe-integration.ts",
+        "apps/web/src/test/mocks/handlers.ts",
+        "apps/web/src/test/mocks/index.ts",
+        "apps/web/src/test/mocks/server.ts",
+        "apps/web/src/app/governance/compliance/components/index.ts",
+        "apps/api/src/test-import.ts",
+        "apps/api/src/security/audit-coverage-test.ts",
+        "apps/api/src/webhooks/idempotency.ts",
+        "apps/api/src/webhooks/retry.ts",
+        "apps/api/src/workflow/dsar-workflow.ts",
+        "apps/api/src/workflow/index.ts",
+        "apps/api/src/modules/autoresponse/index.ts",
+        "apps/api/src/modules/chain-version/index.ts",
+        "apps/api/src/modules/documents/email-inbound.router.ts",
+        "apps/api/src/modules/documents/upload.router.ts",
+        "apps/api/src/modules/experiment/experiment.router.ts",
+        "apps/api/src/modules/experiment/index.ts",
+        "apps/api/src/modules/legal/cases.router.ts",
+        "apps/api/src/modules/legal/types.ts",
+        "apps/api/src/modules/misc/timeline.ts",
+        "apps/api/src/workflow/handlers/case-handler.ts",
+        "apps/ai-worker/src/analytics/feedback-analytics-generator.ts",
+        "apps/ai-worker/src/analytics/index.ts",
+        "apps/ai-worker/src/chains/index.ts",
+        "apps/ai-worker/src/config/index.ts",
+        "apps/ai-worker/src/config/relevance-config.ts",
+        "apps/ai-worker/src/monitoring/index.ts",
+        "apps/ai-worker/src/prompts/index.ts",
+        "apps/ai-worker/src/services/retrieval-service.ts",
+        "apps/ai-worker/src/versioning/index.ts",
+        "apps/ai-worker/src/workers/ocr-worker.ts",
+        "apps/ai-worker/src/test/mocks/index.ts",
+        "apps/ai-worker/src/test/mocks/langchain-openai.mock.ts",
+        "apps/ai-worker/src/test/mocks/ollama.mock.ts",
+        "apps/project-tracker/components/CollapsibleSection.tsx",
+        "apps/project-tracker/components/TrackingView.tsx",
+        "apps/project-tracker/components/tracking/AIMetrics.tsx",
+        "apps/project-tracker/components/tracking/BuildHealth.tsx",
+        "apps/project-tracker/components/tracking/index.ts",
+        "apps/project-tracker/components/tracking/QualityDashboard.tsx",
+        "apps/project-tracker/components/tracking/RiskRegister.tsx",
+        "apps/project-tracker/components/tracking/SecurityDashboard.tsx",
+        "apps/project-tracker/components/tracking/StatusHistory.tsx",
+        "apps/project-tracker/components/tracking/StatusTracker.tsx",
+        "apps/project-tracker/lib/prompt-generator/types.ts",
+        "apps/project-tracker/components/tracking/shared/index.ts",
+        "apps/project-tracker/components/tracking/shared/MetricCard.tsx",
+        "apps/project-tracker/components/tracking/shared/RefreshButton.tsx",
+        "apps/project-tracker/components/tracking/shared/StaleIndicator.tsx"
+      ],
+      "dependencies": [
+        "use-debounce",
+        "ioredis",
+        "twilio",
+        "@upstash/ratelimit",
+        "@upstash/redis",
+        "bullmq",
+        "@paralleldrive/cuid2"
+      ],
+      "devDependencies": [
+        "baseline-browser-mapping",
+        "cspell",
+        "license-checker",
+        "madge",
+        "markdownlint-cli",
+        "testcontainers",
+        "ts-prune",
+        "react",
+        "axe-core"
+      ],
+      "unlisted": [],
+      "exports": [
+        {
+          "file": "packages/validators/src/base-schemas.ts",
+          "exports": [
+            "paginatedResponseSchema",
+            "apiSuccessSchema"
+          ]
+        },
+        {
+          "file": "packages/validators/src/contact.ts",
+          "exports": [
+            "contactTimelineResponseSchema"
+          ]
+        },
+        {
+          "file": "packages/search/src/indexer.ts",
+          "exports": [
+            "DEFAULT_INDEXER_CONFIG"
+          ]
+        },
+        {
+          "file": "packages/search/src/retrieval.ts",
+          "exports": [
+            "DEFAULT_RELEVANCE_CONFIG"
+          ]
+        },
+        {
+          "file": "packages/search/src/worker.ts",
+          "exports": [
+            "REINDEX_QUEUE_NAME"
+          ]
+        },
+        {
+          "file": "packages/db/src/client.ts",
+          "exports": [
+            "withTransaction",
+            "withTransactionOptions",
+            "executeRawWithTiming",
+            "checkDatabaseHealth",
+            "disconnectPrisma"
+          ]
+        },
+        {
+          "file": "apps/workers/shared/src/worker-config.ts",
+          "exports": [
+            "validateConfig",
+            "createTestConfig"
+          ]
+        },
+        {
+          "file": "apps/ai-worker/src/monitoring/drift-detector.ts",
+          "exports": [
+            "getDriftMetrics"
+          ]
+        },
+        {
+          "file": "apps/ai-worker/src/monitoring/latency-monitor.ts",
+          "exports": [
+            "getLatencyMetrics",
+            "withLatencyTracking"
+          ]
+        },
+        {
+          "file": "apps/ai-worker/src/monitoring/chain-monitor.ts",
+          "exports": [
+            "sanitizeMetricLabel",
+            "chainMonitor"
+          ]
+        },
+        {
+          "file": "apps/ai-worker/src/chains/sentiment.chain.ts",
+          "exports": [
+            "sentimentChain"
+          ]
+        },
+        {
+          "file": "apps/ai-worker/src/chains/churn-risk.chain.ts",
+          "exports": [
+            "churnRiskChain"
+          ]
+        },
+        {
+          "file": "apps/ai-worker/src/services/embedding-purge.service.ts",
+          "exports": [
+            "createEmbeddingPurgeService"
+          ]
+        },
+        {
+          "file": "packages/validators/src/platform-metrics.ts",
+          "exports": [
+            "deploymentTypeSchema"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/stoa/evidence.ts",
+          "exports": [
+            "getLegacyEvidenceDir",
+            "verifyEvidenceIntegrity"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/stoa/types.ts",
+          "exports": [
+            "STOA_ROLES"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/stoa/gate-selection.ts",
+          "exports": [
+            "validateGateSelection"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/stoa/stoa-assignment.ts",
+          "exports": [
+            "applyOverrides"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/stoa/gate-runner.ts",
+          "exports": [
+            "allGatesPassed"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/stoa/waiver.ts",
+          "exports": [
+            "isWaiverEffective",
+            "loadWaivers",
+            "mergeWaivers",
+            "approveWaiver",
+            "renewWaiver",
+            "makeWaiverPermanent"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/stoa/verdict.ts",
+          "exports": [
+            "aggregateFindings",
+            "generateCombinedRationale",
+            "determineSupportingSignOff"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/stoa/csv-governance.ts",
+          "exports": [
+            "createMultiFieldProposal",
+            "getPendingPatches",
+            "markPatchApplied",
+            "markPatchRejected",
+            "generatePatchDiff",
+            "validatePatchApplicable",
+            "isForbiddenOperation"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/stoa/remediation.ts",
+          "exports": [
+            "resolveBlocker"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/contract-parser.ts",
+          "exports": [
+            "getGlobPrerequisites",
+            "getImplementsFlows",
+            "getFlowFilePath",
+            "getArtifactPaths",
+            "validateTaskContracts",
+            "filterTasksRequiringContextAck"
+          ]
+        },
+        {
+          "file": "packages/platform/src/resilience/circuit-breaker.ts",
+          "exports": [
+            "withCircuitBreaker"
+          ]
+        },
+        {
+          "file": "tests/integration/setup.ts",
+          "exports": [
+            "testUtils"
+          ]
+        },
+        {
+          "file": "tests/e2e/utils/ai-test-helpers.ts",
+          "exports": [
+            "waitForElementOrTimeout",
+            "getConfidenceLevel",
+            "expectLeadScore",
+            "expectConfidenceIndicator",
+            "performApprovalAction",
+            "expectMetricValue",
+            "verifyPageLoadsWithoutErrors",
+            "captureStableScreenshot",
+            "verifyAriaAttributes",
+            "testKeyboardNavigation",
+            "waitForStableElement",
+            "getVisibleActionCards",
+            "countActionsByStatus"
+          ]
+        },
+        {
+          "file": "packages/adapters/src/messaging/email/inbound.ts",
+          "exports": [
+            "inboundEmailParser"
+          ]
+        },
+        {
+          "file": "packages/adapters/src/messaging/email/attachments.ts",
+          "exports": [
+            "createAttachmentHandler"
+          ]
+        },
+        {
+          "file": "packages/adapters/src/messaging/email/dkim-signer.ts",
+          "exports": [
+            "createDkimSigner",
+            "createDkimKeyManager"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/column-deprecation.ts",
+          "exports": [
+            "generateAndWriteDeprecationPlan"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/context-ack-gatekeeper.ts",
+          "exports": [
+            "runContextAckGateBatch"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/context-pack-builder.ts",
+          "exports": [
+            "computeFileSha256",
+            "buildContextPack"
+          ]
+        },
+        {
+          "file": "tools/perf/lighthouse.config.js",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/workflow/config.ts",
+          "exports": [
+            "TDD_CONFIG"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/schema-paths.ts",
+          "exports": [
+            "getAbsoluteSchemaPath",
+            "getSchemaId"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/stoa/orchestrator.ts",
+          "exports": [
+            "cli"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/output-paths.ts",
+          "exports": [
+            "ENV",
+            "getReportPath",
+            "getBenchmarkPath",
+            "getCoveragePath",
+            "getLogPath",
+            "getStoaEvidencePath",
+            "getLatestSymlink",
+            "normalizePath",
+            "createLatestLink"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/code-review/paths.ts",
+          "exports": [
+            "generateCodeReviewRunId",
+            "getCodeReviewBaseDir",
+            "ensureCodeReviewDirs",
+            "ensurePackageReviewDir",
+            "ensureGatesLinkageDir",
+            "ensureCodeReviewDirSync",
+            "getLegacyCodeReviewDir",
+            "getLegacyPackageReviewDir",
+            "normalizePath",
+            "codeReviewDirExists",
+            "getReportFilePath"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/sprint/types.ts",
+          "exports": [
+            "csvTaskToPhaseEntry",
+            "getStreamLetter"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/sprint-audit/attestation-generator.ts",
+          "exports": [
+            "getAttestationPath",
+            "listAttestationHistory"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/sprint-audit/action-tracker.ts",
+          "exports": [
+            "removeFromReviewQueue",
+            "getTaskActions",
+            "getDebtSummary"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/sprint-audit/types.ts",
+          "exports": [
+            "DEFAULT_AUDIT_CONFIG"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/sprint-audit/artifact-verifier.ts",
+          "exports": [
+            "verifyMultipleTasksArtifacts",
+            "allArtifactsValid"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/sprint-audit/placeholder-detector.ts",
+          "exports": [
+            "groupByPattern",
+            "groupByFile"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/sprint-audit/validation-runner.ts",
+          "exports": [
+            "runMultipleTaskValidations",
+            "dryRunTaskValidations"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/sprint-audit/waiver-checker.ts",
+          "exports": [
+            "isIssueCoveredByWaiver",
+            "getMultipleWaiverStatuses",
+            "getExpiringWaivers",
+            "getExpiredWaivers",
+            "getRequiredGates",
+            "getRequiredEvidence",
+            "getGateProfiles"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/stoa/paths.ts",
+          "exports": [
+            "getSprintDir",
+            "getSprintSummaryPath",
+            "getCoverageDir",
+            "getMemoryDir",
+            "getConstitutionPath",
+            "getHydratedContextMdPath",
+            "getHydratedContextJsonPath",
+            "getContextAckPath",
+            "getContextPackMdPath",
+            "getContextPackManifestPath",
+            "getAttestationPath",
+            "getValidationPath",
+            "getEvidenceSummaryJsonPath",
+            "getEvidenceSummaryMdPath",
+            "getEvidenceHashesPath",
+            "getGatesDir",
+            "getStoaVerdictsDir",
+            "getTaskDir",
+            "getLegacySpecificationsDir",
+            "getLegacyPlanningDir",
+            "getLegacyAttestationsTaskDir",
+            "getLegacyEvidenceTaskDir",
+            "getLegacySpecPathOld",
+            "getLegacyPlanPathOld",
+            "getLegacyEvidenceDir"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/stoa/agent-selection.ts",
+          "exports": [
+            "selectAgents",
+            "writeAgentSelection",
+            "generateAgentSelectionMarkdown",
+            "getRecommendedTeam"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/stoa/attestation.ts",
+          "exports": [
+            "loadCompletedTasks"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/stoa/context-hydration.ts",
+          "exports": [
+            "loadHydratedContext",
+            "hasHydratedContext"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/stoa/spec-session.ts",
+          "exports": [
+            "createSpecSession",
+            "getRoundType",
+            "parseAgentResponse",
+            "prepareSpecRound",
+            "createSpecRound",
+            "addRoundToSession",
+            "shouldContinueSession",
+            "generateSpecification",
+            "writeSpecification",
+            "writeDiscussionLog"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/stoa/plan-session.ts",
+          "exports": [
+            "createPlanSession",
+            "loadSpecification",
+            "generatePlan",
+            "completePlanSession",
+            "writePlan",
+            "writePlanSession"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/workflow/status-transitions.ts",
+          "exports": [
+            "isActiveStatus",
+            "isWaitingStatus",
+            "isTerminalStatus",
+            "isReadyForNextSession"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/workflow/paths.ts",
+          "exports": [
+            "parseRunId",
+            "getSprintPlanJsonPath",
+            "isSpecifyPath",
+            "extractTaskIdFromPath",
+            "extractSprintFromPath",
+            "getExecutionRunsPath",
+            "LEGACY_PATH_MAPPINGS"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/workflow/utils.ts",
+          "exports": [
+            "clearSprintCache",
+            "taskExists"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/workflow/validation.ts",
+          "exports": [
+            "generateRemediationSummary"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/workflow/metrics.ts",
+          "exports": [
+            "recordTaskStart",
+            "recordTaskComplete",
+            "addBlocker",
+            "resolveBlocker",
+            "getTaskMetricsSummary"
+          ]
+        },
+        {
+          "file": "tests/e2e/fixtures/ai-mock-data.ts",
+          "exports": [
+            "createMockLeadScore",
+            "createMockAgentAction",
+            "getConfidenceLevel",
+            "mockAIData"
+          ]
+        },
+        {
+          "file": "packages/sdk/src/index.ts",
+          "exports": [
+            "createIntelliFlowSDK",
+            "isValidLeadStatus",
+            "isValidLeadSource",
+            "isValidOpportunityStage",
+            "isValidTaskStatus",
+            "isValidTaskPriority"
+          ]
+        },
+        {
+          "file": "packages/api-client/src/react-client.tsx",
+          "exports": [
+            "TRPCProvider"
+          ]
+        },
+        {
+          "file": "packages/adapters/src/repositories/PrismaTicketRepository.ts",
+          "exports": [
+            "PrismaTicketRepository"
+          ]
+        },
+        {
+          "file": "packages/adapters/src/repositories/PrismaNotificationRepository.ts",
+          "exports": [
+            "PrismaNotificationRepository"
+          ]
+        },
+        {
+          "file": "packages/adapters/src/repositories/PrismaNotificationPreferenceRepository.ts",
+          "exports": [
+            "PrismaNotificationPreferenceRepository"
+          ]
+        },
+        {
+          "file": "packages/adapters/src/repositories/PrismaAnalyticsRepository.ts",
+          "exports": [
+            "PrismaAnalyticsRepository"
+          ]
+        },
+        {
+          "file": "packages/adapters/src/repositories/InMemoryTicketRepository.ts",
+          "exports": [
+            "InMemoryTicketRepository"
+          ]
+        },
+        {
+          "file": "packages/adapters/src/repositories/InMemoryNotificationRepository.ts",
+          "exports": [
+            "InMemoryNotificationRepository"
+          ]
+        },
+        {
+          "file": "packages/adapters/src/repositories/InMemoryNotificationPreferenceRepository.ts",
+          "exports": [
+            "InMemoryNotificationPreferenceRepository"
+          ]
+        },
+        {
+          "file": "packages/adapters/src/repositories/InMemoryAnalyticsRepository.ts",
+          "exports": [
+            "InMemoryAnalyticsRepository"
+          ]
+        },
+        {
+          "file": "packages/adapters/src/shared/prompt-sanitizer.ts",
+          "exports": [
+            "sanitizeOutput",
+            "logSecurityEvent"
+          ]
+        },
+        {
+          "file": "packages/adapters/src/shared/bias-detector.ts",
+          "exports": [
+            "detectModelDrift",
+            "saveBiasMetrics",
+            "generateBiasReport"
+          ]
+        },
+        {
+          "file": "packages/adapters/src/antivirus/ClamAVScanner.ts",
+          "exports": [
+            "ClamAVScanner"
+          ]
+        },
+        {
+          "file": "packages/adapters/src/messaging/email/EmailServiceAdapter.ts",
+          "exports": [
+            "createEmailServiceAdapter"
+          ]
+        },
+        {
+          "file": "packages/adapters/src/messaging/WebhookServiceAdapter.ts",
+          "exports": [
+            "createWebhookServiceAdapter"
+          ]
+        },
+        {
+          "file": "packages/adapters/src/common/idempotency/IdempotencyStore.ts",
+          "exports": [
+            "InMemoryIdempotencyStore"
+          ]
+        },
+        {
+          "file": "packages/adapters/src/common/idempotency/IdempotencyManager.ts",
+          "exports": [
+            "IdempotencyManager",
+            "calculateContentHash"
+          ]
+        },
+        {
+          "file": "packages/adapters/src/common/errors/AuthenticationError.ts",
+          "exports": [
+            "AuthenticationError"
+          ]
+        },
+        {
+          "file": "packages/adapters/src/common/retry/RetryHandler.ts",
+          "exports": [
+            "RetryHandler"
+          ]
+        },
+        {
+          "file": "packages/adapters/src/common/retry/RateLimiter.ts",
+          "exports": [
+            "TieredRateLimiter"
+          ]
+        },
+        {
+          "file": "packages/application/src/ports/external/WebhookServicePort.ts",
+          "exports": [
+            "DuplicateWebhookError"
+          ]
+        },
+        {
+          "file": "packages/application/src/ports/external/NotificationServicePort.ts",
+          "exports": [
+            "NotificationDeliveryError",
+            "NotificationSchedulingError"
+          ]
+        },
+        {
+          "file": "packages/application/src/errors/ApplicationErrors.ts",
+          "exports": [
+            "ExternalServiceError",
+            "AuthorizationError"
+          ]
+        },
+        {
+          "file": "packages/application/src/services/AutoResponseService.ts",
+          "exports": [
+            "AutoResponseService"
+          ]
+        },
+        {
+          "file": "packages/search/src/index.ts",
+          "exports": [
+            "SEARCH_MODES",
+            "SEARCH_SOURCES",
+            "SEARCH_PERFORMANCE"
+          ]
+        },
+        {
+          "file": "packages/ai/tools/retrieve-case-context.ts",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "packages/validators/src/config.ts",
+          "exports": [
+            "validateEnv",
+            "safeValidateEnv"
+          ]
+        },
+        {
+          "file": "packages/validators/src/events.ts",
+          "exports": [
+            "validateEventMetadata",
+            "validateEventPayload",
+            "validateOutboxEvent",
+            "isRegisteredEventType"
+          ]
+        },
+        {
+          "file": "packages/validators/src/env.ts",
+          "exports": [
+            "validateEnv",
+            "safeValidateEnv"
+          ]
+        },
+        {
+          "file": "packages/platform/src/queues/connection.ts",
+          "exports": [
+            "checkConnectionHealth",
+            "connectionRegistry"
+          ]
+        },
+        {
+          "file": "packages/platform/src/queues/retry-strategy.ts",
+          "exports": [
+            "createBackoffStrategy",
+            "globalRetryBudget"
+          ]
+        },
+        {
+          "file": "packages/platform/src/queues/queue-factory.ts",
+          "exports": [
+            "createEmailNotificationsQueue",
+            "createWebhookDeliveryQueue",
+            "enqueueAIScoring",
+            "getQueueHealth",
+            "pauseQueue",
+            "resumeQueue",
+            "shutdownAllQueues"
+          ]
+        },
+        {
+          "file": "packages/platform/src/queues/metrics-collector.ts",
+          "exports": [
+            "globalMetricsCollector"
+          ]
+        },
+        {
+          "file": "packages/platform/src/queues/bull-board.ts",
+          "exports": [
+            "addQueueToBullBoard",
+            "removeQueueFromBullBoard",
+            "setupBullBoard",
+            "getBullBoardInstance",
+            "configureBullBoardForExpress",
+            "configureBullBoardForFastify"
+          ]
+        },
+        {
+          "file": "packages/platform/src/realtime/event-emitter.ts",
+          "exports": [
+            "subscribeToChannel"
+          ]
+        },
+        {
+          "file": "packages/platform/src/workflow/engine.ts",
+          "exports": [
+            "WorkflowEngineFactory",
+            "DEFAULT_TEMPORAL_CONFIG"
+          ]
+        },
+        {
+          "file": "packages/platform/src/workflow/rules-engine.ts",
+          "exports": [
+            "createCaseEscalationRule",
+            "createLeadScoringRule",
+            "createTaskAssignmentRule",
+            "getRulesEngine",
+            "resetRulesEngine"
+          ]
+        },
+        {
+          "file": "packages/db/src/pgvector.ts",
+          "exports": [
+            "parseEmbedding",
+            "findSimilarLeads",
+            "findSimilarContacts",
+            "updateLeadEmbedding",
+            "updateContactEmbedding",
+            "checkPgVectorInstalled",
+            "getEmbeddingIndexStatus"
+          ]
+        },
+        {
+          "file": "packages/ui/src/components/status-select-dialog.tsx",
+          "exports": [
+            "StatusSelectDialog"
+          ]
+        },
+        {
+          "file": "packages/ui/src/components/confirmation-dialog.tsx",
+          "exports": [
+            "ConfirmationDialog"
+          ]
+        },
+        {
+          "file": "packages/domain/src/crm/task/Task.ts",
+          "exports": [
+            "TaskNotInProgressError"
+          ]
+        },
+        {
+          "file": "packages/domain/src/events/case-events.ts",
+          "exports": [
+            "CaseWorkflowStartedEvent",
+            "CaseWorkflowCompletedEvent",
+            "CaseWorkflowFailedEvent",
+            "CaseApprovalRequiredEvent",
+            "CaseApprovalReceivedEvent",
+            "CaseEscalatedEvent",
+            "CaseSLABreachedEvent",
+            "CaseAssignedEvent",
+            "CaseNoteAddedEvent",
+            "CaseDocumentAttachedEvent",
+            "CaseReopenedEvent",
+            "CaseTimerStartedEvent",
+            "CaseTimerPausedEvent"
+          ]
+        },
+        {
+          "file": "packages/domain/src/legal/appointments/AppointmentEvents.ts",
+          "exports": [
+            "AppointmentConflictDetectedEvent"
+          ]
+        },
+        {
+          "file": "packages/domain/src/legal/appointments/ConflictDetector.ts",
+          "exports": [
+            "ConflictDetectionError"
+          ]
+        },
+        {
+          "file": "packages/domain/src/ai/AIConstants.ts",
+          "exports": [
+            "RETRAINING_THRESHOLDS",
+            "SIGNIFICANCE_LEVELS",
+            "requiresHumanReview"
+          ]
+        },
+        {
+          "file": "packages/domain/src/ai/FeedbackEvents.ts",
+          "exports": [
+            "ScoreFeedbackSubmittedEvent",
+            "RetrainingRecommendedEvent",
+            "TrainingDataExportedEvent",
+            "FeedbackAnalyticsGeneratedEvent"
+          ]
+        },
+        {
+          "file": "packages/domain/src/security/AISecurityEventTypes.ts",
+          "exports": [
+            "getAIEventSeverity"
+          ]
+        },
+        {
+          "file": "packages/domain/src/notifications/Notification.ts",
+          "exports": [
+            "NOTIFICATION_CHANNELS",
+            "NOTIFICATION_STATUSES",
+            "NOTIFICATION_PRIORITIES"
+          ]
+        },
+        {
+          "file": "packages/domain/src/notifications/NotificationEvents.ts",
+          "exports": [
+            "NotificationPreferenceUpdatedEvent",
+            "NotificationScheduledEvent"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/session.ts",
+          "exports": [
+            "encrypt",
+            "getSession",
+            "createSessionFromAuth",
+            "clearSession"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/shared/login-security.ts",
+          "exports": [
+            "generateCsrfToken",
+            "validateCsrf",
+            "clearCsrfToken",
+            "getCsrfToken",
+            "sanitizeInput",
+            "checkSecurityHeaders",
+            "verifySessionFingerprint",
+            "clearSessionFingerprint"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/shared/logout-redirect.ts",
+          "exports": [
+            "navigateToLogout"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/billing/stripe-portal.ts",
+          "exports": [
+            "isAtUsageLimit",
+            "formatStorageSize"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/cases/reminders-context.tsx",
+          "exports": [
+            "useReminders"
+          ]
+        },
+        {
+          "file": "apps/web/src/hooks/use-dynamic-filters.ts",
+          "exports": [
+            "useLeadFilterOptions",
+            "useTicketFilterOptions",
+            "useFilterValidation"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/shared/filter-utils.ts",
+          "exports": [
+            "formatLabelSimple",
+            "leadSourceOptions",
+            "leadStatusChips",
+            "leadSourceChips",
+            "slaStatusOptions",
+            "ticketStatusChips",
+            "ticketPriorityChips",
+            "caseStatusOptions",
+            "casePriorityOptions",
+            "caseStatusChips",
+            "casePriorityChips"
+          ]
+        },
+        {
+          "file": "apps/web/lib/tickets/sla-badge.tsx",
+          "exports": [
+            "SLAQuickView"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/api/quality-reports/job-storage.ts",
+          "exports": [
+            "deleteJob",
+            "getAllJobs"
+          ]
+        },
+        {
+          "file": "apps/web/lib/status/incident-tracker.ts",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/web/src/hooks/useUnsavedChanges.tsx",
+          "exports": [
+            "useFormUnsavedChanges"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/sidebar/SidebarContext.tsx",
+          "exports": [
+            "useSidebarOptional"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/pricing/calculator.ts",
+          "exports": [
+            "redirectToCheckout"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/shared/account-activation.ts",
+          "exports": [
+            "isTokenExpiringSoon"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/shared/token-exchange.ts",
+          "exports": [
+            "clearSessionTokens",
+            "getStoredAccessToken"
+          ]
+        },
+        {
+          "file": "apps/web/src/hooks/use-trpc-subscriptions.ts",
+          "exports": [
+            "useAIProgressSubscription",
+            "useAllSubscriptions"
+          ]
+        },
+        {
+          "file": "apps/web/hooks/use-subscription.ts",
+          "exports": [
+            "useLeadScoreSubscription",
+            "REALTIME_BACKEND"
+          ]
+        },
+        {
+          "file": "apps/web/lib/timeline/types.ts",
+          "exports": [
+            "getEventTypeLabel",
+            "getEventTypeIcon",
+            "getPriorityColor",
+            "getPriorityBgColor",
+            "getAgentActionStatusColor",
+            "getAgentActionStatusLabel",
+            "isAgentActionPendingApproval",
+            "groupEventsByDate",
+            "getRelativeDateLabel"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/auth/mfa-challenge.tsx",
+          "exports": [
+            "InlineMfaChallenge"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/billing/invoice-actions.ts",
+          "exports": [
+            "hasValidPdf",
+            "getInvoiceUrl"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/billing/pdf-generator.ts",
+          "exports": [
+            "getBestViewUrl"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/billing/card-manager.ts",
+          "exports": [
+            "getNextDefaultCard"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/billing/plan-changes.ts",
+          "exports": [
+            "estimateProration",
+            "formatProrationPreview",
+            "getFeatureChangeBadge",
+            "getRecommendedPlan"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/sidebar/SidebarPortalContext.tsx",
+          "exports": [
+            "SidebarPortalProvider",
+            "useSidebarPortalOptional",
+            "useSidebarConfig",
+            "SidebarPortal",
+            "SidebarPortalTarget"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/shared/search-filter-bar.tsx",
+          "exports": [
+            "useFilterState",
+            "useMultiFilterState"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/shared/ab-test-framework.ts",
+          "exports": [
+            "clearAssignments",
+            "getAssignments",
+            "useExperiment",
+            "LANDING_PAGE_EXPERIMENTS"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/shared/password-breach-check.ts",
+          "exports": [
+            "createDebouncedBreachCheck"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/export/csv.ts",
+          "exports": [
+            "arrayToCSV"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/test-runner/spawner.ts",
+          "exports": [
+            "getScopeDescription"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/test-runner/parser.ts",
+          "exports": [
+            "parseVitestOutput"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/sidebar/configs/agent-approvals.ts",
+          "exports": [
+            "agentApprovalsSidebarConfig"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/sidebar/configs/governance.ts",
+          "exports": [
+            "governanceSidebarConfig"
+          ]
+        },
+        {
+          "file": "apps/api/src/services/session.service.ts",
+          "exports": [
+            "resetSessionService"
+          ]
+        },
+        {
+          "file": "apps/api/src/workflow/state-machine.ts",
+          "exports": [
+            "workflowEngine"
+          ]
+        },
+        {
+          "file": "apps/api/src/test/integration-setup.ts",
+          "exports": [
+            "createIntegrationAdminContext",
+            "isDatabaseReady"
+          ]
+        },
+        {
+          "file": "apps/api/src/workflow/types.ts",
+          "exports": [
+            "humanDecisionSchema",
+            "workflowQuerySchema"
+          ]
+        },
+        {
+          "file": "apps/api/src/modules/notifications/notifications.router.ts",
+          "exports": [
+            "createNotification"
+          ]
+        },
+        {
+          "file": "apps/ai-worker/src/utils/token-counter.ts",
+          "exports": [
+            "clearEncoderCache",
+            "ensureTiktokenLoaded"
+          ]
+        },
+        {
+          "file": "apps/ai-worker/src/workers/reindex-worker.ts",
+          "exports": [
+            "createReindexWorker",
+            "scheduleReindexJob"
+          ]
+        },
+        {
+          "file": "apps/project-tracker/lib/icons.tsx",
+          "exports": [
+            "ICON_NAME_MAPPING"
+          ]
+        },
+        {
+          "file": "apps/project-tracker/lib/csv-parser.ts",
+          "exports": [
+            "parseCSVText",
+            "groupTasksBySprint"
+          ]
+        },
+        {
+          "file": "apps/project-tracker/lib/TaskDataContext.tsx",
+          "exports": [
+            "useSprintStatusCounts"
+          ]
+        },
+        {
+          "file": "apps/project-tracker/lib/artifact-registry.ts",
+          "exports": [
+            "validateFilesContent",
+            "isLikelyFabricated",
+            "scanAllArtifacts",
+            "enrichWithGitHistoryBatch",
+            "getTaskArtifacts"
+          ]
+        },
+        {
+          "file": "apps/project-tracker/lib/paths.ts",
+          "exports": [
+            "getPhaseSummaryPath",
+            "getTaskFilePath",
+            "GOVERNANCE_PATHS"
+          ]
+        },
+        {
+          "file": "apps/project-tracker/lib/api-types.ts",
+          "exports": [
+            "createSuccessResponse",
+            "createErrorResponse"
+          ]
+        },
+        {
+          "file": "apps/project-tracker/lib/claude-session-spawner.ts",
+          "exports": [
+            "listSessions"
+          ]
+        },
+        {
+          "file": "apps/project-tracker/lib/csv-status.ts",
+          "exports": [
+            "getCsvPath",
+            "saveTasks",
+            "startSession",
+            "completeSession",
+            "checkArtifactsExist"
+          ]
+        },
+        {
+          "file": "apps/project-tracker/lib/governance.ts",
+          "exports": [
+            "loadGateProfiles",
+            "loadSprintSummary",
+            "enhanceTaskWithGovernance",
+            "getTasksByTier"
+          ]
+        },
+        {
+          "file": "apps/project-tracker/lib/subprocess-spawner.ts",
+          "exports": [
+            "killSubprocess",
+            "killAllSubprocesses",
+            "getActiveSubprocesses",
+            "spawnParallelAgents",
+            "validateScripts"
+          ]
+        },
+        {
+          "file": "apps/project-tracker/lib/execution-history.ts",
+          "exports": [
+            "getRunsByDateRange"
+          ]
+        },
+        {
+          "file": "apps/project-tracker/lib/utils.ts",
+          "exports": [
+            "formatPercentage",
+            "formatNumber",
+            "getStatusColor",
+            "getCompletionColor",
+            "parseDependencies",
+            "parseArtifacts",
+            "calculateCompletionRate",
+            "isAIAssisted",
+            "getPriorityColor",
+            "sortBy",
+            "debounce"
+          ]
+        },
+        {
+          "file": "apps/project-tracker/components/ContextPackStatus.tsx",
+          "exports": [
+            "ContextStatusIndicator"
+          ]
+        },
+        {
+          "file": "apps/project-tracker/components/ContractTagList.tsx",
+          "exports": [
+            "ContractComplianceIndicator"
+          ]
+        },
+        {
+          "file": "apps/project-tracker/components/GateValidationTable.tsx",
+          "exports": [
+            "GateValidationSummary"
+          ]
+        },
+        {
+          "file": "apps/project-tracker/components/PlanDeliverablesStatus.tsx",
+          "exports": [
+            "PlanVerificationIndicator"
+          ]
+        },
+        {
+          "file": "apps/project-tracker/lib/data-sync/file-io.ts",
+          "exports": [
+            "resolvePrettierBin"
+          ]
+        },
+        {
+          "file": "apps/project-tracker/lib/data-sync/orchestrator.ts",
+          "exports": [
+            "formatSyncResult"
+          ]
+        },
+        {
+          "file": "apps/project-tracker/lib/data-sync/validation.ts",
+          "exports": [
+            "validateMetricsConsistency"
+          ]
+        },
+        {
+          "file": "apps/project-tracker/lib/data-sync/schedule-sync.ts",
+          "exports": [
+            "getScheduleSummary"
+          ]
+        }
+      ],
+      "types": [
+        {
+          "file": "packages/validators/src/base-schemas.ts",
+          "types": [
+            "BaseEntity",
+            "SoftDeletableEntity",
+            "TenantEntity",
+            "OwnedEntity"
+          ]
+        },
+        {
+          "file": "packages/validators/src/contact.ts",
+          "types": [
+            "ContactType",
+            "ContactStatus",
+            "CreateContactInput",
+            "UpdateContactInput",
+            "ContactQueryInput",
+            "ContactResponse",
+            "ContactListResponse",
+            "LinkToLeadInput",
+            "UnlinkFromLeadInput",
+            "ContactTimelineInput",
+            "ContactTimelineEventType",
+            "ContactTimelineEvent"
+          ]
+        },
+        {
+          "file": "packages/search/src/indexer.ts",
+          "types": [
+            "DocumentToIndex",
+            "NoteToIndex",
+            "IDocumentIndexer"
+          ]
+        },
+        {
+          "file": "packages/search/src/retrieval.ts",
+          "types": [
+            "ACLFilter",
+            "FTSSearchResult",
+            "VectorSearchResult",
+            "IRetrievalService",
+            "IACLService",
+            "IRelevanceEvaluator"
+          ]
+        },
+        {
+          "file": "packages/search/src/worker.ts",
+          "types": [
+            "IReindexWorker",
+            "ScheduleOptions"
+          ]
+        },
+        {
+          "file": "apps/workers/shared/src/worker-config.ts",
+          "types": [
+            "TelemetryConfig",
+            "CircuitBreakerConfig"
+          ]
+        },
+        {
+          "file": "apps/ai-worker/src/monitoring/drift-detector.ts",
+          "types": [
+            "DriftMetricType"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/stoa/types.ts",
+          "types": [
+            "HumanPacket"
+          ]
+        },
+        {
+          "file": "packages/adapters/src/messaging/email/dkim-signer.ts",
+          "types": [
+            "DkimVerificationResult"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/sprint/types.ts",
+          "types": [
+            "DependencySignature",
+            "GeneratePromptRequest",
+            "GeneratePromptResponse",
+            "PhasesResponse",
+            "ExecuteRequest",
+            "ExecuteResponse",
+            "StatusResponse",
+            "SprintEvent",
+            "SprintOrchestratorConfig"
+          ]
+        },
+        {
+          "file": "packages/application/src/ports/external/NotificationServicePort.ts",
+          "types": [
+            "ReminderServicePort"
+          ]
+        },
+        {
+          "file": "packages/validators/src/events.ts",
+          "types": [
+            "EventMetadataInput",
+            "BaseDomainEventInput",
+            "BaseDomainEventOutput",
+            "OutboxEventInput"
+          ]
+        },
+        {
+          "file": "packages/platform/src/workflow/engine.ts",
+          "types": [
+            "WorkflowDefinition"
+          ]
+        },
+        {
+          "file": "packages/platform/src/workflow/rules-engine.ts",
+          "types": [
+            "ComparisonOperator"
+          ]
+        },
+        {
+          "file": "packages/db/src/pgvector.ts",
+          "types": [
+            "EmbeddingModel"
+          ]
+        },
+        {
+          "file": "packages/domain/src/ai/AIConstants.ts",
+          "types": [
+            "AIPriority",
+            "QualificationLevel",
+            "FollowupUrgency",
+            "RecommendedAction",
+            "OptimalDay",
+            "OptimalTimeSlot",
+            "CommunicationTone",
+            "EmailPurpose",
+            "EmailWriterPurpose",
+            "AgentUrgency",
+            "EmailLength",
+            "LeadFollowupStatus",
+            "InteractionType",
+            "ExperimentStatus",
+            "ExperimentType",
+            "ExperimentVariant",
+            "RiskFactorImpact",
+            "DataQualityLevel"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/billing/stripe-portal.ts",
+          "types": [
+            "BillingSubscription",
+            "BillingInvoice",
+            "UsageMetrics"
+          ]
+        },
+        {
+          "file": "apps/web/lib/timeline/types.ts",
+          "types": [
+            "TimelineEventsResponse",
+            "TimelineStatsResponse",
+            "UpcomingDeadlinesResponse",
+            "PendingAgentActionsResponse",
+            "TimelineQueryParams"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/billing/card-manager.ts",
+          "types": [
+            "CardActionResult"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/billing/plan-changes.ts",
+          "types": [
+            "PlanChangeResult"
+          ]
+        },
+        {
+          "file": "apps/api/src/modules/notifications/notifications.router.ts",
+          "types": [
+            "NotificationsRouter"
+          ]
+        },
+        {
+          "file": "apps/project-tracker/lib/artifact-registry.ts",
+          "types": [
+            "ArtifactEntry",
+            "ArtifactSummary",
+            "MissingArtifact"
+          ]
+        },
+        {
+          "file": "apps/project-tracker/lib/api-types.ts",
+          "types": [
+            "SprintMetricsResponse",
+            "PhaseMetrics",
+            "ExecutiveMetricsResponse",
+            "GovernanceSummaryResponse",
+            "UnifiedDataResponse"
+          ]
+        },
+        {
+          "file": "packages/validators/src/common.ts",
+          "types": [
+            "PaginationInput",
+            "DateRangeInput",
+            "SearchInput",
+            "ApiError",
+            "Metadata"
+          ]
+        },
+        {
+          "file": "packages/validators/src/lead.ts",
+          "types": [
+            "LeadSource",
+            "LeadStatus",
+            "LeadActivityType",
+            "CreateLeadInput",
+            "UpdateLeadInput",
+            "LeadScoreInput",
+            "UpdateLeadScoreInput",
+            "QualifyLeadInput",
+            "ConvertLeadInput",
+            "LeadQueryInput",
+            "LeadResponse",
+            "LeadListResponse"
+          ]
+        },
+        {
+          "file": "packages/validators/src/account.ts",
+          "types": [
+            "CreateAccountInput",
+            "UpdateAccountInput",
+            "AccountQueryInput",
+            "AccountResponse",
+            "AccountListResponse",
+            "AccountActivityType",
+            "GetAccountContactsInput",
+            "GetAccountContactsOutput",
+            "GetAccountOpportunitiesInput",
+            "GetAccountOpportunitiesOutput",
+            "GetAccountActivityInput",
+            "GetAccountActivityOutput"
+          ]
+        },
+        {
+          "file": "packages/validators/src/opportunity.ts",
+          "types": [
+            "OpportunityStage",
+            "CreateOpportunityInput",
+            "UpdateOpportunityInput",
+            "OpportunityQueryInput",
+            "OpportunityResponse",
+            "OpportunityListResponse",
+            "UpdatePipelineStageConfigInput",
+            "UpdatePipelineConfigInput"
+          ]
+        },
+        {
+          "file": "packages/validators/src/task.ts",
+          "types": [
+            "TaskPriority",
+            "TaskStatus",
+            "CreateTaskInput",
+            "UpdateTaskInput",
+            "TaskQueryInput",
+            "TaskResponse",
+            "TaskListResponse",
+            "CompleteTaskInput"
+          ]
+        },
+        {
+          "file": "packages/validators/src/ticket.ts",
+          "types": [
+            "CreateTicketInput",
+            "UpdateTicketInput",
+            "TicketQueryInput",
+            "AddResponseInput",
+            "StatusTransitionInput",
+            "SlaPauseInput",
+            "SlaResumeInput"
+          ]
+        },
+        {
+          "file": "apps/workers/shared/src/types.ts",
+          "types": [
+            "JobResult",
+            "JobContext",
+            "WorkerMetrics",
+            "WorkerEvent",
+            "QueueConnection",
+            "ConnectionHealth"
+          ]
+        },
+        {
+          "file": "apps/ai-worker/src/services/document-indexer.ts",
+          "types": [
+            "NoteToIndex"
+          ]
+        },
+        {
+          "file": "apps/ai-worker/src/utils/logger.ts",
+          "types": [
+            "LogLevel"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/schemas/vulnerability-baseline.schema.ts",
+          "types": [
+            "VulnerabilityBaseline",
+            "Vulnerability",
+            "Severity",
+            "ScanResult"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/schemas/attestation.schema.ts",
+          "types": [
+            "Attestation",
+            "Verdict",
+            "SchemaVersion",
+            "ValidationResult",
+            "GateResult",
+            "KpiResult"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/schemas/task-status.schema.ts",
+          "types": [
+            "TaskStatusObject",
+            "TaskStatus",
+            "TaskDependencies",
+            "StatusHistoryEntry",
+            "Execution",
+            "Artifacts",
+            "ValidationEntry",
+            "KpiEntry",
+            "BlockerEntry",
+            "DependencyType",
+            "ScheduleDependency",
+            "ConstraintType",
+            "ThreePointEstimate",
+            "Planning",
+            "Schedule"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/schemas/phase-summary.schema.ts",
+          "types": [
+            "PhaseSummary",
+            "StreamStatus",
+            "Stream",
+            "AggregatedMetrics",
+            "PhaseKpi"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/schemas/sprint-summary.schema.ts",
+          "types": [
+            "SprintSummary",
+            "PhaseStatus",
+            "KpiStatus",
+            "SprintPhase",
+            "TaskSummary",
+            "KpiSummaryEntry",
+            "SprintBlocker",
+            "ScheduleHealthStatus",
+            "CriticalPathSummary",
+            "ScheduleVarianceSummary",
+            "SprintSchedule"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/schemas/task-registry.schema.ts",
+          "types": [
+            "TaskRegistry",
+            "SprintEntry",
+            "RegistryTaskStatus",
+            "TasksByStatus",
+            "TaskDetail"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/schemas/dependency-graph.schema.ts",
+          "types": [
+            "DependencyGraph",
+            "NodeStatus",
+            "DependencyType",
+            "GraphNode",
+            "CriticalPath",
+            "CrossSprintDependency",
+            "DependencyViolation"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/schemas/kpi-definitions.schema.ts",
+          "types": [
+            "KpiDefinitions",
+            "KpiUnit",
+            "KpiDefinition",
+            "KpiCategory",
+            "MeasurementSchedule"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/schemas/traceability.schema.ts",
+          "types": [
+            "Traceability",
+            "Capability",
+            "CoverageSummary"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/schemas/benchmark.schema.ts",
+          "types": [
+            "Benchmark",
+            "BenchmarkResult",
+            "ModelBenchmark",
+            "PerformanceBudget",
+            "BenchmarkStatus"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/schemas/extracted-text.schema.ts",
+          "types": [
+            "ExtractedText",
+            "DocumentFormat",
+            "OcrEngine",
+            "ExtractedTextMetadata",
+            "Provenance",
+            "QualityMetrics"
+          ]
+        },
+        {
+          "file": "tools/scripts/lib/schemas/analytics-event.schema.ts",
+          "types": [
+            "AnalyticsEvent",
+            "Environment",
+            "EventContext"
+          ]
+        },
+        {
+          "file": "packages/adapters/src/messaging/email/outbound.ts",
+          "types": [
+            "EmailAttachment"
+          ]
+        },
+        {
+          "file": "apps/workers/events-worker/src/outbox/event-dispatcher.ts",
+          "types": [
+            "DomainEventType"
+          ]
+        },
+        {
+          "file": "packages/adapters/src/external/GuardrailsAIService.ts",
+          "types": [
+            "SafePrompt",
+            "SanitizedOutput"
+          ]
+        },
+        {
+          "file": "packages/application/src/ports/repositories/AnalyticsRepositoryPort.ts",
+          "types": [
+            "DealsWonTrendResult",
+            "GrowthTrendResult",
+            "TrafficSourceMetric",
+            "LeadStats"
+          ]
+        },
+        {
+          "file": "packages/application/src/ports/external/AuthServicePort.ts",
+          "types": [
+            "AuthServicePort"
+          ]
+        },
+        {
+          "file": "packages/application/src/ports/external/CalendarServicePort.ts",
+          "types": [
+            "CalendarSyncServicePort"
+          ]
+        },
+        {
+          "file": "packages/application/src/services/AccountService.ts",
+          "types": [
+            "AccountHierarchy"
+          ]
+        },
+        {
+          "file": "packages/application/src/services/ContactService.ts",
+          "types": [
+            "ContactRelationship",
+            "ContactFilters"
+          ]
+        },
+        {
+          "file": "packages/application/src/services/OpportunityService.ts",
+          "types": [
+            "StageVelocityMetrics"
+          ]
+        },
+        {
+          "file": "packages/validators/src/auth.ts",
+          "types": [
+            "MfaMethod",
+            "OAuthProvider",
+            "LoginInput",
+            "MfaVerifyInput",
+            "MfaSetupInput",
+            "MfaSetupResponse",
+            "MfaConfirmInput",
+            "BackupCodesResponse",
+            "ResendMfaCodeInput",
+            "ResendMfaCodeResponse",
+            "OAuthInitInput",
+            "OAuthCallbackInput",
+            "SessionInfo",
+            "ActiveSessionsResponse",
+            "RevokeSessionInput",
+            "RefreshTokenInput",
+            "ForgotPasswordInput",
+            "ResetPasswordInput",
+            "ChangePasswordInput",
+            "SignupInput",
+            "VerifyEmailInput",
+            "ResendVerificationInput"
+          ]
+        },
+        {
+          "file": "packages/validators/src/case.ts",
+          "types": [
+            "CreateCaseInput",
+            "UpdateCaseInput",
+            "CaseQueryInput",
+            "ChangeCaseStatusInput",
+            "CloseCaseInput",
+            "UpdateDeadlineInput",
+            "AddCaseTaskInput",
+            "RemoveCaseTaskInput",
+            "CompleteCaseTaskInput",
+            "CaseTaskResponse",
+            "CaseResponse",
+            "CaseListResponse",
+            "CaseStatistics"
+          ]
+        },
+        {
+          "file": "packages/validators/src/appointment.ts",
+          "types": [
+            "AppointmentStatus",
+            "AppointmentType"
+          ]
+        },
+        {
+          "file": "packages/validators/src/ai.ts",
+          "types": [
+            "Priority",
+            "QualificationLevel",
+            "FollowupUrgency",
+            "RecommendedAction",
+            "OptimalDay",
+            "OptimalTimeSlot",
+            "CommunicationTone",
+            "EmailPurpose",
+            "EmailWriterPurpose",
+            "AgentUrgency",
+            "EmailLength",
+            "LeadFollowupStatus",
+            "InteractionType",
+            "QualificationOutput",
+            "QualificationInput",
+            "EmailWriterInput",
+            "FollowupInput",
+            "ChurnRiskLevelType",
+            "RiskFactorImpactType",
+            "DataQualityLevelType",
+            "RiskFactor",
+            "ChurnRiskOutput",
+            "ChurnRiskInput",
+            "NBAActionTypeType",
+            "NBAPriorityType",
+            "NBARecommendation",
+            "NextBestActionOutput",
+            "AIInsightsSummary"
+          ]
+        },
+        {
+          "file": "packages/validators/src/feedback.ts",
+          "types": [
+            "FeedbackType",
+            "FeedbackCategory",
+            "SubmitSimpleFeedbackInput",
+            "SubmitScoreCorrectionInput",
+            "FeedbackAnalyticsQuery",
+            "FeedbackRecord",
+            "ModelVersionStats",
+            "TrendDataPoint",
+            "FeedbackAnalytics",
+            "RetrainingCheck",
+            "TrainingDataItem",
+            "TrainingDataExport"
+          ]
+        },
+        {
+          "file": "packages/validators/src/experiment.ts",
+          "types": [
+            "CreateExperimentInput",
+            "UpdateExperimentInput",
+            "AssignVariantInput",
+            "ExperimentAssignment",
+            "RecordScoreInput",
+            "RecordConversionInput",
+            "ConfidenceInterval",
+            "TTestResult",
+            "ChiSquareResult",
+            "ExperimentResult",
+            "ExperimentSummary",
+            "ExperimentStatusResponse",
+            "AnalyzeExperimentInput"
+          ]
+        },
+        {
+          "file": "packages/validators/src/chain-version.ts",
+          "types": [
+            "ActivateVersionInput",
+            "RollbackVersionInput",
+            "ListChainVersionsInput",
+            "VersionHistoryInput",
+            "ActiveVersionResponse"
+          ]
+        },
+        {
+          "file": "packages/validators/src/timeline.ts",
+          "types": [
+            "TimelineEventType",
+            "AgentActionStatus",
+            "TimelinePriority",
+            "CommunicationChannel",
+            "CommunicationDirection",
+            "TimelineActor",
+            "AgentActionDetails",
+            "DocumentDetails",
+            "CommunicationDetails",
+            "AppointmentDetails",
+            "TaskDetails",
+            "TimelineEvent",
+            "TimelineEventsResponse",
+            "TimelineStatsResponse",
+            "DeadlineItem",
+            "UpcomingDeadlinesResponse",
+            "PendingAgentAction",
+            "PendingAgentActionsResponse",
+            "TimelineQueryParams"
+          ]
+        },
+        {
+          "file": "packages/validators/src/bulk-operations.ts",
+          "types": [
+            "BulkIdsInput",
+            "BulkOperationResult",
+            "BulkConvertLeadsInput",
+            "BulkUpdateLeadStatusInput",
+            "BulkArchiveLeadsInput",
+            "BulkDeleteLeadsInput",
+            "BulkEmailContactsInput",
+            "BulkCreateDealsInput",
+            "BulkExportContactsInput",
+            "BulkDeleteContactsInput",
+            "BulkAssignTicketsInput",
+            "BulkUpdateTicketStatusInput",
+            "BulkResolveTicketsInput",
+            "BulkEscalateTicketsInput",
+            "BulkCloseTicketsInput",
+            "BulkDownloadDocumentsInput",
+            "BulkShareDocumentsInput",
+            "BulkArchiveDocumentsInput",
+            "BulkDeleteDocumentsInput"
+          ]
+        },
+        {
+          "file": "packages/validators/src/billing.ts",
+          "types": [
+            "SubscriptionStatus",
+            "InvoiceStatus",
+            "PaymentMethodType",
+            "CardDetails",
+            "PaymentMethod",
+            "Subscription",
+            "ListInvoicesInput",
+            "UpdatePaymentMethodInput",
+            "UpdateSubscriptionInput",
+            "CancelSubscriptionInput",
+            "GetUpcomingInvoiceInput",
+            "InvoiceListResponse",
+            "ProrationPreview",
+            "UsageMetrics",
+            "Plan",
+            "PlanFeature",
+            "CreateCheckoutInput",
+            "CheckoutResponse"
+          ]
+        },
+        {
+          "file": "packages/validators/src/auto-response.ts",
+          "types": [
+            "AutoResponseStatus",
+            "TriggerType",
+            "AllowedLeadStatus",
+            "ResponseContentInput",
+            "AutoResponseLeadInfo",
+            "TenantSettings",
+            "AutoResponseContext",
+            "CreateAutoResponseDraftInput",
+            "SubmitForApprovalInput",
+            "ApprovalDecisionInput",
+            "EscalationInput",
+            "MarkSentInput",
+            "MarkFailedInput",
+            "AutoResponseQueryInput",
+            "StatusChange",
+            "AutoResponseDraftResponse",
+            "AutoResponseListResponse",
+            "AutoResponseChainInput",
+            "AutoResponseChainOutput",
+            "AutoResponseValidationResult"
+          ]
+        },
+        {
+          "file": "packages/validators/src/home.ts",
+          "types": [
+            "StatsPeriod",
+            "AIInsightType",
+            "AIInsight",
+            "ActivityFeedType",
+            "ActivityFeedItem",
+            "ActivityFeedQuery",
+            "DailyGoal",
+            "PinnableEntityType",
+            "PinnedItem",
+            "PinItemInput",
+            "UnpinItemInput",
+            "ReorderPinnedItemsInput"
+          ]
+        },
+        {
+          "file": "packages/validators/src/notifications.ts",
+          "types": [
+            "NotificationType",
+            "NotificationPriority",
+            "NotificationChannel",
+            "NotificationStatus",
+            "NotificationListQuery",
+            "MarkAsReadInput",
+            "DeleteNotificationsInput",
+            "NotificationPreferenceItem",
+            "UpdatePreferencesInput",
+            "NotificationSubscriptionInput",
+            "BatchNotificationAction"
+          ]
+        },
+        {
+          "file": "packages/platform/src/feature-flags/schema.ts",
+          "types": [
+            "FeatureFlagsConfigInput"
+          ]
+        },
+        {
+          "file": "packages/platform/src/queues/types.ts",
+          "types": [
+            "AIScoringJobData",
+            "AIScoringResult",
+            "EmailNotificationJobData",
+            "WebhookDeliveryJobData",
+            "QueueName"
+          ]
+        },
+        {
+          "file": "packages/db/src/seed-ids.ts",
+          "types": [
+            "SeedIds"
+          ]
+        },
+        {
+          "file": "packages/ui/src/components/layout-builder/types.ts",
+          "types": [
+            "DashboardLayout"
+          ]
+        },
+        {
+          "file": "packages/domain/src/support/TicketConstants.ts",
+          "types": [
+            "TicketCategory"
+          ]
+        },
+        {
+          "file": "packages/domain/src/shared/QueryTypes.ts",
+          "types": [
+            "PaginationParams",
+            "SearchResult"
+          ]
+        },
+        {
+          "file": "packages/domain/src/crm/ticket/TicketRepository.ts",
+          "types": [
+            "TicketRepository",
+            "TicketQueryService"
+          ]
+        },
+        {
+          "file": "packages/domain/src/crm/task/TaskRepository.ts",
+          "types": [
+            "TaskQueryService"
+          ]
+        },
+        {
+          "file": "packages/domain/src/crm/opportunity/OpportunityRepository.ts",
+          "types": [
+            "OpportunityQueryService"
+          ]
+        },
+        {
+          "file": "packages/domain/src/crm/lead/LeadRepository.ts",
+          "types": [
+            "LeadQueryService"
+          ]
+        },
+        {
+          "file": "packages/domain/src/crm/lead/LeadActivityConstants.ts",
+          "types": [
+            "LeadActivityType"
+          ]
+        },
+        {
+          "file": "packages/domain/src/crm/contact/ContactRepository.ts",
+          "types": [
+            "ContactQueryService"
+          ]
+        },
+        {
+          "file": "packages/domain/src/crm/account/AccountRepository.ts",
+          "types": [
+            "AccountQueryService"
+          ]
+        },
+        {
+          "file": "packages/domain/src/legal/cases/case-document.ts",
+          "types": [
+            "DocumentType",
+            "CaseDocumentEvent"
+          ]
+        },
+        {
+          "file": "packages/domain/src/legal/cases/CaseRepository.ts",
+          "types": [
+            "CaseRepository",
+            "CaseQueryService"
+          ]
+        },
+        {
+          "file": "packages/domain/src/auth/AuthConstants.ts",
+          "types": [
+            "MfaMethod",
+            "OAuthProvider"
+          ]
+        },
+        {
+          "file": "packages/domain/src/config/ConfigConstants.ts",
+          "types": [
+            "NodeEnvironment",
+            "LogLevel"
+          ]
+        },
+        {
+          "file": "packages/domain/src/timeline/TimelineConstants.ts",
+          "types": [
+            "TimelinePriority",
+            "CommunicationChannel",
+            "CommunicationDirection"
+          ]
+        },
+        {
+          "file": "packages/domain/src/platform/PlatformConstants.ts",
+          "types": [
+            "IdpStatus",
+            "DeploymentType",
+            "DeploymentProvider",
+            "DeploymentTrigger",
+            "GoldenPathType",
+            "CiStage",
+            "CdStage",
+            "OnboardingStep",
+            "SecretsTool",
+            "KpiStatus"
+          ]
+        },
+        {
+          "file": "packages/domain/src/ai/review/ReviewStatus.ts",
+          "types": [
+            "ReviewStatusType",
+            "ReviewDecisionType",
+            "AuditEventTypeValue",
+            "AuditEventType"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/adr/adr-service.ts",
+          "types": [
+            "ADRStatus"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/api/compliance/types.ts",
+          "types": [
+            "ComplianceExportData",
+            "ApiResponse"
+          ]
+        },
+        {
+          "file": "apps/web/src/hooks/usePipelineConfig.ts",
+          "types": [
+            "UpdateAllInput"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/sidebar/icon-reference.ts",
+          "types": [
+            "ModuleIcon",
+            "ViewIcon",
+            "SegmentIcon",
+            "ActionIcon",
+            "StatusIcon",
+            "FeatureIcon",
+            "ModuleColorTheme"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/test-runner/types.ts",
+          "types": [
+            "ActiveTestRun"
+          ]
+        },
+        {
+          "file": "apps/api/src/services/appointment-domain.service.ts",
+          "types": [
+            "RescheduleInput"
+          ]
+        },
+        {
+          "file": "apps/api/src/services/mfa.service.ts",
+          "types": [
+            "MfaSetupResult"
+          ]
+        },
+        {
+          "file": "apps/api/src/security/types.ts",
+          "types": [
+            "PermissionId",
+            "RequestContext"
+          ]
+        },
+        {
+          "file": "apps/api/src/modules/email/inbound.router.ts",
+          "types": [
+            "InboundEmailRouter"
+          ]
+        },
+        {
+          "file": "apps/api/src/modules/misc/timeline.router.ts",
+          "types": [
+            "TimelineRouter"
+          ]
+        },
+        {
+          "file": "apps/api/src/modules/home/home.router.ts",
+          "types": [
+            "HomeRouter"
+          ]
+        },
+        {
+          "file": "apps/api/src/modules/legal/appointments.router.ts",
+          "types": [
+            "AppointmentsRouter"
+          ]
+        },
+        {
+          "file": "apps/api/src/modules/integrations/integrations.router.ts",
+          "types": [
+            "IntegrationsRouter"
+          ]
+        },
+        {
+          "file": "apps/api/src/modules/intelligence/intelligence.router.ts",
+          "types": [
+            "IntelligenceRouter"
+          ]
+        },
+        {
+          "file": "apps/project-tracker/lib/types.ts",
+          "types": [
+            "SprintMetrics",
+            "VelocityData",
+            "KPICompliance",
+            "DependencyGraph",
+            "WorkloadData",
+            "TimelineTask",
+            "Milestone",
+            "AIMetrics",
+            "ValidationResult",
+            "ArtifactSummary",
+            "TaskArtifactStatus",
+            "ChartDataPoint",
+            "TimeSeriesPoint",
+            "TaskFilters",
+            "PaginatedResult"
+          ]
+        }
+      ],
+      "duplicates": []
+    },
+    "summary": {
+      "unusedFiles": 88,
+      "unusedDeps": 16,
+      "unusedExports": 441,
+      "unusedTypes": 510
+    }
   },
   "depcheck": {
     "success": true,
     "data": {
       "dependencies": [],
       "devDependencies": [
+        "@eslint/eslintrc",
+        "@typescript-eslint/eslint-plugin",
+        "@typescript-eslint/parser",
         "@vitest/coverage-v8",
+        "baseline-browser-mapping",
         "cspell",
         "dependency-cruiser",
+        "dotenv-cli",
         "license-checker",
         "madge",
         "markdownlint-cli",
+        "testcontainers",
         "ts-node",
         "ts-prune"
       ],
@@ -22,7 +2442,7 @@
     },
     "summary": {
       "unusedDeps": 0,
-      "unusedDevDeps": 8,
+      "unusedDevDeps": 14,
       "missingDeps": 0
     }
   }

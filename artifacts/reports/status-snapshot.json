@@ -584,7 +584,7 @@
       "validation_method": "AUDIT:manual-review"
     },
     {
-      "artifacts_to_track": "ARTIFACT:artifacts/reports/user-test-results.pdf;EVIDENCE:artifacts/attestations/IFC-023/context_ack.json",
+      "artifacts_to_track": "ARTIFACT:artifacts/reports/user-test-results.md;EVIDENCE:artifacts/attestations/IFC-023/context_ack.json",
       "description": "PHASE-011: AI Explainability UI",
       "owner": "Frontend Dev + UX (STOA-Domain)",
       "section": "Intelligence",
