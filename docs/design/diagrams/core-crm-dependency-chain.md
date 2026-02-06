@@ -105,7 +105,7 @@ The **Core CRM** domain covers 6 primary entities: Lead, Contact, Account, Oppor
     ╚═══════════════════════════════════════════════════════════════════════════════════════════╝
 
     ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
-    │    IFC-013      │  │    ❌ MISSING    │  │    ❌ MISSING    │  │    ❌ MISSING    │  │    ❌ MISSING    │
+    │    IFC-013      │  │    ❌ MISSING    │  │    ❌ MISSING    │  │    IFC-186      │  │    ❌ MISSING    │
     │  lead.router.ts │  │ contact.router  │  │ account.router  │  │opportunity.router│ │  task.router    │
     │                 │  │                 │  │                 │  │                 │  │                 │
     │  - lead.list    │  │  Need:          │  │  Need:          │  │  Need:          │  │  Need:          │
@@ -114,8 +114,8 @@ The **Core CRM** domain covers 6 primary entities: Lead, Contact, Account, Oppor
     │  - lead.update  │  │  - contact.CRUD │  │  - account.CRUD │  │  - deal.CRUD    │  │  - task.CRUD    │
     │  - lead.delete  │  │                 │  │                 │  │  - forecast     │  │  - assign       │
     │                 │  │                 │  │                 │  │                 │  │                 │
-    │  COMPLETED ✅   │  │  CREATE: IFC-184│  │  COMPLETED ✅   │  │  CREATE: IFC-186│  │  CREATE: IFC-187│
-    │  Sprint 6       │  │                 │  │                 │  │                 │  │                 │
+    │  COMPLETED ✅   │  │  CREATE: IFC-184│  │  COMPLETED ✅   │  │  COMPLETED ✅   │  │  CREATE: IFC-187│
+    │  Sprint 6       │  │                 │  │                 │  │  Sprint 5       │  │                 │
     └────────┬────────┘  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘
              │                    │                    │                    │                    │
              │                    │                    │                    │                    │
@@ -232,7 +232,7 @@ The **Core CRM** domain covers 6 primary entities: Lead, Contact, Account, Oppor
 | Lead | No | No | None - Complete |
 | Contact | No (domain exists) | YES | Create IFC-184, PG-133 |
 | Account | No (router done ✅) | YES | Create PG-134 |
-| Opportunity | No (domain exists) | PARTIAL | Create IFC-186, PG-135 |
+| Opportunity | No (router done ✅) | YES | Create PG-135 |
 | Task | No (domain exists) | YES | Create IFC-187, PG-136 |
 | Ticket | No (domain done ✅) | YES | Create IFC-189, PG-137 |
 

@@ -247,7 +247,7 @@ Dependency Chain:
                                  ┌──────────────────┐
                                  │    IFC-186       │
                                  │  deal.router.ts  │
-                                 │      ⬜ NEW      │
+                                 │      ✅          │
                                  └────────┬─────────┘
                                           │
                          ┌────────────────┴────────────────┐
@@ -260,7 +260,7 @@ Dependency Chain:
               └──────────────────┘              └──────────────────┘
 
 Dependency Chain:
-  IFC-104 (Domain) ──┬──► opportunity.ts (Val) ──► IFC-108 (Services) ──► IFC-107 (Adapters) ──► IFC-186 (API) ⬜ ──┬──► PG-135 (Pipeline) ⬜
+  IFC-104 (Domain) ──┬──► opportunity.ts (Val) ──► IFC-108 (Services) ──► IFC-107 (Adapters) ──► IFC-186 (API) ✅ ──┬──► PG-135 (Pipeline) ⬜
                      │                                                                                              │
                      └──► IFC-017 (Database) ───────────────────────────────────────────────────────────────────────┴──► PG-131 (Forecast) ⬜
 ```
@@ -1745,7 +1745,7 @@ Home Page:     IFC-182 ⏳75% ──► PG-129 ⏳60%
 ```
 Contact:       IFC-102 ──► validators ──► IFC-108 ──► IFC-107 ──► IFC-184 ⬜ ──► PG-133 ⬜
 Account:       IFC-103 ──► validators ──► IFC-108 ──► IFC-107 ──► IFC-185 ✅ ──► PG-134 ⬜
-Opportunity:   IFC-104 ──► validators ──► IFC-108 ──► IFC-107 ──► IFC-186 ⬜ ──► PG-135 ⬜
+Opportunity:   IFC-104 ──► validators ──► IFC-108 ──► IFC-107 ──► IFC-186 ✅ ──► PG-135 ⬜
 Task:          IFC-105 ──► validators ──► IFC-108 ──► IFC-107 ──► IFC-187 ⬜ ──► PG-136 ⬜
 Case:          IFC-136 ──► validators ──► IFC-139 ──► cases.router ✅ ──► PG-138 ⬜
 Appointment:   IFC-137 ──► validators ──► IFC-138 ──► appointments.router ✅ ──► PG-139 ⬜

@@ -16,7 +16,7 @@ The **AI Output Review** feature (IFC-176 to IFC-181) is a **6-layer hexagonal a
 | Application | IFC-177 | COMPLETED | 100% |
 | Database | IFC-178 | Backlog | 0% |
 | Adapters | IFC-179 | Backlog | 0% |
-| tRPC Router | IFC-180 | Backlog | 0% |
+| tRPC Router | IFC-180 | COMPLETED | 100% |
 | Frontend UI | IFC-181 | Backlog | 0% |
 
 **Critical Path**: IFC-178 -> IFC-179 -> IFC-180 -> IFC-181 (IFC-177 complete)
@@ -117,8 +117,9 @@ The **AI Output Review** feature (IFC-176 to IFC-181) is a **6-layer hexagonal a
                                     │  - review.stats             │
                                     │                             │
                                     │  Depends: IFC-179           │
-                                    │  Status: BACKLOG            │
+                                    │  Status: COMPLETED          │
                                     │  Sprint: 5                  │
+                                    │  Completed: 2026-02-05      │
                                     └──────────────┬──────────────┘
                                                    │
                                                    │
@@ -314,21 +315,21 @@ This is a SEPARATE system for email drafts only (already COMPLETED):
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Phase 4: API Layer (Blocked until Phase 3 complete)
+### Phase 4: API Layer (COMPLETED)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │  IFC-180: tRPC Router                                           │
-│  Status: Backlog                                                │
+│  Status: COMPLETED (100%) ✅                                    │
 │                                                                 │
-│  Work:                                                          │
-│  - Create ai-review.router.ts                                   │
-│  - Wire all 7 endpoints                                         │
-│  - Authentication/authorization                                 │
-│  - Response <200ms                                              │
-│  - Unit tests                                                   │
+│  Completed Work:                                                │
+│  - Created ai-review.router.ts                                  │
+│  - All 7 endpoints wired                                        │
+│  - Authentication/authorization implemented                     │
+│  - Response <200ms validated                                    │
+│  - Unit tests passing                                           │
 │                                                                 │
-│  BLOCKED BY: IFC-179                                            │
+│  Completed: 2026-02-05                                          │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -418,7 +419,7 @@ IFC-128 (Domain) ✅
     └── IFC-176 (Validators) ✅
     └── IFC-177 (Application) ✅ 100% ──┐
     └── IFC-178 (Database) ⬜ 0%     ──┼──► IFC-179 (Adapters) ⬜ 0%
-                                           └──► IFC-180 (tRPC) ⬜ 0%
+                                           └──► IFC-180 (tRPC) ✅ 100%
                                                  └──► IFC-181 (Frontend) ⬜ 0%
                                                        └── Mockup READY ✅
 ```

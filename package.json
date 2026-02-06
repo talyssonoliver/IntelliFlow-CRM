@@ -52,6 +52,7 @@
     "clean": "turbo run clean && rm -rf node_modules",
     "clean:deps": "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",
     "clean:cache": "rm -rf .turbo && turbo run clean",
+    "clean:tmpclaude": "pwsh -ExecutionPolicy Bypass -File ./cleanup-tmpclaude.ps1",
     "setup:local": "pnpm install && pnpm run db:generate && pnpm run db:migrate && pnpm run db:seed",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
