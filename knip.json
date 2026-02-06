@@ -16,7 +16,11 @@
         "tests/setup.ts",
         "tests/**/*.test.ts",
         "tests/**/*.spec.ts",
-        "infra/**/*.ts"
+        "infra/**/*.ts",
+        "artifacts/benchmarks/run-baseline-benchmark.ts",
+        "artifacts/benchmarks/integrate-k6-results.ts",
+        "artifacts/benchmarks/generate-performance-report.ts",
+        "artifacts/benchmarks/run-accuracy-benchmark.ts"
       ],
       "project": ["**/*.ts", "**/*.tsx"]
     }
@@ -39,10 +43,8 @@
     "tests/architecture/**",
     "apps/ai-worker/src/agents/**",
     "apps/ai-worker/src/examples/**",
-    "apps/ai-worker/src/types/**",
-    "apps/api/src/middleware/**",
-    "apps/api/src/shared/**",
-    "apps/api/src/tracing/**",
+    "artifacts/benchmarks/**/*.json",
+    "artifacts/benchmarks/**/*.html",
     "apps/project-tracker/lib/api.ts",
     "apps/project-tracker/lib/data-validator.ts",
     "apps/project-tracker/scripts/**"
@@ -69,14 +71,8 @@
     "dependency-cruiser",
     "ts-node",
     "papaparse",
-    "@langchain/*",
-    "langchain",
-    "openai",
     "pino-pretty",
     "zod-to-json-schema",
-    "@opentelemetry/*",
-    "@sentry/*",
-    "@prisma/client",
     "js-yaml",
     "dotenv",
     "zod",

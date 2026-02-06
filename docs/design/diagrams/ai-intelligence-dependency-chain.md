@@ -255,7 +255,7 @@ The **AI/Intelligence** domain covers Lead Scoring, Sentiment Analysis, Churn Ri
 
     Chain Status: ⚠️ ORPHAN - Backend complete, Frontend missing
     - AI Chain: IFC-039 ✅
-    - Indexing: IFC-155 (20%) ⚠️
+    - Indexing: IFC-155 ✅
     - RAG Tool: IFC-156 ✅
     - Frontend: MISSING ❌ → Create PG-144
 ```

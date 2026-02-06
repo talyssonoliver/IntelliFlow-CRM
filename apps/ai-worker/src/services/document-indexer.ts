@@ -684,7 +684,14 @@ export class DocumentIndexer {
       doc.tags?.join(' ') || '',
     ];
 
-    return parts.filter(Boolean).join('\n\n').trim();
+    const text = parts.filter(Boolean).join('\n\n').trim();
+
+    // Truncate to 8000 chars to stay within embedding model token limits
+    if (text.length > 8000) {
+      return text.slice(0, 8000);
+    }
+
+    return text;
   }
 
   /**

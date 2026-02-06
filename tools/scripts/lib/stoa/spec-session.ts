@@ -34,6 +34,8 @@ import {
   getSpecPath,
   getDiscussionPath,
 } from './paths.js';
+import { resolveAgentMode } from './agent-mode.js';
+import type { AgentMode } from './agent-mode.js';
 
 // ============================================================================
 // Constants
@@ -56,13 +58,20 @@ const ROUND_SEQUENCE: SpecRoundType[] = ['ANALYSIS', 'PROPOSAL', 'CHALLENGE', 'C
 // ============================================================================
 
 /**
- * Create a new spec session
+ * Create a new spec session.
+ *
+ * @param agentMode - Force a specific agent mode. When omitted, auto-detected
+ *   via resolveAgentMode() based on agent count and feature flag.
  */
 export function createSpecSession(
   taskId: string,
   hydratedContext: HydratedContext,
-  selectedAgents: AgentSelection
+  selectedAgents: AgentSelection,
+  agentMode?: AgentMode
 ): SpecSession {
+  const agentCount = selectedAgents.selectedRoles?.length ?? 0;
+  const resolvedMode = agentMode ?? resolveAgentMode('spec', agentCount);
+
   return {
     sessionId: `spec-${taskId}-${randomUUID().slice(0, 8)}`,
     taskId,
@@ -70,8 +79,60 @@ export function createSpecSession(
     selectedAgents,
     rounds: [],
     status: 'in_progress',
+    agentMode: resolvedMode,
     startedAt: new Date().toISOString(),
   };
+}
+
+/**
+ * Build a broadcast message for team-mode discussion rounds.
+ *
+ * In agent team mode, this generates the message payload that the lead
+ * sends to all teammates to kick off a round. Each teammate then
+ * responds with their contribution and can message other teammates
+ * directly during CHALLENGE rounds.
+ */
+export function buildTeamRoundBroadcast(
+  session: SpecSession,
+  roundType: SpecRoundType,
+  previousRoundSummary?: string
+): string {
+  const topic = ROUND_TOPICS[roundType];
+  const taskId = session.taskId;
+
+  let message = `## Round: ${roundType} — ${topic}\n`;
+  message += `**Task**: ${taskId}\n\n`;
+
+  if (previousRoundSummary) {
+    message += `### Previous Round Summary\n${previousRoundSummary}\n\n`;
+  }
+
+  switch (roundType) {
+    case 'ANALYSIS':
+      message += `Analyze the task requirements based on the exploration findings.\n`;
+      message += `Cite file paths and line numbers in your analysis.\n`;
+      message += `Post your analysis as a message to the lead.\n`;
+      break;
+    case 'PROPOSAL':
+      message += `Propose your technical approach based on the analysis.\n`;
+      message += `Reference existing patterns found during exploration.\n`;
+      message += `Post your proposal as a message to the lead.\n`;
+      break;
+    case 'CHALLENGE':
+      message += `Review all proposals and challenge them directly.\n`;
+      message += `**IMPORTANT**: Message other teammates directly to debate.\n`;
+      message += `For example, if you find an issue with Backend-Architect's proposal,\n`;
+      message += `message them directly with your concern. They should respond.\n`;
+      message += `After debate concludes, post your final challenges to the lead.\n`;
+      break;
+    case 'CONSENSUS':
+      message += `Review all challenges and resolutions.\n`;
+      message += `Message the lead with your verdict: APPROVED or REJECTED.\n`;
+      message += `If rejecting, state what must change for approval.\n`;
+      break;
+  }
+
+  return message;
 }
 
 /**

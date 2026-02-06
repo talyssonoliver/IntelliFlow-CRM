@@ -16,7 +16,7 @@ The **Security & Platform** domain covers RBAC, Audit Logging, Encryption, Notif
 | Encryption | IFC-113 | IFC-113 | IFC-113 | N/A | PG-120 | PARTIAL |
 | Notifications | IFC-157 | IFC-157 | IFC-170/171 | **MISSING** | PG-116, PG-130 | **BLOCKED** |
 | Events | IFC-150 | IFC-151 | IFC-150 | Complete | N/A | COMPLETE |
-| Home Page | IFC-182 | IFC-182 | IFC-182 | 75% | PG-129 | PARTIAL |
+| Home Page | IFC-182 | IFC-182 | IFC-182 | Complete | PG-129 | ROUTER COMPLETE |
 | Analytics | ANALYTICS-001 | IFC-37 | IFC-38 | Missing | Dashboard | ORPHAN |
 
 ---
@@ -337,7 +337,7 @@ The **Security & Platform** domain covers RBAC, Audit Logging, Encryption, Notif
 | Tenant Isolation | YES | YES | N/A | None |
 | Domain Events | YES | YES | N/A | None |
 | Notifications | YES | **NO** | YES (Blocked) | **Create IFC-183** |
-| Home Page | YES | 75% | YES (60%) | Complete IFC-182 |
+| Home Page | YES | 100% | YES (60%) | IFC-182 DONE — PG-129 unblocked |
 | Analytics | YES | **NO** | YES (Backlog) | **Create IFC-190** |
 
 **Total New Tasks Required: 2**
@@ -358,11 +358,11 @@ The **Security & Platform** domain covers RBAC, Audit Logging, Encryption, Notif
     └─────────────────────────────────────────────────────────────────────────────────────────┘
 
     ┌─────────────────────────────────────────────────────────────────────────────────────────┐
-    │  PRIORITY 2: Home Page Router Completion (IFC-182)                                       │
+    │  PRIORITY 2: Home Page Router ✅ COMPLETE (IFC-182)                                      │
     │                                                                                          │
-    │  IFC-182 (75%) ─► Complete remaining endpoints ─► PG-129 (Unblocked, currently 60%)    │
+    │  IFC-182 (Complete) ─► All 8 endpoints done ─► PG-129 (Unblocked, currently 60%)       │
     │                                                                                          │
-    │  BLOCKING: 1 frontend page (partially)                                                   │
+    │  UNBLOCKED: PG-129 Home Page UI can now proceed                                         │
     └─────────────────────────────────────────────────────────────────────────────────────────┘
 
     ┌─────────────────────────────────────────────────────────────────────────────────────────┐

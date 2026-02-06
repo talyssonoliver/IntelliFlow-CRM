@@ -14,7 +14,7 @@
   ],
   "task_summary": {
     "total": 19,
-    "done": 18,
+    "done": 19,
     "in_progress": 0,
     "blocked": 0,
     "not_started": 0,
@@ -118,22 +118,27 @@
       "duration_minutes": 90
     },
     {
+      "task_id": "IFC-155",
+      "completed_at": "2026-01-31T00:15:00.000Z",
+      "duration_minutes": 10
+    },
+    {
       "task_id": "IFC-169",
-      "completed_at": "2026-02-06T17:06:42.412Z",
+      "completed_at": "2026-02-06T23:40:55.396Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-170",
-      "completed_at": "2026-02-06T17:06:42.412Z",
+      "completed_at": "2026-02-06T23:40:55.396Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-171",
-      "completed_at": "2026-02-06T17:06:42.412Z",
+      "completed_at": "2026-02-06T23:40:55.396Z",
       "duration_minutes": 15
     }
   ],
-  "notes": "18/19 tasks DONE (95%). Last synced: 2026-02-06T17:06:42.412Z",
+  "notes": "19/19 tasks DONE (100%). Last synced: 2026-02-06T23:40:55.396Z",
   "section": "Public Pages",
   "dependencies": {
     "all_satisfied": true,
@@ -183,14 +188,14 @@
         "IFC-155"
       ],
       "total_duration_minutes": 1170,
-      "completion_percentage": 73,
-      "bottleneck_task_id": "IFC-155"
+      "completion_percentage": 100,
+      "bottleneck_task_id": null
     },
     "schedule_variance": {
-      "sv_minutes": -312,
-      "spi": 0.91,
-      "status": "behind"
+      "sv_minutes": 0,
+      "spi": 1,
+      "status": "on_track"
     },
-    "calculated_at": "2026-02-06T17:06:42.469Z"
+    "calculated_at": "2026-02-06T23:40:55.446Z"
   }
 }

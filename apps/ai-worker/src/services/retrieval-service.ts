@@ -692,10 +692,6 @@ export class RetrievalService {
     const { tenantId } = aclContext;
     const { query, caseId, limit = 20 } = config;
 
-    // Build case filter (reserved for future use when adding case-scoped FTS)
-    const _caseFilter = caseId ? `AND cd.related_case_id = '${caseId}'` : '';
-    void _caseFilter; // Suppress unused variable warning
-
     // Execute FTS query using the helper function
     const results = await this.prisma.$queryRaw<FTSSearchResult[]>`
       SELECT

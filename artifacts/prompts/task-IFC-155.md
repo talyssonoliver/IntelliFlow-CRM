@@ -42,7 +42,7 @@ FILE:artifacts/sprint0/codex-run/Framework.md;FILE:audit-matrix.yml;ENV:pgvector
 7. gates: latency-check
 
 ### Artifacts to Track
-- ARTIFACT:packages/search/retrieval.ts
+- ARTIFACT:packages/search/src/retrieval.ts
 - ARTIFACT:artifacts/misc/relevance-eval.json
 - EVIDENCE:artifacts/attestations/IFC-155/context_ack.json
 

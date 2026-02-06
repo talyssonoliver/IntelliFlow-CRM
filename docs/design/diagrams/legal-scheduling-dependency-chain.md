@@ -107,8 +107,8 @@ The **Legal/Scheduling** domain covers Case Management, Appointments, Documents,
     │  - Tenant + case ACL        │         │  - Permission constraints   │
     │  - Cross-tenant protection  │         │  - Citations                │
     │                             │         │  - Injection hardening      │
-    │  Status: SPEC COMPLETE ⚠️   │         │                             │
-    │  Sprint: 12 (20%)           │ ───────►│  Status: COMPLETED ✅       │
+    │  Status: COMPLETED ✅        │         │                             │
+    │  Sprint: 12                  │ ───────►│  Status: COMPLETED ✅       │
     │                             │         │  Sprint: 13                 │
     └─────────────────────────────┘         └─────────────────────────────┘
 
@@ -286,7 +286,7 @@ The **Legal/Scheduling** domain covers Case Management, Appointments, Documents,
 | Calendar Sync | IFC-138, IFC-172 | COMPLETE | Google + Microsoft |
 | Email Integration | IFC-144, IFC-173 | COMPLETE | Inbound + Outbound |
 | Document Pipeline | IFC-153, IFC-154 | COMPLETE | Upload, OCR, storage |
-| Search Indexing | IFC-155 | 20% | Spec complete, needs implementation |
+| Search Indexing | IFC-155 | COMPLETE | FTS + embeddings with tenant/case ACL |
 | Notifications | IFC-157, IFC-170, IFC-171 | COMPLETE | All channels |
 | Agent Tools | IFC-139, IFC-156 | COMPLETE | RAG + CRUD tools |
 | Timeline | IFC-147, IFC-159 | COMPLETE | Enriched events |

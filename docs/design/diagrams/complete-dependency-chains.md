@@ -481,7 +481,7 @@ Dependency Chain:
     ┌──────────────────┐          ┌──────────────────┐          ┌──────────────────┐
     │    IFC-153       │          │    IFC-154       │          │    IFC-155       │
     │  Ingestion       │          │  OCR/Extract     │          │  Search Index    │
-    │      ✅          │          │      ✅          │          │      ⏳ 20%      │
+    │      ✅          │          │      ✅          │          │      ✅          │
     └────────┬─────────┘          └────────┬─────────┘          └────────┬─────────┘
              │                              │                              │
              └──────────────────────────────┼──────────────────────────────┘
@@ -500,7 +500,7 @@ Dependency Chain:
                                  └──────────────────┘
 
 Dependency Chain:
-  IFC-152 (Domain) ──┬──► IFC-153 (Ingestion) ──► IFC-154 (OCR) ──► IFC-155 (Index) ⏳ ──► documents.router ✅ ──► PG-140 (UI) ⬜
+  IFC-152 (Domain) ──┬──► IFC-153 (Ingestion) ──► IFC-154 (OCR) ──► IFC-155 (Index) ✅ ──► documents.router ✅ ──► PG-140 (UI) ⬜
                      │
                      └──► IFC-017 (Database) ───────────────────────────────────────────────────────────────────────┘
 ```
@@ -777,7 +777,7 @@ Dependency Chain:
     ┌──────────────────┐          ┌──────────────────┐          ┌──────────────────┐
     │    IFC-155       │          │    IFC-156       │          │    IFC-148       │
     │  Search Index    │          │  Case RAG Tool   │          │  Zep Memory      │
-    │      ⏳ 20%      │          │      ✅          │          │      ✅          │
+    │      ✅          │          │      ✅          │          │      ✅          │
     └────────┬─────────┘          └────────┬─────────┘          └────────┬─────────┘
              │                              │                              │
              └──────────────────────────────┼──────────────────────────────┘
@@ -790,7 +790,7 @@ Dependency Chain:
                                  └──────────────────┘
 
 Dependency Chain:
-  IFC-039 (RAG) ✅ ──┬──► IFC-155 (Index) ⏳20% ──► IFC-156 (RAG Tool) ✅ ──► PG-144 (UI) ⬜
+  IFC-039 (RAG) ✅ ──┬──► IFC-155 (Index) ✅ ──► IFC-156 (RAG Tool) ✅ ──► PG-144 (UI) ⬜
                      │
                      └──► IFC-148 (Zep) ✅ ──────────────────────────────────────────────┘
 ```
@@ -926,13 +926,13 @@ Dependency Chain:
 
 ---
 
-## Home Page (75% COMPLETE)
+## Home Page (ROUTER COMPLETE)
 
 ```
                                     ┌──────────────────┐
                                     │    IFC-182       │
                                     │  home.router     │
-                                    │      ⏳ 75%      │
+                                    │       ✅         │
                                     └────────┬─────────┘
                                              │
                                              ▼
@@ -943,7 +943,7 @@ Dependency Chain:
                                     └──────────────────┘
 
 Dependency Chain:
-  IFC-182 (Router) ⏳75% ──► PG-129 (UI) ⏳60%
+  IFC-182 (Router) ✅ ──► PG-129 (UI) ⏳60%
 ```
 
 ---
@@ -1738,7 +1738,7 @@ Explainability:IFC-023 (part of Lead Scoring) ✅
 ```
 AI Review:     IFC-128 ✅ ──┬──► IFC-176 ✅ ──► IFC-177 ⏳75% ──► IFC-179 ⬜ ──► IFC-180 ⬜ ──► IFC-181 ⬜
                            └──► IFC-178 ⏳20% ─────────────────────────────────────────────────┘
-Home Page:     IFC-182 ⏳75% ──► PG-129 ⏳60%
+Home Page:     IFC-182 ✅ ──► PG-129 ⏳60%
 ```
 
 ## Chains Missing UI Only (Router Exists) - 11 Total
@@ -1753,7 +1753,7 @@ Document:      IFC-152 ──► IFC-153 ──► IFC-154 ──► documents.r
 Email:         IFC-144 ──► IFC-173 ──► inbound.router ✅ ──► PG-141 ⬜
 Sentiment:     IFC-039 ──► timeline.router ✅ ──► PG-142 ⬜
 Churn:         IFC-095 ──► intelligence.router ✅ ──► PG-143 ⬜
-RAG:           IFC-039 ──► IFC-155 ⏳ ──► IFC-156 ✅ ──► PG-144 ⬜
+RAG:           IFC-039 ──► IFC-155 ✅ ──► IFC-156 ✅ ──► PG-144 ⬜
 AI Settings:   IFC-086 ✅ ──► chain-version.router ✅ ──► PG-128 ⬜
 Multi-Tenancy: IFC-098 ✅ ──► IFC-127 ✅ ──► Per-Tenant Keys ✅ ──► PG-106/107 ⬜
 RBAC/Audit:    IFC-098 ✅ ──► IFC-124 ✅ ──► Settings Routers ✅ ──► PG-108/109/110/112/120 ⬜

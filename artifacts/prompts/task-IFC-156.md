@@ -30,7 +30,7 @@ Dependency Status:
 - IFC-125 (DONE)
 
 ### Pre-requisites
-FILE:artifacts/sprint0/codex-run/Framework.md;FILE:audit-matrix.yml;ENV:Agent tool-calling exists; guardrails baseline; permissioned retrieval APIs available;FILE:docs/planning/adr/ADR-004-multi-tenancy.md;FILE:docs/planning/adr/ADR-006-agent-tools.md;FILE:docs/shared/review-checklist.md;FILE:docs/operations/quality-gates.md;FILE:docs/operations/pr-checklist.md;FILE:packages/search/retrieval.ts;FILE:artifacts/misc/logs/agent-actions.log;FILE:apps/api/src/shared/prompt-sanitizer.ts
+FILE:artifacts/sprint0/codex-run/Framework.md;FILE:audit-matrix.yml;ENV:Agent tool-calling exists; guardrails baseline; permissioned retrieval APIs available;FILE:docs/planning/adr/ADR-004-multi-tenancy.md;FILE:docs/planning/adr/ADR-006-agent-tools.md;FILE:docs/shared/review-checklist.md;FILE:docs/operations/quality-gates.md;FILE:docs/operations/pr-checklist.md;FILE:packages/search/src/retrieval.ts;FILE:artifacts/misc/logs/agent-actions.log;FILE:apps/api/src/shared/prompt-sanitizer.ts
 
 ### Definition of Done
 1. Agent tool implemented (retrieve_case_context)

@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/dependency-graph.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-02-06T17:06:42.461Z",
+  "last_updated": "2026-02-06T23:40:55.440Z",
   "description": "Cross-sprint dependency tracking for all tasks",
   "nodes": {
     "EXC-INIT-001": {
@@ -404,7 +404,8 @@
         "IFC-187",
         "IFC-188",
         "IFC-189",
-        "IFC-190"
+        "IFC-190",
+        "IFC-194"
       ]
     },
     "IFC-004": {
@@ -1284,7 +1285,9 @@
       "dependencies": [
         "IFC-001"
       ],
-      "dependents": []
+      "dependents": [
+        "IFC-196"
+      ]
     },
     "IFC-076": {
       "task_id": "IFC-076",
@@ -3834,11 +3837,11 @@
     "IFC-155": {
       "task_id": "IFC-155",
       "sprint": 12,
-      "status": "PLANNED",
+      "status": "DONE",
       "dependencies": [
-        "ENV-004-AI",
+        "IFC-154",
         "IFC-127",
-        "IFC-154"
+        "ENV-004-AI"
       ],
       "dependents": [
         "IFC-156",
@@ -4255,13 +4258,19 @@
     "IFC-182": {
       "task_id": "IFC-182",
       "sprint": 13,
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "dependencies": [
         "IFC-003",
         "IFC-089"
       ],
       "dependents": [
-        "PG-129"
+        "PG-129",
+        "IFC-191",
+        "IFC-192",
+        "IFC-193",
+        "IFC-194",
+        "IFC-195",
+        "IFC-196"
       ]
     },
     "IFC-183": {
@@ -4324,7 +4333,8 @@
         "IFC-003"
       ],
       "dependents": [
-        "PG-133"
+        "PG-133",
+        "IFC-192"
       ]
     },
     "IFC-185": {
@@ -4536,6 +4546,63 @@
       "dependencies": [
         "IFC-028",
         "IFC-141"
+      ],
+      "dependents": []
+    },
+    "IFC-191": {
+      "task_id": "IFC-191",
+      "sprint": 15,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-182"
+      ],
+      "dependents": []
+    },
+    "IFC-192": {
+      "task_id": "IFC-192",
+      "sprint": 15,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-182",
+        "IFC-184"
+      ],
+      "dependents": []
+    },
+    "IFC-193": {
+      "task_id": "IFC-193",
+      "sprint": 16,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-182"
+      ],
+      "dependents": []
+    },
+    "IFC-194": {
+      "task_id": "IFC-194",
+      "sprint": 16,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-003",
+        "IFC-182"
+      ],
+      "dependents": []
+    },
+    "IFC-195": {
+      "task_id": "IFC-195",
+      "sprint": 15,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-182"
+      ],
+      "dependents": []
+    },
+    "IFC-196": {
+      "task_id": "IFC-196",
+      "sprint": 17,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-075",
+        "IFC-182"
       ],
       "dependents": []
     }
@@ -7724,6 +7791,69 @@
       "from_sprint": 10,
       "to_sprint": 28,
       "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-182",
+      "to_task": "IFC-191",
+      "from_sprint": 13,
+      "to_sprint": 15,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-182",
+      "to_task": "IFC-192",
+      "from_sprint": 13,
+      "to_sprint": 15,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-184",
+      "to_task": "IFC-192",
+      "from_sprint": 4,
+      "to_sprint": 15,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-182",
+      "to_task": "IFC-193",
+      "from_sprint": 13,
+      "to_sprint": 16,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-182",
+      "to_task": "IFC-194",
+      "from_sprint": 13,
+      "to_sprint": 16,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-003",
+      "to_task": "IFC-194",
+      "from_sprint": 1,
+      "to_sprint": 16,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-182",
+      "to_task": "IFC-195",
+      "from_sprint": 13,
+      "to_sprint": 15,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-182",
+      "to_task": "IFC-196",
+      "from_sprint": 13,
+      "to_sprint": 17,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-075",
+      "to_task": "IFC-196",
+      "from_sprint": 1,
+      "to_sprint": 17,
+      "dependency_type": "REQUIRED"
     }
   ],
   "blocked_tasks": [
@@ -7809,7 +7939,6 @@
     "PG-103",
     "PG-105",
     "IFC-115",
-    "PG-144",
     "IFC-049",
     "IFC-050",
     "PG-106",
@@ -7836,7 +7965,6 @@
     "PG-138",
     "PG-139",
     "PG-141",
-    "IFC-155",
     "PG-017",
     "PG-019",
     "PG-021",
@@ -7863,13 +7991,19 @@
     "PG-131",
     "IFC-190",
     "PG-032",
+    "IFC-191",
+    "IFC-192",
+    "IFC-195",
     "PG-043",
     "PG-046",
+    "IFC-193",
+    "IFC-194",
     "IFC-030",
     "IFC-031",
     "PG-050",
     "PG-055",
     "PG-126",
+    "IFC-196",
     "IFC-070",
     "PG-058",
     "PG-059",
@@ -7898,6 +8032,7 @@
     "PG-101",
     "PG-102",
     "PG-143",
+    "PG-144",
     "PG-108",
     "PG-109",
     "PG-145",
@@ -7945,6 +8080,10 @@
       "group-2": [
         "PG-040",
         "PG-041"
+      ],
+      "group-3": [
+        "IFC-191",
+        "IFC-195"
       ]
     },
     "sprint-16": {

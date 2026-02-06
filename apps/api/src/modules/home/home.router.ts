@@ -82,6 +82,16 @@ function getInitials(name: string | null | undefined): string {
 }
 
 // =============================================================================
+// Constants
+// =============================================================================
+
+/** Days since last interaction before a deal is considered at risk */
+const DEAL_RISK_DAYS = 14;
+
+/** Minimum lead score to be considered a "hot" lead */
+const HOT_LEAD_SCORE = 80;
+
+// =============================================================================
 // Router Implementation
 // =============================================================================
 
@@ -287,17 +297,17 @@ export const homeRouter = createTRPCRouter({
     const tenantId = getTenantId(ctx);
     const userId = getUserId(ctx);
     const now = new Date();
-    const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+    const riskCutoff = new Date(now.getTime() - DEAL_RISK_DAYS * 24 * 60 * 60 * 1000);
 
     const insights: AIInsightsResponse['insights'] = [];
 
-    // Check for deals at risk (no interaction in 14+ days)
+    // Check for deals at risk (no interaction in DEAL_RISK_DAYS+ days)
     const dealsAtRisk = await ctx.prisma.opportunity.findMany({
       where: {
         tenantId,
         ownerId: userId,
         stage: { notIn: ['CLOSED_WON', 'CLOSED_LOST'] },
-        updatedAt: { lt: twoWeeksAgo },
+        updatedAt: { lt: riskCutoff },
       },
       take: 3,
       select: { id: true, name: true, updatedAt: true },
@@ -326,7 +336,7 @@ export const homeRouter = createTRPCRouter({
       where: {
         tenantId,
         ownerId: userId,
-        score: { gte: 80 },
+        score: { gte: HOT_LEAD_SCORE },
         status: { notIn: ['CONVERTED', 'LOST'] },
       },
       take: 2,
@@ -409,7 +419,7 @@ export const homeRouter = createTRPCRouter({
       const startTime = performance.now();
       const tenantId = getTenantId(ctx);
       const userId = getUserId(ctx);
-      const { limit, cursor } = input;
+      const { limit, cursor, types } = input;
 
       // Build where clause for audit log entries (consolidated table per ADR-008)
       // Filter by tenant (required for multi-tenancy) and optionally by user
@@ -423,6 +433,34 @@ export const homeRouter = createTRPCRouter({
 
       if (cursor) {
         where.id = { lt: cursor };
+      }
+
+      // Apply activity type filter
+      if (types && types.length > 0) {
+        const typePatterns: Record<string, string[]> = {
+          mention: ['mention'],
+          call: ['call'],
+          email: ['email'],
+          task: ['task'],
+          deal: ['deal', 'opportunity'],
+          lead: ['lead'],
+          ai: ['ai', 'agent'],
+          system: ['system'],
+        };
+        const orConditions: any[] = [];
+        for (const t of types) {
+          const patterns = typePatterns[t] || [t];
+          for (const pattern of patterns) {
+            orConditions.push({
+              eventType: { contains: pattern, mode: 'insensitive' as const },
+            });
+          }
+          // For 'ai' type, also match by actorType
+          if (t === 'ai') {
+            orConditions.push({ actorType: 'AI_AGENT' });
+          }
+        }
+        where.AND = [{ OR: orConditions }];
       }
 
       // Fetch from audit log entries (comprehensive table)
@@ -491,6 +529,11 @@ export const homeRouter = createTRPCRouter({
 
   /**
    * Get daily goal progress
+   *
+   * @remarks Currently only supports the 'revenue' goal type with a hardcoded
+   * $5,000 daily target. Other goal types (calls, meetings, tasks, custom)
+   * are not yet implemented and will require user settings infrastructure.
+   * See IFC-195 for the customizable goals feature.
    */
   getDailyGoal: protectedProcedure.query(async ({ ctx }): Promise<DailyGoalResponse> => {
     const startTime = performance.now();

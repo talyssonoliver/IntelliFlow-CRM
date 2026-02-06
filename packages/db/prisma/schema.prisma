@@ -153,18 +153,33 @@ model Lead {
 
 /// Lead activity timeline entry (Lead 360)
 model LeadActivity {
-  id          String   @id @default(cuid())
+  id          String            @id @default(cuid())
   leadId      String
-  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  type        String   // e.g., 'email', 'call', 'meeting', 'note', 'status_change'
+  lead        Lead              @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  type        LeadActivityType
+  title       String
   description String?
+  timestamp   DateTime          @default(now())
+  userId      String?
+  userName    String
+  sentiment   Sentiment?
   metadata    Json?
-  timestamp   DateTime @default(now())
-  performedBy String?
+  tenantId    String
 
   @@index([leadId])
   @@index([timestamp])
   @@map("lead_activities")
+}
+
+enum LeadActivityType {
+  WEB_FORM
+  EMAIL
+  CALL
+  MEETING
+  NOTE
+  SCORE_UPDATE
+  STATUS_CHANGE
+  QUALIFICATION
 }
 
 /// Lead notes (Lead 360)
@@ -173,7 +188,8 @@ model LeadNote {
   leadId    String
   lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
   content   String   @db.Text
-  authorId  String?
+  author    String
+  tenantId  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -184,15 +200,17 @@ model LeadNote {
 
 /// Lead file attachments (Lead 360)
 model LeadFile {
-  id         String   @id @default(cuid())
-  leadId     String
-  lead       Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  filename   String
-  url        String
-  mimeType   String?
-  size       Int?
-  uploadedBy String?
-  uploadedAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  leadId       String
+  lead         Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  name         String
+  size         String
+  sizeBytes    Int?
+  fileType     FileType @default(OTHER)
+  url          String?
+  uploadedAt   DateTime @default(now())
+  uploadedById String?
+  tenantId     String
 
   @@index([leadId])
   @@index([uploadedAt])

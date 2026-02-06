@@ -34,19 +34,21 @@ beforeAll(async () => {
   });
 });
 
-// Clean up tenant after all tests
+// Clean up tenant after all tests — always runs even if tests fail
 afterAll(async () => {
-  // Delete all domain events for this tenant first
-  await prisma.domainEvent.deleteMany({
-    where: { tenantId: TEST_TENANT_ID },
-  }).catch(() => {});
+  try {
+    // Delete all domain events for this tenant first
+    await prisma.domainEvent.deleteMany({
+      where: { tenantId: TEST_TENANT_ID },
+    }).catch(() => {});
 
-  // Then delete the tenant
-  await prisma.tenant.deleteMany({
-    where: { id: TEST_TENANT_ID },
-  }).catch(() => {});
-
-  await prisma.$disconnect();
+    // Then delete the tenant
+    await prisma.tenant.deleteMany({
+      where: { id: TEST_TENANT_ID },
+    }).catch(() => {});
+  } finally {
+    await prisma.$disconnect();
+  }
 });
 
 beforeEach(async () => {

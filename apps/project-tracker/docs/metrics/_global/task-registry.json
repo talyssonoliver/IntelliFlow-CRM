@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-02-06T17:06:42.319Z",
+  "last_updated": "2026-02-06T23:40:55.303Z",
   "total_tasks": 305,
   "sprints": {
     "sprint-0": {
@@ -192,6 +192,7 @@
       "IFC-152",
       "IFC-153",
       "IFC-154",
+      "IFC-155",
       "IFC-156",
       "IFC-157",
       "IFC-158",
@@ -219,19 +220,18 @@
       "IFC-178",
       "IFC-179",
       "IFC-180",
+      "IFC-182",
       "IFC-184",
       "IFC-185",
       "IFC-186",
       "IFC-188"
     ],
     "IN_PROGRESS": [
-      "IFC-182",
       "PG-129"
     ],
     "VALIDATING": [],
     "BLOCKED": [],
     "PLANNED": [
-      "IFC-155",
       "PG-128"
     ],
     "BACKLOG": [
@@ -414,7 +414,13 @@
       "PG-144",
       "PG-145",
       "PG-146",
-      "PG-147"
+      "PG-147",
+      "IFC-191",
+      "IFC-192",
+      "IFC-193",
+      "IFC-194",
+      "IFC-195",
+      "IFC-196"
     ],
     "FAILED": [],
     "NEEDS_HUMAN": [],
@@ -6060,7 +6066,7 @@
       "section": "Search/AI",
       "description": "Permissioned indexing for case documents and notes: full-text + embeddings with tenant/case ACL filters",
       "owner": "Backend Dev + AI Specialist (STOA-Intelligence)",
-      "status": "PLANNED",
+      "status": "DONE",
       "sprint": 12,
       "dependencies": [
         "IFC-154",
@@ -6092,7 +6098,7 @@
       "kpis": "0 unauthorized retrievals; response time p95 <2s; hallucination rate reduced via eval suite",
       "definition_of_done": "Agent tool implemented (retrieve_case_context); responses include source references; injection defenses applied; approval needed for external send; tests; artifacts: retrieve-case-context.ts, case-rag.md, context_ack.json; targets: <2s",
       "validation": "AUDIT:manual-review;VALIDATE:pnpm test",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Agent tool-calling exists; guardrails baseline; permissioned retrieval APIs available;FILE:docs/planning/adr/ADR-004-multi-tenancy.md;FILE:docs/planning/adr/ADR-006-agent-tools.md;FILE:docs/shared/review-checklist.md;FILE:docs/operations/quality-gates.md;FILE:docs/operations/pr-checklist.md;FILE:packages/search/retrieval.ts;FILE:artifacts/misc/logs/agent-actions.log;FILE:apps/api/src/shared/prompt-sanitizer.ts"
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Agent tool-calling exists; guardrails baseline; permissioned retrieval APIs available;FILE:docs/planning/adr/ADR-004-multi-tenancy.md;FILE:docs/planning/adr/ADR-006-agent-tools.md;FILE:docs/shared/review-checklist.md;FILE:docs/operations/quality-gates.md;FILE:docs/operations/pr-checklist.md;FILE:packages/search/src/retrieval.ts;FILE:artifacts/misc/logs/agent-actions.log;FILE:apps/api/src/shared/prompt-sanitizer.ts"
     },
     "IFC-157": {
       "section": "Notifications",
@@ -6151,7 +6157,7 @@
       "kpis": "Timeline load <1s; user task completion improved; 0 unauthorized events visible",
       "definition_of_done": "Timeline shows unified chronological events (tasks/deadlines/docs/comms/agent actions); filters; permissions enforced; E2E tests; targets: <1s",
       "validation": "VALIDATE:pnpm test;VALIDATE:pnpm test:e2e",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Timeline UI exists; ingestion pipeline available; comms and agent actions recorded;FILE:docs/planning/adr/ADR-006-agent-tools.md;FILE:docs/shared/review-checklist.md;FILE:docs/operations/pr-checklist.md;FILE:apps/web/src/app/cases/timeline/page.tsx;FILE:docs/operations/runbooks/ingestion.md;FILE:packages/adapters/src/messaging/email/outbound.ts;FILE:apps/web/src/app/agent-approvals/page.tsx;FILE:packages/db/prisma/conversation.sql;FILE:docs/design/sitemap.md;FILE:docs/design/ui-flow-mapping.md;FILE:docs/design/page-registry.md;FILE:apps/project-tracker/docs/metrics/_global/flows/flow-index.md"
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Timeline UI exists; ingestion pipeline available; comms and agent actions recorded;FILE:docs/planning/adr/ADR-006-agent-tools.md;FILE:docs/shared/review-checklist.md;FILE:docs/operations/pr-checklist.md;FILE:apps/web/src/app/cases/timeline/page.tsx;FILE:docs/operations/runbooks/ingestion.md;FILE:packages/adapters/src/messaging/email/outbound.ts;FILE:apps/web/src/app/agent-approvals/page.tsx;FILE:packages/db/prisma/migrations/20260131000000_init/migration.sql;FILE:docs/design/sitemap.md;FILE:docs/design/ui-flow-mapping.md;FILE:docs/design/page-registry.md;FILE:apps/project-tracker/docs/metrics/_global/flows/flow-index.md"
     },
     "IFC-160": {
       "section": "Planning",
@@ -6682,7 +6688,7 @@
       "kpis": "100% schema coverage; all domain types have validators; tests passing",
       "definition_of_done": "Zod schemas derived from domain constants; CreateReviewInput, ReviewDecisionInput, ReviewListFilter schemas; exports match domain types; verified by: pnpm test",
       "validation": "VALIDATE:pnpm test;GATE:no-placeholder-code",
-      "prerequisites": "FILE:packages/domain/src/ai/review/index.ts;FILE:packages/validators/src/ai-outputs.ts"
+      "prerequisites": "FILE:packages/domain/src/ai/review/index.ts;FILE:packages/validators/src/ai-review.ts"
     },
     "IFC-177": {
       "section": "AI Foundation",
@@ -6735,7 +6741,7 @@
       "kpis": "Repository implements all port methods; queries optimized; tests passing",
       "definition_of_done": "PrismaAIOutputReviewRepository implements port; CRUD operations; query filters for status/tenant/SLA; event publishing; verified by: pnpm test",
       "validation": "VALIDATE:pnpm test;VALIDATE:pnpm test:integration",
-      "prerequisites": "FILE:packages/application/src/ports/IAIOutputReviewRepository.ts;FILE:packages/db/prisma/schema.prisma;FILE:docs/architecture/hex-boundaries.md"
+      "prerequisites": "FILE:packages/application/src/ports/repositories/AIOutputReviewRepositoryPort.ts;FILE:packages/db/prisma/schema.prisma;FILE:docs/architecture/hex-boundaries.md"
     },
     "IFC-180": {
       "section": "AI Foundation",
@@ -6752,7 +6758,7 @@
       "kpis": "All endpoints working; auth enforced; response <200ms",
       "definition_of_done": "review.list, review.get, review.claim, review.approve, review.reject, review.escalate, review.stats endpoints; authentication/authorization; verified by: pnpm test",
       "validation": "VALIDATE:pnpm test;AUDIT:code-review",
-      "prerequisites": "FILE:packages/adapters/src/persistence/PrismaAIOutputReviewRepository.ts;FILE:packages/application/src/usecases/ai-review/index.ts;FILE:apps/api/src/trpc.ts"
+      "prerequisites": "FILE:packages/adapters/src/repositories/PrismaAIOutputReviewRepository.ts;FILE:packages/application/src/usecases/ai-review/index.ts;FILE:apps/api/src/trpc.ts"
     },
     "IFC-181": {
       "section": "AI Foundation",
@@ -6776,14 +6782,14 @@
       "section": "Infrastructure",
       "description": "Home Page tRPC Router - Welcome summary activity feed AI insights pinned items daily goals",
       "owner": "Backend Dev (STOA-Domain)",
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "sprint": 13,
       "dependencies": [
         "IFC-003",
         "IFC-089"
       ],
       "artifacts": [
-        "ARTIFACT:apps/api/src/modules/home/home.router.ts;ARTIFACT:packages/validators/src/home.ts;ARTIFACT:apps/api/src/modules/home/__tests__/home.router.test.ts;ARTIFACT:docs/planning/prd-home-page.md;SPEC:docs/specs/HOME-PAGE-SPEC.md;EVIDENCE:.specify/sprints/sprint-13/attestations/IFC-182/context_ack.json"
+        "ARTIFACT:apps/api/src/modules/home/home.router.ts;ARTIFACT:packages/validators/src/home.ts;ARTIFACT:apps/api/src/modules/home/__tests__/home.router.test.ts;ARTIFACT:docs/planning/prd-home-page.md;SPEC:docs/specs/HOME-PAGE-SPEC.md;EVIDENCE:.specify/sprints/sprint-13/attestations/IFC-182/attestation.json"
       ],
       "kpis": "All endpoints <200ms; test coverage >=90%; wired to router.ts",
       "definition_of_done": "home.getWelcomeSummary, home.getAIInsights, home.getActivityFeed, home.getDailyGoal, home.getPinnedItems, home.pinItem, home.unpinItem, home.reorderPinnedItems; verified by: pnpm test",
@@ -7266,6 +7272,111 @@
       "definition_of_done": "Response <500ms, Lighthouse >=90; WorkflowList, WorkflowDetail, StepVisualization, ExecutionLogs, StatusBadges, WorkflowTriggers components; verified by: pnpm test",
       "validation": "VALIDATE:pnpm test;GATE:lighthouse-gte-90",
       "prerequisites": "FILE:apps/api/src/modules/workflow/workflow.router.ts;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/design/UI_DEVELOPMENT_PROMPT.md"
+    },
+    "IFC-191": {
+      "section": "Platform",
+      "description": "User Timezone Support - Add timezone field to User model with preference UI and timezone-aware greeting",
+      "owner": "Backend Dev (STOA-Domain)",
+      "status": "BACKLOG",
+      "sprint": 15,
+      "dependencies": [
+        "IFC-182"
+      ],
+      "artifacts": [
+        "ARTIFACT:packages/db/prisma/migrations/*_add_user_timezone/migration.sql;ARTIFACT:apps/web/src/components/settings/TimezoneSelector.tsx;EVIDENCE:.specify/sprints/sprint-15/attestations/IFC-191/context_ack.json"
+      ],
+      "kpis": "Greeting correct for all timezones; migration reversible; settings UI works; test coverage >=90%",
+      "definition_of_done": "User.timezone field added to Prisma schema; migration applied; home.getWelcomeSummary greeting uses user timezone; settings UI allows timezone selection; fallback chain: user → tenant → UTC; verified by: pnpm test",
+      "validation": "VALIDATE:pnpm test;GATE:coverage-gte-90",
+      "prerequisites": "FILE:packages/db/prisma/schema.prisma;FILE:apps/api/src/modules/home/home.router.ts;FILE:apps/web/src/app/settings/page.tsx"
+    },
+    "IFC-192": {
+      "section": "Core CRM",
+      "description": "Contact Activity Tracking - Add lastContactedAt field to Contact model with auto-update on interactions",
+      "owner": "Backend Dev (STOA-Domain)",
+      "status": "BACKLOG",
+      "sprint": 15,
+      "dependencies": [
+        "IFC-182",
+        "IFC-184"
+      ],
+      "artifacts": [
+        "ARTIFACT:packages/db/prisma/migrations/*_add_contact_last_contacted/migration.sql;ARTIFACT:packages/adapters/src/events/handlers/UpdateContactLastContactedHandler.ts;EVIDENCE:.specify/sprints/sprint-15/attestations/IFC-192/context_ack.json"
+      ],
+      "kpis": "lastContactedAt updates on interactions; stale contact insight works; migration reversible; test coverage >=90%",
+      "definition_of_done": "Contact.lastContactedAt field added to Prisma schema; migration applied; field auto-updated on call/email/meeting events via domain event handler; home.getAIInsights generates stale contact warnings (30+ days no contact with open opportunities); verified by: pnpm test",
+      "validation": "VALIDATE:pnpm test;GATE:coverage-gte-90",
+      "prerequisites": "FILE:packages/db/prisma/schema.prisma;FILE:packages/domain/src/crm/contact/Contact.ts;FILE:apps/api/src/modules/contact/contact.router.ts"
+    },
+    "IFC-193": {
+      "section": "Infrastructure",
+      "description": "Activity Feed Type Registry - Enum-based mapping from AuditLogEntry.eventType to ActivityFeedType with metadata",
+      "owner": "Backend Dev (STOA-Domain)",
+      "status": "BACKLOG",
+      "sprint": 16,
+      "dependencies": [
+        "IFC-182"
+      ],
+      "artifacts": [
+        "ARTIFACT:packages/domain/src/crm/activity/ActivityTypeRegistry.ts;ARTIFACT:packages/domain/src/crm/activity/__tests__/ActivityTypeRegistry.test.ts;EVIDENCE:.specify/sprints/sprint-16/attestations/IFC-193/context_ack.json"
+      ],
+      "kpis": "All event types mapped; registry extensible; no string matching in router; test coverage >=90%",
+      "definition_of_done": "ACTIVITY_TYPE_REGISTRY constant maps all AuditLogEntry.eventType values to ActivityFeedType with icon/label/color metadata; router uses registry instead of string includes(); new event types require only registry entry; verified by: pnpm test",
+      "validation": "VALIDATE:pnpm test;GATE:coverage-gte-90",
+      "prerequisites": "FILE:apps/api/src/modules/home/home.router.ts;FILE:packages/domain/src/events/EventTypes.ts;FILE:packages/validators/src/home.ts"
+    },
+    "IFC-194": {
+      "section": "Architecture",
+      "description": "Router Middleware Standardization - Migrate all routers from manual getTenantId to tenantProcedure",
+      "owner": "Backend Dev (STOA-Foundation)",
+      "status": "BACKLOG",
+      "sprint": 16,
+      "dependencies": [
+        "IFC-182",
+        "IFC-003"
+      ],
+      "artifacts": [
+        "ARTIFACT:tests/architecture/tenant-procedure-enforcement.test.ts;EVIDENCE:.specify/sprints/sprint-16/attestations/IFC-194/context_ack.json"
+      ],
+      "kpis": "All routers use tenantProcedure; no manual tenant extraction; architecture test passing; zero functional regressions",
+      "definition_of_done": "All tenant-scoped routers use tenantProcedure from trpc.ts; manual getTenantId/getUserId helpers removed; consistent ctx.tenantId access pattern across all routers; architecture test enforces tenantProcedure usage; verified by: pnpm test",
+      "validation": "VALIDATE:pnpm test;GATE:architecture-test-pass",
+      "prerequisites": "FILE:apps/api/src/trpc.ts;FILE:apps/api/src/router.ts;FILE:apps/api/src/modules/home/home.router.ts"
+    },
+    "IFC-195": {
+      "section": "Core CRM",
+      "description": "Customizable Daily Goals - Multi-type goal support (revenue calls meetings tasks custom) with user preferences",
+      "owner": "Backend Dev (STOA-Domain)",
+      "status": "BACKLOG",
+      "sprint": 15,
+      "dependencies": [
+        "IFC-182"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/api/src/modules/home/home.router.ts;ARTIFACT:apps/web/src/components/home/GoalSettingsModal.tsx;EVIDENCE:.specify/sprints/sprint-15/attestations/IFC-195/context_ack.json"
+      ],
+      "kpis": "All 5 goal types calculate correctly; preferences persist; settings modal works; test coverage >=90%",
+      "definition_of_done": "home.getDailyGoal calculates progress for all 5 goal types (revenue/calls/meetings/tasks/custom); home.updateDailyGoal mutation saves goal preferences; user can select goal type and target from settings modal; default remains $5000 revenue; verified by: pnpm test",
+      "validation": "VALIDATE:pnpm test;GATE:coverage-gte-90",
+      "prerequisites": "FILE:apps/api/src/modules/home/home.router.ts;FILE:packages/validators/src/home.ts;FILE:apps/web/src/components/home/AuthenticatedHomePage.tsx"
+    },
+    "IFC-196": {
+      "section": "Performance",
+      "description": "Home Page Response Caching - Redis caching for getWelcomeSummary with event-driven invalidation",
+      "owner": "Backend Dev (STOA-Foundation)",
+      "status": "BACKLOG",
+      "sprint": 17,
+      "dependencies": [
+        "IFC-182",
+        "IFC-075"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/api/src/modules/home/home.cache.ts;ARTIFACT:apps/api/src/modules/home/__tests__/home.cache.test.ts;EVIDENCE:.specify/sprints/sprint-17/attestations/IFC-196/context_ack.json"
+      ],
+      "kpis": "Cache hit rate >80%; p95 <50ms on cache hit; graceful degradation; invalidation correct; test coverage >=90%",
+      "definition_of_done": "getWelcomeSummary cached in Redis with 5-minute TTL; cache key: tenant:userId:home:summary; invalidated on lead/opportunity/task mutations via domain events; graceful fallback to direct queries when Redis unavailable; verified by: pnpm test",
+      "validation": "VALIDATE:pnpm test;GATE:coverage-gte-90",
+      "prerequisites": "FILE:apps/api/src/modules/home/home.router.ts;FILE:packages/adapters/src/cache/RedisCacheAdapter.ts"
     }
   }
 }

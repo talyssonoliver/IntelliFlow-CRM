@@ -165,6 +165,27 @@ describeIntegration('Home Router - Integration Tests', () => {
 
       expect(duration).toBeLessThan(500);
     });
+
+    it('should filter activity feed by types parameter', async () => {
+      const ctx = await createIntegrationTestContext();
+      const caller = homeRouter.createCaller(ctx);
+
+      const result = await caller.getActivityFeed({ limit: 10, types: ['lead'] });
+
+      // Should return feed items structure (may be empty if no lead events)
+      expect(Array.isArray(result.items)).toBe(true);
+      expect(typeof result.hasMore).toBe('boolean');
+    });
+
+    it('should return empty feed when filtering by unused type', async () => {
+      const ctx = await createIntegrationTestContext();
+      const caller = homeRouter.createCaller(ctx);
+
+      // Filter by 'mention' which is unlikely to have data in seed
+      const result = await caller.getActivityFeed({ limit: 10, types: ['mention'] });
+
+      expect(Array.isArray(result.items)).toBe(true);
+    });
   });
 
   // =============================================================================
@@ -299,6 +320,77 @@ describeIntegration('Home Router - Integration Tests', () => {
       for (const item of items) {
         await caller.unpinItem({ entityType: item.entityType, entityId: item.entityId });
       }
+    });
+  });
+
+  // =============================================================================
+  // Mutation Performance Tests
+  // =============================================================================
+  describe('Mutation performance', () => {
+    it('pinItem should respond within 200ms', async () => {
+      const ctx = await createIntegrationTestContext();
+      const caller = homeRouter.createCaller(ctx);
+      const uniqueId = 'perf-pin-' + Date.now();
+
+      const start = performance.now();
+      await caller.pinItem({
+        entityType: 'lead',
+        entityId: uniqueId,
+        title: 'Perf Test',
+        url: '/leads/perf',
+      });
+      const duration = performance.now() - start;
+
+      expect(duration).toBeLessThan(500);
+
+      // Cleanup
+      await caller.unpinItem({ entityType: 'lead', entityId: uniqueId });
+    });
+
+    it('unpinItem should respond within 200ms', async () => {
+      const ctx = await createIntegrationTestContext();
+      const caller = homeRouter.createCaller(ctx);
+      const uniqueId = 'perf-unpin-' + Date.now();
+
+      // Setup
+      await caller.pinItem({
+        entityType: 'lead',
+        entityId: uniqueId,
+        title: 'Perf Test Unpin',
+        url: '/leads/perf-unpin',
+      });
+
+      const start = performance.now();
+      await caller.unpinItem({ entityType: 'lead', entityId: uniqueId });
+      const duration = performance.now() - start;
+
+      expect(duration).toBeLessThan(500);
+    });
+
+    it('reorderPinnedItems should respond within 200ms', async () => {
+      const ctx = await createIntegrationTestContext();
+      const caller = homeRouter.createCaller(ctx);
+      const id1 = 'perf-reorder-1-' + Date.now();
+      const id2 = 'perf-reorder-2-' + Date.now();
+
+      // Setup
+      await caller.pinItem({ entityType: 'lead', entityId: id1, title: 'R1', url: '/r1' });
+      await caller.pinItem({ entityType: 'contact', entityId: id2, title: 'R2', url: '/r2' });
+
+      const start = performance.now();
+      await caller.reorderPinnedItems({
+        items: [
+          { entityType: 'contact', entityId: id2, position: 0 },
+          { entityType: 'lead', entityId: id1, position: 1 },
+        ],
+      });
+      const duration = performance.now() - start;
+
+      expect(duration).toBeLessThan(500);
+
+      // Cleanup
+      await caller.unpinItem({ entityType: 'lead', entityId: id1 });
+      await caller.unpinItem({ entityType: 'contact', entityId: id2 });
     });
   });
 

@@ -80,7 +80,7 @@ You must adhere to the following guidelines while implementing this task: .speci
 7. targets: >=100%
 
 ### Artifacts to Track
-- ARTIFACT:packages/db/prisma/conversation.sql
+- ARTIFACT:packages/db/prisma/migrations/20260131000000_init/migration.sql
 - ARTIFACT:apps/api/src/modules/conversation.ts
 - ARTIFACT:artifacts/misc/search/conversation-index.ts
 - ARTIFACT:artifacts/misc/data-retention-config.yaml

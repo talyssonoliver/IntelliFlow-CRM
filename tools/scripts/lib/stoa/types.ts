@@ -485,6 +485,7 @@ export interface SpecSession {
   selectedAgents: AgentSelection;
   rounds: SpecSessionRound[];
   status: 'in_progress' | 'completed' | 'failed';
+  agentMode?: 'subagent' | 'team';
   startedAt?: string;
   completedAt?: string;
 }

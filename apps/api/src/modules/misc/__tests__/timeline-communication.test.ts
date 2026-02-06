@@ -102,13 +102,13 @@ describe('TimelineCommunicationService', () => {
       const result = await service.getEmailEvents({ contactId: 'contact-1' });
 
       expect(result).toHaveLength(1);
-      expect(result[0].id).toBe('email-email-1');
-      expect(result[0].type).toBe(TimelineEventType.EMAIL);
-      expect(result[0].title).toBe('Follow up on proposal');
-      expect(result[0].description).toBe('Dear client, here is the updated proposal...');
-      expect(result[0].timestamp).toEqual(mockEmail.sentAt);
-      expect(result[0].entityType).toBe('email');
-      expect(result[0].entityId).toBe('email-1');
+      expect(result[0]!.id).toBe('email-email-1');
+      expect(result[0]!.type).toBe(TimelineEventType.EMAIL);
+      expect(result[0]!.title).toBe('Follow up on proposal');
+      expect(result[0]!.description).toBe('Dear client, here is the updated proposal...');
+      expect(result[0]!.timestamp).toEqual(mockEmail.sentAt);
+      expect(result[0]!.entityType).toBe('email');
+      expect(result[0]!.entityId).toBe('email-1');
     });
 
     it('should set communication direction based on fromEmail', async () => {
@@ -132,10 +132,10 @@ describe('TimelineCommunicationService', () => {
 
       const result = await service.getEmailEvents({});
 
-      expect(result[0].communication).toBeDefined();
-      expect(result[0].communication!.channel).toBe('email');
+      expect(result[0]!.communication).toBeDefined();
+      expect(result[0]!.communication!.channel).toBe('email');
       // fromEmail contains '@' so direction is outbound
-      expect(result[0].communication!.direction).toBe('outbound');
+      expect(result[0]!.communication!.direction).toBe('outbound');
     });
 
     it('should handle emails with no body gracefully', async () => {
@@ -159,8 +159,8 @@ describe('TimelineCommunicationService', () => {
 
       const result = await service.getEmailEvents({});
 
-      expect(result[0].title).toBe('Email');
-      expect(result[0].description).toBeNull();
+      expect(result[0]!.title).toBe('Email');
+      expect(result[0]!.description).toBeNull();
     });
 
     it('should filter by contactId', async () => {
@@ -265,11 +265,11 @@ describe('TimelineCommunicationService', () => {
 
       const result = await service.getEmailEvents({});
 
-      expect(result[0].metadata.openCount).toBe(3);
-      expect(result[0].metadata.clickCount).toBe(2);
-      expect(result[0].metadata.hasAttachments).toBe(true);
-      expect(result[0].metadata.attachmentCount).toBe(1);
-      expect(result[0].metadata.ccEmails).toEqual(['cc@test.com']);
+      expect(result[0]!.metadata!.openCount).toBe(3);
+      expect(result[0]!.metadata!.clickCount).toBe(2);
+      expect(result[0]!.metadata!.hasAttachments).toBe(true);
+      expect(result[0]!.metadata!.attachmentCount).toBe(1);
+      expect(result[0]!.metadata!.ccEmails).toEqual(['cc@test.com']);
     });
 
     it('should set actor when userId is present', async () => {
@@ -293,9 +293,9 @@ describe('TimelineCommunicationService', () => {
 
       const result = await service.getEmailEvents({});
 
-      expect(result[0].actor).not.toBeNull();
-      expect(result[0].actor!.id).toBe('user-123');
-      expect(result[0].actor!.isAgent).toBe(false);
+      expect(result[0]!.actor).not.toBeNull();
+      expect(result[0]!.actor!.id).toBe('user-123');
+      expect(result[0]!.actor!.isAgent).toBe(false);
     });
 
     it('should set actor to null when userId is not present', async () => {
@@ -319,7 +319,7 @@ describe('TimelineCommunicationService', () => {
 
       const result = await service.getEmailEvents({});
 
-      expect(result[0].actor).toBeNull();
+      expect(result[0]!.actor).toBeNull();
     });
 
     it('should use sentAt as timestamp when available, otherwise createdAt', async () => {
@@ -344,7 +344,7 @@ describe('TimelineCommunicationService', () => {
       mockPrisma.emailRecord.findMany.mockResolvedValue([mockEmail]);
 
       const result = await service.getEmailEvents({});
-      expect(result[0].timestamp).toEqual(sentAt);
+      expect(result[0]!.timestamp).toEqual(sentAt);
     });
   });
 
@@ -389,12 +389,12 @@ describe('TimelineCommunicationService', () => {
       const result = await service.getChatEvents({ contactId: 'contact-1' });
 
       expect(result).toHaveLength(1);
-      expect(result[0].id).toBe('chat-msg-1');
-      expect(result[0].type).toBe(TimelineEventType.COMMUNICATION);
-      expect(result[0].title).toBe('Message from John Client');
-      expect(result[0].description).toBe('Hello, I need help with my account');
-      expect(result[0].communication!.channel).toBe('whatsapp');
-      expect(result[0].communication!.direction).toBe('inbound');
+      expect(result[0]!.id).toBe('chat-msg-1');
+      expect(result[0]!.type).toBe(TimelineEventType.COMMUNICATION);
+      expect(result[0]!.title).toBe('Message from John Client');
+      expect(result[0]!.description).toBe('Hello, I need help with my account');
+      expect(result[0]!.communication!.channel).toBe('whatsapp');
+      expect(result[0]!.communication!.direction).toBe('inbound');
     });
 
     it('should set outbound direction for user/bot messages', async () => {
@@ -421,8 +421,8 @@ describe('TimelineCommunicationService', () => {
 
       const result = await service.getChatEvents({});
 
-      expect(result[0].communication!.direction).toBe('outbound');
-      expect(result[0].title).toBe('Message to Client');
+      expect(result[0]!.communication!.direction).toBe('outbound');
+      expect(result[0]!.title).toBe('Message to Client');
     });
 
     it('should filter conversations by channel', async () => {
@@ -477,10 +477,10 @@ describe('TimelineCommunicationService', () => {
 
       const result = await service.getChatEvents({});
 
-      expect(result[0].actor).not.toBeNull();
-      expect(result[0].actor!.id).toBe('user-1');
-      expect(result[0].actor!.name).toBe('Agent Smith');
-      expect(result[0].actor!.isAgent).toBe(false);
+      expect(result[0]!.actor).not.toBeNull();
+      expect(result[0]!.actor!.id).toBe('user-1');
+      expect(result[0]!.actor!.name).toBe('Agent Smith');
+      expect(result[0]!.actor!.isAgent).toBe(false);
     });
 
     it('should mark bot senders as agents', async () => {
@@ -507,7 +507,7 @@ describe('TimelineCommunicationService', () => {
 
       const result = await service.getChatEvents({});
 
-      expect(result[0].actor!.isAgent).toBe(true);
+      expect(result[0]!.actor!.isAgent).toBe(true);
     });
 
     it('should include message metadata', async () => {
@@ -534,10 +534,10 @@ describe('TimelineCommunicationService', () => {
 
       const result = await service.getChatEvents({});
 
-      expect(result[0].metadata.senderType).toBe('contact');
-      expect(result[0].metadata.channel).toBe('teams');
-      expect(result[0].metadata.isRead).toBe(true);
-      expect(result[0].metadata.attachments).toEqual(['file.pdf']);
+      expect(result[0]!.metadata!.senderType).toBe('contact');
+      expect(result[0]!.metadata!.channel).toBe('teams');
+      expect(result[0]!.metadata!.isRead).toBe(true);
+      expect(result[0]!.metadata!.attachments).toEqual(['file.pdf']);
     });
   });
 
@@ -571,14 +571,14 @@ describe('TimelineCommunicationService', () => {
       const result = await service.getCallEvents({});
 
       expect(result).toHaveLength(1);
-      expect(result[0].id).toBe('call-call-1');
-      expect(result[0].type).toBe(TimelineEventType.CALL);
-      expect(result[0].title).toBe('Incoming call from John Client');
-      expect(result[0].description).toBe('Discussed pricing options');
-      expect(result[0].communication!.channel).toBe('phone');
-      expect(result[0].communication!.direction).toBe('inbound');
-      expect(result[0].communication!.from).toBe('+1234567890');
-      expect(result[0].communication!.to).toBe('+0987654321');
+      expect(result[0]!.id).toBe('call-call-1');
+      expect(result[0]!.type).toBe(TimelineEventType.CALL);
+      expect(result[0]!.title).toBe('Incoming call from John Client');
+      expect(result[0]!.description).toBe('Discussed pricing options');
+      expect(result[0]!.communication!.channel).toBe('phone');
+      expect(result[0]!.communication!.direction).toBe('inbound');
+      expect(result[0]!.communication!.from).toBe('+1234567890');
+      expect(result[0]!.communication!.to).toBe('+0987654321');
     });
 
     it('should set outbound title for outgoing calls', async () => {
@@ -604,7 +604,7 @@ describe('TimelineCommunicationService', () => {
 
       const result = await service.getCallEvents({});
 
-      expect(result[0].title).toBe('Outgoing call to +1234567890');
+      expect(result[0]!.title).toBe('Outgoing call to +1234567890');
     });
 
     it('should filter by contactId', async () => {
@@ -681,11 +681,11 @@ describe('TimelineCommunicationService', () => {
 
       const result = await service.getCallEvents({});
 
-      expect(result[0].metadata.duration).toBe(600);
-      expect(result[0].metadata.outcome).toBe('CONNECTED');
-      expect(result[0].metadata.hasRecording).toBe(true);
-      expect(result[0].metadata.transcription).toBe('Transcript text');
-      expect(result[0].metadata.sentiment).toBe('NEUTRAL');
+      expect(result[0]!.metadata!.duration).toBe(600);
+      expect(result[0]!.metadata!.outcome).toBe('CONNECTED');
+      expect(result[0]!.metadata!.hasRecording).toBe(true);
+      expect(result[0]!.metadata!.transcription).toBe('Transcript text');
+      expect(result[0]!.metadata!.sentiment).toBe('NEUTRAL');
     });
 
     it('should set actor when userId is present', async () => {
@@ -711,9 +711,9 @@ describe('TimelineCommunicationService', () => {
 
       const result = await service.getCallEvents({});
 
-      expect(result[0].actor).not.toBeNull();
-      expect(result[0].actor!.id).toBe('user-456');
-      expect(result[0].actor!.name).toBe('Agent Jane');
+      expect(result[0]!.actor).not.toBeNull();
+      expect(result[0]!.actor!.id).toBe('user-456');
+      expect(result[0]!.actor!.name).toBe('Agent Jane');
     });
 
     it('should use notes as description when summary is null', async () => {
@@ -739,7 +739,7 @@ describe('TimelineCommunicationService', () => {
 
       const result = await service.getCallEvents({});
 
-      expect(result[0].description).toBe('Some call notes');
+      expect(result[0]!.description).toBe('Some call notes');
     });
   });
 
@@ -784,14 +784,14 @@ describe('TimelineCommunicationService', () => {
       const result = await service.getDocumentAuditEvents({ caseId: 'case-1' });
 
       expect(result).toHaveLength(1);
-      expect(result[0].id).toBe('doc-audit-audit-1');
-      expect(result[0].type).toBe(TimelineEventType.DOCUMENT);
-      expect(result[0].title).toBe('CREATED: Contract Agreement');
-      expect(result[0].document).not.toBeNull();
-      expect(result[0].document!.documentId).toBe('doc-1');
-      expect(result[0].document!.filename).toBe('Contract Agreement');
-      expect(result[0].document!.version).toBe(1);
-      expect(result[0].document!.mimeType).toBe('application/pdf');
+      expect(result[0]!.id).toBe('doc-audit-audit-1');
+      expect(result[0]!.type).toBe(TimelineEventType.DOCUMENT);
+      expect(result[0]!.title).toBe('CREATED: Contract Agreement');
+      expect(result[0]!.document).not.toBeNull();
+      expect(result[0]!.document!.documentId).toBe('doc-1');
+      expect(result[0]!.document!.filename).toBe('Contract Agreement');
+      expect(result[0]!.document!.version).toBe(1);
+      expect(result[0]!.document!.mimeType).toBe('application/pdf');
     });
 
     it('should use DOCUMENT_VERSION type for version/update events', async () => {
@@ -818,7 +818,7 @@ describe('TimelineCommunicationService', () => {
 
       const result = await service.getDocumentAuditEvents({ caseId: 'case-1' });
 
-      expect(result[0].type).toBe(TimelineEventType.DOCUMENT_VERSION);
+      expect(result[0]!.type).toBe(TimelineEventType.DOCUMENT_VERSION);
     });
 
     it('should use DOCUMENT_VERSION type for UPDATED events', async () => {
@@ -844,7 +844,7 @@ describe('TimelineCommunicationService', () => {
 
       const result = await service.getDocumentAuditEvents({ caseId: 'case-1' });
 
-      expect(result[0].type).toBe(TimelineEventType.DOCUMENT_VERSION);
+      expect(result[0]!.type).toBe(TimelineEventType.DOCUMENT_VERSION);
     });
 
     it('should filter by specific documentId', async () => {
@@ -896,8 +896,8 @@ describe('TimelineCommunicationService', () => {
 
       const result = await service.getDocumentAuditEvents({ caseId: 'case-1' });
 
-      expect(result[0].actor).not.toBeNull();
-      expect(result[0].actor!.id).toBe('user-123');
+      expect(result[0]!.actor).not.toBeNull();
+      expect(result[0]!.actor!.id).toBe('user-123');
     });
 
     it('should include metadata with IP address and user agent', async () => {
@@ -923,10 +923,10 @@ describe('TimelineCommunicationService', () => {
 
       const result = await service.getDocumentAuditEvents({ caseId: 'case-1' });
 
-      expect(result[0].metadata.ipAddress).toBe('10.0.0.1');
-      expect(result[0].metadata.userAgent).toBe('Chrome/120');
-      expect(result[0].metadata.changes).toEqual({ field: 'value' });
-      expect(result[0].metadata.version).toBe('1.0.3');
+      expect(result[0]!.metadata!.ipAddress).toBe('10.0.0.1');
+      expect(result[0]!.metadata!.userAgent).toBe('Chrome/120');
+      expect(result[0]!.metadata!.changes).toEqual({ field: 'value' });
+      expect(result[0]!.metadata!.version).toBe('1.0.3');
     });
 
     it('should exclude deleted documents', async () => {
@@ -1015,9 +1015,9 @@ describe('TimelineCommunicationService', () => {
 
       expect(result).toHaveLength(3);
       // Default sort is desc
-      expect(result[0].id).toBe('chat-msg-1'); // 11:00
-      expect(result[1].id).toBe('email-email-1'); // 10:00
-      expect(result[2].id).toBe('call-call-1'); // 09:00
+      expect(result[0]!.id).toBe('chat-msg-1'); // 11:00
+      expect(result[1]!.id).toBe('email-email-1'); // 10:00
+      expect(result[2]!.id).toBe('call-call-1'); // 09:00
     });
 
     it('should respect includeEmails flag', async () => {
@@ -1100,8 +1100,8 @@ describe('TimelineCommunicationService', () => {
       });
 
       expect(result).toHaveLength(2);
-      expect(result[0].id).toBe('call-call-1'); // 09:00 first
-      expect(result[1].id).toBe('email-email-1'); // 10:00 second
+      expect(result[0]!.id).toBe('call-call-1'); // 09:00 first
+      expect(result[1]!.id).toBe('email-email-1'); // 10:00 second
     });
 
     it('should apply final limit to combined results', async () => {

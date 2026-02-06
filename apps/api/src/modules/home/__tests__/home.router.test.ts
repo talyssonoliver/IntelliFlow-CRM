@@ -188,6 +188,23 @@ describe('Home Router', () => {
       expect(result.stats.dealsTrendPeriod).toBe('this_month');
     });
 
+    it('should fallback to "User" when name and email are both null', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({
+        ...mockUser,
+        name: null,
+        email: null,
+      } as any);
+
+      prismaMock.task.count.mockResolvedValue(0);
+      prismaMock.lead.count.mockResolvedValue(0);
+      prismaMock.appointment.count.mockResolvedValue(0);
+      prismaMock.opportunity.count.mockResolvedValue(0);
+
+      const result = await caller.getWelcomeSummary();
+
+      expect(result.userName).toBe('User');
+    });
+
     it('should throw UNAUTHORIZED when user context is missing', async () => {
       const publicCtx = createPublicContext();
       const publicCaller = homeRouter.createCaller(publicCtx);
@@ -430,6 +447,219 @@ describe('Home Router', () => {
       const result = await caller.getActivityFeed({ limit: 5 });
 
       expect(result.items[0].actor?.initials).toBe('JD');
+    });
+
+    // =========================================================================
+    // types filter tests (bug fix — Spec §5.1)
+    // =========================================================================
+    describe('types filter', () => {
+      it('should filter activity feed by single type', async () => {
+        const logs = [
+          { id: '1', eventType: 'LEAD_CREATED', resourceType: 'Lead', resourceId: '1', timestamp: new Date(), actorType: 'USER', user: null },
+          { id: '2', eventType: 'TASK_COMPLETED', resourceType: 'Task', resourceId: '2', timestamp: new Date(), actorType: 'USER', user: null },
+          { id: '3', eventType: 'EMAIL_SENT', resourceType: 'Email', resourceId: '3', timestamp: new Date(), actorType: 'USER', user: null },
+        ];
+
+        prismaMock.auditLogEntry.findMany.mockResolvedValue(logs as any);
+
+        await caller.getActivityFeed({ limit: 10, types: ['lead'] });
+
+        // Verify Prisma was called with types filter in where clause
+        expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: expect.objectContaining({
+              AND: expect.arrayContaining([
+                expect.objectContaining({
+                  OR: expect.arrayContaining([
+                    expect.objectContaining({
+                      eventType: { contains: 'lead', mode: 'insensitive' },
+                    }),
+                  ]),
+                }),
+              ]),
+            }),
+          })
+        );
+      });
+
+      it('should filter activity feed by multiple types', async () => {
+        prismaMock.auditLogEntry.findMany.mockResolvedValue([] as any);
+
+        await caller.getActivityFeed({ limit: 10, types: ['lead', 'task'] });
+
+        expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: expect.objectContaining({
+              AND: expect.arrayContaining([
+                expect.objectContaining({
+                  OR: expect.arrayContaining([
+                    { eventType: { contains: 'lead', mode: 'insensitive' } },
+                    { eventType: { contains: 'task', mode: 'insensitive' } },
+                  ]),
+                }),
+              ]),
+            }),
+          })
+        );
+      });
+
+      it('should include deal and opportunity patterns for deal type', async () => {
+        prismaMock.auditLogEntry.findMany.mockResolvedValue([] as any);
+
+        await caller.getActivityFeed({ limit: 10, types: ['deal'] });
+
+        expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: expect.objectContaining({
+              AND: expect.arrayContaining([
+                expect.objectContaining({
+                  OR: expect.arrayContaining([
+                    { eventType: { contains: 'deal', mode: 'insensitive' } },
+                    { eventType: { contains: 'opportunity', mode: 'insensitive' } },
+                  ]),
+                }),
+              ]),
+            }),
+          })
+        );
+      });
+
+      it('should include actorType filter for ai type', async () => {
+        prismaMock.auditLogEntry.findMany.mockResolvedValue([] as any);
+
+        await caller.getActivityFeed({ limit: 10, types: ['ai'] });
+
+        expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: expect.objectContaining({
+              AND: expect.arrayContaining([
+                expect.objectContaining({
+                  OR: expect.arrayContaining([
+                    { actorType: 'AI_AGENT' },
+                  ]),
+                }),
+              ]),
+            }),
+          })
+        );
+      });
+
+      it('should return all items when types is empty array', async () => {
+        prismaMock.auditLogEntry.findMany.mockResolvedValue([] as any);
+
+        await caller.getActivityFeed({ limit: 10, types: [] });
+
+        // With empty types array, no AND filter should be applied
+        const callArgs = prismaMock.auditLogEntry.findMany.mock.calls[0][0] as any;
+        expect(callArgs.where.AND).toBeUndefined();
+      });
+
+      it('should return all items when types is undefined', async () => {
+        prismaMock.auditLogEntry.findMany.mockResolvedValue([] as any);
+
+        await caller.getActivityFeed({ limit: 10 });
+
+        // Without types, no AND filter should be applied
+        const callArgs = prismaMock.auditLogEntry.findMany.mock.calls[0][0] as any;
+        expect(callArgs.where.AND).toBeUndefined();
+      });
+    });
+
+    it('should use actorEmail as fallback for actor name', async () => {
+      prismaMock.auditLogEntry.findMany.mockResolvedValue([
+        {
+          id: 'audit-email-fallback',
+          eventType: 'LEAD_CREATED',
+          resourceType: 'Lead',
+          resourceId: '1',
+          timestamp: new Date(),
+          actorType: 'USER',
+          actorId: 'user-123',
+          actorEmail: 'jane@example.com',
+          user: null, // no user relation loaded
+        },
+      ] as any);
+
+      const result = await caller.getActivityFeed({ limit: 5 });
+
+      expect(result.items[0].actor?.name).toBe('jane@example.com');
+      expect(result.items[0].actor?.initials).toBe('JA'); // from jane@example.com
+    });
+
+    it('should return null actionUrl when resourceId is null', async () => {
+      prismaMock.auditLogEntry.findMany.mockResolvedValue([
+        {
+          id: 'audit-no-resource',
+          eventType: 'SYSTEM_STARTUP',
+          resourceType: 'System',
+          resourceId: null,
+          timestamp: new Date(),
+          actorType: 'SYSTEM',
+          actorId: null,
+          user: null,
+        },
+      ] as any);
+
+      const result = await caller.getActivityFeed({ limit: 5 });
+
+      expect(result.items[0].actionUrl).toBeNull();
+    });
+
+    it('should detect mention type from eventType', async () => {
+      prismaMock.auditLogEntry.findMany.mockResolvedValue([
+        {
+          id: 'audit-mention',
+          eventType: 'USER_MENTIONED',
+          resourceType: 'Comment',
+          resourceId: '1',
+          timestamp: new Date(),
+          actorType: 'USER',
+          user: null,
+        },
+      ] as any);
+
+      const result = await caller.getActivityFeed({ limit: 5 });
+
+      expect(result.items[0].type).toBe('mention');
+    });
+
+    it('should detect ai type from actorType AI_AGENT even without ai in eventType', async () => {
+      prismaMock.auditLogEntry.findMany.mockResolvedValue([
+        {
+          id: 'audit-ai-agent',
+          eventType: 'SCORE_GENERATED',
+          resourceType: 'Lead',
+          resourceId: '1',
+          timestamp: new Date(),
+          actorType: 'AI_AGENT',
+          user: null,
+        },
+      ] as any);
+
+      const result = await caller.getActivityFeed({ limit: 5 });
+
+      expect(result.items[0].type).toBe('ai');
+    });
+
+    it('should handle audit log with null actorId and no user relation', async () => {
+      prismaMock.auditLogEntry.findMany.mockResolvedValue([
+        {
+          id: 'audit-null-actor',
+          eventType: 'SYSTEM_CLEANUP',
+          resourceType: 'System',
+          resourceId: '1',
+          timestamp: new Date(),
+          actorType: 'SYSTEM',
+          actorId: null,
+          actorEmail: null,
+          user: null,
+        },
+      ] as any);
+
+      const result = await caller.getActivityFeed({ limit: 5 });
+
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].actor).toBeNull();
     });
   });
 
@@ -727,6 +957,91 @@ describe('Home Router', () => {
   });
 
   // =============================================================================
+  // Additional coverage gap tests
+  // =============================================================================
+  describe('Coverage gaps', () => {
+    describe('getWelcomeSummary progressive fallbacks', () => {
+      it('should show 100% trend when only this month has deals (no last month)', async () => {
+        prismaMock.user.findUnique.mockResolvedValue(mockUser as any);
+        prismaMock.task.count.mockResolvedValue(0);
+        prismaMock.lead.count.mockResolvedValue(0);
+        prismaMock.appointment.count.mockResolvedValue(0);
+        prismaMock.opportunity.count
+          .mockResolvedValueOnce(0) // no deals this week
+          .mockResolvedValueOnce(0) // no deals last week
+          .mockResolvedValueOnce(3) // 3 deals this month
+          .mockResolvedValueOnce(0); // 0 deals last month
+
+        const result = await caller.getWelcomeSummary();
+
+        expect(result.stats.dealClosingRateTrend).toBe(100);
+        expect(result.stats.dealsTrendPeriod).toBe('this_month');
+      });
+
+      it('should return zero leads when no leads at all (all periods zero)', async () => {
+        prismaMock.user.findUnique.mockResolvedValue(mockUser as any);
+        prismaMock.task.count.mockResolvedValue(0);
+        prismaMock.lead.count.mockResolvedValue(0); // all periods return 0
+        prismaMock.appointment.count.mockResolvedValue(0);
+        prismaMock.opportunity.count.mockResolvedValue(0);
+
+        const result = await caller.getWelcomeSummary();
+
+        expect(result.stats.newLeadsCount).toBe(0);
+        expect(result.stats.newLeadsPeriod).toBe('yesterday');
+      });
+    });
+
+    describe('getAIInsights edge cases', () => {
+      it('should handle lead with only company name (no first/last name)', async () => {
+        prismaMock.opportunity.findMany.mockResolvedValue([]);
+        prismaMock.lead.findMany.mockResolvedValue([
+          {
+            id: 'lead-company-only',
+            firstName: null,
+            lastName: null,
+            company: 'ACME Corp',
+            score: 90,
+          },
+        ] as any);
+        prismaMock.task.count.mockResolvedValue(0);
+
+        const result = await caller.getAIInsights();
+
+        expect(result.insights[0].description).toContain('ACME Corp');
+      });
+
+      it('should handle lead with no name or company', async () => {
+        prismaMock.opportunity.findMany.mockResolvedValue([]);
+        prismaMock.lead.findMany.mockResolvedValue([
+          {
+            id: 'lead-no-name',
+            firstName: null,
+            lastName: null,
+            company: null,
+            score: 95,
+          },
+        ] as any);
+        prismaMock.task.count.mockResolvedValue(0);
+
+        const result = await caller.getAIInsights();
+
+        expect(result.insights[0].description).toContain('Lead');
+      });
+
+      it('should show singular "Task" for single overdue task', async () => {
+        prismaMock.opportunity.findMany.mockResolvedValue([]);
+        prismaMock.lead.findMany.mockResolvedValue([]);
+        prismaMock.task.count.mockResolvedValue(1);
+
+        const result = await caller.getAIInsights();
+
+        expect(result.insights[0].title).toBe('1 Overdue Task');
+      });
+    });
+  });
+
+  // =============================================================================
   // Helper function tests
   // =============================================================================
   describe('Helper Functions', () => {
@@ -754,7 +1069,9 @@ describe('Home Router', () => {
         const timestamps = [
           { date: new Date(now.getTime() - 30 * 1000), expected: 'Just now' },
           { date: new Date(now.getTime() - 5 * 60 * 1000), expected: '5m ago' },
+          { date: new Date(now.getTime() - 60 * 1000), expected: '1m ago' }, // boundary: exactly 60s
           { date: new Date(now.getTime() - 2 * 60 * 60 * 1000), expected: '2h ago' },
+          { date: new Date(now.getTime() - 60 * 60 * 1000), expected: '1h ago' }, // boundary: exactly 60min
           { date: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000), expected: '3d ago' },
         ];
 
@@ -775,6 +1092,27 @@ describe('Home Router', () => {
           expect(result.items[0].relativeTime).toBe(expected);
         }
       });
+
+      it('should return locale date string after 7+ days', async () => {
+        const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
+
+        prismaMock.auditLogEntry.findMany.mockResolvedValue([
+          {
+            id: 'test-old',
+            eventType: 'TEST',
+            resourceType: 'Test',
+            resourceId: '1',
+            timestamp: tenDaysAgo,
+            actorType: 'SYSTEM',
+            user: null,
+          },
+        ] as any);
+
+        const result = await caller.getActivityFeed({ limit: 1 });
+
+        // Should be a locale date string, not relative time
+        expect(result.items[0].relativeTime).toBe(tenDaysAgo.toLocaleDateString());
+      });
     });
 
     describe('getInitials', () => {
@@ -785,6 +1123,8 @@ describe('Home Router', () => {
           { name: 'Bob Smith Jr', expected: 'BJ' },
           { name: null, expected: '??' },
           { name: '', expected: '??' },
+          { name: 'Mary-Jane Watson', expected: 'MW' },
+          { name: 'X', expected: 'X' },
         ];
 
         for (const { name, expected } of testCases) {

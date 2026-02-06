@@ -204,6 +204,7 @@ export {
   getRoundType,
   getTopicForRound,
   buildAgentPrompt,
+  buildTeamRoundBroadcast,
   addRoundToSession,
   checkConsensus,
   generateSpecification,
@@ -217,6 +218,14 @@ export {
   generatePlan,
   writePlan,
 } from './plan-session.js';
+
+// Agent Mode
+export {
+  isAgentTeamsEnabled,
+  isTeammate,
+  resolveAgentMode,
+  type AgentMode,
+} from './agent-mode.js';
 
 // Paths
 export {

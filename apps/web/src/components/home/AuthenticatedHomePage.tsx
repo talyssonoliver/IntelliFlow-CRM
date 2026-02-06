@@ -4,6 +4,11 @@ import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
+import {
+  EditQuickActionsSheet, ALL_QUICK_ACTIONS, loadEnabledActions,
+  EditPinnedNavigationSheet, ALL_PINNED_NAV_GROUPS, loadPinnedGroups,
+  getPinnedIcon,
+} from './PinnedItemsSheet';
 
 // Activity feed type filter options
 const FEED_FILTER_OPTIONS = [
@@ -75,7 +80,7 @@ type SerializedDailyGoal = {
 
 type SerializedPinnedItem = {
   id: string;
-  entityType: 'lead' | 'contact' | 'account' | 'opportunity' | 'document' | 'report' | 'list';
+  entityType: 'lead' | 'contact' | 'account' | 'opportunity' | 'document' | 'report' | 'list' | 'ticket';
   entityId: string;
   title: string;
   subtitle?: string | null;
@@ -84,14 +89,6 @@ type SerializedPinnedItem = {
   pinnedAt: string;
   position: number;
 };
-
-interface QuickAction {
-  id: string;
-  icon: string;
-  label: string;
-  color: string;
-  href: string;
-}
 
 interface InsightIconStyle {
   icon: string;
@@ -105,17 +102,6 @@ interface ActivityIconStyle {
   bg: string;
   color: string;
 }
-
-// =============================================================================
-// Static Data (Quick Actions - no API needed)
-// =============================================================================
-
-const quickActions: QuickAction[] = [
-  { id: 'action-call', icon: 'add_call', label: 'Log Call', color: 'bg-blue-50 dark:bg-blue-900/30 text-blue-600', href: '/calls/new' },
-  { id: 'action-email', icon: 'mail', label: 'Email', color: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600', href: '/emails/compose' },
-  { id: 'action-meeting', icon: 'event', label: 'Meeting', color: 'bg-amber-50 dark:bg-amber-900/30 text-amber-600', href: '/calendar/new' },
-  { id: 'action-task', icon: 'task', label: 'Task', color: 'bg-purple-50 dark:bg-purple-900/30 text-purple-600', href: '/tasks/new' },
-];
 
 // =============================================================================
 // Helper Functions
@@ -146,18 +132,6 @@ function getActivityIcon(type: string): ActivityIconStyle {
     ai: { initials: 'AI', bg: 'bg-purple-100 dark:bg-purple-900', color: 'text-purple-600 dark:text-purple-300' },
   };
   return iconMap[type] || { icon: 'notifications', bg: 'bg-slate-100 dark:bg-slate-800', color: 'text-slate-600 dark:text-slate-400' };
-}
-
-function getPinnedItemIcon(entityType: string): InsightIconStyle {
-  const iconMap: Record<string, InsightIconStyle> = {
-    document: { icon: 'folder_special', iconBg: 'bg-orange-100 dark:bg-orange-900/30', iconColor: 'text-orange-600' },
-    contact: { icon: 'contacts', iconBg: 'bg-blue-100 dark:bg-blue-900/30', iconColor: 'text-blue-600' },
-    list: { icon: 'contacts', iconBg: 'bg-blue-100 dark:bg-blue-900/30', iconColor: 'text-blue-600' },
-    lead: { icon: 'person', iconBg: 'bg-cyan-100 dark:bg-cyan-900/30', iconColor: 'text-cyan-600' },
-    opportunity: { icon: 'attach_money', iconBg: 'bg-green-100 dark:bg-green-900/30', iconColor: 'text-green-600' },
-    report: { icon: 'assessment', iconBg: 'bg-purple-100 dark:bg-purple-900/30', iconColor: 'text-purple-600' },
-  };
-  return iconMap[entityType] || { icon: 'push_pin', iconBg: 'bg-slate-100 dark:bg-slate-800', iconColor: 'text-slate-600' };
 }
 
 function pluralize(count: number, singular: string): string {
@@ -473,38 +447,11 @@ function GoalSection({ isLoading, goal }: Readonly<GoalSectionProps>) {
   );
 }
 
-interface PinnedItemCardProps {
-  item: SerializedPinnedItem;
-  isEditMode?: boolean;
-  onUnpin?: (entityType: string, entityId: string) => void;
-}
-
-function PinnedItemCard({ item, isEditMode, onUnpin }: Readonly<PinnedItemCardProps>) {
+function PinnedItemCard({ item }: Readonly<{ item: SerializedPinnedItem }>) {
   const customIcon = item.icon;
   const iconStyle = customIcon
     ? { icon: customIcon, iconBg: 'bg-slate-100 dark:bg-slate-800', iconColor: 'text-slate-600' }
-    : getPinnedItemIcon(item.entityType);
-
-  if (isEditMode) {
-    return (
-      <div className="flex items-center gap-3 p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-        <div className={`size-8 rounded ${iconStyle.iconBg} ${iconStyle.iconColor} flex items-center justify-center`}>
-          <span className="material-symbols-outlined text-lg">{iconStyle.icon}</span>
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">{item.title}</p>
-          {item.subtitle && <p className="text-xs text-slate-400">{item.subtitle}</p>}
-        </div>
-        <button
-          onClick={() => onUnpin?.(item.entityType, item.entityId)}
-          className="p-1 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-          title="Unpin item"
-        >
-          <span className="material-symbols-outlined text-lg">close</span>
-        </button>
-      </div>
-    );
-  }
+    : getPinnedIcon(item.entityType);
 
   return (
     <Link
@@ -522,14 +469,7 @@ function PinnedItemCard({ item, isEditMode, onUnpin }: Readonly<PinnedItemCardPr
   );
 }
 
-interface PinnedSectionProps {
-  isLoading: boolean;
-  items: SerializedPinnedItem[] | undefined;
-  isEditMode?: boolean;
-  onUnpin?: (entityType: string, entityId: string) => void;
-}
-
-function PinnedSection({ isLoading, items, isEditMode, onUnpin }: Readonly<PinnedSectionProps>) {
+function PinnedSection({ isLoading, items }: Readonly<{ isLoading: boolean; items: SerializedPinnedItem[] | undefined }>) {
   if (isLoading) {
     return <PinnedSkeleton />;
   }
@@ -541,7 +481,7 @@ function PinnedSection({ isLoading, items, isEditMode, onUnpin }: Readonly<Pinne
   return (
     <>
       {items.map((item) => (
-        <PinnedItemCard key={item.id} item={item} isEditMode={isEditMode} onUnpin={onUnpin} />
+        <PinnedItemCard key={item.id} item={item} />
       ))}
     </>
   );
@@ -561,7 +501,10 @@ export function AuthenticatedHomePage() {
   const [feedItems, setFeedItems] = useState<SerializedActivityFeedItem[]>([]);
   const [feedFilter, setFeedFilter] = useState<string>('all');
   const [showFeedFilterMenu, setShowFeedFilterMenu] = useState(false);
-  const [isPinnedEditMode, setIsPinnedEditMode] = useState(false);
+  const [isQuickActionsSheetOpen, setIsQuickActionsSheetOpen] = useState(false);
+  const [enabledActionIds, setEnabledActionIds] = useState<Set<string>>(() => loadEnabledActions());
+  const [isPinnedNavSheetOpen, setIsPinnedNavSheetOpen] = useState(false);
+  const [pinnedGroupIds, setPinnedGroupIds] = useState<Set<string>>(() => loadPinnedGroups());
 
   // Only fetch data when authenticated
   const queryEnabled = isAuthenticated && !authLoading;
@@ -611,6 +554,21 @@ export function AuthenticatedHomePage() {
   const handleUnpin = useCallback((entityType: string, entityId: string) => {
     unpinMutation.mutate({ entityType: entityType as any, entityId });
   }, [unpinMutation]);
+
+  const handleQuickActionsSave = useCallback((ids: Set<string>) => {
+    setEnabledActionIds(new Set(ids));
+  }, []);
+
+  const handlePinnedNavSave = useCallback((ids: Set<string>) => {
+    setPinnedGroupIds(new Set(ids));
+  }, []);
+
+  const visibleQuickActions = ALL_QUICK_ACTIONS.filter((a) => enabledActionIds.has(a.id));
+
+  // Compute enabled groups and filter pinned items by those groups
+  const enabledGroups = ALL_PINNED_NAV_GROUPS.filter((g) => pinnedGroupIds.has(g.id));
+  const enabledEntityTypes = new Set(enabledGroups.flatMap((g) => g.entityTypes));
+  const filteredPinnedItems = pinnedData?.items?.filter((item) => enabledEntityTypes.has(item.entityType));
 
   // Merge feed items for infinite scroll
   const displayedFeedItems = feedCursor ? [...feedItems, ...(feedData?.items || [])] : feedData?.items;
@@ -678,7 +636,7 @@ export function AuthenticatedHomePage() {
                   <span className="material-symbols-outlined text-indigo-600 dark:text-indigo-400">auto_awesome</span>
                   <h3 className="font-bold text-slate-800 dark:text-slate-100">AI Daily Insights</h3>
                 </div>
-                <Link href="/ai/insights" className="text-xs font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 hover:underline">View All</Link>
+                <Link href="/agent-approvals" className="text-xs font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 hover:underline">View All</Link>
               </div>
               <div className="p-4 grid gap-4">
                 <InsightsSection isLoading={insightsLoading} insights={insightsData?.insights} />
@@ -687,20 +645,34 @@ export function AuthenticatedHomePage() {
 
             {/* Quick Actions - colSpan: 1 */}
             <div className="col-span-1 bg-white dark:bg-[#1e2936] rounded-xl border border-[#e2e8f0] dark:border-[#334155] shadow-sm p-5">
-              <h3 className="font-bold text-slate-900 dark:text-white mb-4">Quick Actions</h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-slate-900 dark:text-white">Quick Actions</h3>
+                <button
+                  onClick={() => setIsQuickActionsSheetOpen(true)}
+                  className="text-slate-400 hover:text-[#137fec] transition-colors"
+                  title="Edit quick actions"
+                >
+                  <span className="material-symbols-outlined text-sm">settings</span>
+                </button>
+              </div>
               <div className="grid grid-cols-2 gap-3">
-                {quickActions.map((action) => (
+                {visibleQuickActions.map((action) => (
                   <Link
                     key={action.id}
                     href={action.href}
                     className="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors gap-2 group"
                   >
-                    <div className={`p-2 ${action.color} rounded-full group-hover:scale-110 transition-transform`}>
+                    <div className={`p-2 ${action.iconBg} ${action.iconColor} rounded-full group-hover:scale-110 transition-transform`}>
                       <span className="material-symbols-outlined">{action.icon}</span>
                     </div>
                     <span className="text-xs font-medium text-slate-600 dark:text-slate-300">{action.label}</span>
                   </Link>
                 ))}
+                {visibleQuickActions.length === 0 && (
+                  <p className="col-span-2 text-sm text-slate-500 dark:text-slate-400 text-center py-4">
+                    No actions selected. Click settings to add some.
+                  </p>
+                )}
               </div>
             </div>
 
@@ -773,22 +745,39 @@ export function AuthenticatedHomePage() {
               <div className="flex justify-between items-center mb-3">
                 <h3 className="font-bold text-slate-900 dark:text-white">Pinned</h3>
                 <button
-                  onClick={() => setIsPinnedEditMode(!isPinnedEditMode)}
-                  className={`transition-colors ${isPinnedEditMode ? 'text-[#137fec]' : 'text-slate-400 hover:text-[#137fec]'}`}
-                  title={isPinnedEditMode ? 'Done editing' : 'Edit pinned items'}
+                  onClick={() => setIsPinnedNavSheetOpen(true)}
+                  className="text-slate-400 hover:text-[#137fec] transition-colors"
+                  title="Edit pinned navigation"
                 >
-                  <span className="material-symbols-outlined text-sm">
-                    {isPinnedEditMode ? 'check' : 'edit'}
-                  </span>
+                  <span className="material-symbols-outlined text-sm">edit</span>
                 </button>
               </div>
-              <div className="space-y-3">
-                <PinnedSection
-                  isLoading={pinnedLoading}
-                  items={pinnedData?.items}
-                  isEditMode={isPinnedEditMode}
-                  onUnpin={handleUnpin}
-                />
+              <div className="space-y-1">
+                {/* Group navigation links */}
+                {enabledGroups.map((group) => (
+                  <Link
+                    key={group.id}
+                    href={group.href}
+                    className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors group"
+                  >
+                    <div className={`size-8 rounded ${group.iconBg} ${group.iconColor} flex items-center justify-center`}>
+                      <span className="material-symbols-outlined text-lg">{group.icon}</span>
+                    </div>
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-200 group-hover:text-[#137fec]">{group.label}</span>
+                  </Link>
+                ))}
+                {/* Individual pinned items from enabled groups */}
+                {filteredPinnedItems && filteredPinnedItems.length > 0 && (
+                  <>
+                    <div className="border-t border-[#e2e8f0] dark:border-[#334155] my-2" />
+                    <PinnedSection isLoading={pinnedLoading} items={filteredPinnedItems} />
+                  </>
+                )}
+                {enabledGroups.length === 0 && (
+                  <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-4">
+                    No groups selected. Click edit to add some.
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -870,6 +859,21 @@ export function AuthenticatedHomePage() {
           </div>
         </div>
       </footer>
+
+      {/* Edit Quick Actions Sheet */}
+      <EditQuickActionsSheet
+        open={isQuickActionsSheetOpen}
+        onOpenChange={setIsQuickActionsSheetOpen}
+        onSave={handleQuickActionsSave}
+      />
+
+      {/* Edit Pinned Navigation Sheet */}
+      <EditPinnedNavigationSheet
+        open={isPinnedNavSheetOpen}
+        onOpenChange={setIsPinnedNavSheetOpen}
+        onSave={handlePinnedNavSave}
+      />
+
     </div>
   );
 }

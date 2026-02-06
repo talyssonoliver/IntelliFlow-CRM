@@ -141,7 +141,14 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
 
   afterAll(async () => {
     if (!infrastructureStatus.available || !prisma) return;
-    await prisma.$disconnect();
+    try {
+      // Clean up test documents created during this suite
+      await prisma.caseDocument.deleteMany({
+        where: { tenantId: { in: ['tenant-1', 'tenant-2'] } },
+      }).catch(() => {});
+    } finally {
+      await prisma.$disconnect();
+    }
   });
 
   describe('Successful Ingestion Flow', () => {

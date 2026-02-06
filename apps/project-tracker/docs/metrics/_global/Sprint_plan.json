@@ -132,7 +132,7 @@
       "Description": "AI Output Review - Validators Layer (Zod schemas for review inputs/outputs)",
       "Owner": "Backend Dev (STOA-Quality)",
       "Dependencies": "IFC-128",
-      "Pre-requisites": "FILE:packages/domain/src/ai/review/index.ts;FILE:packages/validators/src/ai-outputs.ts",
+      "Pre-requisites": "FILE:packages/domain/src/ai/review/index.ts;FILE:packages/validators/src/ai-review.ts",
       "Definition of Done": "Zod schemas derived from domain constants; CreateReviewInput, ReviewDecisionInput, ReviewListFilter schemas; exports match domain types; verified by: pnpm test",
       "Status": "Completed",
       "KPIs": "100% schema coverage; all domain types have validators; tests passing",
@@ -174,7 +174,7 @@
       "Description": "AI Output Review - Adapters Layer (repository implementation)",
       "Owner": "Backend Dev (STOA-Quality)",
       "Dependencies": "IFC-177,IFC-178",
-      "Pre-requisites": "FILE:packages/application/src/ports/IAIOutputReviewRepository.ts;FILE:packages/db/prisma/schema.prisma;FILE:docs/architecture/hex-boundaries.md",
+      "Pre-requisites": "FILE:packages/application/src/ports/repositories/AIOutputReviewRepositoryPort.ts;FILE:packages/db/prisma/schema.prisma;FILE:docs/architecture/hex-boundaries.md",
       "Definition of Done": "PrismaAIOutputReviewRepository implements port; CRUD operations; query filters for status/tenant/SLA; event publishing; verified by: pnpm test",
       "Status": "Completed",
       "KPIs": "Repository implements all port methods; queries optimized; tests passing",
@@ -188,7 +188,7 @@
       "Description": "AI Output Review - tRPC Router (API endpoints)",
       "Owner": "Backend Dev (STOA-Quality)",
       "Dependencies": "IFC-179",
-      "Pre-requisites": "FILE:packages/adapters/src/persistence/PrismaAIOutputReviewRepository.ts;FILE:packages/application/src/usecases/ai-review/index.ts;FILE:apps/api/src/trpc.ts",
+      "Pre-requisites": "FILE:packages/adapters/src/repositories/PrismaAIOutputReviewRepository.ts;FILE:packages/application/src/usecases/ai-review/index.ts;FILE:apps/api/src/trpc.ts",
       "Definition of Done": "review.list, review.get, review.claim, review.approve, review.reject, review.escalate, review.stats endpoints; authentication/authorization; verified by: pnpm test",
       "Status": "Completed",
       "KPIs": "All endpoints working; auth enforced; response <200ms",
@@ -2805,6 +2805,34 @@
       "Target Sprint": "6",
       "Artifacts To Track": "ARTIFACT:apps/web/src/app/tickets/page.tsx;ARTIFACT:apps/web/src/app/tickets/[id]/page.tsx;ARTIFACT:apps/web/src/components/tickets/TicketList.tsx;ARTIFACT:apps/web/src/components/tickets/TicketCard.tsx;ARTIFACT:apps/web/src/components/tickets/TicketDetail.tsx;ARTIFACT:apps/web/src/components/tickets/SLAIndicator.tsx;EVIDENCE:.specify/sprints/sprint-6/attestations/PG-137/context_ack.json",
       "Validation Method": "VALIDATE:pnpm test;GATE:lighthouse-gte-90"
+    },
+    {
+      "Task ID": "IFC-192",
+      "Section": "Core CRM",
+      "Description": "Contact Activity Tracking - Add lastContactedAt field to Contact model with auto-update on interactions",
+      "Owner": "Backend Dev (STOA-Domain)",
+      "Dependencies": "IFC-182,IFC-184",
+      "Pre-requisites": "FILE:packages/db/prisma/schema.prisma;FILE:packages/domain/src/crm/contact/Contact.ts;FILE:apps/api/src/modules/contact/contact.router.ts",
+      "Definition of Done": "Contact.lastContactedAt field added to Prisma schema; migration applied; field auto-updated on call/email/meeting events via domain event handler; home.getAIInsights generates stale contact warnings (30+ days no contact with open opportunities); verified by: pnpm test",
+      "Status": "Backlog",
+      "KPIs": "lastContactedAt updates on interactions; stale contact insight works; migration reversible; test coverage >=90%",
+      "Target Sprint": "15",
+      "Artifacts To Track": "ARTIFACT:packages/db/prisma/migrations/*_add_contact_last_contacted/migration.sql;ARTIFACT:packages/adapters/src/events/handlers/UpdateContactLastContactedHandler.ts;EVIDENCE:.specify/sprints/sprint-15/attestations/IFC-192/context_ack.json",
+      "Validation Method": "VALIDATE:pnpm test;GATE:coverage-gte-90"
+    },
+    {
+      "Task ID": "IFC-195",
+      "Section": "Core CRM",
+      "Description": "Customizable Daily Goals - Multi-type goal support (revenue calls meetings tasks custom) with user preferences",
+      "Owner": "Backend Dev (STOA-Domain)",
+      "Dependencies": "IFC-182",
+      "Pre-requisites": "FILE:apps/api/src/modules/home/home.router.ts;FILE:packages/validators/src/home.ts;FILE:apps/web/src/components/home/AuthenticatedHomePage.tsx",
+      "Definition of Done": "home.getDailyGoal calculates progress for all 5 goal types (revenue/calls/meetings/tasks/custom); home.updateDailyGoal mutation saves goal preferences; user can select goal type and target from settings modal; default remains $5000 revenue; verified by: pnpm test",
+      "Status": "Backlog",
+      "KPIs": "All 5 goal types calculate correctly; preferences persist; settings modal works; test coverage >=90%",
+      "Target Sprint": "15",
+      "Artifacts To Track": "ARTIFACT:apps/api/src/modules/home/home.router.ts;ARTIFACT:apps/web/src/components/home/GoalSettingsModal.tsx;EVIDENCE:.specify/sprints/sprint-15/attestations/IFC-195/context_ack.json",
+      "Validation Method": "VALIDATE:pnpm test;GATE:coverage-gte-90"
     }
   ],
   "Support": [
@@ -3234,10 +3262,10 @@
       "Dependencies": "IFC-003,IFC-089",
       "Pre-requisites": "FILE:apps/api/src/router.ts;FILE:apps/api/src/trpc.ts;FILE:packages/validators/src/index.ts;FILE:docs/design/integration-backlog.md;FILE:docs/planning/prd-home-page.md;FILE:docs/specs/HOME-PAGE-SPEC.md",
       "Definition of Done": "home.getWelcomeSummary, home.getAIInsights, home.getActivityFeed, home.getDailyGoal, home.getPinnedItems, home.pinItem, home.unpinItem, home.reorderPinnedItems; verified by: pnpm test",
-      "Status": "In Progress",
+      "Status": "Completed",
       "KPIs": "All endpoints <200ms; test coverage >=90%; wired to router.ts",
       "Target Sprint": "13",
-      "Artifacts To Track": "ARTIFACT:apps/api/src/modules/home/home.router.ts;ARTIFACT:packages/validators/src/home.ts;ARTIFACT:apps/api/src/modules/home/__tests__/home.router.test.ts;ARTIFACT:docs/planning/prd-home-page.md;SPEC:docs/specs/HOME-PAGE-SPEC.md;EVIDENCE:.specify/sprints/sprint-13/attestations/IFC-182/context_ack.json",
+      "Artifacts To Track": "ARTIFACT:apps/api/src/modules/home/home.router.ts;ARTIFACT:packages/validators/src/home.ts;ARTIFACT:apps/api/src/modules/home/__tests__/home.router.test.ts;ARTIFACT:docs/planning/prd-home-page.md;SPEC:docs/specs/HOME-PAGE-SPEC.md;EVIDENCE:.specify/sprints/sprint-13/attestations/IFC-182/attestation.json",
       "Validation Method": "VALIDATE:pnpm test;GATE:coverage-gte-90"
     },
     {
@@ -3252,6 +3280,20 @@
       "KPIs": "All endpoints <200ms; real-time latency <100ms; test coverage >=90%",
       "Target Sprint": "13",
       "Artifacts To Track": "ARTIFACT:apps/api/src/modules/notifications/notifications.router.ts;ARTIFACT:packages/validators/src/notifications.ts;ARTIFACT:apps/api/src/modules/notifications/__tests__/notifications.router.test.ts;EVIDENCE:.specify/sprints/sprint-13/attestations/IFC-183/context_ack.json",
+      "Validation Method": "VALIDATE:pnpm test;GATE:coverage-gte-90"
+    },
+    {
+      "Task ID": "IFC-193",
+      "Section": "Infrastructure",
+      "Description": "Activity Feed Type Registry - Enum-based mapping from AuditLogEntry.eventType to ActivityFeedType with metadata",
+      "Owner": "Backend Dev (STOA-Domain)",
+      "Dependencies": "IFC-182",
+      "Pre-requisites": "FILE:apps/api/src/modules/home/home.router.ts;FILE:packages/domain/src/events/EventTypes.ts;FILE:packages/validators/src/home.ts",
+      "Definition of Done": "ACTIVITY_TYPE_REGISTRY constant maps all AuditLogEntry.eventType values to ActivityFeedType with icon/label/color metadata; router uses registry instead of string includes(); new event types require only registry entry; verified by: pnpm test",
+      "Status": "Backlog",
+      "KPIs": "All event types mapped; registry extensible; no string matching in router; test coverage >=90%",
+      "Target Sprint": "16",
+      "Artifacts To Track": "ARTIFACT:packages/domain/src/crm/activity/ActivityTypeRegistry.ts;ARTIFACT:packages/domain/src/crm/activity/__tests__/ActivityTypeRegistry.test.ts;EVIDENCE:.specify/sprints/sprint-16/attestations/IFC-193/context_ack.json",
       "Validation Method": "VALIDATE:pnpm test;GATE:coverage-gte-90"
     }
   ],
@@ -3411,6 +3453,20 @@
       "Target Sprint": "28",
       "Artifacts To Track": "ARTIFACT:apps/web/src/app/workflows/page.tsx;ARTIFACT:apps/web/src/app/workflows/[id]/page.tsx;ARTIFACT:apps/web/src/components/workflows/WorkflowList.tsx;ARTIFACT:apps/web/src/components/workflows/WorkflowDetail.tsx;ARTIFACT:apps/web/src/components/workflows/StepVisualization.tsx;ARTIFACT:apps/web/src/components/workflows/ExecutionLogs.tsx;EVIDENCE:.specify/sprints/sprint-28/attestations/PG-147/context_ack.json",
       "Validation Method": "VALIDATE:pnpm test;GATE:lighthouse-gte-90"
+    },
+    {
+      "Task ID": "IFC-191",
+      "Section": "Platform",
+      "Description": "User Timezone Support - Add timezone field to User model with preference UI and timezone-aware greeting",
+      "Owner": "Backend Dev (STOA-Domain)",
+      "Dependencies": "IFC-182",
+      "Pre-requisites": "FILE:packages/db/prisma/schema.prisma;FILE:apps/api/src/modules/home/home.router.ts;FILE:apps/web/src/app/settings/page.tsx",
+      "Definition of Done": "User.timezone field added to Prisma schema; migration applied; home.getWelcomeSummary greeting uses user timezone; settings UI allows timezone selection; fallback chain: user → tenant → UTC; verified by: pnpm test",
+      "Status": "Backlog",
+      "KPIs": "Greeting correct for all timezones; migration reversible; settings UI works; test coverage >=90%",
+      "Target Sprint": "15",
+      "Artifacts To Track": "ARTIFACT:packages/db/prisma/migrations/*_add_user_timezone/migration.sql;ARTIFACT:apps/web/src/components/settings/TimezoneSelector.tsx;EVIDENCE:.specify/sprints/sprint-15/attestations/IFC-191/context_ack.json",
+      "Validation Method": "VALIDATE:pnpm test;GATE:coverage-gte-90"
     }
   ],
   "AI/ML": [
@@ -3527,6 +3583,20 @@
       "Target Sprint": "20",
       "Artifacts To Track": "ARTIFACT:artifacts/benchmarks/baseline.json;ARTIFACT:artifacts/reports/performance-baseline-report.json;EVIDENCE:.specify/sprints/sprint-20/attestations/IFC-165/context_ack.json",
       "Validation Method": "VALIDATE:pnpm test;AUDIT:performance-review"
+    },
+    {
+      "Task ID": "IFC-196",
+      "Section": "Performance",
+      "Description": "Home Page Response Caching - Redis caching for getWelcomeSummary with event-driven invalidation",
+      "Owner": "Backend Dev (STOA-Foundation)",
+      "Dependencies": "IFC-182,IFC-075",
+      "Pre-requisites": "FILE:apps/api/src/modules/home/home.router.ts;FILE:packages/adapters/src/cache/RedisCacheAdapter.ts",
+      "Definition of Done": "getWelcomeSummary cached in Redis with 5-minute TTL; cache key: tenant:userId:home:summary; invalidated on lead/opportunity/task mutations via domain events; graceful fallback to direct queries when Redis unavailable; verified by: pnpm test",
+      "Status": "Backlog",
+      "KPIs": "Cache hit rate >80%; p95 <50ms on cache hit; graceful degradation; invalidation correct; test coverage >=90%",
+      "Target Sprint": "17",
+      "Artifacts To Track": "ARTIFACT:apps/api/src/modules/home/home.cache.ts;ARTIFACT:apps/api/src/modules/home/__tests__/home.cache.test.ts;EVIDENCE:.specify/sprints/sprint-17/attestations/IFC-196/context_ack.json",
+      "Validation Method": "VALIDATE:pnpm test;GATE:coverage-gte-90"
     }
   ],
   "AI Insights": [
@@ -4989,6 +5059,20 @@
       "Target Sprint": "1",
       "Artifacts To Track": "ARTIFACT:docs/planning/adr/ADR-004-multi-tenancy.md;ARTIFACT:docs/planning/adr/ADR-005-workflow-engine.md;ARTIFACT:docs/planning/adr/ADR-006-agent-tools.md;ARTIFACT:docs/planning/adr/ADR-007-data-governance.md;ARTIFACT:docs/planning/adr/ADR-008-audit-logging.md;ARTIFACT:artifacts/misc/adr-index.csv;EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-135/context_ack.json",
       "Validation Method": "AUDIT:code-review"
+    },
+    {
+      "Task ID": "IFC-194",
+      "Section": "Architecture",
+      "Description": "Router Middleware Standardization - Migrate all routers from manual getTenantId to tenantProcedure",
+      "Owner": "Backend Dev (STOA-Foundation)",
+      "Dependencies": "IFC-182,IFC-003",
+      "Pre-requisites": "FILE:apps/api/src/trpc.ts;FILE:apps/api/src/router.ts;FILE:apps/api/src/modules/home/home.router.ts",
+      "Definition of Done": "All tenant-scoped routers use tenantProcedure from trpc.ts; manual getTenantId/getUserId helpers removed; consistent ctx.tenantId access pattern across all routers; architecture test enforces tenantProcedure usage; verified by: pnpm test",
+      "Status": "Backlog",
+      "KPIs": "All routers use tenantProcedure; no manual tenant extraction; architecture test passing; zero functional regressions",
+      "Target Sprint": "16",
+      "Artifacts To Track": "ARTIFACT:tests/architecture/tenant-procedure-enforcement.test.ts;EVIDENCE:.specify/sprints/sprint-16/attestations/IFC-194/context_ack.json",
+      "Validation Method": "VALIDATE:pnpm test;GATE:architecture-test-pass"
     }
   ],
   "Domain": [
@@ -5144,7 +5228,7 @@
       "Description": "Case RAG tool: agent retrieval tool constrained by tenant/case permissions; citations + source trace; prompt-injection hardening for retrieved content",
       "Owner": "AI Specialist + Security (STOA-Security)",
       "Dependencies": "IFC-155,IFC-139,IFC-125",
-      "Pre-requisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Agent tool-calling exists; guardrails baseline; permissioned retrieval APIs available;FILE:docs/planning/adr/ADR-004-multi-tenancy.md;FILE:docs/planning/adr/ADR-006-agent-tools.md;FILE:docs/shared/review-checklist.md;FILE:docs/operations/quality-gates.md;FILE:docs/operations/pr-checklist.md;FILE:packages/search/retrieval.ts;FILE:artifacts/misc/logs/agent-actions.log;FILE:apps/api/src/shared/prompt-sanitizer.ts",
+      "Pre-requisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Agent tool-calling exists; guardrails baseline; permissioned retrieval APIs available;FILE:docs/planning/adr/ADR-004-multi-tenancy.md;FILE:docs/planning/adr/ADR-006-agent-tools.md;FILE:docs/shared/review-checklist.md;FILE:docs/operations/quality-gates.md;FILE:docs/operations/pr-checklist.md;FILE:packages/search/src/retrieval.ts;FILE:artifacts/misc/logs/agent-actions.log;FILE:apps/api/src/shared/prompt-sanitizer.ts",
       "Definition of Done": "Agent tool implemented (retrieve_case_context); responses include source references; injection defenses applied; approval needed for external send; tests; artifacts: retrieve-case-context.ts, case-rag.md, context_ack.json; targets: <2s",
       "Status": "Completed",
       "KPIs": "0 unauthorized retrievals; response time p95 <2s; hallucination rate reduced via eval suite",
@@ -5220,7 +5304,7 @@
       "Description": "Case timeline enrichment: include documents/versions, communications (email/WhatsApp), and agent actions/approvals as timeline events",
       "Owner": "Frontend Dev + Backend Dev (STOA-Domain)",
       "Dependencies": "IFC-147,IFC-153,IFC-144,IFC-149,IFC-148",
-      "Pre-requisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Timeline UI exists; ingestion pipeline available; comms and agent actions recorded;FILE:docs/planning/adr/ADR-006-agent-tools.md;FILE:docs/shared/review-checklist.md;FILE:docs/operations/pr-checklist.md;FILE:apps/web/src/app/cases/timeline/page.tsx;FILE:docs/operations/runbooks/ingestion.md;FILE:packages/adapters/src/messaging/email/outbound.ts;FILE:apps/web/src/app/agent-approvals/page.tsx;FILE:packages/db/prisma/conversation.sql;FILE:docs/design/sitemap.md;FILE:docs/design/ui-flow-mapping.md;FILE:docs/design/page-registry.md;FILE:apps/project-tracker/docs/metrics/_global/flows/flow-index.md",
+      "Pre-requisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Timeline UI exists; ingestion pipeline available; comms and agent actions recorded;FILE:docs/planning/adr/ADR-006-agent-tools.md;FILE:docs/shared/review-checklist.md;FILE:docs/operations/pr-checklist.md;FILE:apps/web/src/app/cases/timeline/page.tsx;FILE:docs/operations/runbooks/ingestion.md;FILE:packages/adapters/src/messaging/email/outbound.ts;FILE:apps/web/src/app/agent-approvals/page.tsx;FILE:packages/db/prisma/migrations/20260131000000_init/migration.sql;FILE:docs/design/sitemap.md;FILE:docs/design/ui-flow-mapping.md;FILE:docs/design/page-registry.md;FILE:apps/project-tracker/docs/metrics/_global/flows/flow-index.md",
       "Definition of Done": "Timeline shows unified chronological events (tasks/deadlines/docs/comms/agent actions); filters; permissions enforced; E2E tests; targets: <1s",
       "Status": "Completed",
       "KPIs": "Timeline load <1s; user task completion improved; 0 unauthorized events visible",
@@ -5282,7 +5366,7 @@
       "Dependencies": "IFC-154,IFC-127,ENV-004-AI",
       "Pre-requisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:pgvector enabled; ACL model implemented; extracted text available;FILE:docs/planning/adr/ADR-004-multi-tenancy.md;FILE:artifacts/benchmarks/ocr-quality-benchmarks.csv;FILE:infra/supabase/migrations/20250124000000_rls_policies.sql;FILE:infra/supabase/config.toml",
       "Definition of Done": "FTS index and vector embeddings built; retrieval APIs enforce tenant/case ACL; re-index job; purge on DSAR rules; tests; targets: >=80%, <200ms, zero errors; gates: latency-check; generateEmbedding() must return real embeddings from embedding chain, not null placeholder",
-      "Status": "Spec Complete",
+      "Status": "Completed",
       "KPIs": "Retrieval latency p95 <200ms; zero cross-tenant leakage; relevance eval >=80% on test set",
       "Target Sprint": "12",
       "Artifacts To Track": "ARTIFACT:infra/supabase/migrations/20260104000001_case_document_fts_embeddings.sql;ARTIFACT:apps/ai-worker/src/services/document-indexer.ts;ARTIFACT:apps/ai-worker/src/workers/reindex-worker.ts;ARTIFACT:packages/search/src/retrieval.ts;ARTIFACT:artifacts/misc/relevance-eval.json;EVIDENCE:.specify/sprints/sprint-12/attestations/IFC-155/context_ack.json",

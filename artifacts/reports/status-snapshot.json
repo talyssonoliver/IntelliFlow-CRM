@@ -1744,7 +1744,7 @@
       "validation_method": "VALIDATE:pnpm test;AUDIT:code-review;GATE:coverage-gte-90"
     },
     {
-      "artifacts_to_track": "ARTIFACT:packages/db/prisma/conversation.sql;ARTIFACT:apps/api/src/modules/conversation.ts;ARTIFACT:artifacts/misc/search/conversation-index.ts;ARTIFACT:artifacts/misc/data-retention-config.yaml;EVIDENCE:artifacts/attestations/IFC-148/context_ack.json",
+      "artifacts_to_track": "ARTIFACT:packages/db/prisma/migrations/20260131000000_init/migration.sql;ARTIFACT:apps/api/src/modules/conversation.ts;ARTIFACT:artifacts/misc/search/conversation-index.ts;ARTIFACT:artifacts/misc/data-retention-config.yaml;EVIDENCE:artifacts/attestations/IFC-148/context_ack.json",
       "description": "Implement conversation record entity: store chat transcripts; tool calls; actions per case; enable search and retrieval; integrate audit logging and data retention policies",
       "owner": "Backend Dev + AI Specialist (STOA-Intelligence)",
       "section": "AI Assistant",
@@ -1814,7 +1814,7 @@
       "validation_method": "AUDIT:manual-review;VALIDATE:pnpm test"
     },
     {
-      "artifacts_to_track": "ARTIFACT:packages/search/retrieval.ts;ARTIFACT:artifacts/misc/relevance-eval.json;EVIDENCE:artifacts/attestations/IFC-155/context_ack.json",
+      "artifacts_to_track": "ARTIFACT:packages/search/src/retrieval.ts;ARTIFACT:artifacts/misc/relevance-eval.json;EVIDENCE:artifacts/attestations/IFC-155/context_ack.json",
       "description": "Permissioned indexing for case documents and notes: full-text + embeddings with tenant/case ACL filters",
       "owner": "Backend Dev + AI Specialist (STOA-Intelligence)",
       "section": "Search/AI",

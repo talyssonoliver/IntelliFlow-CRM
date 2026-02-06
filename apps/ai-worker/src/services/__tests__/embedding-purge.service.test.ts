@@ -159,5 +159,103 @@ describe('EmbeddingPurgeService (IFC-155)', () => {
       expect(result.notesPurged).toBe(0);
       expect(result.auditLogId).toBe('audit-empty');
     });
+
+    it('should handle legal hold query failure gracefully', async () => {
+      // Arrange - legal hold query throws (table doesn't exist yet)
+      prisma.$queryRaw.mockRejectedValue(new Error('relation "legal_holds" does not exist'));
+      prisma.$transaction.mockImplementation(async (fn) => {
+        const tx = {
+          $executeRaw: vi.fn()
+            .mockResolvedValueOnce(1)
+            .mockResolvedValueOnce(1),
+          auditLogEntry: {
+            create: vi.fn().mockResolvedValue({ id: 'audit-fallback' }),
+          },
+        };
+        return fn(tx);
+      });
+
+      // Act - should proceed with purge (legal hold table may not exist)
+      const result = await service.purgeForSubject(testSubjectId, testTenantId);
+
+      // Assert
+      expect(result.documentsPurged).toBe(1);
+      expect(result.notesPurged).toBe(1);
+      expect(result.auditLogId).toBe('audit-fallback');
+    });
+
+    it('should handle legal hold with null retention_until', async () => {
+      // Arrange - legal hold exists with no expiry
+      prisma.$queryRaw.mockResolvedValue([{
+        id: 'hold-indefinite',
+        retention_until: null,
+      }]);
+
+      // Act & Assert
+      await expect(service.purgeForSubject(testSubjectId, testTenantId))
+        .rejects.toThrow('indefinite');
+    });
+  });
+
+  describe('verifyPurge', () => {
+    it('should return isPurged true when no searchable data remains', async () => {
+      // Arrange - no remaining documents or notes
+      prisma.$queryRaw
+        .mockResolvedValueOnce([{ count: BigInt(0) }]) // documents
+        .mockResolvedValueOnce([{ count: BigInt(0) }]); // notes
+
+      // Act
+      const result = await service.verifyPurge(testSubjectId, testTenantId);
+
+      // Assert
+      expect(result.isPurged).toBe(true);
+      expect(result.documentsRemaining).toBe(0);
+      expect(result.notesRemaining).toBe(0);
+    });
+
+    it('should return isPurged false when documents still have embeddings', async () => {
+      // Arrange - documents remain with embeddings
+      prisma.$queryRaw
+        .mockResolvedValueOnce([{ count: BigInt(3) }]) // 3 documents still have embeddings
+        .mockResolvedValueOnce([{ count: BigInt(0) }]); // notes are purged
+
+      // Act
+      const result = await service.verifyPurge(testSubjectId, testTenantId);
+
+      // Assert
+      expect(result.isPurged).toBe(false);
+      expect(result.documentsRemaining).toBe(3);
+      expect(result.notesRemaining).toBe(0);
+    });
+
+    it('should return isPurged false when notes still have content', async () => {
+      // Arrange - notes remain with content
+      prisma.$queryRaw
+        .mockResolvedValueOnce([{ count: BigInt(0) }]) // documents are purged
+        .mockResolvedValueOnce([{ count: BigInt(2) }]); // 2 notes still have content
+
+      // Act
+      const result = await service.verifyPurge(testSubjectId, testTenantId);
+
+      // Assert
+      expect(result.isPurged).toBe(false);
+      expect(result.documentsRemaining).toBe(0);
+      expect(result.notesRemaining).toBe(2);
+    });
+
+    it('should handle empty query results', async () => {
+      // Arrange - empty result from query (edge case)
+      prisma.$queryRaw
+        .mockResolvedValueOnce([{}]) // missing count field
+        .mockResolvedValueOnce([{}]);
+
+      // Act
+      const result = await service.verifyPurge(testSubjectId, testTenantId);
+
+      // Assert
+      expect(result.isPurged).toBe(true);
+      expect(result.documentsRemaining).toBe(0);
+      expect(result.notesRemaining).toBe(0);
+    });
   });
 });

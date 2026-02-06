@@ -25,6 +25,8 @@ describe('Bulk Lead Operations', () => {
   let testTenantId: string;
   let testUserId: string;
   let testLeadIds: string[];
+  // Accumulate ALL lead IDs across tests so afterAll can clean them all up
+  let allCreatedLeadIds: string[] = [];
   let isDbAvailable = false;
 
   beforeAll(async () => {
@@ -66,11 +68,22 @@ describe('Bulk Lead Operations', () => {
   });
 
   afterAll(async () => {
-    // Clean up test data
-    if (isDbAvailable && testLeadIds && testLeadIds.length > 0) {
+    if (isDbAvailable) {
+      // Clean up ALL leads created during this test suite
+      if (allCreatedLeadIds.length > 0) {
+        await prisma.lead
+          .deleteMany({
+            where: { id: { in: allCreatedLeadIds } },
+          })
+          .catch(() => {});
+      }
+
+      // Safety net: clean up any remaining test leads by email pattern
       await prisma.lead
         .deleteMany({
-          where: { id: { in: testLeadIds } },
+          where: {
+            email: { contains: '@bulk-ops-test.com' },
+          },
         })
         .catch(() => {});
     }
@@ -104,6 +117,7 @@ describe('Bulk Lead Operations', () => {
       }));
 
       testLeadIds = leadsToCreate.map((l) => l.id);
+      allCreatedLeadIds.push(...testLeadIds);
 
       const start = Date.now();
 
@@ -143,6 +157,7 @@ describe('Bulk Lead Operations', () => {
         }));
 
         testLeadIds = leadsToCreate.map((l) => l.id);
+        allCreatedLeadIds.push(...testLeadIds);
         await prisma.lead.createMany({
           data: leadsToCreate,
           skipDuplicates: true,
@@ -189,6 +204,7 @@ describe('Bulk Lead Operations', () => {
       }));
 
       const deleteIds = leadsToDelete.map((l) => l.id);
+      allCreatedLeadIds.push(...deleteIds);
       await prisma.lead.createMany({
         data: leadsToDelete,
         skipDuplicates: true,
@@ -248,6 +264,10 @@ describe('Bulk Lead Operations', () => {
         updatedAt: new Date(),
       }));
 
+      // Track all IDs for cleanup
+      const allIds = [...sequentialLeads, ...batchLeads].map((l) => l.id);
+      allCreatedLeadIds.push(...allIds);
+
       // Time sequential inserts
       const seqStart = Date.now();
       for (const lead of sequentialLeads) {
@@ -270,8 +290,7 @@ describe('Bulk Lead Operations', () => {
       // Batch should be at least 2x faster
       expect(batchDuration).toBeLessThan(seqDuration);
 
-      // Clean up
-      const allIds = [...sequentialLeads, ...batchLeads].map((l) => l.id);
+      // Clean up inline too (best-effort)
       await prisma.lead.deleteMany({ where: { id: { in: allIds } } });
     });
   });
@@ -285,6 +304,7 @@ describe('Bulk Lead Operations', () => {
 
       const testId1 = uuid();
       const testId2 = uuid();
+      allCreatedLeadIds.push(testId1); // Track for cleanup
 
       // Create a valid lead first
       await prisma.lead.create({

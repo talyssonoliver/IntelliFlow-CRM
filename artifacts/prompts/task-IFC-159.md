@@ -34,7 +34,7 @@ Dependency Status:
 - IFC-148 (DONE)
 
 ### Pre-requisites
-FILE:artifacts/sprint0/codex-run/Framework.md;FILE:audit-matrix.yml;ENV:Timeline UI exists; ingestion pipeline available; comms and agent actions recorded;FILE:docs/planning/adr/ADR-006-agent-tools.md;FILE:docs/shared/review-checklist.md;FILE:docs/operations/pr-checklist.md;FILE:apps/web/src/app/cases/timeline/page.tsx;FILE:docs/operations/runbooks/ingestion.md;FILE:packages/adapters/src/messaging/email/outbound.ts;FILE:apps/web/src/app/agent-approvals/page.tsx;FILE:packages/db/prisma/conversation.sql;FILE:docs/design/sitemap.md;FILE:docs/design/ui-flow-mapping.md;FILE:docs/design/page-registry.md;FILE:apps/project-tracker/docs/metrics/_global/flows/flow-index.md
+FILE:artifacts/sprint0/codex-run/Framework.md;FILE:audit-matrix.yml;ENV:Timeline UI exists; ingestion pipeline available; comms and agent actions recorded;FILE:docs/planning/adr/ADR-006-agent-tools.md;FILE:docs/shared/review-checklist.md;FILE:docs/operations/pr-checklist.md;FILE:apps/web/src/app/cases/timeline/page.tsx;FILE:docs/operations/runbooks/ingestion.md;FILE:packages/adapters/src/messaging/email/outbound.ts;FILE:apps/web/src/app/agent-approvals/page.tsx;FILE:packages/db/prisma/migrations/20260131000000_init/migration.sql;FILE:docs/design/sitemap.md;FILE:docs/design/ui-flow-mapping.md;FILE:docs/design/page-registry.md;FILE:apps/project-tracker/docs/metrics/_global/flows/flow-index.md
 
 ### Definition of Done
 1. Timeline shows unified chronological events (tasks/deadlines/docs/comms/agent actions)
