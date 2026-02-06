@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/dependency-graph.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-02-05T21:31:13.319Z",
+  "last_updated": "2026-02-06T17:06:42.461Z",
   "description": "Cross-sprint dependency tracking for all tasks",
   "nodes": {
     "EXC-INIT-001": {
@@ -4234,7 +4234,7 @@
     "IFC-180": {
       "task_id": "IFC-180",
       "sprint": 5,
-      "status": "PLANNED",
+      "status": "DONE",
       "dependencies": [
         "IFC-179"
       ],
@@ -4343,11 +4343,11 @@
     "IFC-186": {
       "task_id": "IFC-186",
       "sprint": 5,
-      "status": "PLANNED",
+      "status": "DONE",
       "dependencies": [
-        "IFC-003",
         "IFC-104",
-        "IFC-107"
+        "IFC-107",
+        "IFC-003"
       ],
       "dependents": [
         "PG-135"
@@ -7727,8 +7727,6 @@
     }
   ],
   "blocked_tasks": [
-    "IFC-181",
-    "PG-135",
     "PG-136",
     "PG-137",
     "PG-020",
@@ -7829,12 +7827,12 @@
     "PG-121"
   ],
   "ready_to_start": [
-    "IFC-180",
-    "IFC-186",
     "IFC-187",
     "IFC-189",
     "PG-133",
     "PG-134",
+    "IFC-181",
+    "PG-135",
     "PG-138",
     "PG-139",
     "PG-141",

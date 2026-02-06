@@ -521,7 +521,7 @@ async function parsePlanDeliverables(
   let currentPhase = 'Unknown';
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+    const line = lines[i].replace(/\r$/, ''); // Strip trailing CR for CRLF files
 
     // Track current phase (e.g., "### Phase 1: RED", "## Final Validation")
     const phaseMatch = line.match(/^#{2,3}\s+(?:Phase \d+[:\s]*)?(.+)$/);
@@ -607,7 +607,8 @@ async function loadMATOPSummary(taskId: string, sprintNumber: number): Promise<M
     const runDirs = entries
       .filter((entry) => {
         const fullPath = join(executionDir, entry);
-        return statSync(fullPath).isDirectory() && /^\d{8}-\d{6}$/.test(entry);
+        // Match both bare timestamp dirs (20260205-225700) and prefixed dirs (IFC-180-validation-20260205-225700)
+        return statSync(fullPath).isDirectory() && /(?:^|\w+-)\d{8}-\d{6}$/.test(entry);
       })
       .sort()
       .reverse();
@@ -627,14 +628,29 @@ async function loadMATOPSummary(taskId: string, sprintNumber: number): Promise<M
     if (existsSync(deliveryPath)) {
       const deliveryContent = await readFile(deliveryPath, 'utf-8');
       // Extract basic info from delivery if available
-      const consensusMatch = deliveryContent.match(/Consensus Verdict:\*\*\s*(\w+)/i);
+      // Match both "Consensus Verdict:** PASS" and "**Consensus: 4/4 PASS**"
+      const consensusMatch = deliveryContent.match(/\*?\*?Consensus(?:\s+Verdict)?:.*?\b(PASS|WARN|FAIL)\b/i);
       if (consensusMatch) {
+        // Extract STOA results from delivery table (| STOA | Verdict | Notes |)
+        const stoaResults: Record<string, { verdict: string; notes?: string }> = {};
+        const stoaRowRegex = /\|\s*(Foundation|Security|Quality|Domain|Intelligence)\s*\|\s*(PASS|WARN|FAIL)\s*\|\s*([^|]*)\|/gi;
+        let stoaMatch;
+        let stoaPassed = 0;
+        let stoaTotal = 0;
+        while ((stoaMatch = stoaRowRegex.exec(deliveryContent)) !== null) {
+          const name = stoaMatch[1].toLowerCase();
+          const verdict = stoaMatch[2].toUpperCase();
+          stoaResults[name] = { verdict, notes: stoaMatch[3]?.trim() };
+          stoaTotal++;
+          if (verdict === 'PASS') stoaPassed++;
+        }
+
         return {
           runId: runDirs[0],
           timestamp: new Date().toISOString(),
           consensusVerdict: consensusMatch[1].toUpperCase() as 'PASS' | 'WARN' | 'FAIL',
-          stoaResults: {},
-          gatesExecuted: { total: 0, passed: 0, warned: 0, failed: 0 },
+          stoaResults,
+          gatesExecuted: { total: stoaTotal, passed: stoaPassed, warned: 0, failed: stoaTotal - stoaPassed },
         };
       }
     }
@@ -661,18 +677,16 @@ function buildValidationItems(attestation: RawAttestation | null): BuildValidati
   }
 
   // Map validation results to build validation items (with null safety)
-  const typecheck = attestation.validation_results.find((r) =>
-    r.name && (r.name.toLowerCase().includes('typecheck') || r.name.toLowerCase().includes('type'))
-  );
-  const tests = attestation.validation_results.find((r) =>
-    r.name && r.name.toLowerCase().includes('test')
-  );
-  const lint = attestation.validation_results.find((r) =>
-    r.name && r.name.toLowerCase().includes('lint')
-  );
-  const build = attestation.validation_results.find((r) =>
-    r.name && r.name.toLowerCase().includes('build')
-  );
+  // Match by name first, then fall back to command for schema-compliant attestations without name
+  const matchValidation = (namePattern: string, commandPattern: string) =>
+    attestation.validation_results!.find((r) =>
+      (r.name && r.name.toLowerCase().includes(namePattern)) ||
+      (!r.name && r.command && r.command.toLowerCase().includes(commandPattern))
+    );
+  const typecheck = matchValidation('type', 'typecheck');
+  const tests = matchValidation('test', 'vitest');
+  const lint = matchValidation('lint', 'eslint');
+  const build = matchValidation('build', 'build');
 
   items.push({
     name: 'typecheck',

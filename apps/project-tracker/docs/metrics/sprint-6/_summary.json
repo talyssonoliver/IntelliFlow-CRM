@@ -13,56 +13,56 @@
     "not_started": 4,
     "failed": 0
   },
-  "notes": "10/14 tasks DONE (71%). Last synced: 2026-02-05T21:31:13.259Z",
+  "notes": "10/14 tasks DONE (71%). Last synced: 2026-02-06T17:06:42.395Z",
   "completed_tasks": [
     {
       "task_id": "IFC-010",
-      "completed_at": "2026-02-05T21:31:13.259Z",
+      "completed_at": "2026-02-06T17:06:42.395Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-012",
-      "completed_at": "2026-02-05T21:31:13.259Z",
+      "completed_at": "2026-02-06T17:06:42.395Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-013",
-      "completed_at": "2026-02-05T21:31:13.259Z",
+      "completed_at": "2026-02-06T17:06:42.395Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-017",
-      "completed_at": "2026-02-05T21:31:13.259Z",
+      "completed_at": "2026-02-06T17:06:42.395Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-090",
-      "completed_at": "2026-02-05T21:31:13.259Z",
+      "completed_at": "2026-02-06T17:06:42.395Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-091",
-      "completed_at": "2026-02-05T21:31:13.259Z",
+      "completed_at": "2026-02-06T17:06:42.395Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-129",
-      "completed_at": "2026-02-05T21:31:13.259Z",
+      "completed_at": "2026-02-06T17:06:42.395Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-132",
-      "completed_at": "2026-02-05T21:31:13.259Z",
+      "completed_at": "2026-02-06T17:06:42.395Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-139",
-      "completed_at": "2026-02-05T21:31:13.259Z",
+      "completed_at": "2026-02-06T17:06:42.395Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-149",
-      "completed_at": "2026-02-05T21:31:13.259Z",
+      "completed_at": "2026-02-06T17:06:42.395Z",
       "duration_minutes": 15
     }
   ],
@@ -88,6 +88,6 @@
       "spi": 0.58,
       "status": "critical"
     },
-    "calculated_at": "2026-02-05T21:31:13.323Z"
+    "calculated_at": "2026-02-06T17:06:42.466Z"
   }
 }

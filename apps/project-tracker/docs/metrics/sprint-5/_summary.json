@@ -7,13 +7,13 @@
   "phases": [],
   "task_summary": {
     "total": 14,
-    "done": 8,
+    "done": 10,
     "in_progress": 0,
     "blocked": 0,
     "not_started": 4,
     "failed": 0
   },
-  "notes": "8/14 tasks DONE (57%). Last synced: 2026-02-05T21:31:13.316Z",
+  "notes": "10/14 tasks DONE (71%). Last synced: 2026-02-06T17:06:42.458Z",
   "completed_tasks": [
     {
       "task_id": "IFC-179",
@@ -21,38 +21,48 @@
       "duration_minutes": 45
     },
     {
+      "task_id": "IFC-180",
+      "completed_at": "2026-02-05T22:57:00.000Z",
+      "duration_minutes": 57
+    },
+    {
+      "task_id": "IFC-186",
+      "completed_at": "2026-02-05T23:10:00.000Z",
+      "duration_minutes": 15
+    },
+    {
       "task_id": "IFC-089",
-      "completed_at": "2026-02-05T21:31:13.316Z",
+      "completed_at": "2026-02-06T17:06:42.458Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-098",
-      "completed_at": "2026-02-05T21:31:13.316Z",
+      "completed_at": "2026-02-06T17:06:42.458Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-111",
-      "completed_at": "2026-02-05T21:31:13.316Z",
+      "completed_at": "2026-02-06T17:06:42.458Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-112",
-      "completed_at": "2026-02-05T21:31:13.316Z",
+      "completed_at": "2026-02-06T17:06:42.458Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-130",
-      "completed_at": "2026-02-05T21:31:13.316Z",
+      "completed_at": "2026-02-06T17:06:42.458Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-138",
-      "completed_at": "2026-02-05T21:31:13.316Z",
+      "completed_at": "2026-02-06T17:06:42.458Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-147",
-      "completed_at": "2026-02-05T21:31:13.316Z",
+      "completed_at": "2026-02-06T17:06:42.458Z",
       "duration_minutes": 15
     }
   ],
@@ -68,14 +78,14 @@
         "IFC-180"
       ],
       "total_duration_minutes": 650,
-      "completion_percentage": 76,
-      "bottleneck_task_id": "IFC-180"
+      "completion_percentage": 100,
+      "bottleneck_task_id": null
     },
     "schedule_variance": {
-      "sv_minutes": -1566,
-      "spi": 0.56,
+      "sv_minutes": -1235,
+      "spi": 0.65,
       "status": "critical"
     },
-    "calculated_at": "2026-02-05T21:31:13.337Z"
+    "calculated_at": "2026-02-06T17:06:42.483Z"
   }
 }

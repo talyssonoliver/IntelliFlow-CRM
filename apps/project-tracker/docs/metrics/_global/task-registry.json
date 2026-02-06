@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-02-05T21:31:13.177Z",
+  "last_updated": "2026-02-06T17:06:42.319Z",
   "total_tasks": 305,
   "sprints": {
     "sprint-0": {
@@ -218,8 +218,10 @@
       "IFC-177",
       "IFC-178",
       "IFC-179",
+      "IFC-180",
       "IFC-184",
       "IFC-185",
+      "IFC-186",
       "IFC-188"
     ],
     "IN_PROGRESS": [
@@ -230,9 +232,7 @@
     "BLOCKED": [],
     "PLANNED": [
       "IFC-155",
-      "PG-128",
-      "IFC-180",
-      "IFC-186"
+      "PG-128"
     ],
     "BACKLOG": [
       "IFC-030",
@@ -1245,7 +1245,7 @@
       "kpis": "ROI projection validated, budget approved",
       "definition_of_done": "Continue/pivot decision based on MVP success; artifacts: investment-gate-1-deck.md, week-1-metrics.csv, roi-projection.md, cfo-approval.md",
       "validation": "AUDIT:manual-review",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Week 1 metrics collected;ENV:POC results analyzed;FILE:docs/shared/review-checklist.md;FILE:docs/operations/quality-gates.md;FILE:apps/api/src/shared/vitest.config.ts"
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Week 1 metrics collected;ENV:POC results analyzed;FILE:docs/shared/review-checklist.md;FILE:docs/operations/quality-gates.md;FILE:apps/api/vitest.config.ts"
     },
     "IFC-020": {
       "section": "Intelligence",
@@ -1330,7 +1330,7 @@
       "kpis": "All feedback captured, model updating",
       "definition_of_done": "Score adjustments tracked, model improvement loop; artifacts: feedback-analytics.json, context_ack.json",
       "validation": "AUDIT:manual-review",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Feedback UI designed;ENV:learning pipeline ready;FILE:artifacts/reports/user-test-results.pdf"
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Feedback UI designed;ENV:learning pipeline ready;FILE:artifacts/reports/user-test-results.md"
     },
     "IFC-025": {
       "section": "Intelligence",
@@ -1638,7 +1638,7 @@
       "kpis": "100% features documented, interactive demos",
       "definition_of_done": "Comprehensive guide with CodeSandbox examples; targets: >=100%; gates: coverage-gte-90",
       "validation": "GATE:coverage-gte-90",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:All features complete;ENV:screenshots ready;FILE:apps/api/src/shared/vitest.config.ts;FILE:artifacts/misc/playwright-report/index.html;FILE:artifacts/reports/load-test-report.html"
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:All features complete;ENV:screenshots ready;FILE:apps/api/vitest.config.ts;FILE:artifacts/misc/playwright-report/index.html;FILE:artifacts/reports/load-test-report.html"
     },
     "IFC-042": {
       "section": "Documentation",
@@ -2598,7 +2598,7 @@
       "kpis": "Custom dashboards created, export functional",
       "definition_of_done": "Custom dashboards created, export functional; artifacts: context_ack.json; verified by: pnpm build",
       "validation": "VALIDATE:pnpm build",
-      "prerequisites": "FILE:docs/design/page-registry.md;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/company/brand/dos-and-donts.md;FILE:docs/company/brand/accessibility-patterns.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Drag-and-drop widget builder;ENV:export CSV/PDF;FILE:docs/architecture/hex-boundaries.md;FILE:apps/api/src/modules/opportunity/opportunity.router.ts;FILE:apps/api/src/shared/forecast-algorithm-tests.ts"
+      "prerequisites": "FILE:docs/design/page-registry.md;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/company/brand/dos-and-donts.md;FILE:docs/company/brand/accessibility-patterns.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Drag-and-drop widget builder;ENV:export CSV/PDF;FILE:docs/architecture/hex-boundaries.md;FILE:apps/api/src/modules/opportunity/opportunity.router.ts;FILE:apps/api/src/shared/forecast-algorithm.test.ts"
     },
     "IFC-097": {
       "section": "Ops & Observability",
@@ -2682,7 +2682,7 @@
         "BRAND-001"
       ],
       "artifacts": [
-        "SPEC:.specify/sprints/sprint-11/specifications/PG-001-spec.md;PLAN:.specify/sprints/sprint-11/planning/PG-001-plan.md;EVIDENCE:.specify/sprints/sprint-11/attestations/PG-001/context_pack.md;EVIDENCE:.specify/sprints/sprint-11/attestations/PG-001/context_ack.json;ARTIFACT:apps/web/src/app/(public)/page.tsx;ARTIFACT:apps/web/src/components/home/PublicHomePage.tsx;ARTIFACT:apps/web/src/app/(public)/loading.tsx;ARTIFACT:apps/web/src/app/(public)/error.tsx;ARTIFACT:artifacts/misc/seo-meta.json;ARTIFACT:docs/planning/adr/ADR-020-public-site-auth.md;ARTIFACT:docs/planning/prd-public-site-auth.md;PRD:docs/planning/prd-home-page.md;SPEC:docs/specs/HOME-PAGE-SPEC.md"
+        "SPEC:.specify/sprints/sprint-11/specifications/PG-001-spec.md;PLAN:.specify/sprints/sprint-11/planning/PG-001-plan.md;EVIDENCE:.specify/sprints/sprint-11/attestations/PG-001/context_pack.md;EVIDENCE:.specify/sprints/sprint-11/attestations/PG-001/context_ack.json;ARTIFACT:apps/web/src/app/(public)/page.tsx;ARTIFACT:apps/web/src/components/home/PublicHomePage.tsx;ARTIFACT:apps/web/src/app/(public)/loading.tsx;ARTIFACT:apps/web/src/app/(public)/error.tsx;ARTIFACT:artifacts/misc/seo-meta.json;ARTIFACT:docs/planning/adr/ADR-020-public-site-auth.md;ARTIFACT:docs/planning/prd-public-site-auth.md;ARTIFACT:docs/planning/prd-home-page.md;SPEC:docs/specs/HOME-PAGE-SPEC.md"
       ],
       "kpis": "Page live, performance met, SEO indexed",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, SEO optimized; artifacts: page.tsx, PublicHomePage.tsx, loading.tsx, error.tsx; gates: lighthouse-gte-90",
@@ -4051,7 +4051,7 @@
       "kpis": "Forecasts generated, accuracy tracked, adjustments enabled",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, forecasts accurate; artifacts: page.tsx, forecast-display.tsx, accuracy-tracker.ts",
       "validation": "AUDIT:manual-review;GATE:lighthouse-gte-90",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Forecast models;ENV:accuracy tracking;FILE:apps/api/src/shared/forecast-algorithm-tests.ts;FILE:docs/design/sitemap.md;FILE:docs/design/ui-flow-mapping.md;FILE:docs/design/page-registry.md;FILE:apps/project-tracker/docs/metrics/_global/flows/flow-index.md"
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Forecast models;ENV:accuracy tracking;FILE:apps/api/src/shared/forecast-algorithm.test.ts;FILE:docs/design/sitemap.md;FILE:docs/design/ui-flow-mapping.md;FILE:docs/design/page-registry.md;FILE:apps/project-tracker/docs/metrics/_global/flows/flow-index.md"
     },
     "PG-080": {
       "section": "Core CRM",
@@ -5311,7 +5311,7 @@
       "kpis": "25 risks tracked, all mitigation owners assigned, sprint review scheduled",
       "definition_of_done": "Risk register created, risks scored by impact/likelihood, mitigation owners assigned; review scheduled per sprint; artifacts: risk-register.csv, risk-mitigation-plan.md, risk-review-agenda.md",
       "validation": "AUDIT:code-review",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:Project charter and backlog defined;FILE:artifacts/misc/decision-gate-1.pptx;FILE:artifacts/reports/sonarqube-debt-report.html"
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:Project charter and backlog defined;FILE:artifacts/misc/decision-gate-1.md;FILE:artifacts/reports/sonarqube-debt-report.html"
     },
     "IFC-119": {
       "section": "Planning",
@@ -6741,13 +6741,13 @@
       "section": "AI Foundation",
       "description": "AI Output Review - tRPC Router (API endpoints)",
       "owner": "Backend Dev (STOA-Quality)",
-      "status": "PLANNED",
+      "status": "DONE",
       "sprint": 5,
       "dependencies": [
         "IFC-179"
       ],
       "artifacts": [
-        "ARTIFACT:apps/api/src/modules/ai-review/ai-review.router.ts;ARTIFACT:apps/api/src/modules/ai-review/__tests__/ai-review.router.test.ts;SPEC:.specify/sprints/sprint-5/specifications/IFC-180-spec.md;EVIDENCE:.specify/sprints/sprint-5/attestations/IFC-180/context_ack.json"
+        "ARTIFACT:apps/api/src/modules/ai-review/ai-review.router.ts;ARTIFACT:apps/api/src/modules/ai-review/__tests__/ai-review.router.test.ts;SPEC:.specify/sprints/sprint-5/specifications/IFC-180-spec.md;PLAN:.specify/sprints/sprint-5/planning/IFC-180-plan.md;EVIDENCE:.specify/sprints/sprint-5/attestations/IFC-180/context_ack.json"
       ],
       "kpis": "All endpoints working; auth enforced; response <200ms",
       "definition_of_done": "review.list, review.get, review.claim, review.approve, review.reject, review.escalate, review.stats endpoints; authentication/authorization; verified by: pnpm test",
@@ -6783,7 +6783,7 @@
         "IFC-089"
       ],
       "artifacts": [
-        "ARTIFACT:apps/api/src/modules/home/home.router.ts;ARTIFACT:packages/validators/src/home.ts;ARTIFACT:apps/api/src/modules/home/__tests__/home.router.test.ts;PRD:docs/planning/prd-home-page.md;SPEC:docs/specs/HOME-PAGE-SPEC.md;EVIDENCE:.specify/sprints/sprint-13/attestations/IFC-182/context_ack.json"
+        "ARTIFACT:apps/api/src/modules/home/home.router.ts;ARTIFACT:packages/validators/src/home.ts;ARTIFACT:apps/api/src/modules/home/__tests__/home.router.test.ts;ARTIFACT:docs/planning/prd-home-page.md;SPEC:docs/specs/HOME-PAGE-SPEC.md;EVIDENCE:.specify/sprints/sprint-13/attestations/IFC-182/context_ack.json"
       ],
       "kpis": "All endpoints <200ms; test coverage >=90%; wired to router.ts",
       "definition_of_done": "home.getWelcomeSummary, home.getAIInsights, home.getActivityFeed, home.getDailyGoal, home.getPinnedItems, home.pinItem, home.unpinItem, home.reorderPinnedItems; verified by: pnpm test",
@@ -6819,7 +6819,7 @@
         "IFC-095"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/(public)/page.tsx;ARTIFACT:apps/web/src/components/home/AuthenticatedHomePage.tsx;ARTIFACT:apps/web/src/components/home/PublicHomePage.tsx;ARTIFACT:apps/web/src/components/home/HomePageContent.tsx;PRD:docs/planning/prd-home-page.md;SPEC:docs/specs/HOME-PAGE-SPEC.md;EVIDENCE:.specify/sprints/sprint-14/attestations/PG-129/context_ack.json"
+        "ARTIFACT:apps/web/src/app/(public)/page.tsx;ARTIFACT:apps/web/src/components/home/AuthenticatedHomePage.tsx;ARTIFACT:apps/web/src/components/home/PublicHomePage.tsx;ARTIFACT:apps/web/src/components/home/HomePageContent.tsx;ARTIFACT:docs/planning/prd-home-page.md;SPEC:docs/specs/HOME-PAGE-SPEC.md;EVIDENCE:.specify/sprints/sprint-14/attestations/PG-129/context_ack.json"
       ],
       "kpis": "Page loads <500ms; activity feed real-time via WebSocket; AI insights displayed; pins draggable",
       "definition_of_done": "Response <500ms, Lighthouse >=90, real-time feed working; InsightsSection, FeedSection, GoalSection, PinnedSection, QuickActions components; verified by: pnpm test",
@@ -6920,7 +6920,7 @@
       "section": "Core CRM",
       "description": "Deal/Opportunity tRPC Router - CRUD pipeline stages probability history products",
       "owner": "Backend Dev (STOA-Domain)",
-      "status": "PLANNED",
+      "status": "DONE",
       "sprint": 5,
       "dependencies": [
         "IFC-104",
@@ -6928,7 +6928,7 @@
         "IFC-003"
       ],
       "artifacts": [
-        "ARTIFACT:apps/api/src/modules/opportunity/opportunity.router.ts;ARTIFACT:apps/api/src/modules/opportunity/__tests__/opportunity.router.test.ts;EVIDENCE:.specify/sprints/sprint-5/attestations/IFC-186/context_ack.json"
+        "ARTIFACT:apps/api/src/modules/opportunity/opportunity.router.ts;ARTIFACT:apps/api/src/modules/opportunity/__tests__/opportunity.router.test.ts;SPEC:.specify/sprints/sprint-5/specifications/IFC-186-spec.md;PLAN:.specify/sprints/sprint-5/planning/IFC-186-plan.md;EVIDENCE:.specify/sprints/sprint-5/attestations/IFC-186/context_ack.json"
       ],
       "kpis": "All endpoints <200ms; test coverage >=90%; pipeline view optimized",
       "definition_of_done": "deal.list, deal.get, deal.create, deal.update, deal.delete, deal.moveStage, deal.getHistory, deal.getProducts, deal.getPipeline, deal.getForecast endpoints; verified by: pnpm test",

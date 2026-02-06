@@ -21,56 +21,56 @@
     },
     {
       "task_id": "IFC-021",
-      "completed_at": "2026-02-05T21:31:13.280Z",
+      "completed_at": "2026-02-06T17:06:42.414Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-022",
-      "completed_at": "2026-02-05T21:31:13.280Z",
+      "completed_at": "2026-02-06T17:06:42.414Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-023",
-      "completed_at": "2026-02-05T21:31:13.280Z",
+      "completed_at": "2026-02-06T17:06:42.414Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-016",
-      "completed_at": "2026-02-05T21:31:13.280Z",
+      "completed_at": "2026-02-06T17:06:42.414Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-018",
-      "completed_at": "2026-02-05T21:31:13.280Z",
+      "completed_at": "2026-02-06T17:06:42.414Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-156",
-      "completed_at": "2026-02-05T21:31:13.280Z",
+      "completed_at": "2026-02-06T17:06:42.414Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-159",
-      "completed_at": "2026-02-05T21:31:13.280Z",
+      "completed_at": "2026-02-06T17:06:42.414Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-163",
-      "completed_at": "2026-02-05T21:31:13.280Z",
+      "completed_at": "2026-02-06T17:06:42.414Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-172",
-      "completed_at": "2026-02-05T21:31:13.280Z",
+      "completed_at": "2026-02-06T17:06:42.414Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-173",
-      "completed_at": "2026-02-05T21:31:13.280Z",
+      "completed_at": "2026-02-06T17:06:42.414Z",
       "duration_minutes": 15
     }
   ],
-  "notes": "11/22 tasks DONE (50%). Last synced: 2026-02-05T21:31:13.280Z",
+  "notes": "11/22 tasks DONE (50%). Last synced: 2026-02-06T17:06:42.414Z",
   "schedule": {
     "sprint_start_date": null,
     "sprint_end_date": null,
@@ -92,6 +92,6 @@
       "spi": 0.61,
       "status": "critical"
     },
-    "calculated_at": "2026-02-05T21:31:13.325Z"
+    "calculated_at": "2026-02-06T17:06:42.470Z"
   }
 }

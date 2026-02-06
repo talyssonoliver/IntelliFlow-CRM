@@ -21,11 +21,11 @@
     },
     {
       "task_id": "IFC-028",
-      "completed_at": "2026-02-05T21:31:13.291Z",
+      "completed_at": "2026-02-06T17:06:42.428Z",
       "duration_minutes": 15
     }
   ],
-  "notes": "2/9 tasks DONE (22%). Last synced: 2026-02-05T21:31:13.291Z",
+  "notes": "2/9 tasks DONE (22%). Last synced: 2026-02-06T17:06:42.428Z",
   "schedule": {
     "sprint_start_date": null,
     "sprint_end_date": null,
@@ -46,6 +46,6 @@
       "spi": 0.28,
       "status": "critical"
     },
-    "calculated_at": "2026-02-05T21:31:13.327Z"
+    "calculated_at": "2026-02-06T17:06:42.472Z"
   }
 }

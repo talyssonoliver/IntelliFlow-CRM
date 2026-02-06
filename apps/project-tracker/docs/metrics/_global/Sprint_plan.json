@@ -190,10 +190,10 @@
       "Dependencies": "IFC-179",
       "Pre-requisites": "FILE:packages/adapters/src/persistence/PrismaAIOutputReviewRepository.ts;FILE:packages/application/src/usecases/ai-review/index.ts;FILE:apps/api/src/trpc.ts",
       "Definition of Done": "review.list, review.get, review.claim, review.approve, review.reject, review.escalate, review.stats endpoints; authentication/authorization; verified by: pnpm test",
-      "Status": "Spec Complete",
+      "Status": "Completed",
       "KPIs": "All endpoints working; auth enforced; response <200ms",
       "Target Sprint": "5",
-      "Artifacts To Track": "ARTIFACT:apps/api/src/modules/ai-review/ai-review.router.ts;ARTIFACT:apps/api/src/modules/ai-review/__tests__/ai-review.router.test.ts;SPEC:.specify/sprints/sprint-5/specifications/IFC-180-spec.md;EVIDENCE:.specify/sprints/sprint-5/attestations/IFC-180/context_ack.json",
+      "Artifacts To Track": "ARTIFACT:apps/api/src/modules/ai-review/ai-review.router.ts;ARTIFACT:apps/api/src/modules/ai-review/__tests__/ai-review.router.test.ts;SPEC:.specify/sprints/sprint-5/specifications/IFC-180-spec.md;PLAN:.specify/sprints/sprint-5/planning/IFC-180-plan.md;EVIDENCE:.specify/sprints/sprint-5/attestations/IFC-180/context_ack.json",
       "Validation Method": "VALIDATE:pnpm test;AUDIT:code-review"
     },
     {
@@ -944,7 +944,7 @@
       "Description": "PHASE-001: Gate 1 Review - £500 Investment",
       "Owner": "CFO + CEO (STOA-Leadership)",
       "Dependencies": "IFC-018",
-      "Pre-requisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Week 1 metrics collected;ENV:POC results analyzed;FILE:docs/shared/review-checklist.md;FILE:docs/operations/quality-gates.md;FILE:apps/api/src/shared/vitest.config.ts",
+      "Pre-requisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Week 1 metrics collected;ENV:POC results analyzed;FILE:docs/shared/review-checklist.md;FILE:docs/operations/quality-gates.md;FILE:apps/api/vitest.config.ts",
       "Definition of Done": "Continue/pivot decision based on MVP success; artifacts: investment-gate-1-deck.md, week-1-metrics.csv, roi-projection.md, cfo-approval.md",
       "Status": "Completed",
       "KPIs": "ROI projection validated, budget approved",
@@ -1058,7 +1058,7 @@
       "Description": "PHASE-011: Human-in-the-Loop Feedback",
       "Owner": "Full Stack Dev (STOA-Foundation)",
       "Dependencies": "IFC-023",
-      "Pre-requisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Feedback UI designed;ENV:learning pipeline ready;FILE:artifacts/reports/user-test-results.pdf",
+      "Pre-requisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Feedback UI designed;ENV:learning pipeline ready;FILE:artifacts/reports/user-test-results.md",
       "Definition of Done": "Score adjustments tracked, model improvement loop; artifacts: feedback-analytics.json, context_ack.json",
       "Status": "Completed",
       "KPIs": "All feedback captured, model updating",
@@ -1288,7 +1288,7 @@
       "Description": "User Manual with Interactive Examples",
       "Owner": "Tech Writer + PM (STOA-Foundation)",
       "Dependencies": "IFC-018,IFC-026,IFC-033",
-      "Pre-requisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:All features complete;ENV:screenshots ready;FILE:apps/api/src/shared/vitest.config.ts;FILE:artifacts/misc/playwright-report/index.html;FILE:artifacts/reports/load-test-report.html",
+      "Pre-requisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:All features complete;ENV:screenshots ready;FILE:apps/api/vitest.config.ts;FILE:artifacts/misc/playwright-report/index.html;FILE:artifacts/reports/load-test-report.html",
       "Definition of Done": "Comprehensive guide with CodeSandbox examples; targets: >=100%; gates: coverage-gte-90",
       "Status": "Backlog",
       "KPIs": "100% features documented, interactive demos",
@@ -1672,7 +1672,7 @@
       "Description": "Establish and maintain a risk register with mitigation actions",
       "Owner": "PM + Tech Lead (STOA-Foundation)",
       "Dependencies": "IFC-010,IFC-054",
-      "Pre-requisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:Project charter and backlog defined;FILE:artifacts/misc/decision-gate-1.pptx;FILE:artifacts/reports/sonarqube-debt-report.html",
+      "Pre-requisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:Project charter and backlog defined;FILE:artifacts/misc/decision-gate-1.md;FILE:artifacts/reports/sonarqube-debt-report.html",
       "Definition of Done": "Risk register created, risks scored by impact/likelihood, mitigation owners assigned; review scheduled per sprint; artifacts: risk-register.csv, risk-mitigation-plan.md, risk-review-agenda.md",
       "Status": "Completed",
       "KPIs": "25 risks tracked, all mitigation owners assigned, sprint review scheduled",
@@ -2266,7 +2266,7 @@
       "Description": "Forecasts",
       "Owner": "CRM FE+BE (STOA-Foundation)",
       "Dependencies": "IFC-092",
-      "Pre-requisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Forecast models;ENV:accuracy tracking;FILE:apps/api/src/shared/forecast-algorithm-tests.ts;FILE:docs/design/sitemap.md;FILE:docs/design/ui-flow-mapping.md;FILE:docs/design/page-registry.md;FILE:apps/project-tracker/docs/metrics/_global/flows/flow-index.md",
+      "Pre-requisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Forecast models;ENV:accuracy tracking;FILE:apps/api/src/shared/forecast-algorithm.test.ts;FILE:docs/design/sitemap.md;FILE:docs/design/ui-flow-mapping.md;FILE:docs/design/page-registry.md;FILE:apps/project-tracker/docs/metrics/_global/flows/flow-index.md",
       "Definition of Done": "Response <200ms, Lighthouse ≥90, forecasts accurate; artifacts: page.tsx, forecast-display.tsx, accuracy-tracker.ts",
       "Status": "Backlog",
       "KPIs": "Forecasts generated, accuracy tracked, adjustments enabled",
@@ -2621,7 +2621,7 @@
       "Status": "In Progress",
       "KPIs": "Page loads <500ms; activity feed real-time via WebSocket; AI insights displayed; pins draggable",
       "Target Sprint": "14",
-      "Artifacts To Track": "ARTIFACT:apps/web/src/app/(public)/page.tsx;ARTIFACT:apps/web/src/components/home/AuthenticatedHomePage.tsx;ARTIFACT:apps/web/src/components/home/PublicHomePage.tsx;ARTIFACT:apps/web/src/components/home/HomePageContent.tsx;PRD:docs/planning/prd-home-page.md;SPEC:docs/specs/HOME-PAGE-SPEC.md;EVIDENCE:.specify/sprints/sprint-14/attestations/PG-129/context_ack.json",
+      "Artifacts To Track": "ARTIFACT:apps/web/src/app/(public)/page.tsx;ARTIFACT:apps/web/src/components/home/AuthenticatedHomePage.tsx;ARTIFACT:apps/web/src/components/home/PublicHomePage.tsx;ARTIFACT:apps/web/src/components/home/HomePageContent.tsx;ARTIFACT:docs/planning/prd-home-page.md;SPEC:docs/specs/HOME-PAGE-SPEC.md;EVIDENCE:.specify/sprints/sprint-14/attestations/PG-129/context_ack.json",
       "Validation Method": "VALIDATE:pnpm test;GATE:lighthouse-gte-90"
     },
     {
@@ -2688,10 +2688,10 @@
       "Dependencies": "IFC-104,IFC-107,IFC-003",
       "Pre-requisites": "FILE:packages/domain/src/crm/opportunity/Opportunity.ts;FILE:packages/adapters/src/repositories/PrismaOpportunityRepository.ts;FILE:apps/api/src/router.ts;FILE:docs/architecture/hex-boundaries.md",
       "Definition of Done": "deal.list, deal.get, deal.create, deal.update, deal.delete, deal.moveStage, deal.getHistory, deal.getProducts, deal.getPipeline, deal.getForecast endpoints; verified by: pnpm test",
-      "Status": "Specifying",
+      "Status": "Completed",
       "KPIs": "All endpoints <200ms; test coverage >=90%; pipeline view optimized",
       "Target Sprint": "5",
-      "Artifacts To Track": "ARTIFACT:apps/api/src/modules/opportunity/opportunity.router.ts;ARTIFACT:apps/api/src/modules/opportunity/__tests__/opportunity.router.test.ts;EVIDENCE:.specify/sprints/sprint-5/attestations/IFC-186/context_ack.json",
+      "Artifacts To Track": "ARTIFACT:apps/api/src/modules/opportunity/opportunity.router.ts;ARTIFACT:apps/api/src/modules/opportunity/__tests__/opportunity.router.test.ts;SPEC:.specify/sprints/sprint-5/specifications/IFC-186-spec.md;PLAN:.specify/sprints/sprint-5/planning/IFC-186-plan.md;EVIDENCE:.specify/sprints/sprint-5/attestations/IFC-186/context_ack.json",
       "Validation Method": "VALIDATE:pnpm test;GATE:coverage-gte-90"
     },
     {
@@ -3237,7 +3237,7 @@
       "Status": "In Progress",
       "KPIs": "All endpoints <200ms; test coverage >=90%; wired to router.ts",
       "Target Sprint": "13",
-      "Artifacts To Track": "ARTIFACT:apps/api/src/modules/home/home.router.ts;ARTIFACT:packages/validators/src/home.ts;ARTIFACT:apps/api/src/modules/home/__tests__/home.router.test.ts;PRD:docs/planning/prd-home-page.md;SPEC:docs/specs/HOME-PAGE-SPEC.md;EVIDENCE:.specify/sprints/sprint-13/attestations/IFC-182/context_ack.json",
+      "Artifacts To Track": "ARTIFACT:apps/api/src/modules/home/home.router.ts;ARTIFACT:packages/validators/src/home.ts;ARTIFACT:apps/api/src/modules/home/__tests__/home.router.test.ts;ARTIFACT:docs/planning/prd-home-page.md;SPEC:docs/specs/HOME-PAGE-SPEC.md;EVIDENCE:.specify/sprints/sprint-13/attestations/IFC-182/context_ack.json",
       "Validation Method": "VALIDATE:pnpm test;GATE:coverage-gte-90"
     },
     {
@@ -3566,7 +3566,7 @@
       "Description": "Custom Reports & Dashboards",
       "Owner": "Frontend Dev + Data Eng (STOA-Domain)",
       "Dependencies": "IFC-091,IFC-092",
-      "Pre-requisites": "FILE:docs/design/page-registry.md;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/company/brand/dos-and-donts.md;FILE:docs/company/brand/accessibility-patterns.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Drag-and-drop widget builder;ENV:export CSV/PDF;FILE:docs/architecture/hex-boundaries.md;FILE:apps/api/src/modules/opportunity/opportunity.router.ts;FILE:apps/api/src/shared/forecast-algorithm-tests.ts",
+      "Pre-requisites": "FILE:docs/design/page-registry.md;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/company/brand/dos-and-donts.md;FILE:docs/company/brand/accessibility-patterns.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Drag-and-drop widget builder;ENV:export CSV/PDF;FILE:docs/architecture/hex-boundaries.md;FILE:apps/api/src/modules/opportunity/opportunity.router.ts;FILE:apps/api/src/shared/forecast-algorithm.test.ts",
       "Definition of Done": "Custom dashboards created, export functional; artifacts: context_ack.json; verified by: pnpm build",
       "Status": "Completed",
       "KPIs": "Custom dashboards created, export functional",
@@ -3635,7 +3635,7 @@
       "Status": "Completed",
       "KPIs": "Page live, performance met, SEO indexed",
       "Target Sprint": "11",
-      "Artifacts To Track": "SPEC:.specify/sprints/sprint-11/specifications/PG-001-spec.md;PLAN:.specify/sprints/sprint-11/planning/PG-001-plan.md;EVIDENCE:.specify/sprints/sprint-11/attestations/PG-001/context_pack.md;EVIDENCE:.specify/sprints/sprint-11/attestations/PG-001/context_ack.json;ARTIFACT:apps/web/src/app/(public)/page.tsx;ARTIFACT:apps/web/src/components/home/PublicHomePage.tsx;ARTIFACT:apps/web/src/app/(public)/loading.tsx;ARTIFACT:apps/web/src/app/(public)/error.tsx;ARTIFACT:artifacts/misc/seo-meta.json;ARTIFACT:docs/planning/adr/ADR-020-public-site-auth.md;ARTIFACT:docs/planning/prd-public-site-auth.md;PRD:docs/planning/prd-home-page.md;SPEC:docs/specs/HOME-PAGE-SPEC.md",
+      "Artifacts To Track": "SPEC:.specify/sprints/sprint-11/specifications/PG-001-spec.md;PLAN:.specify/sprints/sprint-11/planning/PG-001-plan.md;EVIDENCE:.specify/sprints/sprint-11/attestations/PG-001/context_pack.md;EVIDENCE:.specify/sprints/sprint-11/attestations/PG-001/context_ack.json;ARTIFACT:apps/web/src/app/(public)/page.tsx;ARTIFACT:apps/web/src/components/home/PublicHomePage.tsx;ARTIFACT:apps/web/src/app/(public)/loading.tsx;ARTIFACT:apps/web/src/app/(public)/error.tsx;ARTIFACT:artifacts/misc/seo-meta.json;ARTIFACT:docs/planning/adr/ADR-020-public-site-auth.md;ARTIFACT:docs/planning/prd-public-site-auth.md;ARTIFACT:docs/planning/prd-home-page.md;SPEC:docs/specs/HOME-PAGE-SPEC.md",
       "Validation Method": "GATE:lighthouse-gte-90"
     },
     {
