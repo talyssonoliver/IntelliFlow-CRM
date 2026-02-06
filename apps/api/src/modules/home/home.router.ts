@@ -430,6 +430,11 @@ export const homeRouter = createTRPCRouter({
         where,
         orderBy: { timestamp: 'desc' },
         take: limit + 1,
+        include: {
+          user: {
+            select: { id: true, name: true, avatarUrl: true },
+          },
+        },
       });
 
       const hasMore = auditLogs.length > limit;
@@ -457,12 +462,12 @@ export const homeRouter = createTRPCRouter({
           description: `${log.resourceType} ${log.resourceId}`,
           timestamp: log.timestamp,
           relativeTime: getRelativeTime(log.timestamp),
-          actor: log.actorId
+          actor: (log.actorId || (log as any).user)
             ? {
-                id: log.actorId,
-                name: log.actorEmail ?? log.actorId,
-                avatarUrl: null,
-                initials: getInitials(log.actorEmail),
+                id: log.actorId ?? (log as any).user?.id ?? '',
+                name: (log as any).user?.name ?? log.actorEmail ?? log.actorId ?? '',
+                avatarUrl: (log as any).user?.avatarUrl ?? null,
+                initials: getInitials((log as any).user?.name ?? log.actorEmail),
               }
             : null,
           attachment: null,
