@@ -181,7 +181,7 @@ Execution Mode: SWARM
 - FILE:artifacts/sprint0/codex-run/Framework.md
 - FILE:audit-matrix.yml
 - POLICY:Project charter and backlog defined
-- FILE:artifacts/misc/decision-gate-1.pptx
+- FILE:artifacts/misc/decision-gate-1.md
 - FILE:artifacts/reports/sonarqube-debt-report.html
 
 #### Tasks

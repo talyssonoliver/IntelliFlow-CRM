@@ -303,7 +303,7 @@ Execution Mode: SWARM
 - Forecast accuracy ≥85%
 
 #### Artifacts
-- ARTIFACT:apps/api/src/shared/forecast-algorithm-tests.ts;ARTIFACT:artifacts/metrics/accuracy-backtest.csv;EVIDENCE:artifacts/attestations/IFC-092/context_ack.json
+- ARTIFACT:apps/api/src/shared/forecast-algorithm.test.ts;ARTIFACT:artifacts/metrics/accuracy-backtest.csv;EVIDENCE:artifacts/attestations/IFC-092/context_ack.json
 
 ### IFC-093: Tickets Module - SLA Tracking
 
@@ -552,7 +552,7 @@ Execution Mode: SWARM
 - All critical paths tested, CI green
 
 #### Artifacts
-- ARTIFACT:apps/api/src/shared/vitest.config.ts;ARTIFACT:artifacts/misc/coverage/coverage-summary.json;ARTIFACT:artifacts/reports/test-report.html;ARTIFACT:artifacts/misc/ci-test-results.xml;ARTIFACT:apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md;EVIDENCE:artifacts/attestations/IFC-018/context_ack.json
+- ARTIFACT:apps/api/vitest.config.ts;ARTIFACT:artifacts/misc/coverage/coverage-summary.json;ARTIFACT:artifacts/reports/test-report.html;ARTIFACT:artifacts/misc/ci-test-results.xml;ARTIFACT:apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md;EVIDENCE:artifacts/attestations/IFC-018/context_ack.json
 
 
 ---

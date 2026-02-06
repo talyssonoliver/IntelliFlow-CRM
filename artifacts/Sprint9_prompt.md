@@ -193,7 +193,7 @@ Execution Mode: SWARM
 - ENV:export CSV/PDF
 - FILE:docs/architecture/hex-boundaries.md
 - FILE:apps/api/src/modules/opportunity/opportunity.router.ts
-- FILE:apps/api/src/shared/forecast-algorithm-tests.ts
+- FILE:apps/api/src/shared/forecast-algorithm.test.ts
 
 #### Tasks
 1. Custom dashboards created, export functional
