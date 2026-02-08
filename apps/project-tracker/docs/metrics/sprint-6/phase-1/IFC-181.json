@@ -1,0 +1,143 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "IFC-181",
+  "section": "AI Foundation",
+  "description": "AI Output Review - Frontend UI (review queue page)",
+  "owner": "Frontend Dev (STOA-Quality)",
+  "sprint": "sprint-6",
+  "phase": "phase-1",
+  "stream": null,
+  "status": "BACKLOG",
+  "started_at": "2026-02-07T12:00:00.000Z",
+  "completed_at": "2026-02-07T20:00:00.000Z",
+  "actual_duration_minutes": 480,
+  "dependencies": {
+    "required": [
+      "IFC-180",
+      "IFC-149"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-02-08T21:17:26.138Z",
+    "notes": "IFC-180 (tRPC Router) completed 2026-02-05. IFC-149 (Agent Approvals) completed."
+  },
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-02-03T00:00:00.000Z",
+      "note": "Task created during dependency chain analysis"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-07T12:00:00.000Z",
+      "note": "Spec session started. Status: Specifying -> Spec Complete (20%)"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-07T16:00:00.000Z",
+      "note": "Plan session completed. Status: Plan Complete (50%)"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-07T18:00:00.000Z",
+      "note": "Exec session started. Plan Complete -> In Progress (75%)"
+    },
+    {
+      "status": "Completed",
+      "at": "2026-02-07T20:00:00.000Z",
+      "note": "Exec completed. All 4 completion gates PASS. 48/48 tests pass."
+    }
+  ],
+  "execution": {
+    "started_at": "2026-02-07T18:00:00.000Z",
+    "completed_at": "2026-02-07T20:00:00.000Z",
+    "duration_minutes": 120,
+    "executor": "Claude Code /exec",
+    "agents": [
+      "Foundation",
+      "Quality",
+      "Domain"
+    ],
+    "retry_count": 0,
+    "last_error": null
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/agent-approvals/ai-review/page.tsx",
+      "apps/web/src/app/agent-approvals/ai-review/[id]/page.tsx",
+      "apps/web/src/components/ai-review/ReviewQueue.tsx",
+      "apps/web/src/components/ai-review/ReviewCard.tsx",
+      "apps/web/src/lib/ai-review/hooks.ts",
+      "apps/web/src/lib/shared/date-utils.ts",
+      "apps/web/src/components/ai-review/index.ts"
+    ],
+    "created": [
+      "apps/web/src/app/agent-approvals/ai-review/page.tsx",
+      "apps/web/src/app/agent-approvals/ai-review/[id]/page.tsx",
+      "apps/web/src/components/ai-review/ReviewQueue.tsx",
+      "apps/web/src/components/ai-review/ReviewCard.tsx",
+      "apps/web/src/lib/ai-review/hooks.ts",
+      "apps/web/src/lib/shared/date-utils.ts",
+      "apps/web/src/components/ai-review/index.ts"
+    ],
+    "missing": []
+  },
+  "kpis": {
+    "queue_renders": {
+      "target": true,
+      "actual": true,
+      "met": true
+    },
+    "actions_work": {
+      "target": true,
+      "actual": true,
+      "met": true
+    },
+    "dark_mode": {
+      "target": true,
+      "actual": true,
+      "met": true
+    },
+    "test_coverage": {
+      "target": 90,
+      "actual": 100,
+      "met": true,
+      "unit": "percent"
+    }
+  },
+  "validations": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/ui typecheck && pnpm --filter @intelliflow/validators typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "duration_ms": 8000
+    },
+    {
+      "name": "Tests",
+      "command": "vitest run (5 files, 68 tests)",
+      "exit_code": 0,
+      "passed": true,
+      "duration_ms": 3170
+    },
+    {
+      "name": "Lint",
+      "command": "eslint (all IFC-181 files)",
+      "exit_code": 0,
+      "passed": true,
+      "duration_ms": 5000
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/validators build",
+      "exit_code": 0,
+      "passed": true,
+      "duration_ms": 3000
+    }
+  ],
+  "blockers": [],
+  "notes": "AI Output Review Frontend UI completed. Route moved to /agent-approvals/ai-review with full sidebar integration. Agent Approvals layout wired with SidebarProvider + AppSidebar pattern. Sidebar expanded to 6 sections covering all AI features (Approval Queue, AI Review, Intelligence, AI Tools, History, Monitoring). Nav label unified to 'AI & Agents' across navigation.tsx, AppHeader.tsx, layout, and breadcrumbs. DRY compliance: reuses ConfidenceIndicator, StatusBadge, SearchFilterBar, EmptyState. 68 IFC-181 tests PASS (5 files: hooks 20, ReviewCard 16, ReviewQueue 7, date-utils 16, status-badge-review 9) + 18 AppHeader tests PASS.",
+  "dependencies_resolved": [
+    "IFC-180",
+    "IFC-149"
+  ]
+}

@@ -1,0 +1,130 @@
+{
+  "task_id": "IFC-187",
+  "section": "Core CRM",
+  "description": "Task tRPC Router - CRUD assignment scheduling reminders timeline integration",
+  "owner": "Backend Dev (STOA-Domain)",
+  "sprint": "sprint-5",
+  "phase": "phase-1",
+  "stream": null,
+  "status": "BACKLOG",
+  "started_at": "2026-02-06T12:00:00.000Z",
+  "completed_at": "2026-02-07T18:16:17.254Z",
+  "target_duration_minutes": 90,
+  "actual_duration_minutes": 90,
+  "dependencies": {
+    "required": [
+      "IFC-105",
+      "IFC-107",
+      "IFC-003"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-02-08T21:17:26.203Z"
+  },
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-02-04T00:00:00.000Z",
+      "note": "Initial task creation"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-06T12:00:00.000Z",
+      "note": "Spec session started - 4 agents (Domain-Expert, Backend-Architect, Test-Engineer, Data-Engineer)"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-07T16:10:00.000Z",
+      "note": "Plan session complete - TDD plan generated with 11 steps across 3 phases (RED/GREEN/REFACTOR)"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-07T18:15:00.000Z",
+      "note": "Exec session started — TDD implementation of 4 new procedures (assign, reschedule, getReminders, getByEntity)"
+    },
+    {
+      "status": "Completed",
+      "at": "2026-02-07T18:16:00.000Z",
+      "note": "Exec completed — 63/63 tests pass, all 10 DoD endpoints implemented, compliance PASS, gates PASS"
+    }
+  ],
+  "execution": {
+    "started_at": "2026-02-06T12:00:00.000Z",
+    "completed_at": "2026-02-07T18:16:00.000Z",
+    "duration_minutes": 20,
+    "executor": "Claude Code /exec",
+    "agents": [
+      "Foundation",
+      "Domain"
+    ],
+    "retry_count": 0,
+    "last_error": null
+  },
+  "artifacts": {
+    "expected": [
+      "apps/api/src/modules/task/task.router.ts",
+      "apps/api/src/modules/task/__tests__/task.router.test.ts",
+      ".specify/sprints/sprint-5/specifications/IFC-187-spec.md"
+    ],
+    "created": [
+      "apps/api/src/modules/task/task.router.ts",
+      "apps/api/src/modules/task/__tests__/task.router.test.ts",
+      ".specify/sprints/sprint-5/specifications/IFC-187-spec.md"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/validators typecheck",
+      "executed_at": "2026-02-07T18:13:00.000Z",
+      "exit_code": 0,
+      "duration_ms": 3000,
+      "passed": true
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter api test -- --reporter=verbose task.router.test",
+      "executed_at": "2026-02-07T18:13:48.000Z",
+      "exit_code": 0,
+      "duration_ms": 455,
+      "passed": true
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter api lint",
+      "executed_at": "2026-02-07T18:14:00.000Z",
+      "exit_code": 0,
+      "duration_ms": 5000,
+      "passed": true
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/validators build",
+      "executed_at": "2026-02-07T18:14:10.000Z",
+      "exit_code": 0,
+      "duration_ms": 3251,
+      "passed": true
+    }
+  ],
+  "kpis": {
+    "test_coverage": {
+      "target": 90,
+      "actual": 100,
+      "met": true,
+      "unit": "percent"
+    },
+    "endpoints_count": {
+      "target": 10,
+      "actual": 11,
+      "met": true,
+      "unit": "count"
+    }
+  },
+  "blockers": [],
+  "notes": "Completed: 4 new tRPC procedures (assign, reschedule, getReminders, getByEntity) + 4 Zod schemas + 22 new tests. 63/63 tests pass. All 10 DoD endpoints verified. PERT was 195 min, actual exec ~20 min.",
+  "dependencies_resolved": [
+    "IFC-105",
+    "IFC-107",
+    "IFC-003"
+  ]
+}
