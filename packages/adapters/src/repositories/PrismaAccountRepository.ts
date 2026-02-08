@@ -1,5 +1,5 @@
-import { PrismaClient, Decimal } from '@intelliflow/db';
-import { Account, AccountId, WebsiteUrl } from '@intelliflow/domain';
+import { PrismaClient, Decimal, type Account as PrismaAccount } from '@intelliflow/db';
+import { Account, AccountId, WebsiteUrl, type AccountHierarchyRecord } from '@intelliflow/domain';
 import { AccountRepository } from '@intelliflow/application';
 
 /**
@@ -34,15 +34,32 @@ function toWebsiteUrl(url: string | null): WebsiteUrl | undefined {
 export class PrismaAccountRepository implements AccountRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
+  private toDomain(record: PrismaAccount): Account {
+    return Account.reconstitute(createAccountId(record.id), {
+      name: record.name,
+      website: toWebsiteUrl(record.website),
+      industry: record.industry ?? undefined,
+      employees: record.employees ?? undefined,
+      revenue: record.revenue ? Number(record.revenue) : undefined,
+      description: record.description ?? undefined,
+      parentAccountId: record.parentAccountId ?? undefined,
+      ownerId: record.ownerId,
+      tenantId: record.tenantId,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+    });
+  }
+
   async save(account: Account): Promise<void> {
     const data = {
       id: account.id.value,
       name: account.name,
-      website: account.website?.toValue() ?? null, // Convert WebsiteUrl to string
+      website: account.website?.toValue() ?? null,
       industry: account.industry ?? null,
       employees: account.employees ?? null,
       revenue: account.revenue ? new Decimal(account.revenue.toString()) : null,
       description: account.description ?? null,
+      parentAccountId: account.parentAccountId ?? null,
       ownerId: account.ownerId,
       tenantId: account.tenantId,
       createdAt: account.createdAt,
@@ -63,18 +80,7 @@ export class PrismaAccountRepository implements AccountRepository {
 
     if (!record) return null;
 
-    return Account.reconstitute(createAccountId(record.id), {
-      name: record.name,
-      website: toWebsiteUrl(record.website),
-      industry: record.industry ?? undefined,
-      employees: record.employees ?? undefined,
-      revenue: record.revenue ? Number(record.revenue) : undefined,
-      description: record.description ?? undefined,
-      ownerId: record.ownerId,
-      tenantId: record.tenantId,
-      createdAt: record.createdAt,
-      updatedAt: record.updatedAt,
-    });
+    return this.toDomain(record);
   }
 
   async findByOwnerId(ownerId: string): Promise<Account[]> {
@@ -83,20 +89,7 @@ export class PrismaAccountRepository implements AccountRepository {
       orderBy: { name: 'asc' },
     });
 
-    return records.map((record) =>
-      Account.reconstitute(createAccountId(record.id), {
-        name: record.name,
-        website: toWebsiteUrl(record.website),
-        industry: record.industry ?? undefined,
-        employees: record.employees ?? undefined,
-        revenue: record.revenue ? Number(record.revenue) : undefined,
-        description: record.description ?? undefined,
-        ownerId: record.ownerId,
-      tenantId: record.tenantId,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-      })
-    );
+    return records.map((record) => this.toDomain(record));
   }
 
   async findByName(name: string): Promise<Account[]> {
@@ -107,20 +100,7 @@ export class PrismaAccountRepository implements AccountRepository {
       orderBy: { name: 'asc' },
     });
 
-    return records.map((record) =>
-      Account.reconstitute(createAccountId(record.id), {
-        name: record.name,
-        website: toWebsiteUrl(record.website),
-        industry: record.industry ?? undefined,
-        employees: record.employees ?? undefined,
-        revenue: record.revenue ? Number(record.revenue) : undefined,
-        description: record.description ?? undefined,
-        ownerId: record.ownerId,
-      tenantId: record.tenantId,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-      })
-    );
+    return records.map((record) => this.toDomain(record));
   }
 
   async findByIndustry(industry: string, ownerId?: string): Promise<Account[]> {
@@ -132,20 +112,7 @@ export class PrismaAccountRepository implements AccountRepository {
       orderBy: { name: 'asc' },
     });
 
-    return records.map((record) =>
-      Account.reconstitute(createAccountId(record.id), {
-        name: record.name,
-        website: toWebsiteUrl(record.website),
-        industry: record.industry ?? undefined,
-        employees: record.employees ?? undefined,
-        revenue: record.revenue ? Number(record.revenue) : undefined,
-        description: record.description ?? undefined,
-        ownerId: record.ownerId,
-      tenantId: record.tenantId,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-      })
-    );
+    return records.map((record) => this.toDomain(record));
   }
 
   async delete(id: AccountId): Promise<void> {
@@ -182,5 +149,64 @@ export class PrismaAccountRepository implements AccountRepository {
       },
       {} as Record<string, number>
     );
+  }
+
+  private buildChildrenInclude(depth: number): Record<string, unknown> {
+    if (depth <= 0) return {};
+    return {
+      childAccounts: {
+        include: {
+          _count: { select: { contacts: true, opportunities: true } },
+          ...this.buildChildrenInclude(depth - 1),
+        },
+      },
+    };
+  }
+
+  async findWithChildren(id: AccountId, maxDepth: number): Promise<AccountHierarchyRecord | null> {
+    const include = {
+      _count: { select: { contacts: true, opportunities: true } },
+      ...this.buildChildrenInclude(maxDepth),
+    };
+
+    const record = await this.prisma.account.findUnique({
+      where: { id: id.value },
+      include,
+    });
+
+    return record as AccountHierarchyRecord | null;
+  }
+
+  async findAncestors(id: AccountId): Promise<Account[]> {
+    const ancestors: Account[] = [];
+    let currentId: string | null = id.value;
+    const visited = new Set<string>();
+
+    while (currentId) {
+      if (visited.has(currentId)) break;
+      visited.add(currentId);
+
+      const record: PrismaAccount | null = await this.prisma.account.findUnique({
+        where: { id: currentId },
+      });
+
+      if (!record?.parentAccountId) break;
+
+      const parentRecord: PrismaAccount | null = await this.prisma.account.findUnique({
+        where: { id: record.parentAccountId },
+      });
+
+      if (!parentRecord) break;
+
+      ancestors.push(this.toDomain(parentRecord));
+      currentId = parentRecord.parentAccountId;
+    }
+
+    return ancestors;
+  }
+
+  async getHierarchyDepth(id: AccountId): Promise<number> {
+    const ancestors = await this.findAncestors(id);
+    return ancestors.length;
   }
 }

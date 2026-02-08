@@ -1,141 +1,50 @@
 {
-  "timestamp": "2026-02-06T18:55:39.727Z",
+  "timestamp": "2026-02-08T19:54:59.6344491Z",
   "knip": {
     "success": true,
     "data": {
-      "files": [
-        "apps/workers/notifications-worker/src/channels/sms.ts",
-        "apps/workers/events-worker/src/config.ts",
-        "packages/adapters/src/memory/zep/index.ts",
-        "packages/adapters/src/messaging/slack/index.ts",
-        "packages/adapters/src/messaging/twilio/client.ts",
-        "packages/adapters/src/payments/stripe/index.ts",
-        "packages/adapters/src/payments/paypal/index.ts",
-        "packages/db/prisma/apply-direct.ts",
-        "packages/db/prisma/apply-full.ts",
-        "packages/db/prisma/apply-schema-v2.ts",
-        "packages/db/prisma/apply-schema.ts",
-        "packages/db/prisma/check-db.ts",
-        "packages/db/prisma/schema-audit.prisma",
-        "packages/db/prisma/seed-home-page.ts",
-        "packages/db/prisma/seed-ids.ts",
-        "packages/ui/src/lib/icon-mapping.ts",
-        "packages/domain/src/platform/index.ts",
-        "apps/web/lib/documents/timeline-event-model.ts",
-        "apps/web/lib/tickets/index.ts",
-        "apps/web/lib/tickets/use-sla-notifications.ts",
-        "apps/web/src/test-utils/auth-mocks.ts",
-        "apps/web/src/test-utils/index.ts",
-        "apps/web/src/components/billing/index.ts",
-        "apps/web/src/components/pricing/pricing-calculator.tsx",
-        "apps/web/src/components/settings/index.ts",
-        "apps/web/src/components/settings/settings-sidebar.tsx",
-        "apps/web/src/lib/auth/index.ts",
-        "apps/web/src/lib/pricing/stripe-integration.ts",
-        "apps/web/src/test/mocks/handlers.ts",
-        "apps/web/src/test/mocks/index.ts",
-        "apps/web/src/test/mocks/server.ts",
-        "apps/web/src/app/governance/compliance/components/index.ts",
-        "apps/api/src/middleware/index.ts",
-        "apps/api/src/middleware/rate-limit.ts",
-        "apps/api/src/security/audit-coverage-test.ts",
-        "apps/api/src/shared/audit-encryption-module.ts",
-        "apps/api/src/shared/bias-detector.ts",
-        "apps/api/src/shared/e2e-type-safety-test.ts",
-        "apps/api/src/shared/filter-options-builder.ts",
-        "apps/api/src/shared/performance-benchmark.ts",
-        "apps/api/src/shared/retry-policy.ts",
-        "apps/api/src/tracing/example.ts",
-        "apps/api/src/tracing/index.ts",
-        "apps/api/src/workflow/index.ts",
-        "apps/api/src/modules/autoresponse/index.ts",
-        "apps/api/src/modules/chain-version/index.ts",
-        "apps/api/src/modules/documents/upload.router.ts",
-        "apps/api/src/modules/experiment/index.ts",
-        "apps/api/src/modules/legal/cases.router.ts",
-        "apps/api/src/modules/legal/types.ts",
-        "apps/ai-worker/src/chains/index.ts",
-        "apps/ai-worker/src/config/index.ts",
-        "apps/ai-worker/src/config/relevance-config.ts",
-        "apps/ai-worker/src/analytics/index.ts",
-        "apps/ai-worker/src/prompts/index.ts",
-        "apps/ai-worker/src/monitoring/index.ts",
-        "apps/ai-worker/src/types/index.ts",
-        "apps/ai-worker/src/versioning/index.ts",
-        "apps/ai-worker/src/test/mocks/index.ts",
-        "apps/ai-worker/src/test/mocks/langchain-openai.mock.ts",
-        "apps/ai-worker/src/test/mocks/ollama.mock.ts",
-        "apps/project-tracker/components/CollapsibleSection.tsx",
-        "apps/project-tracker/components/TrackingView.tsx",
-        "apps/project-tracker/components/tracking/AIMetrics.tsx",
-        "apps/project-tracker/components/tracking/BuildHealth.tsx",
-        "apps/project-tracker/components/tracking/index.ts",
-        "apps/project-tracker/components/tracking/QualityDashboard.tsx",
-        "apps/project-tracker/components/tracking/RiskRegister.tsx",
-        "apps/project-tracker/components/tracking/SecurityDashboard.tsx",
-        "apps/project-tracker/components/tracking/StatusHistory.tsx",
-        "apps/project-tracker/components/tracking/StatusTracker.tsx",
-        "apps/project-tracker/lib/prompt-generator/types.ts",
-        "apps/project-tracker/components/tracking/shared/index.ts",
-        "apps/project-tracker/components/tracking/shared/MetricCard.tsx",
-        "apps/project-tracker/components/tracking/shared/RefreshButton.tsx",
-        "apps/project-tracker/components/tracking/shared/StaleIndicator.tsx"
-      ],
+      "files": [],
       "dependencies": [
-        "@prisma/client",
-        "use-debounce",
-        "ioredis",
-        "twilio",
+        "@langchain/community",
+        "@microsoft/api-extractor",
         "@opentelemetry/exporter-metrics-otlp-http",
         "@opentelemetry/exporter-trace-otlp-http",
+        "@opentelemetry/instrumentation",
+        "@opentelemetry/sdk-trace-node",
+        "@paralleldrive/cuid2",
+        "@prisma/client",
         "@sentry/tracing",
         "@upstash/ratelimit",
         "@upstash/redis",
-        "@langchain/community",
-        "langchain",
-        "openai",
+        "axe-core",
+        "baseline-browser-mapping",
         "bullmq",
-        "@opentelemetry/instrumentation",
-        "@opentelemetry/sdk-trace-node",
-        "@paralleldrive/cuid2"
+        "cspell",
+        "ioredis",
+        "langchain",
+        "license-checker",
+        "madge",
+        "markdownlint-cli",
+        "openai",
+        "react",
+        "testcontainers",
+        "ts-prune",
+        "use-debounce"
       ],
       "devDependencies": [
+        "@microsoft/api-extractor",
+        "axe-core",
         "baseline-browser-mapping",
         "cspell",
         "license-checker",
         "madge",
         "markdownlint-cli",
-        "testcontainers",
-        "ts-prune",
         "react",
-        "axe-core"
+        "testcontainers",
+        "ts-prune"
       ],
       "unlisted": [],
       "exports": [
-        {
-          "file": "packages/validators/src/contact.ts",
-          "exports": [
-            "contactTimelineResponseSchema"
-          ]
-        },
-        {
-          "file": "packages/search/src/indexer.ts",
-          "exports": [
-            "DEFAULT_INDEXER_CONFIG"
-          ]
-        },
-        {
-          "file": "packages/search/src/retrieval.ts",
-          "exports": [
-            "DEFAULT_RELEVANCE_CONFIG"
-          ]
-        },
-        {
-          "file": "packages/search/src/worker.ts",
-          "exports": [
-            "REINDEX_QUEUE_NAME"
-          ]
-        },
         {
           "file": "packages/db/src/client.ts",
           "exports": [
@@ -147,156 +56,15 @@
           ]
         },
         {
-          "file": "apps/workers/shared/src/worker-config.ts",
-          "exports": [
-            "validateConfig",
-            "createTestConfig"
-          ]
-        },
-        {
-          "file": "apps/ai-worker/src/monitoring/chain-monitor.ts",
-          "exports": [
-            "sanitizeMetricLabel",
-            "chainMonitor"
-          ]
-        },
-        {
-          "file": "apps/ai-worker/src/chains/sentiment.chain.ts",
-          "exports": [
-            "sentimentChain"
-          ]
-        },
-        {
-          "file": "apps/ai-worker/src/chains/churn-risk.chain.ts",
-          "exports": [
-            "churnRiskChain"
-          ]
-        },
-        {
-          "file": "apps/ai-worker/src/analytics/feedback-analytics-generator.ts",
-          "exports": [
-            "generateFeedbackAnalyticsCLI"
-          ]
-        },
-        {
-          "file": "apps/ai-worker/src/services/embedding-purge.service.ts",
-          "exports": [
-            "createEmbeddingPurgeService"
-          ]
-        },
-        {
-          "file": "packages/validators/src/platform-metrics.ts",
-          "exports": [
-            "deploymentTypeSchema"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/stoa/evidence.ts",
-          "exports": [
-            "getLegacyEvidenceDir",
-            "verifyEvidenceIntegrity"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/stoa/types.ts",
-          "exports": [
-            "STOA_ROLES"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/stoa/gate-selection.ts",
-          "exports": [
-            "validateGateSelection"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/stoa/stoa-assignment.ts",
-          "exports": [
-            "applyOverrides"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/stoa/gate-runner.ts",
-          "exports": [
-            "allGatesPassed"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/stoa/waiver.ts",
-          "exports": [
-            "isWaiverEffective",
-            "loadWaivers",
-            "mergeWaivers",
-            "approveWaiver",
-            "renewWaiver",
-            "makeWaiverPermanent"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/stoa/verdict.ts",
-          "exports": [
-            "aggregateFindings",
-            "generateCombinedRationale",
-            "determineSupportingSignOff"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/stoa/csv-governance.ts",
-          "exports": [
-            "createMultiFieldProposal",
-            "getPendingPatches",
-            "markPatchApplied",
-            "markPatchRejected",
-            "generatePatchDiff",
-            "validatePatchApplicable",
-            "isForbiddenOperation"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/stoa/remediation.ts",
-          "exports": [
-            "resolveBlocker"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/contract-parser.ts",
-          "exports": [
-            "getGlobPrerequisites",
-            "getImplementsFlows",
-            "getFlowFilePath",
-            "getArtifactPaths",
-            "validateTaskContracts",
-            "filterTasksRequiringContextAck"
-          ]
-        },
-        {
           "file": "packages/platform/src/resilience/circuit-breaker.ts",
           "exports": [
             "withCircuitBreaker"
           ]
         },
         {
-          "file": "tests/integration/setup.ts",
+          "file": "packages/platform/src/resilience/retry-policy.ts",
           "exports": [
-            "testUtils"
-          ]
-        },
-        {
-          "file": "tests/e2e/utils/ai-test-helpers.ts",
-          "exports": [
-            "waitForElementOrTimeout",
-            "getConfidenceLevel",
-            "expectLeadScore",
-            "expectConfidenceIndicator",
-            "performApprovalAction",
-            "expectMetricValue",
-            "verifyPageLoadsWithoutErrors",
-            "captureStableScreenshot",
-            "verifyAriaAttributes",
-            "testKeyboardNavigation",
-            "waitForStableElement",
-            "getVisibleActionCards",
-            "countActionsByStatus"
+            "Retry"
           ]
         },
         {
@@ -306,306 +74,9 @@
           ]
         },
         {
-          "file": "packages/adapters/src/messaging/email/attachments.ts",
-          "exports": [
-            "createAttachmentHandler"
-          ]
-        },
-        {
-          "file": "packages/adapters/src/messaging/email/dkim-signer.ts",
-          "exports": [
-            "createDkimSigner",
-            "createDkimKeyManager"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/column-deprecation.ts",
-          "exports": [
-            "generateAndWriteDeprecationPlan"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/context-ack-gatekeeper.ts",
-          "exports": [
-            "runContextAckGateBatch"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/context-pack-builder.ts",
-          "exports": [
-            "computeFileSha256",
-            "buildContextPack"
-          ]
-        },
-        {
-          "file": "tools/perf/lighthouse.config.js",
-          "exports": [
-            "default"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/stoa/orchestrator.ts",
-          "exports": [
-            "cli"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/workflow/config.ts",
-          "exports": [
-            "TDD_CONFIG"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/schema-paths.ts",
-          "exports": [
-            "getAbsoluteSchemaPath",
-            "getSchemaId"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/output-paths.ts",
-          "exports": [
-            "ENV",
-            "getReportPath",
-            "getBenchmarkPath",
-            "getCoveragePath",
-            "getLogPath",
-            "getStoaEvidencePath",
-            "getLatestSymlink",
-            "normalizePath",
-            "createLatestLink"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/code-review/paths.ts",
-          "exports": [
-            "generateCodeReviewRunId",
-            "getCodeReviewBaseDir",
-            "ensureCodeReviewDirs",
-            "ensurePackageReviewDir",
-            "ensureGatesLinkageDir",
-            "ensureCodeReviewDirSync",
-            "getLegacyCodeReviewDir",
-            "getLegacyPackageReviewDir",
-            "normalizePath",
-            "codeReviewDirExists",
-            "getReportFilePath"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/sprint/types.ts",
-          "exports": [
-            "csvTaskToPhaseEntry",
-            "getStreamLetter"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/stoa/paths.ts",
-          "exports": [
-            "getSprintDir",
-            "getSprintSummaryPath",
-            "getCoverageDir",
-            "getMemoryDir",
-            "getConstitutionPath",
-            "getHydratedContextMdPath",
-            "getHydratedContextJsonPath",
-            "getContextAckPath",
-            "getContextPackMdPath",
-            "getContextPackManifestPath",
-            "getAttestationPath",
-            "getValidationPath",
-            "getEvidenceSummaryJsonPath",
-            "getEvidenceSummaryMdPath",
-            "getEvidenceHashesPath",
-            "getGatesDir",
-            "getStoaVerdictsDir",
-            "getTaskDir",
-            "getLegacySpecificationsDir",
-            "getLegacyPlanningDir",
-            "getLegacyAttestationsTaskDir",
-            "getLegacyEvidenceTaskDir",
-            "getLegacySpecPathOld",
-            "getLegacyPlanPathOld",
-            "getLegacyEvidenceDir"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/stoa/agent-selection.ts",
-          "exports": [
-            "selectAgents",
-            "writeAgentSelection",
-            "generateAgentSelectionMarkdown",
-            "getRecommendedTeam"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/stoa/attestation.ts",
-          "exports": [
-            "loadCompletedTasks"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/stoa/context-hydration.ts",
-          "exports": [
-            "loadHydratedContext",
-            "hasHydratedContext"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/stoa/spec-session.ts",
-          "exports": [
-            "createSpecSession",
-            "buildTeamRoundBroadcast",
-            "getRoundType",
-            "parseAgentResponse",
-            "prepareSpecRound",
-            "createSpecRound",
-            "addRoundToSession",
-            "shouldContinueSession",
-            "generateSpecification",
-            "writeSpecification",
-            "writeDiscussionLog"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/stoa/plan-session.ts",
-          "exports": [
-            "createPlanSession",
-            "loadSpecification",
-            "generatePlan",
-            "completePlanSession",
-            "writePlan",
-            "writePlanSession"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/sprint-audit/attestation-generator.ts",
-          "exports": [
-            "getAttestationPath",
-            "listAttestationHistory"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/sprint-audit/action-tracker.ts",
-          "exports": [
-            "removeFromReviewQueue",
-            "getTaskActions",
-            "getDebtSummary"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/sprint-audit/types.ts",
-          "exports": [
-            "DEFAULT_AUDIT_CONFIG"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/sprint-audit/artifact-verifier.ts",
-          "exports": [
-            "verifyMultipleTasksArtifacts",
-            "allArtifactsValid"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/sprint-audit/placeholder-detector.ts",
-          "exports": [
-            "groupByPattern",
-            "groupByFile"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/sprint-audit/validation-runner.ts",
-          "exports": [
-            "runMultipleTaskValidations",
-            "dryRunTaskValidations"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/sprint-audit/waiver-checker.ts",
-          "exports": [
-            "isIssueCoveredByWaiver",
-            "getMultipleWaiverStatuses",
-            "getExpiringWaivers",
-            "getExpiredWaivers",
-            "getRequiredGates",
-            "getRequiredEvidence",
-            "getGateProfiles"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/workflow/status-transitions.ts",
-          "exports": [
-            "isActiveStatus",
-            "isWaitingStatus",
-            "isTerminalStatus",
-            "isReadyForNextSession"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/workflow/paths.ts",
-          "exports": [
-            "parseRunId",
-            "getSprintPlanJsonPath",
-            "isSpecifyPath",
-            "extractTaskIdFromPath",
-            "extractSprintFromPath",
-            "getExecutionRunsPath",
-            "LEGACY_PATH_MAPPINGS"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/workflow/utils.ts",
-          "exports": [
-            "clearSprintCache",
-            "taskExists"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/workflow/validation.ts",
-          "exports": [
-            "generateRemediationSummary"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/workflow/metrics.ts",
-          "exports": [
-            "recordTaskStart",
-            "recordTaskComplete",
-            "addBlocker",
-            "resolveBlocker",
-            "getTaskMetricsSummary"
-          ]
-        },
-        {
-          "file": "tests/e2e/fixtures/ai-mock-data.ts",
-          "exports": [
-            "createMockLeadScore",
-            "createMockAgentAction",
-            "getConfidenceLevel",
-            "mockAIData"
-          ]
-        },
-        {
-          "file": "packages/sdk/src/index.ts",
-          "exports": [
-            "createIntelliFlowSDK",
-            "isValidLeadStatus",
-            "isValidLeadSource",
-            "isValidOpportunityStage",
-            "isValidTaskStatus",
-            "isValidTaskPriority"
-          ]
-        },
-        {
           "file": "packages/api-client/src/react-client.tsx",
           "exports": [
             "TRPCProvider"
-          ]
-        },
-        {
-          "file": "packages/adapters/src/repositories/PrismaNotificationPreferenceRepository.ts",
-          "exports": [
-            "PrismaNotificationPreferenceRepository"
           ]
         },
         {
@@ -630,10 +101,22 @@
           ]
         },
         {
-          "file": "packages/adapters/src/common/idempotency/IdempotencyManager.ts",
+          "file": "packages/adapters/src/messaging/twilio/client.ts",
           "exports": [
-            "IdempotencyManager",
-            "calculateContentHash"
+            "getTwilioClient"
+          ]
+        },
+        {
+          "file": "packages/adapters/src/payments/paypal/adapter.ts",
+          "exports": [
+            "PayPalAdapter"
+          ]
+        },
+        {
+          "file": "apps/workers/shared/src/worker-config.ts",
+          "exports": [
+            "validateConfig",
+            "createTestConfig"
           ]
         },
         {
@@ -657,6 +140,24 @@
           ]
         },
         {
+          "file": "packages/search/src/retrieval.ts",
+          "exports": [
+            "DEFAULT_RELEVANCE_CONFIG"
+          ]
+        },
+        {
+          "file": "packages/search/src/indexer.ts",
+          "exports": [
+            "DEFAULT_INDEXER_CONFIG"
+          ]
+        },
+        {
+          "file": "packages/search/src/worker.ts",
+          "exports": [
+            "REINDEX_QUEUE_NAME"
+          ]
+        },
+        {
           "file": "packages/search/src/index.ts",
           "exports": [
             "SEARCH_MODES",
@@ -671,6 +172,12 @@
           ]
         },
         {
+          "file": "packages/platform/src/resilience/resilient-call.ts",
+          "exports": [
+            "resilientCall"
+          ]
+        },
+        {
           "file": "packages/platform/src/queues/connection.ts",
           "exports": [
             "checkConnectionHealth",
@@ -682,35 +189,6 @@
           "exports": [
             "createBackoffStrategy",
             "globalRetryBudget"
-          ]
-        },
-        {
-          "file": "packages/platform/src/queues/queue-factory.ts",
-          "exports": [
-            "createEmailNotificationsQueue",
-            "createWebhookDeliveryQueue",
-            "enqueueAIScoring",
-            "getQueueHealth",
-            "pauseQueue",
-            "resumeQueue",
-            "shutdownAllQueues"
-          ]
-        },
-        {
-          "file": "packages/platform/src/queues/metrics-collector.ts",
-          "exports": [
-            "globalMetricsCollector"
-          ]
-        },
-        {
-          "file": "packages/platform/src/queues/bull-board.ts",
-          "exports": [
-            "addQueueToBullBoard",
-            "removeQueueFromBullBoard",
-            "setupBullBoard",
-            "getBullBoardInstance",
-            "configureBullBoardForExpress",
-            "configureBullBoardForFastify"
           ]
         },
         {
@@ -735,6 +213,12 @@
           ]
         },
         {
+          "file": "packages/ui/src/lib/icon-mapping.ts",
+          "exports": [
+            "ICON_SIZE_CLASSES"
+          ]
+        },
+        {
           "file": "packages/ui/src/components/confirmation-dialog.tsx",
           "exports": [
             "ConfirmationDialog"
@@ -744,12 +228,6 @@
           "file": "packages/domain/src/crm/task/Task.ts",
           "exports": [
             "TaskNotInProgressError"
-          ]
-        },
-        {
-          "file": "packages/domain/src/legal/appointments/AppointmentEvents.ts",
-          "exports": [
-            "AppointmentConflictDetectedEvent"
           ]
         },
         {
@@ -780,54 +258,6 @@
           ]
         },
         {
-          "file": "packages/domain/src/notifications/NotificationEvents.ts",
-          "exports": [
-            "NotificationPreferenceUpdatedEvent",
-            "NotificationScheduledEvent"
-          ]
-        },
-        {
-          "file": "apps/web/src/lib/session.ts",
-          "exports": [
-            "encrypt",
-            "getSession",
-            "createSessionFromAuth",
-            "clearSession"
-          ]
-        },
-        {
-          "file": "apps/web/src/lib/shared/logout-redirect.ts",
-          "exports": [
-            "navigateToLogout"
-          ]
-        },
-        {
-          "file": "apps/web/src/lib/billing/stripe-portal.ts",
-          "exports": [
-            "isAtUsageLimit",
-            "formatStorageSize"
-          ]
-        },
-        {
-          "file": "apps/web/src/lib/cases/reminders-context.tsx",
-          "exports": [
-            "useReminders"
-          ]
-        },
-        {
-          "file": "apps/web/lib/tickets/sla-badge.tsx",
-          "exports": [
-            "SLAQuickView"
-          ]
-        },
-        {
-          "file": "apps/web/src/app/api/quality-reports/job-storage.ts",
-          "exports": [
-            "deleteJob",
-            "getAllJobs"
-          ]
-        },
-        {
           "file": "apps/web/lib/status/incident-tracker.ts",
           "exports": [
             "default"
@@ -846,9 +276,11 @@
           ]
         },
         {
-          "file": "apps/web/src/lib/pricing/calculator.ts",
+          "file": "apps/web/src/components/sidebar/SidebarPortalContext.tsx",
           "exports": [
-            "redirectToCheckout"
+            "SidebarPortalProvider",
+            "SidebarPortal",
+            "SidebarPortalTarget"
           ]
         },
         {
@@ -858,70 +290,9 @@
           ]
         },
         {
-          "file": "apps/web/src/lib/shared/token-exchange.ts",
+          "file": "apps/web/lib/tickets/sla-badge.tsx",
           "exports": [
-            "clearSessionTokens",
-            "getStoredAccessToken"
-          ]
-        },
-        {
-          "file": "apps/web/hooks/use-subscription.ts",
-          "exports": [
-            "useLeadScoreSubscription",
-            "REALTIME_BACKEND"
-          ]
-        },
-        {
-          "file": "apps/web/src/components/auth/mfa-challenge.tsx",
-          "exports": [
-            "InlineMfaChallenge"
-          ]
-        },
-        {
-          "file": "apps/web/src/lib/billing/pdf-generator.ts",
-          "exports": [
-            "getBestViewUrl"
-          ]
-        },
-        {
-          "file": "apps/web/src/components/sidebar/SidebarPortalContext.tsx",
-          "exports": [
-            "SidebarPortalProvider",
-            "useSidebarPortalOptional",
-            "useSidebarConfig",
-            "SidebarPortal",
-            "SidebarPortalTarget"
-          ]
-        },
-        {
-          "file": "apps/web/src/components/shared/search-filter-bar.tsx",
-          "exports": [
-            "useFilterState",
-            "useMultiFilterState"
-          ]
-        },
-        {
-          "file": "apps/web/src/lib/shared/password-breach-check.ts",
-          "exports": [
-            "createDebouncedBreachCheck"
-          ]
-        },
-        {
-          "file": "apps/web/src/lib/test-runner/spawner.ts",
-          "exports": [
-            "getScopeDescription"
-          ]
-        },
-        {
-          "file": "apps/web/src/lib/test-runner/parser.ts",
-          "exports": [
-            "parseVitestOutput"
-          ]
-        },
-        {
-          "file": "apps/web/src/components/sidebar/configs/agent-approvals.ts",
-          "exports": [
-            "agentApprovalsSidebarConfig"
+            "SLAQuickView"
           ]
         },
         {
@@ -964,6 +335,12 @@
           ]
         },
         {
+          "file": "apps/api/src/middleware/rate-limit.ts",
+          "exports": [
+            "createAuthenticatedRateLimitMiddleware"
+          ]
+        },
+        {
           "file": "apps/api/src/workflow/state-machine.ts",
           "exports": [
             "workflowEngine"
@@ -977,199 +354,67 @@
           ]
         },
         {
-          "file": "apps/api/src/test/integration-setup.ts",
+          "file": "apps/api/src/shared/audit-encryption-module.ts",
           "exports": [
-            "createIntegrationAdminContext",
-            "isDatabaseReady"
+            "resetAuditEncryption"
           ]
         },
         {
-          "file": "apps/api/src/modules/notifications/notifications.router.ts",
+          "file": "apps/ai-worker/src/services/embedding-purge.service.ts",
           "exports": [
-            "createNotification"
+            "createEmbeddingPurgeService"
           ]
         },
         {
-          "file": "apps/ai-worker/src/utils/token-counter.ts",
+          "file": "apps/ai-worker/src/prompts/index.ts",
           "exports": [
-            "clearEncoderCache",
-            "ensureTiktokenLoaded"
+            "default"
           ]
         },
         {
-          "file": "apps/project-tracker/lib/icons.tsx",
+          "file": "apps/ai-worker/src/chains/churn-risk.chain.ts",
           "exports": [
-            "ICON_NAME_MAPPING"
+            "churnRiskChain"
           ]
         },
         {
-          "file": "apps/project-tracker/lib/csv-parser.ts",
+          "file": "apps/ai-worker/src/chains/sentiment.chain.ts",
           "exports": [
-            "parseCSVText",
-            "groupTasksBySprint"
+            "sentimentChain"
           ]
         },
         {
-          "file": "apps/project-tracker/lib/TaskDataContext.tsx",
+          "file": "apps/ai-worker/src/analytics/feedback-analytics-generator.ts",
           "exports": [
-            "useSprintStatusCounts"
+            "generateFeedbackAnalyticsCLI"
           ]
         },
         {
-          "file": "apps/project-tracker/lib/artifact-registry.ts",
+          "file": "apps/ai-worker/src/monitoring/chain-monitor.ts",
           "exports": [
-            "validateFilesContent",
-            "isLikelyFabricated",
-            "scanAllArtifacts",
-            "enrichWithGitHistoryBatch",
-            "getTaskArtifacts"
-          ]
-        },
-        {
-          "file": "apps/project-tracker/lib/paths.ts",
-          "exports": [
-            "getPhaseSummaryPath",
-            "getTaskFilePath",
-            "GOVERNANCE_PATHS"
-          ]
-        },
-        {
-          "file": "apps/project-tracker/lib/api-types.ts",
-          "exports": [
-            "createSuccessResponse",
-            "createErrorResponse"
-          ]
-        },
-        {
-          "file": "apps/project-tracker/lib/claude-session-spawner.ts",
-          "exports": [
-            "listSessions"
-          ]
-        },
-        {
-          "file": "apps/project-tracker/lib/csv-status.ts",
-          "exports": [
-            "getCsvPath",
-            "saveTasks",
-            "startSession",
-            "completeSession",
-            "checkArtifactsExist"
-          ]
-        },
-        {
-          "file": "apps/project-tracker/lib/governance.ts",
-          "exports": [
-            "loadGateProfiles",
-            "loadSprintSummary",
-            "enhanceTaskWithGovernance",
-            "getTasksByTier"
-          ]
-        },
-        {
-          "file": "apps/project-tracker/lib/subprocess-spawner.ts",
-          "exports": [
-            "killSubprocess",
-            "killAllSubprocesses",
-            "getActiveSubprocesses",
-            "spawnParallelAgents",
-            "validateScripts"
-          ]
-        },
-        {
-          "file": "apps/project-tracker/lib/execution-history.ts",
-          "exports": [
-            "getRunsByDateRange"
-          ]
-        },
-        {
-          "file": "apps/project-tracker/lib/utils.ts",
-          "exports": [
-            "formatPercentage",
-            "formatNumber",
-            "getStatusColor",
-            "getCompletionColor",
-            "parseDependencies",
-            "parseArtifacts",
-            "calculateCompletionRate",
-            "isAIAssisted",
-            "getPriorityColor",
-            "sortBy",
-            "debounce"
-          ]
-        },
-        {
-          "file": "apps/project-tracker/components/ContextPackStatus.tsx",
-          "exports": [
-            "ContextStatusIndicator"
-          ]
-        },
-        {
-          "file": "apps/project-tracker/components/ContractTagList.tsx",
-          "exports": [
-            "ContractComplianceIndicator"
-          ]
-        },
-        {
-          "file": "apps/project-tracker/components/GateValidationTable.tsx",
-          "exports": [
-            "GateValidationSummary"
-          ]
-        },
-        {
-          "file": "apps/project-tracker/components/PlanDeliverablesStatus.tsx",
-          "exports": [
-            "PlanVerificationIndicator"
-          ]
-        },
-        {
-          "file": "apps/project-tracker/lib/data-sync/file-io.ts",
-          "exports": [
-            "resolvePrettierBin"
-          ]
-        },
-        {
-          "file": "apps/project-tracker/lib/data-sync/orchestrator.ts",
-          "exports": [
-            "formatSyncResult"
-          ]
-        },
-        {
-          "file": "apps/project-tracker/lib/data-sync/validation.ts",
-          "exports": [
-            "validateMetricsConsistency"
-          ]
-        },
-        {
-          "file": "apps/project-tracker/lib/data-sync/schedule-sync.ts",
-          "exports": [
-            "getScheduleSummary"
+            "sanitizeMetricLabel",
+            "chainMonitor"
           ]
         }
       ],
       "types": [
         {
-          "file": "packages/validators/src/contact.ts",
+          "file": "packages/platform/src/resilience/retry-policy.ts",
           "types": [
-            "ContactType",
-            "ContactStatus",
-            "CreateContactInput",
-            "UpdateContactInput",
-            "ContactQueryInput",
-            "ContactResponse",
-            "ContactListResponse",
-            "LinkToLeadInput",
-            "UnlinkFromLeadInput",
-            "ContactTimelineInput",
-            "ContactTimelineEventType",
-            "ContactTimelineEvent"
+            "ResilientCallOptions"
           ]
         },
         {
-          "file": "packages/search/src/indexer.ts",
+          "file": "apps/workers/shared/src/worker-config.ts",
           "types": [
-            "DocumentToIndex",
-            "NoteToIndex",
-            "IDocumentIndexer"
+            "TelemetryConfig",
+            "CircuitBreakerConfig"
+          ]
+        },
+        {
+          "file": "packages/application/src/ports/external/NotificationServicePort.ts",
+          "types": [
+            "ReminderServicePort"
           ]
         },
         {
@@ -1184,49 +429,18 @@
           ]
         },
         {
+          "file": "packages/search/src/indexer.ts",
+          "types": [
+            "DocumentToIndex",
+            "NoteToIndex",
+            "IDocumentIndexer"
+          ]
+        },
+        {
           "file": "packages/search/src/worker.ts",
           "types": [
             "IReindexWorker",
             "ScheduleOptions"
-          ]
-        },
-        {
-          "file": "apps/workers/shared/src/worker-config.ts",
-          "types": [
-            "TelemetryConfig",
-            "CircuitBreakerConfig"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/stoa/types.ts",
-          "types": [
-            "HumanPacket"
-          ]
-        },
-        {
-          "file": "packages/adapters/src/messaging/email/dkim-signer.ts",
-          "types": [
-            "DkimVerificationResult"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/sprint/types.ts",
-          "types": [
-            "DependencySignature",
-            "GeneratePromptRequest",
-            "GeneratePromptResponse",
-            "PhasesResponse",
-            "ExecuteRequest",
-            "ExecuteResponse",
-            "StatusResponse",
-            "SprintEvent",
-            "SprintOrchestratorConfig"
-          ]
-        },
-        {
-          "file": "packages/application/src/ports/external/NotificationServicePort.ts",
-          "types": [
-            "ReminderServicePort"
           ]
         },
         {
@@ -1239,6 +453,13 @@
           "file": "packages/platform/src/workflow/rules-engine.ts",
           "types": [
             "ComparisonOperator"
+          ]
+        },
+        {
+          "file": "packages/ui/src/lib/icon-mapping.ts",
+          "types": [
+            "MaterialSymbolName",
+            "MaterialIconProps"
           ]
         },
         {
@@ -1262,300 +483,15 @@
           ]
         },
         {
-          "file": "apps/web/src/lib/billing/stripe-portal.ts",
-          "types": [
-            "BillingSubscription",
-            "BillingInvoice",
-            "UsageMetrics"
-          ]
-        },
-        {
-          "file": "apps/api/src/modules/notifications/notifications.router.ts",
-          "types": [
-            "NotificationsRouter"
-          ]
-        },
-        {
-          "file": "apps/project-tracker/lib/artifact-registry.ts",
-          "types": [
-            "ArtifactEntry",
-            "ArtifactSummary",
-            "MissingArtifact"
-          ]
-        },
-        {
-          "file": "apps/project-tracker/lib/api-types.ts",
-          "types": [
-            "SprintMetricsResponse",
-            "PhaseMetrics",
-            "ExecutiveMetricsResponse",
-            "GovernanceSummaryResponse",
-            "UnifiedDataResponse"
-          ]
-        },
-        {
-          "file": "packages/validators/src/common.ts",
-          "types": [
-            "PaginationInput",
-            "DateRangeInput",
-            "SearchInput",
-            "ApiError",
-            "Metadata"
-          ]
-        },
-        {
-          "file": "packages/validators/src/base-schemas.ts",
-          "types": [
-            "BaseEntity",
-            "SoftDeletableEntity",
-            "TenantEntity",
-            "OwnedEntity"
-          ]
-        },
-        {
-          "file": "packages/validators/src/lead.ts",
-          "types": [
-            "LeadSource",
-            "LeadStatus",
-            "LeadActivityType",
-            "CreateLeadInput",
-            "UpdateLeadInput",
-            "LeadScoreInput",
-            "UpdateLeadScoreInput",
-            "QualifyLeadInput",
-            "ConvertLeadInput",
-            "LeadQueryInput",
-            "LeadResponse",
-            "LeadListResponse"
-          ]
-        },
-        {
-          "file": "packages/validators/src/account.ts",
-          "types": [
-            "CreateAccountInput",
-            "UpdateAccountInput",
-            "AccountQueryInput",
-            "AccountResponse",
-            "AccountListResponse",
-            "AccountActivityType",
-            "GetAccountContactsInput",
-            "GetAccountContactsOutput",
-            "GetAccountOpportunitiesInput",
-            "GetAccountOpportunitiesOutput",
-            "GetAccountActivityInput",
-            "GetAccountActivityOutput"
-          ]
-        },
-        {
-          "file": "packages/validators/src/opportunity.ts",
-          "types": [
-            "OpportunityStage",
-            "CreateOpportunityInput",
-            "UpdateOpportunityInput",
-            "OpportunityQueryInput",
-            "OpportunityResponse",
-            "OpportunityListResponse",
-            "MoveStageInput",
-            "OpportunityHistoryQueryInput",
-            "OpportunityProductsQueryInput",
-            "OpportunityPipelineQueryInput",
-            "UpdatePipelineStageConfigInput",
-            "UpdatePipelineConfigInput"
-          ]
-        },
-        {
-          "file": "packages/validators/src/task.ts",
-          "types": [
-            "TaskPriority",
-            "TaskStatus",
-            "CreateTaskInput",
-            "UpdateTaskInput",
-            "TaskQueryInput",
-            "TaskResponse",
-            "TaskListResponse",
-            "CompleteTaskInput"
-          ]
-        },
-        {
-          "file": "packages/validators/src/ticket.ts",
-          "types": [
-            "CreateTicketInput",
-            "UpdateTicketInput",
-            "TicketQueryInput",
-            "AddResponseInput",
-            "StatusTransitionInput",
-            "SlaPauseInput",
-            "SlaResumeInput"
-          ]
-        },
-        {
-          "file": "apps/workers/shared/src/types.ts",
-          "types": [
-            "JobResult",
-            "JobContext",
-            "WorkerMetrics",
-            "WorkerEvent",
-            "QueueConnection",
-            "ConnectionHealth"
-          ]
-        },
-        {
-          "file": "apps/ai-worker/src/services/document-indexer.ts",
-          "types": [
-            "NoteToIndex"
-          ]
-        },
-        {
-          "file": "apps/ai-worker/src/monitoring/drift-detector.ts",
-          "types": [
-            "DriftMetricType"
-          ]
-        },
-        {
-          "file": "apps/ai-worker/src/utils/logger.ts",
-          "types": [
-            "LogLevel"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/schemas/vulnerability-baseline.schema.ts",
-          "types": [
-            "VulnerabilityBaseline",
-            "Vulnerability",
-            "Severity",
-            "ScanResult"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/schemas/attestation.schema.ts",
-          "types": [
-            "Attestation",
-            "Verdict",
-            "SchemaVersion",
-            "ValidationResult",
-            "GateResult",
-            "KpiResult"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/schemas/task-status.schema.ts",
-          "types": [
-            "TaskStatusObject",
-            "TaskStatus",
-            "TaskDependencies",
-            "StatusHistoryEntry",
-            "Execution",
-            "Artifacts",
-            "ValidationEntry",
-            "KpiEntry",
-            "BlockerEntry",
-            "DependencyType",
-            "ScheduleDependency",
-            "ConstraintType",
-            "ThreePointEstimate",
-            "Planning",
-            "Schedule"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/schemas/phase-summary.schema.ts",
-          "types": [
-            "PhaseSummary",
-            "StreamStatus",
-            "Stream",
-            "AggregatedMetrics",
-            "PhaseKpi"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/schemas/sprint-summary.schema.ts",
-          "types": [
-            "SprintSummary",
-            "PhaseStatus",
-            "KpiStatus",
-            "SprintPhase",
-            "TaskSummary",
-            "KpiSummaryEntry",
-            "SprintBlocker",
-            "ScheduleHealthStatus",
-            "CriticalPathSummary",
-            "ScheduleVarianceSummary",
-            "SprintSchedule"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/schemas/task-registry.schema.ts",
-          "types": [
-            "TaskRegistry",
-            "SprintEntry",
-            "RegistryTaskStatus",
-            "TasksByStatus",
-            "TaskDetail"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/schemas/dependency-graph.schema.ts",
-          "types": [
-            "DependencyGraph",
-            "NodeStatus",
-            "DependencyType",
-            "GraphNode",
-            "CriticalPath",
-            "CrossSprintDependency",
-            "DependencyViolation"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/schemas/kpi-definitions.schema.ts",
-          "types": [
-            "KpiDefinitions",
-            "KpiUnit",
-            "KpiDefinition",
-            "KpiCategory",
-            "MeasurementSchedule"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/schemas/traceability.schema.ts",
-          "types": [
-            "Traceability",
-            "Capability",
-            "CoverageSummary"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/schemas/benchmark.schema.ts",
-          "types": [
-            "Benchmark",
-            "BenchmarkResult",
-            "ModelBenchmark",
-            "PerformanceBudget",
-            "BenchmarkStatus"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/schemas/extracted-text.schema.ts",
-          "types": [
-            "ExtractedText",
-            "DocumentFormat",
-            "OcrEngine",
-            "ExtractedTextMetadata",
-            "Provenance",
-            "QualityMetrics"
-          ]
-        },
-        {
-          "file": "tools/scripts/lib/schemas/analytics-event.schema.ts",
-          "types": [
-            "AnalyticsEvent",
-            "Environment",
-            "EventContext"
-          ]
-        },
-        {
           "file": "packages/adapters/src/messaging/email/outbound.ts",
           "types": [
             "EmailAttachment"
+          ]
+        },
+        {
+          "file": "packages/adapters/src/messaging/email/dkim-signer.ts",
+          "types": [
+            "DkimVerificationResult"
           ]
         },
         {
@@ -1575,6 +511,17 @@
           "types": [
             "SafePrompt",
             "SanitizedOutput"
+          ]
+        },
+        {
+          "file": "apps/workers/shared/src/types.ts",
+          "types": [
+            "JobResult",
+            "JobContext",
+            "WorkerMetrics",
+            "WorkerEvent",
+            "QueueConnection",
+            "ConnectionHealth"
           ]
         },
         {
@@ -1615,247 +562,6 @@
           "file": "packages/application/src/services/OpportunityService.ts",
           "types": [
             "StageVelocityMetrics"
-          ]
-        },
-        {
-          "file": "packages/validators/src/auth.ts",
-          "types": [
-            "MfaMethod",
-            "OAuthProvider",
-            "LoginInput",
-            "MfaVerifyInput",
-            "MfaSetupInput",
-            "MfaSetupResponse",
-            "MfaConfirmInput",
-            "BackupCodesResponse",
-            "ResendMfaCodeInput",
-            "ResendMfaCodeResponse",
-            "OAuthInitInput",
-            "OAuthCallbackInput",
-            "SessionInfo",
-            "ActiveSessionsResponse",
-            "RevokeSessionInput",
-            "RefreshTokenInput",
-            "ForgotPasswordInput",
-            "ResetPasswordInput",
-            "ChangePasswordInput",
-            "SignupInput",
-            "VerifyEmailInput",
-            "ResendVerificationInput"
-          ]
-        },
-        {
-          "file": "packages/validators/src/case.ts",
-          "types": [
-            "CreateCaseInput",
-            "UpdateCaseInput",
-            "CaseQueryInput",
-            "ChangeCaseStatusInput",
-            "CloseCaseInput",
-            "UpdateDeadlineInput",
-            "AddCaseTaskInput",
-            "RemoveCaseTaskInput",
-            "CompleteCaseTaskInput",
-            "CaseTaskResponse",
-            "CaseResponse",
-            "CaseListResponse",
-            "CaseStatistics"
-          ]
-        },
-        {
-          "file": "packages/validators/src/ai.ts",
-          "types": [
-            "Priority",
-            "QualificationLevel",
-            "FollowupUrgency",
-            "RecommendedAction",
-            "OptimalDay",
-            "OptimalTimeSlot",
-            "CommunicationTone",
-            "EmailPurpose",
-            "EmailWriterPurpose",
-            "AgentUrgency",
-            "EmailLength",
-            "LeadFollowupStatus",
-            "InteractionType",
-            "QualificationOutput",
-            "QualificationInput",
-            "EmailWriterInput",
-            "FollowupInput",
-            "ChurnRiskLevelType",
-            "RiskFactorImpactType",
-            "DataQualityLevelType",
-            "RiskFactor",
-            "ChurnRiskOutput",
-            "ChurnRiskInput",
-            "NBAActionTypeType",
-            "NBAPriorityType",
-            "NBARecommendation",
-            "NextBestActionOutput",
-            "AIInsightsSummary"
-          ]
-        },
-        {
-          "file": "packages/validators/src/feedback.ts",
-          "types": [
-            "FeedbackType",
-            "FeedbackCategory",
-            "TrainingDataItem"
-          ]
-        },
-        {
-          "file": "packages/validators/src/experiment.ts",
-          "types": [
-            "AssignVariantInput",
-            "ExperimentAssignment",
-            "TTestResult",
-            "ChiSquareResult",
-            "AnalyzeExperimentInput"
-          ]
-        },
-        {
-          "file": "packages/validators/src/chain-version.ts",
-          "types": [
-            "ActivateVersionInput",
-            "RollbackVersionInput",
-            "ListChainVersionsInput",
-            "VersionHistoryInput",
-            "ActiveVersionResponse"
-          ]
-        },
-        {
-          "file": "packages/validators/src/timeline.ts",
-          "types": [
-            "TimelineEventType",
-            "AgentActionStatus",
-            "TimelinePriority",
-            "CommunicationChannel",
-            "CommunicationDirection",
-            "TimelineActor",
-            "AgentActionDetails",
-            "DocumentDetails",
-            "CommunicationDetails",
-            "AppointmentDetails",
-            "TaskDetails",
-            "TimelineEvent",
-            "TimelineEventsResponse",
-            "TimelineStatsResponse",
-            "DeadlineItem",
-            "UpcomingDeadlinesResponse",
-            "PendingAgentAction",
-            "PendingAgentActionsResponse",
-            "TimelineQueryParams"
-          ]
-        },
-        {
-          "file": "packages/validators/src/bulk-operations.ts",
-          "types": [
-            "BulkIdsInput",
-            "BulkOperationResult",
-            "BulkConvertLeadsInput",
-            "BulkUpdateLeadStatusInput",
-            "BulkArchiveLeadsInput",
-            "BulkDeleteLeadsInput",
-            "BulkEmailContactsInput",
-            "BulkCreateDealsInput",
-            "BulkExportContactsInput",
-            "BulkDeleteContactsInput",
-            "BulkAssignTicketsInput",
-            "BulkUpdateTicketStatusInput",
-            "BulkResolveTicketsInput",
-            "BulkEscalateTicketsInput",
-            "BulkCloseTicketsInput",
-            "BulkDownloadDocumentsInput",
-            "BulkShareDocumentsInput",
-            "BulkArchiveDocumentsInput",
-            "BulkDeleteDocumentsInput"
-          ]
-        },
-        {
-          "file": "packages/validators/src/billing.ts",
-          "types": [
-            "CardDetails",
-            "PaymentMethod",
-            "Subscription",
-            "ListInvoicesInput",
-            "UpdatePaymentMethodInput",
-            "UpdateSubscriptionInput",
-            "CancelSubscriptionInput",
-            "GetUpcomingInvoiceInput",
-            "InvoiceListResponse",
-            "ProrationPreview",
-            "UsageMetrics",
-            "Plan",
-            "PlanFeature",
-            "CreateCheckoutInput",
-            "CheckoutResponse"
-          ]
-        },
-        {
-          "file": "packages/validators/src/auto-response.ts",
-          "types": [
-            "AutoResponseStatus",
-            "TriggerType",
-            "AllowedLeadStatus",
-            "ResponseContentInput",
-            "AutoResponseLeadInfo",
-            "TenantSettings",
-            "AutoResponseContext",
-            "CreateAutoResponseDraftInput",
-            "SubmitForApprovalInput",
-            "ApprovalDecisionInput",
-            "EscalationInput",
-            "MarkSentInput",
-            "MarkFailedInput",
-            "AutoResponseQueryInput",
-            "StatusChange",
-            "AutoResponseDraftResponse",
-            "AutoResponseListResponse",
-            "AutoResponseChainInput",
-            "AutoResponseChainOutput",
-            "AutoResponseValidationResult"
-          ]
-        },
-        {
-          "file": "packages/validators/src/events.ts",
-          "types": [
-            "EventMetadataInput",
-            "BaseDomainEventInput",
-            "BaseDomainEventOutput",
-            "OutboxEventInput"
-          ]
-        },
-        {
-          "file": "packages/validators/src/home.ts",
-          "types": [
-            "StatsPeriod",
-            "AIInsightType",
-            "AIInsight",
-            "ActivityFeedType",
-            "ActivityFeedItem",
-            "ActivityFeedQuery",
-            "DailyGoal",
-            "PinnableEntityType",
-            "PinnedItem",
-            "PinItemInput",
-            "UnpinItemInput",
-            "ReorderPinnedItemsInput"
-          ]
-        },
-        {
-          "file": "packages/validators/src/notifications.ts",
-          "types": [
-            "NotificationType",
-            "NotificationPriority",
-            "NotificationChannel",
-            "NotificationStatus",
-            "NotificationListQuery",
-            "MarkAsReadInput",
-            "DeleteNotificationsInput",
-            "NotificationPreferenceItem",
-            "UpdatePreferencesInput",
-            "NotificationSubscriptionInput",
-            "BatchNotificationAction"
           ]
         },
         {
@@ -1913,6 +619,18 @@
           ]
         },
         {
+          "file": "packages/domain/src/crm/task/TaskRepository.ts",
+          "types": [
+            "TaskQueryService"
+          ]
+        },
+        {
+          "file": "packages/domain/src/crm/opportunity/OpportunityRepository.ts",
+          "types": [
+            "OpportunityQueryService"
+          ]
+        },
+        {
           "file": "packages/domain/src/crm/lead/LeadRepository.ts",
           "types": [
             "LeadQueryService"
@@ -1928,18 +646,6 @@
           "file": "packages/domain/src/crm/contact/ContactRepository.ts",
           "types": [
             "ContactQueryService"
-          ]
-        },
-        {
-          "file": "packages/domain/src/crm/task/TaskRepository.ts",
-          "types": [
-            "TaskQueryService"
-          ]
-        },
-        {
-          "file": "packages/domain/src/crm/opportunity/OpportunityRepository.ts",
-          "types": [
-            "OpportunityQueryService"
           ]
         },
         {
@@ -1960,6 +666,14 @@
           "types": [
             "CaseRepository",
             "CaseQueryService"
+          ]
+        },
+        {
+          "file": "packages/domain/src/ai/conversation-record.ts",
+          "types": [
+            "ConversationRecordRepository",
+            "MessageRecordData",
+            "ToolCallRecordData"
           ]
         },
         {
@@ -2015,10 +729,30 @@
           ]
         },
         {
+          "file": "apps/web/src/lib/billing/stripe-portal.ts",
+          "types": [
+            "BillingSubscription",
+            "BillingInvoice",
+            "UsageMetrics"
+          ]
+        },
+        {
           "file": "apps/web/src/app/api/compliance/types.ts",
           "types": [
             "ComplianceExportData",
             "ApiResponse"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/sidebar/icon-reference.ts",
+          "types": [
+            "ModuleIcon",
+            "ViewIcon",
+            "SegmentIcon",
+            "ActionIcon",
+            "StatusIcon",
+            "FeatureIcon",
+            "ModuleColorTheme"
           ]
         },
         {
@@ -2040,37 +774,12 @@
           ]
         },
         {
-          "file": "apps/web/src/components/sidebar/icon-reference.ts",
-          "types": [
-            "ModuleIcon",
-            "ViewIcon",
-            "SegmentIcon",
-            "ActionIcon",
-            "StatusIcon",
-            "FeatureIcon",
-            "ModuleColorTheme"
-          ]
-        },
-        {
-          "file": "apps/web/src/lib/test-runner/types.ts",
-          "types": [
-            "ActiveTestRun"
-          ]
-        },
-        {
           "file": "apps/api/src/shared/scoring-output-schema.zod.ts",
           "types": [
             "ScoringResponse",
             "BatchScoringRequest",
             "BatchScoringResponse",
             "ScoreOverride"
-          ]
-        },
-        {
-          "file": "apps/api/src/security/types.ts",
-          "types": [
-            "PermissionId",
-            "RequestContext"
           ]
         },
         {
@@ -2083,6 +792,13 @@
           "file": "apps/api/src/services/mfa.service.ts",
           "types": [
             "MfaSetupResult"
+          ]
+        },
+        {
+          "file": "apps/api/src/security/types.ts",
+          "types": [
+            "PermissionId",
+            "RequestContext"
           ]
         },
         {
@@ -2104,21 +820,67 @@
           ]
         },
         {
-          "file": "apps/api/src/modules/misc/timeline.router.ts",
-          "types": [
-            "TimelineRouter"
-          ]
-        },
-        {
           "file": "apps/api/src/modules/legal/appointments.router.ts",
           "types": [
             "AppointmentsRouter"
           ]
         },
         {
+          "file": "apps/api/src/modules/misc/timeline.router.ts",
+          "types": [
+            "TimelineRouter"
+          ]
+        },
+        {
+          "file": "apps/api/src/modules/notifications/notifications.router.ts",
+          "types": [
+            "NotificationsRouter"
+          ]
+        },
+        {
+          "file": "apps/api/src/modules/legal/cases.router.ts",
+          "types": [
+            "CasesRouter"
+          ]
+        },
+        {
           "file": "apps/api/src/modules/integrations/integrations.router.ts",
           "types": [
             "IntegrationsRouter"
+          ]
+        },
+        {
+          "file": "apps/ai-worker/src/utils/logger.ts",
+          "types": [
+            "LogLevel"
+          ]
+        },
+        {
+          "file": "apps/ai-worker/src/services/document-indexer.ts",
+          "types": [
+            "NoteToIndex"
+          ]
+        },
+        {
+          "file": "apps/ai-worker/src/types/index.ts",
+          "types": [
+            "LLMProvider",
+            "AgentRole",
+            "HumanDecision",
+            "ConfidenceLevel",
+            "AgentMetrics"
+          ]
+        },
+        {
+          "file": "apps/ai-worker/src/monitoring/drift-detector.ts",
+          "types": [
+            "DriftMetricType"
+          ]
+        },
+        {
+          "file": "apps/ai-worker/src/config/relevance-config.ts",
+          "types": [
+            "SourceWeights"
           ]
         },
         {
@@ -2146,15 +908,76 @@
             "TaskFilters",
             "PaginatedResult"
           ]
+        },
+        {
+          "file": "apps/project-tracker/lib/artifact-registry.ts",
+          "types": [
+            "ArtifactEntry",
+            "ArtifactSummary",
+            "MissingArtifact"
+          ]
+        },
+        {
+          "file": "apps/project-tracker/lib/api-types.ts",
+          "types": [
+            "SprintMetricsResponse",
+            "PhaseMetrics",
+            "ExecutiveMetricsResponse",
+            "GovernanceSummaryResponse",
+            "UnifiedDataResponse"
+          ]
         }
       ],
-      "duplicates": []
+      "duplicates": [
+        "EmbeddingPurgeService -> default",
+        "DocumentIndexer -> default",
+        "RetrievalService -> default",
+        "EncryptionService -> default",
+        "KeyRotationService -> default",
+        "GmailAdapter -> default",
+        "SAPAdapter -> default",
+        "OutlookAdapter -> default",
+        "TeamsAdapter -> default",
+        "ExperimentDashboard -> default",
+        "CookieConsentBanner -> default",
+        "PageHeader -> default",
+        "ForgotPasswordForm -> default",
+        "InvoiceList -> default",
+        "PaymentMethods -> default",
+        "ReceiptList -> default",
+        "SubscriptionManager -> default",
+        "CommentsWidget -> default",
+        "JobDetailTemplate -> default",
+        "LandingBuilder -> default",
+        "PasswordResetForm -> default",
+        "OnboardingFlow -> default",
+        "AuthBackground -> default",
+        "EmailVerification -> default",
+        "InvoiceDetail -> default",
+        "MfaQrGenerator -> default",
+        "BackupCodesDisplay -> default",
+        "rollbackService -> default",
+        "MfaChallenge -> default",
+        "ApplyButton -> default",
+        "AuthCard -> default",
+        "OAuthCallback -> default",
+        "PasswordInput -> default",
+        "TrustIndicators -> default",
+        "EntityHeader -> default",
+        "subscriptionRouter -> default",
+        "conversationRouter -> default",
+        "TimelineCommunicationService -> default",
+        "OCRWorker -> default",
+        "ReindexWorker -> default",
+        "CollapsibleSection -> default",
+        "DailyWorkflowSummary -> default"
+      ]
     },
     "summary": {
-      "unusedFiles": 76,
-      "unusedDeps": 25,
-      "unusedExports": 348,
-      "unusedTypes": 490
+      "unusedFiles": 0,
+      "unusedDeps": 28.0,
+      "unusedExports": 81.0,
+      "unusedTypes": 169.0
     }
   },
   "depcheck": {
@@ -2163,6 +986,7 @@
       "dependencies": [],
       "devDependencies": [
         "@eslint/eslintrc",
+        "@microsoft/api-extractor",
         "@typescript-eslint/eslint-plugin",
         "@typescript-eslint/parser",
         "@vitest/coverage-v8",
@@ -2181,7 +1005,7 @@
     },
     "summary": {
       "unusedDeps": 0,
-      "unusedDevDeps": 14,
+      "unusedDevDeps": 15,
       "missingDeps": 0
     }
   }

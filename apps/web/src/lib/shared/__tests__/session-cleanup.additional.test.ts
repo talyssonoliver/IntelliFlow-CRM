@@ -411,7 +411,7 @@ describe('session-cleanup (additional coverage)', () => {
 
       // Simulate a logout message
       if (messageHandler) {
-        messageHandler({ data: { type: 'logout' } });
+        (messageHandler as (event: any) => void)({ data: { type: 'logout' } });
       }
 
       expect(callback).toHaveBeenCalledTimes(1);
@@ -437,7 +437,7 @@ describe('session-cleanup (additional coverage)', () => {
 
       // Simulate a non-logout message
       if (messageHandler) {
-        messageHandler({ data: { type: 'other' } });
+        (messageHandler as (event: any) => void)({ data: { type: 'other' } });
       }
 
       expect(callback).not.toHaveBeenCalled();

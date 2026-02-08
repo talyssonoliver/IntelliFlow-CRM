@@ -15,7 +15,9 @@ const baseAccountFieldsSchema = z.object({
 });
 
 // Create Account Schema
-export const createAccountSchema = baseAccountFieldsSchema;
+export const createAccountSchema = baseAccountFieldsSchema.extend({
+  parentAccountId: idSchema.optional(),
+});
 
 export type CreateAccountInput = z.infer<typeof createAccountSchema>;
 
@@ -24,6 +26,7 @@ export const updateAccountSchema = baseAccountFieldsSchema
   .partial()
   .extend({
     id: idSchema,
+    parentAccountId: idSchema.nullable().optional(),
   });
 
 export type UpdateAccountInput = z.infer<typeof updateAccountSchema>;
@@ -197,3 +200,21 @@ export const getAccountActivityOutputSchema = z.object({
 });
 
 export type GetAccountActivityOutput = z.infer<typeof getAccountActivityOutputSchema>;
+
+// -------------------------------------------------------------------------
+// Hierarchy endpoint schemas (PG-134)
+// -------------------------------------------------------------------------
+
+export const setParentSchema = z.object({
+  accountId: idSchema,
+  parentAccountId: idSchema.nullable(),
+});
+
+export type SetParentInput = z.infer<typeof setParentSchema>;
+
+export const getHierarchyInputSchema = z.object({
+  accountId: idSchema,
+  maxDepth: z.number().int().min(1).max(5).default(5),
+});
+
+export type GetHierarchyInput = z.infer<typeof getHierarchyInputSchema>;

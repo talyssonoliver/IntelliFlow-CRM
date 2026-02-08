@@ -93,10 +93,10 @@ describe("uploadRouter", () => {
       // Buffer.from with base64 does not throw for invalid base64 - it just decodes what it can.
       // The router catches the error from Buffer.from if it throws.
       // We test the path by mocking Buffer.from to throw.
-      const origFrom = Buffer.from;
-      const mockBufFrom = vi.fn().mockImplementation((...args: any[]) => {
-        if (args[1] === "base64" && args[0] === "!!!INVALID!!!") throw new Error("bad base64");
-        return origFrom.call(Buffer, ...args);
+      const origFrom = Buffer.from.bind(Buffer);
+      const mockBufFrom = vi.fn().mockImplementation((value: string, encoding?: string) => {
+        if (encoding === "base64" && value === "!!!INVALID!!!") throw new Error("bad base64");
+        return encoding ? origFrom(value, encoding as BufferEncoding) : origFrom(value);
       });
       (globalThis as any).Buffer.from = mockBufFrom;
       try {

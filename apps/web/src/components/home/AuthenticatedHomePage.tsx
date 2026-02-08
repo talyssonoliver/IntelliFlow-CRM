@@ -752,32 +752,8 @@ export function AuthenticatedHomePage() {
                   <span className="material-symbols-outlined text-sm">edit</span>
                 </button>
               </div>
-              <div className="space-y-1">
-                {/* Group navigation links */}
-                {enabledGroups.map((group) => (
-                  <Link
-                    key={group.id}
-                    href={group.href}
-                    className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors group"
-                  >
-                    <div className={`size-8 rounded ${group.iconBg} ${group.iconColor} flex items-center justify-center`}>
-                      <span className="material-symbols-outlined text-lg">{group.icon}</span>
-                    </div>
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-200 group-hover:text-[#137fec]">{group.label}</span>
-                  </Link>
-                ))}
-                {/* Individual pinned items from enabled groups */}
-                {filteredPinnedItems && filteredPinnedItems.length > 0 && (
-                  <>
-                    <div className="border-t border-[#e2e8f0] dark:border-[#334155] my-2" />
-                    <PinnedSection isLoading={pinnedLoading} items={filteredPinnedItems} />
-                  </>
-                )}
-                {enabledGroups.length === 0 && (
-                  <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-4">
-                    No groups selected. Click edit to add some.
-                  </p>
-                )}
+              <div className="space-y-3">
+                <PinnedSection isLoading={pinnedLoading} items={filteredPinnedItems} />
               </div>
             </div>
           </div>
@@ -872,6 +848,8 @@ export function AuthenticatedHomePage() {
         open={isPinnedNavSheetOpen}
         onOpenChange={setIsPinnedNavSheetOpen}
         onSave={handlePinnedNavSave}
+        pinnedItems={pinnedData?.items}
+        onUnpin={handleUnpin}
       />
 
     </div>

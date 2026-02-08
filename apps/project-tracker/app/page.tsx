@@ -19,6 +19,7 @@ import SprintExecutionView from '@/components/SprintExecutionView';
 import ArtifactsView from '@/components/ArtifactsView';
 import PerformanceReportView from '@/components/PerformanceReportView';
 import ScheduleView from '@/components/ScheduleView';
+import TrackingView from '@/components/TrackingView';
 
 type Page =
   | 'dashboard'
@@ -26,6 +27,7 @@ type Page =
   | 'analytics'
   | 'metrics'
   | 'artifacts'
+  | 'tracking'
   | 'governance'
   | 'contracts'
   | 'audit'
@@ -212,6 +214,17 @@ export default function Home() {
               Artifacts
             </button>
             <button
+              onClick={() => setCurrentPage('tracking')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
+                currentPage === 'tracking'
+                  ? 'bg-teal-600 text-white'
+                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              <Icon name="monitoring" size="sm" />
+              Tracking
+            </button>
+            <button
               onClick={() => setCurrentPage('sprint-execution')}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
                 currentPage === 'sprint-execution'
@@ -346,6 +359,7 @@ export default function Home() {
                 }}
               />
             )}
+            {currentPage === 'tracking' && <TrackingView />}
             {currentPage === 'governance' && <GovernanceView selectedSprint={currentSprint} />}
             {currentPage === 'contracts' && (
               <ContractsView tasks={filteredTasks} sprint={currentSprint} />

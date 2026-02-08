@@ -32,6 +32,8 @@ export interface AuditLoggerConfig {
   defaultClassification?: DataClassification;
   /** Default retention period in days */
   defaultRetentionDays?: number;
+  /** Encrypt sensitive fields (beforeState, afterState, metadata) using AES-256-GCM */
+  encryptSensitiveFields?: boolean;
 }
 
 export type RequiredAuditLoggerConfig = Required<AuditLoggerConfig>;

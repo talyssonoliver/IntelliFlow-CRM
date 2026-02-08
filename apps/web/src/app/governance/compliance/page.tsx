@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { Card } from '@intelliflow/ui';
+import { RiskHeatMap, ComplianceTimeline, ComplianceDetailPanel, ExportReportButton } from './components';
 
 interface ComplianceCardProps {
   title: string;
@@ -10,6 +12,8 @@ interface ComplianceCardProps {
   trend: number;
   status: 'compliant' | 'critical' | 'attention';
   details: { label: string; value: string }[];
+  standardId: string;
+  onSelect: (id: string) => void;
 }
 
 function ComplianceCard({
@@ -20,6 +24,8 @@ function ComplianceCard({
   trend,
   status,
   details,
+  standardId,
+  onSelect,
 }: ComplianceCardProps) {
   const statusConfig = {
     compliant: {
@@ -51,7 +57,7 @@ function ComplianceCard({
   const config = statusConfig[status];
 
   return (
-    <Card className="p-6 h-full hover:shadow-md transition-shadow">
+    <Card className="p-6 h-full hover:shadow-md transition-shadow cursor-pointer" onClick={() => onSelect(standardId)}>
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
           <div className={`w-10 h-10 rounded-lg ${config.iconBg} ${config.iconColor} flex items-center justify-center`}>
@@ -185,6 +191,14 @@ const recentActivity = [
 ];
 
 export default function ComplianceDashboardPage() {
+  const [selectedStandard, setSelectedStandard] = useState<string | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+
+  const handleSelectStandard = (id: string) => {
+    setSelectedStandard(id);
+    setDetailOpen(true);
+  };
+
   return (
     <div className="p-8">
       <div className="mx-auto">
@@ -201,10 +215,7 @@ export default function ComplianceDashboardPage() {
               <span className="material-symbols-outlined text-lg">refresh</span>
               Refresh Data
             </button>
-            <button className="inline-flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-sm font-bold shadow-md transition-all active:scale-95">
-              <span className="material-symbols-outlined text-lg">download</span>
-              Export Report
-            </button>
+            <ExportReportButton />
           </div>
         </div>
 
@@ -217,6 +228,8 @@ export default function ComplianceDashboardPage() {
             score={92}
             trend={2.4}
             status="compliant"
+            standardId="iso-27001"
+            onSelect={handleSelectStandard}
             details={[
               { label: 'Controls Passed', value: '104 / 114' },
               { label: 'Next Audit', value: 'Oct 24, 2023' },
@@ -230,6 +243,8 @@ export default function ComplianceDashboardPage() {
             score={45}
             trend={-5.1}
             status="critical"
+            standardId="iso-42001"
+            onSelect={handleSelectStandard}
             details={[
               { label: 'Risk Level', value: 'High' },
               { label: 'Open Issues', value: '12 Pending' },
@@ -243,6 +258,8 @@ export default function ComplianceDashboardPage() {
             score={78}
             trend={0}
             status="attention"
+            standardId="iso-14001"
+            onSelect={handleSelectStandard}
             details={[
               { label: 'Cert Status', value: 'Expiring Soon' },
               { label: 'Policy Review', value: 'Required' },
@@ -256,6 +273,8 @@ export default function ComplianceDashboardPage() {
             score={98}
             trend={0.5}
             status="compliant"
+            standardId="gdpr"
+            onSelect={handleSelectStandard}
             details={[
               { label: 'Data Incidents', value: '0 Reported' },
               { label: 'DPIA Status', value: 'Up to date' },
@@ -269,6 +288,8 @@ export default function ComplianceDashboardPage() {
             score={60}
             trend={-12}
             status="attention"
+            standardId="adr-registry"
+            onSelect={handleSelectStandard}
             details={[
               { label: 'Documentation', value: 'Incomplete' },
               { label: 'Decision Log', value: '4 Pending' },
@@ -276,6 +297,12 @@ export default function ComplianceDashboardPage() {
           />
 
           <OverallScoreCard />
+        </div>
+
+        {/* Risk Heat Map & Timeline */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+          <RiskHeatMap />
+          <ComplianceTimeline />
         </div>
 
         {/* Recent Activity */}
@@ -304,6 +331,13 @@ export default function ComplianceDashboardPage() {
             ))}
           </div>
         </Card>
+
+        {/* Compliance Detail Panel (slide-out sheet) */}
+        <ComplianceDetailPanel
+          standardId={selectedStandard}
+          open={detailOpen}
+          onClose={() => setDetailOpen(false)}
+        />
       </div>
     </div>
   );

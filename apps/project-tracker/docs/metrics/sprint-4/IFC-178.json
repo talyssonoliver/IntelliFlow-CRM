@@ -71,22 +71,23 @@
     ],
     "pending": [],
     "all_satisfied": true,
-    "verified_at": "2026-02-06T23:40:55.375Z",
+    "verified_at": "2026-02-08T19:59:16.824Z",
     "required": [
       "IFC-128"
     ]
   },
   "artifacts": {
     "created": [
-      "packages/db/prisma/schema.prisma"
+      "packages/db/prisma/schema.prisma",
+      "infra/supabase/migrations/20260204000001_ai_output_review_tables.sql",
+      "infra/supabase/migrations/20260204000000_ai_output_review_rls.sql"
     ],
     "expected": [
       "packages/db/prisma/schema.prisma",
-      "infra/supabase/migrations/YYYYMMDD_ai_output_review.sql"
+      "infra/supabase/migrations/20260204000001_ai_output_review_tables.sql",
+      "infra/supabase/migrations/20260204000000_ai_output_review_rls.sql"
     ],
-    "missing": [
-      "infra/supabase/migrations/YYYYMMDD_ai_output_review.sql"
-    ]
+    "missing": []
   },
   "validations": [
     {

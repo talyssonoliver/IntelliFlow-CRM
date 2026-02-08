@@ -25,6 +25,7 @@ measurable end-to-end (work → build → deploy → observe).
 - **API**: tRPC + domain model + validators
 - **AI worker**: agent/automation workflows
 - **Project tracker**: sprint metrics and governance gates
+- **Feature matrix (source of truth)**: `docs/company/product/feature-matrix.md`
 
 ## Target Customers (ICP)
 

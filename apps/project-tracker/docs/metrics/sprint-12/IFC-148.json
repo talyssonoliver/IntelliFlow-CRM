@@ -9,7 +9,7 @@
       "IFC-139",
       "IFC-126"
     ],
-    "verified_at": "2026-02-06T23:40:55.391Z",
+    "verified_at": "2026-02-08T19:59:16.850Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -24,10 +24,10 @@
     "expected": [
       "packages/domain/src/ai/conversation-record.ts"
     ],
-    "created": [],
-    "missing": [
+    "created": [
       "packages/domain/src/ai/conversation-record.ts"
-    ]
+    ],
+    "missing": []
   },
   "validations": [
     {

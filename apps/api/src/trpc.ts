@@ -15,6 +15,8 @@ import { initTRPC, TRPCError } from '@trpc/server';
 import { Context } from './context';
 import { ZodError } from 'zod';
 import { tenantContextMiddleware } from './security/tenant-context';
+import { tracingMiddleware } from './tracing/middleware';
+import { createAuthenticatedRateLimitMiddleware } from './middleware/rate-limit';
 
 /**
  * Initialize tRPC with context type
@@ -61,7 +63,7 @@ export const createTRPCRouter = t.router;
  * @example
  * publicProcedure.query(() => ({ status: 'ok' }))
  */
-export const publicProcedure = t.procedure;
+export const publicProcedure = t.procedure.use(tracingMiddleware);
 
 /**
  * Middleware to check if user is authenticated
@@ -103,41 +105,24 @@ const isAuthed = t.middleware(({ ctx, next }) => {
  *     return ctx.prisma.lead.findUnique({ where: { id: input.id } });
  *   })
  */
-export const protectedProcedure = t.procedure.use(isAuthed);
-
-/**
- * Middleware for request logging
- *
- * Logs:
- * - Request type (query/mutation/subscription)
- * - Procedure path
- * - Execution duration
- *
- * Useful for performance monitoring and debugging.
- */
-const loggingMiddleware = t.middleware(async ({ path, type, next }) => {
-  const start = Date.now();
-  const result = await next();
-  const durationMs = Date.now() - start;
-
-  // Log request details
-  console.log(`[tRPC] ${type.toUpperCase()} ${path} - ${durationMs}ms`);
-
-  // Performance warning for slow requests (>50ms as per KPI)
-  if (durationMs > 50) {
-    console.warn(`[tRPC] SLOW REQUEST: ${path} took ${durationMs}ms (target: <50ms)`);
-  }
-
-  return result;
+// Rate limit middleware for authenticated endpoints (1000 req/min per user)
+const _rateLimitFn = createAuthenticatedRateLimitMiddleware();
+const rateLimitMiddleware = t.middleware(async (opts) => {
+  await _rateLimitFn({ ctx: opts.ctx, next: async () => {} });
+  return opts.next();
 });
+
+export const protectedProcedure = t.procedure.use(isAuthed).use(tracingMiddleware).use(rateLimitMiddleware);
 
 /**
  * Logged procedure - includes performance monitoring
  *
- * Same as publicProcedure but with automatic request logging.
- * Use when you need to monitor endpoint performance.
+ * Same as publicProcedure (which now includes tracingMiddleware globally).
+ * Kept for backward compatibility.
+ *
+ * @deprecated Use publicProcedure instead — tracing is now applied globally.
  */
-export const loggedProcedure = t.procedure.use(loggingMiddleware);
+export const loggedProcedure = publicProcedure;
 
 /**
  * Middleware to check if user has admin role
@@ -170,7 +155,7 @@ const isAdmin = t.middleware(({ ctx, next }) => {
  *     return deleteUser(input.userId);
  *   })
  */
-export const adminProcedure = t.procedure.use(isAuthed).use(isAdmin);
+export const adminProcedure = t.procedure.use(isAuthed).use(isAdmin).use(tracingMiddleware);
 
 /**
  * Tenant-aware procedure - requires authentication and enforces tenant isolation

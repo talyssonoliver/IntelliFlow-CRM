@@ -18,13 +18,23 @@ interface StatusMonitorProps {
   refreshInterval?: number;
 }
 
-// Generate uptime bars for the last 90 days
-function generateUptimeBars(uptime: number): { day: number; status: ServiceStatus }[] {
+function deterministicRatio(seedInput: string): number {
+  let hash = 2166136261;
+
+  for (let i = 0; i < seedInput.length; i += 1) {
+    hash ^= seedInput.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return (hash >>> 0) / 4294967295;
+}
+
+// Generate uptime bars for the last 90 days using deterministic pseudo-randomness
+function generateUptimeBars(serviceId: string, uptime: number): { day: number; status: ServiceStatus }[] {
   const bars: { day: number; status: ServiceStatus }[] = [];
 
   for (let i = 0; i < 90; i++) {
-    // Simulate historical uptime based on current uptime percentage
-    const random = Math.random();
+    const random = deterministicRatio(`${serviceId}-${i}`);
     let status: ServiceStatus = 'operational';
 
     if (uptime < 99.9 && random > 0.95) {
@@ -56,10 +66,12 @@ export function StatusMonitor({
   services,
   refreshInterval = 30000,
 }: StatusMonitorProps) {
-  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
+    setLastUpdated(new Date());
+
     const interval = setInterval(() => {
       setIsRefreshing(true);
       // Simulate refresh
@@ -87,14 +99,14 @@ export function StatusMonitor({
               </span>
             )}
             <span>
-              Updated {lastUpdated.toLocaleTimeString()}
+              Updated {lastUpdated ? lastUpdated.toLocaleTimeString() : 'Loading...'}
             </span>
           </div>
         </div>
 
         <div className="space-y-4">
           {services.slice(0, 4).map((service) => {
-            const bars = generateUptimeBars(service.uptime);
+            const bars = generateUptimeBars(service.id, service.uptime);
 
             return (
               <div key={service.id}>

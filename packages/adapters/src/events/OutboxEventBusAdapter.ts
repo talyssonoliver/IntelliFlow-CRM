@@ -10,6 +10,7 @@
  */
 
 import { PrismaClient, EventStatus, Prisma } from '@prisma/client';
+import { withTransaction, type TransactionClient } from '@intelliflow/db';
 import { DomainEvent } from '@intelliflow/domain';
 import { EventBusPort } from '@intelliflow/application';
 
@@ -111,7 +112,7 @@ export class OutboxEventBusAdapter implements EventBusPort {
       return;
     }
 
-    await this.prisma.$transaction(async (tx) => {
+    await withTransaction(async (tx: TransactionClient) => {
       for (const event of events) {
         const idempotencyKey = this.generateIdempotencyKey(event);
 

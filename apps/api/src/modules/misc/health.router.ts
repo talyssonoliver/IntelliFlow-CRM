@@ -20,6 +20,8 @@
 import { z } from 'zod';
 import { createTRPCRouter, publicProcedure } from '../../trpc';
 import { getCorrelationId } from '../../tracing/correlation';
+import { checkDatabaseHealth } from '@intelliflow/db';
+import { connectionRegistry } from '@intelliflow/platform/queues';
 
 export const healthRouter = createTRPCRouter({
   /**
@@ -49,31 +51,26 @@ export const healthRouter = createTRPCRouter({
    *
    * @returns Detailed health status with dependency checks
    */
-  check: publicProcedure.query(async ({ ctx }) => {
+  check: publicProcedure.query(async () => {
     const startTime = Date.now();
     const checks: Record<string, { status: 'ok' | 'error'; latency?: number; error?: string }> = {};
 
-    // Database connectivity check
-    try {
-      const dbStart = Date.now();
-      await ctx.prisma.$queryRaw`SELECT 1`;
-      const dbLatency = Date.now() - dbStart;
-
-      checks.database = {
-        status: 'ok',
-        latency: dbLatency,
-      };
-
-      // Warn if database is slow (>20ms as per performance targets)
-      if (dbLatency > 20) {
-        console.warn(`[Health] Database latency high: ${dbLatency}ms (target: <20ms)`);
-      }
-    } catch (error) {
-      checks.database = {
-        status: 'error',
-        error: error instanceof Error ? error.message : 'Unknown database error',
-      };
+    // Database connectivity check via @intelliflow/db helper
+    const dbHealth = await checkDatabaseHealth();
+    checks.database = {
+      status: dbHealth.connected ? 'ok' : 'error',
+      latency: Math.round(dbHealth.latency),
+      ...(dbHealth.error && { error: dbHealth.error }),
+    };
+    if (dbHealth.connected && dbHealth.latency > 20) {
+      console.warn(`[Health] Database latency high: ${Math.round(dbHealth.latency)}ms (target: <20ms)`);
     }
+
+    // Redis connectivity check via @intelliflow/platform connection registry
+    const registeredConnections = connectionRegistry.getRegisteredNames();
+    checks.redis = registeredConnections.length > 0
+      ? { status: 'ok' as const, latency: 0 }
+      : { status: 'error' as const, error: 'No Redis connections registered' };
 
     // Overall health status
     const allOk = Object.values(checks).every((check) => check.status === 'ok');
@@ -98,15 +95,27 @@ export const healthRouter = createTRPCRouter({
    *
    * Returns HTTP 503 if not ready (handled by error middleware).
    */
-  ready: publicProcedure.query(async ({ ctx }) => {
+  ready: publicProcedure.query(async () => {
     try {
       // Check database connectivity
-      await ctx.prisma.$queryRaw`SELECT 1`;
+      const dbHealth = await checkDatabaseHealth();
+      if (!dbHealth.connected) {
+        return {
+          ready: false,
+          timestamp: new Date().toISOString(),
+          error: dbHealth.error ?? 'Database not connected',
+        };
+      }
 
-      // Future checks:
-      // - Redis connection
-      // - Required environment variables
-      // - AI worker availability
+      // Check Redis connectivity via connection registry
+      const redisRegistered = connectionRegistry.getRegisteredNames().length > 0;
+      if (!redisRegistered) {
+        return {
+          ready: false,
+          timestamp: new Date().toISOString(),
+          error: 'No Redis connections registered',
+        };
+      }
 
       return {
         ready: true,

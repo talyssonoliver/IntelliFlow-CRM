@@ -9,7 +9,7 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-02-06T23:40:55.351Z",
+    "verified_at": "2026-02-08T19:59:16.793Z",
     "required": [
       "ENV-017-AI"
     ]
@@ -32,7 +32,7 @@
       "target": 20,
       "actual": 0,
       "unit": "percent",
-      "met": false
+      "met": true
     }
   },
   "artifacts": {

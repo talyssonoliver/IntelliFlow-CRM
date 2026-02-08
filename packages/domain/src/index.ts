@@ -95,6 +95,9 @@ export * from './ai/FeedbackEvents';
 // AI Domain - Output Review (IFC-128)
 export * from './ai/review';
 
+// AI Domain - Conversation Records (IFC-148)
+export * from './ai/conversation-record';
+
 // Auth Domain - Constants
 export * from './auth/AuthConstants';
 

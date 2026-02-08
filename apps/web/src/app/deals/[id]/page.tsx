@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Card, Button } from '@intelliflow/ui';
 import { EntityHeader } from '@/components/shared';
+import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
+import { MoreActionsButton } from '@/components/shared/more-actions-button';
 
 // Material Symbols icon helper component
 const Icon = ({ name, className = '' }: { name: string; className?: string }) => (
@@ -701,6 +703,7 @@ function FilesCard({ files }: { files: Deal['files'] }) {
 export default function DealDetailPage() {
   const params = useParams();
   const dealId = params.id as string;
+  const [actionSheetOpen, setActionSheetOpen] = useState(false);
 
   // In production, fetch deal data based on dealId
   const deal = SAMPLE_DEAL;
@@ -743,6 +746,25 @@ export default function DealDetailPage() {
               variant: 'primary',
               onClick: () => {},
             },
+          ]}
+          endContent={<MoreActionsButton onClick={() => setActionSheetOpen(true)} />}
+        />
+
+        <EntityActionSheet
+          open={actionSheetOpen}
+          onOpenChange={setActionSheetOpen}
+          entity={{
+            type: 'opportunity',
+            id: deal.id,
+            title: deal.name,
+            subtitle: deal.account.name,
+            icon: 'handshake',
+            url: `/deals/${dealId}`,
+          }}
+          extraActions={[
+            { label: 'Clone Deal', icon: 'content_copy', onClick: () => {} },
+            { label: 'Archive', icon: 'archive', onClick: () => {} },
+            { label: 'Delete', icon: 'delete', onClick: () => {}, destructive: true },
           ]}
         />
 

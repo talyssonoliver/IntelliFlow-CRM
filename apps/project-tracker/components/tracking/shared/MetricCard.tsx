@@ -32,19 +32,19 @@ export default function MetricCard({
   variant = 'default',
 }: Readonly<MetricCardProps>) {
   const variantStyles = {
-    default: 'bg-gray-700/30 border-gray-600',
-    success: 'bg-green-500/10 border-green-500/30',
-    warning: 'bg-yellow-500/10 border-yellow-500/30',
-    error: 'bg-red-500/10 border-red-500/30',
-    info: 'bg-blue-500/10 border-blue-500/30',
+    default: 'bg-gray-50 border-gray-200',
+    success: 'bg-green-50 border-green-200',
+    warning: 'bg-yellow-50 border-yellow-200',
+    error: 'bg-red-50 border-red-200',
+    info: 'bg-blue-50 border-blue-200',
   };
 
   const iconColors = {
-    default: 'text-gray-400',
-    success: 'text-green-400',
-    warning: 'text-yellow-400',
-    error: 'text-red-400',
-    info: 'text-blue-400',
+    default: 'text-gray-500',
+    success: 'text-green-600',
+    warning: 'text-yellow-600',
+    error: 'text-red-500',
+    info: 'text-blue-600',
   };
 
   const trendIcons = {
@@ -54,9 +54,9 @@ export default function MetricCard({
   } as const;
 
   const trendColors = {
-    up: 'text-green-400',
-    down: 'text-red-400',
-    stable: 'text-gray-400',
+    up: 'text-green-600',
+    down: 'text-red-600',
+    stable: 'text-gray-500',
   };
 
   const parsedLastUpdated = lastUpdated
@@ -76,7 +76,7 @@ export default function MetricCard({
               className={iconColors[variant]}
             />
           )}
-          <h3 className="text-sm font-medium text-gray-300">{title}</h3>
+          <h3 className="text-sm font-medium text-gray-600">{title}</h3>
         </div>
         {onRefresh && (
           <RefreshButton
@@ -89,8 +89,8 @@ export default function MetricCard({
       </div>
 
       <div className="mt-2">
-        <p className="text-2xl font-bold text-white">{value}</p>
-        {subtitle && <p className="mt-0.5 text-xs text-gray-400">{subtitle}</p>}
+        <p className="text-2xl font-bold text-gray-900">{value}</p>
+        {subtitle && <p className="mt-0.5 text-xs text-gray-500">{subtitle}</p>}
       </div>
 
       {trend && (
@@ -106,13 +106,13 @@ export default function MetricCard({
             </span>
           )}
           {trendLabel && (
-            <span className="text-xs text-gray-400">{trendLabel}</span>
+            <span className="text-xs text-gray-500">{trendLabel}</span>
           )}
         </div>
       )}
 
       {parsedLastUpdated && (
-        <div className="mt-3 border-t border-gray-600 pt-2">
+        <div className="mt-3 border-t border-gray-200 pt-2">
           <StaleIndicator
             lastUpdated={parsedLastUpdated}
             thresholdMinutes={staleThresholdMinutes}

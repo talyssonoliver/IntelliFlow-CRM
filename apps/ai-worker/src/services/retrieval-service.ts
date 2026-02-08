@@ -26,6 +26,10 @@ import {
 } from '@intelliflow/db';
 import { z } from 'zod';
 import { EmbeddingChain } from '../chains/embedding.chain';
+import {
+  DEFAULT_RELEVANCE_CONFIG as CANONICAL_RELEVANCE_CONFIG,
+  RELEVANCE_PRESETS,
+} from '../config/relevance-config';
 
 // Simple type interfaces to avoid Prisma generic complexity
 interface RolePermission {
@@ -436,16 +440,19 @@ export interface RelevanceConfig {
 }
 
 export const DEFAULT_RELEVANCE_CONFIG: RelevanceConfig = {
-  fullTextWeight: 0.4,
-  semanticWeight: 0.6,
-  titleBoost: 2.0,
+  fullTextWeight: CANONICAL_RELEVANCE_CONFIG.textWeight,
+  semanticWeight: CANONICAL_RELEVANCE_CONFIG.semanticWeight,
+  titleBoost: CANONICAL_RELEVANCE_CONFIG.titleBoost,
   recentBoost: 1.2,
   popularityBoost: 1.1,
-  minScore: 0.3,
-  maxResults: 50,
+  minScore: CANONICAL_RELEVANCE_CONFIG.minScore,
+  maxResults: CANONICAL_RELEVANCE_CONFIG.maxPerSource,
   dateDecayScale: 30, // 30-day half-life
   dateDecayOrigin: new Date(),
 };
+
+/** Re-export canonical presets for consumer convenience */
+export { RELEVANCE_PRESETS };
 
 export class RelevanceEvaluator {
   constructor(private config: RelevanceConfig = DEFAULT_RELEVANCE_CONFIG) {}

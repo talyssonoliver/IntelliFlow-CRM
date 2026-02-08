@@ -4,6 +4,7 @@ export { default as RiskRegister } from './RiskRegister';
 export { default as AIMetrics } from './AIMetrics';
 export { default as SecurityDashboard } from './SecurityDashboard';
 export { default as BuildHealth } from './BuildHealth';
+export { default as FeatureMatrixPanel } from './FeatureMatrixPanel';
 
 // Shared components
 export * from './shared';

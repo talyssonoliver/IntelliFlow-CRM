@@ -62,6 +62,5 @@ export {
 // PMBOK Schedule sync
 export {
   syncScheduleData,
-  getScheduleSummary,
   type ScheduleSyncResult,
 } from './schedule-sync';

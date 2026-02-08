@@ -653,12 +653,9 @@ describe('Lead Router', () => {
   describe('bulkScore', () => {
     it('should bulk score leads via LeadService', async () => {
       const mockBulkResult = {
-        scored: 2,
-        failed: 0,
-        results: [
-          { leadId: TEST_UUIDS.lead1, newScore: 75, success: true },
-          { leadId: TEST_UUIDS.lead2, newScore: 80, success: true },
-        ],
+        successful: [TEST_UUIDS.lead1, TEST_UUIDS.lead2],
+        failed: [] as Array<{ id: string; error: string }>,
+        totalProcessed: 2,
       };
 
       const ctx = createTestContext();
@@ -670,8 +667,8 @@ describe('Lead Router', () => {
         leadIds: [TEST_UUIDS.lead1, TEST_UUIDS.lead2],
       });
 
-      expect(result.scored).toBe(2);
-      expect(result.failed).toBe(0);
+      expect(result.successful).toEqual([TEST_UUIDS.lead1, TEST_UUIDS.lead2]);
+      expect(result.failed).toEqual([]);
       expect(ctx.services!.lead!.bulkScoreLeads).toHaveBeenCalledWith([TEST_UUIDS.lead1, TEST_UUIDS.lead2]);
     });
   });

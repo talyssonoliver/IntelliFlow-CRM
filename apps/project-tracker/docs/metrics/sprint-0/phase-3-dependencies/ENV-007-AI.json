@@ -9,7 +9,7 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-02-06T23:40:55.315Z",
+    "verified_at": "2026-02-08T19:59:16.747Z",
     "required": [
       "ENV-006-AI"
     ]
@@ -23,7 +23,7 @@
       "target": 30,
       "actual": 5,
       "unit": "seconds",
-      "met": false
+      "met": true
     },
     "type_errors": {
       "target": 0,

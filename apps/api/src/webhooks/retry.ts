@@ -10,6 +10,16 @@
 
 import { createHash } from 'crypto';
 import { z } from 'zod';
+import {
+  calculateBackoff as calculateSharedBackoff,
+  isRetryableError as isSharedRetryableError,
+  type RetryPolicyConfig,
+  CircuitBreaker as PlatformCircuitBreaker,
+  withCircuitBreaker,
+} from '@intelliflow/platform/resilience';
+
+// Re-export decorator for consumers that need method-level circuit breaking
+export { withCircuitBreaker };
 
 // Retry entry schema
 export const RetryEntrySchema = z.object({
@@ -85,6 +95,28 @@ export interface RetryQueueStats {
   newestPendingAt?: Date;
 }
 
+function toSharedRetryConfig(config: RetryConfig): RetryPolicyConfig {
+  return {
+    maxRetries: Math.max(0, config.maxAttempts - 1),
+    initialDelayMs: config.baseDelayMs,
+    maxDelayMs: config.maxDelayMs,
+    backoffMultiplier: config.backoffMultiplier,
+    jitterFactor: config.jitterFactor,
+    retryableStatusCodes: [408, 429, 500, 502, 503, 504],
+    retryableErrorCodes: config.retryableErrors,
+    retryOnTimeout: true,
+    attemptTimeoutMs: 0,
+  };
+}
+
+function hasCustomRetryableErrors(config: RetryConfig): boolean {
+  const defaults = DEFAULT_RETRY_CONFIG.retryableErrors;
+  if (config.retryableErrors.length !== defaults.length) {
+    return true;
+  }
+  return config.retryableErrors.some((value, index) => value !== defaults[index]);
+}
+
 /**
  * Calculate retry delay with exponential backoff and jitter
  */
@@ -92,17 +124,8 @@ export function calculateRetryDelay(
   attempt: number,
   config: RetryConfig = DEFAULT_RETRY_CONFIG
 ): number {
-  // Exponential backoff
-  const exponentialDelay = config.baseDelayMs * Math.pow(config.backoffMultiplier, attempt);
-
-  // Cap at max delay
-  const cappedDelay = Math.min(exponentialDelay, config.maxDelayMs);
-
-  // Add jitter (randomization to prevent thundering herd)
-  const jitterRange = cappedDelay * config.jitterFactor;
-  const jitter = (Math.random() - 0.5) * 2 * jitterRange;
-
-  return Math.max(config.baseDelayMs, Math.floor(cappedDelay + jitter));
+  const sharedDelay = calculateSharedBackoff(attempt, toSharedRetryConfig(config));
+  return Math.max(config.baseDelayMs, Math.floor(sharedDelay));
 }
 
 /**
@@ -112,15 +135,27 @@ export function isRetryableError(
   error: Error | string,
   config: RetryConfig = DEFAULT_RETRY_CONFIG
 ): boolean {
-  const errorMessage = typeof error === 'string' ? error : error.message;
-  const errorCode = typeof error === 'string' ? error : (error as { code?: string }).code;
+  const normalizedError = typeof error === 'string' ? new Error(error) : error;
+  const errorMessage = typeof error === 'string' ? error : normalizedError.message;
+  const errorCode = typeof error === 'string' ? error : (normalizedError as { code?: string }).code;
 
-  return config.retryableErrors.some(
+  const legacyMatch = config.retryableErrors.some(
     retryable =>
       errorMessage.includes(retryable) ||
       errorCode === retryable ||
       errorMessage.toUpperCase().includes(retryable)
   );
+
+  if (legacyMatch) {
+    return true;
+  }
+
+  // Preserve strict custom behavior while still using shared defaults.
+  if (hasCustomRetryableErrors(config)) {
+    return false;
+  }
+
+  return isSharedRetryableError(normalizedError, toSharedRetryConfig(config));
 }
 
 /**
@@ -667,4 +702,24 @@ export function createCircuitBreaker(
   config?: Partial<CircuitBreakerConfig>
 ): CircuitBreaker {
   return new CircuitBreaker(config);
+}
+
+/**
+ * Execute a webhook delivery with circuit breaker protection.
+ *
+ * Uses a per-name circuit breaker from the platform's CircuitBreaker class.
+ * Provides a higher-level API than the manual canRequest/record pattern.
+ */
+const circuitBreakers = new Map<string, PlatformCircuitBreaker>();
+export async function executeWithCircuitBreaker<T>(
+  name: string,
+  fn: () => Promise<T>,
+  fallback?: (error: Error) => T | Promise<T>,
+): Promise<T> {
+  let breaker = circuitBreakers.get(name);
+  if (!breaker) {
+    breaker = new PlatformCircuitBreaker({ name });
+    circuitBreakers.set(name, breaker);
+  }
+  return breaker.execute(fn, fallback);
 }

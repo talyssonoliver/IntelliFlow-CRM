@@ -32,6 +32,7 @@ interface FilterOptionsResponse {
   statuses?: FilterOptionWithCount[];
   departments?: FilterOptionWithCount[];
   accounts?: FilterOptionWithCount[];
+  industries?: FilterOptionWithCount[];
   sources?: FilterOptionWithCount[];
   priorities?: FilterOptionWithCount[];
   slaStatuses?: FilterOptionWithCount[];
@@ -51,6 +52,13 @@ interface LeadFilterState {
   search?: string;
   status?: string[];
   source?: string[];
+  ownerId?: string;
+}
+
+/** Account-specific filter state */
+interface AccountFilterState {
+  search?: string;
+  industry?: string;
   ownerId?: string;
 }
 
@@ -199,6 +207,44 @@ export function useContactFilterOptions(
   });
 
   return useFilterOptionsTransform(data, isLoading, error);
+}
+
+/**
+ * Hook to fetch dynamic filter options for accounts
+ */
+export function useAccountFilterOptions(
+  currentFilters?: AccountFilterState,
+  config: UseFilterOptionsConfig = DEFAULT_CONFIG
+) {
+  const queryInput = currentFilters
+    ? {
+        search: currentFilters.search || undefined,
+        industry: currentFilters.industry || undefined,
+        ownerId: currentFilters.ownerId || undefined,
+      }
+    : undefined;
+
+  const { data, isLoading, error } = api.account.filterOptions.useQuery(queryInput, {
+    staleTime: config.staleTime,
+    refetchOnWindowFocus: config.refetchOnWindowFocus,
+  });
+
+  const industryOptions = useMemo(
+    () => transformOptions(data?.industries, capitalizeWords),
+    [data?.industries]
+  );
+
+  const ownerOptions = useMemo(
+    () => transformOptions(data?.owners),
+    [data?.owners]
+  );
+
+  return {
+    industryOptions,
+    ownerOptions,
+    isLoading,
+    error,
+  };
 }
 
 /**

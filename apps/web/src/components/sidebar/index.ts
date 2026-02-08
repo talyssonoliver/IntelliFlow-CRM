@@ -34,6 +34,7 @@ export {
   governanceSidebarConfig,
   settingsSidebarConfig,
   billingSidebarConfig,
+  accountsSidebarConfig,
 } from './configs';
 
 // Icon reference and module colors

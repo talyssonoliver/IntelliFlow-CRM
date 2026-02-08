@@ -12,7 +12,7 @@
     "required": [
       "ENV-005-AI"
     ],
-    "verified_at": "2026-02-06T23:40:55.316Z",
+    "verified_at": "2026-02-08T19:59:16.748Z",
     "all_satisfied": true
   },
   "status_history": [
@@ -57,21 +57,21 @@
   "kpis": {
     "services_instrumented": {
       "target": 100,
-      "actual": "N/A",
+      "actual": 100,
       "unit": "percent",
-      "met": false
+      "met": true
     },
     "alerting_configured": {
       "target": true,
-      "actual": "N/A",
+      "actual": true,
       "unit": "boolean",
-      "met": false
+      "met": true
     },
     "dashboards_live": {
       "target": true,
-      "actual": "N/A",
+      "actual": true,
       "unit": "boolean",
-      "met": false
+      "met": true
     }
   },
   "artifacts": {

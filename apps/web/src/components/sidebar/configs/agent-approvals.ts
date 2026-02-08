@@ -3,7 +3,7 @@ import { MODULE_ICONS, VIEW_ICONS, STATUS_ICONS, FEATURE_ICONS } from '../icon-r
 
 export const agentApprovalsSidebarConfig: SidebarConfig = {
   moduleId: 'agentApprovals',
-  moduleTitle: 'Agent Approvals',
+  moduleTitle: 'AI & Agents',
   moduleIcon: MODULE_ICONS.agentApprovals,
   settingsHref: '/settings/ai',
   showSettings: true,
@@ -34,6 +34,66 @@ export const agentApprovalsSidebarConfig: SidebarConfig = {
       ],
     },
     {
+      id: 'ai-review',
+      title: 'AI Review',
+      items: [
+        {
+          id: 'review-queue',
+          label: 'Review Queue',
+          icon: 'rate_review',
+          href: '/agent-approvals/ai-review',
+        },
+      ],
+    },
+    {
+      id: 'ai-intelligence',
+      title: 'Intelligence',
+      items: [
+        {
+          id: 'lead-scoring',
+          label: 'Lead Scoring',
+          icon: 'leaderboard',
+          href: '/agent-approvals/lead-scoring',
+        },
+        {
+          id: 'sentiment',
+          label: 'Sentiment Analysis',
+          icon: 'sentiment_satisfied',
+          href: '/agent-approvals/sentiment',
+        },
+        {
+          id: 'churn-risk',
+          label: 'Churn Risk',
+          icon: 'warning',
+          href: '/agent-approvals/churn-risk',
+        },
+      ],
+    },
+    {
+      id: 'ai-tools',
+      title: 'AI Tools',
+      items: [
+        {
+          id: 'ai-search',
+          label: 'AI Search (RAG)',
+          icon: 'manage_search',
+          href: '/agent-approvals/ai-search',
+        },
+        {
+          id: 'experiments',
+          label: 'Experiments',
+          icon: 'science',
+          href: '/agent-approvals/experiments',
+        },
+        {
+          id: 'chain-versions',
+          label: 'Chain Versions',
+          icon: 'history',
+          href: '/settings/ai',
+        },
+      ],
+    },
+    {
       id: 'history',
       title: 'History',
       items: [
@@ -60,8 +120,8 @@ export const agentApprovalsSidebarConfig: SidebarConfig = {
       ],
     },
     {
-      id: 'agents',
-      title: 'Agent Management',
+      id: 'monitoring',
+      title: 'Monitoring',
       items: [
         {
           id: 'active-agents',
@@ -74,6 +134,18 @@ export const agentApprovalsSidebarConfig: SidebarConfig = {
           label: 'Agent Logs',
           icon: FEATURE_ICONS.logs,
           href: '/agent-approvals/logs',
+        },
+        {
+          id: 'drift-detection',
+          label: 'Drift Detection',
+          icon: 'trending_down',
+          href: '/agent-approvals/drift',
+        },
+        {
+          id: 'latency',
+          label: 'Latency Monitor',
+          icon: 'speed',
+          href: '/agent-approvals/latency',
         },
       ],
     },

@@ -6,6 +6,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { Card, Skeleton, ChurnRiskCard, NextBestActionCard, type ChurnRiskData, type NextBestActionData, type ChurnRiskLevel, type NBAActionType, type NBAPriority } from '@intelliflow/ui';
 import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
+import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
+import { MoreActionsButton } from '@/components/shared/more-actions-button';
 
 // Tab types matching Contact360 pattern
 type TabId = 'overview' | 'activity' | 'tasks' | 'notes' | 'emails' | 'files' | 'ai-insights';
@@ -284,6 +286,7 @@ export default function Lead360Page() {
   const apiLead = rawApiLead as LeadWithRelations | undefined;
 
   const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [actionSheetOpen, setActionSheetOpen] = useState(false);
   const [activityNote, setActivityNote] = useState('');
   const [activityTypeFilter, setActivityTypeFilter] = useState<ActivityType | 'all'>('all');
   const [personFilter, setPersonFilter] = useState<string>('all');
@@ -880,8 +883,26 @@ export default function Lead360Page() {
             <span className="material-symbols-outlined !text-[18px]">call</span>
             Log Call
           </button>
+          <MoreActionsButton onClick={() => setActionSheetOpen(true)} />
         </div>
       </div>
+
+      <EntityActionSheet
+        open={actionSheetOpen}
+        onOpenChange={setActionSheetOpen}
+        entity={{
+          type: 'lead',
+          id: lead.id,
+          title: `${lead.firstName} ${lead.lastName}`,
+          subtitle: lead.company || undefined,
+          icon: 'person',
+          url: `/leads/${lead.id}`,
+        }}
+        extraActions={[
+          { label: 'Archive', icon: 'archive', onClick: () => {} },
+          { label: 'Delete', icon: 'delete', onClick: () => {}, destructive: true },
+        ]}
+      />
 
       {/* Main 3-column grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">

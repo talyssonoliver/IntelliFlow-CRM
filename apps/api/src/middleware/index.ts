@@ -19,22 +19,20 @@ export {
   createErrorTrackingMiddleware,
 } from './logging';
 
-// TODO: IFC-114 - Rate limiting implementation not yet complete
-// Uncomment when rate-limit.ts has actual implementation
-// export {
-//   createRateLimitMiddleware,
-//   createStrictRateLimitMiddleware,
-//   createLenientRateLimitMiddleware,
-//   createTieredRateLimitMiddleware,
-//   createPublicRateLimitMiddleware,
-//   createAuthenticatedRateLimitMiddleware,
-//   createAIRateLimitMiddleware,
-//   createAuthEndpointRateLimitMiddleware,
-//   RedisRateLimiter,
-//   getRateLimiter,
-//   rateLimitConfig,
-//   RATE_LIMIT_TIERS,
-//   DDOS_CONFIG,
-// } from './rate-limit';
-//
-// export type { RateLimitResult } from './rate-limit';
+export {
+  createRateLimitMiddleware,
+  createStrictRateLimitMiddleware,
+  createLenientRateLimitMiddleware,
+  createTieredRateLimitMiddleware,
+  createPublicRateLimitMiddleware,
+  createAuthenticatedRateLimitMiddleware,
+  createAIRateLimitMiddleware,
+  createAuthEndpointRateLimitMiddleware,
+  RedisRateLimiter,
+  getRateLimiter,
+  rateLimitConfig,
+  RATE_LIMIT_TIERS,
+  DDOS_CONFIG,
+} from './rate-limit';
+
+export type { RateLimitResult } from './rate-limit';

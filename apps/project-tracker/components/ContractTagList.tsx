@@ -177,7 +177,7 @@ export default function ContractTagList({
 }
 
 // Utility component to display contract compliance status
-export function ContractComplianceIndicator({
+function ContractComplianceIndicator({
   prerequisites,
   artifacts,
   validation,
@@ -242,3 +242,4 @@ export function ContractComplianceIndicator({
     </div>
   );
 }
+

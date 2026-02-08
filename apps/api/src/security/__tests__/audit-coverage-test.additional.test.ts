@@ -133,8 +133,10 @@ describe("audit-coverage-test.ts source coverage", () => {
     const { AuditLogger, resetAuditLogger } = await import("../audit-logger.js");
     resetAuditLogger();
     const l = new AuditLogger(mockPrisma, { consoleLog: false });
-    for (const res of ["lead", "contact", "account", "opportunity", "task", "appointment"]) {
-      for (const act of ["CREATE", "READ", "UPDATE", "DELETE"]) {
+    const resources = ["lead", "contact", "account", "opportunity", "task", "appointment"] as const;
+    const actions = ["CREATE", "READ", "UPDATE", "DELETE"] as const;
+    for (const res of resources) {
+      for (const act of actions) {
         await l.logAction(act, res, "id", "t1", { actorId: "u1" });
       }
     }

@@ -184,7 +184,7 @@ describe('TestRunnerModal - logic tests', () => {
       };
 
       if (data.type === 'suite_start' && data.data?.file) {
-        logs.push({ type: 'info', text: `Running: ${data.data?.suiteName || data.data?.file}` });
+        logs.push({ type: 'info', text: `Running: ${(data.data as any)?.suiteName || data.data?.file}` });
       }
 
       expect(logs).toHaveLength(1);
@@ -201,7 +201,7 @@ describe('TestRunnerModal - logic tests', () => {
       };
 
       if (data.type === 'suite_start' && data.data?.file) {
-        logs.push({ type: 'info', text: `Running: ${data.data?.suiteName || data.data?.file}` });
+        logs.push({ type: 'info', text: `Running: ${(data.data as any)?.suiteName || data.data?.file}` });
       }
 
       expect(logs[0].text).toBe('Running: src/test.ts');
@@ -287,7 +287,7 @@ describe('TestRunnerModal - logic tests', () => {
       };
 
       if (data.type === 'error') {
-        error = data.data?.error || 'An error occurred';
+        error = (data.data as any)?.error || 'An error occurred';
       }
 
       expect(error).toBe('Test runner crashed');
@@ -303,7 +303,7 @@ describe('TestRunnerModal - logic tests', () => {
       };
 
       if (data.type === 'error') {
-        error = data.data?.error || 'An error occurred';
+        error = (data.data as any)?.error || 'An error occurred';
       }
 
       expect(error).toBe('An error occurred');

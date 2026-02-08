@@ -9,10 +9,11 @@ const routes: NavRoute[] = [
   { label: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
   { label: 'Leads', href: '/leads', icon: 'group' },
   { label: 'Contacts', href: '/contacts', icon: 'person' },
+  { label: 'Accounts', href: '/accounts', icon: 'domain' },
   { label: 'Deals', href: '/deals', icon: 'handshake' },
   { label: 'Tickets', href: '/tickets', icon: 'confirmation_number' },
   { label: 'Documents', href: '/documents', icon: 'description' },
-  { label: 'Agent Actions', href: '/agent-approvals', icon: 'smart_toy' }, // IFC-149: AI Agent approvals
+  { label: 'AI & Agents', href: '/agent-approvals', icon: 'smart_toy' }, // AI hub: approvals, review, intelligence, monitoring
   { label: 'Reports', href: '/analytics', icon: 'bar_chart' },
 ];
 

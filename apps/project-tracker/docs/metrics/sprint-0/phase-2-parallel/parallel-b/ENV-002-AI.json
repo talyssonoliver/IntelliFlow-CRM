@@ -1,6 +1,6 @@
 {
   "$schema": "../../../schemas/task-status.schema.json",
-  "taskId": "ENV-002-AI",
+  "task_id": "ENV-002-AI",
   "description": "Automated Development Tools Configuration",
   "owner": "Backend Dev + AI Specialist (STOA-Intelligence)",
   "status": "DONE",
@@ -9,7 +9,7 @@
   "stream": "parallel-b",
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-02-06T23:40:55.309Z",
+    "verified_at": "2026-02-08T19:59:16.740Z",
     "required": [
       "ENV-001-AI"
     ]

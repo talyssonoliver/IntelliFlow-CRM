@@ -75,6 +75,32 @@ export class AccountRevenueUpdatedEvent extends DomainEvent {
 /**
  * Event: Account industry was categorized
  */
+/**
+ * Event: Account hierarchy was updated (parent set or removed)
+ */
+export class AccountHierarchyUpdatedEvent extends DomainEvent {
+  readonly eventType = 'account.hierarchy_updated';
+
+  constructor(
+    public readonly accountId: AccountId,
+    public readonly parentAccountId: string | undefined,
+    public readonly updatedBy: string
+  ) {
+    super();
+  }
+
+  toPayload(): Record<string, unknown> {
+    return {
+      accountId: this.accountId.value,
+      parentAccountId: this.parentAccountId ?? null,
+      updatedBy: this.updatedBy,
+    };
+  }
+}
+
+/**
+ * Event: Account industry was categorized
+ */
 export class AccountIndustryCategorizedEvent extends DomainEvent {
   readonly eventType = 'account.industry_categorized';
 

@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import type { AuditLogInput, RequiredAuditLoggerConfig } from './types';
+import { getAuditEncryption } from '../../shared/audit-encryption-module';
 
 /**
  * Validate that the tenantId exists in the database
@@ -51,6 +52,28 @@ export async function writeEntry(
       return eventId;
     }
 
+    // Optionally encrypt sensitive fields (IFC-124)
+    let beforeState = entry.beforeState as object | undefined;
+    let afterState = entry.afterState as object | undefined;
+    let metadata = entry.metadata as object | undefined;
+
+    if (config.encryptSensitiveFields) {
+      try {
+        const encryptor = getAuditEncryption();
+        if (beforeState) {
+          beforeState = { _encrypted: true, ...encryptor.encryptAuditLog(beforeState as Record<string, unknown>) };
+        }
+        if (afterState) {
+          afterState = { _encrypted: true, ...encryptor.encryptAuditLog(afterState as Record<string, unknown>) };
+        }
+        if (metadata) {
+          metadata = { _encrypted: true, ...encryptor.encryptAuditLog(metadata as Record<string, unknown>) };
+        }
+      } catch (encError) {
+        console.warn('[AUDIT] Encryption failed, writing plaintext:', encError);
+      }
+    }
+
     // Write to consolidated AuditLogEntry table
     const auditLogEntry = await prisma.auditLogEntry.create({
       data: {
@@ -68,8 +91,8 @@ export async function writeEntry(
         action: entry.action,
         actionResult: entry.actionResult ?? 'SUCCESS',
         actionReason: entry.actionReason,
-        beforeState: entry.beforeState as object | undefined,
-        afterState: entry.afterState as object | undefined,
+        beforeState,
+        afterState,
         changedFields: entry.changedFields ?? [],
         ipAddress: entry.ipAddress,
         userAgent: entry.userAgent,
@@ -81,7 +104,7 @@ export async function writeEntry(
         requiredPermission: entry.requiredPermission,
         permissionGranted: entry.permissionGranted ?? true,
         permissionDeniedReason: entry.permissionDeniedReason,
-        metadata: entry.metadata as object | undefined,
+        metadata,
       },
     });
 

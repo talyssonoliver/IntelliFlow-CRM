@@ -20,6 +20,8 @@ import {
   getAccountContactsInputSchema,
   getAccountOpportunitiesInputSchema,
   getAccountActivityInputSchema,
+  getHierarchyInputSchema,
+  setParentSchema,
 } from '@intelliflow/validators/account';
 import { mapAccountToResponse } from '../../shared/mappers';
 import { type Context } from '../../context';
@@ -99,7 +101,20 @@ export const accountRouter = createTRPCRouter({
       });
     }
 
-    return mapAccountToResponse(result.value);
+    // Fetch counts for contacts and opportunities
+    const _count = await typedCtx.prismaWithTenant.account.findUnique({
+      where: { id: input.id },
+      select: {
+        _count: {
+          select: { contacts: true, opportunities: true },
+        },
+      },
+    });
+
+    return {
+      ...mapAccountToResponse(result.value),
+      _count: _count?._count ?? { contacts: 0, opportunities: 0 },
+    };
   }),
 
   /**
@@ -171,6 +186,12 @@ export const accountRouter = createTRPCRouter({
             select: {
               id: true,
               email: true,
+              name: true,
+            },
+          },
+          parentAccount: {
+            select: {
+              id: true,
               name: true,
             },
           },
@@ -319,7 +340,7 @@ export const accountRouter = createTRPCRouter({
    */
   stats: tenantProcedure.query(async ({ ctx }) => {
    const typedCtx = getTenantContext(ctx);
-    const [total, byIndustry, withContacts, totalRevenue] = await Promise.all([
+    const [total, byIndustry, withContacts, withOpportunities, totalRevenue] = await Promise.all([
       typedCtx.prismaWithTenant.account.count(),
       typedCtx.prismaWithTenant.account.groupBy({
         by: ['industry'],
@@ -331,6 +352,13 @@ export const accountRouter = createTRPCRouter({
       typedCtx.prismaWithTenant.account.count({
         where: {
           contacts: {
+            some: {},
+          },
+        },
+      }),
+      typedCtx.prismaWithTenant.account.count({
+        where: {
+          opportunities: {
             some: {},
           },
         },
@@ -353,6 +381,7 @@ export const accountRouter = createTRPCRouter({
       ),
       withContacts,
       withoutContacts: total - withContacts,
+      withOpportunities,
       totalRevenue: totalRevenue._sum.revenue?.toString() || '0',
     };
   }),
@@ -525,5 +554,58 @@ export const accountRouter = createTRPCRouter({
       }
 
       return result.value;
+    }),
+
+  /**
+   * Get account hierarchy (PG-134)
+   * Returns ancestors, current node with children tree
+   */
+  getHierarchy: tenantProcedure
+    .input(getHierarchyInputSchema)
+    .query(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const accountService = getAccountService(ctx);
+
+      const result = await accountService.getHierarchy(
+        input.accountId,
+        typedCtx.tenant.tenantId,
+        input.maxDepth
+      );
+
+      if (result.isFailure) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: result.error.message,
+        });
+      }
+
+      return result.value;
+    }),
+
+  /**
+   * Set or remove parent account (PG-134)
+   * Includes cycle detection and max depth enforcement
+   */
+  setParent: tenantProcedure
+    .input(setParentSchema)
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const accountService = getAccountService(ctx);
+
+      const result = await accountService.setParent(
+        input.accountId,
+        input.parentAccountId,
+        typedCtx.tenant.tenantId,
+        typedCtx.user!.userId
+      );
+
+      if (result.isFailure) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: result.error.message,
+        });
+      }
+
+      return mapAccountToResponse(result.value);
     }),
 });

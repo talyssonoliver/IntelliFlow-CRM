@@ -73,23 +73,23 @@ export default function RiskRegister() {
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 6) return 'bg-red-500/20 text-red-400 border-red-500/30';
-    if (score >= 3) return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-    return 'bg-green-500/20 text-green-400 border-green-500/30';
+    if (score >= 6) return 'bg-red-100 text-red-600 border-red-200';
+    if (score >= 3) return 'bg-yellow-100 text-yellow-600 border-yellow-200';
+    return 'bg-green-100 text-green-600 border-green-200';
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Open':
-        return 'bg-red-500/20 text-red-400';
+        return 'bg-red-100 text-red-600';
       case 'Mitigated':
-        return 'bg-green-500/20 text-green-400';
+        return 'bg-green-100 text-green-600';
       case 'Monitoring':
-        return 'bg-blue-500/20 text-blue-400';
+        return 'bg-blue-100 text-blue-600';
       case 'Closed':
-        return 'bg-gray-500/20 text-gray-400';
+        return 'bg-gray-100 text-gray-600';
       default:
-        return 'bg-gray-500/20 text-gray-400';
+        return 'bg-gray-100 text-gray-600';
     }
   };
 
@@ -109,7 +109,7 @@ export default function RiskRegister() {
 
   if (error) {
     return (
-      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400">
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600">
         <div className="flex items-center gap-2">
           <Icon name="error" size="lg" />
           <span>Error: {error}</span>
@@ -129,9 +129,9 @@ export default function RiskRegister() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Icon name="warning" className="text-yellow-400" size="xl" />
+          <Icon name="warning" className="text-yellow-600" size="xl" />
           <div>
-            <h3 className="text-lg font-semibold text-white">Risk Register</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Risk Register</h3>
             {lastUpdated && (
               <StaleIndicator
                 lastUpdated={lastUpdated}
@@ -156,21 +156,21 @@ export default function RiskRegister() {
       {/* Summary Cards */}
       {summary && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-gray-700/30 rounded-lg p-4">
-            <div className="text-2xl font-bold text-white">{summary.total}</div>
-            <div className="text-sm text-gray-400">Total Risks</div>
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <div className="text-2xl font-bold text-gray-900">{summary.total}</div>
+            <div className="text-sm text-gray-500">Total Risks</div>
           </div>
-          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
-            <div className="text-2xl font-bold text-red-400">{summary.open}</div>
-            <div className="text-sm text-gray-400">Open</div>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="text-2xl font-bold text-red-600">{summary.open}</div>
+            <div className="text-sm text-gray-500">Open</div>
           </div>
-          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
-            <div className="text-2xl font-bold text-yellow-400">{summary.highRisk}</div>
-            <div className="text-sm text-gray-400">High Risk</div>
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="text-2xl font-bold text-yellow-600">{summary.highRisk}</div>
+            <div className="text-sm text-gray-500">High Risk</div>
           </div>
-          <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
-            <div className="text-2xl font-bold text-green-400">{summary.mitigated}</div>
-            <div className="text-sm text-gray-400">Mitigated</div>
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="text-2xl font-bold text-green-600">{summary.mitigated}</div>
+            <div className="text-sm text-gray-500">Mitigated</div>
           </div>
         </div>
       )}
@@ -184,7 +184,7 @@ export default function RiskRegister() {
             className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
               filter === f
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-700/50 text-gray-400 hover:text-white'
+                : 'bg-gray-100 text-gray-600 hover:text-gray-900'
             }`}
           >
             {f === 'all' ? 'All' : f === 'open' ? 'Open Only' : 'High Risk'}
@@ -193,31 +193,31 @@ export default function RiskRegister() {
       </div>
 
       {/* Risk Table */}
-      <div className="bg-gray-700/30 rounded-lg overflow-hidden">
+      <div className="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-gray-700">
-              <th className="text-left text-xs font-medium text-gray-400 p-3">ID</th>
-              <th className="text-left text-xs font-medium text-gray-400 p-3">Category</th>
-              <th className="text-left text-xs font-medium text-gray-400 p-3">Description</th>
-              <th className="text-center text-xs font-medium text-gray-400 p-3">Score</th>
-              <th className="text-center text-xs font-medium text-gray-400 p-3">Status</th>
-              <th className="text-left text-xs font-medium text-gray-400 p-3">Owner</th>
+            <tr className="border-b border-gray-200">
+              <th className="text-left text-xs font-medium text-gray-500 p-3">ID</th>
+              <th className="text-left text-xs font-medium text-gray-500 p-3">Category</th>
+              <th className="text-left text-xs font-medium text-gray-500 p-3">Description</th>
+              <th className="text-center text-xs font-medium text-gray-500 p-3">Score</th>
+              <th className="text-center text-xs font-medium text-gray-500 p-3">Status</th>
+              <th className="text-left text-xs font-medium text-gray-500 p-3">Owner</th>
             </tr>
           </thead>
           <tbody>
             {filteredRisks.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center text-gray-400 py-8">
+                <td colSpan={6} className="text-center text-gray-500 py-8">
                   No risks found
                 </td>
               </tr>
             ) : (
               filteredRisks.map((risk) => (
-                <tr key={risk.id} className="border-b border-gray-700/50 hover:bg-gray-700/20">
-                  <td className="p-3 font-mono text-sm text-blue-400">{risk.id}</td>
-                  <td className="p-3 text-sm text-gray-300">{risk.category}</td>
-                  <td className="p-3 text-sm text-gray-300 max-w-xs truncate" title={risk.description}>
+                <tr key={risk.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <td className="p-3 font-mono text-sm text-blue-600">{risk.id}</td>
+                  <td className="p-3 text-sm text-gray-700">{risk.category}</td>
+                  <td className="p-3 text-sm text-gray-700 max-w-xs truncate" title={risk.description}>
                     {risk.description}
                   </td>
                   <td className="p-3 text-center">
@@ -230,7 +230,7 @@ export default function RiskRegister() {
                       {risk.status}
                     </span>
                   </td>
-                  <td className="p-3 text-sm text-gray-400">{risk.owner}</td>
+                  <td className="p-3 text-sm text-gray-500">{risk.owner}</td>
                 </tr>
               ))
             )}

@@ -77,7 +77,7 @@ export default function SecurityDashboard() {
 
   if (error) {
     return (
-      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400">
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600">
         <div className="flex items-center gap-2">
           <Icon name="error" size="lg" />
           <span>Error: {error}</span>
@@ -101,9 +101,9 @@ export default function SecurityDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Icon name="shield" className={hasCritical ? 'text-red-400' : 'text-green-400'} size="xl" />
+          <Icon name="shield" className={hasCritical ? 'text-red-500' : 'text-green-600'} size="xl" />
           <div>
-            <h3 className="text-lg font-semibold text-white">Security Dashboard</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Security Dashboard</h3>
             {data?.lastScan && (
               <StaleIndicator
                 lastUpdated={data.lastScan}
@@ -123,20 +123,20 @@ export default function SecurityDashboard() {
       {/* Security Status Banner */}
       <div className={`rounded-lg p-4 border ${
         hasCritical
-          ? 'bg-red-500/10 border-red-500/30'
+          ? 'bg-red-50 border-red-200'
           : hasVulnerabilities
-          ? 'bg-yellow-500/10 border-yellow-500/30'
-          : 'bg-green-500/10 border-green-500/30'
+          ? 'bg-yellow-50 border-yellow-200'
+          : 'bg-green-50 border-green-200'
       }`}>
         <div className="flex items-center gap-3">
           <Icon
             name={hasCritical ? 'gpp_maybe' : hasVulnerabilities ? 'shield' : 'verified_user'}
-            className={hasCritical ? 'text-red-400' : hasVulnerabilities ? 'text-yellow-400' : 'text-green-400'}
+            className={hasCritical ? 'text-red-500' : hasVulnerabilities ? 'text-yellow-600' : 'text-green-600'}
             size="2xl"
           />
           <div>
             <div className={`text-lg font-semibold ${
-              hasCritical ? 'text-red-400' : hasVulnerabilities ? 'text-yellow-400' : 'text-green-400'
+              hasCritical ? 'text-red-700' : hasVulnerabilities ? 'text-yellow-700' : 'text-green-700'
             }`}>
               {hasCritical
                 ? `${vulns.critical} Critical Vulnerabilities Found`
@@ -144,7 +144,7 @@ export default function SecurityDashboard() {
                 ? `${vulns.total} Vulnerabilities Found`
                 : 'No Vulnerabilities Detected'}
             </div>
-            <div className="text-sm text-gray-400">
+            <div className="text-sm text-gray-600">
               {hasCritical
                 ? 'Immediate action required - critical security issues detected'
                 : hasVulnerabilities
@@ -191,26 +191,26 @@ export default function SecurityDashboard() {
 
       {/* Baseline Comparison */}
       {data?.baseline && (
-        <div className="bg-gray-700/30 rounded-lg p-4">
-          <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
             <Icon name="difference" size="base" />
             Baseline Comparison (from {new Date(data.baseline.date).toLocaleDateString()})
           </h4>
           <div className="grid grid-cols-2 gap-4">
             <div className="flex items-center gap-3">
-              <span className="text-gray-400">Critical:</span>
-              <span className="font-mono text-white">{data.baseline.critical}</span>
+              <span className="text-gray-500">Critical:</span>
+              <span className="font-mono text-gray-900">{data.baseline.critical}</span>
               {vulns.critical !== data.baseline.critical && (
-                <span className={`text-sm ${vulns.critical > data.baseline.critical ? 'text-red-400' : 'text-green-400'}`}>
+                <span className={`text-sm ${vulns.critical > data.baseline.critical ? 'text-red-600' : 'text-green-600'}`}>
                   {vulns.critical > data.baseline.critical ? '+' : ''}{vulns.critical - data.baseline.critical}
                 </span>
               )}
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-gray-400">High:</span>
-              <span className="font-mono text-white">{data.baseline.high}</span>
+              <span className="text-gray-500">High:</span>
+              <span className="font-mono text-gray-900">{data.baseline.high}</span>
               {vulns.high !== data.baseline.high && (
-                <span className={`text-sm ${vulns.high > data.baseline.high ? 'text-red-400' : 'text-green-400'}`}>
+                <span className={`text-sm ${vulns.high > data.baseline.high ? 'text-red-600' : 'text-green-600'}`}>
                   {vulns.high > data.baseline.high ? '+' : ''}{vulns.high - data.baseline.high}
                 </span>
               )}
@@ -221,22 +221,22 @@ export default function SecurityDashboard() {
 
       {/* Scan History */}
       {data?.scanHistory && data.scanHistory.length > 0 && (
-        <div className="bg-gray-700/30 rounded-lg p-4">
-          <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
             <Icon name="history" size="base" />
             Scan History
           </h4>
           <div className="space-y-2">
             {data.scanHistory.slice(0, 5).map((scan, idx) => (
               <div key={idx} className="flex items-center justify-between text-sm">
-                <span className="text-gray-400">
+                <span className="text-gray-500">
                   {new Date(scan.date).toLocaleString()}
                 </span>
                 <div className="flex items-center gap-4">
-                  <span className={`${scan.critical > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                  <span className={`${scan.critical > 0 ? 'text-red-600' : 'text-green-600'}`}>
                     {scan.critical} critical
                   </span>
-                  <span className="text-gray-300">{scan.total} total</span>
+                  <span className="text-gray-700">{scan.total} total</span>
                 </div>
               </div>
             ))}
@@ -245,47 +245,47 @@ export default function SecurityDashboard() {
       )}
 
       {/* Compliance Checks */}
-      <div className="bg-gray-700/30 rounded-lg p-4">
-        <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
           <Icon name="assignment_turned_in" size="base" />
           Compliance Status
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className={`flex items-center gap-2 p-3 rounded-lg ${
             data?.compliance.owasp_top10
-              ? 'bg-green-500/10 border border-green-500/30'
-              : 'bg-red-500/10 border border-red-500/30'
+              ? 'bg-green-50 border border-green-200'
+              : 'bg-red-50 border border-red-200'
           }`}>
             <Icon
               name={data?.compliance.owasp_top10 ? 'check_circle' : 'cancel'}
-              className={data?.compliance.owasp_top10 ? 'text-green-400' : 'text-red-400'}
+              className={data?.compliance.owasp_top10 ? 'text-green-600' : 'text-red-500'}
               size="lg"
             />
-            <span className="text-white">OWASP Top 10</span>
+            <span className="text-gray-900">OWASP Top 10</span>
           </div>
           <div className={`flex items-center gap-2 p-3 rounded-lg ${
             data?.compliance.dependency_check
-              ? 'bg-green-500/10 border border-green-500/30'
-              : 'bg-red-500/10 border border-red-500/30'
+              ? 'bg-green-50 border border-green-200'
+              : 'bg-red-50 border border-red-200'
           }`}>
             <Icon
               name={data?.compliance.dependency_check ? 'check_circle' : 'cancel'}
-              className={data?.compliance.dependency_check ? 'text-green-400' : 'text-red-400'}
+              className={data?.compliance.dependency_check ? 'text-green-600' : 'text-red-500'}
               size="lg"
             />
-            <span className="text-white">Dependency Check</span>
+            <span className="text-gray-900">Dependency Check</span>
           </div>
           <div className={`flex items-center gap-2 p-3 rounded-lg ${
             data?.compliance.secret_scan
-              ? 'bg-green-500/10 border border-green-500/30'
-              : 'bg-red-500/10 border border-red-500/30'
+              ? 'bg-green-50 border border-green-200'
+              : 'bg-red-50 border border-red-200'
           }`}>
             <Icon
               name={data?.compliance.secret_scan ? 'check_circle' : 'cancel'}
-              className={data?.compliance.secret_scan ? 'text-green-400' : 'text-red-400'}
+              className={data?.compliance.secret_scan ? 'text-green-600' : 'text-red-500'}
               size="lg"
             />
-            <span className="text-white">Secret Scan</span>
+            <span className="text-gray-900">Secret Scan</span>
           </div>
         </div>
       </div>

@@ -19,6 +19,7 @@ import { systemRouter } from './modules/misc/system.router';
 import { timelineRouter } from './modules/misc/timeline.router';
 import subscriptionRouter from './shared/subscription-demo';
 import { appointmentsRouter } from './modules/legal/appointments.router';
+import { casesRouter } from './modules/legal/cases.router';
 import { documentsRouter } from './modules/legal/documents.router';
 import { agentRouter } from './modules/agent/agent.router';
 import { auditRouter } from './modules/security/audit.router';
@@ -33,6 +34,8 @@ import { autoResponseRouter } from './modules/autoresponse/autoresponse.router';
 import { aiReviewRouter } from './modules/ai-review/ai-review.router';
 import { homeRouter } from './modules/home/home.router';
 import { notificationsRouter } from './modules/notifications/notifications.router';
+import { workflowRouter } from './modules/workflow/workflow.router';
+import { queuesAdminRouter } from './modules/admin/queues.router';
 
 /**
  * Main application router
@@ -73,8 +76,8 @@ import { notificationsRouter } from './modules/notifications/notifications.route
  * - home.*          - Authenticated home page data (IFC-182)
  * - notifications.* - Notification inbox and preferences (IFC-183)
  *
- * Future routers to add:
- * - workflow.*     - Workflow automation
+ * Workflow Automation (IFC-028):
+ * - workflow.*     - Workflow engine management
  */
 export const appRouter = createTRPCRouter({
   // Authentication & Authorization
@@ -96,6 +99,7 @@ export const appRouter = createTRPCRouter({
   analytics: analyticsRouter,
 
   // Legal domain
+  cases: casesRouter,
   appointments: appointmentsRouter,
   documents: documentsRouter,
 
@@ -129,6 +133,12 @@ export const appRouter = createTRPCRouter({
 
   // Notifications (IFC-183)
   notifications: notificationsRouter,
+
+  // Workflow Automation (IFC-028)
+  workflow: workflowRouter,
+
+  // Queue Administration
+  queuesAdmin: queuesAdminRouter,
 });
 
 /**

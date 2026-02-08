@@ -304,7 +304,7 @@ export const DEFAULT_GATES: GateResult[] = [
 ];
 
 // Compact version for dashboard
-export function GateValidationSummary({
+function GateValidationSummary({
   gates,
 }: Readonly<{
   gates: GateResult[];
@@ -327,3 +327,4 @@ export function GateValidationSummary({
     </div>
   );
 }
+

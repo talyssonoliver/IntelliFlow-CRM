@@ -16,6 +16,8 @@ import { createTransport, Transporter } from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 import pino from 'pino';
 import { z } from 'zod';
+// Re-export platform resilience for downstream consumers
+export { resilientCall } from '@intelliflow/platform/resilience';
 
 // ============================================================================
 // Types & Schemas

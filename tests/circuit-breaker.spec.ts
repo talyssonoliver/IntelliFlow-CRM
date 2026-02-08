@@ -35,7 +35,7 @@ import {
   createRetryPolicy,
   DEFAULT_RETRY_CONFIG,
   type RetryContext,
-} from '../apps/api/src/shared/retry-policy';
+} from '../packages/platform/src/resilience/retry-policy';
 
 describe('Circuit Breaker', () => {
   let breaker: CircuitBreaker;

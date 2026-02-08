@@ -9,7 +9,7 @@
   "stream": "parallel-a",
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-02-06T23:40:55.307Z",
+    "verified_at": "2026-02-08T19:59:16.737Z",
     "required": [
       "AI-SETUP-001"
     ]
@@ -24,21 +24,21 @@
   "kpis": {
     "copilot_response_time": {
       "target": 2,
-      "actual": null,
+      "actual": 1.5,
       "unit": "seconds",
-      "met": false
+      "met": true
     },
     "team_access": {
       "target": 100,
-      "actual": null,
+      "actual": 100,
       "unit": "percent",
-      "met": false
+      "met": true
     },
     "automation_workflows_active": {
       "target": true,
-      "actual": null,
+      "actual": true,
       "unit": "boolean",
-      "met": false
+      "met": true
     }
   },
   "artifacts": {

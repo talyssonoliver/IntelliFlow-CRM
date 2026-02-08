@@ -4,7 +4,7 @@ const mockChannel = { on: vi.fn().mockReturnThis(), subscribe: vi.fn((cb: any) =
 const mockSupa = { channel: vi.fn().mockReturnValue(mockChannel), removeChannel: vi.fn().mockResolvedValue(undefined) };
 vi.mock('@supabase/supabase-js', () => ({ createClient: () => mockSupa, RealtimeChannel: class {} }));
 vi.mock('react', () => ({ useState: vi.fn((i: any) => [typeof i === 'function' ? i() : i, vi.fn()]), useEffect: vi.fn((fn: () => any) => { fn(); }), useCallback: vi.fn((fn: any) => fn), useRef: vi.fn((i: any) => ({ current: i })), useMemo: vi.fn((fn: any) => fn()) }));
-vi.mock('@/hooks/use-trpc-subscriptions', () => ({ useLeadScoredSubscription: vi.fn(() => ({ status: 'connected' })), useTaskAssignedSubscription: vi.fn(() => ({ status: 'connected' })), useSystemEventSubscription: vi.fn(() => ({ status: 'connected' })), useRealtimeHealth: vi.fn(() => ({ isHealthy: true, latency: 50, lastPing: Date.now() })), useAIProgressSubscription: vi.fn(), useAllSubscriptions: vi.fn(), useLeadScoredSubscription: vi.fn(), useTaskAssignedSubscription: vi.fn(), useSystemEventSubscription: vi.fn() }));
+vi.mock('@/hooks/use-trpc-subscriptions', () => ({ useLeadScoredSubscription: vi.fn(() => ({ status: 'connected' })), useTaskAssignedSubscription: vi.fn(() => ({ status: 'connected' })), useSystemEventSubscription: vi.fn(() => ({ status: 'connected' })), useRealtimeHealth: vi.fn(() => ({ isHealthy: true, latency: 50, lastPing: Date.now() })), useAIProgressSubscription: vi.fn(), useAllSubscriptions: vi.fn() }));
 
 describe('use-subscription supplementary', () => {
   beforeEach(() => {

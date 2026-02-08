@@ -6,6 +6,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { Card, Skeleton, ChurnRiskCard, NextBestActionCard, type ChurnRiskData, type NextBestActionData, type ChurnRiskLevel, type NBAActionType, type NBAPriority } from '@intelliflow/ui';
 import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
+import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
+import { MoreActionsButton } from '@/components/shared/more-actions-button';
 
 // Tab types
 type TabId = 'overview' | 'activity' | 'deals' | 'tickets' | 'documents' | 'notes' | 'ai-insights';
@@ -264,6 +266,7 @@ export default function Contact360Page() {
   const apiContact = rawApiContact as ContactWithRelations | undefined;
 
   const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [actionSheetOpen, setActionSheetOpen] = useState(false);
   const [activityNote, setActivityNote] = useState('');
   const [expandedActivities, setExpandedActivities] = useState<Set<string>>(new Set());
   const [activityTypeFilter, setActivityTypeFilter] = useState<ActivityType | 'all'>('all');
@@ -899,8 +902,27 @@ export default function Contact360Page() {
             <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="currentColor"><path d="M19.95 21q-3.125 0-6.175-1.362-3.05-1.363-5.55-3.863-2.5-2.5-3.862-5.55Q3 7.175 3 4.05q0-.45.3-.75t.75-.3H8.1q.35 0 .625.238.275.237.325.562l.65 3.5q.05.4-.025.675-.075.275-.275.475L6.65 11.2q.7 1.3 1.65 2.475.95 1.175 2.1 2.175l2.65-2.65q.225-.225.525-.325.3-.1.625-.025l3.3.7q.35.1.563.363.212.262.212.587v4.05q0 .45-.3.75t-.75.3Z" /></svg>
             Log Call
           </button>
+          <MoreActionsButton onClick={() => setActionSheetOpen(true)} />
         </div>
       </div>
+
+      <EntityActionSheet
+        open={actionSheetOpen}
+        onOpenChange={setActionSheetOpen}
+        entity={{
+          type: 'contact',
+          id: contact.id,
+          title: `${contact.firstName} ${contact.lastName}`,
+          subtitle: contact.company || undefined,
+          icon: 'contacts',
+          url: `/contacts/${contact.id}`,
+        }}
+        extraActions={[
+          { label: 'Merge Duplicate', icon: 'merge', onClick: () => {} },
+          { label: 'Archive', icon: 'archive', onClick: () => {} },
+          { label: 'Delete', icon: 'delete', onClick: () => {}, destructive: true },
+        ]}
+      />
 
       {/* Main 3-column grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">

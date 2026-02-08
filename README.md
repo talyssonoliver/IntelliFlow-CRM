@@ -63,6 +63,7 @@ See `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv` for details.
 - `VALIDATION.md`
 - `PLANNING_ANALYSIS.md`
 - `CLAUDE.md`
+- `docs/company/product/feature-matrix.md`
 - `docs/architecture/`
 - Sprint 0 run report: `artifacts/sprint0/codex-run/report.md`
 

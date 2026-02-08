@@ -16,6 +16,8 @@ import {
   InMemoryEventBus,
   MockAIService,
   InMemoryCache,
+  GuardrailsAIService,
+  DurableAuditLogAdapter,
 } from '@intelliflow/adapters';
 import { TicketService } from './services/TicketService';
 import { AnalyticsService } from './services/AnalyticsService';
@@ -94,8 +96,25 @@ const createAdapters = (prismaClient: PrismaClient) => {
 
   // External services
   const eventBus = new InMemoryEventBus();
-  const aiService = new MockAIService();
+  const baseAIService = new MockAIService();
   const cache = new InMemoryCache();
+
+  // IFC-125: Wrap AI service with guardrails + audit logging
+  const auditSigningKey = Buffer.from(
+    process.env.AI_AUDIT_SIGNING_KEY || 'dev-signing-key-change-in-production',
+    'utf-8'
+  );
+  const auditLogAdapter = new DurableAuditLogAdapter(
+    prismaClient as any,
+    auditSigningKey,
+    { encryptPII: !!process.env.AI_AUDIT_ENCRYPTION_KEY }
+  );
+  const aiService = new GuardrailsAIService(baseAIService, auditLogAdapter, {
+    userId: 'system',
+    tenantId: process.env.DEFAULT_TENANT_ID || 'default',
+    enableBiasDetection: true,
+    enableLogging: true,
+  });
 
   return {
     leadRepository,

@@ -43,6 +43,7 @@ model Tenant {
   chainVersions        ChainVersion[]
   domainEvents         DomainEvent[]
   aiOutputReviews      AIOutputReview[]
+  experiments          Experiment[]
 
   @@index([slug])
   @@index([status])
@@ -134,9 +135,10 @@ model Lead {
   aiScores      AIScore[]
   aiInsight     LeadAIInsight?
   tasks         Task[]
-  activities    LeadActivity[]
-  notes         LeadNote[]
-  files         LeadFile[]
+  activities              LeadActivity[]
+  notes                   LeadNote[]
+  files                   LeadFile[]
+  experimentAssignments   ExperimentAssignment[]
 
   // AI Embedding for semantic search
   embedding     Unsupported("vector(1536)")?
@@ -320,9 +322,15 @@ model Account {
   contacts      Contact[]
   opportunities Opportunity[]
 
+  // Hierarchy: parent/child account relationships
+  parentAccountId  String?
+  parentAccount    Account?  @relation("AccountHierarchy", fields: [parentAccountId], references: [id], onDelete: SetNull)
+  childAccounts    Account[] @relation("AccountHierarchy")
+
   @@index([name])
   @@index([ownerId])
   @@index([tenantId])
+  @@index([parentAccountId])
   @@map("accounts")
 }
 
@@ -3499,4 +3507,109 @@ enum RolloutStrategy {
   IMMEDIATE
   PERCENTAGE
   AB_TEST
+}
+
+// ============================================
+// A/B EXPERIMENT FRAMEWORK (IFC-025)
+// ============================================
+
+/// Experiment status lifecycle
+enum ExperimentStatus {
+  DRAFT
+  RUNNING
+  PAUSED
+  COMPLETED
+  ARCHIVED
+}
+
+/// Experiment type for A/B testing
+enum ExperimentType {
+  AI_VS_MANUAL
+  MODEL_COMPARISON
+  THRESHOLD_TEST
+}
+
+/// A/B experiment for lead scoring and AI features (IFC-025)
+model Experiment {
+  id                String           @id @default(cuid())
+  name              String
+  description       String?
+  type              ExperimentType
+  status            ExperimentStatus @default(DRAFT)
+  hypothesis        String
+  controlVariant    String           @default("manual")
+  treatmentVariant  String           @default("ai")
+  trafficPercent    Int              @default(50)
+  startDate         DateTime?
+  endDate           DateTime?
+  minSampleSize     Int              @default(100)
+  significanceLevel Float            @default(0.05)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  // Multi-tenancy
+  tenantId          String
+  tenant            Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  assignments       ExperimentAssignment[]
+  result            ExperimentResult?
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([type])
+  @@map("experiments")
+}
+
+/// Variant assignment for leads in an experiment (IFC-025)
+model ExperimentAssignment {
+  id              String      @id @default(cuid())
+  experimentId    String
+  leadId          String
+  variant         String      // 'control' or 'treatment'
+  score           Int?
+  confidence      Float?
+  convertedAt     DateTime?
+  conversionValue Float?
+  createdAt       DateTime    @default(now())
+
+  // Relations
+  experiment      Experiment  @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  lead            Lead        @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@unique([experimentId, leadId])
+  @@index([experimentId])
+  @@index([leadId])
+  @@index([variant])
+  @@map("experiment_assignments")
+}
+
+/// Statistical analysis result for an experiment (IFC-025)
+model ExperimentResult {
+  id                      String     @id @default(cuid())
+  experimentId            String     @unique
+  controlSampleSize       Int
+  treatmentSampleSize     Int
+  controlMean             Float
+  treatmentMean           Float
+  controlStdDev           Float
+  treatmentStdDev         Float
+  tStatistic              Float
+  pValue                  Float
+  confidenceInterval      Json       // { lower: number, upper: number }
+  effectSize              Float
+  controlConversionRate   Float?
+  treatmentConversionRate Float?
+  chiSquareStatistic      Float?
+  chiSquarePValue         Float?
+  isSignificant           Boolean
+  winner                  String?    // 'control' or 'treatment'
+  recommendation          String?
+  analyzedAt              DateTime   @default(now())
+
+  // Relations
+  experiment              Experiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+
+  @@index([experimentId])
+  @@map("experiment_results")
 }

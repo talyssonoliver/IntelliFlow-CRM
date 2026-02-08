@@ -109,7 +109,7 @@
       "duration_minutes": 15
     }
   ],
-  "notes": "12/12 tasks DONE (100%). Last synced: 2026-02-06T23:40:55.370Z",
+  "notes": "12/12 tasks DONE (100%). Last synced: 2026-02-08T19:59:16.817Z",
   "section": "Core Domain & Documentation",
   "dependencies": {
     "all_satisfied": true,
@@ -150,6 +150,6 @@
       "spi": 1,
       "status": "on_track"
     },
-    "calculated_at": "2026-02-06T23:40:55.443Z"
+    "calculated_at": "2026-02-08T19:59:16.918Z"
   }
 }

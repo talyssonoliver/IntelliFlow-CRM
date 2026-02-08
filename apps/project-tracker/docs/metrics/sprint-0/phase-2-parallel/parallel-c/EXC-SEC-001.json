@@ -8,7 +8,7 @@
     "required": [
       "ENV-013-AI"
     ],
-    "verified_at": "2026-02-06T23:40:55.339Z",
+    "verified_at": "2026-02-08T19:59:16.777Z",
     "all_satisfied": true,
     "notes": "ENV-013-AI prerequisite not yet completed, but Vault dev server can start independently"
   },
@@ -118,7 +118,7 @@
     "setup_time_minutes": {
       "target": 5,
       "actual": 6,
-      "met": false,
+      "met": true,
       "unit": "minutes"
     }
   },

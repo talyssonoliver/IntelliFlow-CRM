@@ -8,7 +8,7 @@
 import { Queue, Worker, QueueEvents, Job, ConnectionOptions } from 'bullmq';
 import { getBullMQConnectionOptions } from './connection';
 import { QueueConfig, JobMetrics, JobEvent, QUEUE_NAMES, DEFAULT_QUEUE_CONFIGS } from './types';
-import { calculateBackoffDelay, BACKOFF_PRESETS } from './retry-strategy';
+import { calculateBackoffDelay, createBackoffStrategy, globalRetryBudget, BACKOFF_PRESETS } from './retry-strategy';
 import { JobMetricsCollector } from './metrics-collector';
 
 // ============================================================================
@@ -193,14 +193,14 @@ export function createAIScoringQueue(connection?: ConnectionOptions): Queue {
 /**
  * Create the Email Notifications queue
  */
-export function createEmailNotificationsQueue(connection?: ConnectionOptions): Queue {
+function createEmailNotificationsQueue(connection?: ConnectionOptions): Queue {
   return queueRegistry.getOrCreateQueue(QUEUE_NAMES.EMAIL_NOTIFICATIONS, connection);
 }
 
 /**
  * Create the Webhook Delivery queue
  */
-export function createWebhookDeliveryQueue(connection?: ConnectionOptions): Queue {
+function createWebhookDeliveryQueue(connection?: ConnectionOptions): Queue {
   return queueRegistry.getOrCreateQueue(QUEUE_NAMES.WEBHOOK_DELIVERY, connection);
 }
 
@@ -211,6 +211,9 @@ export function createWebhookDeliveryQueue(connection?: ConnectionOptions): Queu
 /**
  * Add a job to the AI scoring queue
  */
+/** Default backoff strategy for worker processing using platform retry utilities */
+export const defaultBackoffStrategy = createBackoffStrategy(BACKOFF_PRESETS.standard);
+
 export async function enqueueAIScoring(
   leadId: string,
   userId: string,
@@ -219,6 +222,11 @@ export async function enqueueAIScoring(
     delay?: number;
   }
 ): Promise<Job> {
+  // Check global retry budget before enqueuing
+  if (!globalRetryBudget.canRetry(QUEUE_NAMES.AI_SCORING)) {
+    throw new Error('Retry budget exhausted for AI scoring queue — too many retries in the current window');
+  }
+
   const queue = createAIScoringQueue();
 
   const priorityMap = {
@@ -291,3 +299,15 @@ export async function resumeQueue(queueName: string): Promise<void> {
 export async function shutdownAllQueues(): Promise<void> {
   await queueRegistry.shutdown();
 }
+
+
+
+
+
+
+
+
+
+
+
+

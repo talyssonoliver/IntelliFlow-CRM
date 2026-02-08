@@ -349,7 +349,7 @@ export async function getSessionOutput(
 /**
  * List all session files (for history)
  */
-export async function listSessions(): Promise<string[]> {
+async function listSessions(): Promise<string[]> {
   const statusDir = getStatusDir();
   if (!existsSync(statusDir)) {
     return [];
@@ -359,3 +359,5 @@ export async function listSessions(): Promise<string[]> {
   const files = await readdir(statusDir);
   return files.filter((f) => f.endsWith('.json')).map((f) => f.replace('.json', ''));
 }
+
+

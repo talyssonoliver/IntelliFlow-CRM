@@ -94,7 +94,7 @@ function getRepoRoot(): string {
 /**
  * Get the path to Sprint_plan.csv (local path for this app)
  */
-export function getCsvPath(): string {
+function getCsvPath(): string {
   return join(process.cwd(), 'docs', 'metrics', '_global', 'Sprint_plan.csv');
 }
 
@@ -104,7 +104,7 @@ export async function loadTasks(): Promise<TaskRecord[]> {
   return _loadTasks(getRepoRoot());
 }
 
-export async function saveTasks(tasks: TaskRecord[]): Promise<void> {
+async function saveTasks(tasks: TaskRecord[]): Promise<void> {
   return _saveTasks(tasks, getRepoRoot());
 }
 
@@ -126,7 +126,7 @@ export async function updateTaskArtifacts(
   return _updateTaskArtifacts(taskId, artifacts, getRepoRoot());
 }
 
-export async function startSession(
+async function startSession(
   taskId: string,
   session: WorkflowSession,
   options: WorkflowOptions = {}
@@ -134,7 +134,7 @@ export async function startSession(
   return _startSession(taskId, session, options, getRepoRoot());
 }
 
-export async function completeSession(
+async function completeSession(
   taskId: string,
   session: WorkflowSession,
   success: boolean,
@@ -144,9 +144,17 @@ export async function completeSession(
   return _completeSession(taskId, session, success, artifacts, verdict, getRepoRoot());
 }
 
-export function checkArtifactsExist(
+function checkArtifactsExist(
   taskId: string,
   session: WorkflowSession
 ): { exists: boolean; missing: string[] } {
   return _checkArtifactsExist(taskId, session, getRepoRoot());
 }
+
+
+
+
+
+
+
+

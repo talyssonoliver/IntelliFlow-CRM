@@ -10,7 +10,7 @@
  */
 
 import { PageHeader } from '@/components/shared/page-header';
-import { BillingPortal } from '@/components/billing/billing-portal';
+import { BillingPortal } from '@/components/billing';
 
 export default function BillingPage() {
   return (

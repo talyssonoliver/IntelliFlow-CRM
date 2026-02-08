@@ -180,6 +180,7 @@ export const PINNABLE_ENTITY_TYPES = [
   'contact',
   'account',
   'opportunity',
+  'ticket',
   'document',
   'report',
   'list',

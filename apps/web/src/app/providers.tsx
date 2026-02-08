@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from '@ta
 import { httpBatchLink, splitLink, createWSClient, wsLink } from '@trpc/client';
 import { useState, useCallback, useRef } from 'react';
 import { trpc } from '@/lib/trpc';
-import { AuthProvider } from '@/lib/auth/AuthContext';
+import { AuthProvider } from '@/lib/auth';
 import { RemindersProvider } from '@/lib/cases/reminders-context';
 
 /**

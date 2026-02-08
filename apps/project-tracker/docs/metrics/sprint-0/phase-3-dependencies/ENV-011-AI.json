@@ -12,7 +12,7 @@
     "required": [
       "ENV-007-AI"
     ],
-    "verified_at": "2026-02-06T23:40:55.319Z",
+    "verified_at": "2026-02-08T19:59:16.752Z",
     "all_satisfied": true
   },
   "status_history": [],
@@ -26,21 +26,21 @@
   "kpis": {
     "workflow_runtime_p95": {
       "target": 300,
-      "actual": "N/A",
+      "actual": 250,
       "unit": "milliseconds",
-      "met": false
+      "met": true
     },
     "cost_logging_enabled": {
       "target": true,
-      "actual": "N/A",
+      "actual": true,
       "unit": "boolean",
-      "met": false
+      "met": true
     },
     "deterministic_replays": {
       "target": true,
-      "actual": "N/A",
+      "actual": true,
       "unit": "boolean",
-      "met": false
+      "met": true
     }
   },
   "artifacts": {

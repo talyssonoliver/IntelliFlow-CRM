@@ -691,7 +691,7 @@ describe('AuthContext Supplementary - Login Result Processing', () => {
   });
 
   it('handles error during login with non-Error value', () => {
-    const error = 'string error';
+    const error: unknown = 'string error';
     const message = error instanceof Error ? error.message : 'Login failed';
     setState((prev) => ({
       ...prev,

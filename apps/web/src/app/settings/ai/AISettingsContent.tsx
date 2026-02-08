@@ -33,7 +33,7 @@ import {
   DialogTitle,
 } from '@intelliflow/ui';
 import type { ChainType, ChainVersionStatus } from '@intelliflow/domain';
-import type { ChainVersionSummary } from '@intelliflow/validators';
+import type { ChainVersionSummary, CreateChainVersionInput, UpdateChainVersionInput } from '@intelliflow/validators';
 import { useChainVersions, useVersionAudit } from './hooks';
 import {
   ChainVersionsDashboard,
@@ -41,9 +41,11 @@ import {
   ZepBudgetGauge,
   RollbackConfirmDialog,
   VersionAuditLog,
+  ChainVersionEditor,
+  VersionComparisonView,
 } from './components';
 
-type TabValue = 'overview' | 'versions' | 'memory' | 'audit';
+type TabValue = 'overview' | 'versions' | 'compare' | 'memory' | 'audit';
 
 export default function AISettingsContent() {
   const router = useRouter();
@@ -62,6 +64,8 @@ export default function AISettingsContent() {
   const [deprecateDialogOpen, setDeprecateDialogOpen] = useState(false);
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
   const [rollbackDialogOpen, setRollbackDialogOpen] = useState(false);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editingVersion, setEditingVersion] = useState<ChainVersionSummary | null>(null);
   const [actionVersion, setActionVersion] = useState<ChainVersionSummary | null>(null);
 
   // Hooks
@@ -71,10 +75,15 @@ export default function AISettingsContent() {
     isLoading,
     isLoadingActive,
     error,
+    createVersion,
+    updateVersion,
     activateVersion,
     deprecateVersion,
     archiveVersion,
     rollbackVersion,
+    compareVersions,
+    isCreating,
+    isUpdating,
     isActivating,
     isDeprecating,
     isArchiving,
@@ -154,6 +163,14 @@ export default function AISettingsContent() {
     setActionVersion(null);
   }, [actionVersion, rollbackVersion]);
 
+  const handleCreateVersion = useCallback(async (input: CreateChainVersionInput) => {
+    await createVersion(input);
+  }, [createVersion]);
+
+  const handleUpdateVersion = useCallback(async (id: string, input: UpdateChainVersionInput) => {
+    await updateVersion(id, input);
+  }, [updateVersion]);
+
   // Check for auth errors
   const isAuthError = error?.message?.toLowerCase().includes('authentication') ||
     error?.message?.toLowerCase().includes('unauthorized');
@@ -231,6 +248,7 @@ export default function AISettingsContent() {
           <TabsList className="mb-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="versions">Versions</TabsTrigger>
+            <TabsTrigger value="compare">Compare</TabsTrigger>
             <TabsTrigger value="memory">Memory</TabsTrigger>
             <TabsTrigger value="audit">Audit Log</TabsTrigger>
           </TabsList>
@@ -275,6 +293,18 @@ export default function AISettingsContent() {
 
           {/* Versions Tab */}
           <TabsContent value="versions">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">All Versions</h2>
+              <Button
+                onClick={() => {
+                  setEditingVersion(null);
+                  setEditorOpen(true);
+                }}
+                size="sm"
+              >
+                Create Version
+              </Button>
+            </div>
             <ChainVersionsTable
               versions={versions ?? []}
               isLoading={isLoading}
@@ -288,6 +318,15 @@ export default function AISettingsContent() {
               onChainTypeChange={setSelectedChainType}
               onStatusChange={setSelectedStatus}
               isActioning={isActivating || isDeprecating || isArchiving || isRollingBack}
+            />
+          </TabsContent>
+
+          {/* Compare Tab */}
+          <TabsContent value="compare">
+            <VersionComparisonView
+              versions={versions ?? []}
+              onCompare={compareVersions}
+              isLoading={isLoading}
             />
           </TabsContent>
 
@@ -409,6 +448,19 @@ export default function AISettingsContent() {
           targetVersion={actionVersion}
           onConfirm={handleRollbackConfirm}
           isLoading={isRollingBack}
+        />
+
+        {/* Version Editor Dialog */}
+        <ChainVersionEditor
+          open={editorOpen}
+          onOpenChange={(open) => {
+            setEditorOpen(open);
+            if (!open) setEditingVersion(null);
+          }}
+          existingDraft={editingVersion}
+          onCreate={handleCreateVersion}
+          onUpdate={handleUpdateVersion}
+          isLoading={isCreating || isUpdating}
         />
       </div>
     </div>

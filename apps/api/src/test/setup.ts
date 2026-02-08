@@ -9,11 +9,27 @@
  */
 
 import { beforeEach, afterAll, vi } from 'vitest';
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient, Prisma as PrismaNamespace } from '@prisma/client';
 import { Prisma } from '@prisma/client';
 import type { DeepMockProxy } from 'vitest-mock-extended';
 import { mockDeep, mockReset } from 'vitest-mock-extended';
 import type { BaseContext } from '../context';
+
+/**
+ * Create a delayed result that satisfies Prisma's PrismaPromise type.
+ * Useful for testing slow query detection branches.
+ *
+ * PrismaPromise extends Promise with [Symbol.toStringTag]: 'PrismaPromise'.
+ * vitest-mock-extended's mockDeep handles this for mockResolvedValue,
+ * but mockImplementation needs a manual wrapper for delayed returns.
+ */
+export function delayedPrismaResult<T>(value: T, delayMs: number): PrismaNamespace.PrismaPromise<T> {
+  const promise = new Promise<T>((resolve) => {
+    setTimeout(() => resolve(value), delayMs);
+  });
+  Object.defineProperty(promise, Symbol.toStringTag, { value: 'PrismaPromise' });
+  return promise as PrismaNamespace.PrismaPromise<T>;
+}
 
 /**
  * Mock Prisma client
@@ -280,6 +296,7 @@ export const mockAccount = {
   revenue: new Prisma.Decimal(1000000),
   employees: 50,
   ownerId: TEST_UUIDS.user1,
+  parentAccountId: null,
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
 };

@@ -259,3 +259,4 @@ export function formatSyncResult(result: SyncResult): string {
 
   return lines.join('\n');
 }
+

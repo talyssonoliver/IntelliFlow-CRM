@@ -228,7 +228,7 @@ export default function ContextPackStatus({ data, compact = false }: ContextPack
 }
 
 // Compact inline indicator for task cards
-export function ContextStatusIndicator({
+function ContextStatusIndicator({
   packStatus,
   ackStatus,
 }: {
@@ -251,3 +251,4 @@ export function ContextStatusIndicator({
     </div>
   );
 }
+

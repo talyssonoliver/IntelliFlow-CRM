@@ -1,7 +1,7 @@
 /**
  * Resilience patterns for fault tolerance
  *
- * Exports circuit breaker and related utilities for building
+ * Exports circuit breaker and retry policies for building
  * resilient external service calls.
  *
  * @module @intelliflow/platform/resilience
@@ -27,3 +27,32 @@ export {
   type CircuitBreakerEventListener,
   type FallbackFn,
 } from './circuit-breaker';
+
+export {
+  // Retry policy
+  RetryPolicy,
+  withRetry,
+  createRetryPolicy,
+  Retry,
+  RetryPolicies,
+  // Error classes
+  RetryableError,
+  RateLimitError,
+  TimeoutError,
+  NetworkError,
+  MaxRetriesExceededError,
+  // Utilities
+  isRetryableError,
+  calculateBackoff,
+  retryPolicyConfigSchema,
+  DEFAULT_RETRY_CONFIG,
+  // Types
+  type RetryPolicyConfig,
+  type RetryContext,
+  type RetryEvent,
+  type RetryEventListener,
+  type RetryOptions,
+  type ResilientCallOptions,
+} from './retry-policy';
+
+export { resilientCall } from './resilient-call';

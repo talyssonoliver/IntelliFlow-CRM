@@ -29,6 +29,8 @@ export interface EntityHeaderProps {
   badges?: EntityBadge[];
   /** Action buttons */
   actions?: PageAction[];
+  /** Content rendered after action buttons (e.g., MoreActionsButton) */
+  endContent?: React.ReactNode;
   /** Additional content below title (e.g., metadata, tags) */
   children?: React.ReactNode;
   /** Additional CSS classes */
@@ -167,6 +169,7 @@ export function EntityHeader({
   entityId,
   badges,
   actions,
+  endContent,
   children,
   className,
 }: EntityHeaderProps) {
@@ -214,11 +217,12 @@ export function EntityHeader({
       </div>
 
       {/* Right side: Actions */}
-      {actions && actions.length > 0 && (
+      {(actions && actions.length > 0 || endContent) && (
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap flex-shrink-0">
-          {actions.map((action, index) => (
+          {actions?.map((action, index) => (
             <ActionButton key={action.label + index} action={action} />
           ))}
+          {endContent}
         </div>
       )}
     </div>

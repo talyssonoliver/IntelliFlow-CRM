@@ -53,3 +53,13 @@ export * from './cookie-consent';
 
 // AI Intelligence Components (IFC-095)
 export * from './intelligence';
+
+// Status & State Components
+export * from './status-badge';
+export * from './empty-state';
+
+// Score Components
+export * from './score';
+
+// Icon Mapping (Material Symbols reference)
+export { ICON_MAPPING } from '../lib/icon-mapping';

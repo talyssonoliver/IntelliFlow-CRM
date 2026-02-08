@@ -78,7 +78,7 @@ describe('AppHeader', () => {
       expect(screen.getByRole('link', { name: /deals/i })).toBeInTheDocument();
       expect(screen.getByRole('link', { name: /tickets/i })).toBeInTheDocument();
       expect(screen.getByRole('link', { name: /documents/i })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: /agent actions/i })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /ai & agents/i })).toBeInTheDocument();
       expect(screen.getByRole('link', { name: /reports/i })).toBeInTheDocument();
     });
 
@@ -111,7 +111,7 @@ describe('AppHeader', () => {
       expect(screen.getByRole('link', { name: /deals/i })).toHaveAttribute('href', '/deals');
       expect(screen.getByRole('link', { name: /tickets/i })).toHaveAttribute('href', '/tickets');
       expect(screen.getByRole('link', { name: /documents/i })).toHaveAttribute('href', '/documents');
-      expect(screen.getByRole('link', { name: /agent actions/i })).toHaveAttribute('href', '/agent-approvals');
+      expect(screen.getByRole('link', { name: /ai & agents/i })).toHaveAttribute('href', '/agent-approvals');
       expect(screen.getByRole('link', { name: /reports/i })).toHaveAttribute('href', '/analytics');
     });
 

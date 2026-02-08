@@ -31,7 +31,7 @@ const mocks = vi.hoisted(() => {
     notificationCallbacks,
     mockStart: vi.fn(),
     mockStop: vi.fn(),
-    mockGetPendingReminders: vi.fn(() => []),
+    mockGetPendingReminders: vi.fn((): any[] => []),
     mockCreateFromTimelineEvents: vi.fn(() => []),
     mockSnoozeReminder: vi.fn(),
     mockDismissReminder: vi.fn(),

@@ -354,7 +354,7 @@ export function formatDuration(ms: number): string {
 /**
  * Get execution runs for a date range
  */
-export function getRunsByDateRange(
+function getRunsByDateRange(
   projectRoot: string,
   startDate: Date,
   endDate: Date
@@ -422,3 +422,4 @@ export function getSprintExecutionStats(
     trend,
   };
 }
+

@@ -127,6 +127,68 @@ export type {
   PredictionType,
 } from './jobs';
 
+// Additional chain exports (IFC-029, IFC-039, IFC-095)
+export {
+  AutoResponseChain,
+  SentimentAnalysisChain,
+  sentimentChain,
+  sentimentInputSchema,
+  sentimentResultSchema,
+  SENTIMENT_LABELS,
+  EMOTION_LABELS,
+  URGENCY_LEVELS,
+  ChurnRiskChain,
+  churnRiskChain,
+  churnRiskInputSchema,
+  churnRiskResultSchema,
+  riskFactorSchema,
+  RISK_LEVEL_CONFIG,
+  RAGContextChain,
+  ragContextChain,
+  createRAGContextChain,
+  RAG_SOURCES,
+  ragContextInputSchema,
+  ragContextResultSchema,
+  contextItemSchema,
+  chainLeadInputSchema,
+} from './chains';
+export type {
+  AutoResponseInput,
+  AutoResponseOutput,
+  ValidationResult,
+  SentimentInput,
+  SentimentResult,
+  SentimentLabel,
+  EmotionLabel,
+  UrgencyLevel,
+  ChurnRiskInput,
+  ChurnRiskResult,
+  RiskFactor,
+  ChurnRiskLevel,
+  RAGSource,
+  RAGContextInput,
+  RAGContextResult,
+  ContextItem,
+  IRetrievalService,
+  ChainLeadInput,
+  ChainScoringResult,
+} from './chains';
+
+// Analytics module (IFC-024, IFC-025)
+export * from './analytics';
+
+// Relevance configuration (IFC-155)
+export * from './config';
+
+// Prompt templates
+export * from './prompts';
+
+// Shared AI types
+export * from './types';
+
+// Chain versioning (IFC-086)
+export * from './versioning';
+
 /**
  * Initialize the AI Worker (legacy mode - library only)
  * @deprecated Use createAIWorker() for queue-based processing

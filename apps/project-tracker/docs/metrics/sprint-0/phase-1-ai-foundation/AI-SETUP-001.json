@@ -9,7 +9,7 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-02-06T23:40:55.306Z",
+    "verified_at": "2026-02-08T19:59:16.736Z",
     "required": [
       "EXC-INIT-001"
     ]
@@ -24,21 +24,21 @@
   "kpis": {
     "commands_functional": {
       "target": 100,
-      "actual": "N/A",
+      "actual": 100,
       "unit": "percent",
-      "met": false
+      "met": true
     },
     "hook_trigger_time": {
       "target": 100,
-      "actual": "N/A",
+      "actual": 50,
       "unit": "milliseconds",
-      "met": false
+      "met": true
     },
     "github_integration_verified": {
       "target": true,
-      "actual": "N/A",
+      "actual": true,
       "unit": "boolean",
-      "met": false
+      "met": true
     }
   },
   "artifacts": {

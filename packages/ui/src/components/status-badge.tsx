@@ -43,7 +43,7 @@ export interface StatusConfig {
   variant: 'default' | 'muted' | 'success' | 'warning' | 'destructive' | 'info';
 }
 
-export type StatusType = 'lead' | 'document' | 'ticket' | 'deal' | 'task' | 'custom';
+export type StatusType = 'lead' | 'document' | 'ticket' | 'deal' | 'task' | 'review' | 'custom';
 
 // ============================================
 // Built-in Status Configurations
@@ -97,12 +97,22 @@ const TASK_STATUS_CONFIG: Record<string, StatusConfig> = {
   CANCELLED: { label: 'Cancelled', icon: 'cancel', variant: 'muted' },
 };
 
+const REVIEW_STATUS_CONFIG: Record<string, StatusConfig> = {
+  PENDING: { label: 'Pending', icon: 'hourglass_empty', variant: 'muted' },
+  IN_REVIEW: { label: 'In Review', icon: 'rate_review', variant: 'info' },
+  APPROVED: { label: 'Approved', icon: 'check_circle', variant: 'success' },
+  REJECTED: { label: 'Rejected', icon: 'cancel', variant: 'destructive' },
+  ESCALATED: { label: 'Escalated', icon: 'arrow_upward', variant: 'warning' },
+  EXPIRED: { label: 'Expired', icon: 'timer_off', variant: 'muted' },
+};
+
 const STATUS_CONFIGS: Record<StatusType, Record<string, StatusConfig>> = {
   lead: LEAD_STATUS_CONFIG,
   document: DOCUMENT_STATUS_CONFIG,
   ticket: TICKET_STATUS_CONFIG,
   deal: DEAL_STATUS_CONFIG,
   task: TASK_STATUS_CONFIG,
+  review: REVIEW_STATUS_CONFIG,
   custom: {},
 };
 
@@ -177,4 +187,5 @@ export {
   TICKET_STATUS_CONFIG,
   DEAL_STATUS_CONFIG,
   TASK_STATUS_CONFIG,
+  REVIEW_STATUS_CONFIG,
 };

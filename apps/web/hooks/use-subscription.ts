@@ -454,6 +454,146 @@ export function useActivitySubscription(options: ActivitySubscriptionOptions = {
   const { entityType, entityId, onActivity } = options;
   const [activities, setActivities] = useState<ActivityRecord[]>([]);
 
+  const appendActivity = useCallback(
+    (activity: ActivityRecord) => {
+      setActivities((prev) => [activity, ...prev].slice(0, 50));
+      onActivity?.(activity);
+    },
+    [onActivity]
+  );
+
+  // Use tRPC subscriptions by default to avoid opening legacy Supabase channels.
+  if (SUBSCRIPTION_BACKEND === 'trpc') {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const leadScored = useTrpcLeadScoredSubscription({
+      onData: (event) => {
+        if (entityType === 'lead' && entityId && event.leadId !== entityId) {
+          return;
+        }
+
+        const timestamp =
+          typeof event.timestamp === 'string'
+            ? event.timestamp
+            : event.timestamp.toISOString();
+
+        appendActivity({
+          id: `lead-scored-${event.leadId}-${timestamp}`,
+          type: 'SCORE_UPDATE',
+          title: `Lead scored: ${event.score}`,
+          description: `Confidence ${(event.confidence * 100).toFixed(0)}%`,
+          timestamp,
+          dateLabel: null,
+          opportunityId: null,
+          userId: null,
+          agentName: 'AI Scoring',
+          agentStatus: null,
+        });
+      },
+    });
+
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const taskAssigned = useTrpcTaskAssignedSubscription({
+      onData: (event) => {
+        appendActivity({
+          id: `task-assigned-${event.taskId}-${Date.now()}`,
+          type: 'TASK',
+          title: `Task assigned: ${event.title}`,
+          description: null,
+          timestamp: new Date().toISOString(),
+          dateLabel: null,
+          opportunityId: null,
+          userId: event.assigneeId,
+          agentName: null,
+          agentStatus: null,
+        });
+      },
+    });
+
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const systemEvent = useTrpcSystemEventSubscription({
+      onData: (event) => {
+        const timestamp =
+          typeof event.timestamp === 'string'
+            ? event.timestamp
+            : event.timestamp.toISOString();
+
+        appendActivity({
+          id: `system-event-${event.type}-${timestamp}`,
+          type: 'SYSTEM',
+          title: event.message,
+          description: `System ${event.type}`,
+          timestamp,
+          dateLabel: null,
+          opportunityId: null,
+          userId: null,
+          agentName: 'System',
+          agentStatus: event.type,
+        });
+      },
+    });
+
+    const leadScoredStatus = leadScored?.status ?? 'disconnected';
+    const taskAssignedStatus = taskAssigned?.status ?? 'disconnected';
+    const systemEventStatus = systemEvent?.status ?? 'disconnected';
+
+    const statuses: ConnectionStatus[] = [
+      leadScoredStatus,
+      taskAssignedStatus,
+      systemEventStatus,
+    ];
+
+    const status: ConnectionStatus = statuses.includes('error')
+      ? 'error'
+      : statuses.includes('connected')
+        ? 'connected'
+        : statuses.includes('connecting')
+          ? 'connecting'
+          : 'disconnected';
+
+    const lastMessageAtCandidates = [
+      leadScored?.metrics?.lastMessageAt ?? null,
+      taskAssigned?.metrics?.lastMessageAt ?? null,
+      systemEvent?.metrics?.lastMessageAt ?? null,
+    ].filter((value): value is number => typeof value === 'number');
+
+    const latencySamples = [
+      leadScored?.metrics?.averageLatency ?? 0,
+      taskAssigned?.metrics?.averageLatency ?? 0,
+      systemEvent?.metrics?.averageLatency ?? 0,
+    ].filter((value) => value > 0);
+
+    const metrics: SupabaseSubscriptionMetrics = {
+      messagesReceived:
+        (leadScored?.metrics?.messagesReceived ?? 0) +
+        (taskAssigned?.metrics?.messagesReceived ?? 0) +
+        (systemEvent?.metrics?.messagesReceived ?? 0),
+      averageLatency:
+        latencySamples.length > 0
+          ? Math.round(latencySamples.reduce((sum, value) => sum + value, 0) / latencySamples.length)
+          : 0,
+      lastMessageAt:
+        lastMessageAtCandidates.length > 0 ? Math.max(...lastMessageAtCandidates) : null,
+      connectionUptime:
+        (leadScored?.metrics?.connectionUptime ?? 0) +
+        (taskAssigned?.metrics?.connectionUptime ?? 0) +
+        (systemEvent?.metrics?.connectionUptime ?? 0),
+      errors:
+        (leadScored?.metrics?.errors ?? 0) +
+        (taskAssigned?.metrics?.errors ?? 0) +
+        (systemEvent?.metrics?.errors ?? 0),
+      reconnectCount: 0, // tRPC hooks already handle reconnects internally
+    };
+
+    return {
+      status,
+      metrics,
+      subscribe: () => {},
+      unsubscribe: async () => {},
+      isConnected: status === 'connected',
+      activities,
+    };
+  }
+
   // Filter by opportunityId if entityType is 'opportunity'
   const filter =
     entityType === 'opportunity' && entityId
@@ -466,8 +606,7 @@ export function useActivitySubscription(options: ActivitySubscriptionOptions = {
     filter,
     onData: (payload) => {
       if (payload.new) {
-        setActivities((prev) => [payload.new!, ...prev].slice(0, 50));
-        onActivity?.(payload.new);
+        appendActivity(payload.new);
       }
     },
   });

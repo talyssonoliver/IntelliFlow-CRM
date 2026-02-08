@@ -13,6 +13,12 @@ import { prismaMock, createPublicContext } from '../../../test/setup';
 // Mock correlation module
 vi.mock('../../../tracing/correlation', () => ({
   getCorrelationId: vi.fn(() => 'test-correlation-id'),
+  initializeRequestContext: vi.fn(() => ({
+    correlationId: 'test-correlation-id',
+    requestId: 'test-request-id',
+    userId: undefined,
+  })),
+  withCorrelationContext: vi.fn((_ctx: unknown, fn: () => unknown) => fn()),
 }));
 
 describe('Health Router', () => {

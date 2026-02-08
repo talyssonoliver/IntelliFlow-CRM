@@ -81,7 +81,7 @@ export default function StatusTracker() {
 
   if (error) {
     return (
-      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400">
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600">
         <div className="flex items-center gap-2">
           <Icon name="error" size="lg" />
           <span>Error: {error}</span>
@@ -113,9 +113,9 @@ export default function StatusTracker() {
       {/* Header with Refresh */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Icon name="monitoring" className="text-blue-400" size="xl" />
+          <Icon name="monitoring" className="text-blue-600" size="xl" />
           <div>
-            <h3 className="text-lg font-semibold text-white">Status Snapshot</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Status Snapshot</h3>
             {data?.lastUpdated && (
               <StaleIndicator
                 lastUpdated={data.lastUpdated}
@@ -174,12 +174,12 @@ export default function StatusTracker() {
       </div>
 
       {/* Progress Bar */}
-      <div className="bg-gray-700/30 rounded-lg p-4">
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-gray-400">Overall Progress</span>
-          <span className="text-sm font-medium text-white">{completionRate}%</span>
+          <span className="text-sm text-gray-500">Overall Progress</span>
+          <span className="text-sm font-medium text-gray-900">{completionRate}%</span>
         </div>
-        <div className="h-3 bg-gray-700 rounded-full overflow-hidden">
+        <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-500"
             style={{ width: `${completionRate}%` }}
@@ -189,8 +189,8 @@ export default function StatusTracker() {
 
       {/* Sprint Breakdown */}
       {data?.by_sprint && Object.keys(data.by_sprint).length > 0 && (
-        <div className="bg-gray-700/30 rounded-lg p-4">
-          <h4 className="text-sm font-medium text-gray-300 mb-3">By Sprint</h4>
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <h4 className="text-sm font-medium text-gray-700 mb-3">By Sprint</h4>
           <div className="space-y-2">
             {Object.entries(data.by_sprint)
               .sort(([a], [b]) => parseInt(a) - parseInt(b))
@@ -201,14 +201,14 @@ export default function StatusTracker() {
                   : 0;
                 return (
                   <div key={sprint} className="flex items-center gap-3">
-                    <span className="text-xs text-gray-400 w-16">Sprint {sprint}</span>
-                    <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <span className="text-xs text-gray-500 w-16">Sprint {sprint}</span>
+                    <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-blue-500"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <span className="text-xs text-gray-400 w-12 text-right">
+                    <span className="text-xs text-gray-500 w-12 text-right">
                       {stats.completed}/{stats.total}
                     </span>
                   </div>
@@ -220,17 +220,17 @@ export default function StatusTracker() {
 
       {/* Recent Completions */}
       {data?.recent_completions && data.recent_completions.length > 0 && (
-        <div className="bg-gray-700/30 rounded-lg p-4">
-          <h4 className="text-sm font-medium text-gray-300 mb-3">Recent Completions</h4>
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <h4 className="text-sm font-medium text-gray-700 mb-3">Recent Completions</h4>
           <div className="space-y-2">
             {data.recent_completions.slice(0, 5).map((item) => (
               <div
                 key={item.task_id}
                 className="flex items-center gap-3 text-sm"
               >
-                <Icon name="check_circle" className="text-green-400" size="base" />
-                <span className="font-mono text-blue-400">{item.task_id}</span>
-                <span className="text-gray-400 truncate flex-1">
+                <Icon name="check_circle" className="text-green-600" size="base" />
+                <span className="font-mono text-blue-600">{item.task_id}</span>
+                <span className="text-gray-500 truncate flex-1">
                   {item.description}
                 </span>
               </div>

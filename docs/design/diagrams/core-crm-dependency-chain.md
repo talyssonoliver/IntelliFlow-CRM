@@ -15,7 +15,7 @@ The **Core CRM** domain covers 6 primary entities: Lead, Contact, Account, Oppor
 | Contact | IFC-102 | IFC-017 | IFC-107 | MISSING | MISSING | ORPHAN |
 | Account | IFC-103 | IFC-017 | IFC-107 | MISSING | MISSING | ORPHAN |
 | Opportunity | IFC-104 | IFC-017 | IFC-107 | MISSING | PG-131* | PARTIAL |
-| Task | IFC-105 | IFC-017 | IFC-107 | MISSING | MISSING | ORPHAN |
+| Task | IFC-105 | IFC-017 | IFC-107 | IFC-187 | MISSING | PARTIAL |
 | Ticket | MISSING | MISSING | MISSING | MISSING | MISSING | ORPHAN |
 
 *PG-131 is Deal Forecast only, no list/detail page
@@ -114,7 +114,7 @@ The **Core CRM** domain covers 6 primary entities: Lead, Contact, Account, Oppor
     │  - lead.update  │  │  - contact.CRUD │  │  - account.CRUD │  │  - deal.CRUD    │  │  - task.CRUD    │
     │  - lead.delete  │  │                 │  │                 │  │  - forecast     │  │  - assign       │
     │                 │  │                 │  │                 │  │                 │  │                 │
-    │  COMPLETED ✅   │  │  CREATE: IFC-184│  │  COMPLETED ✅   │  │  COMPLETED ✅   │  │  CREATE: IFC-187│
+    │  COMPLETED ✅   │  │  CREATE: IFC-184│  │  COMPLETED ✅   │  │  COMPLETED ✅   │  │  COMPLETED ✅   │
     │  Sprint 6       │  │                 │  │                 │  │  Sprint 5       │  │                 │
     └────────┬────────┘  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘
              │                    │                    │                    │                    │
@@ -234,8 +234,8 @@ The **Core CRM** domain covers 6 primary entities: Lead, Contact, Account, Oppor
 | Account | No (router done ✅) | YES | Create PG-134 |
 | Opportunity | No (router done ✅) | YES | Create PG-135 |
 | Task | No (domain exists) | YES | Create IFC-187, PG-136 |
-| Ticket | No (domain done ✅) | YES | Create IFC-189, PG-137 |
+| Ticket | No (router done ✅) | YES | Create PG-137 |
 
-**Total New Tasks Required: 11**
-- 6 Backend (IFC-184 to IFC-189)
+**Total New Tasks Required: 10** (IFC-189 completed 2026-02-07)
+- 5 Backend (IFC-184 to IFC-188, IFC-189 ✅)
 - 5 Frontend (PG-133 to PG-137)

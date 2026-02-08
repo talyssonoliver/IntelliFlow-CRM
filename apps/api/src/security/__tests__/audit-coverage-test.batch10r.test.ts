@@ -961,8 +961,8 @@ describe('audit-coverage-test.ts source coverage - batch10r', () => {
       resetAuditLogger();
       const logger = new AuditLogger(prisma, { consoleLog: false });
 
-      const allCRMResources = ['lead', 'contact', 'account', 'opportunity', 'task', 'appointment'];
-      const allCRUDActions = ['CREATE', 'READ', 'UPDATE', 'DELETE'];
+      const allCRMResources = ['lead', 'contact', 'account', 'opportunity', 'task', 'appointment'] as const;
+      const allCRUDActions = ['CREATE', 'READ', 'UPDATE', 'DELETE'] as const;
 
       for (const resource of allCRMResources) {
         for (const action of allCRUDActions) {

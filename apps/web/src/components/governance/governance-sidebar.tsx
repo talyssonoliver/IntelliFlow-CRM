@@ -36,6 +36,12 @@ const governanceNavItems: GovernanceNavItem[] = [
     icon: 'description',
     description: 'Security & data policies',
   },
+  {
+    label: 'AI Review Queue',
+    href: '/agent-approvals/ai-review',
+    icon: 'rate_review',
+    description: 'Review AI outputs',
+  },
 ];
 
 export function GovernanceSidebar() {

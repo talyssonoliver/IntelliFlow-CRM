@@ -7,6 +7,7 @@ import {
   ContactRepository,
   OpportunityRepository,
   CreateAccountProps,
+  type AccountHierarchyRecord,
 } from '@intelliflow/domain';
 import { EventBusPort } from '../ports/external';
 import { PersistenceError, ValidationError, NotFoundError } from '../errors';
@@ -27,11 +28,32 @@ export const ACCOUNT_TIER_THRESHOLDS = {
 } as const;
 
 /**
- * Account hierarchy relationship
+ * Account hierarchy relationship (legacy — kept for backward compatibility)
  */
 export interface AccountHierarchy {
   parentAccountId?: string;
   childAccountIds: string[];
+}
+
+/**
+ * Hierarchy tree node for UI rendering
+ */
+export interface HierarchyNode {
+  id: string;
+  name: string;
+  industry?: string;
+  revenue?: number;
+  _count: { contacts: number; opportunities: number };
+  children: HierarchyNode[];
+}
+
+/**
+ * Hierarchy response for the getHierarchy endpoint
+ */
+export interface HierarchyResponse {
+  ancestors: Array<{ id: string; name: string }>;
+  current: HierarchyNode;
+  rootAccount: { id: string; name: string } | null;
 }
 
 /**
@@ -770,6 +792,88 @@ export class AccountService {
       activities: results,
       nextCursor: hasMore ? results[results.length - 1]?.createdAt.toISOString() : undefined,
     });
+  }
+
+  async getHierarchy(
+    accountId: string,
+    tenantId: string,
+    maxDepth: number = 5
+  ): Promise<Result<HierarchyResponse, DomainError>> {
+    const id = AccountId.create(accountId);
+    if (id.isFailure) return Result.fail(new ValidationError(id.error.message));
+
+    const rawRecord = await this.accountRepository.findWithChildren(id.value, maxDepth);
+    if (!rawRecord) return Result.fail(new NotFoundError(`Account not found: ${accountId}`));
+    if (rawRecord.tenantId !== tenantId) return Result.fail(new NotFoundError(`Account not found: ${accountId}`));
+
+    const ancestors = await this.accountRepository.findAncestors(id.value);
+    const ancestorList = ancestors.map((a) => ({ id: a.id.value, name: a.name }));
+
+    const mapToNode = (record: AccountHierarchyRecord): HierarchyNode => ({
+      id: record.id,
+      name: record.name,
+      industry: record.industry ?? undefined,
+      revenue: record.revenue ? Number(record.revenue) : undefined,
+      _count: record._count ?? { contacts: 0, opportunities: 0 },
+      children: (record.childAccounts ?? []).map(mapToNode),
+    });
+
+    const current = mapToNode(rawRecord);
+    const rootAccount = ancestorList.length > 0
+      ? ancestorList[ancestorList.length - 1]
+      : null;
+
+    return Result.ok({ ancestors: ancestorList, current, rootAccount });
+  }
+
+  async setParent(
+    accountId: string,
+    parentAccountId: string | null,
+    tenantId: string,
+    userId: string
+  ): Promise<Result<Account, DomainError>> {
+    const id = AccountId.create(accountId);
+    if (id.isFailure) return Result.fail(new ValidationError(id.error.message));
+
+    const account = await this.accountRepository.findById(id.value);
+    if (!account) return Result.fail(new NotFoundError(`Account not found: ${accountId}`));
+    if (account.tenantId !== tenantId) return Result.fail(new NotFoundError(`Account not found: ${accountId}`));
+
+    if (parentAccountId === null) {
+      account.removeParent(userId);
+      await this.accountRepository.save(account);
+      await this.publishEvents(account);
+      return Result.ok(account);
+    }
+
+    const parentId = AccountId.create(parentAccountId);
+    if (parentId.isFailure) return Result.fail(new ValidationError(parentId.error.message));
+
+    const parent = await this.accountRepository.findById(parentId.value);
+    if (!parent) return Result.fail(new NotFoundError(`Parent account not found: ${parentAccountId}`));
+    if (parent.tenantId !== tenantId) {
+      return Result.fail(new ValidationError('Cannot set parent from different tenant'));
+    }
+
+    // Cycle detection: walk ancestors of proposed parent
+    const parentAncestors = await this.accountRepository.findAncestors(parentId.value);
+    const ancestorIds = parentAncestors.map((a) => a.id.value);
+    if (ancestorIds.includes(accountId) || parentAccountId === accountId) {
+      return Result.fail(new ValidationError('Circular hierarchy detected'));
+    }
+
+    // Depth check: parent's depth + 1 (for this account) must not exceed 5
+    const parentDepth = await this.accountRepository.getHierarchyDepth(parentId.value);
+    if (parentDepth + 1 >= 5) {
+      return Result.fail(new ValidationError('Maximum hierarchy depth (5 levels) exceeded'));
+    }
+
+    const setResult = account.setParent(parentAccountId, userId);
+    if (setResult.isFailure) return Result.fail(setResult.error);
+
+    await this.accountRepository.save(account);
+    await this.publishEvents(account);
+    return Result.ok(account);
   }
 
   private async publishEvents(account: Account): Promise<void> {

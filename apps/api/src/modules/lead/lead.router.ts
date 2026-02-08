@@ -14,6 +14,7 @@ import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure, tenantProcedure } from '../../trpc';
 import { PhoneNumber } from '@intelliflow/domain';
+import { withTransactionOptions } from '@intelliflow/db';
 import {
   createLeadSchema,
   updateLeadSchema,
@@ -35,6 +36,7 @@ import {
   createTenantWhereClause,
   type TenantAwareContext
 } from '../../security/tenant-context';
+import { detectScoreBias, type LeadScoringBiasCheck } from '@intelliflow/adapters';
 
 /**
  * Helper to get lead service with null check
@@ -47,6 +49,60 @@ function getLeadService(ctx: Context) {
     });
   }
   return ctx.services.lead;
+}
+
+/**
+ * Run a lightweight bias check on recently scored leads.
+ * This keeps IFC-125 bias detection on an active runtime path.
+ */
+async function runBiasDetectionForScoredLeads(
+  tenantCtx: TenantAwareContext,
+  leadIds: string[] | undefined
+): Promise<void> {
+  if (!leadIds || leadIds.length === 0) return;
+
+  try {
+    const leads = await tenantCtx.prismaWithTenant.lead.findMany({
+      where: { id: { in: leadIds } },
+      select: {
+        id: true,
+        score: true,
+        email: true,
+        title: true,
+        company: true,
+        source: true,
+      },
+    });
+
+    if (leads.length === 0) return;
+
+    const samples: LeadScoringBiasCheck[] = leads.map((lead) => ({
+      leadId: lead.id,
+      score: lead.score ?? 0,
+      metadata: {
+        emailDomain: lead.email,
+        jobTitle: lead.title ?? undefined,
+        company: lead.company ?? undefined,
+        source: lead.source ?? undefined,
+      },
+    }));
+
+    const { biasDetected, violations } = detectScoreBias(samples);
+    if (biasDetected) {
+      console.warn('[BIAS] Lead scoring variance detected', {
+        leadCount: samples.length,
+        violations: violations.map((violation) => ({
+          segment: violation.segment,
+          metric: violation.metric,
+          severity: violation.severity,
+          actual: violation.actual,
+          threshold: violation.threshold,
+        })),
+      });
+    }
+  } catch (error) {
+    console.warn('[BIAS] Failed to run lead scoring bias check', error);
+  }
 }
 
 export const leadRouter = createTRPCRouter({
@@ -511,9 +567,14 @@ export const leadRouter = createTRPCRouter({
   bulkScore: tenantProcedure
     .input(z.object({ leadIds: z.array(idSchema) }))
     .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
       const leadService = getLeadService(ctx);
 
       const result = await leadService.bulkScoreLeads(input.leadIds);
+
+      // IFC-125: run bias detection on scored leads in active request flow.
+      await runBiasDetectionForScoredLeads(typedCtx, result.successful);
+
       return result;
     }),
 

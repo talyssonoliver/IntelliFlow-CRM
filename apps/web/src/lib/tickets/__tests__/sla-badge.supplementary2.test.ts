@@ -230,35 +230,35 @@ describe('sla-badge logic supplementary2', () => {
 
     it('pulse is enabled for BREACHED', () => {
       const pulse = true;
-      const status = 'BREACHED';
+      const status: string = 'BREACHED';
       const shouldPulse = pulse && (status === 'AT_RISK' || status === 'BREACHED');
       expect(shouldPulse).toBe(true);
     });
 
     it('pulse is disabled for ON_TRACK', () => {
       const pulse = true;
-      const status = 'ON_TRACK';
+      const status: string = 'ON_TRACK';
       const shouldPulse = pulse && (status === 'AT_RISK' || status === 'BREACHED');
       expect(shouldPulse).toBe(false);
     });
 
     it('pulse is disabled when pulse prop is false', () => {
       const pulse = false;
-      const status = 'AT_RISK';
+      const status: string = 'AT_RISK';
       const shouldPulse = pulse && (status === 'AT_RISK' || status === 'BREACHED');
       expect(shouldPulse).toBe(false);
     });
 
     it('pulse is disabled for PAUSED', () => {
       const pulse = true;
-      const status = 'PAUSED';
+      const status: string = 'PAUSED';
       const shouldPulse = pulse && (status === 'AT_RISK' || status === 'BREACHED');
       expect(shouldPulse).toBe(false);
     });
 
     it('pulse is disabled for MET', () => {
       const pulse = true;
-      const status = 'MET';
+      const status: string = 'MET';
       const shouldPulse = pulse && (status === 'AT_RISK' || status === 'BREACHED');
       expect(shouldPulse).toBe(false);
     });

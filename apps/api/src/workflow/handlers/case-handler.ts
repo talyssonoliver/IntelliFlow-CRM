@@ -36,6 +36,7 @@ import {
   getRulesEngine,
   getCaseEventWorkflowEngine,
   isRulesEngineEvent,
+  DEFAULT_TEMPORAL_CONFIG,
   type IWorkflowEngine,
   type WorkflowHandle,
   type RuleExecutionResult,
@@ -173,7 +174,17 @@ abstract class BaseCaseEventHandler implements ICaseEventHandler {
     deps?: HandlerDependencies
   ): Promise<{ handle: WorkflowHandle<unknown> | null; error?: string }> {
     try {
-      const workflowEngine = deps?.workflowEngine ?? WorkflowEngineFactory.getEngine(engine);
+      let workflowEngine = deps?.workflowEngine ?? WorkflowEngineFactory.getEngine(engine);
+
+      // Lazily initialize Temporal engine with default config if not set up
+      if (!workflowEngine && engine === 'temporal') {
+        try {
+          const temporalEngine = await WorkflowEngineFactory.createTemporalEngine(DEFAULT_TEMPORAL_CONFIG);
+          workflowEngine = temporalEngine;
+        } catch {
+          // Temporal not available — fall through to simulation
+        }
+      }
 
       if (!workflowEngine) {
         console.warn(

@@ -124,7 +124,7 @@ export function getBullBoardInstance(): ReturnType<typeof createBullBoard> | nul
  * app.use('/admin/queues', serverAdapter.getRouter());
  * ```
  */
-export function configureBullBoardForExpress<T extends { setBasePath: (path: string) => void }>(
+function configureBullBoardForExpress<T extends { setBasePath: (path: string) => void }>(
   serverAdapter: T,
   config: BullBoardConfig = {}
 ): void {
@@ -154,7 +154,7 @@ export function configureBullBoardForExpress<T extends { setBasePath: (path: str
  * await fastify.register(serverAdapter.registerPlugin());
  * ```
  */
-export function configureBullBoardForFastify<T extends { setBasePath: (path: string) => void }>(
+function configureBullBoardForFastify<T extends { setBasePath: (path: string) => void }>(
   serverAdapter: T,
   config: BullBoardConfig = {}
 ): void {
@@ -247,3 +247,9 @@ Dashboard URL: http://localhost:3000/admin/queues (when API server is running)
     `.trim(),
   };
 }
+
+
+
+
+
+

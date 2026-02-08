@@ -166,7 +166,7 @@ function updateSprintSummaryWithSchedule(
 /**
  * Get schedule summary for API response
  */
-export function getScheduleSummary(
+function getScheduleSummary(
   tasks: TaskRecord[],
   sprintNum?: number
 ): {
@@ -204,3 +204,4 @@ export function getScheduleSummary(
     completionPercentage: result.criticalPath.completionPercentage,
   };
 }
+

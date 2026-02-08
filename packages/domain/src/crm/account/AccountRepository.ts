@@ -2,6 +2,21 @@ import { Account } from './Account';
 import { AccountId } from './AccountId';
 
 /**
+ * Raw account record with hierarchy data from persistence layer.
+ * Used by findWithChildren to return nested account trees.
+ */
+export interface AccountHierarchyRecord {
+  id: string;
+  name: string;
+  industry: string | null;
+  revenue: number | string | null;
+  tenantId: string;
+  _count?: { contacts: number; opportunities: number };
+  childAccounts?: AccountHierarchyRecord[];
+  [key: string]: unknown;
+}
+
+/**
  * Account Repository Interface
  * Defines the contract for account persistence
  * Implementation lives in adapters layer
@@ -46,6 +61,22 @@ export interface AccountRepository {
    * Count accounts by industry
    */
   countByIndustry(): Promise<Record<string, number>>;
+
+  /**
+   * Find account with nested children up to maxDepth
+   * Returns raw record with _count and childAccounts includes
+   */
+  findWithChildren(id: AccountId, maxDepth: number): Promise<AccountHierarchyRecord | null>;
+
+  /**
+   * Find ancestor chain from account to root
+   */
+  findAncestors(id: AccountId): Promise<Account[]>;
+
+  /**
+   * Get hierarchy depth (number of ancestors)
+   */
+  getHierarchyDepth(id: AccountId): Promise<number>;
 }
 
 /**

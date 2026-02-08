@@ -49,7 +49,7 @@ export async function parseCSV(file: File): Promise<ParsedCSVData> {
 /**
  * Parse CSV from text content
  */
-export function parseCSVText(csvText: string): ParsedCSVData {
+function parseCSVText(csvText: string): ParsedCSVData {
   const results = Papa.parse(csvText, {
     header: true,
     skipEmptyLines: true,
@@ -188,7 +188,7 @@ function parseBoolean(value: any): boolean {
 /**
  * Group tasks by sprint
  */
-export function groupTasksBySprint(tasks: Task[]): Map<SprintNumber, Task[]> {
+function groupTasksBySprint(tasks: Task[]): Map<SprintNumber, Task[]> {
   const grouped = new Map<SprintNumber, Task[]>();
 
   for (const task of tasks) {
@@ -241,3 +241,5 @@ export function calculateCompletionRate(tasks: Task[]): number {
 
 // Re-export status constants for convenience
 export { TASK_STATUSES, STATUS_ALIASES, STATUS_GROUPS } from './types';
+
+

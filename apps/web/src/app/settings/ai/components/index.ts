@@ -10,3 +10,5 @@ export { ChainVersionsTable } from './ChainVersionsTable';
 export { ZepBudgetGauge } from './ZepBudgetGauge';
 export { RollbackConfirmDialog } from './RollbackConfirmDialog';
 export { VersionAuditLog } from './VersionAuditLog';
+export { ChainVersionEditor } from './ChainVersionEditor';
+export { VersionComparisonView } from './VersionComparisonView';

@@ -10,7 +10,7 @@
       "IFC-127",
       "ENV-004-AI"
     ],
-    "verified_at": "2026-02-06T23:40:55.393Z",
+    "verified_at": "2026-02-08T19:59:16.852Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -93,21 +93,9 @@
       "apps/ai-worker/src/services/__tests__/embedding-purge.service.test.ts"
     ],
     "created": [
-      {
-        "path": "apps/ai-worker/src/services/document-indexer.ts",
-        "sha256": "a92ac4cf3f163afda6ca9f7cfbf103029438d7670841417e0675ee9572ce362d",
-        "created_at": "2026-01-31T00:08:00.000Z"
-      },
-      {
-        "path": "apps/ai-worker/src/services/embedding-purge.service.ts",
-        "sha256": "9c198b7ad772dc84d8d599c2cdaf5712c21b4e51d926502b9f77c7b93e575834",
-        "created_at": "2026-01-31T00:09:00.000Z"
-      },
-      {
-        "path": "apps/ai-worker/src/services/__tests__/embedding-purge.service.test.ts",
-        "sha256": "67c3aab9892779427ad834ae16a75b0be824d272c2b3c80c9807759b72f05885",
-        "created_at": "2026-01-31T00:09:30.000Z"
-      }
+      "apps/ai-worker/src/services/document-indexer.ts",
+      "apps/ai-worker/src/services/embedding-purge.service.ts",
+      "apps/ai-worker/src/services/__tests__/embedding-purge.service.test.ts"
     ],
     "missing": []
   },

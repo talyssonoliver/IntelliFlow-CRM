@@ -84,7 +84,7 @@ export default function BuildHealth() {
 
   if (error) {
     return (
-      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400">
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600">
         <div className="flex items-center gap-2">
           <Icon name="error" size="lg" />
           <span>Error: {error}</span>
@@ -117,9 +117,9 @@ export default function BuildHealth() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Icon name="hardware" className={allPassing ? 'text-green-400' : 'text-red-400'} size="xl" />
+          <Icon name="hardware" className={allPassing ? 'text-green-600' : 'text-red-600'} size="xl" />
           <div>
-            <h3 className="text-lg font-semibold text-white">Build Health</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Build Health</h3>
             {data?.turbo.lastRun && (
               <StaleIndicator
                 lastUpdated={data.turbo.lastRun}
@@ -139,20 +139,20 @@ export default function BuildHealth() {
       {/* Overall Status */}
       <div className={`rounded-lg p-4 border ${
         allPassing
-          ? 'bg-green-500/10 border-green-500/30'
-          : 'bg-red-500/10 border-red-500/30'
+          ? 'bg-green-50 border-green-200'
+          : 'bg-red-50 border-red-200'
       }`}>
         <div className="flex items-center gap-3">
           <Icon
             name={allPassing ? 'check_circle' : 'cancel'}
-            className={allPassing ? 'text-green-400' : 'text-red-400'}
+            className={allPassing ? 'text-green-600' : 'text-red-600'}
             size="2xl"
           />
           <div>
-            <div className={`text-lg font-semibold ${allPassing ? 'text-green-400' : 'text-red-400'}`}>
+            <div className={`text-lg font-semibold ${allPassing ? 'text-green-600' : 'text-red-600'}`}>
               {allPassing ? 'All Checks Passing' : 'Build Issues Detected'}
             </div>
-            <div className="text-sm text-gray-400">
+            <div className="text-sm text-gray-500">
               {allPassing
                 ? 'Typecheck, lint, and tests are all passing'
                 : 'One or more checks have failed - review below'}
@@ -162,13 +162,13 @@ export default function BuildHealth() {
       </div>
 
       {/* Turbo Build Stats */}
-      <div className="bg-gray-700/30 rounded-lg p-4">
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
         <div className="flex items-center justify-between mb-4">
-          <h4 className="text-sm font-medium text-gray-300 flex items-center gap-2">
+          <h4 className="text-sm font-medium text-gray-700 flex items-center gap-2">
             <Icon name="bolt" size="base" />
             Turbo Build
           </h4>
-          <span className={`text-sm ${data?.turbo.success ? 'text-green-400' : 'text-red-400'}`}>
+          <span className={`text-sm ${data?.turbo.success ? 'text-green-600' : 'text-red-600'}`}>
             {data?.turbo.success ? 'SUCCESS' : 'FAILED'}
           </span>
         </div>
@@ -200,9 +200,9 @@ export default function BuildHealth() {
           />
         </div>
         {data?.turbo.errors && data.turbo.errors.length > 0 && (
-          <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-            <div className="text-sm text-red-400 font-medium mb-2">Build Errors:</div>
-            <ul className="text-sm text-gray-300 space-y-1">
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <div className="text-sm text-red-600 font-medium mb-2">Build Errors:</div>
+            <ul className="text-sm text-gray-700 space-y-1">
               {data.turbo.errors.slice(0, 5).map((err, idx) => (
                 <li key={idx} className="font-mono text-xs">{err}</li>
               ))}
@@ -212,9 +212,9 @@ export default function BuildHealth() {
       </div>
 
       {/* Typecheck */}
-      <div className="bg-gray-700/30 rounded-lg p-4">
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
         <div className="flex items-center justify-between mb-4">
-          <h4 className="text-sm font-medium text-gray-300 flex items-center gap-2">
+          <h4 className="text-sm font-medium text-gray-700 flex items-center gap-2">
             <Icon name="code" size="base" />
             TypeScript Check
           </h4>
@@ -228,22 +228,22 @@ export default function BuildHealth() {
             <button
               onClick={() => handleValidation('typecheck')}
               disabled={validating !== null}
-              className="text-xs px-2 py-1 bg-gray-600 hover:bg-gray-500 rounded text-white disabled:opacity-50"
+              className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-gray-700 disabled:opacity-50"
             >
               {validating === 'typecheck' ? 'Running...' : 'Run'}
             </button>
           </div>
         </div>
         <div className="flex items-center gap-6">
-          <div className={`flex items-center gap-2 ${data?.typecheck.success ? 'text-green-400' : 'text-red-400'}`}>
+          <div className={`flex items-center gap-2 ${data?.typecheck.success ? 'text-green-600' : 'text-red-600'}`}>
             <Icon name={data?.typecheck.success ? 'check_circle' : 'cancel'} size="lg" />
             <span className="font-medium">{data?.typecheck.success ? 'Passing' : 'Failing'}</span>
           </div>
           <div className="flex items-center gap-4 text-sm">
-            <span className={`${(data?.typecheck.errors ?? 0) > 0 ? 'text-red-400' : 'text-gray-400'}`}>
+            <span className={`${(data?.typecheck.errors ?? 0) > 0 ? 'text-red-600' : 'text-gray-500'}`}>
               {data?.typecheck.errors ?? 0} errors
             </span>
-            <span className={`${(data?.typecheck.warnings ?? 0) > 0 ? 'text-yellow-400' : 'text-gray-400'}`}>
+            <span className={`${(data?.typecheck.warnings ?? 0) > 0 ? 'text-yellow-600' : 'text-gray-500'}`}>
               {data?.typecheck.warnings ?? 0} warnings
             </span>
           </div>
@@ -251,9 +251,9 @@ export default function BuildHealth() {
       </div>
 
       {/* Lint */}
-      <div className="bg-gray-700/30 rounded-lg p-4">
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
         <div className="flex items-center justify-between mb-4">
-          <h4 className="text-sm font-medium text-gray-300 flex items-center gap-2">
+          <h4 className="text-sm font-medium text-gray-700 flex items-center gap-2">
             <Icon name="check_box" size="base" />
             ESLint
           </h4>
@@ -267,22 +267,22 @@ export default function BuildHealth() {
             <button
               onClick={() => handleValidation('lint')}
               disabled={validating !== null}
-              className="text-xs px-2 py-1 bg-gray-600 hover:bg-gray-500 rounded text-white disabled:opacity-50"
+              className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-gray-700 disabled:opacity-50"
             >
               {validating === 'lint' ? 'Running...' : 'Run'}
             </button>
           </div>
         </div>
         <div className="flex items-center gap-6">
-          <div className={`flex items-center gap-2 ${data?.lint.success ? 'text-green-400' : 'text-red-400'}`}>
+          <div className={`flex items-center gap-2 ${data?.lint.success ? 'text-green-600' : 'text-red-600'}`}>
             <Icon name={data?.lint.success ? 'check_circle' : 'cancel'} size="lg" />
             <span className="font-medium">{data?.lint.success ? 'Passing' : 'Failing'}</span>
           </div>
           <div className="flex items-center gap-4 text-sm">
-            <span className={`${(data?.lint.errors ?? 0) > 0 ? 'text-red-400' : 'text-gray-400'}`}>
+            <span className={`${(data?.lint.errors ?? 0) > 0 ? 'text-red-600' : 'text-gray-500'}`}>
               {data?.lint.errors ?? 0} errors
             </span>
-            <span className={`${(data?.lint.warnings ?? 0) > 0 ? 'text-yellow-400' : 'text-gray-400'}`}>
+            <span className={`${(data?.lint.warnings ?? 0) > 0 ? 'text-yellow-600' : 'text-gray-500'}`}>
               {data?.lint.warnings ?? 0} warnings
             </span>
           </div>
@@ -290,9 +290,9 @@ export default function BuildHealth() {
       </div>
 
       {/* Tests */}
-      <div className="bg-gray-700/30 rounded-lg p-4">
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
         <div className="flex items-center justify-between mb-4">
-          <h4 className="text-sm font-medium text-gray-300 flex items-center gap-2">
+          <h4 className="text-sm font-medium text-gray-700 flex items-center gap-2">
             <Icon name="science" size="base" />
             Test Results
           </h4>
@@ -336,14 +336,14 @@ export default function BuildHealth() {
           />
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-400">Pass Rate:</span>
-          <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
+          <span className="text-sm text-gray-500">Pass Rate:</span>
+          <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
             <div
               className={`h-full ${testPassRate >= 90 ? 'bg-green-500' : testPassRate >= 70 ? 'bg-yellow-500' : 'bg-red-500'}`}
               style={{ width: `${testPassRate}%` }}
             />
           </div>
-          <span className={`text-sm font-medium ${testPassRate >= 90 ? 'text-green-400' : testPassRate >= 70 ? 'text-yellow-400' : 'text-red-400'}`}>
+          <span className={`text-sm font-medium ${testPassRate >= 90 ? 'text-green-600' : testPassRate >= 70 ? 'text-yellow-600' : 'text-red-600'}`}>
             {testPassRate}%
           </span>
         </div>

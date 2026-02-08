@@ -24,6 +24,7 @@ export const MODULE_ICONS = {
   settings: 'settings',
   governance: 'policy',
   profile: 'account_circle',
+  accounts: 'domain',
 } as const;
 
 // =============================================================================
@@ -243,6 +244,12 @@ export const MODULE_COLORS = {
 
   // Governance - Emerald theme
   governance: {
+    iconBg: 'bg-slate-100 dark:bg-slate-800',
+    text: 'text-emerald-600 dark:text-emerald-400',
+  },
+
+  // Accounts - Emerald theme
+  accounts: {
     iconBg: 'bg-slate-100 dark:bg-slate-800',
     text: 'text-emerald-600 dark:text-emerald-400',
   },

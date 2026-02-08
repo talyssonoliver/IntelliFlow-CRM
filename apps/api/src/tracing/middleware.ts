@@ -200,12 +200,12 @@ export const metricsMiddleware = t.middleware(async ({ path, type, next }) => {
 });
 
 /**
- * Create traced procedure builders
+ * Traced procedure builders
  *
- * These can be imported and used instead of the default procedure builders
- * to automatically add tracing to all procedures.
+ * @deprecated Tracing is now applied globally to all procedures in trpc.ts.
+ * Use publicProcedure and protectedProcedure directly instead.
+ *
+ * These are kept as lazy re-exports for backward compatibility.
  */
-import { publicProcedure, protectedProcedure } from '../trpc';
-
-export const tracedPublicProcedure = publicProcedure.use(tracingMiddleware);
-export const tracedProtectedProcedure = protectedProcedure.use(tracingMiddleware);
+export const tracedPublicProcedure = t.procedure.use(tracingMiddleware);
+export const tracedProtectedProcedure = t.procedure.use(tracingMiddleware);

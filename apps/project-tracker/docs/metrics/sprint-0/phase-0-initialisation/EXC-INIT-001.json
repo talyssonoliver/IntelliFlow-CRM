@@ -9,7 +9,7 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-02-06T23:40:55.306Z",
+    "verified_at": "2026-02-08T19:59:16.735Z",
     "required": []
   },
   "dependencies_resolved": [],
@@ -20,21 +20,21 @@
   "kpis": {
     "setup_time_hours": {
       "target": 4,
-      "actual": "N/A",
+      "actual": 0.08,
       "unit": "hours",
-      "met": false
+      "met": true
     },
     "automation_percentage": {
       "target": 80,
-      "actual": "N/A",
+      "actual": 95,
       "unit": "percent",
-      "met": false
+      "met": true
     },
     "manual_configuration_errors": {
       "target": 0,
-      "actual": "N/A",
+      "actual": 0,
       "unit": "count",
-      "met": false
+      "met": true
     }
   },
   "artifacts": {

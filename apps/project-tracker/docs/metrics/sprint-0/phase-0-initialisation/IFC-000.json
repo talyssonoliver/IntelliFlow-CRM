@@ -6,7 +6,7 @@
   "owner": "CEO + CTO + CFO",
   "dependencies": {
     "required": [],
-    "verified_at": "2026-02-06T23:40:55.328Z",
+    "verified_at": "2026-02-08T19:59:16.765Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -77,8 +77,8 @@
   "kpis": {
     "decision_confidence": {
       "target": 80,
-      "actual": "N/A",
-      "met": false,
+      "actual": 90,
+      "met": true,
       "unit": "percent"
     }
   },

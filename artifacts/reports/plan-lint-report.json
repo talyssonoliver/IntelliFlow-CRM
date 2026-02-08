@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-02-01T23:19:54.966Z",
+    "generated_at": "2026-02-08T19:58:37.491Z",
     "schema_version": "1.0.0",
     "sprint_scope": 0
   },
@@ -11,7 +11,7 @@
       "B": 8,
       "C": 7
     },
-    "error_count": 3,
+    "error_count": 45,
     "warning_count": 36,
     "review_queue_size": 29,
     "validation_coverage": {
@@ -21,6 +21,315 @@
     }
   },
   "errors": [
+    {
+      "rule": "NO_CROSS_SPRINT_UNRESOLVED",
+      "severity": "error",
+      "message": "Cross-sprint dependency: PG-142 (Sprint 7) depends on IFC-039 (Sprint 23)",
+      "tasks": [
+        "PG-142",
+        "IFC-039"
+      ],
+      "fix": "Add sprint_override or override_deps_remove in plan-overrides.yaml"
+    },
+    {
+      "rule": "NO_CROSS_SPRINT_UNRESOLVED",
+      "severity": "error",
+      "message": "Cross-sprint dependency: PG-143 (Sprint 7) depends on IFC-095 (Sprint 8)",
+      "tasks": [
+        "PG-143",
+        "IFC-095"
+      ],
+      "fix": "Add sprint_override or override_deps_remove in plan-overrides.yaml"
+    },
+    {
+      "rule": "NO_CROSS_SPRINT_UNRESOLVED",
+      "severity": "error",
+      "message": "Cross-sprint dependency: PG-144 (Sprint 7) depends on IFC-156 (Sprint 13)",
+      "tasks": [
+        "PG-144",
+        "IFC-156"
+      ],
+      "fix": "Add sprint_override or override_deps_remove in plan-overrides.yaml"
+    },
+    {
+      "rule": "NO_CROSS_SPRINT_UNRESOLVED",
+      "severity": "error",
+      "message": "Cross-sprint dependency: PG-144 (Sprint 7) depends on IFC-155 (Sprint 12)",
+      "tasks": [
+        "PG-144",
+        "IFC-155"
+      ],
+      "fix": "Add sprint_override or override_deps_remove in plan-overrides.yaml"
+    },
+    {
+      "rule": "NO_CROSS_SPRINT_UNRESOLVED",
+      "severity": "error",
+      "message": "Cross-sprint dependency: PG-146 (Sprint 8) depends on IFC-117 (Sprint 10)",
+      "tasks": [
+        "PG-146",
+        "IFC-117"
+      ],
+      "fix": "Add sprint_override or override_deps_remove in plan-overrides.yaml"
+    },
+    {
+      "rule": "NO_CROSS_SPRINT_UNRESOLVED",
+      "severity": "error",
+      "message": "Cross-sprint dependency: IFC-197 (Sprint 7) depends on IFC-117 (Sprint 10)",
+      "tasks": [
+        "IFC-197",
+        "IFC-117"
+      ],
+      "fix": "Add sprint_override or override_deps_remove in plan-overrides.yaml"
+    },
+    {
+      "rule": "NO_CROSS_SPRINT_UNRESOLVED",
+      "severity": "error",
+      "message": "Cross-sprint dependency: IFC-197 (Sprint 7) depends on IFC-125 (Sprint 11)",
+      "tasks": [
+        "IFC-197",
+        "IFC-125"
+      ],
+      "fix": "Add sprint_override or override_deps_remove in plan-overrides.yaml"
+    },
+    {
+      "rule": "NO_CROSS_SPRINT_UNRESOLVED",
+      "severity": "error",
+      "message": "Cross-sprint dependency: PG-148 (Sprint 7) depends on IFC-023 (Sprint 13)",
+      "tasks": [
+        "PG-148",
+        "IFC-023"
+      ],
+      "fix": "Add sprint_override or override_deps_remove in plan-overrides.yaml"
+    },
+    {
+      "rule": "NO_CROSS_SPRINT_UNRESOLVED",
+      "severity": "error",
+      "message": "Cross-sprint dependency: PG-149 (Sprint 7) depends on IFC-025 (Sprint 14)",
+      "tasks": [
+        "PG-149",
+        "IFC-025"
+      ],
+      "fix": "Add sprint_override or override_deps_remove in plan-overrides.yaml"
+    },
+    {
+      "rule": "NO_CROSS_SPRINT_UNRESOLVED",
+      "severity": "error",
+      "message": "Cross-sprint dependency: PG-151 (Sprint 8) depends on IFC-021 (Sprint 13)",
+      "tasks": [
+        "PG-151",
+        "IFC-021"
+      ],
+      "fix": "Add sprint_override or override_deps_remove in plan-overrides.yaml"
+    },
+    {
+      "rule": "NO_CROSS_SPRINT_UNRESOLVED",
+      "severity": "error",
+      "message": "Cross-sprint dependency: PG-152 (Sprint 8) depends on IFC-148 (Sprint 12)",
+      "tasks": [
+        "PG-152",
+        "IFC-148"
+      ],
+      "fix": "Add sprint_override or override_deps_remove in plan-overrides.yaml"
+    },
+    {
+      "rule": "NO_CROSS_SPRINT_UNRESOLVED",
+      "severity": "error",
+      "message": "Cross-sprint dependency: PG-153 (Sprint 8) depends on IFC-117 (Sprint 10)",
+      "tasks": [
+        "PG-153",
+        "IFC-117"
+      ],
+      "fix": "Add sprint_override or override_deps_remove in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-028 missing gate_profile",
+      "tasks": [
+        "IFC-028"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-028 missing acceptance_owner",
+      "tasks": [
+        "IFC-028"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-028 missing evidence_required",
+      "tasks": [
+        "IFC-028"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-030 missing gate_profile",
+      "tasks": [
+        "IFC-030"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-030 missing acceptance_owner",
+      "tasks": [
+        "IFC-030"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-030 missing evidence_required",
+      "tasks": [
+        "IFC-030"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-103 missing gate_profile",
+      "tasks": [
+        "IFC-103"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-103 missing acceptance_owner",
+      "tasks": [
+        "IFC-103"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-103 missing evidence_required",
+      "tasks": [
+        "IFC-103"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-105 missing gate_profile",
+      "tasks": [
+        "IFC-105"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-105 missing acceptance_owner",
+      "tasks": [
+        "IFC-105"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-105 missing evidence_required",
+      "tasks": [
+        "IFC-105"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-107 missing gate_profile",
+      "tasks": [
+        "IFC-107"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-107 missing acceptance_owner",
+      "tasks": [
+        "IFC-107"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-107 missing evidence_required",
+      "tasks": [
+        "IFC-107"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-117 missing gate_profile",
+      "tasks": [
+        "IFC-117"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-117 missing acceptance_owner",
+      "tasks": [
+        "IFC-117"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-117 missing evidence_required",
+      "tasks": [
+        "IFC-117"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-125 missing gate_profile",
+      "tasks": [
+        "IFC-125"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-125 missing acceptance_owner",
+      "tasks": [
+        "IFC-125"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-125 missing evidence_required",
+      "tasks": [
+        "IFC-125"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
     {
       "rule": "TIER_A_GATES_REQUIRED",
       "severity": "error",
@@ -45,6 +354,87 @@
       "message": "Tier A task IFC-128 missing evidence_required",
       "tasks": [
         "IFC-128"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-181 missing gate_profile",
+      "tasks": [
+        "IFC-181"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-181 missing acceptance_owner",
+      "tasks": [
+        "IFC-181"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-181 missing evidence_required",
+      "tasks": [
+        "IFC-181"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-182 missing gate_profile",
+      "tasks": [
+        "IFC-182"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-182 missing acceptance_owner",
+      "tasks": [
+        "IFC-182"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-182 missing evidence_required",
+      "tasks": [
+        "IFC-182"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-197 missing gate_profile",
+      "tasks": [
+        "IFC-197"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-197 missing acceptance_owner",
+      "tasks": [
+        "IFC-197"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task IFC-197 missing evidence_required",
+      "tasks": [
+        "IFC-197"
       ],
       "fix": "Add evidence_required array to task in plan-overrides.yaml"
     }
@@ -201,12 +591,12 @@
     {
       "rule": "HIGH_FANOUT",
       "severity": "info",
-      "message": "Task ANALYTICS-001 has 3 direct dependents (high fan-out)",
+      "message": "Task ANALYTICS-001 has 4 direct dependents (high fan-out)",
       "tasks": [
         "ANALYTICS-001"
       ],
       "priority": "high",
-      "dependentCount": 3
+      "dependentCount": 4
     },
     {
       "rule": "WAIVER_USED",
@@ -226,7 +616,7 @@
         "AI-SETUP-003"
       ],
       "priority": "critical",
-      "days_until_expiry": -2
+      "days_until_expiry": -9
     },
     {
       "rule": "WAIVER_USED",
@@ -241,12 +631,12 @@
     {
       "rule": "WAIVER_EXPIRING",
       "severity": "warning",
-      "message": "Task ENV-008-AI waiver expires in 26 days (2026-02-28)",
+      "message": "Task ENV-008-AI waiver expires in 19 days (2026-02-28)",
       "tasks": [
         "ENV-008-AI"
       ],
       "priority": "high",
-      "days_until_expiry": 26
+      "days_until_expiry": 19
     },
     {
       "rule": "WAIVER_USED",
@@ -266,7 +656,7 @@
         "ENV-010-AI"
       ],
       "priority": "critical",
-      "days_until_expiry": -2
+      "days_until_expiry": -9
     },
     {
       "rule": "WAIVER_USED",
@@ -286,7 +676,7 @@
         "ENV-011-AI"
       ],
       "priority": "critical",
-      "days_until_expiry": -2
+      "days_until_expiry": -9
     },
     {
       "rule": "WAIVER_USED",
@@ -301,12 +691,12 @@
     {
       "rule": "WAIVER_EXPIRING",
       "severity": "warning",
-      "message": "Task ENV-012-AI waiver expires in 26 days (2026-02-28)",
+      "message": "Task ENV-012-AI waiver expires in 19 days (2026-02-28)",
       "tasks": [
         "ENV-012-AI"
       ],
       "priority": "high",
-      "days_until_expiry": 26
+      "days_until_expiry": 19
     },
     {
       "rule": "WAIVER_USED",
@@ -321,12 +711,12 @@
     {
       "rule": "WAIVER_EXPIRING",
       "severity": "warning",
-      "message": "Task ENV-014-AI waiver expires in 26 days (2026-02-28)",
+      "message": "Task ENV-014-AI waiver expires in 19 days (2026-02-28)",
       "tasks": [
         "ENV-014-AI"
       ],
       "priority": "high",
-      "days_until_expiry": 26
+      "days_until_expiry": 19
     },
     {
       "rule": "WAIVER_USED",
@@ -341,12 +731,12 @@
     {
       "rule": "WAIVER_EXPIRING",
       "severity": "warning",
-      "message": "Task ENV-015-AI waiver expires in 26 days (2026-02-28)",
+      "message": "Task ENV-015-AI waiver expires in 19 days (2026-02-28)",
       "tasks": [
         "ENV-015-AI"
       ],
       "priority": "high",
-      "days_until_expiry": 26
+      "days_until_expiry": 19
     },
     {
       "rule": "WAIVER_USED",
@@ -361,12 +751,12 @@
     {
       "rule": "WAIVER_EXPIRING",
       "severity": "warning",
-      "message": "Task ENV-016-AI waiver expires in 26 days (2026-02-28)",
+      "message": "Task ENV-016-AI waiver expires in 19 days (2026-02-28)",
       "tasks": [
         "ENV-016-AI"
       ],
       "priority": "high",
-      "days_until_expiry": 26
+      "days_until_expiry": 19
     },
     {
       "rule": "WAIVER_USED",
@@ -381,12 +771,12 @@
     {
       "rule": "WAIVER_EXPIRING",
       "severity": "warning",
-      "message": "Task AUTOMATION-001 waiver expires in 26 days (2026-02-28)",
+      "message": "Task AUTOMATION-001 waiver expires in 19 days (2026-02-28)",
       "tasks": [
         "AUTOMATION-001"
       ],
       "priority": "high",
-      "days_until_expiry": 26
+      "days_until_expiry": 19
     },
     {
       "rule": "WAIVER_USED",
@@ -401,12 +791,12 @@
     {
       "rule": "WAIVER_EXPIRING",
       "severity": "warning",
-      "message": "Task AUTOMATION-002 waiver expires in 26 days (2026-02-28)",
+      "message": "Task AUTOMATION-002 waiver expires in 19 days (2026-02-28)",
       "tasks": [
         "AUTOMATION-002"
       ],
       "priority": "high",
-      "days_until_expiry": 26
+      "days_until_expiry": 19
     }
   ],
   "review_queue": [
@@ -760,9 +1150,9 @@
       "owner": "PM + DA",
       "reasons": [
         "Tier A task - requires explicit validation",
-        "High fan-out (3 dependents)"
+        "High fan-out (4 dependents)"
       ],
-      "dependent_count": 3,
+      "dependent_count": 4,
       "priority": "critical"
     },
     {

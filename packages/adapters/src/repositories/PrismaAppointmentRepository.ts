@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from '@intelliflow/db';
+import { PrismaClient, Prisma, withTransaction, type TransactionClient } from '@intelliflow/db';
 import {
   Appointment,
   AppointmentId,
@@ -106,7 +106,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
       cancellationReason: appointment.cancellationReason ?? null,
     };
 
-    await this.prisma.$transaction(async (tx) => {
+    await withTransaction(async (tx: TransactionClient) => {
       // Upsert appointment
       await tx.appointment.upsert({
         where: { id: data.id },
@@ -147,7 +147,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
   }
 
   async saveAll(appointments: Appointment[]): Promise<void> {
-    await this.prisma.$transaction(async (tx) => {
+    await withTransaction(async (tx: TransactionClient) => {
       for (const appointment of appointments) {
         const data = {
           id: appointment.id.value,

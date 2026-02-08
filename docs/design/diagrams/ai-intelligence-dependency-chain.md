@@ -1,22 +1,25 @@
 # AI/Intelligence Domain - Dependency Chain Analysis
 
 **Generated**: 2026-02-03
+**Updated**: 2026-02-08
 **Purpose**: Ensure complete AI feature chains from chains to UI with no orphaned tasks
 
 ---
 
 ## Executive Summary
 
-The **AI/Intelligence** domain covers Lead Scoring, Sentiment Analysis, Churn Risk, RAG/Search, and Auto-Response features. Most AI chains are complete, but several lack frontend UI.
+The **AI/Intelligence** domain covers Lead Scoring, Sentiment Analysis, Churn Risk, RAG/Search, Auto-Response, AI Output Review, and AI Monitoring features. All chains now have UI tasks assigned via the unified **AI & Agents** sidebar at `/agent-approvals/*`.
 
-| Feature | AI Chain | Router | Frontend UI | Status |
-|---------|----------|--------|-------------|--------|
-| Lead Scoring | IFC-005 | IFC-013 | IFC-023 | COMPLETE |
-| Sentiment Analysis | IFC-039 | Partial | MISSING | ORPHAN |
-| Churn Risk | IFC-095 | Partial | MISSING | ORPHAN |
-| RAG/Search | IFC-039 | IFC-156 | MISSING | ORPHAN |
-| Auto-Response | IFC-029 | IFC-029 | IFC-149 | COMPLETE |
-| AI Output Review | IFC-128 | IFC-180 | IFC-181 | BACKLOG |
+| Feature | AI Chain | Router | Frontend UI | Route | Status |
+|---------|----------|--------|-------------|-------|--------|
+| Lead Scoring | IFC-005 | IFC-013 | IFC-023 + PG-148 | `/agent-approvals/lead-scoring` | COMPLETE (dashboard pending) |
+| Sentiment Analysis | IFC-039 | Partial | PG-142 | `/agent-approvals/sentiment` | UI PLANNED (Sprint 7) |
+| Churn Risk | IFC-095 | Partial | PG-143 | `/agent-approvals/churn-risk` | UI PLANNED (Sprint 7) |
+| RAG/Search | IFC-039 | IFC-156 | PG-144 | `/agent-approvals/ai-search` | UI PLANNED (Sprint 7) |
+| Auto-Response | IFC-029 | IFC-029 | IFC-149 | `/agent-approvals` | COMPLETE |
+| AI Output Review | IFC-128 | IFC-180 ✅ | IFC-181 ✅ + PG-150 | `/agent-approvals/ai-review` | COMPLETE (history pending) |
+| AI Monitoring | IFC-117 | IFC-197 | PG-146/151/152/153 | `/agent-approvals/drift,agents,logs,latency` | ROUTER PLANNED (Sprint 7) |
+| Experiments | IFC-025 | IFC-025 | PG-149 | `/agent-approvals/experiments` | UI PLANNED (Sprint 7) |
 
 ---
 
@@ -138,85 +141,87 @@ The **AI/Intelligence** domain covers Lead Scoring, Sentiment Analysis, Churn Ri
 
 ---
 
-## Sentiment Analysis Pipeline (ORPHAN)
+## Sentiment Analysis Pipeline (UI PLANNED)
 
 ```
     ╔═══════════════════════════════════════════════════════════════════════════════════════════╗
-    ║  SENTIMENT ANALYSIS CHAIN                                              ⚠️ FRONTEND ORPHAN║
+    ║  SENTIMENT ANALYSIS CHAIN                                            ✅ UI TASK CREATED  ║
     ╚═══════════════════════════════════════════════════════════════════════════════════════════╝
 
-    ┌─────────────────────────────────────────────────────────────────────────────────────────┐
-    │                          SENTIMENT CHAIN (IFC-039)                                       │
-    └─────────────────────────────────────────────────────────────────────────────────────────┘
-
     ┌─────────────────────────┐         ┌─────────────────────────────┐
-    │        IFC-039          │         │        ❌ MISSING           │
-    │   sentiment.chain.ts    │         │   Sentiment UI              │
+    │        IFC-039          │         │        PG-142               │
+    │   sentiment.chain.ts    │         │   Sentiment Dashboard       │
     │                         │         │                             │
-    │  - Sentiment labels     │         │  Need:                      │
-    │    (positive/negative)  │ ──────► │  - Timeline integration     │
-    │  - Emotion detection    │         │  - Sentiment badges         │
-    │  - Urgency levels       │         │  - Trend visualization      │
-    │  - Topic extraction     │         │  - Email sentiment preview  │
-    │                         │         │                             │
-    │  Status: COMPLETED ✅   │         │  CREATE: PG-142             │
-    │  Sprint: 23             │         │  Sprint: 24                 │
-    │                         │         │                             │
-    │  Files:                 │         │  Location:                  │
-    │  - sentiment.chain.ts   │         │  - packages/ui/src/         │
-    │  - sentiment.chain.test │         │    components/sentiment/    │
-    └─────────────────────────┘         └─────────────────────────────┘
-
-    Chain Status: ⚠️ ORPHAN - Backend complete, Frontend missing
-    - AI Chain: IFC-039 ✅
-    - Router: Partial (in timeline.router) ⚠️
-    - Frontend: MISSING ❌ → Create PG-142
-```
-
----
-
-## Churn Risk Pipeline (ORPHAN)
-
-```
-    ╔═══════════════════════════════════════════════════════════════════════════════════════════╗
-    ║  CHURN RISK CHAIN                                                      ⚠️ FRONTEND ORPHAN║
-    ╚═══════════════════════════════════════════════════════════════════════════════════════════╝
-
-    ┌─────────────────────────────────────────────────────────────────────────────────────────┐
-    │                          CHURN RISK CHAIN (IFC-095)                                      │
-    └─────────────────────────────────────────────────────────────────────────────────────────┘
-
-    ┌─────────────────────────┐         ┌─────────────────────────────┐
-    │        IFC-095          │         │        ❌ MISSING           │
-    │   churn-risk.chain.ts   │         │   Churn Dashboard UI        │
-    │                         │         │                             │
-    │  - Risk prediction      │         │  Need:                      │
-    │  - Risk factors         │ ──────► │  - Risk indicators          │
-    │  - Confidence scores    │         │  - Customer health score    │
-    │  - Recommendations      │         │  - Intervention triggers    │
-    │                         │         │  - Trend charts             │
-    │  Status: COMPLETED ✅   │         │                             │
-    │  Sprint: 8              │         │  CREATE: PG-143             │
-    │                         │         │  Sprint: 25                 │
-    │  Files:                 │         │                             │
-    │  - churn-risk.chain.ts  │         │  Location:                  │
-    │  - churn-risk.chain.test│         │  - apps/web/src/app/        │
-    └─────────────────────────┘         │    analytics/churn/         │
+    │  - Sentiment labels     │         │  Route: /agent-approvals/   │
+    │    (positive/negative)  │ ──────► │         sentiment           │
+    │  - Emotion detection    │         │                             │
+    │  - Urgency levels       │         │  - Sentiment overview       │
+    │  - Topic extraction     │         │  - Timeline integration     │
+    │                         │         │  - Trend visualization      │
+    │  Status: COMPLETED ✅   │         │  - Email sentiment preview  │
+    │  Sprint: 23             │         │                             │
+    │                         │         │  Status: BACKLOG            │
+    │  Files:                 │         │  Sprint: 7                  │
+    │  - sentiment.chain.ts   │         │  Deps: IFC-039, IFC-181     │
+    │  - sentiment.chain.test │         │                             │
+    └─────────────────────────┘         │  Location:                  │
+                                        │  - apps/web/src/app/        │
+                                        │    agent-approvals/sentiment│
+                                        │  - components/              │
+                                        │    ai-intelligence/         │
                                         └─────────────────────────────┘
 
-    Chain Status: ⚠️ ORPHAN - Backend complete, Frontend missing
-    - AI Chain: IFC-095 ✅
-    - Router: Partial (analytics integration needed) ⚠️
-    - Frontend: MISSING ❌ → Create PG-143
+    Chain Status: ✅ UI task created
+    - AI Chain: IFC-039 ✅
+    - Router: Partial (in timeline.router) ⚠️
+    - Frontend: PG-142 (Sprint 7) ⏳
 ```
 
 ---
 
-## RAG/Search Pipeline (ORPHAN)
+## Churn Risk Pipeline (UI PLANNED)
 
 ```
     ╔═══════════════════════════════════════════════════════════════════════════════════════════╗
-    ║  RAG / SEARCH CHAIN                                                    ⚠️ FRONTEND ORPHAN║
+    ║  CHURN RISK CHAIN                                                    ✅ UI TASK CREATED  ║
+    ╚═══════════════════════════════════════════════════════════════════════════════════════════╝
+
+    ┌─────────────────────────┐         ┌─────────────────────────────┐
+    │        IFC-095          │         │        PG-143               │
+    │   churn-risk.chain.ts   │         │   Churn Risk Dashboard      │
+    │                         │         │                             │
+    │  - Risk prediction      │         │  Route: /agent-approvals/   │
+    │  - Risk factors         │ ──────► │         churn-risk          │
+    │  - Confidence scores    │         │                             │
+    │  - Recommendations      │         │  - Risk indicators          │
+    │                         │         │  - Customer health score    │
+    │  Status: COMPLETED ✅   │         │  - Intervention triggers    │
+    │  Sprint: 8              │         │  - Trend charts             │
+    │                         │         │                             │
+    │  Files:                 │         │  Status: BACKLOG            │
+    │  - churn-risk.chain.ts  │         │  Sprint: 7                  │
+    │  - churn-risk.chain.test│         │  Deps: IFC-095, IFC-181     │
+    └─────────────────────────┘         │                             │
+                                        │  Location:                  │
+                                        │  - apps/web/src/app/        │
+                                        │    agent-approvals/churn-risk│
+                                        │  - components/              │
+                                        │    ai-intelligence/         │
+                                        └─────────────────────────────┘
+
+    Chain Status: ✅ UI task created
+    - AI Chain: IFC-095 ✅
+    - Router: Partial (analytics integration needed) ⚠️
+    - Frontend: PG-143 (Sprint 7) ⏳
+```
+
+---
+
+## RAG/Search Pipeline (UI PLANNED)
+
+```
+    ╔═══════════════════════════════════════════════════════════════════════════════════════════╗
+    ║  RAG / SEARCH CHAIN                                                  ✅ UI TASK CREATED  ║
     ╚═══════════════════════════════════════════════════════════════════════════════════════════╝
 
     ┌─────────────────────────────────────────────────────────────────────────────────────────┐
@@ -237,27 +242,31 @@ The **AI/Intelligence** domain covers Lead Scoring, Sentiment Analysis, Churn Ri
                                                 │
                                                 ▼
                               ┌─────────────────────────────────────────┐
-                              │        ❌ MISSING                       │
-                              │   RAG Search UI                         │
+                              │        PG-144                           │
+                              │   AI Search Dashboard                   │
                               │                                         │
-                              │  Need:                                  │
+                              │  Route: /agent-approvals/ai-search      │
+                              │                                         │
                               │  - Universal search bar                 │
                               │  - AI-powered results                   │
                               │  - Citation display                     │
                               │  - Source highlighting                  │
                               │                                         │
-                              │  CREATE: PG-144                         │
-                              │  Sprint: 25                             │
+                              │  Status: BACKLOG                        │
+                              │  Sprint: 7                              │
+                              │  Deps: IFC-156, IFC-155, IFC-181        │
                               │                                         │
                               │  Location:                              │
-                              │  - apps/web/src/components/search/      │
+                              │  - apps/web/src/app/                    │
+                              │    agent-approvals/ai-search/           │
+                              │  - components/ai-intelligence/          │
                               └─────────────────────────────────────────┘
 
-    Chain Status: ⚠️ ORPHAN - Backend complete, Frontend missing
+    Chain Status: ✅ UI task created
     - AI Chain: IFC-039 ✅
     - Indexing: IFC-155 ✅
     - RAG Tool: IFC-156 ✅
-    - Frontend: MISSING ❌ → Create PG-144
+    - Frontend: PG-144 (Sprint 7) ⏳
 ```
 
 ---
@@ -304,14 +313,16 @@ The **AI/Intelligence** domain covers Lead Scoring, Sentiment Analysis, Churn Ri
 
 ---
 
-## AI Output Review Chain (BACKLOG)
+## AI Output Review Chain (COMPLETE)
 
 ```
     ╔═══════════════════════════════════════════════════════════════════════════════════════════╗
-    ║  AI OUTPUT REVIEW CHAIN                                                   ⏳ IN PROGRESS ║
+    ║  AI OUTPUT REVIEW CHAIN                                                      ✅ COMPLETE ║
     ╚═══════════════════════════════════════════════════════════════════════════════════════════╝
 
     See: docs/design/diagrams/ai-output-review-dependency-chain.md
+
+    Route: /agent-approvals/ai-review (+ /agent-approvals/ai-review/[id])
 
     Status Summary:
     ┌────────────────┬──────────────┬──────────────┐
@@ -320,12 +331,13 @@ The **AI/Intelligence** domain covers Lead Scoring, Sentiment Analysis, Churn Ri
     │ Domain         │ IFC-128      │ COMPLETED ✅ │
     │ Validators     │ IFC-176      │ COMPLETED ✅ │
     │ Application    │ IFC-177      │ COMPLETED ✅ │
-    │ Database       │ IFC-178      │ Backlog      │
-    │ Adapters       │ IFC-179      │ Backlog      │
-    │ Router         │ IFC-180      │ Backlog      │
-    │ Frontend       │ IFC-181      │ Backlog      │
+    │ Database       │ IFC-178      │ COMPLETED ✅ │
+    │ Adapters       │ IFC-179      │ COMPLETED ✅ │
+    │ Router         │ IFC-180      │ COMPLETED ✅ │
+    │ Frontend       │ IFC-181      │ COMPLETED ✅ │
     └────────────────┴──────────────┴──────────────┘
 
+    Related: PG-150 (AI Review History at /agent-approvals/history, Sprint 7)
     Mockup Ready: docs/design/mockups/ai-review-queue.html ✅
 ```
 
@@ -335,7 +347,7 @@ The **AI/Intelligence** domain covers Lead Scoring, Sentiment Analysis, Churn Ri
 
 ```
     ╔═══════════════════════════════════════════════════════════════════════════════════════════╗
-    ║  AI CHAIN VERSIONING (IFC-086, PG-128)                                   ⏳ IN PROGRESS  ║
+    ║  AI CHAIN VERSIONING (IFC-086, PG-128)                                   ✅ COMPLETE     ║
     ╚═══════════════════════════════════════════════════════════════════════════════════════════╝
 
     ┌─────────────────────────────┐         ┌─────────────────────────────┐
@@ -347,40 +359,142 @@ The **AI/Intelligence** domain covers Lead Scoring, Sentiment Analysis, Churn Ri
     │  - Deprecation policy       │         │  - Rollout controls         │
     │  - Zep integration          │         │  - A/B test management      │
     │                             │         │                             │
-    │  Status: COMPLETED ✅       │         │  Status: SPEC COMPLETE      │
-    │  Sprint: 12                 │         │  Sprint: 14 (0%)            │
+    │  Status: COMPLETED ✅       │         │  Status: COMPLETED ✅       │
+    │  Sprint: 12                 │         │  Sprint: 14 (100%)          │
     └─────────────────────────────┘         └─────────────────────────────┘
 ```
 
 ---
 
-## Missing Tasks Summary (To Create)
+## AI Monitoring Pipeline (NEW - Sprint 7-8)
 
-### Frontend Pages (AI Features Need UI)
+```
+    ╔═══════════════════════════════════════════════════════════════════════════════════════════╗
+    ║  AI MONITORING CHAIN                                                     ⏳ TASKS CREATED ║
+    ╚═══════════════════════════════════════════════════════════════════════════════════════════╝
 
-| New Task ID | Feature | Description | Dependencies | Sprint |
-|-------------|---------|-------------|--------------|--------|
-| PG-142 | Sentiment | Sentiment Analysis UI - timeline badges, trends | IFC-039 | 24 |
-| PG-143 | Churn | Churn Risk Dashboard - health scores, interventions | IFC-095 | 25 |
-| PG-144 | RAG | AI Search UI - universal search, citations | IFC-156, IFC-155 | 25 |
+    ┌─────────────────────────┐
+    │       IFC-117           │
+    │  AI Monitoring Tools    │
+    │                         │
+    │  - DriftDetector        │
+    │  - LatencyMonitor       │
+    │  - HallucinationChecker │
+    │  - ROITracker           │
+    │  - ChainMonitor         │
+    │                         │
+    │  Status: COMPLETED ✅   │
+    │  Sprint: 11             │
+    └────────────┬────────────┘
+                 │
+                 ▼
+    ┌─────────────────────────┐         ┌─────────────────────────────────────────────────────┐
+    │       IFC-197           │         │  MONITORING UI PAGES (Sprint 8)                      │
+    │  AI Monitoring Router   │         │                                                      │
+    │  (tRPC)                 │         │  ┌────────────────┐  ┌────────────────┐              │
+    │                         │         │  │    PG-146      │  │    PG-151      │              │
+    │  - drift.list/get       │         │  │  Drift Detect  │  │  Active Agents │              │
+    │  - latency.metrics      │ ──────► │  │                │  │                │              │
+    │  - agents.status        │         │  │  /agent-       │  │  /agent-       │              │
+    │  - hallucination.check  │         │  │  approvals/    │  │  approvals/    │              │
+    │  - roi.dashboard        │         │  │  drift         │  │  agents        │              │
+    │                         │         │  └────────────────┘  └────────────────┘              │
+    │  Status: BACKLOG        │         │  ┌────────────────┐  ┌────────────────┐              │
+    │  Sprint: 7              │         │  │    PG-152      │  │    PG-153      │              │
+    │  Deps: IFC-117, IFC-125 │         │  │  Agent Logs    │  │  Latency Mon   │              │
+    └─────────────────────────┘         │  │                │  │                │              │
+                                        │  │  /agent-       │  │  /agent-       │              │
+                                        │  │  approvals/    │  │  approvals/    │              │
+                                        │  │  logs          │  │  latency       │              │
+                                        │  └────────────────┘  └────────────────┘              │
+                                        │                                                      │
+                                        │  All depend on: IFC-197                              │
+                                        └─────────────────────────────────────────────────────┘
+
+    Chain Status: ⏳ Router and UI tasks created
+    - Monitoring Tools: IFC-117 ✅
+    - tRPC Router: IFC-197 (Sprint 7) ⏳
+    - Drift UI: PG-146 (Sprint 8) ⏳
+    - Agents UI: PG-151 (Sprint 8) ⏳
+    - Logs UI: PG-152 (Sprint 8) ⏳
+    - Latency UI: PG-153 (Sprint 8) ⏳
+```
 
 ---
 
-## Orphan Status Summary
+## Additional Intelligence UI Pages (Sprint 7)
 
-| Feature | AI Chain | Router | Frontend | Action Required |
-|---------|----------|--------|----------|-----------------|
-| Lead Scoring | IFC-005 ✅ | IFC-013 ✅ | IFC-023 ✅ | None - Complete |
-| Sentiment | IFC-039 ✅ | Partial ⚠️ | MISSING ❌ | Create PG-142 |
-| Churn Risk | IFC-095 ✅ | Partial ⚠️ | MISSING ❌ | Create PG-143 |
-| RAG/Search | IFC-039 ✅ | IFC-156 ✅ | MISSING ❌ | Create PG-144 |
-| Auto-Response | IFC-029 ✅ | IFC-029 ✅ | IFC-149 ✅ | None - Complete |
-| AI Review | IFC-128 ✅ | IFC-180 (Backlog) | IFC-181 (Backlog) | Already tracked |
-| Versioning | IFC-086 ✅ | IFC-086 ✅ | PG-128 (Backlog) | Already tracked |
+```
+    ╔═══════════════════════════════════════════════════════════════════════════════════════════╗
+    ║  INTELLIGENCE FEATURE PAGES (AI & Agents Sidebar)                        ⏳ TASKS CREATED ║
+    ╚═══════════════════════════════════════════════════════════════════════════════════════════╝
 
-**Total New Tasks Required: 3**
-- 3 Frontend (PG-142, PG-143, PG-144)
-- 0 Backend (chains complete, routers need integration)
+    ┌─────────────────────────┐    ┌─────────────────────────┐    ┌─────────────────────────┐
+    │       PG-148            │    │       PG-149            │    │       PG-150            │
+    │  Lead Scoring Dashboard │    │  Experiments Dashboard  │    │  AI Review History      │
+    │                         │    │                         │    │                         │
+    │  Route: /agent-         │    │  Route: /agent-         │    │  Route: /agent-         │
+    │  approvals/lead-scoring │    │  approvals/experiments  │    │  approvals/history      │
+    │                         │    │                         │    │                         │
+    │  - Score breakdown      │    │  - A/B test list        │    │  - Decision log         │
+    │  - Score history        │    │  - Statistical analysis │    │  - Audit trail          │
+    │  - Model performance    │    │  - Variant comparison   │    │  - Reviewer stats       │
+    │                         │    │                         │    │                         │
+    │  Status: BACKLOG        │    │  Status: BACKLOG        │    │  Status: BACKLOG        │
+    │  Sprint: 7              │    │  Sprint: 7              │    │  Sprint: 7              │
+    │  Deps: IFC-005, IFC-023 │    │  Deps: IFC-025          │    │  Deps: IFC-181, IFC-180 │
+    │        IFC-181          │    │        IFC-181          │    │                         │
+    └─────────────────────────┘    └─────────────────────────┘    └─────────────────────────┘
+```
+
+---
+
+## Task Status Summary (Updated 2026-02-08)
+
+### All AI & Agents Sidebar Tasks
+
+| Task ID | Feature | Route | Dependencies | Sprint | Status |
+|---------|---------|-------|--------------|--------|--------|
+| IFC-149 | Agent Approvals | `/agent-approvals` | IFC-139 | 6 | COMPLETED ✅ |
+| IFC-181 | AI Review Queue | `/agent-approvals/ai-review` | IFC-180, IFC-149 | 6 | COMPLETED ✅ |
+| PG-142 | Sentiment Dashboard | `/agent-approvals/sentiment` | IFC-039, IFC-181 | 7 | BACKLOG |
+| PG-143 | Churn Risk Dashboard | `/agent-approvals/churn-risk` | IFC-095, IFC-181 | 7 | BACKLOG |
+| PG-144 | AI Search | `/agent-approvals/ai-search` | IFC-156, IFC-155, IFC-181 | 7 | BACKLOG |
+| PG-148 | Lead Scoring Dashboard | `/agent-approvals/lead-scoring` | IFC-005, IFC-023, IFC-181 | 7 | BACKLOG |
+| PG-149 | Experiments Dashboard | `/agent-approvals/experiments` | IFC-025, IFC-181 | 7 | BACKLOG |
+| PG-150 | AI Review History | `/agent-approvals/history` | IFC-181, IFC-180 | 7 | BACKLOG |
+| IFC-197 | AI Monitoring Router | (tRPC) | IFC-117, IFC-125 | 7 | BACKLOG |
+| PG-146 | Drift Detection | `/agent-approvals/drift` | IFC-117, IFC-197 | 8 | BACKLOG |
+| PG-151 | Active Agents | `/agent-approvals/agents` | IFC-021, IFC-139, IFC-197 | 8 | BACKLOG |
+| PG-152 | Agent Logs | `/agent-approvals/logs` | IFC-148, IFC-197 | 8 | BACKLOG |
+| PG-153 | Latency Monitor | `/agent-approvals/latency` | IFC-117, IFC-197 | 8 | BACKLOG |
+
+### Backend Infrastructure Tasks
+
+| Task ID | Feature | Status | Notes |
+|---------|---------|--------|-------|
+| IFC-197 | AI Monitoring tRPC Router | BACKLOG | Exposes monitoring tools via API - prerequisite for Sprint 8 UI pages |
+
+---
+
+## Orphan Status Summary (RESOLVED)
+
+| Feature | AI Chain | Router | Frontend | Status |
+|---------|----------|--------|----------|--------|
+| Lead Scoring | IFC-005 ✅ | IFC-013 ✅ | IFC-023 ✅ + PG-148 | COMPLETE + dashboard planned |
+| Sentiment | IFC-039 ✅ | Partial ⚠️ | PG-142 (Sprint 7) | UI PLANNED |
+| Churn Risk | IFC-095 ✅ | Partial ⚠️ | PG-143 (Sprint 7) | UI PLANNED |
+| RAG/Search | IFC-039 ✅ | IFC-156 ✅ | PG-144 (Sprint 7) | UI PLANNED |
+| Auto-Response | IFC-029 ✅ | IFC-029 ✅ | IFC-149 ✅ | COMPLETE |
+| AI Review | IFC-128 ✅ | IFC-180 ✅ | IFC-181 ✅ + PG-150 | COMPLETE + history planned |
+| Versioning | IFC-086 ✅ | IFC-086 ✅ | PG-128 ✅ | COMPLETE |
+| AI Monitoring | IFC-117 ✅ | IFC-197 (Sprint 7) | PG-146/151/152/153 (Sprint 8) | PLANNED |
+| Experiments | IFC-025 ✅ | IFC-025 ✅ | PG-149 (Sprint 7) | UI PLANNED |
+
+**All orphans resolved.** Every AI feature now has a UI task assigned.
+- 0 orphaned chains (was 3)
+- 8 new tasks created (IFC-197, PG-142-144 updated, PG-148-153 new)
+- 4 existing tasks updated with correct `/agent-approvals/` routes
 
 ---
 
@@ -396,10 +510,25 @@ The **AI/Intelligence** domain covers Lead Scoring, Sentiment Analysis, Churn Ri
     │ Chain                  │ IFC Task    │ Status                                           │
     ├────────────────────────┼─────────────┼──────────────────────────────────────────────────┤
     │ AutoResponseChain      │ IFC-029     │ ✅ Complete + UI (IFC-149)                       │
-    │ LeadScoringChain       │ IFC-005     │ ✅ Complete + UI (IFC-023)                       │
-    │ SentimentAnalysisChain │ IFC-039     │ ⚠️ Chain complete, UI MISSING                   │
-    │ ChurnRiskChain         │ IFC-095     │ ⚠️ Chain complete, UI MISSING                   │
+    │ LeadScoringChain       │ IFC-005     │ ✅ Complete + UI (IFC-023) + Dashboard (PG-148)  │
+    │ SentimentAnalysisChain │ IFC-039     │ ✅ Chain complete, UI planned (PG-142, Sprint 7) │
+    │ ChurnRiskChain         │ IFC-095     │ ✅ Chain complete, UI planned (PG-143, Sprint 7) │
     │ EmbeddingChain         │ AI-SETUP-003│ ✅ Complete (internal use)                       │
-    │ RAGContextChain        │ IFC-039     │ ⚠️ Chain complete, UI MISSING                   │
+    │ RAGContextChain        │ IFC-039     │ ✅ Chain complete, UI planned (PG-144, Sprint 7) │
+    └────────────────────────┴─────────────┴──────────────────────────────────────────────────┘
+
+    ┌─────────────────────────────────────────────────────────────────────────────────────────┐
+    │  apps/ai-worker/src/monitoring/index.ts                                                  │
+    └─────────────────────────────────────────────────────────────────────────────────────────┘
+
+    Monitoring Tools:
+    ┌────────────────────────┬─────────────┬──────────────────────────────────────────────────┐
+    │ Tool                   │ IFC Task    │ Status                                           │
+    ├────────────────────────┼─────────────┼──────────────────────────────────────────────────┤
+    │ DriftDetector          │ IFC-117     │ ✅ Complete, Router (IFC-197), UI (PG-146)       │
+    │ LatencyMonitor         │ IFC-117     │ ✅ Complete, Router (IFC-197), UI (PG-153)       │
+    │ HallucinationChecker   │ IFC-117     │ ✅ Complete, Router (IFC-197)                    │
+    │ ROITracker             │ IFC-117     │ ✅ Complete, Router (IFC-197)                    │
+    │ ChainMonitor           │ IFC-117     │ ✅ Complete, Router (IFC-197)                    │
     └────────────────────────┴─────────────┴──────────────────────────────────────────────────┘
 ```

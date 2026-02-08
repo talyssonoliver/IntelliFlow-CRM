@@ -29,8 +29,8 @@
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts src/feature-flags/index.ts src/resilience/index.ts src/queues/index.ts --format cjs,esm --dts",
-    "dev": "tsup src/index.ts src/feature-flags/index.ts src/resilience/index.ts src/queues/index.ts --format cjs,esm --dts --watch",
+    "build": "tsup src/index.ts src/feature-flags/index.ts src/resilience/index.ts src/queues/index.ts --format cjs,esm --experimental-dts",
+    "dev": "tsup src/index.ts src/feature-flags/index.ts src/resilience/index.ts src/queues/index.ts --format cjs,esm --experimental-dts --watch",
     "clean": "rm -rf dist .turbo",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"src/**/*.ts\"",

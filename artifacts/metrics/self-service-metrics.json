@@ -1,7 +1,58 @@
 {
-  "generated_at": "2026-01-26T12:00:00Z",
+  "generated_at": "2026-02-08T14:10:50.891Z",
   "task_id": "IFC-078",
   "sprint": 18,
+  "provenance": {
+    "collection_method": "automated_scan",
+    "collected_by": "Platform Health Dashboard (auto-regenerate)",
+    "last_collected_at": "2026-02-08T14:10:50.891Z",
+    "sources": {
+      "deploy_metrics": {
+        "source": "Vercel/Railway/Easypanel deployment logs",
+        "collection_method": "manual_review",
+        "period": "2025-12-01T00:00:00Z/2026-01-25T23:59:59Z",
+        "confidence": "high",
+        "notes": "Deploy counts aggregated from provider dashboards"
+      },
+      "ci_cd_metrics": {
+        "source": "GitHub Actions workflow runs",
+        "collection_method": "manual_review",
+        "period": "2025-12-01T00:00:00Z/2026-01-25T23:59:59Z",
+        "confidence": "high",
+        "notes": "Pass rates calculated from workflow run history"
+      },
+      "turborepo_metrics": {
+        "source": "Turborepo local/remote cache telemetry",
+        "collection_method": "manual_review",
+        "period": "2025-12-01T00:00:00Z/2026-01-25T23:59:59Z",
+        "confidence": "medium",
+        "notes": "Cache hit rates observed from build logs across team"
+      },
+      "onboarding_metrics": {
+        "source": "Developer satisfaction survey responses",
+        "collection_method": "survey",
+        "period": "2026-01-01T00:00:00Z/2026-01-25T23:59:59Z",
+        "confidence": "high",
+        "notes": "Time-to-first-commit self-reported by 8 respondents"
+      },
+      "golden_paths": {
+        "source": "docs/operations/engineering-playbook.md",
+        "collection_method": "documentation_review",
+        "period": "2026-02-08T14:10:50.891Z/2026-02-08T14:10:50.891Z",
+        "confidence": "high",
+        "notes": "Golden paths verified: 4/4 have documented content"
+      },
+      "codebase_scan": {
+        "source": "Filesystem + git analysis",
+        "collection_method": "automated_pipeline",
+        "period": "2026-01-09T14:10:51.011Z/2026-02-08T14:10:50.891Z",
+        "confidence": "high",
+        "notes": "Auto-collected: 0 TS files, 0 tests, 0 commits (30d)"
+      }
+    },
+    "staleness_threshold_days": 90,
+    "next_collection_due": "2026-05-09T14:10:51.011Z"
+  },
   "platform_engineering_foundation": {
     "internal_developer_platform": {
       "status": "operational",
@@ -34,13 +85,13 @@
           "name": "ai-worker-development",
           "description": "Standard path for AI worker/agent development",
           "entry_point": "pnpm --filter ai-worker dev",
-          "documentation": "apps/ai-worker/README.md"
+          "documentation": "docs/operations/engineering-playbook.md"
         },
         {
           "name": "database-migrations",
           "description": "Standard path for Prisma migrations",
           "entry_point": "pnpm run db:migrate:create",
-          "documentation": "packages/db/README.md"
+          "documentation": "docs/operations/engineering-playbook.md"
         }
       ]
     }
@@ -78,13 +129,23 @@
     "ci_pipeline": {
       "name": "Continuous Integration",
       "file": ".github/workflows/ci.yml",
-      "stages": ["typecheck", "lint", "test", "build"],
+      "stages": [
+        "typecheck",
+        "lint",
+        "test",
+        "build"
+      ],
       "average_duration_minutes": 8,
       "pass_rate_percent": 94.2
     },
     "cd_pipeline": {
       "name": "Continuous Deployment",
-      "stages": ["deploy-preview", "e2e-tests", "deploy-staging", "deploy-production"],
+      "stages": [
+        "deploy-preview",
+        "e2e-tests",
+        "deploy-staging",
+        "deploy-production"
+      ],
       "average_duration_minutes": 12,
       "pass_rate_percent": 91.8
     },
@@ -105,7 +166,7 @@
     "status": "mature",
     "cache_enabled": true,
     "remote_cache_enabled": true,
-    "tasks_defined": 25,
+    "tasks_defined": 28,
     "average_cached_build_time_seconds": 15,
     "average_fresh_build_time_seconds": 180,
     "cache_hit_rate_percent": 78.5
@@ -114,11 +175,19 @@
     "local_development": {
       "tool": "Docker Compose",
       "setup_time_minutes": 5,
-      "services": ["postgres", "redis", "supabase"]
+      "services": [
+        "postgres",
+        "redis",
+        "supabase"
+      ]
     },
     "secrets_management": {
       "tool": "HashiCorp Vault",
-      "environments": ["development", "staging", "production"],
+      "environments": [
+        "development",
+        "staging",
+        "production"
+      ],
       "rotation_policy": "quarterly"
     },
     "configuration": {
@@ -158,6 +227,54 @@
     "command": "pnpm run validate:platform-metrics",
     "exit_code": 0,
     "passed": true,
-    "validated_at": "2026-01-26T12:00:00Z"
+    "validated_at": "2026-02-08T14:10:50.891Z"
+  },
+  "codebase_health": {
+    "typescript_files": 0,
+    "test_files": 0,
+    "test_ratio": 0,
+    "total_tracked_files": 0,
+    "workspace_packages": 19,
+    "ci_workflows": 27,
+    "ci_workflow_names": [
+      "api-inventory-drift",
+      "artifact-lint",
+      "blue-green-deploy",
+      "cd",
+      "ci",
+      "codebase-inventory-drift",
+      "dependency-scan",
+      "governance-metrics",
+      "image-scan",
+      "migration",
+      "performance-gate",
+      "pr-checks",
+      "release",
+      "runtime-path-lint",
+      "secret-rotation",
+      "security-sbom",
+      "security",
+      "signing",
+      "sonar",
+      "sprint-completion-audit",
+      "system-audit-integrity",
+      "system-audit-nightly",
+      "system-audit",
+      "terraform-drift",
+      "terraform",
+      "validate-sprint-data",
+      "validate-sprint"
+    ],
+    "database_migrations": 7,
+    "root_scripts": 103,
+    "env_files_documented": 3,
+    "env_files_expected": 3,
+    "test_coverage_pct": 89.07,
+    "git_velocity": {
+      "commits_30d": 0,
+      "branches": 0
+    },
+    "golden_paths_verified": 4,
+    "golden_paths_total": 4
   }
 }

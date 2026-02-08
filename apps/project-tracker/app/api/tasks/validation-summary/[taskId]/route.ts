@@ -632,15 +632,15 @@ async function loadMATOPSummary(taskId: string, sprintNumber: number): Promise<M
       const consensusMatch = deliveryContent.match(/\*?\*?Consensus(?:\s+Verdict)?:.*?\b(PASS|WARN|FAIL)\b/i);
       if (consensusMatch) {
         // Extract STOA results from delivery table (| STOA | Verdict | Notes |)
-        const stoaResults: Record<string, { verdict: string; notes?: string }> = {};
+        const stoaResults: Record<string, import('@/lib/types').STOAVerdict> = {};
         const stoaRowRegex = /\|\s*(Foundation|Security|Quality|Domain|Intelligence)\s*\|\s*(PASS|WARN|FAIL)\s*\|\s*([^|]*)\|/gi;
         let stoaMatch;
         let stoaPassed = 0;
         let stoaTotal = 0;
         while ((stoaMatch = stoaRowRegex.exec(deliveryContent)) !== null) {
           const name = stoaMatch[1].toLowerCase();
-          const verdict = stoaMatch[2].toUpperCase();
-          stoaResults[name] = { verdict, notes: stoaMatch[3]?.trim() };
+          const verdict = stoaMatch[2].toUpperCase() as 'PASS' | 'WARN' | 'FAIL';
+          stoaResults[name] = { role: 'Lead', verdict, summary: stoaMatch[3]?.trim() };
           stoaTotal++;
           if (verdict === 'PASS') stoaPassed++;
         }

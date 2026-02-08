@@ -165,8 +165,8 @@ describe('downloadCSV', () => {
 
     mockCreateObjectURL = vi.fn().mockReturnValue('blob:test-url');
     mockRevokeObjectURL = vi.fn();
-    globalThis.URL.createObjectURL = mockCreateObjectURL;
-    globalThis.URL.revokeObjectURL = mockRevokeObjectURL;
+    globalThis.URL.createObjectURL = mockCreateObjectURL as any;
+    globalThis.URL.revokeObjectURL = mockRevokeObjectURL as any;
   });
 
   it('creates a link element and triggers download', () => {

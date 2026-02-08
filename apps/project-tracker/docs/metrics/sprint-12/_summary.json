@@ -119,26 +119,26 @@
     },
     {
       "task_id": "IFC-155",
-      "completed_at": "2026-01-31T00:15:00.000Z",
+      "completed_at": "2026-02-06T23:35:00.000Z",
       "duration_minutes": 10
     },
     {
       "task_id": "IFC-169",
-      "completed_at": "2026-02-06T23:40:55.396Z",
+      "completed_at": "2026-02-08T19:59:16.855Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-170",
-      "completed_at": "2026-02-06T23:40:55.396Z",
+      "completed_at": "2026-02-08T19:59:16.856Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-171",
-      "completed_at": "2026-02-06T23:40:55.396Z",
+      "completed_at": "2026-02-08T19:59:16.856Z",
       "duration_minutes": 15
     }
   ],
-  "notes": "19/19 tasks DONE (100%). Last synced: 2026-02-06T23:40:55.396Z",
+  "notes": "19/19 tasks DONE (100%). Last synced: 2026-02-08T19:59:16.856Z",
   "section": "Public Pages",
   "dependencies": {
     "all_satisfied": true,
@@ -196,6 +196,6 @@
       "spi": 1,
       "status": "on_track"
     },
-    "calculated_at": "2026-02-06T23:40:55.446Z"
+    "calculated_at": "2026-02-08T19:59:16.923Z"
   }
 }

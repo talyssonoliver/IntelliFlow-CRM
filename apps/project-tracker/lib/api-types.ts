@@ -22,7 +22,7 @@ export interface ApiResponse<T> {
 /**
  * Create a successful API response
  */
-export function createSuccessResponse<T>(data: T, message?: string): ApiResponse<T> {
+function createSuccessResponse<T>(data: T, message?: string): ApiResponse<T> {
   return {
     success: true,
     data,
@@ -34,7 +34,7 @@ export function createSuccessResponse<T>(data: T, message?: string): ApiResponse
 /**
  * Create an error API response
  */
-export function createErrorResponse<T>(error: string, data?: T): ApiResponse<T> {
+function createErrorResponse<T>(error: string, data?: T): ApiResponse<T> {
   return {
     success: false,
     data: data as T,
@@ -327,3 +327,5 @@ export const NO_CACHE_HEADERS = {
   Pragma: 'no-cache',
   Expires: '0',
 } as const;
+
+

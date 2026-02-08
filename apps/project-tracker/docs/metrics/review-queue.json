@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-02-01T23:19:54.967Z",
+    "generated_at": "2026-02-08T19:58:37.492Z",
     "sprint_scope": 0,
     "total_items": 29
   },
@@ -355,9 +355,9 @@
       "owner": "PM + DA",
       "reasons": [
         "Tier A task - requires explicit validation",
-        "High fan-out (3 dependents)"
+        "High fan-out (4 dependents)"
       ],
-      "dependent_count": 3,
+      "dependent_count": 4,
       "priority": "critical"
     },
     {

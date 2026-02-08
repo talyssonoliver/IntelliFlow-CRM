@@ -85,7 +85,7 @@ export default function QualityDashboard() {
 
   if (error) {
     return (
-      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400">
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600">
         <div className="flex items-center gap-2">
           <Icon name="error" size="lg" />
           <span>Error: {error}</span>
@@ -104,12 +104,12 @@ export default function QualityDashboard() {
     switch (gate.toLowerCase()) {
       case 'passed':
       case 'ok':
-        return 'text-green-400';
+        return 'text-green-600';
       case 'failed':
       case 'error':
-        return 'text-red-400';
+        return 'text-red-600';
       default:
-        return 'text-yellow-400';
+        return 'text-yellow-600';
     }
   };
 
@@ -124,10 +124,10 @@ export default function QualityDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Icon name="check_circle" className="text-green-400" size="xl" />
+          <Icon name="check_circle" className="text-green-600" size="xl" />
           <div>
-            <h3 className="text-lg font-semibold text-white">Quality Metrics</h3>
-            <p className="text-sm text-gray-400">
+            <h3 className="text-lg font-semibold text-gray-900">Quality Metrics</h3>
+            <p className="text-sm text-gray-500">
               Debt, coverage, and code analysis
             </p>
           </div>
@@ -140,9 +140,9 @@ export default function QualityDashboard() {
       </div>
 
       {/* Coverage Section */}
-      <div className="bg-gray-700/30 rounded-lg p-4">
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
         <div className="flex items-center justify-between mb-4">
-          <h4 className="text-sm font-medium text-gray-300 flex items-center gap-2">
+          <h4 className="text-sm font-medium text-gray-700 flex items-center gap-2">
             <Icon name="pie_chart" size="base" />
             Test Coverage
           </h4>
@@ -182,9 +182,9 @@ export default function QualityDashboard() {
       </div>
 
       {/* Technical Debt Section */}
-      <div className="bg-gray-700/30 rounded-lg p-4">
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
         <div className="flex items-center justify-between mb-4">
-          <h4 className="text-sm font-medium text-gray-300 flex items-center gap-2">
+          <h4 className="text-sm font-medium text-gray-700 flex items-center gap-2">
             <Icon name="trending_down" size="base" />
             Technical Debt
           </h4>
@@ -240,9 +240,9 @@ export default function QualityDashboard() {
       </div>
 
       {/* SonarQube Section */}
-      <div className="bg-gray-700/30 rounded-lg p-4">
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
         <div className="flex items-center justify-between mb-4">
-          <h4 className="text-sm font-medium text-gray-300 flex items-center gap-2">
+          <h4 className="text-sm font-medium text-gray-700 flex items-center gap-2">
             <Icon name="search" size="base" />
             SonarQube Analysis
           </h4>
@@ -264,7 +264,7 @@ export default function QualityDashboard() {
         </div>
         <div className="mb-4">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">Quality Gate:</span>
+            <span className="text-sm text-gray-500">Quality Gate:</span>
             <span className={`font-semibold ${getQualityGateColor(data?.sonarqube.qualityGate ?? 'Unknown')}`}>
               {data?.sonarqube.qualityGate ?? 'Unknown'}
             </span>
@@ -299,9 +299,9 @@ export default function QualityDashboard() {
       </div>
 
       {/* Phantom Audit Section */}
-      <div className="bg-gray-700/30 rounded-lg p-4">
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
         <div className="flex items-center justify-between mb-4">
-          <h4 className="text-sm font-medium text-gray-300 flex items-center gap-2">
+          <h4 className="text-sm font-medium text-gray-700 flex items-center gap-2">
             <Icon name="visibility_off" size="base" />
             Phantom Completion Audit
           </h4>

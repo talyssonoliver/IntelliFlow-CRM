@@ -7,6 +7,7 @@ import {
   AccountUpdatedEvent,
   AccountRevenueUpdatedEvent,
   AccountIndustryCategorizedEvent,
+  AccountHierarchyUpdatedEvent,
 } from './AccountEvents';
 
 export class InvalidRevenueError extends DomainError {
@@ -23,6 +24,13 @@ export class InvalidEmployeeCountError extends DomainError {
   }
 }
 
+export class InvalidHierarchyError extends DomainError {
+  readonly code = 'INVALID_HIERARCHY';
+  constructor(message: string) {
+    super(message);
+  }
+}
+
 interface AccountProps {
   name: string;
   website?: WebsiteUrl;
@@ -30,6 +38,7 @@ interface AccountProps {
   employees?: number;
   revenue?: number;
   description?: string;
+  parentAccountId?: string;
   ownerId: string;
   tenantId: string;
   createdAt: Date;
@@ -43,6 +52,7 @@ export interface CreateAccountProps {
   employees?: number;
   revenue?: number;
   description?: string;
+  parentAccountId?: string;
   ownerId: string;
   tenantId: string;
 }
@@ -100,6 +110,10 @@ export class Account extends AggregateRoot<AccountId> {
     return this.props.updatedAt;
   }
 
+  get parentAccountId(): string | undefined {
+    return this.props.parentAccountId;
+  }
+
   get hasIndustry(): boolean {
     return this.props.industry !== undefined;
   }
@@ -145,6 +159,7 @@ export class Account extends AggregateRoot<AccountId> {
       employees: props.employees,
       revenue: props.revenue,
       description: props.description,
+      parentAccountId: props.parentAccountId,
       ownerId: props.ownerId,
       tenantId: props.tenantId,
       createdAt: now,
@@ -241,6 +256,23 @@ export class Account extends AggregateRoot<AccountId> {
     return Result.ok(undefined);
   }
 
+  setParent(parentAccountId: string, updatedBy: string): Result<void, InvalidHierarchyError> {
+    if (parentAccountId === this.id.value) {
+      return Result.fail(new InvalidHierarchyError('Account cannot be its own parent'));
+    }
+    this.props.parentAccountId = parentAccountId;
+    this.props.updatedAt = new Date();
+    this.addDomainEvent(new AccountHierarchyUpdatedEvent(this.id, parentAccountId, updatedBy));
+    return Result.ok(undefined);
+  }
+
+  removeParent(updatedBy: string): void {
+    if (!this.props.parentAccountId) return;
+    this.props.parentAccountId = undefined;
+    this.props.updatedAt = new Date();
+    this.addDomainEvent(new AccountHierarchyUpdatedEvent(this.id, undefined, updatedBy));
+  }
+
   categorizeIndustry(industry: string, categorizedBy: string): void {
     this.props.industry = industry;
     this.props.updatedAt = new Date();
@@ -258,6 +290,7 @@ export class Account extends AggregateRoot<AccountId> {
       employees: this.employees,
       revenue: this.revenue,
       description: this.description,
+      parentAccountId: this.parentAccountId,
       ownerId: this.ownerId,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),

@@ -112,7 +112,6 @@ tmpclaude-*-cwd/
 .DS_Store
 Thumbs.db
 desktop.ini
-nul
 
 # Prisma
 prisma/migrations/**/migration.sql.backup

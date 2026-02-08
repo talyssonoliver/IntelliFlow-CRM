@@ -1,4 +1,4 @@
-import { Account, AccountId, AccountRepository } from '@intelliflow/domain';
+import { Account, AccountId, AccountRepository, type AccountHierarchyRecord } from '@intelliflow/domain';
 
 /**
  * In-Memory Account Repository
@@ -57,6 +57,51 @@ export class InMemoryAccountRepository implements AccountRepository {
     }
 
     return counts;
+  }
+
+  async findWithChildren(id: AccountId, maxDepth: number = 5): Promise<AccountHierarchyRecord | null> {
+    const root = this.accounts.get(id.value);
+    if (!root) return null;
+
+    const buildNode = (account: Account, depth: number): AccountHierarchyRecord => {
+      const children = depth > 0
+        ? Array.from(this.accounts.values())
+            .filter((a) => a.parentAccountId === account.id.value)
+            .map((child) => buildNode(child, depth - 1))
+        : [];
+      return {
+        id: account.id.value,
+        name: account.name,
+        industry: account.industry ?? null,
+        revenue: account.revenue ?? null,
+        tenantId: account.tenantId,
+        _count: { contacts: 0, opportunities: 0 },
+        childAccounts: children,
+      };
+    };
+
+    return buildNode(root, maxDepth);
+  }
+
+  async findAncestors(id: AccountId): Promise<Account[]> {
+    const ancestors: Account[] = [];
+    let current = this.accounts.get(id.value);
+    const visited = new Set<string>();
+
+    while (current?.parentAccountId && !visited.has(current.parentAccountId)) {
+      visited.add(current.parentAccountId);
+      const parent = this.accounts.get(current.parentAccountId);
+      if (!parent) break;
+      ancestors.unshift(parent);
+      current = parent;
+    }
+
+    return ancestors;
+  }
+
+  async getHierarchyDepth(id: AccountId): Promise<number> {
+    const ancestors = await this.findAncestors(id);
+    return ancestors.length;
   }
 
   // Test helper methods

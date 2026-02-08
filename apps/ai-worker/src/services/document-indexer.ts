@@ -19,6 +19,7 @@
 import { PrismaClient } from '@intelliflow/db';
 import { z } from 'zod';
 import { EmbeddingChain } from '../chains/embedding.chain';
+import { REINDEX_QUEUE_NAME } from '../workers/reindex-worker';
 
 // ============================================
 // Configuration
@@ -712,5 +713,8 @@ export function createDocumentIndexer(
 ): DocumentIndexer {
   return new DocumentIndexer(prisma, config);
 }
+
+/** Re-export the queue name constant so indexer consumers have easy access */
+export { REINDEX_QUEUE_NAME };
 
 export default DocumentIndexer;

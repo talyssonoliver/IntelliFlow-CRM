@@ -89,10 +89,10 @@ export default function StatusHistory({ onBack }: Readonly<StatusHistoryProps>) 
     if (value === 0) return null;
     const isPositive = value > 0;
     const colorClass = label === 'completed'
-      ? (isPositive ? 'text-green-400' : 'text-red-400')
+      ? (isPositive ? 'text-green-600' : 'text-red-600')
       : label === 'blocked'
-        ? (isPositive ? 'text-red-400' : 'text-green-400')
-        : 'text-gray-400';
+        ? (isPositive ? 'text-red-600' : 'text-green-600')
+        : 'text-gray-500';
 
     return (
       <span className={`text-xs font-medium ${colorClass}`}>
@@ -111,7 +111,7 @@ export default function StatusHistory({ onBack }: Readonly<StatusHistoryProps>) 
 
   if (error) {
     return (
-      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400">
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600">
         <div className="flex items-center gap-2">
           <Icon name="error" size="lg" />
           <span>Error: {error}</span>
@@ -134,23 +134,23 @@ export default function StatusHistory({ onBack }: Readonly<StatusHistoryProps>) 
           {onBack && (
             <button
               onClick={onBack}
-              className="p-1 rounded hover:bg-gray-700/50 transition-colors"
+              className="p-1 rounded hover:bg-gray-100 transition-colors"
               aria-label="Back to current view"
             >
-              <Icon name="arrow_back" size="lg" className="text-gray-400" />
+              <Icon name="arrow_back" size="lg" className="text-gray-500" />
             </button>
           )}
-          <Icon name="history" className="text-blue-400" size="xl" />
+          <Icon name="history" className="text-blue-600" size="xl" />
           <div>
-            <h3 className="text-lg font-semibold text-white">Status History</h3>
-            <p className="text-sm text-gray-400">
+            <h3 className="text-lg font-semibold text-gray-900">Status History</h3>
+            <p className="text-sm text-gray-500">
               {entries.length} snapshot{entries.length !== 1 ? 's' : ''} recorded
             </p>
           </div>
         </div>
         <button
           onClick={fetchHistory}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-700/50 hover:bg-gray-700 text-gray-300 text-sm transition-colors"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm transition-colors"
         >
           <Icon name="refresh" size="sm" />
           Refresh
@@ -159,16 +159,16 @@ export default function StatusHistory({ onBack }: Readonly<StatusHistoryProps>) 
 
       {/* Trend Summary */}
       {trend && (
-        <div className="bg-gray-700/30 rounded-lg p-4 border border-gray-600">
+        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
           <div className="flex items-center gap-3">
             <Icon
               name={trend.direction === 'up' ? 'trending_up' : trend.direction === 'down' ? 'trending_down' : 'remove'}
               size="xl"
-              className={trend.direction === 'up' ? 'text-green-400' : trend.direction === 'down' ? 'text-red-400' : 'text-gray-400'}
+              className={trend.direction === 'up' ? 'text-green-600' : trend.direction === 'down' ? 'text-red-600' : 'text-gray-500'}
             />
             <div>
-              <p className="text-sm text-gray-400">Recent Trend</p>
-              <p className={`text-lg font-semibold ${trend.direction === 'up' ? 'text-green-400' : trend.direction === 'down' ? 'text-red-400' : 'text-gray-300'}`}>
+              <p className="text-sm text-gray-500">Recent Trend</p>
+              <p className={`text-lg font-semibold ${trend.direction === 'up' ? 'text-green-600' : trend.direction === 'down' ? 'text-red-600' : 'text-gray-700'}`}>
                 {trend.direction === 'stable'
                   ? 'No change'
                   : `${trend.value} task${trend.value !== 1 ? 's' : ''} ${trend.direction === 'up' ? 'completed' : 'regressed'}`}
@@ -180,23 +180,23 @@ export default function StatusHistory({ onBack }: Readonly<StatusHistoryProps>) 
 
       {/* History Timeline */}
       {entries.length === 0 ? (
-        <div className="bg-gray-700/30 rounded-lg p-8 text-center border border-gray-600">
+        <div className="bg-gray-50 rounded-lg p-8 text-center border border-gray-200">
           <Icon name="history" size="2xl" className="text-gray-500 mx-auto mb-3" />
-          <p className="text-gray-400">No history available yet.</p>
+          <p className="text-gray-500">No history available yet.</p>
           <p className="text-sm text-gray-500 mt-1">
             Click &ldquo;Regenerate&rdquo; in the current view to start tracking history.
           </p>
         </div>
       ) : (
-        <div className="bg-gray-700/30 rounded-lg border border-gray-600 overflow-hidden">
-          <div className="px-4 py-3 bg-gray-800/50 border-b border-gray-600">
-            <h4 className="text-sm font-medium text-gray-300">Timeline</h4>
+        <div className="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-4 py-3 bg-gray-100 border-b border-gray-200">
+            <h4 className="text-sm font-medium text-gray-700">Timeline</h4>
           </div>
-          <div className="divide-y divide-gray-600">
+          <div className="divide-y divide-gray-200">
             {entries.map((entry, index) => (
               <div
                 key={entry.timestamp}
-                className={`px-4 py-3 ${index === 0 ? 'bg-blue-500/5' : ''}`}
+                className={`px-4 py-3 ${index === 0 ? 'bg-blue-50' : ''}`}
               >
                 <div className="flex items-start justify-between gap-4">
                   {/* Timestamp */}
@@ -204,9 +204,9 @@ export default function StatusHistory({ onBack }: Readonly<StatusHistoryProps>) 
                     <Icon
                       name={index === 0 ? 'schedule' : 'history'}
                       size="sm"
-                      className={index === 0 ? 'text-blue-400' : 'text-gray-500'}
+                      className={index === 0 ? 'text-blue-600' : 'text-gray-600'}
                     />
-                    <span className={`text-sm ${index === 0 ? 'text-blue-400 font-medium' : 'text-gray-400'}`}>
+                    <span className={`text-sm ${index === 0 ? 'text-blue-600 font-medium' : 'text-gray-500'}`}>
                       {formatTimestamp(entry.timestamp)}
                     </span>
                   </div>
@@ -214,31 +214,31 @@ export default function StatusHistory({ onBack }: Readonly<StatusHistoryProps>) 
                   {/* Summary */}
                   <div className="flex-1 flex items-center gap-4 flex-wrap">
                     <div className="flex items-center gap-1.5">
-                      <Icon name="check_circle" size="sm" className="text-green-400" />
-                      <span className="text-sm text-white">{entry.summary.completed}</span>
+                      <Icon name="check_circle" size="sm" className="text-green-600" />
+                      <span className="text-sm text-gray-900">{entry.summary.completed}</span>
                       {entry.delta && renderDelta(entry.delta.completed, 'completed')}
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <Icon name="schedule" size="sm" className="text-yellow-400" />
-                      <span className="text-sm text-white">{entry.summary.in_progress}</span>
+                      <Icon name="schedule" size="sm" className="text-yellow-600" />
+                      <span className="text-sm text-gray-900">{entry.summary.in_progress}</span>
                       {entry.delta && renderDelta(entry.delta.in_progress, 'in_progress')}
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <Icon name="cancel" size="sm" className="text-red-400" />
-                      <span className="text-sm text-white">{entry.summary.blocked}</span>
+                      <Icon name="cancel" size="sm" className="text-red-600" />
+                      <span className="text-sm text-gray-900">{entry.summary.blocked}</span>
                       {entry.delta && renderDelta(entry.delta.blocked, 'blocked')}
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <Icon name="inbox" size="sm" className="text-gray-400" />
-                      <span className="text-sm text-white">{entry.summary.backlog}</span>
+                      <Icon name="inbox" size="sm" className="text-gray-500" />
+                      <span className="text-sm text-gray-900">{entry.summary.backlog}</span>
                       {entry.delta && renderDelta(entry.delta.backlog, 'backlog')}
                     </div>
                   </div>
 
                   {/* Total */}
                   <div className="text-right">
-                    <span className="text-xs text-gray-500">Total</span>
-                    <p className="text-sm font-medium text-white">{entry.summary.total}</p>
+                    <span className="text-xs text-gray-600">Total</span>
+                    <p className="text-sm font-medium text-gray-900">{entry.summary.total}</p>
                   </div>
                 </div>
               </div>

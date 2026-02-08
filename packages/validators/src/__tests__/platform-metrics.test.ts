@@ -149,6 +149,20 @@ describe('Platform Metrics Validators', () => {
       generated_at: '2026-01-26T12:00:00Z',
       task_id: 'IFC-078',
       sprint: 18,
+      provenance: {
+        collection_method: 'automated_pipeline',
+        collected_by: 'ci-bot',
+        last_collected_at: '2026-01-26T12:00:00Z',
+        sources: {
+          deploy_metrics: { source: 'Vercel API', collection_method: 'api_query', period: 'sprint-18', confidence: 'high' },
+          ci_cd_metrics: { source: 'GitHub Actions', collection_method: 'automated_pipeline', period: 'sprint-18', confidence: 'high' },
+          turborepo_metrics: { source: 'Turborepo logs', collection_method: 'automated_pipeline', period: 'sprint-18', confidence: 'medium' },
+          onboarding_metrics: { source: 'Survey results', collection_method: 'survey', period: 'sprint-18', confidence: 'medium' },
+          golden_paths: { source: 'Documentation review', collection_method: 'documentation_review', period: 'sprint-18', confidence: 'high' },
+        },
+        staleness_threshold_days: 30,
+        next_collection_due: '2026-02-26T12:00:00Z',
+      },
       platform_engineering_foundation: {
         internal_developer_platform: {
           status: 'operational',
@@ -323,6 +337,20 @@ describe('Platform Metrics Validators', () => {
       generated_at: '2026-01-26T12:00:00Z',
       task_id: 'IFC-078',
       sprint: 18,
+      provenance: {
+        collection_method: 'automated_pipeline',
+        collected_by: 'ci-bot',
+        last_collected_at: '2026-01-26T12:00:00Z',
+        sources: {
+          deploy_metrics: { source: 'Vercel API', collection_method: 'api_query', period: 'sprint-18', confidence: 'high' },
+          ci_cd_metrics: { source: 'GitHub Actions', collection_method: 'automated_pipeline', period: 'sprint-18', confidence: 'high' },
+          turborepo_metrics: { source: 'Turborepo logs', collection_method: 'automated_pipeline', period: 'sprint-18', confidence: 'medium' },
+          onboarding_metrics: { source: 'Survey results', collection_method: 'survey', period: 'sprint-18', confidence: 'medium' },
+          golden_paths: { source: 'Documentation review', collection_method: 'documentation_review', period: 'sprint-18', confidence: 'high' },
+        },
+        staleness_threshold_days: 30,
+        next_collection_due: '2026-02-26T12:00:00Z',
+      },
       platform_engineering_foundation: {
         internal_developer_platform: {
           status: 'operational',

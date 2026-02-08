@@ -39,6 +39,18 @@ export const governanceSidebarConfig: SidebarConfig = {
       ],
     },
     {
+      id: 'ai-review',
+      title: 'AI Review',
+      items: [
+        {
+          id: 'review-queue',
+          label: 'Review Queue',
+          icon: 'rate_review',
+          href: '/agent-approvals/ai-review',
+        },
+      ],
+    },
+    {
       id: 'quality',
       title: 'Quality',
       items: [

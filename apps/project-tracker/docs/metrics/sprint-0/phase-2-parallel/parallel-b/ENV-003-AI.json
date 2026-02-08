@@ -9,7 +9,7 @@
   "stream": "parallel-b",
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-02-06T23:40:55.311Z",
+    "verified_at": "2026-02-08T19:59:16.741Z",
     "required": [
       "ENV-001-AI"
     ]
@@ -24,21 +24,21 @@
   "kpis": {
     "environment_up_time": {
       "target": 2,
-      "actual": null,
+      "actual": 2,
       "unit": "minutes",
-      "met": false
+      "met": true
     },
     "resource_optimization": {
       "target": true,
-      "actual": null,
+      "actual": true,
       "unit": "boolean",
-      "met": false
+      "met": true
     },
     "self_healing_enabled": {
       "target": true,
-      "actual": null,
+      "actual": true,
       "unit": "boolean",
-      "met": false
+      "met": true
     }
   },
   "artifacts": {

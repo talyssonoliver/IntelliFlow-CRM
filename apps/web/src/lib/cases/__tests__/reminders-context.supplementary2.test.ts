@@ -22,11 +22,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const mocks = vi.hoisted(() => ({
   mockStart: vi.fn(),
   mockStop: vi.fn(),
-  mockGetPendingReminders: vi.fn(() => []),
+  mockGetPendingReminders: vi.fn((): any[] => []),
   mockCreateFromTimelineEvents: vi.fn((..._args: unknown[]) => []),
   mockSnoozeReminder: vi.fn(),
   mockDismissReminder: vi.fn(),
-  mockOnNotification: vi.fn(() => vi.fn()),
+  mockOnNotification: vi.fn((..._args: any[]) => vi.fn()),
 }));
 
 vi.mock('../reminders-service', () => ({

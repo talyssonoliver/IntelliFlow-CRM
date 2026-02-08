@@ -12,7 +12,7 @@
       "IFC-001",
       "IFC-005"
     ],
-    "verified_at": "2026-02-06T23:40:55.373Z",
+    "verified_at": "2026-02-08T19:59:16.821Z",
     "all_satisfied": true,
     "notes": "IFC-001 (Technical Architecture Spike) and IFC-005 (Technology Stack Validation) verified as DONE"
   },
@@ -58,25 +58,24 @@
   },
   "artifacts": {
     "expected": [
-      "artifacts/reports/team-skills-matrix.xlsx",
+      "artifacts/reports/team-skills-matrix.csv",
       "docs/planning/training-plan.md",
       "artifacts/misc/competency-test-results.csv",
-      "artifacts/reports/confidence-survey.pdf",
+      "artifacts/reports/confidence-survey.md",
       "apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md",
       "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md",
-      "artifacts/attestations/IFC-009/context_ack.json"
+      ".specify/sprints/sprint-4/attestations/IFC-009/context_ack.json"
     ],
     "created": [
+      "artifacts/reports/team-skills-matrix.csv",
       "docs/planning/training-plan.md",
       "artifacts/misc/competency-test-results.csv",
+      "artifacts/reports/confidence-survey.md",
       "apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md",
-      "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md"
+      "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md",
+      ".specify/sprints/sprint-4/attestations/IFC-009/context_ack.json"
     ],
-    "missing": [
-      "artifacts/reports/team-skills-matrix.xlsx",
-      "artifacts/reports/confidence-survey.pdf",
-      "artifacts/attestations/IFC-009/context_ack.json"
-    ]
+    "missing": []
   },
   "validations": [
     {

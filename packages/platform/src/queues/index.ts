@@ -61,9 +61,6 @@ export {
 export {
   queueRegistry,
   createAIScoringQueue,
-  createEmailNotificationsQueue,
-  createWebhookDeliveryQueue,
-  enqueueAIScoring,
   getQueueHealth,
   pauseQueue,
   resumeQueue,
@@ -83,8 +80,6 @@ export {
   getBullBoardInstance,
   addQueueToBullBoard,
   removeQueueFromBullBoard,
-  configureBullBoardForExpress,
-  configureBullBoardForFastify,
   getDashboardInfo,
   getBullBoardScreenshotDescription,
   type BullBoardConfig,

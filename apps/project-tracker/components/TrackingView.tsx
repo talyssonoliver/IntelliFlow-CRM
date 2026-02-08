@@ -2,14 +2,19 @@
 
 import { useState } from 'react';
 import { Icon } from '@/lib/icons';
-import StatusTracker from './tracking/StatusTracker';
-import QualityDashboard from './tracking/QualityDashboard';
-import RiskRegister from './tracking/RiskRegister';
-import AIMetrics from './tracking/AIMetrics';
-import SecurityDashboard from './tracking/SecurityDashboard';
-import BuildHealth from './tracking/BuildHealth';
+import {
+  StatusTracker,
+  FeatureMatrixPanel,
+  QualityDashboard,
+  RiskRegister,
+  AIMetrics,
+  SecurityDashboard,
+  BuildHealth,
+} from './tracking';
+import StatusHistory from './tracking/StatusHistory';
+import CollapsibleSection from './CollapsibleSection';
 
-type TrackingTab = 'status' | 'quality' | 'risks' | 'ai' | 'security' | 'build';
+type TrackingTab = 'status' | 'featureMatrix' | 'quality' | 'risks' | 'ai' | 'security' | 'build' | 'history';
 
 interface TabConfig {
   id: TrackingTab;
@@ -24,6 +29,12 @@ const TABS: TabConfig[] = [
     label: 'Status',
     icon: 'monitoring',
     description: 'Task status snapshot and progress tracking',
+  },
+  {
+    id: 'featureMatrix',
+    label: 'Feature Matrix',
+    icon: 'table_chart',
+    description: 'Source-of-truth feature inventory with task and coverage traceability',
   },
   {
     id: 'quality',
@@ -55,6 +66,12 @@ const TABS: TabConfig[] = [
     icon: 'hardware',
     description: 'Build health and validation status',
   },
+  {
+    id: 'history',
+    label: 'History',
+    icon: 'history',
+    description: 'Status change timeline and audit trail',
+  },
 ];
 
 export default function TrackingView() {
@@ -64,6 +81,8 @@ export default function TrackingView() {
     switch (activeTab) {
       case 'status':
         return <StatusTracker />;
+      case 'featureMatrix':
+        return <FeatureMatrixPanel />;
       case 'quality':
         return <QualityDashboard />;
       case 'risks':
@@ -74,6 +93,8 @@ export default function TrackingView() {
         return <SecurityDashboard />;
       case 'build':
         return <BuildHealth />;
+      case 'history':
+        return <StatusHistory onBack={() => setActiveTab('status')} />;
       default:
         return <StatusTracker />;
     }
@@ -84,15 +105,15 @@ export default function TrackingView() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-white">Continuous Tracking</h2>
-          <p className="text-gray-400 mt-1">
+          <h2 className="text-2xl font-bold text-gray-900">Continuous Tracking</h2>
+          <p className="text-gray-500 mt-1">
             Monitor and refresh artifact metrics with manual controls
           </p>
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="bg-gray-800/50 rounded-lg p-1 inline-flex gap-1">
+      <div className="bg-gray-100 rounded-lg p-1 inline-flex gap-1">
         {TABS.map((tab) => (
           <button
             key={tab.id}
@@ -102,7 +123,7 @@ export default function TrackingView() {
               ${
                 activeTab === tab.id
                   ? 'bg-blue-600 text-white shadow-lg'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
               }
             `}
             title={tab.description}
@@ -114,9 +135,14 @@ export default function TrackingView() {
       </div>
 
       {/* Tab Content */}
-      <div className="bg-gray-800/30 rounded-xl border border-gray-700/50 p-6">
+      <CollapsibleSection
+        storageKey={`tracking-${activeTab}`}
+        title={TABS.find((t) => t.id === activeTab)?.label ?? 'Tracking'}
+        icon="monitoring"
+        defaultExpanded
+      >
         {renderTabContent()}
-      </div>
+      </CollapsibleSection>
     </div>
   );
 }

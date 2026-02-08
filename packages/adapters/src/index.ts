@@ -25,16 +25,35 @@ export * from './calendar/shared';
 // ERP Adapters (IFC-099)
 export * from './erp/sap/client';
 
-// Payment Adapters (IFC-099)
-export * from './payments/stripe/client';
-export * from './payments/paypal/client';
+// Payment Adapters (IFC-099) — barrel includes client + types + errors + mappers
+export * from './payments/stripe';
+
+// PayPal adapter (renamed mapToRefund/mapToSubscription to avoid Stripe conflict)
+export { PayPalAdapter } from './payments/paypal';
+export type { PayPalServicePort } from './payments/paypal';
+export type {
+  PayPalConfig, PayPalAccessToken, PayPalOrder, PayPalPurchaseUnit,
+  PayPalItem, PayPalPayer, PayPalAddress, PayPalCapture, PayPalAuthorization,
+  PayPalRefund, PayPalLink, PayPalSubscription, PayPalWebhookEvent,
+  CreateOrderParams, CreateSubscriptionParams,
+} from './payments/paypal';
+export {
+  PayPalAuthenticationError, PayPalInvalidRequestError,
+  PayPalRateLimitError, PayPalConnectionError, PayPalResourceNotFoundError,
+} from './payments/paypal';
+export {
+  mapToOrder, mapToPurchaseUnit, mapToItem, mapToPayer,
+  mapToAddress, mapToCapture, mapToAuthorization,
+  mapToRefund as mapToPayPalRefund,
+  mapToSubscription as mapToPayPalSubscription,
+} from './payments/paypal';
 
 // Email Adapters (IFC-099)
 export * from './email/gmail/client';
 export * from './email/outlook/client';
 
-// Messaging Adapters (IFC-099)
-export * from './messaging/slack/client';
+// Messaging Adapters (IFC-099) — barrel includes client + types + errors + mappers
+export * from './messaging/slack';
 export * from './messaging/teams/client';
 
 // Email Service Adapter (IFC-144)
@@ -71,5 +90,12 @@ export {
 // Webhook Service Adapter (IFC-144)
 export * from './messaging/WebhookServiceAdapter';
 
+// Memory Adapters (Zep)
+export * from './memory/zep';
+
 // Audit Adapters (IFC-125)
 export * from './audit';
+
+// Shared utilities (IFC-125)
+export { detectScoreBias } from './shared/bias-detector';
+export type { BiasMetric, BiasViolation, BiasReport } from './shared/bias-detector';

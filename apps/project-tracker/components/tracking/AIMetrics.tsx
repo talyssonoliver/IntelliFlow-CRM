@@ -81,7 +81,7 @@ export default function AIMetrics() {
 
   if (error) {
     return (
-      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400">
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600">
         <div className="flex items-center gap-2">
           <Icon name="error" size="lg" />
           <span>Error: {error}</span>
@@ -105,9 +105,9 @@ export default function AIMetrics() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Icon name="smart_toy" className="text-purple-400" size="xl" />
+          <Icon name="smart_toy" className="text-purple-600" size="xl" />
           <div>
-            <h3 className="text-lg font-semibold text-white">AI Metrics</h3>
+            <h3 className="text-lg font-semibold text-gray-900">AI Metrics</h3>
             {lastUpdated && (
               <StaleIndicator
                 lastUpdated={lastUpdated}
@@ -129,37 +129,37 @@ export default function AIMetrics() {
         {/* Drift Detection */}
         <div className={`rounded-lg p-4 border ${
           data?.drift.detected
-            ? 'bg-red-500/10 border-red-500/30'
-            : 'bg-green-500/10 border-green-500/30'
+            ? 'bg-red-50 border-red-200'
+            : 'bg-green-50 border-green-200'
         }`}>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <Icon
                 name={data?.drift.detected ? 'warning' : 'check_circle'}
-                className={data?.drift.detected ? 'text-red-400' : 'text-green-400'}
+                className={data?.drift.detected ? 'text-red-600' : 'text-green-600'}
                 size="lg"
               />
-              <span className="font-medium text-white">Model Drift</span>
+              <span className="font-medium text-gray-900">Model Drift</span>
             </div>
-            <span className={`text-sm ${data?.drift.detected ? 'text-red-400' : 'text-green-400'}`}>
+            <span className={`text-sm ${data?.drift.detected ? 'text-red-600' : 'text-green-600'}`}>
               {data?.drift.detected ? 'DETECTED' : 'OK'}
             </span>
           </div>
           <div className="flex items-center gap-4 text-sm">
             <div>
-              <span className="text-gray-400">Score: </span>
-              <span className="text-white font-mono">
+              <span className="text-gray-500">Score: </span>
+              <span className="text-gray-900 font-mono">
                 {((data?.drift.score ?? 0) * 100).toFixed(1)}%
               </span>
             </div>
             <div>
-              <span className="text-gray-400">Threshold: </span>
-              <span className="text-white font-mono">
+              <span className="text-gray-500">Threshold: </span>
+              <span className="text-gray-900 font-mono">
                 {((data?.drift.threshold ?? 0.05) * 100).toFixed(0)}%
               </span>
             </div>
           </div>
-          <div className="mt-2 h-2 bg-gray-700 rounded-full overflow-hidden">
+          <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
             <div
               className={`h-full ${data?.drift.detected ? 'bg-red-500' : 'bg-green-500'}`}
               style={{ width: `${Math.min((data?.drift.score ?? 0) / (data?.drift.threshold ?? 0.05) * 100, 100)}%` }}
@@ -170,36 +170,36 @@ export default function AIMetrics() {
         {/* Hallucination Rate */}
         <div className={`rounded-lg p-4 border ${
           (data?.hallucination.rate ?? 0) > (data?.hallucination.threshold ?? 0.05)
-            ? 'bg-red-500/10 border-red-500/30'
-            : 'bg-green-500/10 border-green-500/30'
+            ? 'bg-red-50 border-red-200'
+            : 'bg-green-50 border-green-200'
         }`}>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <Icon
                 name="psychology"
-                className={(data?.hallucination.rate ?? 0) > (data?.hallucination.threshold ?? 0.05) ? 'text-red-400' : 'text-green-400'}
+                className={(data?.hallucination.rate ?? 0) > (data?.hallucination.threshold ?? 0.05) ? 'text-red-600' : 'text-green-600'}
                 size="lg"
               />
-              <span className="font-medium text-white">Hallucination Rate</span>
+              <span className="font-medium text-gray-900">Hallucination Rate</span>
             </div>
             <span className={`text-sm ${
               (data?.hallucination.rate ?? 0) > (data?.hallucination.threshold ?? 0.05)
-                ? 'text-red-400'
-                : 'text-green-400'
+                ? 'text-red-600'
+                : 'text-green-600'
             }`}>
               {((data?.hallucination.rate ?? 0) * 100).toFixed(1)}%
             </span>
           </div>
           <div className="flex items-center gap-4 text-sm">
             <div>
-              <span className="text-gray-400">Samples: </span>
-              <span className="text-white font-mono">
+              <span className="text-gray-500">Samples: </span>
+              <span className="text-gray-900 font-mono">
                 {data?.hallucination.samples_checked ?? 0}
               </span>
             </div>
             <div>
-              <span className="text-gray-400">Threshold: </span>
-              <span className="text-white font-mono">
+              <span className="text-gray-500">Threshold: </span>
+              <span className="text-gray-900 font-mono">
                 {((data?.hallucination.threshold ?? 0.05) * 100).toFixed(0)}%
               </span>
             </div>
@@ -208,13 +208,13 @@ export default function AIMetrics() {
       </div>
 
       {/* Cost Tracking */}
-      <div className="bg-gray-700/30 rounded-lg p-4">
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
         <div className="flex items-center justify-between mb-4">
-          <h4 className="text-sm font-medium text-gray-300 flex items-center gap-2">
+          <h4 className="text-sm font-medium text-gray-700 flex items-center gap-2">
             <Icon name="attach_money" size="base" />
             Cost Tracking (Current Month)
           </h4>
-          <span className={`text-sm ${costUtilization > 90 ? 'text-red-400' : costUtilization > 70 ? 'text-yellow-400' : 'text-green-400'}`}>
+          <span className={`text-sm ${costUtilization > 90 ? 'text-red-600' : costUtilization > 70 ? 'text-yellow-600' : 'text-green-600'}`}>
             {costUtilization}% of budget
           </span>
         </div>
@@ -239,7 +239,7 @@ export default function AIMetrics() {
             variant={(data?.costs.forecast ?? 0) > (data?.costs.budget ?? 0) ? 'warning' : 'default'}
           />
         </div>
-        <div className="h-3 bg-gray-700 rounded-full overflow-hidden">
+        <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
           <div
             className={`h-full transition-all ${
               costUtilization > 90
@@ -254,47 +254,47 @@ export default function AIMetrics() {
       </div>
 
       {/* Model Performance Table */}
-      <div className="bg-gray-700/30 rounded-lg overflow-hidden">
-        <div className="p-4 border-b border-gray-700">
-          <h4 className="text-sm font-medium text-gray-300 flex items-center gap-2">
+      <div className="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
+        <div className="p-4 border-b border-gray-200">
+          <h4 className="text-sm font-medium text-gray-700 flex items-center gap-2">
             <Icon name="memory" size="base" />
             Model Performance
           </h4>
         </div>
         <table className="w-full">
           <thead>
-            <tr className="border-b border-gray-700">
-              <th className="text-left text-xs font-medium text-gray-400 p-3">Model</th>
-              <th className="text-center text-xs font-medium text-gray-400 p-3">Latency (p50)</th>
-              <th className="text-center text-xs font-medium text-gray-400 p-3">Latency (p95)</th>
-              <th className="text-center text-xs font-medium text-gray-400 p-3">Accuracy</th>
-              <th className="text-center text-xs font-medium text-gray-400 p-3">Cost/1K</th>
-              <th className="text-center text-xs font-medium text-gray-400 p-3">Requests (24h)</th>
+            <tr className="border-b border-gray-200">
+              <th className="text-left text-xs font-medium text-gray-500 p-3">Model</th>
+              <th className="text-center text-xs font-medium text-gray-500 p-3">Latency (p50)</th>
+              <th className="text-center text-xs font-medium text-gray-500 p-3">Latency (p95)</th>
+              <th className="text-center text-xs font-medium text-gray-500 p-3">Accuracy</th>
+              <th className="text-center text-xs font-medium text-gray-500 p-3">Cost/1K</th>
+              <th className="text-center text-xs font-medium text-gray-500 p-3">Requests (24h)</th>
             </tr>
           </thead>
           <tbody>
             {(data?.models || []).map((model) => (
-              <tr key={model.name} className="border-b border-gray-700/50 hover:bg-gray-700/20">
-                <td className="p-3 font-medium text-white">{model.name}</td>
+              <tr key={model.name} className="border-b border-gray-100 hover:bg-gray-50">
+                <td className="p-3 font-medium text-gray-900">{model.name}</td>
                 <td className="p-3 text-center">
-                  <span className={`font-mono text-sm ${model.latency_p50 < 500 ? 'text-green-400' : model.latency_p50 < 1000 ? 'text-yellow-400' : 'text-red-400'}`}>
+                  <span className={`font-mono text-sm ${model.latency_p50 < 500 ? 'text-green-600' : model.latency_p50 < 1000 ? 'text-yellow-600' : 'text-red-600'}`}>
                     {model.latency_p50}ms
                   </span>
                 </td>
                 <td className="p-3 text-center">
-                  <span className={`font-mono text-sm ${model.latency_p95 < 1000 ? 'text-green-400' : model.latency_p95 < 2000 ? 'text-yellow-400' : 'text-red-400'}`}>
+                  <span className={`font-mono text-sm ${model.latency_p95 < 1000 ? 'text-green-600' : model.latency_p95 < 2000 ? 'text-yellow-600' : 'text-red-600'}`}>
                     {model.latency_p95}ms
                   </span>
                 </td>
                 <td className="p-3 text-center">
-                  <span className={`font-mono text-sm ${model.accuracy >= 0.9 ? 'text-green-400' : model.accuracy >= 0.8 ? 'text-yellow-400' : 'text-red-400'}`}>
+                  <span className={`font-mono text-sm ${model.accuracy >= 0.9 ? 'text-green-600' : model.accuracy >= 0.8 ? 'text-yellow-600' : 'text-red-600'}`}>
                     {(model.accuracy * 100).toFixed(0)}%
                   </span>
                 </td>
-                <td className="p-3 text-center font-mono text-sm text-gray-300">
+                <td className="p-3 text-center font-mono text-sm text-gray-700">
                   ${model.cost_per_1k.toFixed(3)}
                 </td>
-                <td className="p-3 text-center font-mono text-sm text-gray-300">
+                <td className="p-3 text-center font-mono text-sm text-gray-700">
                   {model.requests_24h.toLocaleString()}
                 </td>
               </tr>

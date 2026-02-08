@@ -59,6 +59,7 @@ export class AuditLogger {
       consoleLog: config.consoleLog ?? process.env.NODE_ENV === 'development',
       defaultClassification: config.defaultClassification ?? 'INTERNAL',
       defaultRetentionDays: config.defaultRetentionDays ?? 365 * 7,
+      encryptSensitiveFields: config.encryptSensitiveFields ?? false,
     };
   }
 

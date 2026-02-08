@@ -278,7 +278,7 @@ describe('emailInvoice', () => {
       value: {
         ...window.location,
         set href(val: string) {
-          locationHrefSetter(val);
+          (locationHrefSetter as any)(val);
         },
         get href() {
           return '';

@@ -46,7 +46,7 @@ export function findRepoRoot(startDir: string): string | null {
 /**
  * Resolve prettier binary path
  */
-export function resolvePrettierBin(repoRoot: string): string | null {
+function resolvePrettierBin(repoRoot: string): string | null {
   const isWindows = process.platform === 'win32';
   const nodeModulesPaths = isWindows
     ? [
@@ -141,3 +141,4 @@ export function findTaskFile(taskId: string, baseDir: string): string | null {
 
   return search(baseDir);
 }
+

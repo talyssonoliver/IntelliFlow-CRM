@@ -12,29 +12,30 @@
 import { Job } from 'bullmq';
 import pino from 'pino';
 import { BaseWorker, type ComponentHealth } from '@intelliflow/worker-shared';
-import { PrismaClient } from '@intelliflow/db';
+import { PrismaClient, disconnectPrisma } from '@intelliflow/db';
 import { OutboxPoller, InMemoryOutboxRepository, type OutboxRepository } from './outbox/pollOutbox';
 import { EventDispatcher, DOMAIN_EVENT_TYPES, type OutboxEvent } from './outbox/event-dispatcher';
+import { loadEventsWorkerConfig, type EventsWorkerConfig as EnvEventsWorkerConfig } from './config';
 import {
   createLeadScoredBridgeHandler,
   createTaskAssignedBridgeHandler,
   createSystemEventBridgeHandler,
   createAIProgressBridgeHandler,
 } from './handlers/subscription-bridge';
+import {
+  getRulesEngine,
+  createLeadScoringRule,
+  createCaseEscalationRule,
+  createTaskAssignmentRule,
+} from '@intelliflow/platform';
 
 // ============================================================================
 // Types
 // ============================================================================
 
-interface EventsWorkerConfig {
-  /** Use database repository (default: false, uses in-memory for now) */
-  useDatabase?: boolean;
+interface EventsWorkerConfig extends EnvEventsWorkerConfig {
   /** PrismaClient instance (required when useDatabase is true) */
   prisma?: PrismaClient;
-  /** Polling interval in milliseconds */
-  pollIntervalMs?: number;
-  /** Batch size for event fetching */
-  batchSize?: number;
 }
 
 interface EventJobData {
@@ -65,22 +66,36 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
       queues: ['intelliflow-domain-events'],
     });
 
-    this.workerConfig = config || {};
+    this.workerConfig =
+      config ??
+      ({
+        useDatabase: false,
+        outbox: {
+          pollIntervalMs: 100,
+          batchSize: 100,
+          lockTimeoutMs: 30000,
+          maxRetries: 3,
+        },
+        handlers: {
+          parallel: true,
+          timeoutMs: 30000,
+        },
+      } satisfies EventsWorkerConfig);
     this.eventDispatcher = new EventDispatcher(this.logger);
 
     // Use PrismaOutboxRepository when database mode is enabled and PrismaClient is provided
-    if (config?.useDatabase && config?.prisma) {
+    if (this.workerConfig.useDatabase && this.workerConfig.prisma) {
       // Dynamic require to avoid build-time dependency on adapters package types
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { PrismaOutboxRepository } = require('@intelliflow/adapters') as {
         PrismaOutboxRepository: new (prisma: PrismaClient) => OutboxRepository;
       };
-      this.repository = new PrismaOutboxRepository(config.prisma);
+      this.repository = new PrismaOutboxRepository(this.workerConfig.prisma);
       this.logger.info('Using PrismaOutboxRepository for database-backed outbox');
     } else {
       // Use in-memory repository for development/testing
       this.repository = new InMemoryOutboxRepository();
-      this.logger.info('Using InMemoryOutboxRepository (set USE_DATABASE_OUTBOX=true for production)');
+      this.logger.info('Using InMemoryOutboxRepository (set EVENTS_WORKER_USE_DATABASE=true for production)');
     }
   }
 
@@ -90,14 +105,19 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
   protected async onStart(): Promise<void> {
     this.logger.info('Initializing events worker');
 
+    // Register built-in rules in the rules engine
+    this.registerRules();
+
     // Register domain event handlers
     this.registerEventHandlers();
 
     // Initialize outbox poller
     this.outboxPoller = new OutboxPoller({
       config: {
-        pollIntervalMs: this.workerConfig.pollIntervalMs || 100,
-        batchSize: this.workerConfig.batchSize || 100,
+        pollIntervalMs: this.workerConfig.outbox.pollIntervalMs,
+        batchSize: this.workerConfig.outbox.batchSize,
+        lockTimeoutMs: this.workerConfig.outbox.lockTimeoutMs,
+        maxRetries: this.workerConfig.outbox.maxRetries,
       },
       repository: this.repository,
       dispatcher: this.eventDispatcher,
@@ -118,6 +138,9 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
 
     // Stop polling
     await this.outboxPoller?.stop();
+
+    // Disconnect Prisma client gracefully
+    await disconnectPrisma();
 
     this.logger.info('Events worker stopped');
   }
@@ -184,6 +207,36 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
   // ============================================================================
   // Private Methods
   // ============================================================================
+
+  /**
+   * Register built-in rules in the rules engine
+   */
+  private registerRules(): void {
+    const engine = getRulesEngine();
+
+    engine.registerRule(createLeadScoringRule({
+      id: 'default-lead-scoring',
+      triggerOnCreate: true,
+      triggerOnUpdate: true,
+    }));
+
+    engine.registerRule(createCaseEscalationRule({
+      id: 'default-case-escalation',
+      priority: 'HIGH',
+      daysOverdue: 3,
+      notifyUsers: [],
+    }));
+
+    engine.registerRule(createTaskAssignmentRule({
+      id: 'default-task-on-lead-qualified',
+      eventType: 'lead.qualified',
+      assigneeField: 'qualifiedBy',
+      taskTitle: 'Follow up with qualified lead',
+      priority: 'HIGH',
+    }));
+
+    this.logger.info('Rules engine initialized with default rules');
+  }
 
   /**
    * Register domain event handlers
@@ -465,15 +518,17 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
 // Top-Level Execution
 // ============================================================================
 
-// Create PrismaClient if database mode is enabled
-const useDatabase = process.env.USE_DATABASE_OUTBOX === 'true';
+const envConfig = loadEventsWorkerConfig();
+
+// Backward compatibility: keep legacy USE_DATABASE_OUTBOX while transitioning to EVENTS_WORKER_USE_DATABASE
+const useDatabase = envConfig.useDatabase || process.env.USE_DATABASE_OUTBOX === 'true';
 const prismaClient = useDatabase ? new PrismaClient() : undefined;
 
 const worker = new EventsWorker({
   useDatabase,
+  outbox: envConfig.outbox,
+  handlers: envConfig.handlers,
   prisma: prismaClient,
-  pollIntervalMs: Number.parseInt(process.env.OUTBOX_POLL_INTERVAL_MS ?? '100', 10),
-  batchSize: Number.parseInt(process.env.OUTBOX_BATCH_SIZE ?? '100', 10),
 });
 
 // Run if executed directly (CommonJS modules cannot use top-level await - TS error 1309)

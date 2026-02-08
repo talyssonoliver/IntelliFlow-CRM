@@ -239,7 +239,7 @@ export function TaskDataProvider({ children }: TaskDataProviderProps) {
  * Hook to get status counts for a specific sprint
  * Useful for views that need sprint-specific counts
  */
-export function useSprintStatusCounts(sprint: SprintNumber): TaskSummary {
+function useSprintStatusCounts(sprint: SprintNumber): TaskSummary {
   const { allTasks, statusCounts } = useTaskData();
 
   // If 'all', return global counts
@@ -277,3 +277,4 @@ export function useSprintStatusCounts(sprint: SprintNumber): TaskSummary {
 
   return counts;
 }
+

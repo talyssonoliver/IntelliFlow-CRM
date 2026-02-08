@@ -4,6 +4,8 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Card } from '@intelliflow/ui';
+import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
+import { MoreActionsButton } from '@/components/shared/more-actions-button';
 
 // =============================================================================
 // Types
@@ -276,6 +278,7 @@ export default function TicketDetailPage() {
   const ticketId = params.id as string;
 
   const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [actionSheetOpen, setActionSheetOpen] = useState(false);
   const [replyMode, setReplyMode] = useState<'public' | 'internal'>('public');
   const [replyContent, setReplyContent] = useState('');
   const [activityNote, setActivityNote] = useState('');
@@ -333,8 +336,27 @@ export default function TicketDetailPage() {
               <span className="material-symbols-outlined text-[18px]">check_circle</span>
               Resolve
             </button>
+            <MoreActionsButton onClick={() => setActionSheetOpen(true)} />
           </div>
         </div>
+
+        <EntityActionSheet
+          open={actionSheetOpen}
+          onOpenChange={setActionSheetOpen}
+          entity={{
+            type: 'ticket',
+            id: ticket.id,
+            title: ticket.subject,
+            subtitle: `#${ticket.id}`,
+            icon: 'confirmation_number',
+            url: `/tickets/${ticket.id}`,
+          }}
+          extraActions={[
+            { label: 'Merge Ticket', icon: 'merge', onClick: () => {} },
+            { label: 'Mark as Spam', icon: 'report', onClick: () => {} },
+            { label: 'Delete', icon: 'delete', onClick: () => {}, destructive: true },
+          ]}
+        />
 
         {/* SLA Alert Banner */}
         {ticket.slaStatus === 'BREACHED' && (

@@ -98,7 +98,7 @@ describe("Case Handler Additional Coverage", () => {
       (getRulesEngine as any).mockReturnValue({
         evaluate: vi.fn().mockResolvedValue([{ matched: true, actionsExecuted: 3 }, { matched: false, actionsExecuted: 0 }, { matched: true, actionsExecuted: 1 }]),
       });
-      const { CasePriorityChangedHandler } = await import("../case-handler");
+      const { CasePriorityChangedHandler } = await import("../case-handler.js");
       const r = await new CasePriorityChangedHandler().handle(pay({ priority: "HIGH" }), ctx());
       expect(r.metadata?.rulesMatched).toBe(true);
       expect(r.metadata?.actionsExecuted).toBe(4);

@@ -4,7 +4,7 @@
   "section": "AI Settings",
   "description": "FLOW-045: AI Chain Versioning Admin UI - Wire IFC-086 Backend",
   "owner": "Frontend Dev + AI Specialist (STOA-Intelligence)",
-  "status": "PLANNED",
+  "status": "DONE",
   "started_at": "2026-01-29T14:30:00.000Z",
   "completed_at": "2026-01-30T18:30:00.000Z",
   "status_history": [
@@ -49,7 +49,7 @@
       "IFC-086",
       "PG-104"
     ],
-    "verified_at": "2026-02-06T23:40:55.403Z",
+    "verified_at": "2026-02-08T19:59:16.864Z",
     "status": {
       "IFC-086": "Completed"
     },
@@ -110,7 +110,7 @@
       "met": true
     }
   },
-  "notes": "Wires IFC-086 chain versioning backend to frontend UI with full admin functionality. Includes: Overview tab with active versions dashboard, Versions tab with filterable table, Memory tab with Zep budget gauge, Audit Log tab with action filtering, Dialogs for Activate/Deprecate/Archive/Rollback.",
+  "notes": "Wires IFC-086 chain versioning backend to frontend UI with full admin functionality. Includes: Overview tab with active versions dashboard, Versions tab with filterable table and Create Version button, Compare tab with side-by-side version comparison, Memory tab with Zep budget gauge, Audit Log tab with action filtering, Dialogs for Activate/Deprecate/Archive/Rollback, ChainVersionEditor modal for create/edit drafts, VersionComparisonView for diff visualization. Completion session 2026-02-08: added 2 missing components (ChainVersionEditor, VersionComparisonView), all 14 AC met, 4409 tests pass.",
   "actual_duration_minutes": 240,
   "validations": [
     {

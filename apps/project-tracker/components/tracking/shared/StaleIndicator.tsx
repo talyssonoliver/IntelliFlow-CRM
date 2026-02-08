@@ -48,8 +48,8 @@ export default function StaleIndicator({
         title={`Last updated: ${formattedTime}`}
       >
         <Icon name="warning" size="xs" className="text-amber-500" />
-        <span className="text-amber-400 font-medium">Stale data</span>
-        {showTime && <span className="text-gray-400">({timeAgo})</span>}
+        <span className="text-amber-600 font-medium">Stale data</span>
+        {showTime && <span className="text-gray-500">({timeAgo})</span>}
       </div>
     );
   }
@@ -59,8 +59,8 @@ export default function StaleIndicator({
       className="flex items-center gap-1.5 text-xs"
       title={`Last updated: ${formattedTime}`}
     >
-      <Icon name="schedule" size="xs" className="text-gray-400" />
-      <span className="text-gray-500">Updated {timeAgo}</span>
+      <Icon name="schedule" size="xs" className="text-gray-500" />
+      <span className="text-gray-600">Updated {timeAgo}</span>
     </div>
   );
 }

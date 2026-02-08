@@ -9,7 +9,7 @@
  * @module @intelliflow/db/pgvector
  */
 
-import { prisma, Prisma, VectorEmbedding, VectorSearchResult } from './client';
+import { prisma, Prisma, VectorEmbedding, VectorSearchResult, executeRawWithTiming } from './client';
 
 /**
  * OpenAI embedding dimensions
@@ -148,9 +148,9 @@ export async function findSimilarLeads(
   // We filter where 1 - distance > threshold, i.e., distance < 1 - threshold
   const distanceThreshold = 1 - threshold;
 
-  const results = await prisma.$queryRaw<
+  const { result: results, duration } = await executeRawWithTiming<
     Array<{ id: string; email: string; company: string | null; score: number; similarity: number }>
-  >`
+  >(Prisma.sql`
     SELECT
       l.id,
       l.email,
@@ -162,7 +162,11 @@ export async function findSimilarLeads(
       AND (l.embedding ${Prisma.raw(operator)} ${embeddingStr}::vector) < ${distanceThreshold}
     ORDER BY l.embedding ${Prisma.raw(operator)} ${embeddingStr}::vector
     LIMIT ${limit}
-  `;
+  `);
+
+  if (duration > 100) {
+    console.warn(`[pgvector] findSimilarLeads took ${Math.round(duration)}ms`);
+  }
 
   return results.map((r) => ({
     item: { id: r.id, email: r.email, company: r.company, score: r.score },
@@ -187,9 +191,9 @@ export async function findSimilarContacts(
   const embeddingStr = formatEmbedding(embedding);
   const distanceThreshold = 1 - threshold;
 
-  const results = await prisma.$queryRaw<
+  const { result: results, duration } = await executeRawWithTiming<
     Array<{ id: string; email: string; first_name: string; last_name: string; similarity: number }>
-  >`
+  >(Prisma.sql`
     SELECT
       c.id,
       c.email,
@@ -201,7 +205,11 @@ export async function findSimilarContacts(
       AND (c.embedding ${Prisma.raw(operator)} ${embeddingStr}::vector) < ${distanceThreshold}
     ORDER BY c.embedding ${Prisma.raw(operator)} ${embeddingStr}::vector
     LIMIT ${limit}
-  `;
+  `);
+
+  if (duration > 100) {
+    console.warn(`[pgvector] findSimilarContacts took ${Math.round(duration)}ms`);
+  }
 
   return results.map((r) => ({
     item: { id: r.id, email: r.email, firstName: r.first_name, lastName: r.last_name },
