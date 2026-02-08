@@ -21,66 +21,66 @@
     },
     {
       "task_id": "IFC-024",
-      "completed_at": "2026-02-08T19:59:16.866Z",
+      "completed_at": "2026-02-08T22:17:24.495Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-025",
-      "completed_at": "2026-02-08T19:59:16.866Z",
+      "completed_at": "2026-02-08T22:17:24.495Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-045",
-      "completed_at": "2026-02-08T19:59:16.866Z",
+      "completed_at": "2026-02-08T22:17:24.495Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-061",
-      "completed_at": "2026-02-08T19:59:16.866Z",
+      "completed_at": "2026-02-08T22:17:24.495Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-063",
-      "completed_at": "2026-02-08T19:59:16.866Z",
+      "completed_at": "2026-02-08T22:17:24.495Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-086",
-      "completed_at": "2026-02-08T19:59:16.866Z",
+      "completed_at": "2026-02-08T22:17:24.495Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-088",
-      "completed_at": "2026-02-08T19:59:16.866Z",
+      "completed_at": "2026-02-08T22:17:24.495Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-031",
-      "completed_at": "2026-02-08T19:59:16.866Z",
+      "completed_at": "2026-02-08T22:17:24.495Z",
       "duration_minutes": 15
     },
     {
       "task_id": "EXP-ARTIFACTS-002",
-      "completed_at": "2026-02-08T19:59:16.866Z",
+      "completed_at": "2026-02-08T22:17:24.495Z",
       "duration_minutes": 15
     },
     {
       "task_id": "EXP-ARTIFACTS-003",
-      "completed_at": "2026-02-08T19:59:16.866Z",
+      "completed_at": "2026-02-08T22:17:24.495Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-167",
-      "completed_at": "2026-02-08T19:59:16.866Z",
+      "completed_at": "2026-02-08T22:17:24.495Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-168",
-      "completed_at": "2026-02-08T19:59:16.866Z",
+      "completed_at": "2026-02-08T22:17:24.495Z",
       "duration_minutes": 15
     }
   ],
-  "notes": "13/38 tasks DONE (34%). Last synced: 2026-02-08T19:59:16.866Z",
+  "notes": "13/38 tasks DONE (34%). Last synced: 2026-02-08T22:17:24.495Z",
   "schedule": {
     "sprint_start_date": null,
     "sprint_end_date": null,
@@ -101,6 +101,6 @@
       "spi": 0.33,
       "status": "critical"
     },
-    "calculated_at": "2026-02-08T19:59:16.925Z"
+    "calculated_at": "2026-02-08T22:17:24.540Z"
   }
 }
