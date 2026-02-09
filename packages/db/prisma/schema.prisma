@@ -3457,11 +3457,14 @@ model ChainVersion {
   temperature     Float    @default(0.7)
   maxTokens       Int?
   config          Json?
+  description     String?  @db.Text
+  parentVersionId String?
   status          ChainVersionStatus @default(DRAFT)
   rolloutStrategy RolloutStrategy    @default(IMMEDIATE)
   rolloutPercent  Int      @default(100)
   experimentId    String?
   createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
   createdBy       String
   activatedAt     DateTime?
   activatedBy     String?

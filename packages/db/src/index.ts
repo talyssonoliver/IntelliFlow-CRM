@@ -48,7 +48,9 @@ export {
   queryPerformanceTracker,
   executeRawWithTiming,
   checkDatabaseHealth,
+  withTransaction,
   withTransactionOptions,
+  disconnectPrisma,
   validateEmbedding,
   formatEmbeddingForPgVector,
 } from './client';
