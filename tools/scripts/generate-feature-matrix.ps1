@@ -20,6 +20,7 @@ foreach ($r in $rows) {
   $id = ([string]$r.'Task ID').Trim()
   if ($id) { $rowsById[$id] = $r }
 }
+$docContentCache = @{}
 
 function Normalize-Status([string]$status) {
   $s = ([string]$status).Trim().ToLower()
@@ -49,7 +50,176 @@ function Parse-TaskIds([string]$text) {
 }
 
 function Get-DependencyIds([string]$dependencies) {
-  return Parse-TaskIds $dependencies
+  if ([string]::IsNullOrWhiteSpace($dependencies)) { return @() }
+  $out = New-Object System.Collections.Generic.HashSet[string]
+  foreach ($token in ($dependencies -split '[,;]')) {
+    $id = (Clean-Cell $token).ToUpper()
+    if ($id -match '^[A-Z]+-\d+(?:-[A-Z0-9]+)*$') {
+      [void]$out.Add($id)
+    }
+  }
+  return @($out)
+}
+
+function Get-TaskIdParts([string]$taskId) {
+  $id = (Clean-Cell $taskId).ToUpper()
+  if ($id -match '^([A-Z]+)-(\d+)') {
+    return [pscustomobject]@{
+      Prefix = $Matches[1]
+      Number = [int]$Matches[2]
+    }
+  }
+  return $null
+}
+
+function Test-TaskIdInRange([string]$taskId, [string]$startTaskId, [string]$endTaskId) {
+  $task = Get-TaskIdParts $taskId
+  $start = Get-TaskIdParts $startTaskId
+  $end = Get-TaskIdParts $endTaskId
+  if (-not $task -or -not $start -or -not $end) { return $false }
+  if ($task.Prefix -ne $start.Prefix -or $task.Prefix -ne $end.Prefix) { return $false }
+  $min = [Math]::Min($start.Number, $end.Number)
+  $max = [Math]::Max($start.Number, $end.Number)
+  return ($task.Number -ge $min -and $task.Number -le $max)
+}
+
+function Get-MeaningfulTerms([string]$text) {
+  $stopWords = @(
+    'and','the','for','with','from','this','that','these','those','into','onto','over','under',
+    'page','pages','section','sections','part','parts','feature','features','deliver','task','tasks',
+    'flow','flows','public','auth','card','cards','grid','view','panel','list','item','items'
+  )
+  $terms = New-Object System.Collections.Generic.HashSet[string]
+  foreach ($m in [regex]::Matches(([string]$text).ToLower(), '[a-z0-9]+')) {
+    $token = $m.Value
+    if ($token.Length -lt 4) { continue }
+    if ($stopWords -contains $token) { continue }
+    [void]$terms.Add($token)
+  }
+  return @($terms | Sort-Object | Select-Object -First 10)
+}
+
+function Test-FeatureMention([string]$content, [string]$featureTitle, [string]$primaryTitle) {
+  if ([string]::IsNullOrWhiteSpace($content)) { return $false }
+  $lc = ([string]$content).ToLower()
+  foreach ($phrase in @($featureTitle, $primaryTitle)) {
+    $p = (Clean-Cell $phrase).ToLower()
+    if ($p -and $p.Length -ge 4 -and $lc.Contains($p)) {
+      return $true
+    }
+  }
+
+  $terms = Get-MeaningfulTerms "$featureTitle $primaryTitle"
+  if ($terms.Count -eq 0) { return $false }
+  $hits = 0
+  foreach ($t in $terms) {
+    if ($lc -match ("\b" + [regex]::Escape($t) + "\b")) { $hits++ }
+  }
+  if ($terms.Count -le 2) { return ($hits -ge 1) }
+  if ($terms.Count -le 5) { return ($hits -ge 2) }
+  return ($hits -ge 3)
+}
+
+function Get-DocContent([string]$path) {
+  $p = Clean-Cell $path
+  if (-not $p) { return '' }
+  if ($docContentCache.ContainsKey($p)) {
+    return [string]$docContentCache[$p]
+  }
+  $content = ''
+  if (Test-Path -LiteralPath $p) {
+    $content = Get-Content -LiteralPath $p -Raw
+  }
+  $docContentCache[$p] = $content
+  return [string]$content
+}
+
+function Get-DocTaskScope([string]$docPath, [string]$taskId, [string]$featureTitle, [string]$primaryTitle) {
+  $path = Clean-Cell $docPath
+  if (-not $path) {
+    return [pscustomobject]@{
+      Scope = 'none'
+      Label = ''
+      Reason = ''
+    }
+  }
+  if (-not (Test-Path -LiteralPath $path)) {
+    return [pscustomobject]@{
+      Scope = 'missing'
+      Label = "$path [missing file]"
+      Reason = 'missing_file'
+    }
+  }
+
+  $content = Get-DocContent $path
+  $taskPattern = "(?i)\b$([regex]::Escape((Clean-Cell $taskId)))\b"
+  if ($content -match $taskPattern) {
+    return [pscustomobject]@{
+      Scope = 'task'
+      Label = "$path [task-id]"
+      Reason = 'task_id'
+    }
+  }
+
+  if (Test-FeatureMention $content $featureTitle $primaryTitle) {
+    return [pscustomobject]@{
+      Scope = 'task'
+      Label = "$path [feature]"
+      Reason = 'feature_terms'
+    }
+  }
+
+  $rangeHits = New-Object System.Collections.Generic.List[string]
+  foreach ($m in [regex]::Matches($content, '([A-Z]+-\d+)\s*[\p{Pd}-]\s*([A-Z]+-\d+)')) {
+    $start = $m.Groups[1].Value.ToUpper()
+    $end = $m.Groups[2].Value.ToUpper()
+    if (Test-TaskIdInRange $taskId $start $end) {
+      $rangeHits.Add("$start-$end")
+    }
+  }
+  if ($rangeHits.Count -gt 0) {
+    $rangeText = (@($rangeHits | Sort-Object -Unique) -join '/')
+    return [pscustomobject]@{
+      Scope = 'shared'
+      Label = "$path [task-range: $rangeText]"
+      Reason = 'task_range'
+    }
+  }
+
+  return [pscustomobject]@{
+    Scope = 'shared'
+    Label = "$path [shared-context]"
+    Reason = 'shared_context'
+  }
+}
+
+function Get-TaskScopedDocRefs([string[]]$docPaths, [string]$taskId, [string]$featureTitle, [string]$primaryTitle) {
+  $taskScoped = New-Object System.Collections.Generic.List[string]
+  $shared = New-Object System.Collections.Generic.List[string]
+  $missing = New-Object System.Collections.Generic.List[string]
+  $seen = New-Object System.Collections.Generic.HashSet[string]
+
+  foreach ($docPath in $docPaths) {
+    $cleanPath = Clean-Cell $docPath
+    if (-not $cleanPath) { continue }
+    if (-not $seen.Add($cleanPath)) { continue }
+
+    $scope = Get-DocTaskScope $cleanPath $taskId $featureTitle $primaryTitle
+    if ($scope.Scope -eq 'task') {
+      $taskScoped.Add($scope.Label)
+    } elseif ($scope.Scope -eq 'shared') {
+      $shared.Add($scope.Label)
+    } elseif ($scope.Scope -eq 'missing') {
+      $missing.Add($scope.Label)
+      $shared.Add($scope.Label)
+    }
+  }
+
+  return [pscustomobject]@{
+    TaskScoped = @($taskScoped | Sort-Object -Unique)
+    Shared = @($shared | Sort-Object -Unique)
+    Missing = @($missing | Sort-Object -Unique)
+  }
 }
 
 function Split-Semicolon([string]$value) {
@@ -83,6 +253,137 @@ function Format-FullList([string[]]$items) {
   $uniq = @($items | Where-Object { $_ -and $_.Trim() -ne '' } | ForEach-Object { Clean-Cell $_ } | Sort-Object -Unique)
   if ($uniq.Count -eq 0) { return '-' }
   return ($uniq -join ', ')
+}
+
+function Format-DocRefList([string[]]$items, [string]$label) {
+  $joined = Format-FullList $items
+  if ($joined -eq '-') { return "No $label linked" }
+  return $joined
+}
+
+function Is-PathLike([string]$value) {
+  $v = Clean-Cell $value
+  if (-not $v) { return $false }
+  if ($v -match '[,]' -or $v -match '\s') { return $false }
+  if ($v -match '[\\/]' -or $v -match '^\.' -or $v -match '\.[A-Za-z0-9]{1,8}$') { return $true }
+  return $false
+}
+
+function Test-TrackedPathExists([string]$path) {
+  $p = Clean-Cell $path
+  if (-not $p) { return $false }
+
+  if ($p.IndexOfAny(@('*', '?')) -ge 0) {
+    return ((Get-ChildItem -Path $p -ErrorAction SilentlyContinue | Measure-Object).Count -gt 0)
+  }
+  return (Test-Path -LiteralPath $p)
+}
+
+function Get-ForecastRisk(
+  [string]$featureStatus,
+  [int]$missingRequiredLayers,
+  [int]$unresolvedDependencyCount,
+  [int]$missingDependencyRefCount,
+  [int]$missingArtifactPathCount
+) {
+  if ($featureStatus -eq 'done') {
+    if ($missingDependencyRefCount -gt 0 -or $unresolvedDependencyCount -gt 0 -or $missingArtifactPathCount -gt 0) { return 'critical' }
+    if ($missingRequiredLayers -gt 0) { return 'high' }
+    return 'low'
+  }
+
+  if ($featureStatus -eq 'in_progress') {
+    if ($missingDependencyRefCount -gt 0 -or $missingArtifactPathCount -gt 0) { return 'high' }
+    if ($unresolvedDependencyCount -gt 0 -or $missingRequiredLayers -ge 3) { return 'high' }
+    if ($missingRequiredLayers -gt 0) { return 'medium' }
+    return 'low'
+  }
+
+  if ($missingDependencyRefCount -gt 0) { return 'high' }
+  if ($missingRequiredLayers -ge 3) { return 'medium' }
+  if ($missingRequiredLayers -gt 0) { return 'low' }
+  return 'low'
+}
+
+function Get-DependencyHealth([string]$rootTaskId, $rowsById) {
+  $visited = New-Object System.Collections.Generic.HashSet[string]
+  $queue = New-Object 'System.Collections.Generic.Queue[string]'
+  $missing = New-Object System.Collections.Generic.HashSet[string]
+  $unresolved = New-Object System.Collections.Generic.HashSet[string]
+
+  $root = (Clean-Cell $rootTaskId).ToUpper()
+  if (-not $root) {
+    return [pscustomobject]@{
+      VisitedTasks = @()
+      MissingDependencies = @()
+      UnresolvedDependencies = @()
+    }
+  }
+
+  [void]$visited.Add($root)
+  $queue.Enqueue($root)
+
+  while ($queue.Count -gt 0) {
+    $current = $queue.Dequeue()
+    if (-not $rowsById.ContainsKey($current)) { continue }
+
+    $depIds = Get-DependencyIds $rowsById[$current].Dependencies
+    foreach ($depId in $depIds) {
+      if (-not $rowsById.ContainsKey($depId)) {
+        [void]$missing.Add("$depId (missing)")
+        continue
+      }
+
+      $depStatus = Normalize-Status $rowsById[$depId].Status
+      if ($depStatus -ne 'done') {
+        [void]$unresolved.Add("$depId ($depStatus)")
+      }
+
+      if ($visited.Add($depId)) {
+        $queue.Enqueue($depId)
+      }
+    }
+  }
+
+  return [pscustomobject]@{
+    VisitedTasks = @($visited | Sort-Object)
+    MissingDependencies = @($missing | Sort-Object)
+    UnresolvedDependencies = @($unresolved | Sort-Object)
+  }
+}
+
+function Get-TaskClosure([string[]]$seedTaskIds, $rowsById) {
+  $visited = New-Object System.Collections.Generic.HashSet[string]
+  $queue = New-Object 'System.Collections.Generic.Queue[string]'
+
+  foreach ($seed in $seedTaskIds) {
+    $sid = (Clean-Cell $seed).ToUpper()
+    if (-not $sid) { continue }
+    if ($visited.Add($sid)) {
+      $queue.Enqueue($sid)
+    }
+  }
+
+  while ($queue.Count -gt 0) {
+    $current = $queue.Dequeue()
+    if (-not $rowsById.ContainsKey($current)) { continue }
+
+    foreach ($depId in (Get-DependencyIds $rowsById[$current].Dependencies)) {
+      if ($visited.Add($depId)) {
+        $queue.Enqueue($depId)
+      }
+    }
+  }
+
+  return @($visited | Sort-Object)
+}
+
+function Format-TaskIdPreview([string[]]$ids, [int]$max = 6) {
+  $uniq = @($ids | Where-Object { $_ -and $_.Trim() -ne '' } | Sort-Object -Unique)
+  if ($uniq.Count -eq 0) { return '-' }
+  if ($uniq.Count -le $max) { return ($uniq -join ', ') }
+  $head = $uniq[0..($max - 1)] -join ', '
+  return "$head (+$($uniq.Count - $max) more)"
 }
 
 function Get-Group([string]$section, [string]$text) {
@@ -192,6 +493,19 @@ function Get-TaskLayerFlags($row) {
     if ($v) { $allRefs.Add((Clean-Cell $v)) }
   }
 
+  $trackedPathCandidates = @(
+    @($artifactPaths + $prereqPaths |
+      ForEach-Object { Clean-Cell $_ } |
+      Where-Object { Is-PathLike $_ } |
+      Sort-Object -Unique)
+  )
+  $missingTrackedPaths = New-Object System.Collections.Generic.List[string]
+  foreach ($tp in $trackedPathCandidates) {
+    if (-not (Test-TrackedPathExists $tp)) {
+      $missingTrackedPaths.Add($tp)
+    }
+  }
+
   $prd = New-Object System.Collections.Generic.HashSet[string]
   $adr = New-Object System.Collections.Generic.HashSet[string]
   foreach ($txt in $allRefs) {
@@ -213,6 +527,7 @@ function Get-TaskLayerFlags($row) {
     Artifacts = @($artifactPaths)
     Specs = @(Extract-TaggedValues $row.'Artifacts To Track' @('SPEC','PLAN'))
     Evidence = @(Extract-TaggedValues $row.'Artifacts To Track' @('EVIDENCE'))
+    MissingTrackedPaths = @($missingTrackedPaths)
     PRDRefs = @($prd)
     ADRRefs = @($adr)
   }
@@ -238,8 +553,27 @@ foreach ($flowFile in $flowFiles) {
   }
 }
 
+$flowIndexPath = Join-Path $flowsDir 'flow-index.md'
+if (Test-Path $flowIndexPath) {
+  $currentFlow = ''
+  foreach ($line in (Get-Content -Path $flowIndexPath)) {
+    if ($line -match '^###\s+(FLOW-\d+)\b') {
+      $currentFlow = $Matches[1].ToUpper()
+      continue
+    }
+    if (-not $currentFlow) { continue }
+    foreach ($taskId in (Parse-TaskIds $line)) {
+      if (-not $flowRefsByTask.ContainsKey($taskId)) {
+        $flowRefsByTask[$taskId] = New-Object System.Collections.Generic.HashSet[string]
+      }
+      [void]$flowRefsByTask[$taskId].Add($currentFlow)
+    }
+  }
+}
+
 $decompose = @{
   'PG-001' = @('Home hero headline emphasizing AI-first CRM with governance','Home hero CTA: Start free trial','Home hero CTA: Talk to sales','Home quick-win badges (AI playbooks, audit-matrix ready, accessible by design)','Home interactive stats card: response target (<200ms)','Home interactive stats card: Lighthouse baseline (90%+)','Home interactive stats card: delivery efficiency metric','Home governance health indicators (WCAG, audit gates, LCP budget)','Home social proof bar','Home value pillars grid','Home flow highlights section','Home "How it works" section','Home assurance checklist (security, accessibility, reliability)','Home final conversion CTA section')
+  'PG-004' = @('About hero section','About mission and vision cards','About core values grid','About team showcase','About conversion CTA section')
   'PG-127' = @('Partner application form','Specialized partner qualification fields','Partner submission routing workflow','Partner onboarding handoff flow')
   'PG-128' = @('AI chain versioning admin interface','AI chain version backend wiring')
   'PG-129' = @('Authenticated home welcome summary','Authenticated home activity feed','Authenticated home AI insights panel','Authenticated home pinned items','Authenticated home daily goals')
@@ -292,6 +626,7 @@ foreach ($r in $pgRows) {
         Owner = Clean-Cell $r.Owner
         Priority = Get-Priority $status $g $r.'Target Sprint'
         PrimaryTaskId = $taskId
+        PrimaryTitle = $baseTitle
         PrimarySection = $section
         ImmediateTasks = $immediate
         Notes = Clean-Cell "Sub-feature extracted from CSV description for $taskId."
@@ -308,6 +643,7 @@ foreach ($r in $pgRows) {
       Owner = Clean-Cell $r.Owner
       Priority = Get-Priority $status $g $r.'Target Sprint'
       PrimaryTaskId = $taskId
+      PrimaryTitle = $featureTitle
       PrimarySection = $section
       ImmediateTasks = $immediate
       Notes = Clean-Cell "CSV section: $section; source status: $($r.Status)."
@@ -330,6 +666,7 @@ foreach ($r in $ifcRows) {
     Owner = Clean-Cell $r.Owner
     Priority = Get-Priority $status $g $r.'Target Sprint'
     PrimaryTaskId = $taskId
+    PrimaryTitle = $featureTitle
     PrimarySection = $section
     ImmediateTasks = $immediate
     Notes = Clean-Cell "Backend/platform capability from CSV section $section; source status: $($r.Status)."
@@ -351,6 +688,7 @@ foreach ($r in $otherRows) {
     Owner = Clean-Cell $r.Owner
     Priority = Get-Priority $status $g $r.'Target Sprint'
     PrimaryTaskId = $taskId
+    PrimaryTitle = $featureTitle
     PrimarySection = $section
     ImmediateTasks = $immediate
     Notes = Clean-Cell "Cross-cutting CSV capability from section $section; source status: $($r.Status)."
@@ -372,7 +710,7 @@ function Get-LayerCell($infos, [string]$layerName, [bool]$required) {
   elseif ($hasDone -and $hasPlanned) { $state = 'partial' }
 
   $ids = @($hits | Select-Object -ExpandProperty TaskId | Sort-Object -Unique)
-  return "$state ($(Format-FullList $ids))"
+  return "$state ($($ids.Count) task(s))"
 }
 
 $layerNames = @('Entity','Domain','Database','Adapter','Router','Frontend')
@@ -382,7 +720,8 @@ $missingByLayer = @{ Entity = 0; Domain = 0; Database = 0; Adapter = 0; Router =
 
 foreach ($f in $baseFeatures) {
   $immediate = @($f.ImmediateTasks | Sort-Object -Unique)
-  $infos = @($immediate | Where-Object { $taskInfoById.ContainsKey($_) } | ForEach-Object { $taskInfoById[$_] })
+  $analysisTasks = Get-TaskClosure $immediate $rowsById
+  $infos = @($analysisTasks | Where-Object { $taskInfoById.ContainsKey($_) } | ForEach-Object { $taskInfoById[$_] })
   $required = Get-RequiredLayers $f.Group $f.PrimaryTaskId
   $requiredList = @($required | Sort-Object)
 
@@ -429,20 +768,19 @@ foreach ($f in $baseFeatures) {
   $flowRefs = New-Object System.Collections.Generic.List[string]
   $prdRefs = New-Object System.Collections.Generic.List[string]
   $adrRefs = New-Object System.Collections.Generic.List[string]
-  foreach ($tid in $immediate) {
-    if ($flowRefsByTask.ContainsKey($tid)) {
-      foreach ($fl in $flowRefsByTask[$tid]) { $flowRefs.Add($fl) }
-    }
-    if ($taskInfoById.ContainsKey($tid)) {
-      foreach ($pr in $taskInfoById[$tid].PRDRefs) { $prdRefs.Add($pr) }
-      foreach ($ar in $taskInfoById[$tid].ADRRefs) { $adrRefs.Add($ar) }
-    }
+  if ($flowRefsByTask.ContainsKey($f.PrimaryTaskId)) {
+    foreach ($fl in $flowRefsByTask[$f.PrimaryTaskId]) { $flowRefs.Add($fl) }
+  }
+  if ($taskInfoById.ContainsKey($f.PrimaryTaskId)) {
+    foreach ($pr in $taskInfoById[$f.PrimaryTaskId].PRDRefs) { $prdRefs.Add($pr) }
+    foreach ($ar in $taskInfoById[$f.PrimaryTaskId].ADRRefs) { $adrRefs.Add($ar) }
   }
 
-  $kpiIds = @($infos | Where-Object { $_.KPI -and $_.KPI.Trim() -ne '' } | Select-Object -ExpandProperty TaskId | Sort-Object -Unique)
+  $immediateInfos = @($immediate | Where-Object { $taskInfoById.ContainsKey($_) } | ForEach-Object { $taskInfoById[$_] })
+  $kpiIds = @($immediateInfos | Where-Object { $_.KPI -and $_.KPI.Trim() -ne '' } | Select-Object -ExpandProperty TaskId | Sort-Object -Unique)
 
   $validationRefs = New-Object System.Collections.Generic.List[string]
-  foreach ($i in $infos) {
+  foreach ($i in $immediateInfos) {
     if ($i.Validation -and $i.Validation.Trim() -ne '') {
       $validationRefs.Add("$($i.TaskId): $($i.Validation)")
     }
@@ -453,31 +791,73 @@ foreach ($f in $baseFeatures) {
     foreach ($e in $primaryInfo.Evidence) { $evidenceRefs.Add((Clean-Cell $e)) }
   }
 
-  $missingTasks = '-'
+  $missingTasks = 'None'
   if ($missing.Count -gt 0) {
     $missingTasks = "Create CSV task(s) for: " + ($missing -join ', ')
   }
 
-  $flowRefText = Format-FullList @($flowRefs)
-  $prdRefText = Format-FullList @($prdRefs)
-  $adrRefText = Format-FullList @($adrRefs)
+  $flowRefText = Format-DocRefList @($flowRefs) 'Flow'
+  $primaryTitle = Clean-Cell $f.PrimaryTitle
+  $docPrd = Get-TaskScopedDocRefs @($prdRefs) $f.PrimaryTaskId $f.Feature $primaryTitle
+  $docAdr = Get-TaskScopedDocRefs @($adrRefs) $f.PrimaryTaskId $f.Feature $primaryTitle
+  $prdRefText = Format-DocRefList @($docPrd.TaskScoped) 'PRD'
+  $adrRefText = Format-DocRefList @($docAdr.TaskScoped) 'ADR'
+  $sharedContextRefs = New-Object System.Collections.Generic.List[string]
+  foreach ($v in @($docPrd.Shared + $docAdr.Shared)) {
+    if ($v) { $sharedContextRefs.Add((Clean-Cell $v)) }
+  }
+  $sharedContextRefText = Format-FullList @($sharedContextRefs)
 
-  if ($planCoverage.StartsWith('at_risk')) {
+  $executionRiskReasons = New-Object System.Collections.Generic.List[string]
+  $missingDependencyRefs = New-Object System.Collections.Generic.List[string]
+  $unresolvedDependencies = New-Object System.Collections.Generic.List[string]
+  $missingArtifactPaths = New-Object System.Collections.Generic.List[string]
+  if ($f.Status -in @('done', 'in_progress')) {
+    $depHealth = Get-DependencyHealth $f.PrimaryTaskId $rowsById
+    foreach ($d in $depHealth.MissingDependencies) { $missingDependencyRefs.Add($d) }
+    foreach ($d in $depHealth.UnresolvedDependencies) { $unresolvedDependencies.Add($d) }
+
+    if ($missingDependencyRefs.Count -gt 0) {
+      $executionRiskReasons.Add("Dependency references missing from CSV: " + ((@($missingDependencyRefs) | Sort-Object -Unique) -join ', '))
+    }
+    if ($unresolvedDependencies.Count -gt 0) {
+      $executionRiskReasons.Add("Dependencies not done: " + ((@($unresolvedDependencies) | Sort-Object -Unique) -join ', '))
+    }
+    if ($primaryInfo -and $primaryInfo.MissingTrackedPaths -and $primaryInfo.MissingTrackedPaths.Count -gt 0) {
+      $missingPaths = @($primaryInfo.MissingTrackedPaths | Sort-Object -Unique)
+      foreach ($mp in $missingPaths) { $missingArtifactPaths.Add($mp) }
+      $preview = @($missingPaths | Select-Object -First 3)
+      $suffix = if ($missingPaths.Count -gt $preview.Count) { " (+$($missingPaths.Count - $preview.Count) more)" } else { '' }
+      $executionRiskReasons.Add("Missing artifact path(s): $($preview -join ', ')$suffix")
+    }
+  }
+
+  $executionRiskText = if ($executionRiskReasons.Count -eq 0) { '-' } else { $executionRiskReasons -join ' | ' }
+  $forecastRisk = Get-ForecastRisk -featureStatus $f.Status -missingRequiredLayers $missing.Count -unresolvedDependencyCount $unresolvedDependencies.Count -missingDependencyRefCount $missingDependencyRefs.Count -missingArtifactPathCount $missingArtifactPaths.Count
+
+  if ($executionRiskReasons.Count -gt 0) {
     $docGapParts = New-Object System.Collections.Generic.List[string]
-    if ($flowRefText -eq '-') { $docGapParts.Add('No Flow') }
-    if ($prdRefText -eq '-') { $docGapParts.Add('No PRD') }
-    if ($adrRefText -eq '-') { $docGapParts.Add('No ADR') }
+    if ($flowRefText -like 'No Flow*') { $docGapParts.Add('No Flow') }
+    if ($prdRefText -like 'No PRD*') { $docGapParts.Add('No task-scoped PRD') }
+    if ($adrRefText -like 'No ADR*') { $docGapParts.Add('No task-scoped ADR') }
+    if (($prdRefText -like 'No PRD*' -or $adrRefText -like 'No ADR*') -and $sharedContextRefText -ne '-') {
+      $docGapParts.Add('Shared docs only')
+    }
     $docGap = if ($docGapParts.Count -eq 0) { '-' } else { $docGapParts -join ', ' }
+    $missingLayersText = if ($missing.Count -eq 0) { '-' } else { $missing -join ', ' }
 
     $atRisk.Add([pscustomobject]@{
       Group = $f.Group
       Feature = $f.Feature
       Status = $f.Status
-      Missing = ($missing -join ', ')
+      Missing = $missingLayersText
+      ForecastRisk = $forecastRisk
+      ExecutionRisk = $executionRiskText
       PrimaryTask = $f.PrimaryTaskId
       FlowRef = $flowRefText
       PRDRef = $prdRefText
       ADRRef = $adrRefText
+      SharedContextRef = $sharedContextRefText
       DocGap = $docGap
     })
   }
@@ -486,6 +866,7 @@ foreach ($f in $baseFeatures) {
     Group = Clean-Cell $f.Group
     Feature = Clean-Cell $f.Feature
     Status = $f.Status
+    ForecastRisk = $forecastRisk
     PlanCoverage = $planCoverage
     RequiredLayers = Format-FullList @($requiredList)
     Purpose = Clean-Cell $f.Purpose
@@ -496,6 +877,7 @@ foreach ($f in $baseFeatures) {
     FlowRef = $flowRefText
     PRDRef = $prdRefText
     ADRRef = $adrRefText
+    SharedContextRef = $sharedContextRefText
     Entity = Clean-Cell $layerCells['Entity']
     Domain = Clean-Cell $layerCells['Domain']
     Database = Clean-Cell $layerCells['Database']
@@ -523,7 +905,8 @@ $topAtRisk = $atRisk
 $sb = New-Object System.Text.StringBuilder
 [void]$sb.AppendLine('# Feature Matrix (Source of Truth)')
 [void]$sb.AppendLine('')
-[void]$sb.AppendLine('Last audited: 2026-02-08  ')
+$auditDate = (Get-Date).ToString('yyyy-MM-dd')
+[void]$sb.AppendLine("Last audited: $auditDate  ")
 [void]$sb.AppendLine('Owner: Product + Engineering')
 [void]$sb.AppendLine('')
 [void]$sb.AppendLine('## Purpose')
@@ -532,7 +915,7 @@ $sb = New-Object System.Text.StringBuilder
 [void]$sb.AppendLine('')
 [void]$sb.AppendLine('This matrix is the canonical view for:')
 [void]$sb.AppendLine('- Feature status (`planned`, `in_progress`, `done`)')
-[void]$sb.AppendLine('- Requirement traceability (`Related Task (CSV)`, `Flow Ref`, `PRD Ref`, `ADR Ref`)')
+[void]$sb.AppendLine('- Requirement traceability (`Related Task (CSV)`, `Flow Ref`, task-scoped `PRD Ref` / `ADR Ref`, `Shared Context Ref`)')
 [void]$sb.AppendLine('- End-to-end chain coverage (`Entity -> Domain -> Database -> Adapter -> Router -> Frontend`)')
 [void]$sb.AppendLine('- Validation sources (`KPI`, `Validation Method`, evidence artifacts)')
 [void]$sb.AppendLine('- Missing CSV tasks needed to fully plan or complete a feature')
@@ -554,10 +937,20 @@ $sb = New-Object System.Text.StringBuilder
 [void]$sb.AppendLine('| `gap` | 3+ required layers are missing tasks |')
 [void]$sb.AppendLine('| `at_risk` | Feature is `done` or `in_progress` but still has missing required layers |')
 [void]$sb.AppendLine('')
+[void]$sb.AppendLine('Forecast risk rubric:')
+[void]$sb.AppendLine('- `critical` = `done` with unresolved dependencies, missing dependency references, or missing artifact paths')
+[void]$sb.AppendLine('- `high` = `in_progress` with dependency/path issues, or major layer risk')
+[void]$sb.AppendLine('- `medium` = non-critical row with partial layer risk')
+[void]$sb.AppendLine('- `low` = no immediate leading indicators of delivery slippage')
+[void]$sb.AppendLine('')
+[void]$sb.AppendLine('Doc-linking criteria:')
+[void]$sb.AppendLine('- `PRD Ref` / `ADR Ref` include only task-scoped evidence (task ID or feature/title mention in the document)')
+[void]$sb.AppendLine('- Range-only or generic docs are listed in `Shared Context Ref` to avoid masking row-level documentation gaps')
+[void]$sb.AppendLine('')
 [void]$sb.AppendLine('Layer cell legend:')
 [void]$sb.AppendLine('- `not_required` = layer is not required for this feature type')
 [void]$sb.AppendLine('- `missing` = required layer has no linked CSV task')
-[void]$sb.AppendLine('- `done/in_progress/planned/partial (task IDs listed)` = layer has linked task coverage')
+[void]$sb.AppendLine('- `done/in_progress/planned/partial (N task(s))` = layer has linked task coverage')
 [void]$sb.AppendLine('')
 [void]$sb.AppendLine('## Coverage Snapshot')
 [void]$sb.AppendLine('')
@@ -575,27 +968,29 @@ foreach ($ln in @('Entity','Domain','Database','Adapter','Router','Frontend')) {
 if ($topAtRisk.Count -gt 0) {
   [void]$sb.AppendLine('## Immediate Gap Register (At-Risk Features)')
   [void]$sb.AppendLine('')
-  [void]$sb.AppendLine('| Group | Feature | Status | Missing Layers | Primary Task | Flow Ref | PRD Ref | ADR Ref | Doc Gap |')
-  [void]$sb.AppendLine('|---|---|---|---|---|---|---|---|---|')
+  [void]$sb.AppendLine('Execution-risk criteria: unresolved dependency task status or missing tracked artifact paths for `done`/`in_progress` features.')
+  [void]$sb.AppendLine('')
+  [void]$sb.AppendLine('| Group | Feature | Status | Forecast Risk | Missing Layers | Execution Risk | Primary Task | Flow Ref | PRD Ref | ADR Ref | Shared Context Ref | Doc Gap |')
+  [void]$sb.AppendLine('|---|---|---|---|---|---|---|---|---|---|---|---|')
   foreach ($r in $topAtRisk) {
-    [void]$sb.AppendLine("| $(Clean-Cell $r.Group) | $(Clean-Cell $r.Feature) | $($r.Status) | $(Clean-Cell $r.Missing) | $($r.PrimaryTask) | $(Clean-Cell $r.FlowRef) | $(Clean-Cell $r.PRDRef) | $(Clean-Cell $r.ADRRef) | $(Clean-Cell $r.DocGap) |")
+    [void]$sb.AppendLine("| $(Clean-Cell $r.Group) | $(Clean-Cell $r.Feature) | $($r.Status) | $($r.ForecastRisk) | $(Clean-Cell $r.Missing) | $(Clean-Cell $r.ExecutionRisk) | $($r.PrimaryTask) | $(Clean-Cell $r.FlowRef) | $(Clean-Cell $r.PRDRef) | $(Clean-Cell $r.ADRRef) | $(Clean-Cell $r.SharedContextRef) | $(Clean-Cell $r.DocGap) |")
   }
   [void]$sb.AppendLine('')
 }
 
 [void]$sb.AppendLine('## Feature Matrix')
 [void]$sb.AppendLine('')
-[void]$sb.AppendLine('| Group | Feature | Status | Plan Coverage | Required Layers | Purpose | Owner | Priority | Related Task (CSV) | Requirements | Flow Ref | PRD Ref | ADR Ref | Entity | Domain | Database | Adapter | Router | Frontend | KPI Ref | Validation Ref | Evidence Ref | Missing CSV Task(s) | Notes |')
-[void]$sb.AppendLine('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|')
+[void]$sb.AppendLine('| Group | Feature | Status | Forecast Risk | Plan Coverage | Required Layers | Purpose | Owner | Priority | Related Task (CSV) | Requirements | Flow Ref | PRD Ref | ADR Ref | Shared Context Ref | Entity | Domain | Database | Adapter | Router | Frontend | KPI Ref | Validation Ref | Evidence Ref | Missing CSV Task(s) | Notes |')
+[void]$sb.AppendLine('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|')
 foreach ($m in $sorted) {
-  [void]$sb.AppendLine("| $($m.Group) | $($m.Feature) | $($m.Status) | $($m.PlanCoverage) | $($m.RequiredLayers) | $($m.Purpose) | $($m.Owner) | $($m.Priority) | $($m.RelatedTask) | $($m.Requirements) | $($m.FlowRef) | $($m.PRDRef) | $($m.ADRRef) | $($m.Entity) | $($m.Domain) | $($m.Database) | $($m.Adapter) | $($m.Router) | $($m.Frontend) | $($m.KPIRef) | $($m.ValidationRef) | $($m.EvidenceRef) | $($m.MissingTasks) | $($m.Notes) |")
+  [void]$sb.AppendLine("| $($m.Group) | $($m.Feature) | $($m.Status) | $($m.ForecastRisk) | $($m.PlanCoverage) | $($m.RequiredLayers) | $($m.Purpose) | $($m.Owner) | $($m.Priority) | $($m.RelatedTask) | $($m.Requirements) | $($m.FlowRef) | $($m.PRDRef) | $($m.ADRRef) | $($m.SharedContextRef) | $($m.Entity) | $($m.Domain) | $($m.Database) | $($m.Adapter) | $($m.Router) | $($m.Frontend) | $($m.KPIRef) | $($m.ValidationRef) | $($m.EvidenceRef) | $($m.MissingTasks) | $($m.Notes) |")
 }
 [void]$sb.AppendLine('')
 [void]$sb.AppendLine('## Maintenance Rules')
 [void]$sb.AppendLine('')
 [void]$sb.AppendLine('1. Update this matrix in the same PR whenever a feature status changes.')
 [void]$sb.AppendLine('2. Update `Related Task (CSV)` whenever task IDs or dependencies change in `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`.')
-[void]$sb.AppendLine('3. Keep `Flow Ref`, `PRD Ref`, and `ADR Ref` updated as source docs are created or updated.')
+[void]$sb.AppendLine('3. Keep `Flow Ref`, task-scoped `PRD Ref` / `ADR Ref`, and `Shared Context Ref` updated as source docs are created or updated.')
 [void]$sb.AppendLine('4. For any `Missing CSV Task(s)` entry, add task(s) to `Sprint_plan.csv` and replace the gap in the same PR.')
 [void]$sb.AppendLine('5. Keep status values limited to `planned`, `in_progress`, `done`.')
 
@@ -607,6 +1002,7 @@ $featureRowsForHtml = @(
       Group = $_.Group
       Feature = $_.Feature
       Status = $_.Status
+      ForecastRisk = $_.ForecastRisk
       PlanCoverage = $_.PlanCoverage
       RequiredLayers = $_.RequiredLayers
       Purpose = $_.Purpose
@@ -617,6 +1013,7 @@ $featureRowsForHtml = @(
       FlowRef = $_.FlowRef
       PRDRef = $_.PRDRef
       ADRRef = $_.ADRRef
+      SharedContextRef = $_.SharedContextRef
       Entity = $_.Entity
       Domain = $_.Domain
       Database = $_.Database
@@ -638,11 +1035,14 @@ $riskRowsForHtml = @(
       Group = $_.Group
       Feature = $_.Feature
       Status = $_.Status
+      ForecastRisk = $_.ForecastRisk
       Missing = $_.Missing
+      ExecutionRisk = $_.ExecutionRisk
       PrimaryTask = $_.PrimaryTask
       FlowRef = $_.FlowRef
       PRDRef = $_.PRDRef
       ADRRef = $_.ADRRef
+      SharedContextRef = $_.SharedContextRef
       DocGap = $_.DocGap
     }
   }
@@ -886,6 +1286,7 @@ $htmlTemplate = @'
               <th>Flow Ref</th>
               <th>PRD Ref</th>
               <th>ADR Ref</th>
+              <th>Shared Context Ref</th>
               <th>Related Task (CSV)</th>
               <th>Missing CSV Task(s)</th>
               <th>Details</th>
@@ -905,11 +1306,14 @@ $htmlTemplate = @'
               <th>Group</th>
               <th>Feature</th>
               <th>Status</th>
+              <th>Forecast Risk</th>
               <th>Missing Layers</th>
+              <th>Execution Risk</th>
               <th>Primary Task</th>
               <th>Flow Ref</th>
               <th>PRD Ref</th>
               <th>ADR Ref</th>
+              <th>Shared Context Ref</th>
               <th>Doc Gap</th>
             </tr>
           </thead>
@@ -960,7 +1364,7 @@ $htmlTemplate = @'
       if (state.group !== 'all' && row.Group !== state.group) return false;
       if (state.status !== 'all' && row.Status !== state.status) return false;
       if (state.coverage !== 'all' && covKind(row.PlanCoverage) !== state.coverage) return false;
-      if (state.missingOnly && row.MissingTasks === '-') return false;
+      if (state.missingOnly && row.MissingTasks === 'None') return false;
       if (state.search) {
         const hay = toSearchText(row);
         if (!hay.includes(state.search)) return false;
@@ -987,7 +1391,7 @@ $htmlTemplate = @'
         ['in_progress', total.in_progress, 'Visible ' + visible.in_progress],
         ['planned', total.planned, 'Visible ' + visible.planned],
         ['at_risk', total.at_risk, 'Visible ' + visible.at_risk],
-        ['Missing CSV', allRows.filter((r) => r.MissingTasks !== '-').length, 'Visible ' + filteredRows.filter((r) => r.MissingTasks !== '-').length],
+        ['Missing CSV', allRows.filter((r) => r.MissingTasks !== 'None').length, 'Visible ' + filteredRows.filter((r) => r.MissingTasks !== 'None').length],
       ];
       document.getElementById('summary-cards').innerHTML = cards
         .map((c) => '<div class="card"><div class="k">' + esc(c[0]) + '</div><div class="v">' + esc(c[1]) + '</div><div class="tiny">' + esc(c[2]) + '</div></div>')
@@ -1003,11 +1407,14 @@ $htmlTemplate = @'
             '<td>' + esc(r.Group) + '</td>' +
             '<td>' + esc(r.Feature) + '</td>' +
             '<td><span class="badge status-' + esc(r.Status) + '">' + esc(r.Status) + '</span></td>' +
+            '<td>' + esc(r.ForecastRisk || 'low') + '</td>' +
             '<td>' + esc(r.Missing) + '</td>' +
+            '<td>' + esc(r.ExecutionRisk) + '</td>' +
             '<td class="mono">' + esc(r.PrimaryTask) + '</td>' +
             '<td>' + esc(r.FlowRef) + '</td>' +
             '<td>' + esc(r.PRDRef) + '</td>' +
             '<td>' + esc(r.ADRRef) + '</td>' +
+            '<td>' + esc(r.SharedContextRef) + '</td>' +
             '<td>' + esc(r.DocGap) + '</td>' +
           '</tr>';
         })
@@ -1023,9 +1430,10 @@ $htmlTemplate = @'
       body.innerHTML = filtered
         .map((r, idx) => {
           const ck = covKind(r.PlanCoverage);
-          const missClass = r.MissingTasks === '-' ? 'missing-ok' : 'missing-gap';
+          const missClass = r.MissingTasks === 'None' ? 'missing-ok' : 'missing-gap';
           const details = [
             ['Purpose', r.Purpose],
+            ['Forecast Risk', r.ForecastRisk || 'low'],
             ['Owner / Priority', r.Owner + ' / ' + r.Priority],
             ['Requirements', r.Requirements],
             ['Layer Status', 'Entity: ' + r.Entity + '\nDomain: ' + r.Domain + '\nDatabase: ' + r.Database + '\nAdapter: ' + r.Adapter + '\nRouter: ' + r.Router + '\nFrontend: ' + r.Frontend],
@@ -1048,12 +1456,13 @@ $htmlTemplate = @'
               '<td>' + esc(r.FlowRef) + '</td>' +
               '<td>' + esc(r.PRDRef) + '</td>' +
               '<td>' + esc(r.ADRRef) + '</td>' +
+              '<td>' + esc(r.SharedContextRef) + '</td>' +
               '<td class="mono">' + esc(r.RelatedTask) + '</td>' +
               '<td class="' + missClass + '">' + esc(r.MissingTasks) + '</td>' +
               '<td><button class="toggle" data-detail-toggle="' + idx + '">View</button></td>' +
             '</tr>' +
             '<tr class="detail-row" data-detail-row="' + idx + '" hidden>' +
-              '<td colspan="11"><div class="detail-grid">' + detailHtml + '</div></td>' +
+              '<td colspan="12"><div class="detail-grid">' + detailHtml + '</div></td>' +
             '</tr>';
         })
         .join('');

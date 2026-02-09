@@ -30,6 +30,7 @@
     "**/*.test.tsx",
     "**/*.spec.ts",
     "**/*.spec.tsx",
+    "**/.tsup/**",
     "**/dist/**",
     "**/.tsup/**",
     "**/build/**",
