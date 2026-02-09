@@ -19,6 +19,10 @@ export * from './PrismaAutoResponseDraftRepository';
 export { PrismaAIOutputReviewRepository } from './PrismaAIOutputReviewRepository';
 // Note: OptimisticLockError is exported from PrismaAutoResponseDraftRepository
 
+// Chain Version Repositories (IFC-086)
+export * from './PrismaChainVersionRepository';
+export * from './PrismaChainVersionAuditRepository';
+
 // Outbox pattern (domain events)
 export * from './PrismaOutboxRepository';
 

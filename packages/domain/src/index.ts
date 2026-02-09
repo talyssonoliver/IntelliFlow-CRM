@@ -96,7 +96,7 @@ export * from './ai/FeedbackEvents';
 export * from './ai/review';
 
 // AI Domain - Conversation Records (IFC-148)
-export * from './ai/conversation-record';
+// TODO: Create conversation-record domain module (Prisma model exists but domain entity not yet implemented)
 
 // Auth Domain - Constants
 export * from './auth/AuthConstants';
