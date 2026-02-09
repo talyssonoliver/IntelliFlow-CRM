@@ -22,6 +22,8 @@ import {
   cancelSubscriptionInputSchema,
   getUpcomingInvoiceInputSchema,
 } from '@intelliflow/validators';
+import { callStripeAPI } from '../../shared/external-service-wrapper';
+import { mapErrorToTRPCError } from '../../shared/error-mapper';
 
 // ============================================
 // Local Type Definitions (from StripeAdapter)
@@ -175,30 +177,37 @@ export const billingRouter = createTRPCRouter({
    * Returns null if user has no Stripe customer ID or no active subscription.
    */
   getSubscription: protectedProcedure.query(async ({ ctx }) => {
-    const stripe = await getStripeAdapter();
-    const user = ctx.user;
+    try {
+      const stripe = await getStripeAdapter();
+      const user = ctx.user;
 
-    if (!user?.stripeCustomerId) {
-      return null;
+      if (!user?.stripeCustomerId) {
+        return null;
+      }
+
+      // Wrap Stripe API call with ExternalServiceError handling
+      const result = await callStripeAPI(() =>
+        stripe.listSubscriptions(user.stripeCustomerId!)
+      );
+
+      if (result.isFailure) {
+        throw mapErrorToTRPCError(result.error);
+      }
+
+      const subscriptions = result.value;
+
+      // Return the first active subscription (customers typically have one)
+      const activeSubscription = subscriptions.find(
+        (sub) => sub.status === 'active' || sub.status === 'trialing'
+      );
+
+      return activeSubscription ?? (subscriptions.length > 0 ? subscriptions[0] : null);
+    } catch (error) {
+      if (error instanceof TRPCError) {
+        throw error;
+      }
+      throw mapErrorToTRPCError(error);
     }
-
-    const result = await stripe.listSubscriptions(user.stripeCustomerId);
-
-    if (result.isFailure) {
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: result.error.message,
-      });
-    }
-
-    const subscriptions = result.value;
-
-    // Return the first active subscription (customers typically have one)
-    const activeSubscription = subscriptions.find(
-      (sub) => sub.status === 'active' || sub.status === 'trialing'
-    );
-
-    return activeSubscription ?? (subscriptions.length > 0 ? subscriptions[0] : null);
   }),
 
   /**

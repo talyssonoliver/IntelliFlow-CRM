@@ -36,6 +36,7 @@ import {
   NOTIFICATION_TYPES,
   NOTIFICATION_CHANNELS,
 } from '@intelliflow/validators';
+import { mapErrorToTRPCError } from '../../shared/error-mapper';
 
 // =============================================================================
 // Event Emitter for Real-time Updates
@@ -105,8 +106,8 @@ function mapToNotification(event: any, userId: string): Notification {
     type: payload?.notificationType || 'system_alert',
     title: payload?.title || event.eventType,
     body: payload?.body || payload?.description || '',
-    priority: payload?.priority || 'medium',
-    status: event.status === 'PROCESSED' ? 'read' : 'unread',
+    priority: payload?.priority || 'normal',
+    status: event.status === 'PROCESSED' ? 'read' : 'pending',
     isRead: event.status === 'PROCESSED',
     readAt: event.status === 'PROCESSED' ? event.processedAt : null,
     createdAt: event.occurredAt,
@@ -128,6 +129,185 @@ function mapToNotification(event: any, userId: string): Notification {
 // =============================================================================
 
 export const notificationsRouter = createTRPCRouter({
+  /**
+   * Send email notification immediately
+   * Handles NotificationDeliveryError from NotificationServicePort
+   */
+  sendEmail: protectedProcedure
+    .input(z.object({
+      to: z.array(z.string().email()).min(1),
+      cc: z.array(z.string().email()).optional(),
+      bcc: z.array(z.string().email()).optional(),
+      subject: z.string().min(1).max(200),
+      htmlBody: z.string().optional(),
+      textBody: z.string().optional(),
+      replyTo: z.string().email().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        // Lazy load notification service
+        const adapters = await import('@intelliflow/adapters');
+        const NotificationService = (adapters as any).NotificationService;
+
+        if (!NotificationService) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Notification service not available',
+          });
+        }
+
+        const service = new NotificationService();
+        const result = await service.sendEmail(input);
+
+        if (result.isFailure) {
+          // Maps NotificationDeliveryError to INTERNAL_SERVER_ERROR
+          throw mapErrorToTRPCError(result.error);
+        }
+
+        return result.value;
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw mapErrorToTRPCError(error);
+      }
+    }),
+
+  /**
+   * Send SMS notification immediately
+   * Handles NotificationDeliveryError from NotificationServicePort
+   */
+  sendSms: protectedProcedure
+    .input(z.object({
+      to: z.string().min(1),
+      message: z.string().min(1).max(1600),
+      from: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const adapters = await import('@intelliflow/adapters');
+        const NotificationService = (adapters as any).NotificationService;
+
+        if (!NotificationService) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Notification service not available',
+          });
+        }
+
+        const service = new NotificationService();
+        const result = await service.sendSms(input);
+
+        if (result.isFailure) {
+          // Maps NotificationDeliveryError to INTERNAL_SERVER_ERROR
+          throw mapErrorToTRPCError(result.error);
+        }
+
+        return result.value;
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw mapErrorToTRPCError(error);
+      }
+    }),
+
+  /**
+   * Schedule notification for future delivery
+   * Handles NotificationSchedulingError from NotificationServicePort
+   */
+  scheduleNotification: protectedProcedure
+    .input(z.object({
+      channel: z.enum(['email', 'sms', 'push', 'webhook', 'in_app']),
+      scheduledAt: z.date(),
+      priority: z.enum(['high', 'normal', 'low']).optional(),
+      options: z.union([
+        z.object({
+          to: z.array(z.string().email()),
+          subject: z.string(),
+          htmlBody: z.string().optional(),
+          textBody: z.string().optional(),
+        }),
+        z.object({
+          to: z.string(),
+          message: z.string(),
+        }),
+        z.object({
+          userId: z.string(),
+          title: z.string(),
+          body: z.string(),
+        }),
+      ]),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const adapters = await import('@intelliflow/adapters');
+        const NotificationService = (adapters as any).NotificationService;
+
+        if (!NotificationService) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Notification service not available',
+          });
+        }
+
+        const service = new NotificationService();
+        const result = await service.schedule(
+          input.channel,
+          input.scheduledAt,
+          input.options,
+          input.priority
+        );
+
+        if (result.isFailure) {
+          // Maps NotificationSchedulingError to BAD_REQUEST
+          throw mapErrorToTRPCError(result.error);
+        }
+
+        return result.value;
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw mapErrorToTRPCError(error);
+      }
+    }),
+
+  /**
+   * Cancel scheduled notification
+   */
+  cancelScheduled: protectedProcedure
+    .input(z.object({
+      notificationId: z.string().min(1),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const adapters = await import('@intelliflow/adapters');
+        const NotificationService = (adapters as any).NotificationService;
+
+        if (!NotificationService) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Notification service not available',
+          });
+        }
+
+        const service = new NotificationService();
+        const result = await service.cancelScheduled(input.notificationId);
+
+        if (result.isFailure) {
+          throw mapErrorToTRPCError(result.error);
+        }
+
+        return { success: true, message: 'Notification cancelled successfully' };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw mapErrorToTRPCError(error);
+      }
+    }),
+
   /**
    * List notifications with pagination and filtering
    */
@@ -709,7 +889,7 @@ export async function createNotification(
     type: (typeof NOTIFICATION_TYPES)[number];
     title: string;
     body: string;
-    priority?: 'low' | 'medium' | 'high' | 'urgent';
+    priority?: 'high' | 'normal' | 'low';
     entityType?: string;
     entityId?: string;
     entityName?: string;
@@ -724,8 +904,8 @@ export async function createNotification(
     type: params.type,
     title: params.title,
     body: params.body,
-    priority: params.priority || 'medium',
-    status: 'unread',
+    priority: params.priority || 'normal',
+    status: 'pending',
     isRead: false,
     readAt: null,
     createdAt: new Date(),

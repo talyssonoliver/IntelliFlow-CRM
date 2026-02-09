@@ -26,6 +26,7 @@ import {
   createTenantWhereClause,
   type TenantAwareContext
 } from '../../security/tenant-context';
+import { TaskNotInProgressError } from '@intelliflow/domain';
 
 /**
  * Helper to get task service from context
@@ -360,6 +361,15 @@ export const taskRouter = createTRPCRouter({
     if (result.isFailure) {
       const errorCode = result.error.code;
       const message = result.error.message;
+
+      // Handle specific domain error for task not in progress
+      if (result.error instanceof TaskNotInProgressError) {
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: 'Task must be in progress before it can be completed',
+        });
+      }
+
       if (errorCode === 'NOT_FOUND_ERROR' || message.includes('not found')) {
         throw new TRPCError({
           code: 'NOT_FOUND',

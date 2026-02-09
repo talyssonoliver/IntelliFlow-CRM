@@ -80,7 +80,7 @@ describe('notificationsRouter', () => {
       expect(result.notifications).toHaveLength(1);
       expect(result.notifications[0].title).toBe('New Lead Assigned');
       expect(result.notifications[0].type).toBe('lead_assigned');
-      expect(result.notifications[0].status).toBe('unread');
+      expect(result.notifications[0].status).toBe('pending');
       expect(result.notifications[0].isRead).toBe(false);
       expect(result.total).toBe(1);
       expect(result.unreadCount).toBe(1);
