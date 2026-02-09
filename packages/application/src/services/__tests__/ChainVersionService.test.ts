@@ -807,7 +807,7 @@ describe('ChainVersionService', () => {
       ];
       versionRepo.findByChainType.mockResolvedValue(versions);
 
-      const result = await service.listVersions('LEAD_SCORING' as any, 'tenant-1');
+      const result = await service.listVersions('tenant-1', { chainType: 'LEAD_SCORING' as any });
 
       expect(result).toHaveLength(2);
       // Should be sorted descending by createdAt
@@ -815,10 +815,21 @@ describe('ChainVersionService', () => {
       expect(result[1].id).toBe('ver-1');
     });
 
+    it('should list all versions for tenant when no chainType specified', async () => {
+      const versions = [makeVersion({ id: 'ver-1' })];
+      versionRepo.findByTenantId.mockResolvedValue(versions);
+
+      const result = await service.listVersions('tenant-1');
+
+      expect(versionRepo.findByTenantId).toHaveBeenCalledWith('tenant-1');
+      expect(result).toHaveLength(1);
+    });
+
     it('should filter by status when provided', async () => {
       versionRepo.findByStatus.mockResolvedValue([makeVersion({ status: 'ACTIVE' })]);
 
-      const result = await service.listVersions('LEAD_SCORING' as any, 'tenant-1', {
+      const result = await service.listVersions('tenant-1', {
+        chainType: 'LEAD_SCORING' as any,
         status: 'ACTIVE' as any,
       });
 
@@ -832,7 +843,8 @@ describe('ChainVersionService', () => {
       );
       versionRepo.findByChainType.mockResolvedValue(versions);
 
-      const result = await service.listVersions('LEAD_SCORING' as any, 'tenant-1', {
+      const result = await service.listVersions('tenant-1', {
+        chainType: 'LEAD_SCORING' as any,
         offset: 10,
         limit: 5,
       });
@@ -846,7 +858,7 @@ describe('ChainVersionService', () => {
       );
       versionRepo.findByChainType.mockResolvedValue(versions);
 
-      const result = await service.listVersions('LEAD_SCORING' as any, 'tenant-1');
+      const result = await service.listVersions('tenant-1', { chainType: 'LEAD_SCORING' as any });
 
       expect(result).toHaveLength(20);
     });
@@ -857,14 +869,148 @@ describe('ChainVersionService', () => {
   // =========================================================================
 
   describe('getVersionHistory', () => {
+    it('should return chronological version list for a chain type', async () => {
+      const versions = [
+        makeVersion({ id: 'ver-1', createdAt: new Date('2025-01-01') }),
+        makeVersion({ id: 'ver-2', createdAt: new Date('2025-02-01') }),
+      ];
+      versionRepo.findByChainType.mockResolvedValue(versions);
+
+      const result = await service.getVersionHistory('LEAD_SCORING' as any, 'tenant-1');
+
+      expect(result).toHaveLength(2);
+      expect(result[0].id).toBe('ver-2');
+      expect(versionRepo.findByChainType).toHaveBeenCalledWith('LEAD_SCORING', 'tenant-1');
+    });
+
+    it('should respect limit parameter', async () => {
+      const versions = Array.from({ length: 10 }, (_, i) =>
+        makeVersion({ id: `ver-${i}`, createdAt: new Date(2025, 0, i + 1) }),
+      );
+      versionRepo.findByChainType.mockResolvedValue(versions);
+
+      const result = await service.getVersionHistory('LEAD_SCORING' as any, 'tenant-1', 3);
+
+      expect(result).toHaveLength(3);
+    });
+  });
+
+  // =========================================================================
+  // getVersionAuditLog
+  // =========================================================================
+
+  describe('getVersionAuditLog', () => {
     it('should return audit records for a version', async () => {
       const audits = [makeAuditRecord(), makeAuditRecord({ id: 'audit-2', action: 'ACTIVATED' })];
       auditRepo.findByVersionId.mockResolvedValue(audits);
 
-      const result = await service.getVersionHistory('ver-1');
+      const result = await service.getVersionAuditLog('ver-1');
 
       expect(result).toEqual(audits);
       expect(auditRepo.findByVersionId).toHaveBeenCalledWith('ver-1');
+    });
+
+    it('should respect limit parameter', async () => {
+      const audits = Array.from({ length: 10 }, (_, i) =>
+        makeAuditRecord({ id: `audit-${i}` }),
+      );
+      auditRepo.findByVersionId.mockResolvedValue(audits);
+
+      const result = await service.getVersionAuditLog('ver-1', 3);
+
+      expect(result).toHaveLength(3);
+    });
+  });
+
+  // =========================================================================
+  // getVersionStats
+  // =========================================================================
+
+  describe('getVersionStats', () => {
+    it('should aggregate stats from all tenant versions', async () => {
+      const versions = [
+        makeVersion({ id: 'v1', chainType: 'LEAD_SCORING', status: 'ACTIVE' }),
+        makeVersion({ id: 'v2', chainType: 'LEAD_SCORING', status: 'DRAFT' }),
+        makeVersion({ id: 'v3', chainType: 'EMAIL_WRITER', status: 'DEPRECATED' }),
+        makeVersion({ id: 'v4', chainType: 'EMAIL_WRITER', status: 'ARCHIVED' }),
+      ];
+      versionRepo.findByTenantId.mockResolvedValue(versions);
+
+      const stats = await service.getVersionStats('tenant-1');
+
+      expect(stats.totalVersions).toBe(4);
+      expect(stats.activeVersions).toBe(1);
+      expect(stats.draftVersions).toBe(1);
+      expect(stats.deprecatedVersions).toBe(1);
+      expect(stats.archivedVersions).toBe(1);
+      expect(stats.byChainType).toEqual({ LEAD_SCORING: 2, EMAIL_WRITER: 2 });
+    });
+
+    it('should filter by chain type when provided', async () => {
+      versionRepo.findByChainType.mockResolvedValue([
+        makeVersion({ status: 'ACTIVE' }),
+      ]);
+
+      const stats = await service.getVersionStats('tenant-1', 'LEAD_SCORING' as any);
+
+      expect(versionRepo.findByChainType).toHaveBeenCalledWith('LEAD_SCORING', 'tenant-1');
+      expect(stats.totalVersions).toBe(1);
+    });
+  });
+
+  // =========================================================================
+  // compareVersions
+  // =========================================================================
+
+  describe('compareVersions', () => {
+    it('should return differences between two versions', async () => {
+      const vA = makeVersion({ id: 'v-a', prompt: 'prompt A', temperature: 0.5 });
+      const vB = makeVersion({ id: 'v-b', prompt: 'prompt B', temperature: 0.7 });
+
+      versionRepo.findById.mockImplementation((id: string) => {
+        if (id === 'v-a') return Promise.resolve(vA);
+        if (id === 'v-b') return Promise.resolve(vB);
+        return Promise.resolve(null);
+      });
+
+      const result = await service.compareVersions('v-a', 'v-b');
+
+      expect(result.versionA).toEqual(vA);
+      expect(result.versionB).toEqual(vB);
+      expect(result.differences).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ field: 'prompt', valueA: 'prompt A', valueB: 'prompt B' }),
+          expect.objectContaining({ field: 'temperature', valueA: 0.5, valueB: 0.7 }),
+        ]),
+      );
+    });
+
+    it('should throw if version A not found', async () => {
+      versionRepo.findById.mockResolvedValue(null);
+
+      await expect(service.compareVersions('missing', 'v-b')).rejects.toThrow(
+        'Chain version not found: missing',
+      );
+    });
+
+    it('should throw if version B not found', async () => {
+      versionRepo.findById.mockImplementation((id: string) => {
+        if (id === 'v-a') return Promise.resolve(makeVersion({ id: 'v-a' }));
+        return Promise.resolve(null);
+      });
+
+      await expect(service.compareVersions('v-a', 'missing')).rejects.toThrow(
+        'Chain version not found: missing',
+      );
+    });
+
+    it('should return empty differences for identical versions', async () => {
+      const version = makeVersion();
+      versionRepo.findById.mockResolvedValue(version);
+
+      const result = await service.compareVersions('ver-1', 'ver-1');
+
+      expect(result.differences).toHaveLength(0);
     });
   });
 

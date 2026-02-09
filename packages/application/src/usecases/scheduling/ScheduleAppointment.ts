@@ -6,6 +6,7 @@ import {
   Buffer,
   Recurrence,
   ConflictDetector,
+  ConflictDetectionError,
   AppointmentType,
   CaseId,
   DomainError,
@@ -132,13 +133,23 @@ export class ScheduleAppointmentUseCase {
         return Result.fail(timeSlotResult.error);
       }
 
-      const existingAppointments = await this.appointmentRepository.findForConflictCheck(
-        allAttendees,
-        {
-          startTime: buffer.adjustStartTime(input.startTime),
-          endTime: buffer.adjustEndTime(input.endTime),
-        }
-      );
+      let existingAppointments: Appointment[];
+      try {
+        existingAppointments = await this.appointmentRepository.findForConflictCheck(
+          allAttendees,
+          {
+            startTime: buffer.adjustStartTime(input.startTime),
+            endTime: buffer.adjustEndTime(input.endTime),
+          }
+        );
+      } catch (error) {
+        // Wrap repository errors as ConflictDetectionError
+        return Result.fail(
+          new ConflictDetectionError(
+            `Failed to fetch appointments for conflict check: ${error instanceof Error ? error.message : 'Unknown error'}`
+          )
+        );
+      }
 
       const conflictResult = ConflictDetector.checkConflicts(appointment, existingAppointments);
 

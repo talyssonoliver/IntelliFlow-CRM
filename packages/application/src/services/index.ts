@@ -24,3 +24,6 @@ export * from './IngestionOrchestrator';
 
 // Auto-Response Service (IFC-029)
 export * from './AutoResponseService';
+
+// Chain Version Service (IFC-086)
+export * from './ChainVersionService';

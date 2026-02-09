@@ -612,19 +612,20 @@ export class ChainVersionService {
   }
 
   /**
-   * List versions for a chain type
+   * List versions, optionally filtered by chain type and/or status
    */
   async listVersions(
-    chainType: ChainType,
     tenantId: string,
-    options?: { status?: ChainVersionStatus; limit?: number; offset?: number }
+    options?: { chainType?: ChainType; status?: ChainVersionStatus; limit?: number; offset?: number }
   ): Promise<ChainVersionRecord[]> {
     let versions: ChainVersionRecord[];
 
-    if (options?.status) {
-      versions = await this.versionRepo.findByStatus(chainType, options.status, tenantId);
+    if (options?.chainType && options?.status) {
+      versions = await this.versionRepo.findByStatus(options.chainType, options.status, tenantId);
+    } else if (options?.chainType) {
+      versions = await this.versionRepo.findByChainType(options.chainType, tenantId);
     } else {
-      versions = await this.versionRepo.findByChainType(chainType, tenantId);
+      versions = await this.versionRepo.findByTenantId(tenantId);
     }
 
     // Sort by createdAt descending
@@ -638,10 +639,112 @@ export class ChainVersionService {
   }
 
   /**
-   * Get version history (audit log) for a version
+   * Get version history for a chain type (chronological list of versions)
    */
-  async getVersionHistory(versionId: string): Promise<ChainVersionAuditRecord[]> {
-    return this.auditRepo.findByVersionId(versionId);
+  async getVersionHistory(
+    chainType: ChainType,
+    tenantId: string,
+    limit?: number
+  ): Promise<ChainVersionRecord[]> {
+    const versions = await this.versionRepo.findByChainType(chainType, tenantId);
+    // Sort by createdAt descending (newest first)
+    versions.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return limit ? versions.slice(0, limit) : versions;
+  }
+
+  /**
+   * Get audit log entries for a specific version
+   */
+  async getVersionAuditLog(
+    versionId: string,
+    limit?: number
+  ): Promise<ChainVersionAuditRecord[]> {
+    const entries = await this.auditRepo.findByVersionId(versionId);
+    return limit ? entries.slice(0, limit) : entries;
+  }
+
+  /**
+   * Get version statistics for a tenant
+   */
+  async getVersionStats(
+    tenantId: string,
+    chainType?: ChainType
+  ): Promise<{
+    totalVersions: number;
+    activeVersions: number;
+    draftVersions: number;
+    deprecatedVersions: number;
+    archivedVersions: number;
+    byChainType: Record<string, number>;
+  }> {
+    const versions = chainType
+      ? await this.versionRepo.findByChainType(chainType, tenantId)
+      : await this.versionRepo.findByTenantId(tenantId);
+
+    const byChainType: Record<string, number> = {};
+    let activeVersions = 0;
+    let draftVersions = 0;
+    let deprecatedVersions = 0;
+    let archivedVersions = 0;
+
+    for (const v of versions) {
+      byChainType[v.chainType] = (byChainType[v.chainType] ?? 0) + 1;
+      switch (v.status) {
+        case 'ACTIVE': activeVersions++; break;
+        case 'DRAFT': draftVersions++; break;
+        case 'DEPRECATED': deprecatedVersions++; break;
+        case 'ARCHIVED': archivedVersions++; break;
+      }
+    }
+
+    return {
+      totalVersions: versions.length,
+      activeVersions,
+      draftVersions,
+      deprecatedVersions,
+      archivedVersions,
+      byChainType,
+    };
+  }
+
+  /**
+   * Compare two versions and return their differences
+   */
+  async compareVersions(
+    versionIdA: string,
+    versionIdB: string
+  ): Promise<{
+    versionA: ChainVersionRecord;
+    versionB: ChainVersionRecord;
+    differences: Array<{ field: string; valueA: unknown; valueB: unknown }>;
+  }> {
+    const [versionA, versionB] = await Promise.all([
+      this.versionRepo.findById(versionIdA),
+      this.versionRepo.findById(versionIdB),
+    ]);
+
+    if (!versionA) {
+      throw new Error(`Chain version not found: ${versionIdA}`);
+    }
+    if (!versionB) {
+      throw new Error(`Chain version not found: ${versionIdB}`);
+    }
+
+    const compareFields: Array<keyof ChainVersionRecord> = [
+      'prompt', 'model', 'temperature', 'maxTokens',
+      'additionalParams', 'description', 'rolloutStrategy', 'rolloutPercent',
+    ];
+
+    const differences: Array<{ field: string; valueA: unknown; valueB: unknown }> = [];
+    for (const field of compareFields) {
+      const valA = versionA[field];
+      const valB = versionB[field];
+      if (JSON.stringify(valA) !== JSON.stringify(valB)) {
+        differences.push({ field, valueA: valA, valueB: valB });
+      }
+    }
+
+    return { versionA, versionB, differences };
   }
 
   /**

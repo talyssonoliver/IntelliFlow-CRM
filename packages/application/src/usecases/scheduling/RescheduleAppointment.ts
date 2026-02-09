@@ -5,6 +5,7 @@ import {
   TimeSlot,
   Buffer,
   ConflictDetector,
+  ConflictDetectionError,
   DomainError,
   Result,
 } from '@intelliflow/domain';
@@ -87,14 +88,24 @@ export class RescheduleAppointmentUseCase {
         return Result.fail(newTimeSlotResult.error);
       }
 
-      const existingAppointments = await this.appointmentRepository.findForConflictCheck(
-        allAttendees,
-        {
-          startTime: appointment.buffer.adjustStartTime(input.newStartTime),
-          endTime: appointment.buffer.adjustEndTime(input.newEndTime),
-        },
-        appointmentId // Exclude self
-      );
+      let existingAppointments: Appointment[];
+      try {
+        existingAppointments = await this.appointmentRepository.findForConflictCheck(
+          allAttendees,
+          {
+            startTime: appointment.buffer.adjustStartTime(input.newStartTime),
+            endTime: appointment.buffer.adjustEndTime(input.newEndTime),
+          },
+          appointmentId // Exclude self
+        );
+      } catch (error) {
+        // Wrap repository errors as ConflictDetectionError
+        return Result.fail(
+          new ConflictDetectionError(
+            `Failed to fetch appointments for conflict check: ${error instanceof Error ? error.message : 'Unknown error'}`
+          )
+        );
+      }
 
       const conflictResult = ConflictDetector.checkTimeSlotConflicts(
         newTimeSlotResult.value,
