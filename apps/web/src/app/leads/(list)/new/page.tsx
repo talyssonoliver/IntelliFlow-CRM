@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Card, ToastProvider, ToastViewport, Toast, ToastTitle, ToastDescription, ToastClose } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
+import { useFormUnsavedChanges } from '@/hooks/useUnsavedChanges';
 
 // Step configuration
 type StepId = 'basic' | 'company' | 'qualification';
@@ -143,6 +144,15 @@ export default function CreateNewLeadPage() {
   });
 
   const currentStepIndex = steps.findIndex(s => s.id === currentStep);
+
+  // Track if form has unsaved changes
+  const isDirty = JSON.stringify(formData) !== JSON.stringify(initialFormData);
+
+  // Register form as having unsaved changes
+  useFormUnsavedChanges({
+    formName: 'newLeadForm',
+    isDirty,
+  });
 
   // Update form field
   const updateField = (field: keyof LeadFormData, value: string) => {

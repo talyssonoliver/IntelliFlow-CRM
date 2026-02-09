@@ -63,7 +63,7 @@ type NotificationType =
   | 'email_opened'
   | 'email_replied';
 
-type NotificationPriority = 'low' | 'medium' | 'high' | 'urgent';
+type NotificationPriority = 'high' | 'normal' | 'low';
 
 interface Notification {
   id: string;
@@ -351,27 +351,20 @@ function getTypeConfig(type: NotificationType) {
 }
 
 function getPriorityConfig(priority: NotificationPriority) {
-  const configs = {
-    urgent: {
+  const configs: Record<NotificationPriority, { borderColor: string; badgeBg: string; badgeText: string; badgeRing: string; label: string }> = {
+    high: {
       borderColor: 'bg-red-500',
       badgeBg: 'bg-red-50 dark:bg-red-900/30',
       badgeText: 'text-red-700 dark:text-red-300',
       badgeRing: 'ring-red-600/10 dark:ring-red-500/20',
-      label: 'Urgent',
-    },
-    high: {
-      borderColor: 'bg-orange-400',
-      badgeBg: 'bg-orange-50 dark:bg-orange-900/30',
-      badgeText: 'text-orange-700 dark:text-orange-300',
-      badgeRing: 'ring-orange-600/10 dark:ring-orange-500/20',
       label: 'High',
     },
-    medium: {
+    normal: {
       borderColor: 'bg-primary',
       badgeBg: 'bg-blue-50 dark:bg-blue-900/30',
       badgeText: 'text-blue-700 dark:text-blue-300',
       badgeRing: 'ring-blue-600/10 dark:ring-blue-500/20',
-      label: 'Medium',
+      label: 'Normal',
     },
     low: {
       borderColor: 'bg-slate-300 dark:bg-slate-600',
@@ -452,7 +445,7 @@ function NotificationItem({
             >
               {notification.title}
             </h3>
-            {(notification.priority === 'urgent' || notification.priority === 'high') && (
+            {notification.priority === 'high' && (
               <span
                 className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${priorityConfig.badgeBg} ${priorityConfig.badgeText} ${priorityConfig.badgeRing}`}
               >
@@ -565,9 +558,7 @@ export default function NotificationsPage() {
 
     if (activeTab === 'unread') {
       filters.isRead = false;
-    } else if (activeTab === 'urgent') {
-      filters.priorities = ['urgent'];
-    } else if (activeTab === 'high') {
+    } else if (activeTab === 'urgent' || activeTab === 'high') {
       filters.priorities = ['high'];
     }
 

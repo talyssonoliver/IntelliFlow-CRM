@@ -6,6 +6,11 @@ import { useState, useCallback, useRef } from 'react';
 import { trpc } from '@/lib/trpc';
 import { AuthProvider } from '@/lib/auth';
 import { RemindersProvider } from '@/lib/cases/reminders-context';
+// NOTE: We use a custom tRPC setup instead of TRPCProvider from @intelliflow/api-client
+// because we need:
+// - WebSocket support for real-time subscriptions
+// - Custom auth error handling with automatic redirect
+// - Token validation before including in headers
 
 /**
  * Check if an error is an authentication error (401 UNAUTHORIZED)
