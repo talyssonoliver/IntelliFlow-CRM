@@ -1,0 +1,407 @@
+[
+  {
+    "file": "apps/ai-worker/src/analytics/feedback-analytics-generator.ts",
+    "name": "generateFeedbackAnalyticsCLI",
+    "line": 603
+  },
+  {
+    "file": "apps/ai-worker/src/chains/churn-risk.chain.ts",
+    "name": "churnRiskChain",
+    "line": 749
+  },
+  {
+    "file": "apps/ai-worker/src/chains/sentiment.chain.ts",
+    "name": "sentimentChain",
+    "line": 445
+  },
+  {
+    "file": "apps/ai-worker/src/monitoring/chain-monitor.ts",
+    "name": "sanitizeMetricLabel",
+    "line": 54
+  },
+  {
+    "file": "apps/ai-worker/src/monitoring/chain-monitor.ts",
+    "name": "chainMonitor",
+    "line": 213
+  },
+  {
+    "file": "apps/ai-worker/src/prompts/index.ts",
+    "name": "default",
+    "line": 162
+  },
+  {
+    "file": "apps/ai-worker/src/services/embedding-purge.service.ts",
+    "name": "createEmbeddingPurgeService",
+    "line": 183
+  },
+  {
+    "file": "apps/api/src/middleware/rate-limit.ts",
+    "name": "createAuthenticatedRateLimitMiddleware",
+    "line": 174
+  },
+  {
+    "file": "apps/api/src/shared/audit-encryption-module.ts",
+    "name": "resetAuditEncryption",
+    "line": 316
+  },
+  {
+    "file": "apps/api/src/shared/prompt-sanitizer.ts",
+    "name": "logSecurityEvent",
+    "line": 338
+  },
+  {
+    "file": "apps/api/src/tracing/correlation.ts",
+    "name": "getUserId",
+    "line": 156
+  },
+  {
+    "file": "apps/api/src/tracing/middleware.ts",
+    "name": "tracedPublicProcedure",
+    "line": 210
+  },
+  {
+    "file": "apps/api/src/tracing/middleware.ts",
+    "name": "tracedProtectedProcedure",
+    "line": 211
+  },
+  {
+    "file": "apps/api/src/tracing/otel.ts",
+    "name": "startTracing",
+    "line": 152
+  },
+  {
+    "file": "apps/api/src/tracing/otel.ts",
+    "name": "getSDKInstance",
+    "line": 179
+  },
+  {
+    "file": "apps/api/src/tracing/sentry.ts",
+    "name": "startSpan",
+    "line": 194
+  },
+  {
+    "file": "apps/api/src/tracing/sentry.ts",
+    "name": "setContext",
+    "line": 231
+  },
+  {
+    "file": "apps/api/src/workflow/state-machine.ts",
+    "name": "workflowEngine",
+    "line": 481
+  },
+  {
+    "file": "apps/api/src/workflow/types.ts",
+    "name": "humanDecisionSchema",
+    "line": 252
+  },
+  {
+    "file": "apps/api/src/workflow/types.ts",
+    "name": "workflowQuerySchema",
+    "line": 260
+  },
+  {
+    "file": "apps/web/lib/status/incident-tracker.ts",
+    "name": "default",
+    "line": 366
+  },
+  {
+    "file": "apps/web/lib/tickets/sla-badge.tsx",
+    "name": "SLAQuickView",
+    "line": 240
+  },
+  {
+    "file": "apps/web/src/components/sidebar/configs/governance.ts",
+    "name": "governanceSidebarConfig",
+    "line": 4
+  },
+  {
+    "file": "apps/web/src/components/sidebar/SidebarContext.tsx",
+    "name": "useSidebarOptional",
+    "line": 123
+  },
+  {
+    "file": "apps/web/src/components/sidebar/SidebarPortalContext.tsx",
+    "name": "SidebarPortalProvider",
+    "line": 42
+  },
+  {
+    "file": "apps/web/src/components/sidebar/SidebarPortalContext.tsx",
+    "name": "SidebarPortal",
+    "line": 129
+  },
+  {
+    "file": "apps/web/src/components/sidebar/SidebarPortalContext.tsx",
+    "name": "SidebarPortalTarget",
+    "line": 150
+  },
+  {
+    "file": "apps/web/src/hooks/useUnsavedChanges.tsx",
+    "name": "useFormUnsavedChanges",
+    "line": 169
+  },
+  {
+    "file": "apps/web/src/lib/shared/account-activation.ts",
+    "name": "isTokenExpiringSoon",
+    "line": 328
+  },
+  {
+    "file": "apps/workers/shared/src/worker-config.ts",
+    "name": "validateConfig",
+    "line": 198
+  },
+  {
+    "file": "apps/workers/shared/src/worker-config.ts",
+    "name": "createTestConfig",
+    "line": 223
+  },
+  {
+    "file": "packages/adapters/src/antivirus/ClamAVScanner.ts",
+    "name": "ClamAVScanner",
+    "line": 19
+  },
+  {
+    "file": "packages/adapters/src/messaging/email/inbound.ts",
+    "name": "inboundEmailParser",
+    "line": 677
+  },
+  {
+    "file": "packages/adapters/src/messaging/twilio/client.ts",
+    "name": "getTwilioClient",
+    "line": 232
+  },
+  {
+    "file": "packages/adapters/src/payments/paypal/adapter.ts",
+    "name": "PayPalAdapter",
+    "line": 80
+  },
+  {
+    "file": "packages/adapters/src/shared/bias-detector.ts",
+    "name": "detectModelDrift",
+    "line": 162
+  },
+  {
+    "file": "packages/adapters/src/shared/bias-detector.ts",
+    "name": "saveBiasMetrics",
+    "line": 229
+  },
+  {
+    "file": "packages/adapters/src/shared/bias-detector.ts",
+    "name": "generateBiasReport",
+    "line": 241
+  },
+  {
+    "file": "packages/adapters/src/shared/prompt-sanitizer.ts",
+    "name": "sanitizeOutput",
+    "line": 166
+  },
+  {
+    "file": "packages/adapters/src/shared/prompt-sanitizer.ts",
+    "name": "logSecurityEvent",
+    "line": 349
+  },
+  {
+    "file": "packages/ai/tools/retrieve-case-context.ts",
+    "name": "default",
+    "line": 878
+  },
+  {
+    "file": "packages/api-client/src/react-client.tsx",
+    "name": "TRPCProvider",
+    "line": 66
+  },
+  {
+    "file": "packages/application/src/errors/ApplicationErrors.ts",
+    "name": "ExternalServiceError",
+    "line": 17
+  },
+  {
+    "file": "packages/application/src/errors/ApplicationErrors.ts",
+    "name": "AuthorizationError",
+    "line": 28
+  },
+  {
+    "file": "packages/application/src/ports/external/NotificationServicePort.ts",
+    "name": "NotificationDeliveryError",
+    "line": 105
+  },
+  {
+    "file": "packages/application/src/ports/external/NotificationServicePort.ts",
+    "name": "NotificationSchedulingError",
+    "line": 112
+  },
+  {
+    "file": "packages/application/src/ports/external/WebhookServicePort.ts",
+    "name": "DuplicateWebhookError",
+    "line": 118
+  },
+  {
+    "file": "packages/db/src/client.ts",
+    "name": "withTransaction",
+    "line": 129
+  },
+  {
+    "file": "packages/db/src/client.ts",
+    "name": "withTransactionOptions",
+    "line": 136
+  },
+  {
+    "file": "packages/db/src/client.ts",
+    "name": "executeRawWithTiming",
+    "line": 151
+  },
+  {
+    "file": "packages/db/src/client.ts",
+    "name": "checkDatabaseHealth",
+    "line": 166
+  },
+  {
+    "file": "packages/db/src/client.ts",
+    "name": "disconnectPrisma",
+    "line": 190
+  },
+  {
+    "file": "packages/domain/src/ai/AIConstants.ts",
+    "name": "SIGNIFICANCE_LEVELS",
+    "line": 298
+  },
+  {
+    "file": "packages/domain/src/ai/AIConstants.ts",
+    "name": "requiresHumanReview",
+    "line": 517
+  },
+  {
+    "file": "packages/domain/src/crm/task/Task.ts",
+    "name": "TaskNotInProgressError",
+    "line": 30
+  },
+  {
+    "file": "packages/domain/src/legal/appointments/ConflictDetector.ts",
+    "name": "ConflictDetectionError",
+    "line": 7
+  },
+  {
+    "file": "packages/domain/src/notifications/Notification.ts",
+    "name": "NOTIFICATION_CHANNELS",
+    "line": 34
+  },
+  {
+    "file": "packages/domain/src/notifications/Notification.ts",
+    "name": "NOTIFICATION_STATUSES",
+    "line": 35
+  },
+  {
+    "file": "packages/domain/src/notifications/Notification.ts",
+    "name": "NOTIFICATION_PRIORITIES",
+    "line": 36
+  },
+  {
+    "file": "packages/domain/src/security/AISecurityEventTypes.ts",
+    "name": "getAIEventSeverity",
+    "line": 141
+  },
+  {
+    "file": "packages/platform/src/queues/connection.ts",
+    "name": "checkConnectionHealth",
+    "line": 84
+  },
+  {
+    "file": "packages/platform/src/queues/connection.ts",
+    "name": "connectionRegistry",
+    "line": 185
+  },
+  {
+    "file": "packages/platform/src/queues/retry-strategy.ts",
+    "name": "createBackoffStrategy",
+    "line": 64
+  },
+  {
+    "file": "packages/platform/src/queues/retry-strategy.ts",
+    "name": "globalRetryBudget",
+    "line": 234
+  },
+  {
+    "file": "packages/platform/src/resilience/circuit-breaker.ts",
+    "name": "withCircuitBreaker",
+    "line": 421
+  },
+  {
+    "file": "packages/platform/src/resilience/resilient-call.ts",
+    "name": "resilientCall",
+    "line": 25
+  },
+  {
+    "file": "packages/platform/src/resilience/retry-policy.ts",
+    "name": "Retry",
+    "line": 429
+  },
+  {
+    "file": "packages/platform/src/workflow/engine.ts",
+    "name": "DEFAULT_TEMPORAL_CONFIG",
+    "line": 579
+  },
+  {
+    "file": "packages/platform/src/workflow/rules-engine.ts",
+    "name": "createCaseEscalationRule",
+    "line": 679
+  },
+  {
+    "file": "packages/platform/src/workflow/rules-engine.ts",
+    "name": "createLeadScoringRule",
+    "line": 723
+  },
+  {
+    "file": "packages/platform/src/workflow/rules-engine.ts",
+    "name": "createTaskAssignmentRule",
+    "line": 760
+  },
+  {
+    "file": "packages/platform/src/workflow/rules-engine.ts",
+    "name": "resetRulesEngine",
+    "line": 814
+  },
+  {
+    "file": "packages/search/src/index.ts",
+    "name": "SEARCH_MODES",
+    "line": 67
+  },
+  {
+    "file": "packages/search/src/index.ts",
+    "name": "SEARCH_SOURCES",
+    "line": 75
+  },
+  {
+    "file": "packages/search/src/index.ts",
+    "name": "SEARCH_PERFORMANCE",
+    "line": 89
+  },
+  {
+    "file": "packages/search/src/indexer.ts",
+    "name": "DEFAULT_INDEXER_CONFIG",
+    "line": 30
+  },
+  {
+    "file": "packages/search/src/retrieval.ts",
+    "name": "DEFAULT_RELEVANCE_CONFIG",
+    "line": 114
+  },
+  {
+    "file": "packages/search/src/worker.ts",
+    "name": "REINDEX_QUEUE_NAME",
+    "line": 19
+  },
+  {
+    "file": "packages/ui/src/components/confirmation-dialog.tsx",
+    "name": "ConfirmationDialog",
+    "line": 58
+  },
+  {
+    "file": "packages/ui/src/components/status-select-dialog.tsx",
+    "name": "StatusSelectDialog",
+    "line": 79
+  },
+  {
+    "file": "packages/ui/src/lib/icon-mapping.ts",
+    "name": "ICON_SIZE_CLASSES",
+    "line": 128
+  }
+]
