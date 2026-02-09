@@ -26,8 +26,8 @@ type Page =
   | 'kanban'
   | 'analytics'
   | 'metrics'
-  | 'artifacts'
   | 'tracking'
+  | 'artifacts'
   | 'governance'
   | 'contracts'
   | 'audit'
@@ -203,6 +203,17 @@ export default function Home() {
               Metrics
             </button>
             <button
+              onClick={() => setCurrentPage('tracking')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
+                currentPage === 'tracking'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              <Icon name="timeline" size="sm" />
+              Tracking
+            </button>
+            <button
               onClick={() => setCurrentPage('artifacts')}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
                 currentPage === 'artifacts'
@@ -212,17 +223,6 @@ export default function Home() {
             >
               <Icon name="folder_open" size="sm" />
               Artifacts
-            </button>
-            <button
-              onClick={() => setCurrentPage('tracking')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
-                currentPage === 'tracking'
-                  ? 'bg-teal-600 text-white'
-                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-              }`}
-            >
-              <Icon name="monitoring" size="sm" />
-              Tracking
             </button>
             <button
               onClick={() => setCurrentPage('sprint-execution')}
@@ -351,6 +351,7 @@ export default function Home() {
               <AnalyticsView tasks={filteredTasks} sections={sections} />
             )}
             {currentPage === 'metrics' && <MetricsView selectedSprint={currentSprint} />}
+            {currentPage === 'tracking' && <TrackingView />}
             {currentPage === 'artifacts' && (
               <ArtifactsView
                 onTaskClick={(taskId) => {
@@ -359,7 +360,6 @@ export default function Home() {
                 }}
               />
             )}
-            {currentPage === 'tracking' && <TrackingView />}
             {currentPage === 'governance' && <GovernanceView selectedSprint={currentSprint} />}
             {currentPage === 'contracts' && (
               <ContractsView tasks={filteredTasks} sprint={currentSprint} />

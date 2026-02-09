@@ -1786,9 +1786,8 @@ ENV-016-AI:
   notes: 'Privacy-first analytics.'
 
 # -----------------------------------------------------------------------------
-# CROSS-SPRINT DEPENDENCY OVERRIDE
-# ENV-017-AI depends on IFC-001 (Sprint 1). This creates a Sprint 0 → Sprint 1
-# violation. Resolution: Remove IFC-001 dependency, replace with stub contract.
+# DEBT-009 RESOLVED 2026-02-08 — Stub contract exception removed.
+# Both ENV-017-AI (2025-12-23) and IFC-001 (2025-12-26) completed.
 # -----------------------------------------------------------------------------
 
 ENV-017-AI:
@@ -1799,19 +1798,13 @@ ENV-017-AI:
     - lint
     - integration_test
   acceptance_owner: 'Tech Lead'
-  debt_allowed: yes
-  waiver_expiry: '2026-02-28'
-  override_deps_remove:
-    - IFC-001
-  exception_policy: 'stub_contract'
+  debt_allowed: no
   evidence_required:
     - tests/integration/*
     - artifacts/misc/test-orchestration.json
   notes: |
-    CROSS-SPRINT FIX: Original dependency on IFC-001 (Sprint 1) removed.
-    Replaced with stub contract: ENV-017-AI runs with existing Sprint 0
-    infrastructure. Full IFC-001 integration deferred to Sprint 1.
-    See: ADR-PLAN-001-env017-dependency.md
+    DEBT-009 RESOLVED: IFC-001 completed 2025-12-26, ENV-017-AI completed
+    2025-12-23. Stub contract exception removed. Full dependency restored.
 
 ENV-018-AI:
   tier: B
