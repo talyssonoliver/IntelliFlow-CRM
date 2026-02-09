@@ -24,6 +24,7 @@ import {
   checkResendRateLimit,
   createVerificationToken,
   buildVerificationUrl,
+  isTokenExpiringSoon,
 } from '@/lib/shared/account-activation';
 
 // ============================================
@@ -102,6 +103,7 @@ export function EmailVerification({
   const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
   const [isResending, setIsResending] = useState(false);
   const [resendMessage, setResendMessage] = useState<string | null>(null);
+  const [showExpiryWarning, setShowExpiryWarning] = useState(false);
 
   // Verify token on mount
   useEffect(() => {
@@ -127,6 +129,11 @@ export function EmailVerification({
         setMessage(result.error.message);
         onError?.(result.error.message);
         return;
+      }
+
+      // Check if token is expiring soon (within 1 hour)
+      if (isTokenExpiringSoon(result.value)) {
+        setShowExpiryWarning(true);
       }
 
       // Mark as verified
@@ -359,6 +366,18 @@ export function EmailVerification({
           </span>
           {verifiedEmail}
         </p>
+      )}
+
+      {/* Show warning if token is expiring soon */}
+      {showExpiryWarning && (status === 'expired' || status === 'loading') && (
+        <div className="mb-6 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-start gap-2">
+          <span className="material-symbols-outlined text-amber-500 text-lg mt-0.5 flex-shrink-0" aria-hidden="true">
+            schedule
+          </span>
+          <p className="text-xs text-amber-300 text-left">
+            This verification link will expire soon (within 1 hour). Please complete verification quickly or request a new link.
+          </p>
+        </div>
       )}
 
       {/* Actions */}
