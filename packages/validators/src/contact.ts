@@ -146,6 +146,10 @@ export const contactTimelineEventSchema = z.object({
   timestamp: z.coerce.date(),
   title: z.string(),
   description: z.string().optional(),
+  actor: z.object({
+    id: z.string(),
+    name: z.string(),
+  }).optional(),
   metadata: z.record(z.unknown()).optional(),
 });
 

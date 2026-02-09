@@ -7,9 +7,19 @@
  * - Real-time subscription
  *
  * Task: IFC-183 - Notifications tRPC Router
+ *
+ * Following DRY enum pattern - imports domain constants as single source of truth
  */
 
 import { z } from 'zod';
+import {
+  NOTIFICATION_CHANNELS,
+  NOTIFICATION_STATUSES,
+  NOTIFICATION_PRIORITIES,
+} from '@intelliflow/domain';
+
+// Re-export domain constants for consumers
+export { NOTIFICATION_CHANNELS, NOTIFICATION_STATUSES, NOTIFICATION_PRIORITIES };
 
 // =============================================================================
 // Notification Types
@@ -67,30 +77,24 @@ export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 export const notificationTypeSchema = z.enum(NOTIFICATION_TYPES);
 
 // =============================================================================
-// Notification Priority
+// Notification Priority (derived from domain)
 // =============================================================================
-
-export const NOTIFICATION_PRIORITIES = ['low', 'medium', 'high', 'urgent'] as const;
 
 export type NotificationPriority = (typeof NOTIFICATION_PRIORITIES)[number];
 
 export const notificationPrioritySchema = z.enum(NOTIFICATION_PRIORITIES);
 
 // =============================================================================
-// Notification Channel Types
+// Notification Channel Types (derived from domain)
 // =============================================================================
-
-export const NOTIFICATION_CHANNELS = ['in_app', 'email', 'push', 'sms', 'slack', 'teams'] as const;
 
 export type NotificationChannel = (typeof NOTIFICATION_CHANNELS)[number];
 
 export const notificationChannelSchema = z.enum(NOTIFICATION_CHANNELS);
 
 // =============================================================================
-// Notification Status
+// Notification Status (derived from domain)
 // =============================================================================
-
-export const NOTIFICATION_STATUSES = ['unread', 'read', 'archived', 'deleted'] as const;
 
 export type NotificationStatus = (typeof NOTIFICATION_STATUSES)[number];
 

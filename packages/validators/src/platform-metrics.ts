@@ -225,63 +225,6 @@ export const validationResultSchema = z.object({
 });
 
 // =============================================================================
-// Provenance Schemas
-// =============================================================================
-
-/**
- * Collection method for a metric source
- */
-export const collectionMethodSchema = z.enum([
-  'manual_review',
-  'automated_pipeline',
-  'survey',
-  'documentation_review',
-  'api_query',
-]);
-
-export type CollectionMethod = z.infer<typeof collectionMethodSchema>;
-
-/**
- * Confidence level for a metric source
- */
-export const confidenceLevelSchema = z.enum(['high', 'medium', 'low']);
-
-export type ConfidenceLevel = z.infer<typeof confidenceLevelSchema>;
-
-/**
- * Evidence source for a metric section
- */
-export const metricSourceSchema = z.object({
-  source: z.string().min(1),
-  collection_method: collectionMethodSchema,
-  period: z.string().min(1),
-  confidence: confidenceLevelSchema,
-  notes: z.string().optional(),
-});
-
-export type MetricSource = z.infer<typeof metricSourceSchema>;
-
-/**
- * Provenance metadata — tracks where metrics came from and when they go stale
- */
-export const provenanceSchema = z.object({
-  collection_method: z.string().min(1),
-  collected_by: z.string().min(1),
-  last_collected_at: z.string().datetime(),
-  sources: z.object({
-    deploy_metrics: metricSourceSchema,
-    ci_cd_metrics: metricSourceSchema,
-    turborepo_metrics: metricSourceSchema,
-    onboarding_metrics: metricSourceSchema,
-    golden_paths: metricSourceSchema,
-  }),
-  staleness_threshold_days: z.number().int().positive(),
-  next_collection_due: z.string().datetime(),
-});
-
-export type Provenance = z.infer<typeof provenanceSchema>;
-
-// =============================================================================
 // Main Schema: Self-Service Metrics
 // =============================================================================
 
@@ -294,7 +237,6 @@ export const selfServiceMetricsSchema = z.object({
   generated_at: z.string().datetime(),
   task_id: z.string().regex(/^IFC-\d+$/),
   sprint: z.number().int().nonnegative(),
-  provenance: provenanceSchema,
   platform_engineering_foundation: z.object({
     internal_developer_platform: idpCapabilitiesSchema,
     golden_paths: goldenPathsConfigSchema,

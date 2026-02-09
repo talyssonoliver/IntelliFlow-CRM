@@ -42,8 +42,8 @@ const validNotification = {
   type: 'lead_assigned' as const,
   title: 'New Lead Assigned',
   body: 'A new lead has been assigned to you.',
-  priority: 'medium' as const,
-  status: 'unread' as const,
+  priority: 'normal' as const,
+  status: 'pending' as const,
   isRead: false,
   createdAt: now,
 };
@@ -77,26 +77,25 @@ describe('Notifications Validators', () => {
       expect(NOTIFICATION_TYPES).toHaveLength(35);
     });
 
-    it('should have 4 notification priorities', () => {
-      expect(NOTIFICATION_PRIORITIES).toHaveLength(4);
-      expect([...NOTIFICATION_PRIORITIES]).toEqual(['low', 'medium', 'high', 'urgent']);
+    it('should have 3 notification priorities', () => {
+      expect(NOTIFICATION_PRIORITIES).toHaveLength(3);
+      expect([...NOTIFICATION_PRIORITIES]).toEqual(['high', 'normal', 'low']);
     });
 
-    it('should have 6 notification channels', () => {
-      expect(NOTIFICATION_CHANNELS).toHaveLength(6);
+    it('should have 5 notification channels', () => {
+      expect(NOTIFICATION_CHANNELS).toHaveLength(5);
       expect([...NOTIFICATION_CHANNELS]).toEqual([
         'in_app',
         'email',
-        'push',
         'sms',
-        'slack',
-        'teams',
+        'push',
+        'webhook',
       ]);
     });
 
-    it('should have 4 notification statuses', () => {
-      expect(NOTIFICATION_STATUSES).toHaveLength(4);
-      expect([...NOTIFICATION_STATUSES]).toEqual(['unread', 'read', 'archived', 'deleted']);
+    it('should have 6 notification statuses', () => {
+      expect(NOTIFICATION_STATUSES).toHaveLength(6);
+      expect([...NOTIFICATION_STATUSES]).toEqual(['pending', 'sent', 'delivered', 'failed', 'read', 'bounced']);
     });
   });
 
@@ -159,7 +158,7 @@ describe('Notifications Validators', () => {
     });
 
     it('should reject invalid status', () => {
-      const result = notificationStatusSchema.safeParse('pending');
+      const result = notificationStatusSchema.safeParse('archived');
       expect(result.success).toBe(false);
     });
   });
@@ -267,8 +266,8 @@ describe('Notifications Validators', () => {
         limit: 50,
         cursor: 'cursor-abc',
         types: ['lead_assigned', 'deal_won'],
-        priorities: ['high', 'urgent'],
-        status: 'unread',
+        priorities: ['high', 'normal'],
+        status: 'pending',
         isRead: false,
         fromDate: '2025-01-01T00:00:00.000Z',
         toDate: '2025-12-31T23:59:59.999Z',

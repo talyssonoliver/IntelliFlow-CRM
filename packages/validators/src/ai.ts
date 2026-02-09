@@ -30,6 +30,8 @@ import {
   // Next Best Action constants
   NBA_ACTION_TYPES,
   NBA_ACTION_PRIORITIES,
+  // A/B Testing constants (IFC-025)
+  SIGNIFICANCE_LEVELS,
 } from '@intelliflow/domain';
 
 // ============================================================================
@@ -454,6 +456,28 @@ export const nextBestActionOutputSchema = z.object({
   modelVersion: z.string(),
 });
 export type NextBestActionOutput = z.infer<typeof nextBestActionOutputSchema>;
+
+// ============================================================================
+// A/B Testing Statistical Confidence (IFC-025)
+// ============================================================================
+
+/**
+ * Significance level schema for A/B tests
+ * Uses domain constants for standard statistical significance thresholds
+ */
+export const significanceLevelSchema = z
+  .number()
+  .refine(
+    (val) =>
+      val === SIGNIFICANCE_LEVELS.LOW ||
+      val === SIGNIFICANCE_LEVELS.MEDIUM ||
+      val === SIGNIFICANCE_LEVELS.HIGH,
+    {
+      message: `Significance level must be one of: ${SIGNIFICANCE_LEVELS.LOW} (90%), ${SIGNIFICANCE_LEVELS.MEDIUM} (95%), or ${SIGNIFICANCE_LEVELS.HIGH} (99%)`,
+    }
+  );
+
+export type SignificanceLevelType = z.infer<typeof significanceLevelSchema>;
 
 // ============================================================================
 // AI Insights Summary Schema (IFC-095)
