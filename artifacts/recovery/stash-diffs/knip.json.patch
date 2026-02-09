@@ -1,0 +1,52 @@
+diff --git a/knip.json b/knip.json
+index 48e3dad..f78f9ba 100644
+--- a/knip.json
++++ b/knip.json
+@@ -30,6 +30,7 @@
+     "**/*.test.tsx",
+     "**/*.spec.ts",
+     "**/*.spec.tsx",
++    "**/.tsup/**",
+     "**/dist/**",
+     "**/build/**",
+     "**/node_modules/**",
+@@ -47,7 +48,38 @@
+     "artifacts/benchmarks/**/*.html",
+     "apps/project-tracker/lib/api.ts",
+     "apps/project-tracker/lib/data-validator.ts",
+-    "apps/project-tracker/scripts/**"
++    "apps/project-tracker/scripts/**",
++    "tools/scripts/lib/**",
++    "tools/perf/**",
++    "tests/e2e/**",
++    "tests/integration/**",
++    "packages/sdk/src/**",
++    "packages/platform/src/queues/**",
++    "packages/platform/src/workflow/**",
++    "packages/search/src/**",
++    "packages/adapters/src/antivirus/**",
++    "packages/adapters/src/messaging/twilio/**",
++    "packages/adapters/src/shared/bias-detector.ts",
++    "packages/adapters/src/shared/prompt-sanitizer.ts",
++    "packages/ai/tools/**",
++    "apps/api/src/test/**",
++    "apps/api/src/shared/prompt-sanitizer.ts",
++    "apps/workers/shared/**",
++    "apps/project-tracker/lib/**",
++    "apps/project-tracker/components/ContextPackStatus.tsx",
++    "apps/project-tracker/components/ContractTagList.tsx",
++    "apps/project-tracker/components/GateValidationTable.tsx",
++    "apps/project-tracker/components/PlanDeliverablesStatus.tsx",
++    "apps/ai-worker/src/chains/**",
++    "apps/ai-worker/src/monitoring/**",
++    "apps/ai-worker/src/analytics/**",
++    "apps/ai-worker/src/services/**",
++    "apps/api/src/shared/external-service-wrapper.ts",
++    "apps/api/src/webhooks/retry.ts",
++    "packages/adapters/src/messaging/email/inbound.ts",
++    "packages/api-client/src/react-client.tsx",
++    "apps/web/src/lib/test-runner/**",
++    "apps/web/lib/status/**"
+   ],
+   "ignoreDependencies": [
+     "@types/*",

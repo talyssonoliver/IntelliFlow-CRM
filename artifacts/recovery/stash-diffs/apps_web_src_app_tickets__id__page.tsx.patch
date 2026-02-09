@@ -1,0 +1,133 @@
+diff --git a/apps/web/src/app/tickets/[id]/page.tsx b/apps/web/src/app/tickets/[id]/page.tsx
+index d604706..5d33e57 100644
+--- a/apps/web/src/app/tickets/[id]/page.tsx
++++ b/apps/web/src/app/tickets/[id]/page.tsx
+@@ -3,7 +3,7 @@
+ import { useState, useMemo } from 'react';
+ import Link from 'next/link';
+ import { useParams } from 'next/navigation';
+-import { Card } from '@intelliflow/ui';
++import { Card, StatusSelectDialog, ConfirmationDialog, type StatusOption } from '@intelliflow/ui';
+ 
+ // =============================================================================
+ // Types
+@@ -280,6 +280,11 @@ export default function TicketDetailPage() {
+   const [replyContent, setReplyContent] = useState('');
+   const [activityNote, setActivityNote] = useState('');
+ 
++  // Dialog state
++  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
++  const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
++  const [isUpdating, setIsUpdating] = useState(false);
++
+   // In production, fetch ticket by ticketId from API
+   // For now, use sample data with the URL's ticketId
+   const ticket = useMemo(() => ({
+@@ -291,6 +296,45 @@ export default function TicketDetailPage() {
+   const statusConfig = useMemo(() => getStatusConfig(ticket.status), [ticket.status]);
+   const priorityConfig = useMemo(() => getPriorityConfig(ticket.priority), [ticket.priority]);
+ 
++  // Status options for status select dialog
++  const statusOptions: StatusOption[] = [
++    { value: 'OPEN', label: 'Open', description: 'Ticket is waiting to be addressed', color: 'blue', icon: 'circle' },
++    { value: 'IN_PROGRESS', label: 'In Progress', description: 'Actively working on this ticket', color: 'amber', icon: 'autorenew' },
++    { value: 'PENDING', label: 'Pending', description: 'Waiting for customer response', color: 'slate', icon: 'schedule' },
++    { value: 'RESOLVED', label: 'Resolved', description: 'Issue has been resolved', color: 'green', icon: 'check_circle' },
++    { value: 'CLOSED', label: 'Closed', description: 'Ticket is closed', color: 'slate', icon: 'block' },
++  ];
++
++  const handleStatusChange = async (newStatus: string) => {
++    setIsUpdating(true);
++    try {
++      // In production: await api.tickets.updateStatus(ticket.id, newStatus);
++      console.log('Updating ticket status to:', newStatus);
++      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
++      // Show success toast
++    } catch (error) {
++      console.error('Failed to update status:', error);
++      // Show error toast
++    } finally {
++      setIsUpdating(false);
++    }
++  };
++
++  const handleCloseTicket = async () => {
++    setIsUpdating(true);
++    try {
++      // In production: await api.tickets.close(ticket.id);
++      console.log('Closing ticket:', ticket.id);
++      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
++      // Show success toast and redirect
++    } catch (error) {
++      console.error('Failed to close ticket:', error);
++      // Show error toast
++    } finally {
++      setIsUpdating(false);
++    }
++  };
++
+   return (
+     <main className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-[#0B1116] p-6 md:p-8">
+       <div className="mx-auto flex flex-col gap-6">
+@@ -321,21 +365,51 @@ export default function TicketDetailPage() {
+ 
+           {/* Actions */}
+           <div className="flex gap-3">
+-            <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
++            <button
++              onClick={() => setStatusDialogOpen(true)}
++              className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
++            >
+               <span className="material-symbols-outlined text-[18px]">edit</span>
+-              Edit
+-            </button>
+-            <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+-              <span className="material-symbols-outlined text-[18px]">publish</span>
+-              Escalate
+-            </button>
+-            <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors shadow-sm">
+-              <span className="material-symbols-outlined text-[18px]">check_circle</span>
+-              Resolve
++              Change Status
+             </button>
++            {ticket.status !== 'CLOSED' && (
++              <button
++                onClick={() => setCloseConfirmOpen(true)}
++                className="flex items-center gap-2 px-4 h-10 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-semibold hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
++              >
++                <span className="material-symbols-outlined text-[18px]">close</span>
++                Close Ticket
++              </button>
++            )}
+           </div>
+         </div>
+ 
++        {/* Status Change Dialog */}
++        <StatusSelectDialog
++          open={statusDialogOpen}
++          onOpenChange={setStatusDialogOpen}
++          title="Update Ticket Status"
++          description="Select the new status for this ticket."
++          options={statusOptions}
++          selectedStatus={ticket.status}
++          onConfirm={handleStatusChange}
++          isLoading={isUpdating}
++          itemCount={1}
++        />
++
++        {/* Close Confirmation Dialog */}
++        <ConfirmationDialog
++          open={closeConfirmOpen}
++          onOpenChange={setCloseConfirmOpen}
++          title="Close Ticket"
++          description="Are you sure you want to close this ticket? This action will mark it as resolved and no longer active."
++          confirmLabel="Close Ticket"
++          variant="destructive"
++          onConfirm={handleCloseTicket}
++          isLoading={isUpdating}
++          icon="close"
++        />
++
+         {/* SLA Alert Banner */}
+         {ticket.slaStatus === 'BREACHED' && (
+           <div className={`flex items-center gap-3 p-4 rounded-lg ${slaConfig.bg} border ${slaConfig.border}`}>

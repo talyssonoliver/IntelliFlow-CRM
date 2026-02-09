@@ -1,0 +1,16 @@
+TIMESTAMP: 02/08/2026 12:26:03
+CALL_ID: call_vWiil34Z56tHrXvsAVTqfPjK
+NAME: apply_patch
+---INPUT---
+*** Begin Patch
+*** Update File: docs/company/master-brief.md
+@@
+ ## Product
+ 
+ - **Web app**: Next.js frontend
+ - **API**: tRPC + domain model + validators
+ - **AI worker**: agent/automation workflows
+ - **Project tracker**: sprint metrics and governance gates
++- **Feature matrix (source of truth)**: `docs/company/product/feature-matrix.md`
+*** End Patch
+

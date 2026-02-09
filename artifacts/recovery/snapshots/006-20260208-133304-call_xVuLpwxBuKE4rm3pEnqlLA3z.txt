@@ -1,0 +1,63 @@
+TIMESTAMP: 02/08/2026 13:33:04
+CALL_ID: call_xVuLpwxBuKE4rm3pEnqlLA3z
+COMMAND: {"cmd":"Get-Content -Raw docs/company/product/feature-matrix.md"}
+OUTPUT_LEN: 1746
+---OUTPUT---
+Chunk ID: c4424d
+Wall time: 0.1855 seconds
+Process exited with code 0
+Original token count: 411
+Output:
+# Feature Matrix (Source of Truth)
+
+Last audited: 2026-02-08  
+Owner: Product + Engineering
+
+## Purpose
+
+Single artifact to track feature implementation state across IntelliFlow CRM.
+
+This matrix is the canonical view for:
+- What features exist
+- Current status (`planned`, `in_progress`, `done`)
+- Why the feature exists
+- Who owns it
+- Priority and implementation notes
+
+## Scope
+
+Included:
+- `apps/web` product surfaces
+- Supporting feature integrations exposed in current web routes/hooks
+- Backlog items explicitly tracked in `docs/design/integration-backlog.md`
+
+Not included:
+- Internal-only developer tooling and one-off sprint artifacts
+
+## Status Rubric
+
+| Status | Definition |
+|---|---|
+| `done` | Implemented and wired to active data/API paths for the primary user flow |
+| `in_progress` | Partially implemented, mock/placeholder behavior, or known integration gaps |
+| `planned` | Backlog item with no production-ready flow yet |
+
+## Coverage Snapshot
+
+- Route-backed product surfaces: 68 pages (`docs/design/sitemap.md`)
+- Total matrix entries: 93
+- Groups covered: 18
+
+## Feature Matrix
+
+| Group | Feature | Status | Purpose | Owner | Priority | Related Task (CSV) | Notes |
+|---|---|---|---|---|---|---|---|
+
+## Maintenance Rules
+
+1. Update this matrix in the same PR whenever a feature status changes.
+2. Add evidence in Notes (route, hook, or backlog reference) for every status update.
+3. If backlog status and code status conflict, record current code reality here and link follow-up backlog cleanup.
+4. Keep status values limited to `planned`, `in_progress`, `done`.
+
+

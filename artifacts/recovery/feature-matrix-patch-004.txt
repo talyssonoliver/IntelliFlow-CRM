@@ -1,0 +1,15 @@
+*** Update File: docs/company/product/feature-matrix.md
+@@
+-| Public | Marketing home page | `done` | Present product value proposition and conversion entry points | Growth FE | P1 | TBD | Route: `/` -> `apps/web/src/app/(public)/page.tsx` |
++| Public | Home hero headline (AI-first + governed delivery) | `done` | Communicate core product promise immediately above the fold | Growth FE | P1 | PG-001 | `PublicHomePage` hero heading in `apps/web/src/components/home/PublicHomePage.tsx` |
++| Public | Home hero CTAs (Start free trial / Talk to sales) | `done` | Drive self-serve and sales-assisted conversion paths | Growth FE | P1 | PG-001 | Hero CTA buttons in `apps/web/src/components/home/PublicHomePage.tsx` |
++| Public | Home quick-win badges (AI playbooks / audit-ready / accessible) | `done` | Build immediate trust with concise capability proof points | Growth FE | P1 | PG-001 | Hero badge strip in `apps/web/src/components/home/PublicHomePage.tsx` |
++| Public | Home interactive stats card (<200ms / Lighthouse / delivery efficiency) | `done` | Reinforce measurable outcomes with operational metrics | Growth FE + Platform FE | P1 | PG-001;IFC-007 | `heroStats` card block in `apps/web/src/components/home/PublicHomePage.tsx` |
++| Public | Home governance health indicators (WCAG / audit gates / LCP budget) | `done` | Surface governance posture directly in the hero | Growth FE + Governance FE | P1 | PG-001;IFC-100;IFC-088 | "Live governance health" section in `apps/web/src/components/home/PublicHomePage.tsx` |
++| Public | Home social proof bar | `done` | Increase trust via recognizable customer logos/names | Growth FE | P2 | PG-001 | `socialProof` section in `apps/web/src/components/home/PublicHomePage.tsx` |
++| Public | Home value pillars section | `done` | Explain strategic differentiators in digestible cards | Growth FE | P1 | PG-001 | `valuePillars` section in `apps/web/src/components/home/PublicHomePage.tsx` |
++| Public | Home flow highlights section | `done` | Connect product value to concrete CRM flows | Growth FE + Product | P1 | PG-001;IFC-146 | `flowHighlights` section in `apps/web/src/components/home/PublicHomePage.tsx` |
++| Public | Home "How it works" section | `done` | Clarify adoption journey from setup to launch | Growth FE | P2 | PG-001 | `howItWorks` section in `apps/web/src/components/home/PublicHomePage.tsx` |
++| Public | Home assurance checklist (security/accessibility/reliability) | `done` | Reduce adoption risk concerns with explicit controls | Growth FE + Security | P1 | PG-001;IFC-008;IFC-058 | `securityChecklist` section in `apps/web/src/components/home/PublicHomePage.tsx` |
++| Public | Home final conversion CTA band | `done` | Provide bottom-of-page conversion trigger | Growth FE | P1 | PG-001 | Final CTA section in `apps/web/src/components/home/PublicHomePage.tsx` |
+*** End Patch

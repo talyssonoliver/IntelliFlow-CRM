@@ -1,0 +1,233 @@
+TIMESTAMP: 02/08/2026 14:30:44
+CALL_ID: call_3Nn5phoYW2gQs59KCRrvOgSD
+COMMAND: {"cmd":"Get-Content -Raw docs/company/product/feature-matrix.md"}
+OUTPUT_LEN: 40154
+---OUTPUT---
+Chunk ID: 70c324
+Wall time: 0.1723 seconds
+Process exited with code 0
+Original token count: 19827
+Output:
+Total output lines: 369
+
+# Feature Matrix (Source of Truth)
+
+Last audited: 2026-02-08  
+Owner: Product + Engineering
+
+## Purpose
+
+Single artifact to track feature implementation state across IntelliFlow CRM.
+
+This matrix is the canonical view for:
+- What features exist
+- Current status (`planned`, `in_progress`, `done`)
+- Why the feature exists
+- Who owns it
+- Priority and implementation notes
+
+## Scope
+
+Included:
+- `apps/web` product surfaces (all PG tasks from the source-of-truth CSV)
+- Product capability tasks linked through PG dependencies and core CRM/AI/platform IFCs
+
+Not included:
+- Sprint enablement tasks that are not product capabilities (setup-only/env-only work)
+
+## Status Rubric
+
+| Status | Definition |
+|---|---|
+| `done` | Implemented and wired to active data/API paths for the primary user flow |
+| `in_progress` | Partially implemented, mock/placeholder behavior, or known integration gaps |
+| `planned` | Backlog item with no production-ready flow yet |
+
+## Coverage Snapshot
+
+- Route-backed product surfaces: 68 pages (`docs/design/sitemap.md`)
+- CSV-linked PG tasks covered: 153
+- CSV-linked IFC capabilities covered: 71
+- Total matrix entries: 316
+- Groups covered: 22
+
+## Feature Matrix
+
+| Group | Feature | Status | Purpose | Owner | Priority | Related Task (CSV) | Notes |
+|---|---|---|---|---|---|---|---|
+| Marketing | About Page | done | Deliver About Page for Public Pages. | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, PG-001, PG-004 | CSV section: Public Pages; source status: Completed. |
+| Marketing | Add in-app onboarding, guided product tours and feedback collection | planned | Deliver Add in-app onboarding, guided product tours and feedback collection for Public Pages. | UX Designer + Frontend Dev (STOA-Domain) | P2 | PG-001, PG-002, PG-126 | CSV section: Public Pages; source status: Backlog. |
+| Marketing | Blog Index | done | Deliver Blog Index for Public Pages. | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, PG-001, PG-009 | CSV section: Public Pages; source status: Completed. |
+| Marketing | Blog Post | done | Deliver Blog Post for Public Pages. | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, PG-009, PG-010 | CSV section: Public Pages; source status: Completed. |
+| Marketing | Career Detail | done | Deliver Career Detail for Public Pages. | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, PG-011, PG-012 | CSV section: Public Pages; source status: Completed. |
+| Marketing | Careers Page | done | Deliver Careers Page for Public Pages. | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, PG-001, PG-011 | CSV section: Public Pages; source status: Completed. |
+| Marketing | Contact Page | done | Deliver Contact Page for Public Pages. | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, PG-001, PG-005 | CSV section: Public Pages; source status: Completed. |
+| Marketing | Features Page | done | Deliver Features Page for Public Pages. | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, PG-001, PG-002 | CSV section: Public Pages; source status: Completed. |
+| Marketing | Home "How it works" section | done | Deliver Home "How it works" section as part of Home Page (Public). | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, IFC-076, PG-001 | Sub-feature extracted from CSV description for PG-001. |
+| Marketing | Home assurance checklist (security, accessibility, reliability) | done | Deliver Home assurance checklist (security, accessibility, reliability) as part of Home Page (Public). | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, IFC-076, PG-001 | Sub-feature extracted from CSV description for PG-001. |
+| Marketing | Home final conversion CTA section | done | Deliver Home final conversion CTA section as part of Home Page (Public). | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, IFC-076, PG-001 | Sub-feature extracted from CSV description for PG-001. |
+| Marketing | Home flow highlights section | done | Deliver Home flow highlights section as part of Home Page (Public). | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, IFC-076, PG-001 | Sub-feature extracted from CSV description for PG-001. |
+| Marketing | Home governance health indicators (WCAG, audit gates, LCP budget) | done | Deliver Home governance health indicators (WCAG, audit gates, LCP budget) as part of Home Page (Public). | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, IFC-076, PG-001 | Sub-feature extracted from CSV description for PG-001. |
+| Marketing | Home hero CTA: Start free trial | done | Deliver Home hero CTA: Start free trial as part of Home Page (Public). | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, IFC-076, PG-001 | Sub-feature extracted from CSV description for PG-001. |
+| Marketing | Home hero CTA: Talk to sales | done | Deliver Home hero CTA: Talk to sales as part of Home Page (Public). | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, IFC-076, PG-001 | Sub-feature extracted from CSV description for PG-001. |
+| Marketing | Home hero headline emphasizing AI-first CRM with governance | done | Deliver Home hero headline emphasizing AI-first CRM with governance as part of Home Page (Public). | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, IFC-076, PG-001 | Sub-feature extracted from CSV description for PG-001. |
+| Marketing | Home interactive stats card: delivery efficiency metric | done | Deliver Home interactive stats card: delivery efficiency metric as part of Home Page (Public). | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, IFC-076, PG-001 | Sub-feature extracted from CSV description for PG-001. |
+| Marketing | Home interactive stats card: Lighthouse baseline (90%+) | done | Deliver Home interactive stats card: Lighthouse baseline (90%+) as part of Home Page (Public). | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, IFC-076, PG-001 | Sub-feature extracted from CSV description for PG-001. |
+| Marketing | Home interactive stats card: response target (<200ms) | done | Deliver Home interactive stats card: response target (<200ms) as part of Home Page (Public). | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, IFC-076, PG-001 | Sub-feature extracted from CSV description for PG-001. |
+| Marketing | Home quick-win badges (AI playbooks, audit-matrix ready, accessible by design) | done | Deliver Home quick-win badges (AI playbooks, audit-matrix ready, accessible by design) as part of Home Page (Public). | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, IFC-076, PG-001 | Sub-feature extracted from CSV description for PG-001. |
+| Marketing | Home social proof bar | done | Deliver Home social proof bar as part of Home Page (Public). | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, IFC-076, PG-001 | Sub-feature extracted from CSV description for PG-001. |
+| Marketing | Home value pillars grid | done | Deliver Home value pillars grid as part of Home Page (Public). | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, IFC-076, PG-001 | Sub-feature extracted from CSV description for PG-001. |
+| Marketing | Landing Page Template | done | Deliver Landing Page Template for Marketing Pages. | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, PG-001, PG-013 | CSV section: Marketing Pages; source status: Completed. |
+| Marketing | Partner application form | planned | Deliver Partner application form as part of Partner Application Workflow. | Growth FE+BE (STOA-Foundation) | P2 | GTM-002, PG-005, PG-006, PG-127 | Sub-feature extracted from CSV description for PG-127. |
+| Marketing | Partner onboarding handoff flow | planned | Deliver Partner onboarding handoff flow as part of Partner Application Workflow. | Growth FE+BE (STOA-Foundation) | P2 | GTM-002, PG-005, PG-006, PG-127 | Sub-feature extracted from CSV description for PG-127. |
+| Marketing | Partner submission routing workflow | planned | Deliver Partner submission routing workflow as part of Partner Application Workflow. | Growth FE+BE (STOA-Foundation) | P2 | GTM-002, PG-005, PG-006, PG-127 | Sub-feature extracted from CSV description for PG-127. |
+| Marketing | Partners Page | done | Deliver Partners Page for Public Pages. | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, PG-001, PG-006 | CSV section: Public Pages; source status: Completed. |
+| Marketing | Press Page | done | Deliver Press Page for Public Pages. | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, PG-001, PG-007 | CSV section: Public Pages; source status: Completed. |
+| Marketing | Pricing Page | done | Deliver Pricing Page for Public Pages. | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, PG-001, PG-003 | CSV section: Public Pages; source status: Completed. |
+| Marketing | Security Page | done | Deliver Security Page for Public Pages. | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, PG-001, PG-008 | CSV section: Public Pages; source status: Completed. |
+| Marketing | Specialized partner qualification fields | planned | Deliver Specialized partner qualification fields as part of Partner Application Workflow. | Growth FE+BE (STOA-Foundation) | P2 | GTM-002, PG-005, PG-006, PG-127 | Sub-feature extracted from CSV description for PG-127. |
+| Marketing | Status Page | done | Deliver Status Page for Public Pages. | Growth FE (STOA-Foundation) | P1 | BRAND-001, GTM-002, PG-001, PG-014 | CSV section: Public Pages; source status: Completed. |
+| Auth | Add MFA using TOTP or SMS and allow users to enable/disable from security settings | planned | Deliver Add MFA using TOTP or SMS and allow users to enable/disable from security settings for Auth Pages. | Frontend Dev + Backend Dev (STOA-Domain) | P1 | IFC-006, PG-021, PG-022, PG-125 | CSV section: Auth Pages; source status: Backlog. |
+| Auth | Email Verification | planned | Deliver Email Verification for Auth Pages. | Platform FE (STOA-Foundation) | P1 | IFC-006, PG-016, PG-023 | CSV section: Auth Pages; source status: Backlog. |
+| Auth | Forgot Password | planned | Deliver Forgot Password for Auth Pages. | Platform FE (STOA-Foundation) | P1 | IFC-006, PG-015, PG-019 | CSV section: Auth Pages; source status: Backlog. |
+| Auth | Implement password reset and email verification flows | planned | Implement capability: Implement password reset and email verification flows. | Frontend Dev + Backend Dev (STOA-Domain) | P1 | IFC-006, IFC-120, PG-019, PG-020, PG-023 | Backend/platform capability from CSV section Auth Pages; source status: Backlog. |
+| Auth | Implement SSO (SAML/OAuth) and social login providers | planned | Deliver Implement SSO (SAML/OAuth) and social login providers for Auth Pages. | Frontend Dev + Backend Dev (STOA-Domain) | P1 | IFC-006, PG-015, PG-024, PG-124 | CSV section: Auth Pages; source status: Backlog. |
+| Auth | Logout | done | Deliver Logout for Auth Pages. | Platform FE (STOA-Foundation) | P1 | IFC-006, PG-015, PG-018 | CSV section: Auth Pages; source status: Completed. |
+| Auth | MFA Setup | planned | Deliver MFA Setup for Auth Pages. | Platform FE (STOA-Foundation) | P1 | IFC-006, IFC-098, PG-015, PG-021 | CSV section: Auth Pages; source status: Backlog. |
+| Auth | MFA Verify | planned | Deliver MFA Verify for Auth Pages. | Platform FE (STOA-Foundation) | P1 | PG-015, PG-021, PG-022 | CSV section: Auth Pages; source status: Backlog. |
+| Auth | Reset Password | planned | Deliver Reset Password for Auth Pages. | Platform FE (STOA-Foundation) | P1 | PG-019, PG-020 | CSV section: Auth Pages; source status: Backlog. |
+| Auth | Sign In | done | Deliver Sign In for Auth Pages. | Platform FE (STOA-Foundation) | P1 | IFC-006, IFC-076, IFC-098, PG-015 | CSV section: Auth Pages; source status: Completed. |
+| Auth | Sign Up | done | Deliver Sign Up for Auth Pages. | Platform FE (STOA-Foundation) | P1 | IFC-006, PG-015, PG-016 | CSV section: Auth Pages; source status: Completed. |
+| Auth | Sign Up Success | planned | Deliver Sign Up Success for Auth Pages. | Platform FE (STOA-Foundation) | P1 | PG-016, PG-017 | CSV section: Auth Pages; source status: Backlog. |
+| Auth | SSO Callback | planned | Deliver SSO Callback for Auth Pages. | Platform FE (STOA-Foundation) | P1 | IFC-006, PG-015, PG-024 | CSV section: Auth Pages; source status: Backlog. |
+| Billing | Billing Portal | planned | Deliver Billing Portal for Billing Pages. | Platform BE (STOA-Foundation) | P1 | IFC-099, PG-025 | CSV section: Billing Pages; source status: Backlog. |
+| Billing | Checkout | planned | Deliver Checkout for Billing Pages. | Platform BE (STOA-Foundation) | P1 | PG-025, PG-026 | CSV section: Billing Pages; source status: Backlog. |
+| Billing | Invoice Detail | planned | Deliver Invoice Detail for Billing Pages. | Platform BE (STOA-Foundation) | P1 | PG-027, PG-028 | CSV section: Billing Pages; source status: Backlog. |
+| Billing | Invoices | planned | Deliver Invoices for Billing Pages. | Platform BE (STOA-Foundation) | P1 | PG-025, PG-027 | CSV section: Billing Pages; source status: Backlog. |
+| Billing | Payment Methods | planned | Deliver Payment Methods for Billing Pages. | Platform BE (STOA-Foundation) | P1 | PG-025, PG-029 | CSV section: Billing Pages; source status: Backlog. |
+| Billing | Receipts | done | Deliver Receipts for Billing Pages. | Platform BE (STOA-Foundation) | P1 | PG-025, PG-031 | CSV section: Billing Pages; source status: Completed. |
+| Billing | Subscriptions | planned | Deliver Subscriptions for Billing Pages. | Platform BE (STOA-Foundation) | P1 | PG-025, PG-030 | CSV section: Billing Pages; source status: Backlog. |
+| Account | Account tRPC Router - CRUD hierarchy contacts opportunities activity feed | done | Implement capability: Account tRPC Router - CRUD hierarchy contacts opportunities activity feed. | Backend Dev (STOA-Domain) | P1 | IFC-003, IFC-103, IFC-107, IFC-185 | Backend/platform capability from CSV section Core CRM; source status: Completed. |
+| Dashboard | Authenticated home activity feed | in_progress | Deliver Authenticated home activity feed as part of Authenticated Home Page. | CRM FE+BE (STOA-Foundation) | P0 | IFC-069, IFC-095, IFC-182, PG-129 | Sub-feature extracted from CSV description for PG-129. |
+| Dashboard | Authenticated home AI insights panel | in_progress | Deliver Authenticated home AI insights panel as part of Authenticated Home Page. | CRM FE+BE (STOA-Foundation) | P0 | IFC-069, IFC-095, IFC-182, PG-129 | Sub-feature extracted from CSV description for PG-129. |
+| Dashboard | Authenticated home daily goals | in_progress | Deliver Authenticated home daily goals as part of Authenticated Home Page. | CRM FE+BE (STOA-Foundation) | P0 | IFC-069, IFC-095, IFC-182, PG-129 | Sub-feature extracted from CSV description for PG-129. |
+| Dashboard | Authenticated home pinned items | in_progress | Deliver Authenticated home pinned items as part of Authenticated Home Page. | CRM FE+BE (STOA-Foundation) | P0 | IFC-069, IFC-095, IFC-182, PG-129 | Sub-feature extracted from CSV description for PG-129. |
+| Dashboard | Authenticated home welcome summary | in_progress | Deliver Authenticated home welcome summary as part of Authenticated Home Page. | CRM FE+BE (STOA-Foundation) | P0 | IFC-069, IFC-095, IFC-182, PG-129 | Sub-feature extracted from CSV description for PG-129. |
+| Dashboard | Customizable Daily Goals - Multi-type goal support (revenue calls meetings tasks custom) with user preferences | planned | Implement capability: Customizable Daily Goals - Multi-type goal support (revenue calls meetings tasks custom) with user preferences. | Backend Dev (STOA-Domain) | P1 | IFC-182, IFC-195 | Backend/platform capability from CSV section Core CRM; source status: Backlog. |
+| Dashboard | Dashboard | planned | Deliver Dashboard for Core CRM. | CRM FE+BE (STOA-Foundation) | P2 | IFC-089, IFC-091, IFC-095, PG-058 | CSV section: Core CRM; source status: Backlog. |
+| Dashboard | Unified Activity Feed Service | planned | Implement capability: Unified Activity Feed Service. | Backend Dev + Frontend Dev (STOA-Domain) | P1 | IFC-069, IFC-089, IFC-091, IFC-093, IFC-109 | Backend/platform capability from CSV section Core CRM; source status: Backlog. |
+| Lead | Edit Lead | planned | Deliver Edit Lead for Core CRM. | CRM FE+BE (STOA-Foundation) | P2 | PG-061, PG-062 | CSV section: Core CRM; source status: Backlog. |
+| Lead | Lead Detail | planned | Deliver Lead Detail for Core CRM. | CRM FE+BE (STOA-Foundation) | P2 | PG-059, PG-061 | CSV section: Core CRM; source status: Backlog. |
+| Lead | Lead to Contact Conversion Logic | done | Implement capability: Lead to Contact Conversion Logic. | Backend Dev + Domain Expert (STOA-Domain) | P1 | IFC-061, IFC-089, IFC-101, IFC-102 | Backend/platform capability from CSV section Core CRM; source status: Completed. |
+| Lead | Lead to Deal Conversion Logic | planned | Implement capability: Lead to Deal Conversion Logic. | Backend Dev + Domain Expert (STOA-Domain) | P1 | IFC-061, IFC-062, IFC-104 | Backend/platform capability from CSV section Core CRM; source status: Backlog. |
+| Lead | New Lead | planned | Deliver New Lead for Core CRM. | CRM FE+BE (STOA-Foundation) | P2 | PG-059, PG-060 | CSV section: Core CRM; source status: Backlog. |
+| Contact | Contact 360 | planned | Deliver Contact 360 for Core CRM. | CRM FE+BE (STOA-Foundation) | P2 | IFC-090, PG-065 | CSV section: Core CRM; source status: Backlog. |
+| Contact | Contact 360 Page - Full Detail View | done | Implement capability: Contact 360 Page - Full Detail View. | Frontend Dev + UX Designer (STOA-Domain) | P1 | IFC-089, IFC-090 | Backend/platform capability from CSV section Core CRM; source status: Completed. |
+| Contact | Contact activity timeline | done | Deliver Contact activity timeline as part of Contact List & Detail Pages. | Frontend Dev (STOA-Domain) | P1 | IFC-184, PG-133 | Sub-feature extracted from CSV description for PG-133. |
+| Contact | Contact Activity Tracking - Add lastContactedAt field to Contact model with auto-update on interactions | planned | Implement capability: Contact Activity Tracking - Add lastContactedAt field to Contact model with auto-update on interactions. | Backend Dev (STOA-Domain) | P1 | IFC-182, IFC-184, IFC-192 | Backend/platform capability from CSV section Core CRM; source status: Backlog. |
+| Contact | Contact filters | done | Deliver Contact filters as part of Contact List & Detail Pages. | Frontend Dev (STOA-Domain) | P1 | IFC-184, PG-133 | Sub-feature extracted from CSV description for PG-133. |
+| Contact | Contact relationship view | done | Deliver Contact relationship view as part of Contact List & Detail Pages. | Frontend Dev (STOA-Domain) | P1 | IFC-184, PG-133 | Sub-feature extracted from CSV description for PG-133. |
+| Contact | Contact search | done | Deliver Contact search as part of Contact List & Detail Pages. | Frontend Dev (STOA-Domain) | P1 | IFC-184, PG-133 | Sub-feature extracted from CSV description for PG-133. |
+| Contact | Contact tRPC Router - CRUD search relationship linking timeline integration | done | Implement capability: Contact tRPC Router - CRUD search relationship linking timeline integration. | Backend Dev (STOA-Domain) | P1 | IFC-003, IFC-102, IFC-107, IFC-184 | Backend/platform capability from CSV section Core CRM; source status: Done. |
+| Contact | Edit Contact | planned | Deliver Edit Contact for Core CRM. | CRM FE+BE (STOA-Foundation) | P2 | PG-065, PG-066 | CSV section: Core CRM; source status: Backlog. |
+| Account | Account contacts panel | in_progress | Deliver Account contacts panel as part of Account List & Detail Pages. | Frontend Dev (STOA-Domain) | P0 | IFC-185, PG-134 | Sub-feature extracted from CSV description for PG-134. |
+| Account | Account Detail | planned | Deliver Account Detail for Core CRM. | CRM FE+BE (STOA-Foundation) | P2 | PG-069, PG-070 | CSV section: Core CRM; source status: Backlog. |
+| Account | Account hierarchy view | in_progress | Deliver Account hierarchy view as part of Account List & …9827 tokens truncated… Flow). | Frontend Dev + UX (STOA-Domain) | P2 | IFC-028, IFC-031 | Backend/platform capability from CSV section Automation; source status: Backlog. |
+| Automation | Workflow Engine with LangGraph | done | Implement capability: Workflow Engine with LangGraph. | Backend Dev + Architect (STOA-Domain) | P2 | IFC-027, IFC-028 | Backend/platform capability from CSV section Automation; source status: Completed. |
+| Analytics | Analytics tRPC Router - Sales metrics conversion funnels time series exports | planned | Implement capability: Analytics tRPC Router - Sales metrics conversion funnels time series exports. | Backend Dev (STOA-Intelligence) | P3 | ANALYTICS-001, IFC-003, IFC-190 | Backend/platform capability from CSV section Analytics; source status: Backlog. |
+| Analytics | Custom Reports | planned | Deliver Custom Reports for Core CRM. | CRM FE+BE (STOA-Foundation) | P3 | IFC-096, PG-102 | CSV section: Core CRM; source status: Backlog. |
+| Analytics | Custom Reports & Dashboards | done | Implement capability: Custom Reports & Dashboards. | Frontend Dev + Data Eng (STOA-Domain) | P2 | IFC-091, IFC-092, IFC-096 | Backend/platform capability from CSV section Reports; source status: Completed. |
+| Analytics | Feedback Analytics Dashboard | planned | Implement capability: Feedback Analytics Dashboard. | Frontend Dev + Data Eng (STOA-Domain) | P3 | IFC-068, IFC-090, IFC-096 | Backend/platform capability from CSV section Analytics; source status: Backlog. |
+| Analytics | Report Schedules | planned | Deliver Report Schedules for Core CRM. | CRM FE+BE (STOA-Foundation) | P3 | PG-102, PG-103 | CSV section: Core CRM; source status: Backlog. |
+| Analytics | Reports | planned | Deliver Reports for Core CRM. | CRM FE+BE (STOA-Foundation) | P3 | IFC-096, PG-101 | CSV section: Core CRM; source status: Backlog. |
+| Settings | Account Settings | planned | Deliver Account Settings for Settings. | Platform FE+BE (STOA-Foundation) | P3 | PG-104, PG-106 | CSV section: Settings; source status: Backlog. |
+| Settings | API Keys | planned | Deliver API Keys for Settings. | Platform FE+BE (STOA-Foundation) | P3 | PG-104, PG-113 | CSV section: Settings; source status: Backlog. |
+| Settings | Audit Log | planned | Deliver Audit Log for Settings. | Platform FE+BE (STOA-Foundation) | P3 | IFC-098, IFC-124, PG-112 | CSV section: Settings; source status: Backlog. |
+| Settings | Compliance | planned | Deliver Compliance for Settings. | Platform FE+BE (STOA-Foundation) | P3 | IFC-058, PG-119 | CSV section: Settings; source status: Backlog. |
+| Settings | Data Retention | planned | Deliver Data Retention for Settings. | Platform FE+BE (STOA-Foundation) | P3 | IFC-058, PG-118 | CSV section: Settings; source status: Backlog. |
+| Settings | Import/Export | planned | Deliver Import/Export for Settings. | Platform FE+BE (STOA-Foundation) | P3 | IFC-070, PG-121 | CSV section: Settings; source status: Backlog. |
+| Settings | Integrations | planned | Deliver Integrations for Settings. | Platform FE+BE (STOA-Foundation) | P3 | IFC-099, PG-115 | CSV section: Settings; source status: Backlog. |
+| Settings | Localization | planned | Deliver Localization for Settings. | Platform FE+BE (STOA-Foundation) | P3 | PG-104, PG-117 | CSV section: Settings; source status: Backlog. |
+| Settings | Notifications | planned | Deliver Notifications for Settings. | Platform FE+BE (STOA-Foundation) | P3 | PG-104, PG-116 | CSV section: Settings; source status: Backlog. |
+| Settings | Organization Settings | planned | Deliver Organization Settings for Settings. | Platform FE+BE (STOA-Foundation) | P3 | PG-104, PG-107 | CSV section: Settings; source status: Backlog. |
+| Settings | Permissions | planned | Deliver Permissions for Settings. | Platform FE+BE (STOA-Foundation) | P3 | PG-109, PG-110 | CSV section: Settings; source status: Backlog. |
+| Settings | Privacy Delete | planned | Deliver Privacy Delete for Settings. | Platform FE+BE (STOA-Foundation) | P3 | IFC-058, PG-123 | CSV section: Settings; source status: Backlog. |
+| Settings | Privacy Export | planned | Deliver Privacy Export for Settings. | Platform FE+BE (STOA-Foundation) | P3 | IFC-058, PG-122 | CSV section: Settings; source status: Backlog. |
+| Settings | Profile Settings | planned | Deliver Profile Settings for Settings. | Platform FE+BE (STOA-Foundation) | P3 | PG-104, PG-105 | CSV section: Settings; source status: Backlog. |
+| Settings | Roles | planned | Deliver Roles for Settings. | Platform FE+BE (STOA-Foundation) | P3 | IFC-098, PG-109 | CSV section: Settings; source status: Backlog. |
+| Settings | Security | planned | Deliver Security for Settings. | Platform FE+BE (STOA-Foundation) | P3 | IFC-072, PG-120 | CSV section: Settings; source status: Backlog. |
+| Settings | Settings Home | planned | Deliver Settings Home for Settings. | Platform FE+BE (STOA-Foundation) | P3 | IFC-076, PG-104 | CSV section: Settings; source status: Backlog. |
+| Settings | Teams | planned | Deliver Teams for Settings. | Platform FE+BE (STOA-Foundation) | P3 | PG-108, PG-111 | CSV section: Settings; source status: Backlog. |
+| Settings | Users | planned | Deliver Users for Settings. | Platform FE+BE (STOA-Foundation) | P3 | IFC-098, PG-108 | CSV section: Settings; source status: Backlog. |
+| Settings | Webhooks | planned | Deliver Webhooks for Settings. | Platform FE+BE (STOA-Foundation) | P3 | IFC-099, PG-114 | CSV section: Settings; source status: Backlog. |
+| Governance | ADR Registry & Compliance Reporting | done | Implement capability: ADR Registry & Compliance Reporting. | PM + CTO (STOA-Foundation) | P2 | GOV-001, IFC-008, IFC-100 | Backend/platform capability from CSV section Governance; source status: Completed. |
+| Governance | Encrypt and aggregate audit logs; automate compliance reporting | done | Implement capability: Encrypt and aggregate audit logs; automate compliance reporting. | Security Eng + Compliance (STOA-Security) | P2 | IFC-098, IFC-124 | Backend/platform capability from CSV section Compliance; source status: Completed. |
+| Governance | GDPR baseline controls: Supabase RLS policies, data minimisation, retention hooks | done | Implement capability: GDPR baseline controls: Supabase RLS policies, data minimisation, retention hooks. | DPO + Legal (STOA-Foundation) | P2 | IFC-008, IFC-017, IFC-058, IFC-127 | Backend/platform capability from CSV section Compliance; source status: Completed. |
+| Developer | API Docs | planned | Deliver API Docs for Developer Pages. | DevRel (STOA-Foundation) | P3 | PG-032, PG-033 | CSV section: Developer Pages; source status: Backlog. |
+| Developer | Auth Guides | planned | Deliver Auth Guides for Developer Pages. | DevRel (STOA-Foundation) | P3 | PG-032, PG-038 | CSV section: Developer Pages; source status: Backlog. |
+| Developer | Changelog | planned | Deliver Changelog for Developer Pages. | DevRel (STOA-Foundation) | P3 | PG-032, PG-035 | CSV section: Developer Pages; source status: Backlog. |
+| Developer | CLI Docs | planned | Deliver CLI Docs for Developer Pages. | DevRel (STOA-Foundation) | P3 | PG-032, PG-037 | CSV section: Developer Pages; source status: Backlog. |
+| Developer | Dev App Detail | planned | Deliver Dev App Detail for Developer Pages. | DevRel (STOA-Foundation) | P3 | PG-039, PG-041 | CSV section: Developer Pages; source status: Backlog. |
+| Developer | Dev App Edit | planned | Deliver Dev App Edit for Developer Pages. | DevRel (STOA-Foundation) | P3 | PG-041, PG-042 | CSV section: Developer Pages; source status: Backlog. |
+| Developer | Dev Apps | planned | Deliver Dev Apps for Developer Pages. | DevRel (STOA-Foundation) | P3 | PG-032, PG-039 | CSV section: Developer Pages; source status: Backlog. |
+| Developer | Docs Index | planned | Deliver Docs Index for Developer Pages. | DevRel (STOA-Foundation) | P3 | IFC-079, PG-032 | CSV section: Developer Pages; source status: Backlog. |
+| Developer | New Dev App | planned | Deliver New Dev App for Developer Pages. | DevRel (STOA-Foundation) | P3 | PG-039, PG-040 | CSV section: Developer Pages; source status: Backlog. |
+| Developer | SDK Guides | planned | Deliver SDK Guides for Developer Pages. | DevRel (STOA-Foundation) | P3 | PG-032, PG-036 | CSV section: Developer Pages; source status: Backlog. |
+| Developer | Webhooks Docs | planned | Deliver Webhooks Docs for Developer Pages. | DevRel (STOA-Foundation) | P3 | PG-032, PG-034 | CSV section: Developer Pages; source status: Backlog. |
+| Legal | Acceptable Use Policy | planned | Deliver Acceptable Use Policy for Legal Pages. | Legal Counsel (STOA-Foundation) | P3 | PG-050, PG-054 | CSV section: Legal Pages; source status: Backlog. |
+| Legal | Cookie Policy | planned | Deliver Cookie Policy for Legal Pages. | Legal Counsel (STOA-Foundation) | P3 | PG-050, PG-052 | CSV section: Legal Pages; source status: Backlog. |
+| Legal | Data Processing Addendum | planned | Deliver Data Processing Addendum for Legal Pages. | Legal Counsel (STOA-Foundation) | P3 | PG-050, PG-053 | CSV section: Legal Pages; source status: Backlog. |
+| Legal | Privacy Policy | planned | Deliver Privacy Policy for Legal Pages. | Legal Counsel (STOA-Foundation) | P3 | IFC-058, PG-050 | CSV section: Legal Pages; source status: Backlog. |
+| Legal | Terms of Service | planned | Deliver Terms of Service for Legal Pages. | Legal Counsel (STOA-Foundation) | P3 | PG-050, PG-051 | CSV section: Legal Pages; source status: Backlog. |
+| Platform | 404 Not Found | planned | Deliver 404 Not Found for System Pages. | SRE (STOA-Foundation) | P3 | IFC-076, PG-055 | CSV section: System Pages; source status: Backlog. |
+| Platform | 500 Error | planned | Deliver 500 Error for System Pages. | SRE (STOA-Foundation) | P3 | PG-055, PG-056 | CSV section: System Pages; source status: Backlog. |
+| Platform | A/B Testing Framework | done | Implement capability: A/B Testing Framework. | Data Scientist + Backend Dev (STOA-Intelligence) | P2 | IFC-022, IFC-025 | Backend/platform capability from CSV section Intelligence; source status: Completed. |
+| Platform | Accounts List | planned | Deliver Accounts List for Core CRM. | CRM FE+BE (STOA-Foundation) | P3 | IFC-089, PG-069 | CSV section: Core CRM; source status: Backlog. |
+| Platform | Active workflow list | planned | Deliver Active workflow list as part of Workflow List & Status UI. | Frontend Dev (STOA-Automation) | P3 | IFC-028, IFC-141, PG-147 | Sub-feature extracted from CSV description for PG-147. |
+| Platform | Activities | planned | Deliver Activities for Core CRM. | CRM FE+BE (STOA-Foundation) | P3 | IFC-089, PG-080 | CSV section: Core CRM; source status: Backlog. |
+| Platform | Activity Feed Type Registry - Enum-based mapping from AuditLogEntry.eventType to ActivityFeedType with metadata | planned | Implement capability: Activity Feed Type Registry - Enum-based mapping from AuditLogEntry.eventType to ActivityFeedType with metadata. | Backend Dev (STOA-Domain) | P3 | IFC-182, IFC-193 | Backend/platform capability from CSV section Infrastructure; source status: Backlog. |
+| Platform | Calls | planned | Deliver Calls for Core CRM. | CRM FE+BE (STOA-Foundation) | P3 | IFC-099, PG-087 | CSV section: Core CRM; source status: Backlog. |
+| Platform | Component Library (shadcn/ui) | done | Implement capability: Component Library (shadcn/ui). | Frontend Dev + UX (STOA-Domain) | P2 | BRAND-002, IFC-014, IFC-076 | Backend/platform capability from CSV section Quality; source status: Completed. |
+| Platform | Contacts List | planned | Deliver Contacts List for Core CRM. | CRM FE+BE (STOA-Foundation) | P3 | IFC-089, PG-064 | CSV section: Core CRM; source status: Backlog. |
+| Platform | Contacts Module - Create/Edit/Search | done | Implement capability: Contacts Module - Create/Edit/Search. | Frontend Dev + Backend Dev (STOA-Domain) | P2 | IFC-002, IFC-004, IFC-089 | Backend/platform capability from CSV section Core CRM; source status: Completed. |
+| Platform | Data Migration from Legacy | planned | Implement capability: Data Migration from Legacy. | DA + DevOps (STOA-Automation) | P3 | IFC-017, IFC-070 | Backend/platform capability from CSV section Migration; source status: Backlog. |
+| Platform | Documents Management - Upload & Sign | done | Implement capability: Documents Management - Upload & Sign. | Backend Dev + Integrations Eng (STOA-Domain) | P2 | IFC-090, IFC-094, IFC-106 | Backend/platform capability from CSV section Core CRM; source status: Completed. |
+| Platform | Docusaurus Setup | done | Implement capability: Docusaurus Setup. | Tech Writer + DevOps (STOA-Automation) | P2 | IFC-012, IFC-079 | Backend/platform capability from CSV section Documentation; source status: Completed. |
+| Platform | Files | planned | Deliver Files for Core CRM. | CRM FE+BE (STOA-Foundation) | P3 | IFC-094, PG-089 | CSV section: Core CRM; source status: Backlog. |
+| Platform | Home Page Response Caching - Redis caching for getWelcomeSummary with event-driven invalidation | planned | Implement capability: Home Page Response Caching - Redis caching for getWelcomeSummary with event-driven invalidation. | Backend Dev (STOA-Foundation) | P3 | IFC-075, IFC-182, IFC-196 | Backend/platform capability from CSV section Performance; source status: Backlog. |
+| Platform | Home Page tRPC Router - Welcome summary activity feed AI insights pinned items daily goals | done | Implement capability: Home Page tRPC Router - Welcome summary activity feed AI insights pinned items daily goals. | Backend Dev (STOA-Domain) | P2 | IFC-003, IFC-089, IFC-182 | Backend/platform capability from CSV section Infrastructure; source status: Completed. |
+| Platform | Import Accounts | planned | Deliver Import Accounts for Core CRM. | CRM FE+BE (STOA-Foundation) | P3 | PG-069, PG-072 | CSV section: Core CRM; source status: Backlog. |
+| Platform | Import Contacts | planned | Deliver Import Contacts for Core CRM. | CRM FE+BE (STOA-Foundation) | P3 | PG-064, PG-067 | CSV section: Core CRM; source status: Backlog. |
+| Platform | Import Leads | planned | Deliver Import Leads for Core CRM. | CRM FE+BE (STOA-Foundation) | P3 | PG-059, PG-063 | CSV section: Core CRM; source status: Backlog. |
+| Platform | Kanban Drag-Drop Persistence | planned | Implement capability: Kanban Drag-Drop Persistence. | Frontend Dev + Backend Dev (STOA-Domain) | P3 | IFC-063, IFC-064, IFC-091 | Backend/platform capability from CSV section Core CRM; source status: Backlog. |
+| Platform | LangChain AI Scoring Prototype | done | Implement capability: LangChain AI Scoring Prototype. | AI Specialist + Backend Dev (STOA-Intelligence) | P2 | IFC-004, IFC-005 | Backend/platform capability from CSV section Validation; source status: Completed. |
+| Platform | Leads List | planned | Deliver Leads List for Core CRM. | CRM FE+BE (STOA-Foundation) | P3 | IFC-089, PG-059 | CSV section: Core CRM; source status: Backlog. |
+| Platform | Merge Contacts | planned | Deliver Merge Contacts for Core CRM. | CRM FE+BE (STOA-Foundation) | P3 | PG-064, PG-068 | CSV section: Core CRM; source status: Backlog. |
+| Platform | Notes | planned | Deliver Notes for Core CRM. | CRM FE+BE (STOA-Foundation) | P3 | PG-080, PG-088 | CSV section: Core CRM; source status: Backlog. |
+| Platform | Notifications tRPC Router - List mark read preferences real-time subscription | planned | Implement capability: Notifications tRPC Router - List mark read preferences real-time subscription. | Backend Dev (STOA-Domain) | P3 | IFC-003, IFC-183 | Backend/platform capability from CSV section Infrastructure; source status: Backlog. |
+| Platform | RBAC/ABAC & Audit Trail | done | Implement capability: RBAC/ABAC & Audit Trail. | Security Eng + Backend Dev (STOA-Security) | P2 | IFC-008, IFC-098 | Backend/platform capability from CSV section Security; source status: Completed. |
+| Platform | Router Middleware Standardization - Migrate all routers from manual getTenantId to tenantProcedure | planned | Implement capability: Router Middleware Standardization - Migrate all routers from manual getTenantId to tenantProcedure. | Backend Dev (STOA-Foundation) | P3 | IFC-003, IFC-182, IFC-194 | Backend/platform capability from CSV section Architecture; source status: Backlog. |
+| Platform | Stage Detail | planned | Deliver Stage Detail for Core CRM. | CRM FE+BE (STOA-Foundation) | P3 | PG-077, PG-078 | CSV section: Core CRM; source status: Backlog. |
+| Platform | Stage value totals | planned | Deliver Stage value totals as part of Deal Pipeline Page. | Frontend Dev (STOA-Domain) | P3 | IFC-186, PG-135 | Sub-feature extracted from CSV description for PG-135. |
+| Platform | Supabase Integration Test | done | Implement capability: Supabase Integration Test. | Backend Dev + DevOps (STOA-Automation) | P2 | IFC-003, IFC-006 | Backend/platform capability from CSV section Validation; source status: Completed. |
+| Platform | Task assignments | planned | Deliver Task assignments as part of Task Management Page. | Frontend Dev (STOA-Domain) | P3 | IFC-187, PG-136 | Sub-feature extracted from CSV description for PG-136. |
+| Platform | Task Detail | planned | Deliver Task Detail for Core CRM. | CRM FE+BE (STOA-Foundation) | P3 | PG-081, PG-082 | CSV section: Core CRM; source status: Backlog. |
+| Platform | Task entity linking | planned | Deliver Task entity linking as part of Task Management Page. | Frontend Dev (STOA-Domain) | P3 | IFC-187, PG-136 | Sub-feature extracted from CSV description for PG-136. |
+| Platform | Task list view | planned | Deliver Task list view as part of Task Management Page. | Frontend Dev (STOA-Domain) | P3 | IFC-187, PG-136 | Sub-feature extracted from CSV description for PG-136. |
+| Platform | Task reminders | planned | Deliver Task reminders as part of Task Management Page. | Frontend Dev (STOA-Domain) | P3 | IFC-187, PG-136 | Sub-feature extracted from CSV description for PG-136. |
+| Platform | Tasks | planned | Deliver Tasks for Core CRM. | CRM FE+BE (STOA-Foundation) | P3 | PG-080, PG-081 | CSV section: Core CRM; source status: Backlog. |
+| Platform | Tickets Module - SLA Tracking | done | Implement capability: Tickets Module - SLA Tracking. | Backend Dev + Frontend Dev (STOA-Domain) | P2 | IFC-002, IFC-004, IFC-093 | Backend/platform capability from CSV section Core CRM; source status: Completed. |
+| Platform | User Timezone Support - Add timezone field to User model with preference UI and timezone-aware greeting | planned | Implement capability: User Timezone Support - Add timezone field to User model with preference UI and timezone-aware greeting. | Backend Dev (STOA-Domain) | P3 | IFC-182, IFC-191 | Backend/platform capability from CSV section Platform; source status: Backlog. |
+| Platform | Workflow execution logs | planned | Deliver Workflow execution logs as part of Workflow List & Status UI. | Frontend Dev (STOA-Automation) | P3 | IFC-028, IFC-141, PG-147 | Sub-feature extracted from CSV description for PG-147. |
+| Platform | Workflow execution status | planned | Deliver Workflow execution status as part of Workflow List & Status UI. | Frontend Dev (STOA-Automation) | P3 | IFC-028, IFC-141, PG-147 | Sub-feature extracted from CSV description for PG-147. |
+| Platform | Workflow step visualization | planned | Deliver Workflow step visualization as part of Workflow List & Status UI. | Frontend Dev (STOA-Automation) | P3 | IFC-028, IFC-141, PG-147 | Sub-feature extracted from CSV description for PG-147. |
+| Platform | Zero Trust Security Model | done | Implement capability: Zero Trust Security Model. | Security Eng + CTO (STOA-Security) | P2 | IFC-001, IFC-008, IFC-072 | Backend/platform capability from CSV section Security; source status: Completed. |
+
+## Maintenance Rules
+
+1. Update this matrix in the same PR whenever a feature status changes.
+2. Update `Related Task (CSV)` whenever task IDs or dependencies change in `Sprint_plan.csv`.
+3. Keep status values limited to `planned`, `in_progress`, `done`.
+
+
+

@@ -1,0 +1,29 @@
+TIMESTAMP: 02/08/2026 14:44:07
+CALL_ID: call_D9xRJNQPWnAYvMoYrr4zmpq0
+NAME: apply_patch
+---INPUT---
+*** Begin Patch
+*** Update File: .tmp_feature_matrix_rebuild.ps1
+@@
+-  $id = ($r.'Task ID' ?? '').Trim()
++  $id = ([string]$r.'Task ID').Trim()
+@@
+-  $s = ($status ?? '').Trim().ToLower()
++  $s = ([string]$status).Trim().ToLower()
+@@
+-  $t = ($text ?? '')
++  $t = [string]$text
+@@
+-  $t = $title ?? ''
++  $t = [string]$title
+@@
+-  foreach ($m in [regex]::Matches(($dependencies ?? ''), '[A-Z]+-\d+')) {
++  foreach ($m in [regex]::Matches(([string]$dependencies), '[A-Z]+-\d+')) {
+@@
+-  $sec = ($section ?? '').ToLower()
++  $sec = ([string]$section).ToLower()
+@@
+-    if ([int]::TryParse(($targetSprint ?? ''), [ref]$n)) {
++    if ([int]::TryParse(([string]$targetSprint), [ref]$n)) {
+*** End Patch
+

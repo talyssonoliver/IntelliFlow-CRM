@@ -1,0 +1,632 @@
+TIMESTAMP: 02/08/2026 15:09:16
+CALL_ID: call_w8yz4IFzExsqwNICIpmlvvBH
+NAME: apply_patch
+---INPUT---
+*** Begin Patch
+*** Add File: .tmp_generate_feature_matrix.ps1
++$ErrorActionPreference = "Stop"
++
++$csvPath = "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv"
++$flowsDir = "apps/project-tracker/docs/metrics/_global/flows"
++$outPath = "docs/company/product/feature-matrix.md"
++
++$rows = Import-Csv $csvPath
++$rowsById = @{}
++foreach ($r in $rows) {
++  $id = ([string]$r.'Task ID').Trim()
++  if ($id) { $rowsById[$id] = $r }
++}
++
++function Normalize-Status([string]$status) {
++  $s = ([string]$status).Trim().ToLower()
++  switch -Regex ($s) {
++    '^(completed|done)$' { return 'done' }
++    '^(in progress|in_progress|spec complete)$' { return 'in_progress' }
++    default { return 'planned' }
++  }
++}
++
++function Clean-Cell([string]$text) {
++  $t = [string]$text
++  $t = $t.Replace('|', '/')
++  $t = [regex]::Replace($t, '\p{Pd}', '-')
++  $t = $t.Replace("`r", ' ').Replace("`n", ' ').Trim()
++  $t = [regex]::Replace($t, '\s+', ' ')
++  return $t
++}
++
++function Shorten([string]$text, [int]$maxLen = 72) {
++  $t = Clean-Cell $text
++  if ($t.Length -le $maxLen) { return $t }
++  return $t.Substring(0, $maxLen - 3) + '...'
++}
++
++function Clean-FeatureTitle([string]$title) {
++  $t = [string]$title
++  $t = $t -replace '^FLOW-[^:]+:\s*', ''
++  $t = $t -replace '^PHASE-[^:]+:\s*', ''
++  return (Clean-Cell $t)
++}
++
++function Parse-TaskIds([string]$text) {
++  $ids = New-Object System.Collections.Generic.HashSet[string]
++  foreach ($m in [regex]::Matches(([string]$text), '[A-Z]+-\d+')) {
++    [void]$ids.Add($m.Value)
++  }
++  return @($ids)
++}
++
++function Get-DependencyIds([string]$dependencies) {
++  return Parse-TaskIds $dependencies
++}
++
++function Split-Semicolon([string]$value) {
++  if ([string]::IsNullOrWhiteSpace($value)) { return @() }
++  return ($value -split ';' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
++}
++
++function Extract-TaggedValues([string]$value, [string[]]$tags) {
++  $out = New-Object System.Collections.Generic.List[string]
++  foreach ($token in (Split-Semicolon $value)) {
++    foreach ($tag in $tags) {
++      $prefix = "${tag}:"
++      if ($token.StartsWith($prefix, [System.StringComparison]::OrdinalIgnoreCase)) {
++        $v = $token.Substring($prefix.Length).Trim()
++        if ($v) { $out.Add($v) }
++      }
++    }
++  }
++  return @($out)
++}
++
++function Format-IdList([string[]]$ids, [int]$max = 4) {
++  if (-not $ids -or $ids.Count -eq 0) { return '-' }
++  $uniq = @($ids | Where-Object { $_ -and $_.Trim() -ne '' } | Sort-Object -Unique)
++  if ($uniq.Count -eq 0) { return '-' }
++  if ($uniq.Count -le $max) { return ($uniq -join ', ') }
++  $head = $uniq[0..($max - 1)] -join ', '
++  return "$head +$($uniq.Count - $max)"
++}
++
++function Format-RefList([string[]]$refs, [int]$max = 2) {
++  if (-not $refs -or $refs.Count -eq 0) { return '-' }
++  $uniq = @($refs | Where-Object { $_ -and $_.Trim() -ne '' } | ForEach-Object { Clean-Cell $_ } | Sort-Object -Unique)
++  if ($uniq.Count -eq 0) { return '-' }
++  if ($uniq.Count -le $max) { return ($uniq -join ', ') }
++  $head = $uniq[0..($max - 1)] -join ', '
++  return "$head +$($uniq.Count - $max)"
++}
++
++function Get-Group([string]$section, [string]$text) {
++  $sec = ([string]$section).ToLower()
++  $s = ("$section $text").ToLower()
++
++  if ($sec -match 'public pages|marketing pages') { return 'Marketing' }
++  if ($sec -match 'auth pages') { return 'Auth' }
++  if ($sec -match 'billing pages') { return 'Billing' }
++  if ($sec -match 'developer pages') { return 'Developer' }
++  if ($sec -eq 'settings') { return 'Settings' }
++  if ($sec -match 'notifications') { return 'Notification' }
++  if ($sec -match 'communications') { return 'Communication' }
++  if ($sec -match 'legal pages') { return 'Legal' }
++  if ($sec -match 'support pages|support') { return 'Ticket' }
++  if ($sec -match 'ai intelligence|ai settings|ai foundation|ai insights|ai/ml|ai assistant|search/ai') { return 'AI' }
++  if ($sec -match 'automation|workflow') { return 'Automation' }
++  if ($sec -match 'analytics|reports') { return 'Analytics' }
++  if ($sec -match 'case docs') { return 'Document' }
++  if ($sec -match 'scheduling') { return 'Calendar' }
++  if ($sec -match 'governance|compliance') { return 'Governance' }
++  if ($sec -match 'infrastructure|platform|architecture|performance|security|resilience|validation|foundation|planning|operations|migration') { return 'Platform' }
++
++  if ($sec -match 'core crm') {
++    if ($s -match 'notification') { return 'Notification' }
++    if ($s -match 'home|welcome summary|activity feed|daily goal|dashboard') { return 'Dashboard' }
++    if ($s -match '\bleads?\b') { return 'Lead' }
++    if ($s -match '\bcontacts?\b') { return 'Contact' }
++    if ($s -match '\baccounts?\b') { return 'Account' }
++    if ($s -match '\bdeals?\b|\bopportunit(?:y|ies)\b|pipeline|forecast|quote|order|price book|product') { return 'Deal' }
++    if ($s -match '\btickets?\b|support') { return 'Ticket' }
++    if ($s -match '\bcases?\b|deadline') { return 'Case' }
++    if ($s -match '\bdocuments?\b|\bfiles?\b|ocr|ingestion|acl') { return 'Document' }
++    if ($s -match 'appointment|calendar|scheduling') { return 'Calendar' }
++    if ($s -match 'email|sms|whatsapp|communication|thread|template') { return 'Communication' }
++    if ($s -match 'report|analytics|metrics') { return 'Analytics' }
++    return 'Platform'
++  }
++
++  if ($s -match '\bleads?\b') { return 'Lead' }
++  if ($s -match '\bcontacts?\b') { return 'Contact' }
++  if ($s -match '\baccounts?\b') { return 'Account' }
++  if ($s -match '\bdeals?\b|\bopportunit(?:y|ies)\b|pipeline|forecast|quote|order|price book|product') { return 'Deal' }
++  if ($s -match '\btickets?\b|support') { return 'Ticket' }
++  if ($s -match '\bcases?\b|deadline') { return 'Case' }
++  if ($s -match '\bdocuments?\b|\bfiles?\b|ocr|ingestion|acl') { return 'Document' }
++  if ($s -match 'appointment|calendar|scheduling') { return 'Calendar' }
++  if ($s -match 'email|sms|whatsapp|communication|thread|template') { return 'Communication' }
++  if ($s -match 'notification') { return 'Notification' }
++  if ($s -match 'ai|agent|rag|churn|sentiment|drift|latency|scoring|nba|experiment|prompt|hallucination') { return 'AI' }
++  if ($s -match 'report|analytics|dashboard|metrics') { return 'Analytics' }
++  if ($s -match 'billing|invoice|subscription|payment|receipt|checkout|stripe') { return 'Billing' }
++  if ($s -match 'governance|compliance|audit|adr|policy') { return 'Governance' }
++
++  return 'Platform'
++}
++
++function Get-Priority([string]$normalizedStatus, [string]$group, [string]$targetSprint) {
++  if ($normalizedStatus -eq 'in_progress') { return 'P0' }
++  if ($normalizedStatus -eq 'done') {
++    if ($group -in @('Lead', 'Contact', 'Account', 'Deal', 'Ticket', 'Auth', 'Billing', 'Notification', 'AI', 'Marketing', 'Dashboard')) { return 'P1' }
++    return 'P2'
++  }
++
++  $core = @('Lead', 'Contact', 'Account', 'Deal', 'Ticket', 'Auth', 'Billing', 'Notification', 'AI', 'Marketing', 'Automation', 'Case', 'Document', 'Dashboard')
++  if ($group -in $core) {
++    $n = 0
++    if ([int]::TryParse(([string]$targetSprint), [ref]$n)) {
++      if ($n -le 16) { return 'P1' }
++      if ($n -le 24) { return 'P2' }
++      return 'P3'
++    }
++    return 'P2'
++  }
++  return 'P3'
++}
++
++function Get-RequiredLayers([string]$group, [string]$section, [string]$primaryTaskId) {
++  $required = New-Object System.Collections.Generic.HashSet[string]
++  $isPageTask = $primaryTaskId -match '^PG-'
++  if ($isPageTask) { [void]$required.Add('Frontend') }
++
++  switch ($group) {
++    'Marketing' { return $required }
++    'Developer' { return $required }
++    'Legal' { return $required }
++    'Auth' {
++      foreach ($l in @('Domain', 'Database', 'Adapter', 'Router', 'Frontend')) { [void]$required.Add($l) }
++      return $required
++    }
++    'Billing' {
++      foreach ($l in @('Domain', 'Database', 'Adapter', 'Router', 'Frontend')) { [void]$required.Add($l) }
++      return $required
++    }
++    'Settings' {
++      foreach ($l in @('Domain', 'Database', 'Adapter', 'Router', 'Frontend')) { [void]$required.Add($l) }
++      return $required
++    }
++  }
++
++  if ($group -in @('Lead', 'Contact', 'Account', 'Deal', 'Ticket', 'Case', 'Document', 'Notification', 'Dashboard', 'AI', 'Automation', 'Analytics', 'Communication', 'Calendar')) {
++    foreach ($l in @('Entity', 'Domain', 'Database', 'Adapter', 'Router')) { [void]$required.Add($l) }
++    if ($isPageTask -or $group -in @('Dashboard', 'AI', 'Notification')) { [void]$required.Add('Frontend') }
++    return $required
++  }
++
++  if ($group -in @('Governance', 'Platform')) {
++    foreach ($l in @('Domain', 'Database', 'Adapter', 'Router')) { [void]$required.Add($l) }
++    if ($isPageTask) { [void]$required.Add('Frontend') }
++    return $required
++  }
++
++  foreach ($l in @('Domain', 'Database', 'Adapter', 'Router')) { [void]$required.Add($l) }
++  if ($isPageTask) { [void]$required.Add('Frontend') }
++  return $required
++}
++
++function Get-TaskLayerFlags($row) {
++  $desc = Clean-Cell $row.Description
++  $dod = Clean-Cell $row.'Definition of Done'
++  $kpi = Clean-Cell $row.KPIs
++  $section = Clean-Cell $row.Section
++  $status = Normalize-Status $row.Status
++  $allText = ("$desc $dod $kpi $section").ToLower()
++
++  $artifactPaths = Extract-TaggedValues $row.'Artifacts To Track' @('ARTIFACT', 'FILE', 'SPEC', 'PLAN', 'EVIDENCE')
++  $prereqPaths = Extract-TaggedValues $row.'Pre-requisites' @('FILE', 'ARTIFACT', 'SPEC', 'PLAN')
++  $paths = @($artifactPaths + $prereqPaths | ForEach-Object { (Clean-Cell $_).ToLower() })
++
++  $hasPath = {
++    param([string]$pattern)
++    foreach ($p in $paths) { if ($p -match $pattern) { return $true } }
++    return $false
++  }
++
++  $entity = (& $hasPath '^packages/domain/src/') -or ($allText -match 'aggregate|domain model|entity|conversation record|case document model')
++  $domain = (& $hasPath '^packages/application/src/|^packages/domain/src/') -or ($allText -match 'logic|workflow|engine|business rule|conversion|service')
++  $database = (& $hasPath '^packages/db/|prisma/|^infra/supabase/|migration|schema') -or ($allText -match 'prisma|migration|schema|database|supabase|sql|pgvector')
++  $adapter = (& $hasPath '^packages/adapters/src/|^apps/workers/|^apps/ai-worker/') -or ($allText -match 'repository|adapter|connector|integration')
++  $router = (& $hasPath '^apps/api/src/modules/.+router\.ts|^apps/api/src/router\.ts|^apps/api/src/trpc\.ts') -or ($allText -match 'router|endpoint|trpc|api')
++  $frontend = (& $hasPath '^apps/web/src/') -or ($allText -match 'page|component|ui|lighthouse|frontend')
++
++  $allRefs = New-Object System.Collections.Generic.List[string]
++  foreach ($v in @($artifactPaths + $prereqPaths + @($desc, $dod, $kpi))) {
++    if ($v) { $allRefs.Add((Clean-Cell $v)) }
++  }
++
++  $prd = New-Object System.Collections.Generic.HashSet[string]
++  $adr = New-Object System.Collections.Generic.HashSet[string]
++  foreach ($txt in $allRefs) {
++    foreach ($m in [regex]::Matches($txt, 'docs/planning/prd-[A-Za-z0-9\-_]+\.md')) { [void]$prd.Add($m.Value) }
++    foreach ($m in [regex]::Matches($txt, 'docs/planning/adr/ADR-[0-9]{3}[A-Za-z0-9\-_]*\.md')) { [void]$adr.Add($m.Value) }
++  }
++
++  return [pscustomobject]@{
++    TaskId = $row.'Task ID'
++    Status = $status
++    Entity = $entity
++    Domain = $domain
++    Database = $database
++    Adapter = $adapter
++    Router = $router
++    Frontend = $frontend
++    KPI = Clean-Cell $row.KPIs
++    Validation = Clean-Cell $row.'Validation Method'
++    Artifacts = @($artifactPaths)
++    Specs = @(Extract-TaggedValues $row.'Artifacts To Track' @('SPEC', 'PLAN'))
++    Evidence = @(Extract-TaggedValues $row.'Artifacts To Track' @('EVIDENCE'))
++    PRDRefs = @($prd)
++    ADRRefs = @($adr)
++  }
++}
++
++$taskInfoById = @{}
++foreach ($r in $rows) {
++  $id = $r.'Task ID'
++  if ($id) { $taskInfoById[$id] = Get-TaskLayerFlags $r }
++}
++
++$flowRefsByTask = @{}
++$flowFiles = Get-ChildItem -Path $flowsDir -File -Filter 'FLOW-*.md'
++foreach ($flowFile in $flowFiles) {
++  $flowId = [System.IO.Path]::GetFileNameWithoutExtension($flowFile.Name).ToUpper()
++  if ($flowId -notmatch '^FLOW-\d+$') { continue }
++  $content = Get-Content -Path $flowFile.FullName -Raw
++  foreach ($taskId in (Parse-TaskIds $content)) {
++    if (-not $flowRefsByTask.ContainsKey($taskId)) {
++      $flowRefsByTask[$taskId] = New-Object System.Collections.Generic.HashSet[string]
++    }
++    [void]$flowRefsByTask[$taskId].Add($flowId)
++  }
++}
++
++function Get-LayerCell($infos, [string]$layerName, [bool]$required) {
++  if (-not $required) { return 'n/a' }
++  $hits = @($infos | Where-Object { $_.$layerName })
++  if ($hits.Count -eq 0) { return 'missing' }
++
++  $statuses = $hits | Select-Object -ExpandProperty Status
++  $hasInProgress = $statuses -contains 'in_progress'
++  $hasDone = $statuses -contains 'done'
++  $hasPlanned = $statuses -contains 'planned'
++
++  $state = 'planned'
++  if ($hasInProgress) { $state = 'in_progress' }
++  elseif ($hasDone -and -not $hasPlanned) { $state = 'done' }
++  elseif ($hasDone -and $hasPlanned) { $state = 'partial' }
++
++  $ids = $hits | Select-Object -ExpandProperty TaskId
++  return "$state ($(Format-IdList $ids 2))"
++}
++
++$decompose = @{
++  'PG-001' = @('Home hero headline emphasizing AI-first CRM with governance', 'Home hero CTA: Start free trial', 'Home hero CTA: Talk to sales', 'Home quick-win badges (AI playbooks, audit-matrix ready, accessible by design)', 'Home interactive stats card: response target (<200ms)', 'Home interactive stats card: Lighthouse baseline (90%+)', 'Home interactive stats card: delivery efficiency metric', 'Home governance health indicators (WCAG, audit gates, LCP budget)', 'Home social proof bar', 'Home value pillars grid', 'Home flow highlights section', 'Home "How it works" section', 'Home assurance checklist (security, accessibility, reliability)', 'Home final conversion CTA section')
++  'PG-127' = @('Partner application form', 'Specialized partner qualification fields', 'Partner submission routing workflow', 'Partner onboarding handoff flow')
++  'PG-128' = @('AI chain versioning admin interface', 'AI chain version backend wiring')
++  'PG-129' = @('Authenticated home welcome summary', 'Authenticated home activity feed', 'Authenticated home AI insights panel', 'Authenticated home pinned items', 'Authenticated home daily goals')
++  'PG-130' = @('Notifications inbox list', 'Notification mark-as-read actions', 'Real-time notification updates', 'Notification filters')
++  'PG-131' = @('Deal forecast probability gauge', 'Deal forecast risk factors', 'Deal forecast recommendations', 'Deal forecast history')
++  'PG-132' = @('Lead routing rules configuration', 'Lead assignment dashboard', 'Lead routing SLA monitoring')
++  'PG-133' = @('Contact search', 'Contact filters', 'Contact relationship view', 'Contact activity timeline')
++  'PG-134' = @('Account hierarchy view', 'Account contacts panel', 'Account opportunities panel', 'Account revenue charts')
++  'PG-135' = @('Deal pipeline Kanban board', 'Deal stage drag-drop', 'Stage value totals', 'Pipeline filtering')
++  'PG-136' = @('Task list view', 'Task calendar view', 'Task assignments', 'Task reminders', 'Task entity linking')
++  'PG-137' = @('Ticket list and detail view', 'Ticket SLA indicators', 'Ticket escalation handling', 'Ticket customer portal view')
++  'PG-138' = @('Case party management', 'Case deadline tracking', 'Case document links', 'Case timeline view')
++  'PG-139' = @('Appointment calendar view', 'Appointment conflict detection', 'Appointment-to-case linking', 'Appointment reminders')
++  'PG-140' = @('Document upload flow', 'Document viewer', 'Document version history', 'Document ACL management', 'Document search')
++  'PG-141' = @('Email thread view', 'Email compose flow', 'Email attachments handling', 'Email template usage')
++  'PG-142' = @('Sentiment timeline', 'Sentiment badges', 'Sentiment trend visualization', 'Email sentiment preview')
++  'PG-143' = @('Churn health scores', 'Churn risk indicators', 'Churn intervention triggers', 'Churn trend charts')
++  'PG-144' = @('Universal AI search bar', 'AI-powered search results', 'Search citations display', 'Source highlighting')
++  'PG-145' = @('Next-best-action recommendations', 'NBA deal insights', 'NBA action cards', 'NBA success metrics')
++  'PG-146' = @('Model drift performance panel', 'Drift alerts', 'AI cost tracking', 'AI error rate monitoring')
++  'PG-147' = @('Active workflow list', 'Workflow execution status', 'Workflow step visualization', 'Workflow execution logs')
++  'PG-148' = @('Lead score distribution', 'Lead scoring model accuracy', 'Top-scored leads list', 'Lead scoring factor breakdown')
++  'PG-149' = @('Experiment management dashboard', 'Experiment results view', 'Experiment statistical analysis', 'Variant comparison view')
++  'PG-150' = @('AI review history list', 'AI review timeline', 'AI review audit trail')
++  'PG-151' = @('Active agent status monitoring', 'Agent active sessions', 'Agent task assignments', 'Agent health indicators')
++  'PG-152' = @('Conversation transcript viewer', 'Tool call record viewer', 'Searchable agent log timeline')
++  'PG-153' = @('Latency SLO compliance panel', 'Latency percentile charts', 'Chain performance view', 'Phase-level latency monitoring')
++}
++
++$pgRows = $rows | Where-Object { $_.'Task ID' -match '^PG-' } | Sort-Object { [int]($_.'Task ID' -replace '^PG-', '') }
++$ifcSet = New-Object System.Collections.Generic.HashSet[string]
++foreach ($r in $pgRows) {
++  foreach ($id in (Get-DependencyIds $r.Dependencies)) { if ($id -match '^IFC-') { [void]$ifcSet.Add($id) } }
++}
++$ifcExtras = @('IFC-029', 'IFC-031', 'IFC-061', 'IFC-062', 'IFC-063', 'IFC-064', 'IFC-065', 'IFC-066', 'IFC-067', 'IFC-068', 'IFC-069', 'IFC-090', 'IFC-091', 'IFC-092', 'IFC-093', 'IFC-094', 'IFC-095', 'IFC-096', 'IFC-100', 'IFC-120', 'IFC-126', 'IFC-147', 'IFC-149', 'IFC-152', 'IFC-153', 'IFC-157', 'IFC-181', 'IFC-182', 'IFC-183', 'IFC-184', 'IFC-185', 'IFC-186', 'IFC-187', 'IFC-189', 'IFC-190', 'IFC-191', 'IFC-192', 'IFC-193', 'IFC-194', 'IFC-195', 'IFC-196', 'IFC-197')
++foreach ($id in $ifcExtras) { [void]$ifcSet.Add($id) }
++$ifcRows = $rows | Where-Object { $ifcSet.Contains($_.'Task ID') } | Sort-Object { [int]($_.'Task ID' -replace '^IFC-', '') }
++
++$baseFeatures = New-Object System.Collections.Generic.List[object]
++foreach ($r in $pgRows) {
++  $taskId = $r.'Task ID'
++  $status = Normalize-Status $r.Status
++  $section = $r.Section
++  $baseTitle = Clean-FeatureTitle (($r.Description -split ' - ', 2)[0])
++  $immediate = @($taskId) + (Get-DependencyIds $r.Dependencies)
++  if ($decompose.ContainsKey($taskId)) {
++    foreach ($feature in $decompose[$taskId]) {
++      $g = Get-Group $section $feature
++      $baseFeatures.Add([pscustomobject]@{
++          Group = $g
++          Feature = Clean-Cell $feature
++          Status = $status
++          Purpose = Clean-Cell "Deliver $feature as part of $baseTitle."
++          Owner = Clean-Cell $r.Owner
++          Priority = Get-Priority $status $g $r.'Target Sprint'
++          PrimaryTaskId = $taskId
++          PrimarySection = $section
++          ImmediateTasks = $immediate
++          Notes = Clean-Cell "Sub-feature extracted from CSV description for $taskId."
++        })
++    }
++  } else {
++    $featureTitle = Clean-FeatureTitle $r.Description
++    $g = Get-Group $section $featureTitle
++    $baseFeatures.Add([pscustomobject]@{
++        Group = $g
++        Feature = $featureTitle
++        Status = $status
++        Purpose = Clean-Cell "Deliver $featureTitle for $section."
++        Owner = Clean-Cell $r.Owner
++        Priority = Get-Priority $status $g $r.'Target Sprint'
++        PrimaryTaskId = $taskId
++        PrimarySection = $section
++        ImmediateTasks = $immediate
++        Notes = Clean-Cell "CSV section: $section; source status: $($r.Status)."
++      })
++  }
++}
++
++foreach ($r in $ifcRows) {
++  $taskId = $r.'Task ID'
++  $status = Normalize-Status $r.Status
++  $section = $r.Section
++  $featureTitle = Clean-FeatureTitle $r.Description
++  $g = Get-Group $section $featureTitle
++  $immediate = @($taskId) + (Get-DependencyIds $r.Dependencies)
++  $baseFeatures.Add([pscustomobject]@{
++      Group = $g
++      Feature = $featureTitle
++      Status = $status
++      Purpose = Clean-Cell "Implement capability: $featureTitle."
++      Owner = Clean-Cell $r.Owner
++      Priority = Get-Priority $status $g $r.'Target Sprint'
++      PrimaryTaskId = $taskId
++      PrimarySection = $section
++      ImmediateTasks = $immediate
++      Notes = Clean-Cell "Backend/platform capability from CSV section $section; source status: $($r.Status)."
++    })
++}
++
++$layerNames = @('Entity', 'Domain', 'Database', 'Adapter', 'Router', 'Frontend')
++$matrix = New-Object System.Collections.Generic.List[object]
++$atRisk = New-Object System.Collections.Generic.List[object]
++$missingByLayer = @{ Entity = 0; Domain = 0; Database = 0; Adapter = 0; Router = 0; Frontend = 0 }
++
++foreach ($f in $baseFeatures) {
++  $immediate = @($f.ImmediateTasks | Sort-Object -Unique)
++  $infos = @($immediate | Where-Object { $taskInfoById.ContainsKey($_) } | ForEach-Object { $taskInfoById[$_] })
++  $required = Get-RequiredLayers $f.Group $f.PrimarySection $f.PrimaryTaskId
++
++  $layerCells = @{}
++  $missing = New-Object System.Collections.Generic.List[string]
++  $requiredCount = 0
++  $coveredCount = 0
++  foreach ($ln in $layerNames) {
++    $isReq = $required.Contains($ln)
++    if ($isReq) { $requiredCount++ }
++    $cell = Get-LayerCell $infos $ln $isReq
++    $layerCells[$ln] = $cell
++    if ($isReq) {
++      if ($cell -eq 'missing') {
++        $missing.Add($ln)
++        $missingByLayer[$ln]++
++      } else {
++        $coveredCount++
++      }
++    }
++  }
++  if ($requiredCount -eq 0) { $requiredCount = 1 }
++
++  $planCoverage = "complete ($coveredCount/$requiredCount)"
++  if ($missing.Count -gt 0 -and ($f.Status -in @('done', 'in_progress'))) { $planCoverage = "at_risk ($coveredCount/$requiredCount)" }
++  elseif ($missing.Count -ge 3) { $planCoverage = "gap ($coveredCount/$requiredCount)" }
++  elseif ($missing.Count -gt 0) { $planCoverage = "partial ($coveredCount/$requiredCount)" }
++
++  $primaryInfo = if ($taskInfoById.ContainsKey($f.PrimaryTaskId)) { $taskInfoById[$f.PrimaryTaskId] } else { $null }
++  $specRefs = New-Object System.Collections.Generic.List[string]
++  if ($primaryInfo) {
++    foreach ($s in $primaryInfo.Specs) { $specRefs.Add((Shorten $s 42)) }
++    foreach ($a in $primaryInfo.Artifacts) {
++      $aClean = Clean-Cell $a
++      if ($aClean -match 'docs/specs/|docs/planning/prd|docs/planning/adr') { $specRefs.Add((Shorten $aClean 42)) }
++    }
++  }
++  $reqRef = "$($f.PrimaryTaskId)"
++  $specUniq = @($specRefs | Sort-Object -Unique)
++  if ($specUniq.Count -gt 0) { $reqRef = "$($f.PrimaryTaskId); " + (Format-IdList $specUniq 2) }
++
++  $flowRefs = New-Object System.Collections.Generic.List[string]
++  $prdRefs = New-Object System.Collections.Generic.List[string]
++  $adrRefs = New-Object System.Collections.Generic.List[string]
++  foreach ($tid in $immediate) {
++    if ($flowRefsByTask.ContainsKey($tid)) {
++      foreach ($fl in $flowRefsByTask[$tid]) { $flowRefs.Add($fl) }
++    }
++    if ($taskInfoById.ContainsKey($tid)) {
++      foreach ($pr in $taskInfoById[$tid].PRDRefs) { $prdRefs.Add($pr) }
++      foreach ($ar in $taskInfoById[$tid].ADRRefs) { $adrRefs.Add($ar) }
++    }
++  }
++  $flowRef = Format-RefList @($flowRefs) 2
++  $prdRef = Format-RefList @($prdRefs) 2
++  $adrRef = Format-RefList @($adrRefs) 2
++
++  $kpiIds = @($infos | Where-Object { $_.KPI -and $_.KPI.Trim() -ne '' } | Select-Object -ExpandProperty TaskId | Sort-Object -Unique)
++  $kpiRef = if ($kpiIds.Count -gt 0) { Format-IdList $kpiIds 3 } else { '-' }
++
++  $valRefs = @($infos | Where-Object { $_.Validation -and $_.Validation.Trim() -ne '' } | ForEach-Object { "$($_.TaskId): $(Shorten $_.Validation 48)" } | Sort-Object -Unique)
++  $validationRef = if ($valRefs.Count -eq 0) { '-' } elseif ($valRefs.Count -le 2) { ($valRefs -join '; ') } else { "$($valRefs[0]); $($valRefs[1]) +$($valRefs.Count - 2)" }
++
++  $evidenceRef = '-'
++  if ($primaryInfo) {
++    $ev = @($primaryInfo.Evidence | Sort-Object -Unique)
++    if ($ev.Count -gt 0) { $evidenceRef = Format-IdList (@($ev | ForEach-Object { Shorten $_ 44 })) 2 }
++  }
++
++  $missingTasks = '-'
++  if ($missing.Count -gt 0) {
++    $missingTasks = "Create CSV task(s) for: " + ($missing -join ', ')
++  }
++
++  if ($planCoverage.StartsWith('at_risk')) {
++    $docGapParts = New-Object System.Collections.Generic.List[string]
++    if ($flowRef -eq '-') { $docGapParts.Add('No Flow') }
++    if ($prdRef -eq '-') { $docGapParts.Add('No PRD') }
++    if ($adrRef -eq '-') { $docGapParts.Add('No ADR') }
++    $docGap = if ($docGapParts.Count -eq 0) { '-' } else { $docGapParts -join ', ' }
++
++    $atRisk.Add([pscustomobject]@{
++        Group = $f.Group
++        Feature = $f.Feature
++        Status = $f.Status
++        Missing = ($missing -join ', ')
++        PrimaryTask = $f.PrimaryTaskId
++        FlowRef = $flowRef
++        PRDRef = $prdRef
++        ADRRef = $adrRef
++        DocGap = $docGap
++      })
++  }
++
++  $matrix.Add([pscustomobject]@{
++      Group = Clean-Cell $f.Group
++      Feature = Clean-Cell $f.Feature
++      Status = $f.Status
++      PlanCoverage = $planCoverage
++      Purpose = Clean-Cell $f.Purpose
++      Owner = Clean-Cell $f.Owner
++      Priority = $f.Priority
++      RelatedTask = Format-IdList $immediate 6
++      Requirements = Clean-Cell $reqRef
++      FlowRef = Clean-Cell $flowRef
++      PRDRef = Clean-Cell $prdRef
++      ADRRef = Clean-Cell $adrRef
++      Entity = Clean-Cell $layerCells['Entity']
++      Domain = Clean-Cell $layerCells['Domain']
++      Database = Clean-Cell $layerCells['Database']
++      Adapter = Clean-Cell $layerCells['Adapter']
++      Router = Clean-Cell $layerCells['Router']
++      Frontend = Clean-Cell $layerCells['Frontend']
++      KPIRef = Clean-Cell $kpiRef
++      ValidationRef = Clean-Cell $validationRef
++      EvidenceRef = Clean-Cell $evidenceRef
++      MissingTasks = Clean-Cell $missingTasks
++      Notes = Clean-Cell $f.Notes
++    })
++}
++
++$groupOrder = @{ Marketing = 1; Auth = 2; Billing = 3; Dashboard = 4; Lead = 5; Contact = 6; Account = 7; Deal = 8; Ticket = 9; Case = 10; Document = 11; Communication = 12; Calendar = 13; Notification = 14; AI = 15; Automation = 16; Analytics = 17; Settings = 18; Governance = 19; Developer = 20; Legal = 21; Platform = 22 }
++$sorted = $matrix | Sort-Object @{ Expression = { if ($groupOrder.ContainsKey($_.Group)) { $groupOrder[$_.Group] } else { 99 } } }, @{ Expression = { $_.Group } }, @{ Expression = { $_.Feature } }
++
++$totalEntries = $sorted.Count
++$totalGroups = ($sorted | Select-Object -ExpandProperty Group -Unique).Count
++$completeCount = ($sorted | Where-Object { $_.PlanCoverage -like 'complete*' }).Count
++$partialCount = ($sorted | Where-Object { $_.PlanCoverage -like 'partial*' }).Count
++$gapCount = ($sorted | Where-Object { $_.PlanCoverage -like 'gap*' }).Count
++$atRiskCount = ($sorted | Where-Object { $_.PlanCoverage -like 'at_risk*' }).Count
++$topAtRisk = $atRisk | Select-Object -First 25
++
++$sb = New-Object System.Text.StringBuilder
++[void]$sb.AppendLine('# Feature Matrix (Source of Truth)')
++[void]$sb.AppendLine('')
++[void]$sb.AppendLine('Last audited: 2026-02-08  ')
++[void]$sb.AppendLine('Owner: Product + Engineering')
++[void]$sb.AppendLine('')
++[void]$sb.AppendLine('## Purpose')
++[void]$sb.AppendLine('')
++[void]$sb.AppendLine('Single artifact to track feature implementation state and delivery completeness across IntelliFlow CRM.')
++[void]$sb.AppendLine('')
++[void]$sb.AppendLine('This matrix is the canonical view for:')
++[void]$sb.AppendLine('- Feature status (`planned`, `in_progress`, `done`)')
++[void]$sb.AppendLine('- Requirement traceability (`Related Task (CSV)`, `Flow Ref`, `PRD Ref`, `ADR Ref`)')
++[void]$sb.AppendLine('- End-to-end chain coverage (`Entity -> Domain -> Database -> Adapter -> Router -> Frontend`)')
++[void]$sb.AppendLine('- Validation sources (`KPI`, `Validation Method`, evidence artifacts)')
++[void]$sb.AppendLine('- Missing CSV tasks needed to fully plan or complete a feature')
++[void]$sb.AppendLine('')
++[void]$sb.AppendLine('## Status Rubric')
++[void]$sb.AppendLine('')
++[void]$sb.AppendLine('| Status | Definition |')
++[void]$sb.AppendLine('|---|---|')
++[void]$sb.AppendLine('| `done` | Implemented and wired to active data/API paths for the primary user flow |')
++[void]$sb.AppendLine('| `in_progress` | Partially implemented, mock/placeholder behavior, or known integration gaps |')
++[void]$sb.AppendLine('| `planned` | Backlog item with no production-ready flow yet |')
++[void]$sb.AppendLine('')
++[void]$sb.AppendLine('## Completeness Rubric')
++[void]$sb.AppendLine('')
++[void]$sb.AppendLine('| Plan Coverage | Definition |')
++[void]$sb.AppendLine('|---|---|')
++[void]$sb.AppendLine('| `complete` | All required layers for this feature type are covered by CSV tasks |')
++[void]$sb.AppendLine('| `partial` | 1-2 required layers are missing tasks |')
++[void]$sb.AppendLine('| `gap` | 3+ required layers are missing tasks |')
++[void]$sb.AppendLine('| `at_risk` | Feature is `done` or `in_progress` but still has missing required layers |')
++[void]$sb.AppendLine('')
++[void]$sb.AppendLine('Layer cell legend:')
++[void]$sb.AppendLine('- `n/a` = layer is not required for this feature type')
++[void]$sb.AppendLine('- `missing` = required layer has no linked CSV task')
++[void]$sb.AppendLine('- `done/in_progress/planned/partial (...)` = layer has linked task coverage')
++[void]$sb.AppendLine('')
++[void]$sb.AppendLine('## Coverage Snapshot')
++[void]$sb.AppendLine('')
++[void]$sb.AppendLine('- Route-backed product surfaces: 68 pages (`docs/design/sitemap.md`)')
++[void]$sb.AppendLine('- CSV-linked PG tasks covered: 153')
++[void]$sb.AppendLine("- CSV-linked IFC capabilities covered: $($ifcRows.Count)")
++[void]$sb.AppendLine("- Total feature entries: $totalEntries")
++[void]$sb.AppendLine("- Groups covered: $totalGroups")
++[void]$sb.AppendLine("- Plan coverage: complete=$completeCount, partial=$partialCount, gap=$gapCount, at_risk=$atRiskCount")
++[void]$sb.AppendLine('- Missing required layers (count of features):')
++foreach ($ln in @('Entity', 'Domain', 'Database', 'Adapter', 'Router', 'Frontend')) { [void]$sb.AppendLine("  - ${ln}: $($missingByLayer[$ln])") }
++[void]$sb.AppendLine('')
++
++if ($topAtRisk.Count -gt 0) {
++  [void]$sb.AppendLine('## Immediate Gap Register (At-Risk Features)')
++  [void]$sb.AppendLine('')
++  [void]$sb.AppendLine('| Group | Feature | Status | Missing Layers | Primary Task | Flow Ref | PRD Ref | ADR Ref | Doc Gap |')
++  [void]$sb.AppendLine('|---|---|---|---|---|---|---|---|---|')
++  foreach ($r in $topAtRisk) {
++    [void]$sb.AppendLine("| $(Clean-Cell $r.Group) | $(Clean-Cell $r.Feature) | $($r.Status) | $(Clean-Cell $r.Missing) | $($r.PrimaryTask) | $(Clean-Cell $r.FlowRef) | $(Clean-Cell $r.PRDRef) | $(Clean-Cell $r.ADRRef) | $(Clean-Cell $r.DocGap) |")
++  }
++  [void]$sb.AppendLine('')
++}
++
++[void]$sb.AppendLine('## Feature Matrix')
++[void]$sb.AppendLine('')
++[void]$sb.AppendLine('| Group | Feature | Status | Plan Coverage | Purpose | Owner | Priority | Related Task (CSV) | Requirements | Flow Ref | PRD Ref | ADR Ref | Entity | Domain | Database | Adapter | Router | Frontend | KPI Ref | Validation Ref | Evidence Ref | Missing CSV Task(s) | Notes |')
++[void]$sb.AppendLine('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|')
++foreach ($m in $sorted) {
++  [void]$sb.AppendLine("| $($m.Group) | $($m.Feature) | $($m.Status) | $($m.PlanCoverage) | $($m.Purpose) | $($m.Owner) | $($m.Priority) | $($m.RelatedTask) | $($m.Requirements) | $($m.FlowRef) | $($m.PRDRef) | $($m.ADRRef) | $($m.Entity) | $($m.Domain) | $($m.Database) | $($m.Adapter) | $($m.Router) | $($m.Frontend) | $($m.KPIRef) | $($m.ValidationRef) | $($m.EvidenceRef) | $($m.MissingTasks) | $($m.Notes) |")
++}
++[void]$sb.AppendLine('')
++[void]$sb.AppendLine('## Maintenance Rules')
++[void]$sb.AppendLine('')
++[void]$sb.AppendLine('1. Update this matrix in the same PR whenever a feature status changes.')
++[void]$sb.AppendLine('2. Update `Related Task (CSV)` whenever task IDs or dependencies change in `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`.')
++[void]$sb.AppendLine('3. Keep `Flow Ref`, `PRD Ref`, and `ADR Ref` updated as source docs are created or updated.')
++[void]$sb.AppendLine('4. For any `Missing CSV Task(s)` entry, add task(s) to `Sprint_plan.csv` and replace the gap in the same PR.')
++[void]$sb.AppendLine('5. Keep status values limited to `planned`, `in_progress`, `done`.')
++
++Set-Content -Path $outPath -Value $sb.ToString() -Encoding UTF8
++Write-Output "Wrote $outPath with $totalEntries entries. complete=$completeCount partial=$partialCount gap=$gapCount at_risk=$atRiskCount"
+*** End Patch
+

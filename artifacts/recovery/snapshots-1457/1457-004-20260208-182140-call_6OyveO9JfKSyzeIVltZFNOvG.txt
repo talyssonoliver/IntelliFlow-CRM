@@ -1,0 +1,15 @@
+TIMESTAMP: 02/08/2026 18:21:40
+CALL_ID: call_6OyveO9JfKSyzeIVltZFNOvG
+COMMAND: {"cmd":"rg -n \"^## Immediate Gap Register \\(At-Risk Features\\)|^## Feature Matrix|^## Maintenance Rules|^# Feature Matrix\" docs/company/product/feature-matrix.md"}
+OUTPUT_LEN: 239
+---OUTPUT---
+Chunk ID: a4c1fc
+Wall time: 0.1858 seconds
+Process exited with code 0
+Original token count: 34
+Output:
+1:# Feature Matrix (Source of Truth)
+56:## Immediate Gap Register (At-Risk Features)
+241:## Feature Matrix
+739:## Maintenance Rules
+

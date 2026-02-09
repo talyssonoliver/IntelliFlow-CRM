@@ -1,0 +1,482 @@
+================================================================================
+STASH FORENSIC ANALYSIS REPORT
+================================================================================
+
+Baseline Commit:   d364545 (feat(web): add CRM entity components and tests)
+Stash Reference:   stash@{0} "pre-promote-c46-20260208-220352"
+Current HEAD:      76b9826 (docs: add product feature matrix documentation)
+GOV-001 Commits:   bb61188, a9bc4ff, 76b9826
+
+================================================================================
+EXECUTIVE SUMMARY
+================================================================================
+
+Total Untracked Files in Stash:              170 files
+Total Tracked Changes in Stash:              188 files
+Total Tracked Changes in HEAD (GOV-001):     166 files
+
+Category A (Safe to Restore):                170 files
+Category B (Potentially Lost):                26 files  
+Category C (Conflict Zone):                  162 files
+
+================================================================================
+CATEGORY A: SAFE TO RESTORE (170 files)
+================================================================================
+
+These are UNTRACKED files from the stash that do NOT exist in current HEAD.
+They can be restored without any conflicts.
+
+These appear to be:
+- Test files (b11.test.ts, supplementary.test.ts)
+- Temporary knip export files
+- Artifacts and recovery snapshots
+- Build/analysis reports
+
+RECOMMENDATION: Restore selectively based on value. Most appear to be:
+  - Generated test files (low value, can regenerate)
+  - Temporary analysis files (low value)
+  - Recovery artifacts (HIGH VALUE - contains feature-matrix patches)
+
+"apps/api/C\357\200\272UserstalysprojectsintelliFlow-CRM_trace_output.txt"
+"C\357\200\272UserstalysAppDataLocalTempclaudeC--Users-talys-projects-intelliFlow-CRM0dfca401-0806-4243-b346-bcb70fff47d3scratchpadknip-exports.json"
+"C\357\200\272UserstalysAppDataLocalTempclaudeknip-exports.json"
+.tmp-knip-root.json
+_b64_3.txt
+_test_gen.ps1
+apps/ai-worker/src/__tests__/ai-worker.supplementary2.test.ts
+apps/ai-worker/src/agents/__tests__/next-best-action.agent.b11.test.ts
+apps/ai-worker/src/analytics/__tests__/statistical-analysis.b11.test.ts
+apps/ai-worker/src/analytics/__tests__/statistical-analysis.supplementary.test.ts
+apps/ai-worker/src/chains/__tests__/churn-risk.chain.b11.test.ts
+apps/ai-worker/src/config/__tests__/relevance-config.b11.test.ts
+apps/ai-worker/src/services/__tests__/retrieval-service.b11.test.ts
+apps/ai-worker/src/test/mocks/__tests__/ollama.mock.b11.test.ts
+apps/ai-worker/src/utils/__tests__/token-counter.b11.test.ts
+apps/api/src/agent/__tests__/logger.b11.test.ts
+apps/api/src/modules/email/__tests__/inbound.router.b11.test.ts
+apps/api/src/modules/notifications/__tests__/notifications.router.b11.test.ts
+apps/api/src/modules/notifications/__tests__/notifications.router.batch10.test.ts
+apps/web/hooks/__tests__/use-subscription.supplementary.test.ts
+apps/web/lib/tickets/__tests__/sla-notifications.b11.test.ts
+apps/web/src/__tests__/proxy.test.ts
+apps/web/src/__tests__/root-proxy.test.ts
+apps/web/src/__tests__/use-subscription.additional.test.ts
+apps/web/src/app/__tests__/providers.supplementary.test.tsx
+apps/web/src/app/__tests__/providers.supplementary2.test.ts
+apps/web/src/app/__tests__/providers.test.ts
+apps/web/src/app/api/adr/__tests__/route.b11.test.ts
+apps/web/src/app/api/adr/create/__tests__/route.b11.test.ts
+apps/web/src/app/api/adr/index/__tests__/route.b11.test.ts
+apps/web/src/app/api/adr/status/__tests__/route.b11.test.ts
+apps/web/src/app/api/quality-reports/test-run/[runId]/__tests__/route.b11.test.ts
+apps/web/src/components/blog/__tests__/comments-widget.b11.test.ts
+apps/web/src/components/header/__tests__/notifications.supplementary.test.tsx
+apps/web/src/components/header/__tests__/notifications.supplementary2.test.ts
+apps/web/src/components/header/__tests__/user-menu.supplementary.test.tsx
+apps/web/src/components/header/__tests__/user-menu.supplementary2.test.ts
+apps/web/src/components/home/__tests__/PinnedItemsSheet.supplementary.test.tsx
+apps/web/src/components/home/__tests__/PinnedItemsSheet.supplementary2.test.ts
+apps/web/src/components/shared/__tests__/landing-builder.supplementary.test.tsx
+apps/web/src/components/shared/__tests__/landing-builder.supplementary2.test.ts
+apps/web/src/components/shared/__tests__/mfa-verification.supplementary.test.tsx
+apps/web/src/components/shared/__tests__/mfa-verification.supplementary2.test.ts
+apps/web/src/components/shared/__tests__/registration-form.b11.test.ts
+apps/web/src/components/shared/__tests__/reset-email.supplementary2.test.ts
+apps/web/src/components/shared/__tests__/search-filter-bar.supplementary.test.tsx
+apps/web/src/components/shared/__tests__/search-filter-bar.supplementary2.test.ts
+apps/web/src/components/sidebar/__tests__/AppSidebar.supplementary.test.tsx
+apps/web/src/components/sidebar/__tests__/AppSidebar.supplementary2.test.ts
+apps/web/src/components/sidebar/__tests__/SidebarPortalContext.supplementary2.test.ts
+apps/web/src/hooks/__tests__/use-subscription.supplementary2.test.ts
+apps/web/src/lib/__tests__/broadcast.supplementary2.test.ts
+apps/web/src/lib/__tests__/use-sla-notifications.test.ts
+apps/web/src/lib/adr/__tests__/adr-service.b11.test.ts
+apps/web/src/lib/ai-review/__tests__/hooks.test.ts
+apps/web/src/lib/ai-review/hooks.ts
+apps/web/src/lib/pricing/__tests__/stripe-integration.b11.test.ts
+apps/web/src/lib/shared/__tests__/date-utils.test.ts
+apps/web/src/lib/shared/__tests__/logout-redirect.supplementary.test.ts
+apps/web/src/lib/shared/__tests__/logout-redirect.supplementary2.test.ts
+apps/web/src/lib/shared/__tests__/password-breach-check.test.ts
+apps/web/src/lib/shared/__tests__/token-exchange.b11.test.ts
+apps/web/src/lib/shared/date-utils.ts
+artifacts/metrics/platform-health-history.jsonl
+artifacts/playwright-output/build-tab.png
+artifacts/playwright-output/tracking-view.png
+artifacts/recovery/feature-matrix-before-restore-20260208-215341.md
+artifacts/recovery/feature-matrix-patch-001.txt
+artifacts/recovery/feature-matrix-patch-002.txt
+artifacts/recovery/feature-matrix-patch-003.txt
+artifacts/recovery/feature-matrix-patch-004.txt
+artifacts/recovery/feature-matrix-patch-005.txt
+artifacts/recovery/feature-matrix-patch-006.txt
+artifacts/recovery/feature-matrix-recovered-from-patch013.md
+artifacts/recovery/rebuild-from-patch013.ps1
+artifacts/recovery/script-patches/patch-001-20260208-122556-call_8SzXVjN6XUwL5KewmNJljY0i.txt
+artifacts/recovery/script-patches/patch-002-20260208-122603-call_vWiil34Z56tHrXvsAVTqfPjK.txt
+artifacts/recovery/script-patches/patch-003-20260208-122606-call_8gtmRXjq0pntUlgzXhm8FLqF.txt
+artifacts/recovery/script-patches/patch-004-20260208-124611-call_B0EMmIBKC3c7DZiNneUwty0A.txt
+artifacts/recovery/script-patches/patch-005-20260208-124643-call_qrMttEdqi1epNBRTmVHK4VI2.txt
+artifacts/recovery/script-patches/patch-006-20260208-133154-call_jKrXghCGcQ9dVPxHQlD5ynll.txt
+artifacts/recovery/script-patches/patch-007-20260208-134200-call_Kl8IV7sIpGw0klcCtSshIzBm.txt
+artifacts/recovery/script-patches/patch-008-20260208-144348-call_HSGgcZUJsRdUv369IZ4JBbC3.txt
+artifacts/recovery/script-patches/patch-009-20260208-144407-call_D9xRJNQPWnAYvMoYrr4zmpq0.txt
+artifacts/recovery/script-patches/patch-010-20260208-144534-call_fEATN9zzbEGNDpfvN2HPNVtN.txt
+artifacts/recovery/script-patches/patch-011-20260208-144653-call_GPG0qcfq11ZdNW1RFW4OVVMf.txt
+artifacts/recovery/script-patches/patch-012-20260208-150607-call_KbrUvpM8TMO44XW15YX0jFeO.txt
+artifacts/recovery/script-patches/patch-013-20260208-150916-call_w8yz4IFzExsqwNICIpmlvvBH.txt
+artifacts/recovery/script-patches/patch-014-20260208-152444-call_slxdZcmr13edsf1mEFAdQpkr.txt
+artifacts/recovery/script-patches/patch-015-20260208-162801-call_NaAadpUp9UEyUduRMIKnvurH.txt
+artifacts/recovery/script-patches/patch-016-20260208-162917-call_E8kGgRrdci6OYF5GgXCxM4sV.txt
+artifacts/recovery/script-patches/patch-017-20260208-162930-call_d14fU8Ym5ijg1rNcGv06Jxan.txt
+artifacts/recovery/script-patches/patch-018-20260208-163151-call_si3OEtHrlJS0MaFv1ba3q3cW.txt
+artifacts/recovery/script-patches/patch-019-20260208-163200-call_DAayuq8MDOJwYpDW0cBrzXf3.txt
+artifacts/recovery/script-patches/patch-020-20260208-195254-call_8fD5FOCfoXgKXw0zLtDkgvBD.txt
+artifacts/recovery/snapshot-a418/feature-matrix-recovered-a418.md
+artifacts/recovery/snapshot-a418/rebuild-feature-matrix-a418.ps1
+artifacts/recovery/snapshot-a418/Sprint_plan.csv
+artifacts/recovery/snapshot-c46fc8b/feature-matrix-recovered-c46.md
+artifacts/recovery/snapshot-c46fc8b/rebuild-feature-matrix-c46.ps1
+artifacts/recovery/snapshot-c46fc8b/Sprint_plan.csv
+artifacts/recovery/snapshots/001-20260208-122611-call_w90f4h2QwTjHE0nmYNi6HIaO.txt
+artifacts/recovery/snapshots/002-20260208-122637-call_zNSZOTwF4ItTRH547h6DAbdZ.txt
+artifacts/recovery/snapshots/003-20260208-124615-call_K1lJSFDS7of0ImiU5VjZJHvo.txt
+artifacts/recovery/snapshots/004-20260208-124701-call_Ijonp06FY7ITk6ARwZ8WW6sw.txt
+artifacts/recovery/snapshots/005-20260208-133105-call_Odc8eiwN2iQXqu4MPPkP7uDf.txt
+artifacts/recovery/snapshots/006-20260208-133304-call_xVuLpwxBuKE4rm3pEnqlLA3z.txt
+artifacts/recovery/snapshots/007-20260208-133952-call_oifO1pLbvT4Y6y9R7HLXETRE.txt
+artifacts/recovery/snapshots/008-20260208-134146-call_X9xq9hGB5aPaFbLyZcBNFrzV.txt
+artifacts/recovery/snapshots/009-20260208-143044-call_3Nn5phoYW2gQs59KCRrvOgSD.txt
+artifacts/recovery/snapshots/010-20260208-143842-call_k9HCupoMk5Xze2WjL7fGXerP.txt
+artifacts/recovery/snapshots/011-20260208-144129-call_CxROwKzsn0aJyLZTOuqCfenF.txt
+artifacts/recovery/snapshots/012-20260208-144514-call_Zmh9QXNxdQeI81n86NZ8eql2.txt
+artifacts/recovery/snapshots/013-20260208-144545-call_MzOE5Qw6K5h61TKbJLJftVmt.txt
+artifacts/recovery/snapshots/014-20260208-150618-call_qJopfkY6rlrVhfr8UwEh7vlk.txt
+artifacts/recovery/snapshots/015-20260208-151245-call_NKgcXQeF92acGBTMwoOQF70C.txt
+artifacts/recovery/snapshots/016-20260208-152051-call_JMz3ByDrWHjadyenPEo9iBjq.txt
+artifacts/recovery/snapshots/017-20260208-152419-call_IbAIC06dFEM8tVe7RRKZ0QDJ.txt
+artifacts/recovery/snapshots/018-20260208-214155-call_aDSYdbRuIhPLGsIWTS5ipUYi.txt
+artifacts/recovery/snapshots-1457/1457-001-20260208-151321-call_9khAM8VQJlsAH8uII5Aq9MJ6.txt
+artifacts/recovery/snapshots-1457/1457-002-20260208-154219-call_Ect2eLxmrgnTc2ZJhcUjg42f.txt
+artifacts/recovery/snapshots-1457/1457-003-20260208-154246-call_Pdb88dAZWtvPjiUAUjFucSXM.txt
+artifacts/recovery/snapshots-1457/1457-004-20260208-182140-call_6OyveO9JfKSyzeIVltZFNOvG.txt
+artifacts/recovery/snapshots-1457/1457-005-20260208-182510-call_x4h9p1CTUQBU5RjiTp2W5T7w.txt
+artifacts/recovery/snapshots-1457/1457-006-20260208-214415-call_3lALUamOnXHoDhTGTohANMlx.txt
+artifacts/reports/build-state.json
+artifacts/reports/code-analysis/depcheck-report-latest.json
+artifacts/reports/code-analysis/knip-dependency-triage-2026-02-07.csv
+artifacts/reports/code-analysis/knip-export-triage-2026-02-08.csv
+artifacts/reports/code-analysis/knip-file-triage-2026-02-07.csv
+artifacts/reports/code-analysis/knip-report-batch-c.json
+artifacts/reports/code-analysis/knip-report-excl.json
+artifacts/reports/code-analysis/knip-report-latest.json
+artifacts/reports/code-analysis/knip-report-live.json
+artifacts/reports/code-analysis/knip-report-live-after-tsup-ignore.json
+artifacts/reports/code-analysis/knip-report-temp-rootcfg.json
+artifacts/reports/code-analysis/knip-triage-batch-c.md
+artifacts/reports/code-analysis/knip-triage-summary-2026-02-07.md
+artifacts/reports/code-analysis/knip-unused-exports-latest.json
+artifacts/reports/code-analysis/knip-unused-exports-list.json
+artifacts/reports/code-analysis/knip-unused-files-current.txt
+artifacts/reports/security/scan-state.json
+docs/design/mockups/account-list.html
+docs/design/mockups/account-list.png
+docs/planning/adr/ADR-026-account-hierarchy.md
+docs/planning/prd-account-management.md
+packages/adapters/src/audit/__tests__/errors.b11.test.ts
+packages/adapters/src/external/__tests__/GuardrailsAIService.additional.test.ts
+packages/adapters/src/ics/__tests__/IcsGenerationService.b11.test.ts
+packages/adapters/src/messaging/twilio/__tests__/client.test.ts
+packages/adapters/src/payments/stripe/__tests__/adapter.b11.test.ts
+packages/adapters/src/repositories/__tests__/PrismaAutoResponseDraftRepository.supplementary.test.ts
+packages/application/src/services/__tests__/AccountService.hierarchy.test.ts
+packages/application/src/services/__tests__/AppointmentIcsEventHandler.b11.test.ts
+packages/application/src/services/__tests__/LeadService.b11.test.ts
+packages/db/prisma/migrations/20260208000000_add_account_hierarchy/migration.sql
+packages/domain/src/ai/conversation-record.ts
+packages/domain/src/ai/review/__tests__/AIOutputReview.additional.test.ts
+packages/domain/src/crm/opportunity/__tests__/Opportunity.b11.test.ts
+packages/domain/src/crm/ticket/__tests__/Ticket.b11.test.ts
+packages/domain/src/legal/appointments/__tests__/AppointmentEvents.b11.test.ts
+packages/domain/src/legal/appointments/__tests__/ConflictDetector.b11.test.ts
+packages/domain/src/legal/appointments/__tests__/Recurrence.b11.test.ts
+packages/platform/src/queues/metrics-collector.additional.test.ts
+packages/platform/src/resilience/resilient-call.ts
+packages/platform/src/resilience/retry-policy.ts
+packages/ui/__tests__/status-badge-review.test.tsx
+TASK_COMPLETION_ERROR_WIRING.md
+tools/scripts/cleanup-task-data.ts
+tools/scripts/validate-artifacts.ts
+
+================================================================================
+CATEGORY B: STASH-ONLY TRACKED CHANGES (26 files)
+================================================================================
+
+These files were MODIFIED in the stash but NOT touched by GOV-001 commits.
+These changes are potentially LOST if stash is not applied.
+
+CRITICAL FILES TO REVIEW:
+apps/ai-worker/src/chains/scoring.chain.ts
+apps/api/src/__tests__/trpc.test.ts
+apps/api/src/middleware/auth.ts
+apps/api/src/modules/ai-review/ai-review.router.ts
+apps/api/src/modules/billing/billing.router.ts
+apps/api/src/modules/contact/contact.router.ts
+apps/api/src/modules/notifications/notifications.router.ts
+apps/api/src/modules/task/task.router.ts
+apps/api/src/security/audit/handlers/security-handler.ts
+apps/api/src/tracing/index.ts
+apps/api/src/tracing/middleware.test.ts
+apps/api/src/tracing/otel.test.ts
+apps/api/src/tracing/sentry.test.ts
+apps/api/src/tracing/tracing.test.ts
+apps/project-tracker/docs/metrics/plan-overrides.yaml
+apps/web/lib/tickets/sla-badge.tsx
+apps/web/src/app/governance/layout.tsx
+apps/web/src/app/leads/(list)/new/page.tsx
+apps/web/src/app/tickets/(list)/layout.tsx
+apps/web/src/components/shared/email-verification.tsx
+docs/debt-ledger.yaml
+packages/application/src/usecases/scheduling/RescheduleAppointment.ts
+packages/application/src/usecases/scheduling/ScheduleAppointment.ts
+packages/db/src/index.ts
+packages/validators/src/ai.ts
+packages/validators/src/notifications.ts
+
+ANALYSIS OF CATEGORY B:
+- apps/api tracing files (middleware.test.ts, otel.test.ts, etc.) - Test changes lost
+- apps/api routers (ai-review, billing, contact, notifications, task) - Router changes lost  
+- apps/web governance/tickets layouts - UI layout changes lost
+- packages/validators (ai.ts, notifications.ts) - Validation schema changes lost
+- docs/debt-ledger.yaml - Tech debt tracking changes lost
+
+RECOMMENDATION: HIGH PRIORITY to review these changes. Use:
+  git diff d364545 stash@{0} -- <file>
+to see what was changed.
+
+================================================================================
+CATEGORY C: CONFLICT ZONE (162 files)
+================================================================================
+
+These files were modified in BOTH the stash AND the GOV-001 commits.
+Requires careful 3-way merge to preserve both sets of changes.
+
+MAJOR CONFLICT AREAS:
+apps/ai-worker/src/services/document-indexer.ts
+apps/ai-worker/src/services/retrieval-service.ts
+apps/api/src/index.ts
+apps/api/src/modules/lead/lead.router.ts
+apps/api/src/modules/misc/__tests__/health.router.test.ts
+apps/api/src/modules/misc/health.router.ts
+apps/api/src/router.ts
+apps/api/src/test/setup.ts
+apps/api/src/tracing/middleware.ts
+apps/api/src/trpc.ts
+apps/api/src/webhooks/retry.ts
+apps/project-tracker/app/page.tsx
+apps/project-tracker/components/TrackingView.tsx
+apps/project-tracker/docs/metrics/_global/dependency-graph.json
+apps/project-tracker/docs/metrics/_global/Sprint_plan.csv
+apps/project-tracker/docs/metrics/_global/task-registry.json
+apps/project-tracker/docs/metrics/sprint-0/_summary.json
+apps/project-tracker/docs/metrics/sprint-0/phase-0-initialisation/_phase-summary.json
+apps/project-tracker/docs/metrics/sprint-0/phase-0-initialisation/EXC-INIT-001.json
+apps/project-tracker/docs/metrics/sprint-0/phase-0-initialisation/IFC-000.json
+apps/project-tracker/docs/metrics/sprint-0/phase-1-ai-foundation/_phase-summary.json
+apps/project-tracker/docs/metrics/sprint-0/phase-1-ai-foundation/AI-SETUP-001.json
+apps/project-tracker/docs/metrics/sprint-0/phase-2-parallel/_phase-summary.json
+apps/project-tracker/docs/metrics/sprint-0/phase-2-parallel/parallel-a/AI-SETUP-002.json
+apps/project-tracker/docs/metrics/sprint-0/phase-2-parallel/parallel-a/AI-SETUP-003.json
+apps/project-tracker/docs/metrics/sprint-0/phase-2-parallel/parallel-b/ENV-001-AI.json
+apps/project-tracker/docs/metrics/sprint-0/phase-2-parallel/parallel-b/ENV-002-AI.json
+apps/project-tracker/docs/metrics/sprint-0/phase-2-parallel/parallel-b/ENV-003-AI.json
+apps/project-tracker/docs/metrics/sprint-0/phase-2-parallel/parallel-b/ENV-005-AI.json
+apps/project-tracker/docs/metrics/sprint-0/phase-2-parallel/parallel-b/ENV-009-AI.json
+apps/project-tracker/docs/metrics/sprint-0/phase-2-parallel/parallel-b/ENV-012-AI.json
+apps/project-tracker/docs/metrics/sprint-0/phase-2-parallel/parallel-b/ENV-014-AI.json
+apps/project-tracker/docs/metrics/sprint-0/phase-2-parallel/parallel-c/EXC-SEC-001.json
+apps/project-tracker/docs/metrics/sprint-0/phase-2-parallel/parallel-c/IFC-160.json
+apps/project-tracker/docs/metrics/sprint-0/phase-3-dependencies/_phase-summary.json
+apps/project-tracker/docs/metrics/sprint-0/phase-3-dependencies/ENV-004-AI.json
+apps/project-tracker/docs/metrics/sprint-0/phase-3-dependencies/ENV-006-AI.json
+apps/project-tracker/docs/metrics/sprint-0/phase-3-dependencies/ENV-007-AI.json
+apps/project-tracker/docs/metrics/sprint-0/phase-3-dependencies/ENV-008-AI.json
+apps/project-tracker/docs/metrics/sprint-0/phase-3-dependencies/ENV-010-AI.json
+apps/project-tracker/docs/metrics/sprint-0/phase-3-dependencies/ENV-011-AI.json
+apps/project-tracker/docs/metrics/sprint-0/phase-3-dependencies/ENV-013-AI.json
+apps/project-tracker/docs/metrics/sprint-0/phase-3-dependencies/ENV-015-AI.json
+apps/project-tracker/docs/metrics/sprint-0/phase-3-dependencies/ENV-016-AI.json
+apps/project-tracker/docs/metrics/sprint-0/phase-3-dependencies/EP-001-AI.json
+apps/project-tracker/docs/metrics/sprint-0/phase-5-completion/_phase-summary.json
+apps/project-tracker/docs/metrics/sprint-0/phase-5-completion/ANALYTICS-001.json
+apps/project-tracker/docs/metrics/sprint-0/phase-5-completion/AUTOMATION-001.json
+apps/project-tracker/docs/metrics/sprint-0/phase-5-completion/AUTOMATION-002.json
+apps/project-tracker/docs/metrics/sprint-0/phase-5-completion/BRAND-001.json
+apps/project-tracker/docs/metrics/sprint-0/phase-5-completion/DOC-001.json
+apps/project-tracker/docs/metrics/sprint-0/phase-5-completion/ENG-OPS-001.json
+apps/project-tracker/docs/metrics/sprint-0/phase-5-completion/GTM-001.json
+apps/project-tracker/docs/metrics/sprint-0/phase-5-completion/GTM-002.json
+apps/project-tracker/docs/metrics/sprint-0/phase-5-completion/IFC-044.json
+apps/project-tracker/docs/metrics/sprint-0/phase-5-completion/PM-OPS-001.json
+apps/project-tracker/docs/metrics/sprint-1/_summary.json
+apps/project-tracker/docs/metrics/sprint-1/phase-1-validation/BRAND-002.json
+apps/project-tracker/docs/metrics/sprint-1/phase-1-validation/ENV-017-AI.json
+apps/project-tracker/docs/metrics/sprint-1/phase-1-validation/ENV-018-AI.json
+apps/project-tracker/docs/metrics/sprint-1/phase-1-validation/GOV-001.json
+apps/project-tracker/docs/metrics/sprint-1/phase-1-validation/IFC-001.json
+apps/project-tracker/docs/metrics/sprint-1/phase-1-validation/IFC-002.json
+apps/project-tracker/docs/metrics/sprint-1/phase-1-validation/IFC-003.json
+apps/project-tracker/docs/metrics/sprint-1/phase-1-validation/IFC-074.json
+apps/project-tracker/docs/metrics/sprint-1/phase-1-validation/IFC-075.json
+apps/project-tracker/docs/metrics/sprint-1/phase-1-validation/IFC-106.json
+apps/project-tracker/docs/metrics/sprint-1/phase-1-validation/IFC-119.json
+apps/project-tracker/docs/metrics/sprint-1/phase-1-validation/IFC-135.json
+apps/project-tracker/docs/metrics/sprint-1/phase-1-validation/SALES-001.json
+apps/project-tracker/docs/metrics/sprint-10/_summary.json
+apps/project-tracker/docs/metrics/sprint-11/_summary.json
+apps/project-tracker/docs/metrics/sprint-11/phase-1-ai-security/IFC-125.json
+apps/project-tracker/docs/metrics/sprint-12/_summary.json
+apps/project-tracker/docs/metrics/sprint-12/EXP-PLATFORM-001.json
+apps/project-tracker/docs/metrics/sprint-12/EXP-SCRIPTS-001.json
+apps/project-tracker/docs/metrics/sprint-12/IFC-020.json
+apps/project-tracker/docs/metrics/sprint-12/IFC-042.json
+apps/project-tracker/docs/metrics/sprint-12/IFC-081.json
+apps/project-tracker/docs/metrics/sprint-12/IFC-126.json
+apps/project-tracker/docs/metrics/sprint-12/IFC-148.json
+apps/project-tracker/docs/metrics/sprint-12/IFC-153.json
+apps/project-tracker/docs/metrics/sprint-12/IFC-154.json
+apps/project-tracker/docs/metrics/sprint-12/IFC-155.json
+apps/project-tracker/docs/metrics/sprint-12/PG-009.json
+apps/project-tracker/docs/metrics/sprint-12/PG-010.json
+apps/project-tracker/docs/metrics/sprint-12/PG-011.json
+apps/project-tracker/docs/metrics/sprint-12/PG-012.json
+apps/project-tracker/docs/metrics/sprint-12/PG-013.json
+apps/project-tracker/docs/metrics/sprint-12/PG-014.json
+apps/project-tracker/docs/metrics/sprint-13/_summary.json
+apps/project-tracker/docs/metrics/sprint-13/IFC-182.json
+apps/project-tracker/docs/metrics/sprint-13/PG-015.json
+apps/project-tracker/docs/metrics/sprint-14/_summary.json
+apps/project-tracker/docs/metrics/sprint-14/PG-128.json
+apps/project-tracker/docs/metrics/sprint-15/_summary.json
+apps/project-tracker/docs/metrics/sprint-15/phase-1/IFC-027.json
+apps/project-tracker/docs/metrics/sprint-16/_summary.json
+apps/project-tracker/docs/metrics/sprint-16/phase-1/IFC-029.json
+apps/project-tracker/docs/metrics/sprint-17/_summary.json
+apps/project-tracker/docs/metrics/sprint-18/_summary.json
+apps/project-tracker/docs/metrics/sprint-19/_summary.json
+apps/project-tracker/docs/metrics/sprint-2/_summary.json
+apps/project-tracker/docs/metrics/sprint-2/IFC-004.json
+apps/project-tracker/docs/metrics/sprint-2/IFC-005.json
+apps/project-tracker/docs/metrics/sprint-2/IFC-008.json
+apps/project-tracker/docs/metrics/sprint-2/IFC-072.json
+apps/project-tracker/docs/metrics/sprint-2/IFC-073.json
+apps/project-tracker/docs/metrics/sprint-2/IFC-085.json
+apps/project-tracker/docs/metrics/sprint-2/IFC-101.json
+apps/project-tracker/docs/metrics/sprint-2/IFC-102.json
+apps/project-tracker/docs/metrics/sprint-2/IFC-103.json
+apps/project-tracker/docs/metrics/sprint-2/IFC-109.json
+apps/project-tracker/docs/metrics/sprint-2/IFC-146.json
+apps/project-tracker/docs/metrics/sprint-2/SALES-002.json
+apps/project-tracker/docs/metrics/sprint-20/_summary.json
+apps/project-tracker/docs/metrics/sprint-21/_summary.json
+apps/project-tracker/docs/metrics/sprint-22/_summary.json
+apps/project-tracker/docs/metrics/sprint-23/_summary.json
+apps/project-tracker/docs/metrics/sprint-24/_summary.json
+apps/project-tracker/docs/metrics/sprint-25/_summary.json
+apps/project-tracker/docs/metrics/sprint-26/_summary.json
+apps/project-tracker/docs/metrics/sprint-27/_summary.json
+apps/project-tracker/docs/metrics/sprint-28/_summary.json
+apps/project-tracker/docs/metrics/sprint-3/_summary.json
+apps/project-tracker/docs/metrics/sprint-3/IFC-006.json
+apps/project-tracker/docs/metrics/sprint-3/IFC-128.json
+apps/project-tracker/docs/metrics/sprint-4/_summary.json
+apps/project-tracker/docs/metrics/sprint-4/IFC-009.json
+apps/project-tracker/docs/metrics/sprint-4/IFC-177.json
+apps/project-tracker/docs/metrics/sprint-4/IFC-178.json
+apps/project-tracker/docs/metrics/sprint-4/IFC-184.json
+apps/project-tracker/docs/metrics/sprint-4/IFC-185.json
+apps/project-tracker/docs/metrics/sprint-4/IFC-188.json
+apps/project-tracker/docs/metrics/sprint-5/_summary.json
+apps/project-tracker/docs/metrics/sprint-5/phase-1/IFC-179.json
+apps/project-tracker/docs/metrics/sprint-5/phase-1/IFC-180.json
+apps/project-tracker/docs/metrics/sprint-5/phase-1/IFC-186.json
+apps/project-tracker/docs/metrics/sprint-5/phase-1/IFC-187.json
+apps/project-tracker/docs/metrics/sprint-5/phase-1/PG-133.json
+apps/project-tracker/docs/metrics/sprint-5/phase-1/PG-134.json
+apps/project-tracker/docs/metrics/sprint-6/_summary.json
+apps/project-tracker/docs/metrics/sprint-6/phase-1/IFC-181.json
+apps/project-tracker/docs/metrics/sprint-7/_summary.json
+apps/project-tracker/docs/metrics/sprint-8/_summary.json
+apps/project-tracker/docs/metrics/sprint-8/IFC-077.json
+apps/project-tracker/docs/metrics/sprint-8/IFC-150.json
+apps/project-tracker/docs/metrics/sprint-9/_summary.json
+apps/web/src/app/(public)/pricing/page.tsx
+apps/web/src/app/agent-approvals/layout.tsx
+apps/web/src/app/providers.tsx
+apps/web/src/app/tickets/(list)/page.tsx
+apps/web/src/app/tickets/[id]/page.tsx
+apps/workers/events-worker/src/main.ts
+artifacts/reports/code-analysis/latest.json
+knip.json
+packages/adapters/src/events/OutboxEventBusAdapter.ts
+packages/adapters/src/repositories/PrismaAppointmentRepository.ts
+packages/db/src/pgvector.ts
+packages/platform/src/queues/queue-factory.ts
+packages/ui/src/components/index.ts
+packages/validators/src/platform-metrics.ts
+
+ANALYSIS OF CATEGORY C:
+- Sprint plan metrics (130+ JSON files) - GOV-001 batch-updated all sprint files
+- apps/project-tracker components - Dashboard UI changes on both sides
+- apps/api modules - Both stash and GOV-001 touched core routers
+- knip.json - Dependency analysis config changed on both sides
+- packages/* - Core package changes on both sides
+
+RECOMMENDATION: EXTREME CAUTION required. The GOV-001 commits made sweeping
+changes to all sprint metric files. Any stash application will conflict heavily.
+
+Suggested approach:
+1. Create a new branch from current HEAD
+2. Apply stash to see ALL conflicts
+3. Manually resolve conflicts file-by-file
+4. For sprint metrics: Keep HEAD version (GOV-001 updates)
+5. For code files: 3-way merge to preserve both changes
+
+================================================================================
+RECOMMENDED RECOVERY STRATEGY
+================================================================================
+
+STEP 1: Backup current state
+  git branch backup-before-stash-recovery HEAD
+
+STEP 2: Create working branch
+  git checkout -b stash-recovery-analysis
+
+STEP 3: Attempt stash apply (expect conflicts)
+  git stash apply stash@{0}
+
+STEP 4: Review conflicts systematically
+  git status | grep "both modified"
+  
+STEP 5: For each conflict category:
+  - Sprint metrics/*.json: Keep HEAD version (GOV-001)
+  - Code files: 3-way merge to preserve all changes
+  - Test files: Keep stash version if tests were improved
+  
+STEP 6: Restore high-value untracked files
+  git show stash@{0}^3:artifacts/recovery/feature-matrix-recovered-from-patch013.md > artifacts/recovery/feature-matrix-recovered-from-patch013.md
+  (repeat for other valuable artifacts)
+
+================================================================================
+HIGH-VALUE UNTRACKED FILES TO CONSIDER RESTORING
+================================================================================
+
+artifacts/recovery/feature-matrix-recovered-from-patch013.md
+artifacts/recovery/snapshot-c46fc8b/feature-matrix-recovered-c46.md
+artifacts/recovery/script-patches/patch-*.txt (20 patches)
+artifacts/reports/code-analysis/knip-*.json (multiple analysis reports)
+TASK_COMPLETION_ERROR_WIRING.md (documentation of wiring issues)
+
+================================================================================
+END OF REPORT
+================================================================================

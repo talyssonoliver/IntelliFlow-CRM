@@ -1,0 +1,5 @@
+*** Update File: docs/company/product/feature-matrix.md
+@@
+-- Plan coverage: complete=138, partial=92, gap=128, at_risk=135, reclassified=46
++- Plan coverage: complete=92, partial=92, gap=128, at_risk=181
+*** End Patch

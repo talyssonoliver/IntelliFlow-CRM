@@ -1,0 +1,11 @@
+TIMESTAMP: 02/08/2026 19:52:54
+CALL_ID: call_8fD5FOCfoXgKXw0zLtDkgvBD
+NAME: apply_patch
+---INPUT---
+*** Begin Patch
+*** Update File: docs/company/product/feature-matrix.md
+@@
+-- Plan coverage: complete=138, partial=92, gap=128, at_risk=135, reclassified=46
++- Plan coverage: complete=92, partial=92, gap=128, at_risk=181
+*** End Patch
+

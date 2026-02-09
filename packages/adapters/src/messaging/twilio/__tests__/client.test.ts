@@ -14,8 +14,8 @@ vi.mock("twilio", () => {
 
 describe("TwilioClient", () => {
   const validConfig: TwilioConfig = {
-    accountSid: "AC1234567890abcdef1234567890abcdef",
-    authToken: "auth-token-12345",
+    accountSid: "ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    authToken: "test-auth-token-placeholder",
     fromNumber: "+15551234567",
     statusCallbackUrl: "https://example.com/status",
     messagingServiceSid: "MG1234567890",

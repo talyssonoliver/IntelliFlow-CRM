@@ -1,0 +1,55 @@
+diff --git a/apps/web/src/app/tickets/(list)/page.tsx b/apps/web/src/app/tickets/(list)/page.tsx
+index 4572d35..db75ac4 100644
+--- a/apps/web/src/app/tickets/(list)/page.tsx
++++ b/apps/web/src/app/tickets/(list)/page.tsx
+@@ -16,7 +16,10 @@ import {
+ import { type TicketStatus, type TicketPriority, type SLAStatus } from '@intelliflow/domain';
+ import { PageHeader, SearchFilterBar } from '@/components/shared';
+ import { ticketStatusOptions, ticketPriorityOptions, slaStatusChips } from '@/lib/shared/filter-utils';
+-import { SLAStatusBadge as SLAStatusBadgeModule } from '../../../../lib/tickets/sla-badge';
++import { SLAStatusBadge as SLAStatusBadgeModule, SLAQuickView } from '../../../../lib/tickets/sla-badge';
++import { DEFAULT_SLA_POLICY } from '../../../../lib/tickets/sla-service';
++import { useSidebarOptional } from '@/components/sidebar';
++import { SidebarPortal } from '@/components/sidebar';
+ import { api } from '@/lib/api';
+ 
+ interface Ticket {
+@@ -423,6 +426,7 @@ const ASSIGNEE_OPTIONS: StatusOption[] = [
+ 
+ export default function TicketsPage() {
+   const router = useRouter();
++  const sidebar = useSidebarOptional();
+   const [activeSLAFilter, setActiveSLAFilter] = useState('all');
+   const [searchQuery, setSearchQuery] = useState('');
+   const [statusFilter, setStatusFilter] = useState('');
+@@ -799,6 +803,30 @@ export default function TicketsPage() {
+         </Card>
+       </div>
+ 
++      {/* SLA Alerts injected into sidebar via portal */}
++      <SidebarPortal>
++        <div className="px-3 py-4 space-y-3">
++          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">
++            SLA Alerts
++          </h3>
++          {SAMPLE_TICKETS.filter((t) => t.slaStatus === 'BREACHED' || t.slaStatus === 'AT_RISK').map((ticket) => (
++            <SLAQuickView
++              key={ticket.id}
++              dueTime={new Date(Date.now() + ticket.slaTimeRemaining * 60000)}
++              policy={DEFAULT_SLA_POLICY}
++              ticketStatus={ticket.status}
++              ticketNumber={ticket.id}
++              priority={ticket.priority}
++            />
++          ))}
++        </div>
++      </SidebarPortal>
++
++      {/* Sidebar-aware layout hint */}
++      {sidebar?.isExpanded && (
++        <p className="sr-only">Sidebar expanded - SLA alerts visible in sidebar</p>
++      )}
++
+       {/* Search and Filters - Using unified SearchFilterBar with schema-derived options */}
+       <SearchFilterBar
+         searchValue={searchQuery}

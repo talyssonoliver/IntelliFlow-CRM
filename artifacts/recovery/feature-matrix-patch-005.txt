@@ -1,0 +1,5 @@
+*** Update File: docs/company/product/feature-matrix.md
+@@
+-| Dashboard | Account tRPC Router - CRUD hierarchy contacts opportunities activity feed | done | Implement capability: Account tRPC Router - CRUD hierarchy contacts opportunities activity feed. | Backend Dev (STOA-Domain) | P1 | IFC-003, IFC-103, IFC-107, IFC-185 | Backend/platform capability from CSV section Core CRM; source status: Completed. |
++| Account | Account tRPC Router - CRUD hierarchy contacts opportunities activity feed | done | Implement capability: Account tRPC Router - CRUD hierarchy contacts opportunities activity feed. | Backend Dev (STOA-Domain) | P1 | IFC-003, IFC-103, IFC-107, IFC-185 | Backend/platform capability from CSV section Core CRM; source status: Completed. |
+*** End Patch

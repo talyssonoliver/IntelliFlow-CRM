@@ -1,0 +1,148 @@
+TIMESTAMP: 02/08/2026 12:46:15
+CALL_ID: call_K1lJSFDS7of0ImiU5VjZJHvo
+COMMAND: {"cmd":"Get-Content -LiteralPath 'docs/company/product/feature-matrix.md' -TotalCount 260","workdir":"C:\\Users\\talys\\projects\\intelliFlow-CRM","max_output_tokens":12000}
+OUTPUT_LEN: 16056
+---OUTPUT---
+Chunk ID: 76532c
+Wall time: 0.1721 seconds
+Process exited with code 0
+Original token count: 3988
+Output:
+# Feature Matrix (Source of Truth)
+
+Last audited: 2026-02-08  
+Owner: Product + Engineering
+
+## Purpose
+
+Single artifact to track feature implementation state across IntelliFlow CRM.
+
+This matrix is the canonical view for:
+- What features exist
+- Current status (`planned`, `in_progress`, `done`)
+- Why the feature exists
+- Who owns it
+- Priority and implementation notes
+
+## Scope
+
+Included:
+- `apps/web` product surfaces
+- Supporting feature integrations exposed in current web routes/hooks
+- Backlog items explicitly tracked in `docs/design/integration-backlog.md`
+
+Not included:
+- Internal-only developer tooling and one-off sprint artifacts
+
+## Status Rubric
+
+| Status | Definition |
+|---|---|
+| `done` | Implemented and wired to active data/API paths for the primary user flow |
+| `in_progress` | Partially implemented, mock/placeholder behavior, or known integration gaps |
+| `planned` | Backlog item with no production-ready flow yet |
+
+## Feature Matrix
+
+| Group | Feature | Status | Purpose | Owner | Priority | Notes |
+|---|---|---|---|---|---|---|
+| Public | Marketing home page | `done` | Present product value proposition and conversion entry points | Growth FE | P1 | Route: `/` -> `apps/web/src/app/(public)/page.tsx` |
+| Public | Features page | `done` | Showcase capability catalog | Growth FE | P1 | Route: `/features` |
+| Public | Pricing page | `done` | Present plans and pricing CTAs | Growth FE | P1 | Route: `/pricing` |
+| Public | About page | `done` | Company narrative and positioning | Growth FE | P2 | Route: `/about` |
+| Public | Contact page | `done` | Inbound lead/contact channel | Growth FE | P1 | Route: `/contact` |
+| Public | Partners page | `done` | Partner recruitment and value proposition | Growth FE | P2 | Route: `/partners` |
+| Public | Press page | `done` | Press/PR updates and assets | Growth FE | P2 | Route: `/press` |
+| Public | Security page | `done` | Trust and security posture for buyers | Growth FE + Security | P1 | Route: `/security` |
+| Public | Status page | `in_progress` | Service status visibility | Platform FE | P2 | Route: `/status`; currently static incident content |
+| Public | Blog index | `done` | Content marketing and discovery | Growth FE | P2 | Route: `/blog` |
+| Public | Blog article page | `done` | Long-form article consumption | Growth FE | P2 | Route: `/blog/[slug]` |
+| Public | Careers index | `done` | Hiring funnel entry point | Growth FE | P2 | Route: `/careers` |
+| Public | Career detail page | `done` | Role-level recruiting conversion | Growth FE | P2 | Route: `/careers/[id]` |
+| Public | Dynamic landing pages | `done` | Campaign-specific landing experiences | Growth FE | P2 | Route: `/lp/[slug]` |
+| Auth | Login | `done` | Authenticate users with provider/email flows | Auth FE+BE | P0 | Route: `/login` |
+| Auth | Signup | `in_progress` | New user registration | Auth FE+BE | P0 | Route: `/signup`; TODO notes indicate backend hookup gaps |
+| Auth | Signup success | `in_progress` | Post-signup confirmation and next actions | Auth FE+BE | P1 | Route: `/signup/success`; resend-email TODO remains |
+| Auth | Forgot password | `in_progress` | Initiate password reset flow | Auth FE+BE | P0 | Route: `/forgot-password`; email send TODO remains |
+| Auth | Reset password | `in_progress` | Complete secure password reset | Auth FE+BE | P0 | Route: `/reset-password/[token]` |
+| Auth | Logout | `done` | End active user sessions | Auth FE+BE | P1 | Route: `/logout` |
+| Auth | OAuth callback | `done` | Handle provider callback and session finalize | Auth FE+BE | P0 | Route: `/auth/callback` |
+| Auth | MFA challenge verify | `done` | Complete MFA challenge during login | Auth FE+BE | P0 | Route: `/auth/mfa/verify` |
+| Auth | Email verification | `done` | Verify email ownership via token | Auth FE+BE | P0 | Route: `/auth/verify-email/[token]` |
+| Dashboard | Main dashboard | `in_progress` | KPI cockpit and operational snapshot | Platform FE+BE | P1 | Route: `/dashboard`; mix of live and sample-backed widgets |
+| Dashboard | Quick create dashboard | `in_progress` | Fast create surface for core entities | Platform FE+BE | P2 | Route: `/dashboard/new`; largely static action cards |
+| Dashboard | Dashboard customization | `in_progress` | User-configurable widget layout | Platform FE+BE | P2 | Route: `/dashboard/customize`; widget settings TODO present |
+| Dashboard | Dashboard widgets data layer | `in_progress` | Populate widgets with real-time business metrics | Platform FE+BE | P1 | `apps/web/src/components/dashboard/widgets/*` contains live queries plus fallback sample data |
+| Leads | Lead list and filtering | `done` | Manage lead queue, segmentation, and sorting | CRM FE+BE | P0 | Route: `/leads`; `api.lead.list.useQuery` |
+| Leads | Lead creation | `in_progress` | Add new leads from intake forms | CRM FE+BE | P0 | Route: `/leads/new`; unsupported field TODO remains |
+| Leads | Lead 360 detail | `in_progress` | Context-rich lead workspace | CRM FE+BE | P0 | Route: `/leads/[id]`; mock similar leads still present |
+| Leads | AI lead scoring | `done` | Prioritize leads by AI confidence | CRM Intelligence | P0 | `api.lead.scoreWithAI` integrated in list actions |
+| Leads | Lead qualification/conversion | `done` | Move leads to later revenue stages | CRM FE+BE | P0 | `qualify`, `convert`, `bulkConvert` mutations wired |
+| Contacts | Contact list and filtering | `done` | Manage and search contact records | CRM FE+BE | P0 | Route: `/contacts`; `api.contact.list.useQuery` |
+| Contacts | Contact creation | `done` | Add contacts with profile data | CRM FE+BE | P0 | Route: `/contacts/new`; `trpc.contact.create.useMutation` |
+| Contacts | Contact 360 detail | `in_progress` | Unified contact profile with activities/tasks | CRM FE+BE | P0 | Route: `/contacts/[id]`; some UI areas still rely on placeholder elements |
+| Contacts | Contact bulk actions | `done` | Bulk email/export/delete workflows | CRM FE+BE | P1 | `bulkEmail`, `bulkExport`, `bulkDelete` mutations wired |
+| Accounts | Accounts list | `done` | Manage account portfolio and discoverability | CRM FE+BE | P0 | Route: `/accounts`; `api.account.list.useQuery` |
+| Accounts | Account detail | `done` | Account-level overview with revenue and relationships | CRM FE+BE | P0 | Route: `/accounts/[id]`; `AccountDetail` uses account APIs |
+| Accounts | Account activity/opportunity tabs | `done` | Cross-entity account context for teams | CRM FE+BE | P1 | `getActivity`, `getOpportunities` queries in `AccountDetail` |
+| Accounts | Account create page | `planned` | Dedicated UI for new account onboarding | CRM FE+BE | P2 | `/accounts/new` not yet implemented in current route inventory |
+| Accounts | Account edit page | `planned` | Full edit workflow for accounts | CRM FE+BE | P2 | Backlog reference: `PG-071` in `docs/design/integration-backlog.md` |
+| Accounts | Account import | `planned` | Bulk onboarding of account records | CRM FE+BE | P2 | Backlog reference: `PG-072` in `docs/design/integration-backlog.md` |
+| Deals | Deals pipeline board/list | `done` | Track opportunities by stage and owner | CRM FE+BE | P0 | Route: `/deals`; `trpc.opportunity.list.useQuery` |
+| Deals | Deal detail workspace | `in_progress` | Deep deal collaboration and context | CRM FE+BE | P1 | Route: `/deals/[id]`; sample data still in page |
+| Deals | Deal forecast (single deal) | `done` | Forecast probability and risk for a deal | CRM Intelligence | P1 | Route: `/deals/[id]/forecast`; `trpc.opportunity.forecast` |
+| Deals | Deal forecast (portfolio) | `done` | Portfolio-level weighted forecast | CRM Intelligence | P1 | Route: `/deals/forecast`; `trpc.opportunity.forecast` |
+| Tickets | Ticket queue/list | `in_progress` | Operate support queue with SLA visibility | Support FE+BE | P1 | Route: `/tickets`; list rendering still based on `SAMPLE_TICKETS` |
+| Tickets | Ticket detail workspace | `in_progress` | Resolve individual incidents and requests | Support FE+BE | P1 | Route: `/tickets/[id]`; detail still based on `SAMPLE_TICKET` |
+| Tickets | Bulk ticket actions | `in_progress` | Assign/resolve/escalate/close in batch | Support FE+BE | P1 | Bulk mutation hooks exist; UI still sample-driven |
+| Documents | Document library | `done` | Search/filter and manage stored documents | CRM FE+BE | P1 | Route: `/documents`; `trpc.documents.list.useQuery` |
+| Documents | Document upload workflow | `in_progress` | Upload and classify documents | CRM FE+BE | P1 | Route: `/documents/new`; Supabase Storage TODO remains |
+| Documents | Document detail and audit trail | `in_progress` | Inspect metadata/versioning/audit changes | CRM FE+BE | P1 | Route: `/documents/[id]`; signer-email mapping TODO remains |
+| Cases | Case timeline | `in_progress` | Track deadlines/tasks/events for cases | Case Ops FE+BE | P1 | Route: `/cases/timeline`; uses `trpc.timeline.getEvents` with sample fallback generation |
+| Agent Approvals | Agent approvals queue | `in_progress` | Human gate for auto-response drafts | AI Governance FE+BE | P0 | Route: `/agent-approvals`; wired to `trpc.autoResponse.*`, tenant context TODO remains |
+| Agent Approvals | AI review queue | `done` | Queue AI outputs for review lifecycle | AI Governance FE+BE | P0 | Route: `/agent-approvals/ai-review`; `useReviewQueue` + `api.aiReview.*` |
+| Agent Approvals | AI review detail | `done` | Claim/approve/reject/escalate per item | AI Governance FE+BE | P0 | Route: `/agent-approvals/ai-review/[id]` |
+| Agent Approvals | Preview sandbox | `in_progress` | UI sandbox for action previews | AI Governance FE | P3 | Route: `/agent-approvals/preview`; mock data intentionally used |
+| Analytics | Analytics dashboard | `in_progress` | Reporting on sales and pipeline performance | Analytics FE+BE | P1 | Route: `/analytics`; currently static dataset-driven UI |
+| Analytics | Analytics export (CSV/PDF) | `in_progress` | Download business performance outputs | Analytics FE+BE | P2 | Export flows present, source data currently static in page |
+| Notifications | Notifications inbox | `done` | Central user notification feed | Platform FE+BE | P1 | Route: `/notifications`; `trpc.notifications.*` queries and mutations |
+| Notifications | Notifications settings page | `in_progress` | Configure inbox preferences | Platform FE+BE | P2 | Route: `/notifications/settings`; static configuration UI |
+| Notifications | Settings notifications panel | `in_progress` | Configure channel-level preferences | Platform FE+BE | P2 | Route: `/settings/notifications`; static configuration UI |
+| Settings | Settings overview | `done` | Navigation hub for all user/workspace settings | Platform FE | P2 | Route: `/settings` |
+| Settings | Account settings | `in_progress` | Personal profile/security preferences | Platform FE+BE | P2 | Route: `/settings/account`; static defaults |
+| Settings | Team settings | `in_progress` | Team member management and roles | Platform FE+BE | P2 | Route: `/settings/team`; static team dataset |
+| Settings | Integrations settings | `in_progress` | Connect/disconnect external providers | Platform FE+BE | P2 | Route: `/settings/integrations`; static integration dataset |
+| Settings | AI chain settings | `done` | Manage chain versions and lifecycle actions | AI Platform FE+BE | P0 | Route: `/settings/ai`; `useChainVersions` and audit hooks integrated |
+| Settings | Pipeline settings | `done` | Configure stage names/colors/order/probability | CRM FE+BE | P1 | Route: `/settings/pipeline`; `api.pipelineConfig.*` via `usePipelineConfig` |
+| Settings | Security MFA settings | `in_progress` | Manage MFA methods and recovery controls | Auth FE+BE | P1 | Route: `/settings/security/mfa`; auth mutations wired, SMS/email setup placeholder remains |
+| Billing | Billing portal | `in_progress` | Subscription/payment/invoice overview | Billing FE+BE | P1 | Route: `/billing`; uses composed billing components |
+| Billing | Checkout | `in_progress` | Activate subscriptions from plan selection | Billing FE+BE | P1 | Route: `/billing/checkout`; simulated payment method ID remains in checkout form |
+| Billing | Subscription management | `in_progress` | Upgrade/downgrade/cancel plans | Billing FE+BE | P1 | Route: `/billing/subscriptions`; backend hooks present with partial mock payment behavior |
+| Billing | Invoices list | `done` | Browse invoice history | Billing FE+BE | P1 | Route: `/billing/invoices`; `trpc.billing.listInvoices.useQuery` |
+| Billing | Invoice detail | `in_progress` | Detailed invoice breakdown and actions | Billing FE+BE | P2 | Route: `/billing/invoices/[id]`; line items generated as mock |
+| Billing | Payment methods | `in_progress` | Manage saved payment instruments | Billing FE+BE | P1 | Route: `/billing/payment-methods`; mock payment method ID generation still used |
+| Billing | Receipts | `in_progress` | View/send receipt history | Billing FE+BE | P2 | Route: `/billing/receipts`; currently uses `MOCK_RECEIPTS` |
+| Governance | Governance overview | `in_progress` | Entry point for governance capabilities | Governance FE+BE | P2 | Route: `/governance`; mixes live ADR stats with static counts |
+| Governance | ADR registry | `done` | Manage architecture decisions and validation | Governance FE+BE | P1 | Route: `/governance/adr`; uses `/api/adr*` endpoints |
+| Governance | Compliance dashboard | `in_progress` | Track compliance posture and trends | Governance FE+BE | P1 | Route: `/governance/compliance`; static metric cards currently |
+| Governance | Policy library | `in_progress` | View and manage governance policies | Governance FE+BE | P2 | Route: `/governance/policies`; static policy dataset currently |
+| Governance | Quality reports hub | `in_progress` | Monitor quality health across report types | Governance FE+BE | P1 | Route: `/governance/quality-reports`; placeholder states still supported |
+| Governance | Quality report detail | `done` | Deep-dive into a selected report | Governance FE+BE | P2 | Route: `/governance/quality-reports/[reportId]` |
+| Governance | Quality report generation jobs | `in_progress` | Trigger and track report generation runs | Governance FE+BE | P1 | `apps/web/src/app/governance/quality-reports/page.tsx` and `/api/quality-reports/*` |
+| Profile | User profile | `in_progress` | Personal profile summary and settings jump-off | Platform FE+BE | P2 | Route: `/profile`; static profile content |
+| Planned | Workflow builder | `planned` | Visual workflow automation editor | Platform FE+BE | P1 | Backlog item: `IFC-031` |
+| Planned | Reports list page | `planned` | Centralized reports catalog | Analytics FE+BE | P2 | Backlog item: `PG-101` |
+| Planned | Custom reports builder | `planned` | Build ad-hoc/custom reports | Analytics FE+BE | P2 | Backlog item: `PG-102` |
+| Planned | Scheduled reports | `planned` | Schedule recurring report delivery | Analytics FE+BE | P2 | Backlog item: `PG-103` |
+| Planned | Calendar view | `planned` | Time-based operational planning | Platform FE+BE | P2 | Backlog item: `PG-083` |
+| Planned | Dashboard router hardening | `planned` | Complete dashboard API coverage (welcome/feed/widgets/goals) | Platform FE+BE | P1 | Backlog item: `IFC-182` |
+| Planned | Notifications router hardening | `planned` | Complete notifications API and subscription behavior | Platform FE+BE | P1 | Backlog item: `IFC-183` |
+| Planned | Unified activity feed service | `planned` | Shared activity stream across product surfaces | Platform FE+BE | P1 | Backlog item: `IFC-069` |
+
+## Maintenance Rules
+
+1. Update this matrix in the same PR whenever a feature status changes.
+2. Add evidence in Notes (route, hook, or backlog reference) for every status update.
+3. If backlog status and code status conflict, record current code reality here and link follow-up backlog cleanup.
+4. Keep status values limited to `planned`, `in_progress`, `done`.
+

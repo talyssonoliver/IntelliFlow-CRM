@@ -1,0 +1,115 @@
+TIMESTAMP: 02/08/2026 12:26:11
+CALL_ID: call_w90f4h2QwTjHE0nmYNi6HIaO
+COMMAND: {"cmd":"Get-Content -LiteralPath 'docs/company/product/feature-matrix.md'","workdir":"C:\\Users\\talys\\projects\\intelliFlow-CRM","max_output_tokens":12000}
+OUTPUT_LEN: 13000
+---OUTPUT---
+Chunk ID: 8e28f6
+Wall time: 0.2183 seconds
+Process exited with code 0
+Original token count: 3224
+Output:
+# Feature Matrix (Source of Truth)
+
+Last audited: 2026-02-08  
+Owner: Product + Engineering
+
+## Purpose
+
+Single artifact to track feature implementation state across IntelliFlow CRM.
+
+This matrix is the canonical view for:
+- What features exist
+- Current status (`planned`, `in_progress`, `done`)
+- Why the feature exists
+- Who owns it
+- Priority and implementation notes
+
+## Scope
+
+Included:
+- `apps/web` product surfaces
+- Supporting feature integrations exposed in current web routes/hooks
+- Backlog items explicitly tracked in `docs/design/integration-backlog.md`
+
+Not included:
+- Internal-only developer tooling and one-off sprint artifacts
+
+## Status Rubric
+
+| Status | Definition |
+|---|---|
+| `done` | Implemented and wired to active data/API paths for the primary user flow |
+| `in_progress` | Partially implemented, mock/placeholder behavior, or known integration gaps |
+| `planned` | Backlog item with no production-ready flow yet |
+
+## Feature Matrix
+
+| Feature | Status | Purpose | Owner | Priority | Notes |
+|---|---|---|---|---|---|
+| Leads list and bulk management | `done` | Manage lead pipeline with filtering and bulk operations | CRM FE+BE | P0 | `apps/web/src/app/leads/(list)/page.tsx` uses `api.lead.list` + bulk mutations |
+| Lead creation | `in_progress` | Capture new leads from sales intake | CRM FE+BE | P0 | `apps/web/src/app/leads/(list)/new/page.tsx` has API-backed create with TODO for unsupported fields |
+| Lead 360 detail | `in_progress` | Give reps full lead context and actions | CRM FE+BE | P0 | `apps/web/src/app/leads/[id]/page.tsx` uses `api.lead.getById` but still contains mock similar leads |
+| AI lead scoring | `done` | Prioritize leads by predicted value | CRM Intelligence | P0 | `api.lead.scoreWithAI` used in `apps/web/src/app/leads/(list)/page.tsx` |
+| Lead qualification and conversion | `done` | Move qualified leads into downstream sales pipeline | CRM FE+BE | P0 | `api.lead.qualify`, `api.lead.convert`, and bulk convert are wired |
+| Contacts list and bulk actions | `done` | Manage contacts at scale | CRM FE+BE | P0 | `apps/web/src/app/contacts/(list)/page.tsx` uses `api.contact.list` and bulk actions |
+| Contact creation | `done` | Add new contacts with key profile metadata | CRM FE+BE | P0 | `apps/web/src/app/contacts/(list)/new/page.tsx` uses `trpc.contact.create` |
+| Contact 360 detail | `done` | Unified contact profile with activity/tasks/insights | CRM FE+BE | P0 | `apps/web/src/app/contacts/[id]/page.tsx` uses `api.contact.getById` |
+| Accounts list and filtering | `done` | Manage company accounts and segmentation | CRM FE+BE | P0 | `apps/web/src/app/accounts/(list)/page.tsx` uses `api.account.list` |
+| Account 360 detail | `done` | View account health, contacts, opportunities, and activity | CRM FE+BE | P0 | `apps/web/src/components/accounts/AccountDetail.tsx` uses `api.account.getById/getActivity/getOpportunities` |
+| Deals pipeline list | `done` | Track opportunities by stage | CRM FE+BE | P0 | `apps/web/src/app/deals/(list)/page.tsx` uses `trpc.opportunity.list/update` |
+| Deal detail workspace | `in_progress` | Deep deal context for progression and collaboration | CRM FE+BE | P1 | `apps/web/src/app/deals/[id]/page.tsx` currently relies on sample data |
+| Deal forecast views | `done` | Forecast weighted pipeline and revenue | CRM Intelligence | P1 | `apps/web/src/app/deals/forecast/page.tsx` and `apps/web/src/app/deals/[id]/forecast/page.tsx` use `trpc.opportunity.forecast` |
+| Ticket queue and bulk actions | `in_progress` | Manage support workload and SLA status | Support FE+BE | P1 | `apps/web/src/app/tickets/(list)/page.tsx` still uses `SAMPLE_TICKETS` for list rendering |
+| Ticket detail workspace | `in_progress` | Resolve cases with SLA, activity, and AI insights | Support FE+BE | P1 | `apps/web/src/app/tickets/[id]/page.tsx` still uses `SAMPLE_TICKET` |
+| Document library | `done` | Search and manage documents at scale | CRM FE+BE | P1 | `apps/web/src/app/documents/(list)/page.tsx` uses `trpc.documents.list` + bulk mutations |
+| Document upload and metadata capture | `in_progress` | Intake and classify business documents | CRM FE+BE | P1 | `apps/web/src/app/documents/(list)/new/page.tsx` has TODO for Supabase Storage integration |
+| Document detail and audit trail | `in_progress` | Review document history and metadata changes | CRM FE+BE | P1 | `apps/web/src/app/documents/[id]/page.tsx` uses APIs but includes TODO for signer email mapping |
+| Case timeline | `in_progress` | Track legal/service milestones and deadlines | Case Ops FE+BE | P1 | `apps/web/src/app/cases/timeline/page.tsx` has `trpc.timeline.getEvents` with sample fallback data |
+| Agent approvals queue (auto-response) | `in_progress` | Human approval gate for AI-generated outbound actions | AI Governance FE+BE | P0 | `apps/web/src/app/agent-approvals/page.tsx` is wired to `trpc.autoResponse.*`; tenant context TODO remains |
+| AI review queue | `done` | Review AI outputs under SLA and lock control | AI Governance FE+BE | P0 | `apps/web/src/components/ai-review/ReviewQueue.tsx` uses `api.aiReview.list/stats` and decision mutations |
+| AI review detail actions | `done` | Claim/approve/reject/escalate specific AI outputs | AI Governance FE+BE | P0 | `apps/web/src/app/agent-approvals/ai-review/[id]/page.tsx` uses `api.aiReview.*` mutations |
+| AI chain version administration | `done` | Manage model/chain versions and rollback decisions | AI Platform FE+BE | P0 | `apps/web/src/app/settings/ai/AISettingsContent.tsx` with `useChainVersions` + audit hooks |
+| Pipeline stage configuration | `done` | Customize deal stages, ordering, probabilities, and colors | CRM FE+BE | P1 | `apps/web/src/app/settings/pipeline/PipelineSettingsContent.tsx` uses `api.pipelineConfig.*` via `usePipelineConfig` |
+| Governance overview | `in_progress` | Provide entry point for compliance and ADR operations | Governance FE+BE | P2 | `apps/web/src/app/governance/page.tsx` mixes live ADR stats with static counters/content |
+| ADR registry and validation | `done` | Manage architecture decision records with validation/status | Governance FE+BE | P1 | `apps/web/src/app/governance/adr/page.tsx` calls `/api/adr*` endpoints |
+| Compliance dashboard | `in_progress` | Monitor standards posture (ISO/GDPR) | Governance FE+BE | P1 | `apps/web/src/app/governance/compliance/page.tsx` currently displays static compliance data |
+| Policies library | `in_progress` | Track and review policy documents | Governance FE+BE | P2 | `apps/web/src/app/governance/policies/page.tsx` is currently static |
+| Quality reports dashboard and generation | `in_progress` | Surface Lighthouse, coverage, and performance evidence | Governance FE+BE | P1 | `apps/web/src/app/governance/quality-reports/page.tsx` supports generation but handles placeholder states |
+| Dashboard widgets | `in_progress` | Central KPI and activity cockpit | Platform FE+BE | P1 | `apps/web/src/app/dashboard/page.tsx` + widgets include live queries and sample fallbacks |
+| Dashboard layout customization | `in_progress` | Let users configure widget arrangement | Platform FE+BE | P2 | `apps/web/src/app/dashboard/customize/page.tsx` includes TODO for widget settings modal |
+| Dashboard quick-create actions | `in_progress` | Fast entry points for creating records | Platform FE+BE | P2 | `apps/web/src/app/dashboard/new/page.tsx` is present but mostly local/static action definitions |
+| Analytics dashboard | `in_progress` | Provide sales and conversion analytics with export | Analytics FE+BE | P1 | `apps/web/src/app/analytics/(list)/page.tsx` currently uses static metric datasets |
+| Notifications inbox | `done` | Real-time-style user notification center | Platform FE+BE | P1 | `apps/web/src/app/notifications/page.tsx` uses `trpc.notifications.*` queries/mutations |
+| Notification preferences (settings routes) | `in_progress` | Configure user alert channels and frequency | Platform FE+BE | P2 | `apps/web/src/app/notifications/settings/page.tsx` and `apps/web/src/app/settings/notifications/page.tsx` are currently static UI |
+| Settings: account | `in_progress` | Manage personal account profile and security preferences | Platform FE+BE | P2 | `apps/web/src/app/settings/account/page.tsx` uses static values/forms |
+| Settings: team management | `in_progress` | Manage team members and roles | Platform FE+BE | P2 | `apps/web/src/app/settings/team/page.tsx` is currently static |
+| Settings: integrations catalog | `in_progress` | Connect external services | Platform FE+BE | P2 | `apps/web/src/app/settings/integrations/page.tsx` is currently static |
+| Security MFA setup | `in_progress` | Configure two-factor authentication methods | Auth FE+BE | P1 | `apps/web/src/app/settings/security/mfa/page.tsx` uses auth mutations; SMS/email setup still placeholder |
+| Profile page | `in_progress` | Show user profile summary | Platform FE+BE | P2 | `apps/web/src/app/profile/page.tsx` is currently static |
+| Billing portal overview | `in_progress` | Unified billing, subscription, and usage management | Billing FE+BE | P1 | `apps/web/src/app/billing/page.tsx` -> `BillingPortal`; backend connected but Stripe behaviors are not fully production wired |
+| Checkout flow | `in_progress` | Convert plan selection into active subscription | Billing FE+BE | P1 | `apps/web/src/components/billing/checkout-form.tsx` still simulates payment method IDs |
+| Subscription management | `in_progress` | Upgrade/downgrade/cancel subscriptions | Billing FE+BE | P1 | `apps/web/src/components/billing/subscription-manager.tsx` uses billing mutations with partial mocked payment flow dependencies |
+| Invoices list | `done` | Browse invoice history | Billing FE+BE | P1 | `apps/web/src/app/billing/invoices/page.tsx` uses `trpc.billing.listInvoices` |
+| Invoice detail | `in_progress` | Inspect invoice line-item breakdown and actions | Billing FE+BE | P2 | `apps/web/src/app/billing/invoices/[id]/page.tsx` generates mock line items |
+| Payment methods | `in_progress` | Add/remove/update stored cards | Billing FE+BE | P1 | `apps/web/src/components/billing/payment-methods.tsx` uses billing APIs but simulates new payment method IDs |
+| Receipts history | `in_progress` | Review and send receipts | Billing FE+BE | P2 | `apps/web/src/app/billing/receipts/page.tsx` currently relies on `MOCK_RECEIPTS` |
+| Public marketing site | `done` | Present product narrative and conversion pages | Growth FE | P1 | Routes under `apps/web/src/app/(public)` implemented |
+| Login/logout and OAuth callback | `done` | Authenticate users and handle provider callbacks | Auth FE+BE | P0 | `apps/web/src/app/(public)/login/page.tsx` + `apps/web/src/app/auth/callback/page.tsx` |
+| MFA and email verification during auth | `done` | Validate user identity during sign-in lifecycle | Auth FE+BE | P0 | `apps/web/src/app/auth/mfa/verify/page.tsx` and `apps/web/src/app/auth/verify-email/[token]/page.tsx` |
+| Signup and onboarding | `in_progress` | Register new users and complete account setup | Auth FE+BE | P1 | `apps/web/src/app/(public)/signup/page.tsx` has TODO for production API call |
+| Password reset flow | `in_progress` | Recover account access securely | Auth FE+BE | P1 | `apps/web/src/app/(public)/forgot-password/page.tsx` has TODO for email API |
+| Workflow builder | `planned` | Visual automation builder for repeatable business flows | Platform FE+BE | P1 | Backlog item `IFC-031` in `docs/design/integration-backlog.md` |
+| Reports library | `planned` | Central list of generated/available reports | Analytics FE+BE | P2 | Backlog item `PG-101` in `docs/design/integration-backlog.md` |
+| Custom report builder | `planned` | Build custom analytics/governance reports | Analytics FE+BE | P2 | Backlog item `PG-102` in `docs/design/integration-backlog.md` |
+| Scheduled reports | `planned` | Automate report generation and distribution | Analytics FE+BE | P2 | Backlog item `PG-103` in `docs/design/integration-backlog.md` |
+| Calendar view | `planned` | Time-based planning and activity visibility | Platform FE+BE | P2 | Backlog item `PG-083` in `docs/design/integration-backlog.md` |
+| Account edit route | `planned` | Dedicated UI for account editing workflow | CRM FE+BE | P2 | Backlog item `PG-071` in `docs/design/integration-backlog.md` |
+| Account import flow | `planned` | Bulk account onboarding/import | CRM FE+BE | P2 | Backlog item `PG-072` in `docs/design/integration-backlog.md` |
+
+## Maintenance Rules
+
+1. Update this matrix in the same PR whenever a feature status changes.
+2. Add evidence in Notes (route, hook, or backlog reference) for every status update.
+3. If backlog status and code status conflict, record current code reality here and link follow-up backlog cleanup.
+4. Keep status values limited to `planned`, `in_progress`, `done`.
+

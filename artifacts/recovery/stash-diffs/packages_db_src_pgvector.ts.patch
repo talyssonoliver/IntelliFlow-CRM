@@ -1,0 +1,55 @@
+diff --git a/packages/db/src/pgvector.ts b/packages/db/src/pgvector.ts
+index b5e50ed..596603c 100644
+--- a/packages/db/src/pgvector.ts
++++ b/packages/db/src/pgvector.ts
+@@ -9,7 +9,7 @@
+  * @module @intelliflow/db/pgvector
+  */
+ 
+-import { prisma, Prisma, VectorEmbedding, VectorSearchResult } from './client';
++import { prisma, Prisma, VectorEmbedding, VectorSearchResult, executeRawWithTiming } from './client';
+ 
+ /**
+  * OpenAI embedding dimensions
+@@ -148,9 +148,9 @@ export async function findSimilarLeads(
+   // We filter where 1 - distance > threshold, i.e., distance < 1 - threshold
+   const distanceThreshold = 1 - threshold;
+ 
+-  const results = await prisma.$queryRaw<
++  const { result: results } = await executeRawWithTiming<
+     Array<{ id: string; email: string; company: string | null; score: number; similarity: number }>
+-  >`
++  >(Prisma.sql`
+     SELECT
+       l.id,
+       l.email,
+@@ -162,7 +162,7 @@ export async function findSimilarLeads(
+       AND (l.embedding ${Prisma.raw(operator)} ${embeddingStr}::vector) < ${distanceThreshold}
+     ORDER BY l.embedding ${Prisma.raw(operator)} ${embeddingStr}::vector
+     LIMIT ${limit}
+-  `;
++  `);
+ 
+   return results.map((r) => ({
+     item: { id: r.id, email: r.email, company: r.company, score: r.score },
+@@ -187,9 +187,9 @@ export async function findSimilarContacts(
+   const embeddingStr = formatEmbedding(embedding);
+   const distanceThreshold = 1 - threshold;
+ 
+-  const results = await prisma.$queryRaw<
++  const { result: results } = await executeRawWithTiming<
+     Array<{ id: string; email: string; first_name: string; last_name: string; similarity: number }>
+-  >`
++  >(Prisma.sql`
+     SELECT
+       c.id,
+       c.email,
+@@ -201,7 +201,7 @@ export async function findSimilarContacts(
+       AND (c.embedding ${Prisma.raw(operator)} ${embeddingStr}::vector) < ${distanceThreshold}
+     ORDER BY c.embedding ${Prisma.raw(operator)} ${embeddingStr}::vector
+     LIMIT ${limit}
+-  `;
++  `);
+ 
+   return results.map((r) => ({
+     item: { id: r.id, email: r.email, firstName: r.first_name, lastName: r.last_name },

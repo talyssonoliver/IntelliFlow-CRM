@@ -1,0 +1,111 @@
+diff --git a/apps/api/src/modules/misc/health.router.ts b/apps/api/src/modules/misc/health.router.ts
+index ca31a6a..8d98e51 100644
+--- a/apps/api/src/modules/misc/health.router.ts
++++ b/apps/api/src/modules/misc/health.router.ts
+@@ -19,7 +19,11 @@
+ 
+ import { z } from 'zod';
+ import { createTRPCRouter, publicProcedure } from '../../trpc';
+-import { getCorrelationId } from '../../tracing/correlation';
++import { getCorrelationId, getUserId } from '../../tracing/correlation';
++import { getSDKInstance } from '../../tracing/otel';
++import { startSpan } from '../../tracing/sentry';
++import { checkDatabaseHealth } from '@intelliflow/db';
++import { connectionRegistry } from '@intelliflow/platform/queues';
+ 
+ export const healthRouter = createTRPCRouter({
+   /**
+@@ -53,20 +57,20 @@ export const healthRouter = createTRPCRouter({
+     const startTime = Date.now();
+     const checks: Record<string, { status: 'ok' | 'error'; latency?: number; error?: string }> = {};
+ 
+-    // Database connectivity check
++    // Database connectivity check (instrumented with Sentry span)
+     try {
+-      const dbStart = Date.now();
+-      await ctx.prisma.$queryRaw`SELECT 1`;
+-      const dbLatency = Date.now() - dbStart;
++      startSpan('health.database-check', 'db.query');
++      const dbHealth = await checkDatabaseHealth();
+ 
+       checks.database = {
+-        status: 'ok',
+-        latency: dbLatency,
++        status: dbHealth.connected ? 'ok' : 'error',
++        latency: Math.round(dbHealth.latency),
++        ...(dbHealth.error && { error: dbHealth.error }),
+       };
+ 
+       // Warn if database is slow (>20ms as per performance targets)
+-      if (dbLatency > 20) {
+-        console.warn(`[Health] Database latency high: ${dbLatency}ms (target: <20ms)`);
++      if (dbHealth.latency > 20) {
++        console.warn(`[Health] Database latency high: ${dbHealth.latency}ms (target: <20ms)`);
+       }
+     } catch (error) {
+       checks.database = {
+@@ -75,6 +79,26 @@ export const healthRouter = createTRPCRouter({
+       };
+     }
+ 
++    // Redis connectivity check
++    try {
++      const registeredConnections = connectionRegistry.getRegisteredNames();
++      checks.redis = registeredConnections.length > 0
++        ? { status: 'ok' as const, latency: 0 }
++        : { status: 'error' as const, error: 'No Redis connections registered' };
++    } catch (error) {
++      checks.redis = {
++        status: 'error',
++        error: error instanceof Error ? error.message : 'Redis check failed',
++      };
++    }
++
++    // OpenTelemetry tracing status
++    const otelSdk = getSDKInstance();
++    checks.tracing = {
++      status: otelSdk ? 'ok' : 'error',
++      ...(otelSdk ? {} : { error: 'OpenTelemetry SDK not initialized' }),
++    };
++
+     // Overall health status
+     const allOk = Object.values(checks).every((check) => check.status === 'ok');
+     const totalLatency = Date.now() - startTime;
+@@ -85,6 +109,7 @@ export const healthRouter = createTRPCRouter({
+       latency: totalLatency,
+       checks,
+       correlationId: getCorrelationId(),
++      userId: getUserId(),
+       version: process.env.npm_package_version ?? '0.1.0',
+       environment: process.env.NODE_ENV ?? 'development',
+     };
+@@ -101,12 +126,24 @@ export const healthRouter = createTRPCRouter({
+   ready: publicProcedure.query(async ({ ctx }) => {
+     try {
+       // Check database connectivity
+-      await ctx.prisma.$queryRaw`SELECT 1`;
++      const dbHealth = await checkDatabaseHealth();
++      if (!dbHealth.connected) {
++        return {
++          ready: false,
++          timestamp: new Date().toISOString(),
++          error: dbHealth.error || 'Database not connected',
++        };
++      }
+ 
+-      // Future checks:
+-      // - Redis connection
+-      // - Required environment variables
+-      // - AI worker availability
++      // Check Redis connectivity
++      const registeredConnections = connectionRegistry.getRegisteredNames();
++      if (registeredConnections.length === 0) {
++        return {
++          ready: false,
++          timestamp: new Date().toISOString(),
++          error: 'No Redis connections registered',
++        };
++      }
+ 
+       return {
+         ready: true,

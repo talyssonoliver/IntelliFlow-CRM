@@ -1,0 +1,19 @@
+TIMESTAMP: 02/08/2026 12:26:06
+CALL_ID: call_8gtmRXjq0pntUlgzXhm8FLqF
+NAME: apply_patch
+---INPUT---
+*** Begin Patch
+*** Update File: README.md
+@@
+ ## Documentation
+ 
+ - `QUICK-START.md`
+ - `SETUP.md`
+ - `VALIDATION.md`
+ - `PLANNING_ANALYSIS.md`
+ - `CLAUDE.md`
++- `docs/company/product/feature-matrix.md`
+ - `docs/architecture/`
+ - Sprint 0 run report: `artifacts/sprint0/codex-run/report.md`
+*** End Patch
+
