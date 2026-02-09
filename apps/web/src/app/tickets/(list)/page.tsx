@@ -16,7 +16,7 @@ import {
 import { type TicketStatus, type TicketPriority, type SLAStatus } from '@intelliflow/domain';
 import { PageHeader, SearchFilterBar } from '@/components/shared';
 import { ticketStatusOptions, ticketPriorityOptions, slaStatusChips } from '@/lib/shared/filter-utils';
-import { SLAStatusBadge as SLAStatusBadgeModule } from '../../../../lib/tickets';
+import { SLAStatusBadge as SLAStatusBadgeModule } from '../../../../lib/tickets/sla-badge';
 import { api } from '@/lib/api';
 
 interface Ticket {

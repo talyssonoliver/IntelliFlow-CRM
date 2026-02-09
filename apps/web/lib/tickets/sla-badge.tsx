@@ -2,6 +2,7 @@
 
 /**
  * SLA Badge Component - IFC-093
+ * @export SLAQuickView - Added to exports for use in ticket list views
  *
  * Displays SLA status with color-coded badges based on breach status:
  * - Green (On Track): Plenty of time remaining

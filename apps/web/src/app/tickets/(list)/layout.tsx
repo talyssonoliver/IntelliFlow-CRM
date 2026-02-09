@@ -7,6 +7,8 @@ import {
   SidebarTrigger,
   MobileSidebar,
   ticketsSidebarConfig,
+  SidebarPortalProvider,
+  SidebarPortalTarget,
 } from '@/components/sidebar';
 
 export default function TicketsListLayout({
@@ -15,10 +17,14 @@ export default function TicketsListLayout({
   children: React.ReactNode;
 }) {
   return (
+    <SidebarPortalProvider>
     <SidebarProvider>
       <div className="flex min-h-[calc(100vh-4rem)]">
         {/* Left Sidebar - Ticket Management & Configuration (Desktop) */}
         <AppSidebar config={ticketsSidebarConfig} />
+
+        {/* Portal target for page-injected sidebar content */}
+        <SidebarPortalTarget />
 
         {/* Mobile Sidebar Drawer */}
         <MobileSidebar config={ticketsSidebarConfig} />
@@ -44,5 +50,6 @@ export default function TicketsListLayout({
         </SidebarInset>
       </div>
     </SidebarProvider>
+    </SidebarPortalProvider>
   );
 }

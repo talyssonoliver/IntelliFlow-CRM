@@ -16,6 +16,14 @@ type TicketPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 type SLAStatus = 'ON_TRACK' | 'AT_RISK' | 'BREACHED';
 type TabId = 'overview' | 'activity' | 'resolution' | 'attachments' | 'ai-insights';
 
+interface StatusOption {
+  value: string;
+  label: string;
+  description: string;
+  color: string;
+  icon: string;
+}
+
 interface TicketActivity {
   id: string;
   type: 'customer_message' | 'agent_reply' | 'internal_note' | 'system_event' | 'sla_breach' | 'priority_change';
@@ -283,6 +291,11 @@ export default function TicketDetailPage() {
   const [replyContent, setReplyContent] = useState('');
   const [activityNote, setActivityNote] = useState('');
 
+  // Dialog state
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
   // In production, fetch ticket by ticketId from API
   // For now, use sample data with the URL's ticketId
   const ticket = useMemo(() => ({
@@ -293,6 +306,45 @@ export default function TicketDetailPage() {
   const slaConfig = useMemo(() => getSLAConfig(ticket.slaStatus), [ticket.slaStatus]);
   const statusConfig = useMemo(() => getStatusConfig(ticket.status), [ticket.status]);
   const priorityConfig = useMemo(() => getPriorityConfig(ticket.priority), [ticket.priority]);
+
+  // Status options for status select dialog
+  const statusOptions: StatusOption[] = [
+    { value: 'OPEN', label: 'Open', description: 'Ticket is waiting to be addressed', color: 'blue', icon: 'circle' },
+    { value: 'IN_PROGRESS', label: 'In Progress', description: 'Actively working on this ticket', color: 'amber', icon: 'autorenew' },
+    { value: 'PENDING', label: 'Pending', description: 'Waiting for customer response', color: 'slate', icon: 'schedule' },
+    { value: 'RESOLVED', label: 'Resolved', description: 'Issue has been resolved', color: 'green', icon: 'check_circle' },
+    { value: 'CLOSED', label: 'Closed', description: 'Ticket is closed', color: 'slate', icon: 'block' },
+  ];
+
+  const handleStatusChange = async (newStatus: string) => {
+    setIsUpdating(true);
+    try {
+      // In production: await api.tickets.updateStatus(ticket.id, newStatus);
+      console.log('Updating ticket status to:', newStatus);
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      // Show success toast
+    } catch (error) {
+      console.error('Failed to update status:', error);
+      // Show error toast
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleCloseTicket = async () => {
+    setIsUpdating(true);
+    try {
+      // In production: await api.tickets.close(ticket.id);
+      console.log('Closing ticket:', ticket.id);
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      // Show success toast and redirect
+    } catch (error) {
+      console.error('Failed to close ticket:', error);
+      // Show error toast
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   return (
     <main className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-[#0B1116] p-6 md:p-8">
@@ -324,17 +376,12 @@ export default function TicketDetailPage() {
 
           {/* Actions */}
           <div className="flex gap-3">
-            <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+            <button
+              onClick={() => setStatusDialogOpen(true)}
+              className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            >
               <span className="material-symbols-outlined text-[18px]">edit</span>
-              Edit
-            </button>
-            <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-              <span className="material-symbols-outlined text-[18px]">publish</span>
-              Escalate
-            </button>
-            <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors shadow-sm">
-              <span className="material-symbols-outlined text-[18px]">check_circle</span>
-              Resolve
+              Change Status
             </button>
             <MoreActionsButton onClick={() => setActionSheetOpen(true)} />
           </div>
