@@ -21,76 +21,76 @@
     },
     {
       "task_id": "IFC-058",
-      "completed_at": "2026-02-08T22:17:24.520Z",
+      "completed_at": "2026-02-09T00:04:45.813Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-001",
-      "completed_at": "2026-02-08T22:17:24.520Z",
+      "completed_at": "2026-02-09T00:04:45.813Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-002",
-      "completed_at": "2026-02-08T22:17:24.520Z",
+      "completed_at": "2026-02-09T00:04:45.813Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-003",
-      "completed_at": "2026-02-08T22:17:24.520Z",
+      "completed_at": "2026-02-09T00:04:45.813Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-004",
-      "completed_at": "2026-02-08T22:17:24.520Z",
+      "completed_at": "2026-02-09T00:04:45.813Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-005",
-      "completed_at": "2026-02-08T22:17:24.520Z",
+      "completed_at": "2026-02-09T00:04:45.813Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-006",
-      "completed_at": "2026-02-08T22:17:24.520Z",
+      "completed_at": "2026-02-09T00:04:45.813Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-007",
-      "completed_at": "2026-02-08T22:17:24.520Z",
+      "completed_at": "2026-02-09T00:04:45.813Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-008",
-      "completed_at": "2026-02-08T22:17:24.520Z",
+      "completed_at": "2026-02-09T00:04:45.813Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-140",
-      "completed_at": "2026-02-08T22:17:24.520Z",
+      "completed_at": "2026-02-09T00:04:45.813Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-143",
-      "completed_at": "2026-02-08T22:17:24.520Z",
+      "completed_at": "2026-02-09T00:04:45.813Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-152",
-      "completed_at": "2026-02-08T22:17:24.520Z",
+      "completed_at": "2026-02-09T00:04:45.813Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-157",
-      "completed_at": "2026-02-08T22:17:24.520Z",
+      "completed_at": "2026-02-09T00:04:45.813Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-158",
-      "completed_at": "2026-02-08T22:17:24.520Z",
+      "completed_at": "2026-02-09T00:04:45.813Z",
       "duration_minutes": 15
     }
   ],
-  "notes": "15/16 tasks DONE (94%). Last synced: 2026-02-08T22:17:24.520Z",
+  "notes": "15/16 tasks DONE (94%). Last synced: 2026-02-09T00:04:45.813Z",
   "schedule": {
     "sprint_start_date": null,
     "sprint_end_date": null,
@@ -111,6 +111,6 @@
       "spi": 0.9,
       "status": "behind"
     },
-    "calculated_at": "2026-02-08T22:17:24.549Z"
+    "calculated_at": "2026-02-09T00:04:45.865Z"
   }
 }

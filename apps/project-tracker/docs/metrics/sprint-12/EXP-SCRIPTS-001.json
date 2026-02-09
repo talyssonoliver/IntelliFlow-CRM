@@ -8,7 +8,7 @@
     "required": [
       "EXC-INIT-001"
     ],
-    "verified_at": "2026-02-08T22:17:24.485Z",
+    "verified_at": "2026-02-09T00:04:45.742Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -23,10 +23,10 @@
     "expected": [
       "tools/scripts/cleanup-task-data.ts"
     ],
-    "created": [],
-    "missing": [
+    "created": [
       "tools/scripts/cleanup-task-data.ts"
-    ]
+    ],
+    "missing": []
   },
   "validations": [
     {

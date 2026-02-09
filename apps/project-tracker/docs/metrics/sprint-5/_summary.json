@@ -13,7 +13,7 @@
     "not_started": 0,
     "failed": 0
   },
-  "notes": "13/14 tasks DONE (93%). Last synced: 2026-02-08T22:17:24.526Z",
+  "notes": "13/14 tasks DONE (93%). Last synced: 2026-02-09T00:04:45.826Z",
   "completed_tasks": [
     {
       "task_id": "IFC-179",
@@ -32,52 +32,52 @@
     },
     {
       "task_id": "IFC-089",
-      "completed_at": "2026-02-08T22:17:24.526Z",
+      "completed_at": "2026-02-09T00:04:45.826Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-098",
-      "completed_at": "2026-02-08T22:17:24.526Z",
+      "completed_at": "2026-02-09T00:04:45.826Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-111",
-      "completed_at": "2026-02-08T22:17:24.526Z",
+      "completed_at": "2026-02-09T00:04:45.826Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-112",
-      "completed_at": "2026-02-08T22:17:24.526Z",
+      "completed_at": "2026-02-09T00:04:45.826Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-130",
-      "completed_at": "2026-02-08T22:17:24.526Z",
+      "completed_at": "2026-02-09T00:04:45.826Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-138",
-      "completed_at": "2026-02-08T22:17:24.526Z",
+      "completed_at": "2026-02-09T00:04:45.826Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-147",
-      "completed_at": "2026-02-08T22:17:24.526Z",
+      "completed_at": "2026-02-09T00:04:45.826Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-187",
-      "completed_at": "2026-02-08T22:17:24.526Z",
+      "completed_at": "2026-02-09T00:04:45.826Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-189",
-      "completed_at": "2026-02-08T22:17:24.526Z",
+      "completed_at": "2026-02-09T00:04:45.826Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-133",
-      "completed_at": "2026-02-08T22:17:24.526Z",
+      "completed_at": "2026-02-09T00:04:45.826Z",
       "duration_minutes": 15
     }
   ],
@@ -101,6 +101,6 @@
       "spi": 0.97,
       "status": "on_track"
     },
-    "calculated_at": "2026-02-08T22:17:24.550Z"
+    "calculated_at": "2026-02-09T00:04:45.866Z"
   }
 }
