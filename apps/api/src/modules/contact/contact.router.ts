@@ -23,6 +23,7 @@ import {
   linkToLeadSchema,
   unlinkFromLeadSchema,
   contactTimelineSchema,
+  contactTimelineResponseSchema,
 } from '@intelliflow/validators/contact';
 import {
   bulkEmailContactsSchema,
@@ -880,6 +881,7 @@ export const contactRouter = createTRPCRouter({
    */
   getTimeline: tenantProcedure
     .input(contactTimelineSchema)
+    .output(contactTimelineResponseSchema.extend({ performanceTarget: z.number().optional() }))
     .query(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const startTime = Date.now();
@@ -961,7 +963,7 @@ export const contactRouter = createTRPCRouter({
       // 5. Map to timeline events
       type TimelineEvent = {
         id: string;
-        type: string;
+        type: 'email' | 'task' | 'appointment' | 'activity' | 'note' | 'call' | 'status_change' | 'meeting';
         title: string;
         description?: string;
         timestamp: Date;

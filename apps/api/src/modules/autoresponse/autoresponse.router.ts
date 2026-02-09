@@ -33,6 +33,7 @@ import {
 } from '@intelliflow/domain';
 import type { Context } from '../../context';
 import { getTenantContext } from '../../security/tenant-context';
+import { mapErrorToTRPCError } from '../../shared/error-mapper';
 
 // Lazy-load the repository implementation to avoid workspace resolution issues
 let _repositoryClass: (new (prisma: any) => AutoResponseDraftRepository) | null = null;
