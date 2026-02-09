@@ -25,14 +25,14 @@ import type { Context } from '../../context';
 import { getTenantContext } from '../../security/tenant-context';
 
 /**
- * Helper to get chain version service with null check
+ * Helper to get chain version service from context.
+ * Throws if the service is not initialized (should not happen in production).
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getChainVersionService(ctx: Context): any {
+function getChainVersionService(ctx: Context) {
   if (!ctx.services?.chainVersion) {
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
-      message: 'Chain version service not available',
+      message: 'ChainVersion service not initialized. Check container wiring.',
     });
   }
   return ctx.services.chainVersion;
@@ -53,11 +53,11 @@ export const chainVersionRouter = createTRPCRouter({
       const typedCtx = getTenantContext(ctx);
       const chainVersionService = getChainVersionService(ctx);
 
-      return chainVersionService.createVersion({
-        ...input,
-        tenantId: typedCtx.tenant.tenantId,
-        createdBy: typedCtx.tenant.userId,
-      });
+      return chainVersionService.createVersion(
+        input,
+        typedCtx.tenant.userId,
+        typedCtx.tenant.tenantId,
+      );
     }),
 
   /**
@@ -72,8 +72,9 @@ export const chainVersionRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
       const chainVersionService = getChainVersionService(ctx);
-      return chainVersionService.updateVersion(input.versionId, input.data);
+      return chainVersionService.updateVersion(input.versionId, input.data, typedCtx.tenant.userId);
     }),
 
   /**

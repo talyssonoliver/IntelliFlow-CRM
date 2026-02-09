@@ -132,19 +132,17 @@ describe('Chain Version Router', () => {
         services: {} as any,
       }));
 
-      await expect(
-        caller.chainVersion.getById({ versionId: TEST_VERSION_ID })
-      ).rejects.toThrow(/Chain version service not available/);
+      await expect(caller.chainVersion.getById({ versionId: TEST_VERSION_ID }))
+        .rejects.toThrow('ChainVersion service not initialized');
     });
 
-    it('should throw when services is undefined', async () => {
+    it('should throw INTERNAL_SERVER_ERROR when services is undefined', async () => {
       const caller = testRouter.createCaller(createTestContext({
         services: undefined as any,
       }));
 
-      await expect(
-        caller.chainVersion.getById({ versionId: TEST_VERSION_ID })
-      ).rejects.toThrow();
+      await expect(caller.chainVersion.getById({ versionId: TEST_VERSION_ID }))
+        .rejects.toThrow('ChainVersion service not initialized');
     });
   });
 
@@ -165,7 +163,9 @@ describe('Chain Version Router', () => {
           expect.objectContaining({
             chainType: 'SCORING',
             name: 'v1.0.0',
-          })
+          }),
+          expect.any(String), // userId
+          'test-tenant-id', // tenantId
         );
       });
     });
@@ -182,7 +182,8 @@ describe('Chain Version Router', () => {
         expect(result).toBeDefined();
         expect(mockChainVersionService.updateVersion).toHaveBeenCalledWith(
           TEST_VERSION_ID,
-          { name: 'v1.1.0' }
+          { name: 'v1.1.0' },
+          expect.any(String), // userId
         );
       });
     });
@@ -264,7 +265,7 @@ describe('Chain Version Router', () => {
         });
 
         expect(result).toBeDefined();
-        expect(result.id).toBe(TEST_VERSION_ID);
+        expect(result!.id).toBe(TEST_VERSION_ID);
         expect(mockChainVersionService.getVersion).toHaveBeenCalledWith(TEST_VERSION_ID);
       });
     });

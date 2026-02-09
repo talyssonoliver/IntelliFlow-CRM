@@ -23,6 +23,10 @@ import {
   aiInsightsSummarySchema,
 } from '@intelliflow/validators';
 import { getTenantContext } from '../../security/tenant-context';
+import {
+  SIGNIFICANCE_LEVELS,
+  requiresHumanReview,
+} from '@intelliflow/domain';
 
 /**
  * Entity type for AI predictions
@@ -330,10 +334,11 @@ export const intelligenceRouter = createTRPCRouter({
       sentimentTrend: z.string().optional(),
       nextBestAction: z.string().optional(),
       recommendations: z.array(z.string()).optional(),
+      confidence: z.number().min(0).max(1).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
-      const { leadId, ...updateData } = input;
+      const { leadId, confidence, ...updateData } = input;
 
       // Verify lead exists
       const lead = await typedCtx.prismaWithTenant.lead.findUnique({
@@ -345,6 +350,18 @@ export const intelligenceRouter = createTRPCRouter({
           code: 'NOT_FOUND',
           message: `Lead with ID ${leadId} not found`,
         });
+      }
+
+      // Check if human review is required based on confidence
+      // Use CHURN_PREDICTION chain type for churn risk assessments
+      const needsReview = confidence !== undefined
+        ? requiresHumanReview(confidence, 'CHURN_PREDICTION')
+        : false;
+
+      if (needsReview) {
+        console.warn(
+          `[intelligence.updateLeadInsights] Lead ${leadId} requires human review (confidence: ${confidence?.toFixed(2)}, threshold: ${SIGNIFICANCE_LEVELS.MEDIUM})`
+        );
       }
 
       // Upsert AI insight
@@ -368,7 +385,13 @@ export const intelligenceRouter = createTRPCRouter({
         },
       });
 
-      return aiInsight;
+      return {
+        ...aiInsight,
+        requiresHumanReview: needsReview,
+        reviewReason: needsReview
+          ? `Low confidence (${confidence?.toFixed(2)}) for churn prediction (threshold: ${SIGNIFICANCE_LEVELS.MEDIUM})`
+          : undefined,
+      };
     }),
 
   /**

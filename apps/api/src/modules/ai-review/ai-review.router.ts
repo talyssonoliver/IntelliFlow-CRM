@@ -25,6 +25,7 @@ import {
 import type { IAIOutputReviewRepository, AIOutputReview, DomainError, DomainEvent } from '@intelliflow/domain';
 import type { Context } from '../../context';
 import { getTenantContext } from '../../security/tenant-context';
+import { mapErrorToTRPCError as centralizedErrorMapper } from '../../shared/error-mapper';
 
 // ============================================================
 // Lazy-loaded repository (follows autoresponse.router.ts pattern)
@@ -97,34 +98,14 @@ const eventBus: EventBusPort = {
 /**
  * Maps domain error codes to tRPC error codes.
  * Exported for testing.
+ *
+ * Note: This function is deprecated in favor of the centralized error mapper.
+ * It's kept for backward compatibility and tests.
+ * New code should use mapErrorToTRPCError from '../../shared/error-mapper'
  */
 export function mapDomainErrorToTRPCError(error: DomainError): TRPCError {
-  const code = (error as any).code as string;
-
-  switch (code) {
-    case 'REVIEW_NOT_FOUND':
-      return new TRPCError({ code: 'NOT_FOUND', message: error.message });
-    case 'REVIEW_ALREADY_CLAIMED':
-      return new TRPCError({ code: 'CONFLICT', message: error.message });
-    case 'INVALID_REVIEW_STATE':
-      return new TRPCError({ code: 'BAD_REQUEST', message: error.message });
-    case 'CONCURRENT_MODIFICATION':
-      return new TRPCError({ code: 'CONFLICT', message: error.message });
-    case 'INVALID_LOCK_TOKEN':
-      return new TRPCError({ code: 'UNAUTHORIZED', message: error.message });
-    case 'LOCK_EXPIRED':
-      return new TRPCError({ code: 'UNAUTHORIZED', message: error.message });
-    case 'NOT_LOCK_HOLDER':
-      return new TRPCError({ code: 'FORBIDDEN', message: error.message });
-    case 'MAX_ESCALATION_REACHED':
-      return new TRPCError({ code: 'CONFLICT', message: error.message });
-    case 'REJECTION_NOTES_REQUIRED':
-      return new TRPCError({ code: 'BAD_REQUEST', message: error.message });
-    case 'NO_ACTIVE_LOCK':
-      return new TRPCError({ code: 'BAD_REQUEST', message: error.message });
-    default:
-      return new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'An unexpected error occurred' });
-  }
+  // Delegate to centralized error mapper
+  return centralizedErrorMapper(error);
 }
 
 // ============================================================
