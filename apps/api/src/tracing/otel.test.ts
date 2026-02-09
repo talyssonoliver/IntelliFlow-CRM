@@ -5,6 +5,10 @@ import {
   ATTR_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions/incubating';
 
+// Unmock modules that are globally mocked in setup.ts but need real implementation here
+vi.unmock('./otel');
+vi.unmock('@opentelemetry/api');
+
 let lastNodeSdkOptions: unknown;
 const nodeSdkStart = vi.fn();
 const nodeSdkShutdown = vi.fn(async () => {});

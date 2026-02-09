@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
+// Unmock modules that are globally mocked in setup.ts but need real implementation here
+vi.unmock('./sentry');
+
 type SentryInitOptions = {
   dsn?: string;
   environment?: string;

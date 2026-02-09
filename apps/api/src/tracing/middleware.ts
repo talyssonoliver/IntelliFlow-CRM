@@ -16,7 +16,7 @@
 import { TRPCError, initTRPC } from '@trpc/server';
 import { initializeRequestContext, runWithContext, getCorrelationId } from './correlation';
 import { trace, SpanStatusCode } from '@opentelemetry/api';
-import { captureException, setUser, setTag } from './sentry';
+import { captureException, setUser, setTag, setContext } from './sentry';
 import type { Context } from '../context';
 
 // Initialize tRPC for middleware
@@ -73,6 +73,12 @@ export const tracingMiddleware = t.middleware(async ({ path, type, next, ctx }) 
           setTag('trpc.path', path);
           setTag('trpc.type', type);
           setTag('correlation.id', safeCorrelationId);
+          setContext('request', {
+            path,
+            type,
+            correlationId: safeCorrelationId,
+            tenantId: ctx.user?.tenantId,
+          });
 
           // Execute procedure
           const result = await next();

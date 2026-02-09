@@ -59,6 +59,4 @@ export {
 export {
   tracingMiddleware,
   metricsMiddleware,
-  tracedPublicProcedure,
-  tracedProtectedProcedure,
 } from './middleware';

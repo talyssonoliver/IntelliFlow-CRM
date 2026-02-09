@@ -19,6 +19,10 @@ import {
   logWithCorrelation,
 } from './correlation';
 
+// Unmock modules that are globally mocked in setup.ts but need real implementation here
+vi.unmock('./correlation');
+vi.unmock('@opentelemetry/api');
+
 describe('Correlation ID Utilities', () => {
   describe('generateCorrelationId', () => {
     it('should generate a valid UUID v4', () => {

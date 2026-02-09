@@ -8,6 +8,7 @@ const {
   captureException,
   setUser,
   setTag,
+  setContext,
   initializeRequestContext,
   runWithContext,
   getCorrelationId,
@@ -28,6 +29,7 @@ const {
     captureException: vi.fn(),
     setUser: vi.fn(),
     setTag: vi.fn(),
+    setContext: vi.fn(),
     initializeRequestContext: vi.fn(() => ({ correlationId: 'cid', startTime: Date.now() })),
     runWithContext: vi.fn((_ctx: any, fn: any) => fn()),
     getCorrelationId: vi.fn(() => 'cid'),
@@ -62,6 +64,7 @@ vi.mock('./sentry', () => ({
   captureException: (err: unknown) => captureException(err),
   setUser: (user: Record<string, unknown> | null) => setUser(user),
   setTag: (key: string, value: string) => setTag(key, value),
+  setContext: (name: string, ctx: Record<string, unknown>) => setContext(name, ctx),
 }));
 
 vi.mock('./correlation', () => ({
