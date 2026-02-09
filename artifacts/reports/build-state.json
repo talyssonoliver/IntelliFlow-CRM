@@ -1,0 +1,22 @@
+{
+  "typecheck": {
+    "success": false,
+    "errors": 1,
+    "warnings": 0,
+    "lastRun": "2026-02-08T19:58:34.284Z"
+  },
+  "lint": {
+    "success": false,
+    "errors": 1,
+    "warnings": 0,
+    "lastRun": "2026-02-08T19:58:48.250Z"
+  },
+  "turbo": {
+    "success": true,
+    "tasks_run": 33,
+    "tasks_cached": 16,
+    "duration_ms": 44759,
+    "errors": [],
+    "lastRun": "2026-02-08T18:58:21.169Z"
+  }
+}
