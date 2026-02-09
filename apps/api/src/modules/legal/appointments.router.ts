@@ -21,6 +21,7 @@ import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure } from '../../trpc';
 import { AppointmentDomainService } from '../../services';
+import { ConflictDetectionError, AppointmentConflictDetectedEvent, AppointmentId } from '@intelliflow/domain';
 
 // Zod schemas for appointment operations
 const appointmentTypeSchema = z.enum([
@@ -147,92 +148,125 @@ export const appointmentsRouter = createTRPCRouter({
   create: protectedProcedure.input(createAppointmentSchema).mutation(async ({ ctx, input }) => {
     const startTime = performance.now();
 
-    // Use domain service for input validation
-    const validation = AppointmentDomainService.validateInput({
-      title: input.title,
-      description: input.description,
-      startTime: input.startTime,
-      endTime: input.endTime,
-      appointmentType: input.appointmentType as any,
-      location: input.location,
-      organizerId: ctx.user.userId,
-      attendeeIds: input.attendeeIds,
-      linkedCaseIds: input.linkedCaseIds,
-      bufferMinutesBefore: input.bufferMinutesBefore,
-      bufferMinutesAfter: input.bufferMinutesAfter,
-      recurrence: input.recurrence as any,
-      reminderMinutes: input.reminderMinutes,
-    });
-
-    if (!validation.valid) {
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: validation.errors.join('; '),
-      });
-    }
-
-    // Check for conflicts if not overriding
-    if (!input.forceOverrideConflicts) {
-      const allAttendees = [ctx.user.userId, ...input.attendeeIds];
-
-      // Fetch existing appointments for conflict detection
-      const dbAppointments = await ctx.prisma.appointment.findMany({
-        where: {
-          AND: [
-            {
-              OR: [
-                { organizerId: { in: allAttendees } },
-                { attendees: { some: { userId: { in: allAttendees } } } },
-              ],
-            },
-            { status: { notIn: ['CANCELLED', 'NO_SHOW'] } },
-          ],
-        },
-        include: {
-          attendees: { select: { userId: true } },
-        },
+    try {
+      // Use domain service for input validation
+      const validation = AppointmentDomainService.validateInput({
+        title: input.title,
+        description: input.description,
+        startTime: input.startTime,
+        endTime: input.endTime,
+        appointmentType: input.appointmentType as any,
+        location: input.location,
+        organizerId: ctx.user.userId,
+        attendeeIds: input.attendeeIds,
+        linkedCaseIds: input.linkedCaseIds,
+        bufferMinutesBefore: input.bufferMinutesBefore,
+        bufferMinutesAfter: input.bufferMinutesAfter,
+        recurrence: input.recurrence as any,
+        reminderMinutes: input.reminderMinutes,
       });
 
-      // Convert to domain Appointments
-      const domainAppointments = AppointmentDomainService.toDomainAppointments(dbAppointments);
-
-      // Use domain service for sophisticated conflict detection
-      const conflictResult = AppointmentDomainService.checkConflicts(
-        {
-          startTime: input.startTime,
-          endTime: input.endTime,
-          attendeeIds: allAttendees,
-          bufferMinutesBefore: input.bufferMinutesBefore,
-          bufferMinutesAfter: input.bufferMinutesAfter,
-        },
-        domainAppointments
-      );
-
-      if (conflictResult.hasConflicts) {
-        // Get conflict details from database
-        const conflictDetails = await ctx.prisma.appointment.findMany({
-          where: { id: { in: conflictResult.conflicts.map((c) => c.appointmentId) } },
-          select: { id: true, title: true, startTime: true, endTime: true },
-        });
-
+      if (!validation.valid) {
         throw new TRPCError({
-          code: 'CONFLICT',
-          message: `Scheduling conflict detected with ${conflictResult.conflicts.length} appointment(s)`,
-          cause: {
-            conflicts: conflictResult.conflicts.map((c) => {
-              const details = conflictDetails.find((d) => d.id === c.appointmentId);
-              return {
-                id: c.appointmentId,
-                title: details?.title ?? 'Unknown',
-                startTime: details?.startTime ?? c.conflictStart,
-                endTime: details?.endTime ?? c.conflictEnd,
-                overlapMinutes: c.overlapMinutes,
-                conflictType: c.conflictType,
-              };
-            }),
-          },
+          code: 'BAD_REQUEST',
+          message: validation.errors.join('; '),
         });
       }
+
+      // Check for conflicts if not overriding
+      if (!input.forceOverrideConflicts) {
+        const allAttendees = [ctx.user.userId, ...input.attendeeIds];
+
+        // Fetch existing appointments for conflict detection
+        const dbAppointments = await ctx.prisma.appointment.findMany({
+          where: {
+            AND: [
+              {
+                OR: [
+                  { organizerId: { in: allAttendees } },
+                  { attendees: { some: { userId: { in: allAttendees } } } },
+                ],
+              },
+              { status: { notIn: ['CANCELLED', 'NO_SHOW'] } },
+            ],
+          },
+          include: {
+            attendees: { select: { userId: true } },
+          },
+        });
+
+        // Convert to domain Appointments
+        const domainAppointments = AppointmentDomainService.toDomainAppointments(dbAppointments);
+
+        // Use domain service for sophisticated conflict detection
+        const conflictResult = AppointmentDomainService.checkConflicts(
+          {
+            startTime: input.startTime,
+            endTime: input.endTime,
+            attendeeIds: allAttendees,
+            bufferMinutesBefore: input.bufferMinutesBefore,
+            bufferMinutesAfter: input.bufferMinutesAfter,
+          },
+          domainAppointments
+        );
+
+        if (conflictResult.hasConflicts) {
+          // Get conflict details from database
+          const conflictDetails = await ctx.prisma.appointment.findMany({
+            where: { id: { in: conflictResult.conflicts.map((c) => c.appointmentId) } },
+            select: { id: true, title: true, startTime: true, endTime: true },
+          });
+
+          // Log conflict detection for audit/monitoring
+          console.warn('[appointments.create] Conflict detected:', {
+            attemptedTimeSlot: { start: input.startTime, end: input.endTime },
+            conflictCount: conflictResult.conflicts.length,
+            attendees: allAttendees,
+          });
+
+          // Emit conflict detected domain event for audit trail
+          const appointmentIdResult = AppointmentId.create(input.title);
+          if (appointmentIdResult.isSuccess) {
+            const conflictIds = conflictResult.conflicts
+              .map((c) => AppointmentId.create(c.appointmentId))
+              .filter((r) => r.isSuccess)
+              .map((r) => r.value);
+            const conflictEvent = new AppointmentConflictDetectedEvent(
+              appointmentIdResult.value,
+              conflictIds,
+              new Date()
+            );
+            console.log('[appointments] Conflict detected:', conflictEvent.toPayload());
+          }
+
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: `Scheduling conflict detected with ${conflictResult.conflicts.length} appointment(s)`,
+            cause: {
+              conflicts: conflictResult.conflicts.map((c) => {
+                const details = conflictDetails.find((d) => d.id === c.appointmentId);
+                return {
+                  id: c.appointmentId,
+                  title: details?.title ?? 'Unknown',
+                  startTime: details?.startTime ?? c.conflictStart,
+                  endTime: details?.endTime ?? c.conflictEnd,
+                  overlapMinutes: c.overlapMinutes,
+                  conflictType: c.conflictType,
+                };
+              }),
+            },
+          });
+        }
+      }
+    } catch (error) {
+      // Handle domain-specific conflict detection errors
+      if (error instanceof ConflictDetectionError) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Conflict detection failed: ${error.message}`,
+        });
+      }
+      throw error;
     }
 
     // Create the appointment

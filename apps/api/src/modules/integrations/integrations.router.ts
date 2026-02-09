@@ -13,6 +13,7 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure, publicProcedure } from '../../trpc';
+import { mapErrorToTRPCError } from '../../shared/error-mapper';
 
 // ============================================
 // Types
