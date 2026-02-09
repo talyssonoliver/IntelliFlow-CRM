@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import type { SecurityEventInput } from '../types';
 import { getSeverityMarker } from '../utils';
+import { getAIEventSeverity, isAISecurityEventType } from '@intelliflow/domain';
 
 /**
  * Validate that the tenantId exists in the database
@@ -35,7 +36,13 @@ export async function logSecurityEventToDb(
   input: SecurityEventInput,
   consoleLog: boolean
 ): Promise<string> {
-  const marker = getSeverityMarker(input.severity || 'INFO');
+  // Auto-determine severity for AI security events if not provided
+  let severity = input.severity || 'INFO';
+  if (isAISecurityEventType(input.eventType)) {
+    severity = input.severity || getAIEventSeverity(input.eventType);
+  }
+
+  const marker = getSeverityMarker(severity);
 
   if (consoleLog) {
     console.log(`[SECURITY] ${marker} ${input.eventType}: ${input.description}`);
@@ -57,7 +64,7 @@ export async function logSecurityEventToDb(
   const event = await prisma.securityEvent?.create({
     data: {
       eventType: input.eventType,
-      severity: input.severity ?? 'INFO',
+      severity,
       tenantId: input.tenantId,
       actorId: input.actorId,
       actorEmail: input.actorEmail,

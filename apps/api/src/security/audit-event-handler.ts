@@ -26,6 +26,7 @@ import {
   ResourceType,
   ActionResult,
 } from './types';
+import { getAIEventSeverity } from '@intelliflow/domain';
 
 // ============================================================================
 // Types
@@ -285,14 +286,30 @@ const EVENT_AUDIT_MAPPINGS: Record<string, EventAuditMapping> = {
     resourceType: 'ai_score',
     dataClassification: 'INTERNAL',
     actorType: 'AI_AGENT',
-    extractAfterState: (p) => p.prediction as Record<string, unknown>,
+    extractAfterState: (p) => {
+      const prediction = p.prediction as Record<string, unknown>;
+      const eventType = p.eventType as string || 'PREDICTION';
+      const severity = getAIEventSeverity(eventType);
+      return {
+        ...prediction,
+        severity,
+      };
+    },
   },
   'AIGeneration': {
     action: 'AI_GENERATE',
     resourceType: 'ai_score',
     dataClassification: 'INTERNAL',
     actorType: 'AI_AGENT',
-    extractAfterState: (p) => ({ generatedContent: p.content, model: p.model }),
+    extractAfterState: (p) => {
+      const eventType = p.eventType as string || 'GENERATION';
+      const severity = getAIEventSeverity(eventType);
+      return {
+        generatedContent: p.content,
+        model: p.model,
+        severity,
+      };
+    },
   },
 
   // User/Auth events
@@ -404,6 +421,11 @@ export class AuditEventHandler {
         return this.handleUnknownEvent(event);
       }
 
+      // For AI events, include severity from domain utility
+      const isAIEvent = event.eventType.toLowerCase().includes('ai') ||
+        mapping.actorType === 'AI_AGENT';
+      const aiSeverity = isAIEvent ? getAIEventSeverity(event.eventType) : undefined;
+
       const auditLogId = await this.auditLogger.log({
         // Multi-tenancy
         tenantId: event.metadata?.tenantId ?? 'unknown',
@@ -448,6 +470,7 @@ export class AuditEventHandler {
           correlationId: event.metadata?.correlationId,
           causationId: event.metadata?.causationId,
           originalPayload: event.payload,
+          ...(aiSeverity && { aiEventSeverity: aiSeverity }),
         },
       });
 
