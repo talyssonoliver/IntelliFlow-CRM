@@ -35,6 +35,7 @@ import { aiReviewRouter } from './modules/ai-review/ai-review.router';
 import { homeRouter } from './modules/home/home.router';
 import { notificationsRouter } from './modules/notifications/notifications.router';
 import { workflowRouter } from './modules/workflow/workflow.router';
+import { webhooksRouter } from './modules/webhooks/webhooks.router';
 import { queuesAdminRouter } from './modules/admin/queues.router';
 
 /**
@@ -71,6 +72,9 @@ import { queuesAdminRouter } from './modules/admin/queues.router';
  *
  * Email Infrastructure (IFC-144):
  * - email.*        - Inbound email webhooks and processing
+ *
+ * Webhook Infrastructure:
+ * - webhooks.*     - Webhook management and processing (IFC-144)
  *
  * Home & Notifications:
  * - home.*          - Authenticated home page data (IFC-182)
@@ -127,6 +131,9 @@ export const appRouter = createTRPCRouter({
 
   // Email Infrastructure (IFC-144)
   email: inboundEmailRouter,
+
+  // Webhook Infrastructure (IFC-144)
+  webhooks: webhooksRouter,
 
   // Home Page (IFC-182)
   home: homeRouter,

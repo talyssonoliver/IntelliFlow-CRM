@@ -15,6 +15,49 @@ import type { DeepMockProxy } from 'vitest-mock-extended';
 import { mockDeep, mockReset } from 'vitest-mock-extended';
 import type { BaseContext } from '../context';
 
+// ============================================================================
+// Global mocks for tracingMiddleware dependencies
+// tracingMiddleware is applied to all procedures (public, protected, admin)
+// so every router test needs these mocks.
+// Individual tests can override with their own vi.mock() if needed.
+// ============================================================================
+
+vi.mock('../tracing/correlation', () => ({
+  getCorrelationId: vi.fn(() => 'test-correlation-id'),
+  getUserId: vi.fn(() => undefined),
+  initializeRequestContext: vi.fn(() => ({
+    correlationId: 'test-correlation-id',
+    requestId: 'test-request-id',
+    userId: undefined,
+  })),
+  runWithContext: vi.fn((_ctx: unknown, fn: () => unknown) => fn()),
+}));
+
+vi.mock('@opentelemetry/api', () => ({
+  trace: {
+    getTracer: () => ({
+      startActiveSpan: (_name: string, _opts: unknown, fn: (span: unknown) => unknown) => {
+        const mockSpan = { setAttribute: vi.fn(), setStatus: vi.fn(), recordException: vi.fn(), end: vi.fn() };
+        return fn(mockSpan);
+      },
+    }),
+  },
+  SpanStatusCode: { ERROR: 2, OK: 0 },
+}));
+
+vi.mock('../tracing/sentry', () => ({
+  captureException: vi.fn(),
+  setUser: vi.fn(),
+  setTag: vi.fn(),
+  setContext: vi.fn(),
+  startSpan: vi.fn(),
+}));
+
+vi.mock('../tracing/otel', () => ({
+  getSDKInstance: vi.fn(() => null),
+  startTracing: vi.fn(),
+}));
+
 /**
  * Create a delayed result that satisfies Prisma's PrismaPromise type.
  * Useful for testing slow query detection branches.
@@ -80,6 +123,7 @@ export const mockServices = {
   task: mockDeep<any>(),
   ticket: mockDeep<any>(),
   analytics: mockDeep<any>(),
+  chainVersion: mockDeep<any>(),
 };
 
 /**
@@ -103,6 +147,8 @@ export const mockAdapters = {
   accountRepository: mockDeep<any>(),
   opportunityRepository: mockDeep<any>(),
   taskRepository: mockDeep<any>(),
+  chainVersionRepository: mockDeep<any>(),
+  chainVersionAuditRepository: mockDeep<any>(),
   eventBus: mockDeep<any>(),
   aiService: mockDeep<any>(),
   cache: mockDeep<any>(),

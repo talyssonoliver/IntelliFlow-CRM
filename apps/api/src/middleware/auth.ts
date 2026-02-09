@@ -14,6 +14,7 @@
 import { TRPCError } from '@trpc/server';
 import { Context } from '../context';
 import { verifyToken as supabaseVerifyToken } from '../lib/supabase';
+import { mapErrorToTRPCError } from '../shared/error-mapper';
 
 /**
  * Middleware options type for authentication middleware
@@ -48,40 +49,50 @@ export function createAuthMiddleware() {
 /**
  * Creates middleware to check if user has admin role
  * Use with t.middleware() in server.ts
+ * Handles AuthorizationError from application layer
  */
 export function createAdminMiddleware() {
   return async ({
     ctx,
     next,
   }: MiddlewareOpts<Context & { user: NonNullable<Context['user']> }>) => {
-    if (ctx.user.role !== 'ADMIN') {
-      throw new TRPCError({
-        code: 'FORBIDDEN',
-        message: 'Admin access required',
-      });
-    }
+    try {
+      if (ctx.user.role !== 'ADMIN') {
+        // Import and throw AuthorizationError from application layer
+        const { AuthorizationError } = await import('@intelliflow/application');
+        throw new AuthorizationError('Admin access required');
+      }
 
-    return next();
+      return next();
+    } catch (error) {
+      // Map AuthorizationError to FORBIDDEN TRPC error
+      throw mapErrorToTRPCError(error);
+    }
   };
 }
 
 /**
  * Creates middleware to check if user has manager role or above
  * Use with t.middleware() in server.ts
+ * Handles AuthorizationError from application layer
  */
 export function createManagerMiddleware() {
   return async ({
     ctx,
     next,
   }: MiddlewareOpts<Context & { user: NonNullable<Context['user']> }>) => {
-    if (!['ADMIN', 'MANAGER'].includes(ctx.user.role)) {
-      throw new TRPCError({
-        code: 'FORBIDDEN',
-        message: 'Manager access required',
-      });
-    }
+    try {
+      if (!['ADMIN', 'MANAGER'].includes(ctx.user.role)) {
+        // Import and throw AuthorizationError from application layer
+        const { AuthorizationError } = await import('@intelliflow/application');
+        throw new AuthorizationError('Manager access required');
+      }
 
-    return next();
+      return next();
+    } catch (error) {
+      // Map AuthorizationError to FORBIDDEN TRPC error
+      throw mapErrorToTRPCError(error);
+    }
   };
 }
 

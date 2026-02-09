@@ -132,7 +132,7 @@ describe('tRPC Configuration', () => {
     });
   });
 
-  describe('loggingMiddleware', () => {
+  describe('loggingMiddleware (now via tracingMiddleware)', () => {
     it('should log request type and path', async () => {
       const { createTRPCRouter, loggedProcedure } = await import('../trpc.js');
 
@@ -143,7 +143,8 @@ describe('tRPC Configuration', () => {
       const caller = router.createCaller({} as any);
       await caller.test();
 
-      expect(console.log).toHaveBeenCalledWith(expect.stringContaining('[tRPC]'));
+      // tracingMiddleware logs structured JSON with trpc.request type
+      expect(console.log).toHaveBeenCalledWith(expect.stringContaining('trpc.request'));
     });
 
     it('should warn for slow requests over 50ms', async () => {
@@ -159,7 +160,11 @@ describe('tRPC Configuration', () => {
       const caller = router.createCaller({} as any);
       await caller.slowEndpoint();
 
-      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('SLOW REQUEST'));
+      // tracingMiddleware warns with [Tracing] SLOW REQUEST format
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining('SLOW REQUEST'),
+        expect.anything()
+      );
     });
   });
 

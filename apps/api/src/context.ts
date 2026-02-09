@@ -29,7 +29,7 @@ export interface UserSession {
 
 /**
  * Services type from container
- * Note: Some services (chainVersion, experiment, feedback) are optional
+ * Note: Some services (experiment, feedback) are optional
  * as they are planned for future implementation
  */
 export type Services = {
@@ -40,8 +40,8 @@ export type Services = {
   task: Container['taskService'];
   ticket: Container['ticketService'];
   analytics: Container['analyticsService'];
+  chainVersion: Container['chainVersionService'];
   // Optional future services - not yet implemented in container
-  chainVersion?: unknown;
   experiment?: unknown;
   feedback?: unknown;
 };
@@ -212,6 +212,7 @@ export const createWSContext = async (authHeader?: string): Promise<BaseContext>
       task: container.taskService,
       ticket: container.ticketService,
       analytics: container.analyticsService,
+      chainVersion: container.chainVersionService,
     },
     security: container.security,
     adapters: container.adapters,
@@ -350,6 +351,7 @@ export const createContext = async (opts?: { req?: Request; res?: Response }): P
       task: container.taskService,
       ticket: container.ticketService,
       analytics: container.analyticsService,
+      chainVersion: container.chainVersionService,
     },
     // Security services (IFC-098, IFC-113, IFC-127)
     security: container.security,
