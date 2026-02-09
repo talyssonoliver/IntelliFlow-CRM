@@ -6,7 +6,10 @@ import { StructuredOutputParser } from '@langchain/core/output_parsers';
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
 import { costTracker } from '../utils/cost-tracker';
+import { chainMonitor, withMonitoring } from '../monitoring/chain-monitor';
+import type { MonitoredResult } from '../monitoring/chain-monitor';
 import { leadScoreSchema } from '@intelliflow/validators';
+import { requiresHumanReview } from '@intelliflow/domain';
 import pino from 'pino';
 
 const logger = pino({
@@ -154,29 +157,46 @@ Be thorough but concise. Each factor should have a clear impact score and reason
         lead_info: leadInfo,
       });
 
-      // Call the LLM
-      const response = await this.model.invoke(formattedPrompt);
+      // Wrap LLM call + parsing with monitoring (IFC-117)
+      const monitoredConfig = chainMonitor.getConfig();
+      const monitored: MonitoredResult<ScoringResult> = await withMonitoring(
+        async () => {
+          // Call the LLM
+          const response = await this.model.invoke(formattedPrompt);
 
-      // Parse the structured output
-      const result = (await this.parser.parse(response.content as string)) as Omit<
-        ScoringResult,
-        'modelVersion'
-      >;
+          // Parse the structured output
+          const result = (await this.parser.parse(response.content as string)) as Omit<
+            ScoringResult,
+            'modelVersion'
+          >;
 
-      // Add model version
-      const scoringResult: ScoringResult = {
-        ...result,
-        modelVersion: `${aiConfig.provider}:${aiConfig.provider === 'openai' ? aiConfig.openai.model : aiConfig.ollama.model}:v1`,
-      };
+          // Add model version
+          return {
+            ...result,
+            modelVersion: `${aiConfig.provider}:${aiConfig.provider === 'openai' ? aiConfig.openai.model : aiConfig.ollama.model}:v1`,
+          };
+        },
+        monitoredConfig,
+      );
 
+      const scoringResult = monitored.result;
       const duration = Date.now() - startTime;
+
+      // Check if result requires human review based on confidence threshold
+      const needsReview = requiresHumanReview(scoringResult.confidence, 'LEAD_SCORING');
 
       logger.info(
         {
           leadEmail: lead.email,
           score: scoringResult.score,
           confidence: scoringResult.confidence,
+          requiresHumanReview: needsReview,
           duration,
+          monitoringMetrics: {
+            operationId: monitored.metrics.operationId,
+            latencyMs: monitored.metrics.latencyMs,
+            driftScore: monitored.metrics.driftScore,
+          },
         },
         'Lead scoring completed'
       );

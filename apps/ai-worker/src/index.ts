@@ -186,6 +186,9 @@ export * from './prompts';
 // Shared AI types
 export * from './types';
 
+// AI Model Monitoring (IFC-117)
+export * from './monitoring';
+
 // Chain versioning (IFC-086)
 export * from './versioning';
 
