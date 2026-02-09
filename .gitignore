@@ -105,6 +105,7 @@ __pycache__/
 # Claude AI
 .claude/commands/
 .claude/skills/
+.claude/hooks/state/
 tmpclaude-*-cwd
 tmpclaude-*-cwd/
 

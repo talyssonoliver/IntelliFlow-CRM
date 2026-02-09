@@ -147,14 +147,19 @@ items:
       Stub contract in place for Sprint 0, full integration in Sprint 1+.
     created_at: 2025-12-17
     expiry_date: 2026-01-15
+    resolved_at: 2026-02-08
     remediation_plan: |
       1. Complete IFC-001 in Sprint 1
       2. Integrate ENV-017-AI with architecture decisions
       3. Run full integration test suite
       4. Remove stub contract exception
     remediation_sprint: 1
-    status: open
-    notes: Cross-sprint dependency resolved via stub_contract. See PLAN-FIX-001.
+    status: resolved
+    notes: |
+      Cross-sprint dependency resolved via stub_contract. See PLAN-FIX-001.
+      RESOLVED 2026-02-08: Both ENV-017-AI (2025-12-23) and IFC-001 (2025-12-26)
+      completed. 17 integration test files passing. Stub contract exception removed
+      from plan-overrides.yaml.
   DEBT-010:
     origin_task: ENV-018-AI
     owner: PM
