@@ -1,15 +1,17 @@
 @startuml IntelliFlow-CRM-Context-Map
 
-!define RECTANGLE class
+title IntelliFlow CRM - DDD Context Map (Strategic)
 
-title IntelliFlow CRM - DDD Context Map
+' Style definitions
+skinparam componentStyle uml2
 
-' Define Bounded Contexts
-package "CRM Context" as CRM {
+' ============================================================
+' BOUNDED CONTEXTS
+' ============================================================
+
+package "CRM Core Domain" as CRM {
   rectangle "Lead Management" as LeadBC {
     [Lead Aggregate]
-    [Email VO]
-    [LeadScore VO]
   }
 
   rectangle "Contact Management" as ContactBC {
@@ -24,143 +26,104 @@ package "CRM Context" as CRM {
     [Opportunity Aggregate]
   }
 
-  rectangle "Task Management" as TaskBC {
-    [Task Aggregate]
+  rectangle "Support & Ticketing" as TicketBC {
+    [Ticket Aggregate]
   }
 }
 
-package "Intelligence Context" as Intelligence {
-  rectangle "AI Scoring" as ScoringBC {
-    [ScoringService]
-    [ScoreModel]
+package "Intelligence Domain" as Intelligence {
+  rectangle "AI Scoring & Next Best Action" as ScoringBC {
+    [Scoring Engine]
   }
 
-  rectangle "Predictions" as PredictionBC {
-    [PredictionEngine]
-    [ConversionPredictor]
+  rectangle "RAG & Knowledge" as RagBC {
+    [Knowledge Base]
   }
 
-  rectangle "Recommendations" as RecommendationBC {
-    [RecommendationEngine]
-    [NextBestAction]
+  rectangle "Model Governance" as ModelGovBC {
+    [Model Registry]
   }
 }
 
-package "Platform Context" as Platform {
-  rectangle "Authentication" as AuthBC {
-    [User Aggregate]
-    [Session]
-    [Permissions]
+package "Platform & Support Domain" as Platform {
+  rectangle "IAM & Tenancy" as AuthBC {
+    [Identity & Access]
   }
 
-  rectangle "Notifications" as NotificationBC {
-    [Notification Aggregate]
-    [EmailService]
-    [SMSService]
+  rectangle "Document Management" as DocBC {
+    [Blob Storage]
   }
 
-  rectangle "Audit" as AuditBC {
-    [AuditLog]
-    [EventStore]
+  rectangle "Workflow Automation" as WorkflowBC {
+    [Process Engine]
   }
-}
 
-package "Integration Context" as Integration {
-  rectangle "External APIs" as ExternalBC {
-    [EmailProvider]
-    [CalendarSync]
-    [DataEnrichment]
+  rectangle "Audit & Compliance" as AuditBC {
+    [Audit Log]
   }
 }
 
-' Define relationships between contexts
+package "Integration Domain" as Integration {
+  rectangle "Communication Adapters" as CommBC {
+    [Email/WhatsApp Provider]
+  }
+  
+  rectangle "ERP Connectors" as ErpBC {
+    [External ERP]
+  }
+}
 
-' CRM Internal Relationships
-LeadBC --> ContactBC : "Converts to" \n(Conformist)
-ContactBC --> AccountBC : "Belongs to" \n(Customer-Supplier)
-OpportunityBC --> AccountBC : "Belongs to" \n(Customer-Supplier)
-OpportunityBC --> ContactBC : "Associated with" \n(Customer-Supplier)
-TaskBC --> LeadBC : "Relates to" \n(Shared Kernel)
-TaskBC --> ContactBC : "Relates to" \n(Shared Kernel)
-TaskBC --> OpportunityBC : "Relates to" \n(Shared Kernel)
+' ============================================================
+' RELATIONSHIPS (Arrow points to Dependency / Upstream unless noted)
+' Downstream --> Upstream
+' Partnership uses bidirectional coupling (A <--> B)
+' ============================================================
 
-' Intelligence to CRM (Upstream-Downstream)
-ScoringBC --> LeadBC : "Scores" \n(Customer-Supplier)
-PredictionBC --> OpportunityBC : "Predicts" \n(Customer-Supplier)
-RecommendationBC --> TaskBC : "Suggests" \n(Customer-Supplier)
+' CRM Internal
+LeadBC -down-> ContactBC : "Converts to" \n(Conformist)
+LeadBC -right-> OpportunityBC : "Initiates" \n(Customer-Supplier)
+ContactBC -right-> AccountBC : "Belongs to" \n(Customer-Supplier)
+OpportunityBC -up-> AccountBC : "Attached to" \n(Customer-Supplier)
+TicketBC -up-> ContactBC : "Refers to" \n(Customer-Supplier)
+TicketBC -up-> AccountBC : "Refers to" \n(Customer-Supplier)
 
-' Platform to CRM (Shared Kernel for Auth, Published Language for others)
-AuthBC --> LeadBC : "Owns" \n(Shared Kernel)
-AuthBC --> ContactBC : "Owns" \n(Shared Kernel)
-AuthBC --> AccountBC : "Owns" \n(Shared Kernel)
-AuthBC --> OpportunityBC : "Owns" \n(Shared Kernel)
-AuthBC --> TaskBC : "Owns" \n(Shared Kernel)
+' Intelligence (Services)
+LeadBC -up-> ScoringBC : "Uses" \n(Customer-Supplier)
+OpportunityBC -up-> ScoringBC : "Uses" \n(Customer-Supplier)
+TicketBC -up-> RagBC : "Uses" \n(Customer-Supplier)
 
-NotificationBC ..> LeadBC : "Notifies about" \n(Published Language)
-NotificationBC ..> OpportunityBC : "Notifies about" \n(Published Language)
-NotificationBC ..> TaskBC : "Notifies about" \n(Published Language)
+' Model Governance
+ScoringBC -right-> ModelGovBC : "Verified by" \n(Conformist)
+RagBC -left-> ModelGovBC : "Verified by" \n(Conformist)
 
-AuditBC ..> LeadBC : "Audits" \n(Published Language)
-AuditBC ..> ContactBC : "Audits" \n(Published Language)
-AuditBC ..> AccountBC : "Audits" \n(Published Language)
-AuditBC ..> OpportunityBC : "Audits" \n(Published Language)
+' Platform Support (Foundation)
+CRM -down-> AuthBC : "Uses Identity" \n(Conformist)
+Intelligence -down-> AuthBC : "Uses Identity" \n(Conformist)
+CRM -down-> DocBC : "References" \n(Customer-Supplier)
+TicketBC -down-> DocBC : "References" \n(Customer-Supplier)
 
-' Integration Context
-ExternalBC --> ContactBC : "Enriches" \n(Anti-Corruption Layer)
-ExternalBC --> AccountBC : "Enriches" \n(Anti-Corruption Layer)
+' Workflow
+OpportunityBC <--> WorkflowBC : "Delegates State" \n(Partnership)
+TicketBC <--> WorkflowBC : "Delegates State" \n(Partnership)
 
-note right of CRM
-  **CRM Context** (Core Domain)
-  - Lead Management: Lead capture, scoring, qualification
-  - Contact Management: Individual contacts from leads
-  - Account Management: Organizations/companies
-  - Opportunity Management: Sales pipeline
-  - Task Management: Activities and to-dos
+' Audit (Compliance)
+AuditBC ..> CRM : "Observes" \n(Open Host Service)
+AuditBC ..> Intelligence : "Observes" \n(Open Host Service)
+AuditBC ..> Platform : "Observes" \n(Open Host Service)
 
-  All aggregates follow DDD patterns:
-  - Strong consistency boundaries
-  - Domain events for communication
-  - Repository pattern for persistence
-end note
-
-note right of Intelligence
-  **Intelligence Context** (Core Domain)
-  - AI Scoring: ML-based lead scoring
-  - Predictions: Opportunity win probability
-  - Recommendations: Next best actions
-
-  Consumes CRM data, publishes insights
-  via domain events
-end note
-
-note right of Platform
-  **Platform Context** (Supporting Subdomain)
-  - Authentication: User management, RBAC
-  - Notifications: Multi-channel notifications
-  - Audit: Event sourcing, compliance
-
-  Provides foundational services to
-  all bounded contexts
-end note
-
-note right of Integration
-  **Integration Context** (Generic Subdomain)
-  - External APIs: Third-party integrations
-  - Data enrichment: Company/contact data
-  - Calendar sync: Meeting management
-
-  Uses Anti-Corruption Layer to protect
-  domain from external changes
-end note
+' Integration (ACL)
+ContactBC ..> CommBC : "Uses" \n(ACL)
+AccountBC ..> ErpBC : "Uses" \n(ACL)
 
 legend right
-  **Context Relationship Patterns:**
-  |= Pattern |= Description |
-  | Shared Kernel | Shared domain concepts (e.g., User, ownerId) |
-  | Customer-Supplier | Downstream depends on upstream APIs |
-  | Conformist | Downstream conforms to upstream model |
-  | Published Language | Event-based integration via domain events |
-  | Anti-Corruption Layer | Protects domain from external systems |
+  | Arrow | Meaning |
+  | A -> B | A depends on B (B is Upstream) |
+  | A <-> B | A and B are mutually dependent |
+  | A ..> B | A implements/uses B (weak dependency) |
+  | Conformist | Downstream strictly adheres to Upstream model |
+  | Customer-Supplier | Negotiated interface |
+  | ACL | Anti-Corruption Layer (Adapter) |
+  | Partnership | Coupled evolution |
 endlegend
 
 @enduml

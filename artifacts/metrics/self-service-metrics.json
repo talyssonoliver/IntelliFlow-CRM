@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-02-08T14:10:50.891Z",
+  "generated_at": "2026-02-09T17:44:13.362Z",
   "task_id": "IFC-078",
   "sprint": 18,
   "provenance": {
     "collection_method": "automated_scan",
     "collected_by": "Platform Health Dashboard (auto-regenerate)",
-    "last_collected_at": "2026-02-08T14:10:50.891Z",
+    "last_collected_at": "2026-02-09T17:44:13.362Z",
     "sources": {
       "deploy_metrics": {
         "source": "Vercel/Railway/Easypanel deployment logs",
@@ -38,20 +38,20 @@
       "golden_paths": {
         "source": "docs/operations/engineering-playbook.md",
         "collection_method": "documentation_review",
-        "period": "2026-02-08T14:10:50.891Z/2026-02-08T14:10:50.891Z",
+        "period": "2026-02-09T17:44:13.362Z/2026-02-09T17:44:13.362Z",
         "confidence": "high",
         "notes": "Golden paths verified: 4/4 have documented content"
       },
       "codebase_scan": {
         "source": "Filesystem + git analysis",
         "collection_method": "automated_pipeline",
-        "period": "2026-01-09T14:10:51.011Z/2026-02-08T14:10:50.891Z",
+        "period": "2026-01-10T17:44:13.866Z/2026-02-09T17:44:13.362Z",
         "confidence": "high",
-        "notes": "Auto-collected: 0 TS files, 0 tests, 0 commits (30d)"
+        "notes": "Auto-collected: 2066 TS files, 724 tests, 242 commits (30d)"
       }
     },
     "staleness_threshold_days": 90,
-    "next_collection_due": "2026-05-09T14:10:51.011Z"
+    "next_collection_due": "2026-05-10T17:44:13.866Z"
   },
   "platform_engineering_foundation": {
     "internal_developer_platform": {
@@ -227,13 +227,13 @@
     "command": "pnpm run validate:platform-metrics",
     "exit_code": 0,
     "passed": true,
-    "validated_at": "2026-02-08T14:10:50.891Z"
+    "validated_at": "2026-02-09T17:44:13.362Z"
   },
   "codebase_health": {
-    "typescript_files": 0,
-    "test_files": 0,
-    "test_ratio": 0,
-    "total_tracked_files": 0,
+    "typescript_files": 2066,
+    "test_files": 724,
+    "test_ratio": 35,
+    "total_tracked_files": 3492,
     "workspace_packages": 19,
     "ci_workflows": 27,
     "ci_workflow_names": [
@@ -265,14 +265,14 @@
       "validate-sprint-data",
       "validate-sprint"
     ],
-    "database_migrations": 7,
+    "database_migrations": 8,
     "root_scripts": 103,
     "env_files_documented": 3,
     "env_files_expected": 3,
     "test_coverage_pct": 89.07,
     "git_velocity": {
-      "commits_30d": 0,
-      "branches": 0
+      "commits_30d": 242,
+      "branches": 20
     },
     "golden_paths_verified": 4,
     "golden_paths_total": 4

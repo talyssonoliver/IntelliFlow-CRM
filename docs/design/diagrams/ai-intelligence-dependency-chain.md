@@ -18,7 +18,7 @@ The **AI/Intelligence** domain covers Lead Scoring, Sentiment Analysis, Churn Ri
 | RAG/Search | IFC-039 | IFC-156 | PG-144 | `/agent-approvals/ai-search` | UI PLANNED (Sprint 7) |
 | Auto-Response | IFC-029 | IFC-029 | IFC-149 | `/agent-approvals` | COMPLETE |
 | AI Output Review | IFC-128 | IFC-180 ✅ | IFC-181 ✅ + PG-150 | `/agent-approvals/ai-review` | COMPLETE (history pending) |
-| AI Monitoring | IFC-117 | IFC-197 | PG-146/151/152/153 | `/agent-approvals/drift,agents,logs,latency` | ROUTER PLANNED (Sprint 7) |
+| AI Monitoring | IFC-117 | IFC-197 ✅ | PG-146/151/152/153 | `/agent-approvals/drift,agents,logs,latency` | ROUTER COMPLETE |
 | Experiments | IFC-025 | IFC-025 | PG-149 | `/agent-approvals/experiments` | UI PLANNED (Sprint 7) |
 
 ---
@@ -411,9 +411,9 @@ The **AI/Intelligence** domain covers Lead Scoring, Sentiment Analysis, Churn Ri
                                         │  All depend on: IFC-197                              │
                                         └─────────────────────────────────────────────────────┘
 
-    Chain Status: ⏳ Router and UI tasks created
+    Chain Status: ⏳ Router complete, UI tasks pending
     - Monitoring Tools: IFC-117 ✅
-    - tRPC Router: IFC-197 (Sprint 7) ⏳
+    - tRPC Router: IFC-197 (Sprint 7) ✅
     - Drift UI: PG-146 (Sprint 8) ⏳
     - Agents UI: PG-151 (Sprint 8) ⏳
     - Logs UI: PG-152 (Sprint 8) ⏳
@@ -463,7 +463,7 @@ The **AI/Intelligence** domain covers Lead Scoring, Sentiment Analysis, Churn Ri
 | PG-148 | Lead Scoring Dashboard | `/agent-approvals/lead-scoring` | IFC-005, IFC-023, IFC-181 | 7 | BACKLOG |
 | PG-149 | Experiments Dashboard | `/agent-approvals/experiments` | IFC-025, IFC-181 | 7 | BACKLOG |
 | PG-150 | AI Review History | `/agent-approvals/history` | IFC-181, IFC-180 | 7 | BACKLOG |
-| IFC-197 | AI Monitoring Router | (tRPC) | IFC-117, IFC-125 | 7 | BACKLOG |
+| IFC-197 | AI Monitoring Router | (tRPC) | IFC-117, IFC-125 | 7 | COMPLETE ✅ |
 | PG-146 | Drift Detection | `/agent-approvals/drift` | IFC-117, IFC-197 | 8 | BACKLOG |
 | PG-151 | Active Agents | `/agent-approvals/agents` | IFC-021, IFC-139, IFC-197 | 8 | BACKLOG |
 | PG-152 | Agent Logs | `/agent-approvals/logs` | IFC-148, IFC-197 | 8 | BACKLOG |
@@ -473,7 +473,7 @@ The **AI/Intelligence** domain covers Lead Scoring, Sentiment Analysis, Churn Ri
 
 | Task ID | Feature | Status | Notes |
 |---------|---------|--------|-------|
-| IFC-197 | AI Monitoring tRPC Router | BACKLOG | Exposes monitoring tools via API - prerequisite for Sprint 8 UI pages |
+| IFC-197 | AI Monitoring tRPC Router | COMPLETE ✅ | 7 endpoints operational, 22 tests, all gates passed |
 
 ---
 
@@ -488,7 +488,7 @@ The **AI/Intelligence** domain covers Lead Scoring, Sentiment Analysis, Churn Ri
 | Auto-Response | IFC-029 ✅ | IFC-029 ✅ | IFC-149 ✅ | COMPLETE |
 | AI Review | IFC-128 ✅ | IFC-180 ✅ | IFC-181 ✅ + PG-150 | COMPLETE + history planned |
 | Versioning | IFC-086 ✅ | IFC-086 ✅ | PG-128 ✅ | COMPLETE |
-| AI Monitoring | IFC-117 ✅ | IFC-197 (Sprint 7) | PG-146/151/152/153 (Sprint 8) | PLANNED |
+| AI Monitoring | IFC-117 ✅ | IFC-197 ✅ | PG-146/151/152/153 (Sprint 8) | ROUTER COMPLETE |
 | Experiments | IFC-025 ✅ | IFC-025 ✅ | PG-149 (Sprint 7) | UI PLANNED |
 
 **All orphans resolved.** Every AI feature now has a UI task assigned.

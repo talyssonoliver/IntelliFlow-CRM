@@ -201,7 +201,7 @@ The **Auth & Public Pages** domain covers authentication flows, public marketing
 
 ```
     ╔═══════════════════════════════════════════════════════════════════════════════════════════╗
-    ║  DEVELOPER PAGES (PG-032 to PG-042)                                      ⚠️ BACKLOG     ║
+    ║  DEVELOPER PAGES (PG-032 to PG-042)                                 ⏳ IN PROGRESS       ║
     ╚═══════════════════════════════════════════════════════════════════════════════════════════╝
 
     ┌─────────────────────────────────────────────────────────────────────────────────────────┐
@@ -213,7 +213,7 @@ The **Auth & Public Pages** domain covers authentication flows, public marketing
     │  Docs Hub   │  │  Quickstart │  │  Tutorials  │  │   Guides    │  │ API Ref     │
     │             │  │             │  │             │  │             │  │             │
     │ /docs       │  │ /quickstart │  │ /tutorials  │  │ /guides     │  │ /api        │
-    │ BACKLOG     │  │ BACKLOG     │  │ BACKLOG     │  │ BACKLOG     │  │ BACKLOG     │
+    │ ✅ DONE     │  │ BACKLOG     │  │ BACKLOG     │  │ BACKLOG     │  │ BACKLOG     │
     └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘
 
     ┌─────────────────────────────────────────────────────────────────────────────────────────┐

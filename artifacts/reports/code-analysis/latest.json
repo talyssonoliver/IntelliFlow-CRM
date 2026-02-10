@@ -1,12 +1,30 @@
 {
-  "timestamp": "2026-02-08T22:29:02.811Z",
+  "timestamp": "2026-02-09T17:45:46.638Z",
   "knip": {
     "success": true,
     "data": {
       "files": [
-        "packages/adapters/src/messaging/twilio/client.ts",
-        "apps/web/lib/tickets/use-sla-notifications.ts",
-        "apps/web/src/lib/pricing/stripe-integration.ts"
+        "packages/db/prisma/apply-direct.ts",
+        "packages/db/prisma/apply-full.ts",
+        "packages/db/prisma/apply-schema-v2.ts",
+        "packages/db/prisma/apply-schema.ts",
+        "packages/db/prisma/check-db.ts",
+        "packages/domain/src/ai/conversation-record.ts",
+        "packages/domain/src/platform/index.ts",
+        "apps/web/lib/tickets/index.ts",
+        "apps/web/src/components/governance/governance-sidebar.tsx",
+        "apps/web/src/components/governance/index.ts",
+        "apps/web/src/components/pricing/pricing-calculator.tsx",
+        "apps/web/src/components/settings/index.ts",
+        "apps/web/src/components/settings/settings-sidebar.tsx",
+        "apps/api/src/shared/bias-detector.ts",
+        "apps/api/src/shared/filter-options-builder.ts",
+        "apps/api/src/shared/retry-policy.ts",
+        "apps/api/src/modules/autoresponse/index.ts",
+        "apps/api/src/modules/chain-version/index.ts",
+        "apps/api/src/modules/experiment/index.ts",
+        "apps/api/src/modules/legal/types.ts",
+        "apps/project-tracker/lib/prompt-generator/types.ts"
       ],
       "dependencies": [
         "@prisma/client",
@@ -17,7 +35,6 @@
         "@sentry/tracing",
         "@upstash/ratelimit",
         "@upstash/redis",
-        "twilio",
         "@langchain/community",
         "langchain",
         "openai",
@@ -61,28 +78,7 @@
         {
           "file": "packages/db/src/client.ts",
           "exports": [
-            "withTransaction",
-            "disconnectPrisma"
-          ]
-        },
-        {
-          "file": "packages/application/src/ports/external/NotificationServicePort.ts",
-          "exports": [
-            "NotificationDeliveryError",
-            "NotificationSchedulingError"
-          ]
-        },
-        {
-          "file": "packages/application/src/ports/external/WebhookServicePort.ts",
-          "exports": [
-            "DuplicateWebhookError"
-          ]
-        },
-        {
-          "file": "packages/application/src/errors/ApplicationErrors.ts",
-          "exports": [
-            "ExternalServiceError",
-            "AuthorizationError"
+            "checkDatabaseHealth"
           ]
         },
         {
@@ -99,17 +95,9 @@
           ]
         },
         {
-          "file": "apps/ai-worker/src/config/relevance-config.ts",
-          "exports": [
-            "createRelevanceConfig",
-            "validateRelevanceConfig"
-          ]
-        },
-        {
           "file": "apps/ai-worker/src/monitoring/chain-monitor.ts",
           "exports": [
-            "sanitizeMetricLabel",
-            "chainMonitor"
+            "sanitizeMetricLabel"
           ]
         },
         {
@@ -140,6 +128,12 @@
           "file": "apps/ai-worker/src/prompts/index.ts",
           "exports": [
             "default"
+          ]
+        },
+        {
+          "file": "packages/platform/src/resilience/retry-policy.ts",
+          "exports": [
+            "Retry"
           ]
         },
         {
@@ -182,6 +176,12 @@
           ]
         },
         {
+          "file": "packages/adapters/src/messaging/twilio/client.ts",
+          "exports": [
+            "getTwilioClient"
+          ]
+        },
+        {
           "file": "packages/search/src/index.ts",
           "exports": [
             "SEARCH_MODES",
@@ -196,9 +196,16 @@
           ]
         },
         {
+          "file": "packages/platform/src/resilience/resilient-call.ts",
+          "exports": [
+            "resilientCall"
+          ]
+        },
+        {
           "file": "packages/platform/src/queues/connection.ts",
           "exports": [
-            "checkConnectionHealth"
+            "checkConnectionHealth",
+            "connectionRegistry"
           ]
         },
         {
@@ -209,12 +216,6 @@
             "getQueueHealth",
             "pauseQueue",
             "resumeQueue"
-          ]
-        },
-        {
-          "file": "packages/platform/src/queues/metrics-collector.ts",
-          "exports": [
-            "globalMetricsCollector"
           ]
         },
         {
@@ -251,53 +252,9 @@
           ]
         },
         {
-          "file": "packages/domain/src/crm/task/Task.ts",
+          "file": "apps/web/lib/tickets/sla-badge.tsx",
           "exports": [
-            "TaskNotInProgressError"
-          ]
-        },
-        {
-          "file": "packages/domain/src/legal/appointments/AppointmentEvents.ts",
-          "exports": [
-            "AppointmentConflictDetectedEvent"
-          ]
-        },
-        {
-          "file": "packages/domain/src/legal/appointments/ConflictDetector.ts",
-          "exports": [
-            "ConflictDetectionError"
-          ]
-        },
-        {
-          "file": "packages/domain/src/ai/AIConstants.ts",
-          "exports": [
-            "SIGNIFICANCE_LEVELS",
-            "requiresHumanReview"
-          ]
-        },
-        {
-          "file": "packages/domain/src/security/AISecurityEventTypes.ts",
-          "exports": [
-            "getAIEventSeverity"
-          ]
-        },
-        {
-          "file": "apps/web/src/lib/shared/logout-redirect.ts",
-          "exports": [
-            "navigateToLogout"
-          ]
-        },
-        {
-          "file": "apps/web/src/hooks/use-dynamic-filters.ts",
-          "exports": [
-            "useAccountFilterOptions"
-          ]
-        },
-        {
-          "file": "apps/web/src/app/api/quality-reports/job-storage.ts",
-          "exports": [
-            "deleteJob",
-            "getAllJobs"
+            "SLAQuickView"
           ]
         },
         {
@@ -307,63 +264,21 @@
           ]
         },
         {
-          "file": "apps/web/src/hooks/useUnsavedChanges.tsx",
-          "exports": [
-            "useFormUnsavedChanges"
-          ]
-        },
-        {
           "file": "apps/web/src/components/sidebar/SidebarContext.tsx",
           "exports": [
             "useSidebarOptional"
           ]
         },
         {
-          "file": "apps/web/src/lib/shared/account-activation.ts",
-          "exports": [
-            "isTokenExpiringSoon"
-          ]
-        },
-        {
-          "file": "apps/web/src/lib/shared/token-exchange.ts",
-          "exports": [
-            "clearSessionTokens",
-            "getStoredAccessToken"
-          ]
-        },
-        {
-          "file": "apps/web/lib/tickets/sla-badge.tsx",
-          "exports": [
-            "SLAQuickView"
-          ]
-        },
-        {
-          "file": "apps/web/src/components/shared/search-filter-bar.tsx",
-          "exports": [
-            "useFilterState",
-            "useMultiFilterState"
-          ]
-        },
-        {
-          "file": "apps/web/src/lib/shared/password-breach-check.ts",
-          "exports": [
-            "createDebouncedBreachCheck"
-          ]
-        },
-        {
           "file": "apps/web/src/components/sidebar/SidebarPortalContext.tsx",
           "exports": [
-            "SidebarPortalProvider",
-            "useSidebarPortalOptional",
-            "useSidebarConfig",
-            "SidebarPortal",
-            "SidebarPortalTarget"
+            "SidebarPortal"
           ]
         },
         {
-          "file": "apps/web/src/components/sidebar/configs/governance.ts",
+          "file": "apps/web/src/lib/pricing/calculator.ts",
           "exports": [
-            "governanceSidebarConfig"
+            "redirectToCheckout"
           ]
         },
         {
@@ -388,8 +303,7 @@
         {
           "file": "apps/api/src/tracing/sentry.ts",
           "exports": [
-            "startSpan",
-            "setContext"
+            "startSpan"
           ]
         },
         {
@@ -412,22 +326,19 @@
           ]
         },
         {
-          "file": "apps/api/src/modules/notifications/notifications.router.ts",
-          "exports": [
-            "createNotification"
-          ]
-        },
-        {
           "file": "apps/api/src/shared/audit-encryption-module.ts",
           "exports": [
             "resetAuditEncryption"
           ]
         },
         {
-          "file": "apps/ai-worker/src/utils/token-counter.ts",
+          "file": "apps/api/src/shared/external-service-wrapper.ts",
           "exports": [
-            "clearEncoderCache",
-            "ensureTiktokenLoaded"
+            "wrapExternalServiceCall",
+            "callOpenAI",
+            "callSendGrid",
+            "callTwilio",
+            "wrapExternalServiceCallWithRetry"
           ]
         }
       ],
@@ -459,12 +370,6 @@
           ]
         },
         {
-          "file": "packages/application/src/ports/external/NotificationServicePort.ts",
-          "types": [
-            "ReminderServicePort"
-          ]
-        },
-        {
           "file": "apps/workers/shared/src/worker-config.ts",
           "types": [
             "TelemetryConfig",
@@ -472,9 +377,9 @@
           ]
         },
         {
-          "file": "apps/ai-worker/src/config/relevance-config.ts",
+          "file": "packages/platform/src/resilience/retry-policy.ts",
           "types": [
-            "SourceWeights"
+            "ResilientCallOptions"
           ]
         },
         {
@@ -488,32 +393,6 @@
           "types": [
             "MaterialSymbolName",
             "MaterialIconProps"
-          ]
-        },
-        {
-          "file": "packages/domain/src/ai/AIConstants.ts",
-          "types": [
-            "AIPriority",
-            "QualificationLevel",
-            "FollowupUrgency",
-            "RecommendedAction",
-            "OptimalDay",
-            "OptimalTimeSlot",
-            "CommunicationTone",
-            "EmailPurpose",
-            "EmailWriterPurpose",
-            "AgentUrgency",
-            "EmailLength",
-            "LeadFollowupStatus",
-            "InteractionType",
-            "RiskFactorImpact",
-            "DataQualityLevel"
-          ]
-        },
-        {
-          "file": "apps/api/src/modules/notifications/notifications.router.ts",
-          "types": [
-            "NotificationsRouter"
           ]
         },
         {
@@ -533,6 +412,12 @@
           "file": "packages/application/src/services/OpportunityService.ts",
           "types": [
             "StageVelocityMetrics"
+          ]
+        },
+        {
+          "file": "packages/application/src/ports/external/NotificationServicePort.ts",
+          "types": [
+            "ReminderServicePort"
           ]
         },
         {
@@ -578,6 +463,12 @@
           "file": "apps/ai-worker/src/services/document-indexer.ts",
           "types": [
             "NoteToIndex"
+          ]
+        },
+        {
+          "file": "apps/ai-worker/src/config/relevance-config.ts",
+          "types": [
+            "SourceWeights"
           ]
         },
         {
@@ -707,6 +598,26 @@
           ]
         },
         {
+          "file": "packages/domain/src/ai/AIConstants.ts",
+          "types": [
+            "AIPriority",
+            "QualificationLevel",
+            "FollowupUrgency",
+            "RecommendedAction",
+            "OptimalDay",
+            "OptimalTimeSlot",
+            "CommunicationTone",
+            "EmailPurpose",
+            "EmailWriterPurpose",
+            "AgentUrgency",
+            "EmailLength",
+            "LeadFollowupStatus",
+            "InteractionType",
+            "RiskFactorImpact",
+            "DataQualityLevel"
+          ]
+        },
+        {
           "file": "packages/domain/src/auth/AuthConstants.ts",
           "types": [
             "MfaMethod",
@@ -774,6 +685,18 @@
           ]
         },
         {
+          "file": "apps/web/src/components/sidebar/icon-reference.ts",
+          "types": [
+            "ModuleIcon",
+            "ViewIcon",
+            "SegmentIcon",
+            "ActionIcon",
+            "StatusIcon",
+            "FeatureIcon",
+            "ModuleColorTheme"
+          ]
+        },
+        {
           "file": "apps/web/src/lib/billing/card-manager.ts",
           "types": [
             "CardActionResult"
@@ -792,24 +715,15 @@
           ]
         },
         {
-          "file": "apps/web/src/components/sidebar/icon-reference.ts",
+          "file": "apps/api/src/services/appointment-domain.service.ts",
           "types": [
-            "ModuleIcon",
-            "ViewIcon",
-            "SegmentIcon",
-            "ActionIcon",
-            "StatusIcon",
-            "FeatureIcon",
-            "ModuleColorTheme"
+            "RescheduleInput"
           ]
         },
         {
-          "file": "apps/api/src/shared/scoring-output-schema.zod.ts",
+          "file": "apps/api/src/services/mfa.service.ts",
           "types": [
-            "ScoringResponse",
-            "BatchScoringRequest",
-            "BatchScoringResponse",
-            "ScoreOverride"
+            "MfaSetupResult"
           ]
         },
         {
@@ -820,15 +734,12 @@
           ]
         },
         {
-          "file": "apps/api/src/services/appointment-domain.service.ts",
+          "file": "apps/api/src/shared/scoring-output-schema.zod.ts",
           "types": [
-            "RescheduleInput"
-          ]
-        },
-        {
-          "file": "apps/api/src/services/mfa.service.ts",
-          "types": [
-            "MfaSetupResult"
+            "ScoringResponse",
+            "BatchScoringRequest",
+            "BatchScoringResponse",
+            "ScoreOverride"
           ]
         },
         {
@@ -850,15 +761,21 @@
           ]
         },
         {
+          "file": "apps/api/src/modules/legal/appointments.router.ts",
+          "types": [
+            "AppointmentsRouter"
+          ]
+        },
+        {
           "file": "apps/api/src/modules/misc/timeline.router.ts",
           "types": [
             "TimelineRouter"
           ]
         },
         {
-          "file": "apps/api/src/modules/legal/appointments.router.ts",
+          "file": "apps/api/src/modules/notifications/notifications.router.ts",
           "types": [
-            "AppointmentsRouter"
+            "NotificationsRouter"
           ]
         },
         {
@@ -871,6 +788,12 @@
           "file": "apps/api/src/modules/integrations/integrations.router.ts",
           "types": [
             "IntegrationsRouter"
+          ]
+        },
+        {
+          "file": "apps/api/src/modules/webhooks/webhooks.router.ts",
+          "types": [
+            "WebhooksRouter"
           ]
         },
         {
@@ -921,10 +844,10 @@
       "duplicates": []
     },
     "summary": {
-      "unusedFiles": 3,
-      "unusedDeps": 26,
-      "unusedExports": 90,
-      "unusedTypes": 160
+      "unusedFiles": 21,
+      "unusedDeps": 25,
+      "unusedExports": 64,
+      "unusedTypes": 162
     }
   },
   "depcheck": {

@@ -475,15 +475,15 @@ Desktop (lg:grid-cols-4):
 
 ### 5.2 TODO / Missing Features
 
-| Item | Priority | Sprint | Task ID | Notes |
-|------|----------|--------|---------|-------|
-| Real-time activity feed (WebSocket) | High | 14 | IFC-069 | Depends on IFC-089, IFC-091, IFC-093, IFC-109 |
+| Item | Priority | Sprint | Task ID | Status |
+|------|----------|--------|---------|--------|
+| ~~Real-time activity feed (WebSocket)~~ | ~~High~~ | ~~14~~ | ~~IFC-069~~ | **DONE** — `useActivityFeed()` hook wired with WS subscriptions (2026-02-10) |
 | Notifications integration | High | 13-14 | IFC-183 | Depends on IFC-003 |
 | Customizable daily goals | Medium | 15 | PG-129 | User settings page |
 | Drag & drop pinned items reorder | Medium | 15 | PG-129 | UX enhancement |
-| Filter activity feed by type | Medium | 15 | PG-129 | UI filter component |
+| ~~Filter activity feed by type~~ | ~~Medium~~ | ~~15~~ | ~~PG-129~~ | **DONE** — 8 filter types (CALL, EMAIL, MEETING, TASK, DEAL, NOTE, TICKET) (2026-02-10) |
 | AI insights from ML model | High | 16 | - | Replace rule-based logic |
-| View Schedule button functionality | Low | 14 | PG-129 | Link to calendar |
+| ~~View Schedule button functionality~~ | ~~Low~~ | ~~14~~ | ~~PG-129~~ | **DONE** — Link to /calendar exists |
 | View All insights page | Low | 15 | PG-129 | New route needed |
 | Real customer logos | Low | - | - | Marketing content |
 
@@ -494,54 +494,28 @@ Desktop (lg:grid-cols-4):
 > Each item below provides the full context needed to start implementation.
 > Current state, files to modify, approach, and acceptance criteria are included.
 
-### 9.1 Real-time Activity Feed (IFC-069) — Sprint 14, High Priority
+### 9.1 Real-time Activity Feed (IFC-069) — COMPLETED (2026-02-10)
 
 **Sprint Plan**: IFC-069 (Unified Activity Feed Service)
-**Dependencies**: IFC-089, IFC-091, IFC-093, IFC-109 (entity routers must exist)
-**Owner**: Backend Dev + Frontend Dev (STOA-Domain)
+**Status**: **DONE** — Fully implemented and wired into home page.
 
-**Current State**:
-- `home.getActivityFeed` in `apps/api/src/modules/home/home.router.ts:406-485` queries `auditLogEntry` table via polling
-- The frontend (`AuthenticatedHomePage.tsx`) calls `trpc.home.getActivityFeed.useQuery()` — no real-time subscription
-- WebSocket server already runs on port 3001 (`apps/ws/`)
-- tRPC subscriptions infrastructure exists (see `apps/web/src/hooks/use-trpc-subscriptions.ts`)
+**Implementation Summary**:
 
-**What Needs to Change**:
+| Layer | File | Description |
+|-------|------|-------------|
+| Domain | `packages/domain/src/activity-feed/` | 7 sources, 17 types, 5 entity types |
+| Validators | `packages/validators/src/activity-feed.ts` | Zod schemas derived from domain constants |
+| Application | `packages/application/src/services/ActivityFeedService.ts` | Cache-aside, dedup, cursor pagination |
+| Adapter | `packages/adapters/src/repositories/PrismaActivityFeedRepository.ts` | 7 Prisma tables queried in parallel |
+| API Router | `apps/api/src/modules/misc/activity-feed.router.ts` | `getUnifiedFeed`, `getEntityFeed` |
+| WebSocket | `apps/api/src/ws-server.ts` + `apps/api/src/shared/subscription-demo.ts` | 5 tRPC subscriptions (port 3001) |
+| Frontend Hook | `apps/web/src/hooks/useActivityFeed.ts` | Infinite scroll + WS cache invalidation + 60s fallback poll |
+| Frontend Component | `apps/web/src/components/shared/activity-feed/ActivityFeed.tsx` | Virtualized rendering |
+| Home Page | `apps/web/src/components/home/AuthenticatedHomePage.tsx` | Uses `useActivityFeed()` with 8 type filters |
 
-1. **Create `ActivityFeedService`** at `packages/application/src/services/ActivityFeedService.ts`
-   - Unified service that aggregates activities across entities (leads, contacts, deals, tickets)
-   - Must support both pull (query) and push (subscription) modes
+**Real-time mechanism**: WebSocket subscriptions (`onLeadScored`, `onTaskAssigned`, `onSystemEvent`) invalidate React Query cache with debounced refetch. 60s polling as safety net.
 
-2. **Create activity feed router** at `apps/api/src/modules/misc/activity-feed.router.ts`
-   - New `activityFeed.subscribe` subscription procedure using tRPC subscriptions
-   - Emits events when any entity is created/updated/deleted within tenant
-   - Filter by activity type (lead, deal, task, etc.)
-
-3. **Create shared component** at `apps/web/src/components/shared/activity-feed.tsx`
-   - Reusable feed component used by both home page and entity detail pages
-   - Accepts `mode: 'poll' | 'realtime'` prop
-   - Graceful fallback to polling if WebSocket disconnects
-
-4. **Update `AuthenticatedHomePage.tsx`** "Your Feed" section:
-   - Replace `useQuery` with `useSubscription` for real-time
-   - Keep `useQuery` as initial data loader, subscription for live updates
-   - Animate new items sliding in from top
-
-**Files to Create/Modify**:
-```
-packages/application/src/services/ActivityFeedService.ts  (NEW)
-apps/api/src/modules/misc/activity-feed.router.ts         (NEW)
-apps/web/src/components/shared/activity-feed.tsx           (NEW)
-apps/web/src/components/home/AuthenticatedHomePage.tsx     (MODIFY - Your Feed section)
-apps/api/src/modules/home/home.router.ts                  (MODIFY - delegate to service)
-```
-
-**Acceptance Criteria**:
-- Feed loads < 500ms on initial query
-- Real-time updates arrive via WebSocket within < 100ms of event
-- Feed shows activities from all entity types (leads, contacts, deals, tickets)
-- Graceful degradation to polling on WebSocket failure
-- Test coverage >= 90%
+**Tests**: 93 tests passing (IFC-069) + 56 tests (AuthenticatedHomePage) covering feed integration.
 
 ---
 

@@ -441,9 +441,28 @@ function Get-Priority([string]$normalizedStatus, [string]$group, [string]$target
   return 'P3'
 }
 
-function Get-RequiredLayers([string]$group, [string]$primaryTaskId) {
+function Get-RequiredLayers([string]$group, [string]$primaryTaskId, [string]$primarySection, $primaryInfo, [string]$featureTitle) {
   $required = New-Object System.Collections.Generic.HashSet[string]
   $isPageTask = $primaryTaskId -match '^PG-'
+  $section = ([string]$primarySection).ToLower()
+  $title = ([string]$featureTitle).ToLower()
+  $routerOnly = $title -match '\brouter\b'
+  $allLayers = @('Entity','Domain','Database','Adapter','Router','Frontend')
+
+  $nonExecutionSectionPattern = 'ai foundation|foundation setup|strategy|documentation|go-to-market|brand|design system|architecture governance|architecture|governance|operations|project operations|tracking|quality|testing|validation|planning|performance|resilience|security|compliance|risk mgmt|commercial assets|decision gate|investment gate|launch|engineering operations|mvp week 1|parallel track|infrastructure|observability|ai/ml|analytics & segmentation|intelligence|platform'
+  if ($section -match $nonExecutionSectionPattern) {
+    if ($isPageTask -or ($primaryInfo -and $primaryInfo.Frontend -and -not $routerOnly)) { [void]$required.Add('Frontend') }
+    return $required
+  }
+
+  if ($section -match 'integrations?|integration') {
+    foreach ($ln in @('Adapter','Router')) { [void]$required.Add($ln) }
+    if ($primaryInfo -and $primaryInfo.Database) { [void]$required.Add('Database') }
+    if ($primaryInfo -and $primaryInfo.Domain) { [void]$required.Add('Domain') }
+    if ($isPageTask -and -not $routerOnly) { [void]$required.Add('Frontend') }
+    return $required
+  }
+
   if ($isPageTask) { [void]$required.Add('Frontend') }
 
   if ($group -in @('Marketing','Developer','Legal')) { return $required }
@@ -455,7 +474,7 @@ function Get-RequiredLayers([string]$group, [string]$primaryTaskId) {
 
   if ($group -in @('Lead','Contact','Account','Deal','Ticket','Case','Document','Notification','Dashboard','AI','Automation','Analytics','Communication','Calendar')) {
     foreach ($l in @('Entity','Domain','Database','Adapter','Router')) { [void]$required.Add($l) }
-    if ($isPageTask -or $group -in @('Dashboard','AI','Notification')) { [void]$required.Add('Frontend') }
+    if (($isPageTask -or $group -in @('Dashboard','AI','Notification')) -and -not $routerOnly) { [void]$required.Add('Frontend') }
     return $required
   }
 
@@ -722,7 +741,9 @@ foreach ($f in $baseFeatures) {
   $immediate = @($f.ImmediateTasks | Sort-Object -Unique)
   $analysisTasks = Get-TaskClosure $immediate $rowsById
   $infos = @($analysisTasks | Where-Object { $taskInfoById.ContainsKey($_) } | ForEach-Object { $taskInfoById[$_] })
-  $required = Get-RequiredLayers $f.Group $f.PrimaryTaskId
+  $primaryInfo = if ($taskInfoById.ContainsKey($f.PrimaryTaskId)) { $taskInfoById[$f.PrimaryTaskId] } else { $null }
+  $required = Get-RequiredLayers $f.Group $f.PrimaryTaskId $f.PrimarySection $primaryInfo $f.Feature
+  if (-not $required) { $required = New-Object System.Collections.Generic.HashSet[string] }
   $requiredList = @($required | Sort-Object)
 
   $layerCells = @{}
@@ -752,8 +773,6 @@ foreach ($f in $baseFeatures) {
   if ($missing.Count -gt 0 -and ($f.Status -in @('done','in_progress'))) { $planCoverage = "at_risk ($coveredCount/$requiredCount)" }
   elseif ($missing.Count -ge 3) { $planCoverage = "gap ($coveredCount/$requiredCount)" }
   elseif ($missing.Count -gt 0) { $planCoverage = "partial ($coveredCount/$requiredCount)" }
-
-  $primaryInfo = if ($taskInfoById.ContainsKey($f.PrimaryTaskId)) { $taskInfoById[$f.PrimaryTaskId] } else { $null }
 
   $reqRefs = New-Object System.Collections.Generic.List[string]
   $reqRefs.Add($f.PrimaryTaskId)

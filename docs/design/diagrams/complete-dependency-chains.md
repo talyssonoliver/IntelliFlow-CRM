@@ -210,7 +210,7 @@ Dependency Chain:
                                  └──────────────────┘
 
 Dependency Chain:
-  IFC-103 (Domain) ──┬──► account.ts (Validators) ──► IFC-108 (Services) ──► IFC-107 (Adapters) ──► IFC-185 (API) ✅ ──► PG-134 (UI) ⬜
+  IFC-103 (Domain) ──┬──► account.ts (Validators) ──► IFC-108 (Services) ──► IFC-107 (Adapters) ──► IFC-185 (API) ✅ ──► PG-134 (UI) ✅
                      │
                      └──► IFC-017 (Database) ────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -1705,7 +1705,7 @@ Dependency Chain:
 | 17 | AI | AI Chain Versioning | ⬜ UI Missing |
 | 18 | AI | AI Agents Framework | ⏳ UI Planned (PG-151, Sprint 8) |
 | 19 | AI | Next Best Action | ⬜ All New |
-| 20 | AI | AI Monitoring/Drift | ⏳ Router+UI Planned (IFC-197+PG-146/152/153, Sprint 7-8) |
+| 20 | AI | AI Monitoring/Drift | ⏳ Router Complete (IFC-197 ✅), UI Planned (PG-146/151/152/153, Sprint 8) |
 | **PLATFORM INFRASTRUCTURE (10)** |
 | 21 | Platform | Notifications | ⬜ Router Blocking |
 | 22 | Platform | Analytics | ⬜ Router Missing |
@@ -1745,7 +1745,7 @@ Home Page:     IFC-182 ✅ ──► PG-129 ⏳60%
 ## Chains Missing UI Only (Router Exists) - 11 Total
 ```
 Contact:       IFC-102 ──► validators ──► IFC-108 ──► IFC-107 ──► IFC-184 ⬜ ──► PG-133 ⬜
-Account:       IFC-103 ──► validators ──► IFC-108 ──► IFC-107 ──► IFC-185 ✅ ──► PG-134 ⬜
+Account:       IFC-103 ──► validators ──► IFC-108 ──► IFC-107 ──► IFC-185 ✅ ──► PG-134 ✅
 Opportunity:   IFC-104 ──► validators ──► IFC-108 ──► IFC-107 ──► IFC-186 ✅ ──► PG-135 ⬜
 Task:          IFC-105 ──► validators ──► IFC-108 ──► IFC-107 ──► IFC-187 ⬜ ──► PG-136 ⬜
 Case:          IFC-136 ──► validators ──► IFC-139 ──► cases.router ✅ ──► PG-138 ⬜
