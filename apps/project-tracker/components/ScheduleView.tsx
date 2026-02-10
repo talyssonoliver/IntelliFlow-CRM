@@ -5,6 +5,14 @@ import { clsx } from 'clsx';
 import { Icon } from '@/lib/icons';
 import GanttChart, { GanttTask } from './GanttChart';
 import { useTaskData } from '@/lib/TaskDataContext';
+import {
+  computePriorityScores,
+  type ScoredTask,
+  type DepGraphNode,
+  type SessionStatus,
+  type ScheduleTaskInfo,
+  type PhaseProgress,
+} from '@/lib/priority-scorer';
 
 /**
  * Schedule View Component
@@ -81,6 +89,7 @@ export default function ScheduleView() {
   const [error, setError] = useState<string | null>(null);
   const [showCriticalOnly, setShowCriticalOnly] = useState(false);
   const [criticalPathExpanded, setCriticalPathExpanded] = useState(true);
+  const [todaysCriticalWork, setTodaysCriticalWork] = useState<ScoredTask[]>([]);
 
   // Get sprint param for API calls - 'all' or number
   const sprintParam = currentSprint === 'all' ? 'all' : String(currentSprint);
@@ -112,6 +121,88 @@ export default function ScheduleView() {
         setLoading(false);
       });
   }, [sprintParam]);
+
+  // Compute "Today's Critical Work" from ready tasks on critical path
+  useEffect(() => {
+    if (!criticalPathData || !scheduleData) return;
+
+    const fetchCriticalWork = async () => {
+      try {
+        // Fetch ready tasks from dependency graph
+        const [graphRes, progressRes] = await Promise.all([
+          fetch(`/api/dependency-graph?sprint=${sprintParam}`),
+          fetch(`/api/sprint/progress?sprint=${sprintParam}`).catch(() => null),
+        ]);
+        const graphData = await graphRes.json();
+        const progressData = progressRes ? await progressRes.json().catch(() => null) : null;
+
+        const readyDetails = graphData.ready_to_start_details || [];
+        if (readyDetails.length === 0) { setTodaysCriticalWork([]); return; }
+
+        // Build scorer inputs
+        const depGraphNodes = new Map<string, DepGraphNode>();
+        if (graphData.nodes) {
+          for (const [id, node] of Object.entries(graphData.nodes as Record<string, { task_id: string; dependencies: string[]; dependents: string[] }>)) {
+            depGraphNodes.set(id, {
+              task_id: node.task_id || id,
+              dependencies: node.dependencies || [],
+              dependents: node.dependents || [],
+            });
+          }
+        }
+
+        const criticalPathIds = new Set<string>(criticalPathData.criticalPath.taskIds || []);
+        const scheduleTaskMap = new Map<string, ScheduleTaskInfo>();
+        for (const t of criticalPathData.tasks) {
+          // Enrich with totalFloat from schedule/calculate data (already fetched)
+          const calcTask = scheduleData?.tasks?.[t.taskId];
+          scheduleTaskMap.set(t.taskId, {
+            taskId: t.taskId,
+            earlyFinish: t.earlyFinish,
+            totalFloat: calcTask?.totalFloat,
+            isCritical: criticalPathIds.has(t.taskId),
+          });
+        }
+        const phaseProgress: PhaseProgress[] = progressData?.phases || [];
+
+        // Build minimal Task objects
+        const readyTasks = readyDetails.map((rd: { taskId: string; section: string; description: string; owner: string; dependencies: string[]; sprint: number; status?: string }) => ({
+          id: rd.taskId,
+          section: rd.section,
+          description: rd.description,
+          owner: rd.owner,
+          dependencies: rd.dependencies,
+          cleanDependencies: [],
+          crossQuarterDeps: false,
+          prerequisites: '',
+          dod: '',
+          status: rd.status || 'Planned',
+          kpis: '',
+          sprint: rd.sprint,
+          artifacts: [],
+          validation: '',
+        }));
+
+        const scored = computePriorityScores(
+          readyTasks,
+          depGraphNodes,
+          criticalPathIds,
+          new Map<string, SessionStatus>(),
+          scheduleTaskMap,
+          phaseProgress,
+          typeof currentSprint === 'number' ? currentSprint : undefined,
+        );
+
+        // Filter to NOW bucket, take top 3
+        setTodaysCriticalWork(scored.filter((s) => s.bucket === 'now').slice(0, 3));
+      } catch {
+        // Silently fail — this is a supplementary widget
+        setTodaysCriticalWork([]);
+      }
+    };
+
+    fetchCriticalWork();
+  }, [criticalPathData, scheduleData, sprintParam, currentSprint]);
 
   // Convert schedule tasks to GanttTask array
   const ganttTasks = useMemo((): GanttTask[] => {
@@ -333,6 +424,35 @@ export default function ScheduleView() {
                 style={{ width: `${scheduleData.criticalPath.completionPercentage}%` }}
               />
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Today's Critical Work — bridges schedule analysis with actionable items */}
+      {todaysCriticalWork.length > 0 && (
+        <div className="bg-white rounded-lg border border-red-200 p-4">
+          <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2 mb-3">
+            <Icon name="priority_high" size="lg" className="text-red-500" />
+            Today&apos;s Critical Work
+          </h3>
+          <p className="text-xs text-gray-500 mb-3">
+            Tasks that need attention today based on schedule analysis:
+          </p>
+          <div className="space-y-2">
+            {todaysCriticalWork.map((scored, idx) => (
+              <div
+                key={scored.taskId}
+                className="flex items-center gap-3 p-2 rounded-lg hover:bg-red-50 cursor-pointer transition-colors"
+                onClick={() => handleTaskClick(scored.taskId)}
+              >
+                <span className="text-xs font-bold text-red-500 w-4">{idx + 1}.</span>
+                <span className="font-mono text-sm text-blue-700">{scored.taskId}</span>
+                <span className="text-xs text-gray-500 flex-1 truncate">{scored.reason}</span>
+                {typeof scored.task.sprint === 'number' && (
+                  <span className="text-xs text-gray-400 shrink-0">Sprint {scored.task.sprint}</span>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}

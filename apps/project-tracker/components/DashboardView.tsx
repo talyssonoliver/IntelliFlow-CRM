@@ -95,18 +95,18 @@ export default function DashboardView({
         </div>
       </div>
 
-      {/* Schedule Health (EVM Metrics) */}
-      <ScheduleHealthWidget sprint={typeof sprint === 'number' ? sprint : sprint === 'all' ? 'all' : 0} />
-
-      {/* Executive Summary */}
-      <ExecutiveSummary sprint={sprint} />
-
-      {/* Daily Workflow Summary */}
+      {/* Daily Workflow Summary (Smart Work Queue — NOW/NEXT/WAIT) */}
       <DailyWorkflowSummary
         tasks={tasks}
         sprint={sprint ?? 'all'}
         onTaskClick={onTaskClick}
       />
+
+      {/* Schedule Health (EVM Metrics) */}
+      <ScheduleHealthWidget sprint={typeof sprint === 'number' ? sprint : sprint === 'all' ? 'all' : 0} />
+
+      {/* Executive Summary */}
+      <ExecutiveSummary sprint={sprint} />
 
       {/* Swarm Monitor */}
       <SwarmMonitor />

@@ -5,8 +5,8 @@
  * Pure logic tests — no React rendering required.
  */
 
-import { describe, it, expect, vi, afterEach } from 'vitest';
-import { getAccountTier, TIER_CONFIG, createAccountColumns, type AccountRow } from '../AccountCard';
+import { describe, it, expect } from 'vitest';
+import { getAccountTier, TIER_CONFIG, createAccountColumns } from '../AccountCard';
 
 describe('getAccountTier()', () => {
   it('returns ENTERPRISE for revenue >= 10M', () => {

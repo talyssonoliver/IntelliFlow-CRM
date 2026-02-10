@@ -221,7 +221,7 @@ export function createMockFormData() {
     department: 'product',
     linkedIn: 'https://linkedin.com/in/janesmith',
     contactType: 'prospect',
-    status: 'ACTIVE' as ContactStatus,
+    status: 'ACTIVE' as const,
     tags: 'VIP, Decision Maker',
     notes: 'Met at conference, interested in enterprise plan',
   };

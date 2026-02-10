@@ -8,6 +8,14 @@ import {
   useSessionPolling,
   type SessionType,
 } from './SessionOutputModal';
+import {
+  computePriorityScores,
+  type ScoredTask,
+  type DepGraphNode,
+  type SessionStatus,
+  type ScheduleTaskInfo,
+  type PhaseProgress,
+} from '@/lib/priority-scorer';
 
 interface DailyWorkflowSummaryProps {
   tasks: Task[];
@@ -55,6 +63,8 @@ interface WorkflowData {
   // End of day
   completedToday: TaskWorkflowStatus[];
   blockedTasks: TaskWorkflowStatus[];
+  // Priority-scored tasks (NOW / NEXT / WAIT)
+  scoredTasks: ScoredTask[];
 }
 
 /**
@@ -113,16 +123,68 @@ export function DailyWorkflowSummary({
       setLoading(true);
       setError(null);
 
-      // Fetch dependency graph and task status
-      const graphRes = await fetch(`/api/dependency-graph?sprint=${sprint === 'all' ? 'all' : sprint}`);
+      const sprintParam = sprint === 'all' ? 'all' : sprint;
+
+      // Fetch dependency graph, critical path, schedule calculate, and sprint progress in parallel
+      const [graphRes, criticalPathRes, scheduleCalcRes, sprintProgressRes] = await Promise.all([
+        fetch(`/api/dependency-graph?sprint=${sprintParam}`),
+        fetch(`/api/schedule/critical-path?sprint=${sprintParam}`).catch(() => null),
+        fetch(`/api/schedule/calculate?sprint=${sprintParam}`).catch(() => null),
+        fetch(`/api/sprint/progress?sprint=${sprintParam}`).catch(() => null),
+      ]);
+
       const graphData = await graphRes.json();
+      const criticalPathData = criticalPathRes ? await criticalPathRes.json().catch(() => null) : null;
+      const scheduleCalcData = scheduleCalcRes ? await scheduleCalcRes.json().catch(() => null) : null;
+      const sprintProgressData = sprintProgressRes ? await sprintProgressRes.json().catch(() => null) : null;
+
+      // Build dep graph node map and critical path set for priority scoring
+      const depGraphNodes = new Map<string, DepGraphNode>();
+      if (graphData.nodes) {
+        for (const [id, node] of Object.entries(graphData.nodes)) {
+          const n = node as { task_id: string; dependencies: string[]; dependents: string[] };
+          depGraphNodes.set(id, {
+            task_id: n.task_id || id,
+            dependencies: n.dependencies || [],
+            dependents: n.dependents || [],
+          });
+        }
+      }
+
+      const criticalPathIds = new Set<string>(
+        criticalPathData?.criticalPath?.taskIds || []
+      );
+
+      const scheduleTaskMap = new Map<string, ScheduleTaskInfo>();
+      if (criticalPathData?.tasks) {
+        for (const t of criticalPathData.tasks) {
+          // Enrich with totalFloat from schedule/calculate data (CPM-based)
+          const calcTask = scheduleCalcData?.tasks?.[t.taskId];
+          scheduleTaskMap.set(t.taskId, {
+            taskId: t.taskId,
+            earlyFinish: t.earlyFinish,
+            totalFloat: calcTask?.totalFloat,
+            isCritical: criticalPathIds.has(t.taskId),
+          });
+        }
+      }
+
+      const phaseProgress: PhaseProgress[] = sprintProgressData?.phases || [];
 
       // Process tasks into workflow categories
+      const sessionStatusMap = new Map<string, SessionStatus>();
+
       const workflowTasks: TaskWorkflowStatus[] = await Promise.all(
         tasks.map(async (task) => {
           // Check if task has spec/plan/context
           const planStatusRes = await fetch(`/api/tasks/plan?taskId=${task.id}`);
           const planStatus = await planStatusRes.json();
+
+          // Collect session status for priority scoring
+          sessionStatusMap.set(task.id, {
+            hasSpec: planStatus.hasSpec || false,
+            hasPlan: planStatus.hasPlan || false,
+          });
 
           const dependenciesMet = graphData.ready_to_start_details?.some(
             (r: { taskId: string }) => r.taskId === task.id
@@ -191,6 +253,23 @@ export function DailyWorkflowSummary({
         (t) => t.status === 'Blocked' || (!t.dependenciesMet && t.status !== 'Completed')
       );
 
+      // Compute priority scores for ready tasks
+      const readyFullTasks = readyTasks.map((wt) => {
+        const fullTask = tasks.find((t) => t.id === wt.taskId);
+        return fullTask!;
+      }).filter(Boolean);
+
+      const currentSprintNum = typeof sprint === 'number' ? sprint : undefined;
+      const scoredTasks = computePriorityScores(
+        readyFullTasks,
+        depGraphNodes,
+        criticalPathIds,
+        sessionStatusMap,
+        scheduleTaskMap,
+        phaseProgress,
+        currentSprintNum,
+      );
+
       setWorkflowData({
         readyTasks,
         inProgressTasks,
@@ -199,6 +278,7 @@ export function DailyWorkflowSummary({
         awaitingExec,
         completedToday,
         blockedTasks,
+        scoredTasks,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load workflow data');
@@ -473,6 +553,9 @@ export function DailyWorkflowSummary({
     if (!workflowData) return null;
     if (optimisticUpdates.size === 0) return workflowData;
 
+    // Keep scored tasks as-is during optimistic updates (they reflect pre-action state)
+    const scoredTasks = workflowData.scoredTasks;
+
     // Create a map of all tasks with optimistic updates applied
     const applyOptimisticToTasks = (tasks: TaskWorkflowStatus[]): TaskWorkflowStatus[] => {
       return tasks.map((task) => {
@@ -553,6 +636,7 @@ export function DailyWorkflowSummary({
         ...tasksWithOptimistic.filter((t) => optimisticUpdates.get(t.taskId)?.expectedSession === 'completed'),
       ],
       blockedTasks: workflowData.blockedTasks,
+      scoredTasks,
     };
   }, [workflowData, optimisticUpdates]);
 
@@ -653,194 +737,113 @@ export function DailyWorkflowSummary({
 
       <div className="p-6">
         {/* ═══════════════════════════════════════════════════════════════════
-            MORNING: Task Selection
+            SMART WORK QUEUE: NOW / NEXT / WAIT
             ═══════════════════════════════════════════════════════════════════ */}
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-4">
             <Icon name="wb_sunny" className="w-5 h-5 text-amber-500" />
-            <h4 className="font-semibold text-gray-900">MORNING: Task Selection</h4>
+            <h4 className="font-semibold text-gray-900">MORNING: Smart Work Queue</h4>
             <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
               {data.readyTasks.length} ready
             </span>
           </div>
 
-          {/* Ready Tasks */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Tasks Ready for Today */}
-            <div className="border border-blue-200 rounded-lg overflow-hidden">
-              <div className="bg-blue-50 px-4 py-2 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Icon name="check_circle" className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm font-medium text-gray-900">Ready for Today</span>
-                </div>
-                <span className="text-xs bg-blue-200 text-blue-800 px-2 py-0.5 rounded-full">
-                  {data.readyTasks.length}
-                </span>
-              </div>
-              <div className="divide-y divide-gray-100 max-h-48 overflow-y-auto">
-                {data.readyTasks.length === 0 ? (
-                  <div className="p-3 text-center text-gray-500 text-sm">
-                    No tasks ready. Complete dependencies first.
-                  </div>
-                ) : (
-                  data.readyTasks.slice(0, 5).map((task) => (
-                    <TaskRow
-                      key={task.taskId}
-                      task={task}
-                      onTaskClick={onTaskClick}
-                      tasks={tasks}
-                    />
-                  ))
-                )}
-              </div>
-            </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* NOW bucket */}
+            <PriorityBucket
+              bucket="now"
+              label="NOW"
+              description="What matters today"
+              tasks={data.scoredTasks.filter((s) => s.bucket === 'now')}
+              colorScheme="red"
+              actionInProgress={actionInProgress}
+              onRunSpec={handleRunSpec}
+              onRunPlan={handleRunPlan}
+              onRunExec={handleRunExec}
+              onTaskClick={onTaskClick}
+              allTasks={tasks}
+              defaultExpanded
+            />
 
-            {/* In Progress */}
-            <div className="border border-purple-200 rounded-lg overflow-hidden">
-              <div className="bg-purple-50 px-4 py-2 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Icon name="play_circle" className="w-4 h-4 text-purple-600" />
-                  <span className="text-sm font-medium text-gray-900">In Progress</span>
+            {/* NEXT bucket */}
+            <PriorityBucket
+              bucket="next"
+              label="NEXT"
+              description="Important, coming up"
+              tasks={data.scoredTasks.filter((s) => s.bucket === 'next')}
+              colorScheme="amber"
+              actionInProgress={actionInProgress}
+              onRunSpec={handleRunSpec}
+              onRunPlan={handleRunPlan}
+              onRunExec={handleRunExec}
+              onTaskClick={onTaskClick}
+              allTasks={tasks}
+              defaultExpanded={false}
+            />
+
+            {/* WAIT bucket */}
+            <PriorityBucket
+              bucket="wait"
+              label="WAIT"
+              description="Ready but deferrable"
+              tasks={data.scoredTasks.filter((s) => s.bucket === 'wait')}
+              colorScheme="gray"
+              actionInProgress={actionInProgress}
+              onRunSpec={handleRunSpec}
+              onRunPlan={handleRunPlan}
+              onRunExec={handleRunExec}
+              onTaskClick={onTaskClick}
+              allTasks={tasks}
+              defaultExpanded={false}
+            />
+          </div>
+
+          {/* In Progress */}
+          <div className="mt-4 border border-purple-200 rounded-lg overflow-hidden">
+            <div className="bg-purple-50 px-4 py-2 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Icon name="play_circle" className="w-4 h-4 text-purple-600" />
+                <span className="text-sm font-medium text-gray-900">In Progress</span>
+              </div>
+              <span className="text-xs bg-purple-200 text-purple-800 px-2 py-0.5 rounded-full">
+                {data.inProgressTasks.length}
+              </span>
+            </div>
+            <div className="divide-y divide-gray-100 max-h-48 overflow-y-auto">
+              {data.inProgressTasks.length === 0 ? (
+                <div className="p-3 text-center text-gray-500 text-sm">
+                  No tasks in progress.
                 </div>
-                <span className="text-xs bg-purple-200 text-purple-800 px-2 py-0.5 rounded-full">
-                  {data.inProgressTasks.length}
-                </span>
-              </div>
-              <div className="divide-y divide-gray-100 max-h-48 overflow-y-auto">
-                {data.inProgressTasks.length === 0 ? (
-                  <div className="p-3 text-center text-gray-500 text-sm">
-                    No tasks in progress.
-                  </div>
-                ) : (
-                  data.inProgressTasks.slice(0, 5).map((task) => (
-                    <TaskRow
-                      key={task.taskId}
-                      task={task}
-                      onTaskClick={onTaskClick}
-                      tasks={tasks}
-                    />
-                  ))
-                )}
-              </div>
+              ) : (
+                data.inProgressTasks.slice(0, 5).map((task) => (
+                  <TaskRow
+                    key={task.taskId}
+                    task={task}
+                    onTaskClick={onTaskClick}
+                    tasks={tasks}
+                  />
+                ))
+              )}
             </div>
           </div>
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════════
-            FOR EACH READY TASK: Sessions
+            PIPELINE: Next Actions (sorted by priority)
             ═══════════════════════════════════════════════════════════════════ */}
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-4">
             <Icon name="account_tree" className="w-5 h-5 text-blue-500" />
-            <h4 className="font-semibold text-gray-900">FOR EACH READY TASK: Session Status</h4>
+            <h4 className="font-semibold text-gray-900">Pipeline: What&apos;s Next</h4>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* SESSION 1: Spec */}
-            <div className="border border-indigo-200 rounded-lg overflow-hidden">
-              <div className="bg-indigo-50 px-4 py-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">1</div>
-                    <span className="text-sm font-medium text-gray-900">SESSION: Spec</span>
-                  </div>
-                  <span className="text-xs bg-indigo-200 text-indigo-800 px-2 py-0.5 rounded-full">
-                    {data.awaitingSpec.length} awaiting
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Context → Agents → Discussion → Spec</p>
-              </div>
-              <div className="divide-y divide-gray-100 max-h-40 overflow-y-auto">
-                {data.awaitingSpec.length === 0 ? (
-                  <div className="p-3 text-center text-gray-500 text-xs">All specs complete</div>
-                ) : (
-                  data.awaitingSpec.slice(0, 3).map((task) => (
-                    <div key={task.taskId} className="p-2 flex items-center justify-between">
-                      <span className="font-mono text-xs text-indigo-600">{task.taskId}</span>
-                      <button
-                        type="button"
-                        onClick={(e) => handleRunSpec(e, task.taskId)}
-                        disabled={actionInProgress === task.taskId}
-                        className="px-2 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:bg-gray-300"
-                      >
-                        {actionInProgress === task.taskId ? 'Specifying...' : 'Run Spec'}
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {/* SESSION 2: Plan */}
-            <div className="border border-cyan-200 rounded-lg overflow-hidden">
-              <div className="bg-cyan-50 px-4 py-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-cyan-600 text-white flex items-center justify-center text-xs font-bold">2</div>
-                    <span className="text-sm font-medium text-gray-900">SESSION: Plan</span>
-                  </div>
-                  <span className="text-xs bg-cyan-200 text-cyan-800 px-2 py-0.5 rounded-full">
-                    {data.awaitingPlan.length} awaiting
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Load Spec → Create Execution Plan</p>
-              </div>
-              <div className="divide-y divide-gray-100 max-h-40 overflow-y-auto">
-                {data.awaitingPlan.length === 0 ? (
-                  <div className="p-3 text-center text-gray-500 text-xs">All plans complete</div>
-                ) : (
-                  data.awaitingPlan.slice(0, 3).map((task) => (
-                    <div key={task.taskId} className="p-2 flex items-center justify-between">
-                      <span className="font-mono text-xs text-cyan-600">{task.taskId}</span>
-                      <button
-                        type="button"
-                        onClick={(e) => handleRunPlan(e, task.taskId)}
-                        disabled={actionInProgress === task.taskId}
-                        className="px-2 py-1 text-xs bg-cyan-600 text-white rounded hover:bg-cyan-700 disabled:bg-gray-300"
-                      >
-                        {actionInProgress === task.taskId ? 'Planning...' : 'Run Plan'}
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {/* SESSION 3: Exec */}
-            <div className="border border-green-200 rounded-lg overflow-hidden">
-              <div className="bg-green-50 px-4 py-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">3</div>
-                    <span className="text-sm font-medium text-gray-900">SESSION: Exec</span>
-                  </div>
-                  <span className="text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded-full">
-                    {data.awaitingExec.length} ready
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Execute → Validate → Delivery Report</p>
-              </div>
-              <div className="divide-y divide-gray-100 max-h-40 overflow-y-auto">
-                {data.awaitingExec.length === 0 ? (
-                  <div className="p-3 text-center text-gray-500 text-xs">No tasks ready for exec</div>
-                ) : (
-                  data.awaitingExec.slice(0, 3).map((task) => (
-                    <div key={task.taskId} className="p-2 flex items-center justify-between">
-                      <span className="font-mono text-xs text-green-600">{task.taskId}</span>
-                      <button
-                        type="button"
-                        onClick={(e) => handleRunExec(e, task.taskId)}
-                        disabled={actionInProgress === task.taskId}
-                        className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-300"
-                      >
-                        {actionInProgress === task.taskId ? 'Executing...' : 'Run Exec'}
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
+          <PipelineColumns
+            scoredTasks={data.scoredTasks}
+            actionInProgress={actionInProgress}
+            onRunSpec={handleRunSpec}
+            onRunPlan={handleRunPlan}
+            onRunExec={handleRunExec}
+          />
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════════
@@ -952,7 +955,259 @@ export function DailyWorkflowSummary({
   );
 }
 
-// Task row component
+// ---------------------------------------------------------------------------
+// Bucket colors
+// ---------------------------------------------------------------------------
+
+const BUCKET_COLORS = {
+  red: {
+    border: 'border-red-200',
+    headerBg: 'bg-red-50',
+    icon: 'text-red-600',
+    badge: 'bg-red-200 text-red-800',
+    pill: 'bg-red-100 text-red-700',
+  },
+  amber: {
+    border: 'border-amber-200',
+    headerBg: 'bg-amber-50',
+    icon: 'text-amber-600',
+    badge: 'bg-amber-200 text-amber-800',
+    pill: 'bg-amber-100 text-amber-700',
+  },
+  gray: {
+    border: 'border-gray-200',
+    headerBg: 'bg-gray-50',
+    icon: 'text-gray-500',
+    badge: 'bg-gray-200 text-gray-700',
+    pill: 'bg-gray-100 text-gray-600',
+  },
+} as const;
+
+const ACTION_LABELS: Record<string, { label: string; activeLabel: string; color: string }> = {
+  spec: { label: 'Run Spec', activeLabel: 'Specifying...', color: 'bg-indigo-600 hover:bg-indigo-700' },
+  plan: { label: 'Run Plan', activeLabel: 'Planning...', color: 'bg-cyan-600 hover:bg-cyan-700' },
+  exec: { label: 'Run Exec', activeLabel: 'Executing...', color: 'bg-green-600 hover:bg-green-700' },
+};
+
+// ---------------------------------------------------------------------------
+// PriorityBucket component — collapsible bucket of scored tasks
+// ---------------------------------------------------------------------------
+
+function PriorityBucket({
+  bucket,
+  label,
+  description,
+  tasks: scoredTasks,
+  colorScheme,
+  actionInProgress,
+  onRunSpec,
+  onRunPlan,
+  onRunExec,
+  onTaskClick,
+  allTasks,
+  defaultExpanded,
+}: {
+  bucket: 'now' | 'next' | 'wait';
+  label: string;
+  description: string;
+  tasks: ScoredTask[];
+  colorScheme: 'red' | 'amber' | 'gray';
+  actionInProgress: string | null;
+  onRunSpec: (e: React.MouseEvent, taskId: string) => void;
+  onRunPlan: (e: React.MouseEvent, taskId: string) => void;
+  onRunExec: (e: React.MouseEvent, taskId: string) => void;
+  onTaskClick?: (task: Task) => void;
+  allTasks: Task[];
+  defaultExpanded: boolean;
+}) {
+  const [expanded, setExpanded] = useState(defaultExpanded);
+  const colors = BUCKET_COLORS[colorScheme];
+  const MAX_VISIBLE = bucket === 'now' ? 10 : 5;
+
+  const handleAction = (e: React.MouseEvent, taskId: string, action: 'spec' | 'plan' | 'exec') => {
+    if (action === 'spec') onRunSpec(e, taskId);
+    else if (action === 'plan') onRunPlan(e, taskId);
+    else onRunExec(e, taskId);
+  };
+
+  return (
+    <div className={`border ${colors.border} rounded-lg overflow-hidden`}>
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className={`w-full ${colors.headerBg} px-4 py-2 flex items-center justify-between hover:opacity-90 transition-opacity`}
+      >
+        <div className="flex items-center gap-2">
+          <span className={`text-sm font-bold ${colors.icon}`}>{label}</span>
+          <span className="text-xs text-gray-500">{description}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className={`text-xs ${colors.badge} px-2 py-0.5 rounded-full`}>
+            {scoredTasks.length}
+          </span>
+          <Icon name={expanded ? 'expand_less' : 'expand_more'} className="w-4 h-4 text-gray-400" />
+        </div>
+      </button>
+
+      {expanded && (
+        <div className="divide-y divide-gray-100 max-h-64 overflow-y-auto">
+          {scoredTasks.length === 0 ? (
+            <div className="p-3 text-center text-gray-500 text-xs">
+              {bucket === 'now' ? 'No urgent tasks' : 'No tasks in this bucket'}
+            </div>
+          ) : (
+            scoredTasks.slice(0, MAX_VISIBLE).map((scored) => {
+              const fullTask = allTasks.find((t) => t.id === scored.taskId);
+              const actionMeta = ACTION_LABELS[scored.recommendedAction];
+
+              return (
+                <div
+                  key={scored.taskId}
+                  className="p-2 hover:bg-gray-50 cursor-pointer"
+                  onClick={() => fullTask && onTaskClick?.(fullTask)}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <span className="font-mono text-xs font-medium text-blue-600 shrink-0">
+                        {scored.taskId}
+                      </span>
+                      <span className="text-xs text-gray-500 truncate">{scored.reason}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAction(e, scored.taskId, scored.recommendedAction);
+                      }}
+                      disabled={actionInProgress === scored.taskId}
+                      className={`px-2 py-1 text-xs text-white rounded shrink-0 disabled:bg-gray-300 ${actionMeta.color}`}
+                    >
+                      {actionInProgress === scored.taskId ? actionMeta.activeLabel : actionMeta.label}
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+          {scoredTasks.length > MAX_VISIBLE && (
+            <div className="p-2 text-center text-xs text-gray-400">
+              +{scoredTasks.length - MAX_VISIBLE} more
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// PipelineColumns — sorted by priority score
+// ---------------------------------------------------------------------------
+
+function PipelineColumns({
+  scoredTasks,
+  actionInProgress,
+  onRunSpec,
+  onRunPlan,
+  onRunExec,
+}: {
+  scoredTasks: ScoredTask[];
+  actionInProgress: string | null;
+  onRunSpec: (e: React.MouseEvent, taskId: string) => void;
+  onRunPlan: (e: React.MouseEvent, taskId: string) => void;
+  onRunExec: (e: React.MouseEvent, taskId: string) => void;
+}) {
+  const specTasks = scoredTasks.filter((s) => s.recommendedAction === 'spec');
+  const planTasks = scoredTasks.filter((s) => s.recommendedAction === 'plan');
+  const execTasks = scoredTasks.filter((s) => s.recommendedAction === 'exec');
+
+  const columns: {
+    label: string;
+    tasks: ScoredTask[];
+    action: 'spec' | 'plan' | 'exec';
+    colorClass: string;
+    borderClass: string;
+    bgClass: string;
+    handler: (e: React.MouseEvent, taskId: string) => void;
+  }[] = [
+    {
+      label: 'Next Spec',
+      tasks: specTasks,
+      action: 'spec',
+      colorClass: 'text-indigo-600',
+      borderClass: 'border-indigo-200',
+      bgClass: 'bg-indigo-50',
+      handler: onRunSpec,
+    },
+    {
+      label: 'Next Plan',
+      tasks: planTasks,
+      action: 'plan',
+      colorClass: 'text-cyan-600',
+      borderClass: 'border-cyan-200',
+      bgClass: 'bg-cyan-50',
+      handler: onRunPlan,
+    },
+    {
+      label: 'Next Exec',
+      tasks: execTasks,
+      action: 'exec',
+      colorClass: 'text-green-600',
+      borderClass: 'border-green-200',
+      bgClass: 'bg-green-50',
+      handler: onRunExec,
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {columns.map((col) => {
+        const actionMeta = ACTION_LABELS[col.action];
+        return (
+          <div key={col.label} className={`border ${col.borderClass} rounded-lg overflow-hidden`}>
+            <div className={`${col.bgClass} px-4 py-2 flex items-center justify-between`}>
+              <span className={`text-sm font-medium ${col.colorClass}`}>{col.label}</span>
+              <span className={`text-xs ${col.bgClass} ${col.colorClass} px-2 py-0.5 rounded-full font-medium`}>
+                {col.tasks.length}
+              </span>
+            </div>
+            <div className="divide-y divide-gray-100 max-h-40 overflow-y-auto">
+              {col.tasks.length === 0 ? (
+                <div className="p-3 text-center text-gray-500 text-xs">
+                  None pending
+                </div>
+              ) : (
+                col.tasks.slice(0, 5).map((scored) => (
+                  <div key={scored.taskId} className="p-2 flex items-center justify-between">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className={`font-mono text-xs ${col.colorClass}`}>{scored.taskId}</span>
+                      {scored.bucket === 'now' && (
+                        <span className="text-[10px] bg-red-100 text-red-700 px-1 py-0.5 rounded">NOW</span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => col.handler(e, scored.taskId)}
+                      disabled={actionInProgress === scored.taskId}
+                      className={`px-2 py-1 text-xs text-white rounded shrink-0 disabled:bg-gray-300 ${actionMeta.color}`}
+                    >
+                      {actionInProgress === scored.taskId ? actionMeta.activeLabel : actionMeta.label}
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Task row component (for In Progress / Completed / Blocked)
+// ---------------------------------------------------------------------------
+
 function TaskRow({
   task,
   onTaskClick,

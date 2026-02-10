@@ -270,7 +270,7 @@ export function useChainVersions(options: UseChainVersionsOptions = {}): UseChai
 
   return {
     // Queries
-    versions: versionsQuery.data?.items as ChainVersionSummary[] | undefined,
+    versions: versionsQuery.data as ChainVersionSummary[] | undefined,
     activeVersions,
     stats: statsQuery.data as ChainVersionStats | undefined,
 

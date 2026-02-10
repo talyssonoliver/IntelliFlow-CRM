@@ -10,3 +10,4 @@ export { governanceSidebarConfig } from './governance';
 export { settingsSidebarConfig } from './settings';
 export { billingSidebarConfig } from './billing';
 export { accountsSidebarConfig } from './accounts';
+export { developerSidebarConfig } from './developer';

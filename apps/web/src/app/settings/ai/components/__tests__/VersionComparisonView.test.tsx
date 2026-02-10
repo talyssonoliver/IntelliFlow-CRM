@@ -233,7 +233,7 @@ describe('VersionComparisonView', () => {
     it('shows comparing text while comparison is in progress', async () => {
       const user = userEvent.setup();
       const onCompare = vi.fn(
-        () => new Promise((resolve) => setTimeout(() => resolve(mockComparison), 100))
+        () => new Promise<VersionComparison>((resolve) => setTimeout(() => resolve(mockComparison), 100))
       );
       render(<VersionComparisonView {...defaultProps} onCompare={onCompare} />);
 
@@ -247,7 +247,7 @@ describe('VersionComparisonView', () => {
     it('disables compare button while comparison is in progress', async () => {
       const user = userEvent.setup();
       const onCompare = vi.fn(
-        () => new Promise((resolve) => setTimeout(() => resolve(mockComparison), 100))
+        () => new Promise<VersionComparison>((resolve) => setTimeout(() => resolve(mockComparison), 100))
       );
       render(<VersionComparisonView {...defaultProps} onCompare={onCompare} />);
 

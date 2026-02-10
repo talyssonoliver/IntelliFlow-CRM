@@ -1,7 +1,15 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Icon } from '@/lib/icons';
+import {
+  computePriorityScores,
+  type ScoredTask,
+  type DepGraphNode,
+  type SessionStatus,
+  type ScheduleTaskInfo,
+  type PhaseProgress,
+} from '@/lib/priority-scorer';
 
 interface ReadyTaskDetail {
   taskId: string;
@@ -71,6 +79,7 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
   const [taskPlanStatus, setTaskPlanStatus] = useState<
     Record<string, { hasSpec: boolean; hasPlan: boolean; specPath?: string | null; planPath?: string | null }>
   >({});
+  const [scoredMap, setScoredMap] = useState<Map<string, ScoredTask>>(new Map());
 
   const getSprintParam = (): string => {
     if (sprint === 'all') return 'all';
@@ -123,6 +132,86 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
 
         await Promise.all(planChecks);
         setTaskPlanStatus(planStatusMap);
+
+        // Fetch critical path, schedule calculate, and sprint progress for priority scoring
+        const [critRes, schedCalcRes, progressRes] = await Promise.all([
+          fetch(`/api/schedule/critical-path?sprint=${sprintParam}`).catch(() => null),
+          fetch(`/api/schedule/calculate?sprint=${sprintParam}`).catch(() => null),
+          fetch(`/api/sprint/progress?sprint=${sprintParam}`).catch(() => null),
+        ]);
+        const critData = critRes ? await critRes.json().catch(() => null) : null;
+        const schedCalcData = schedCalcRes ? await schedCalcRes.json().catch(() => null) : null;
+        const progressData = progressRes ? await progressRes.json().catch(() => null) : null;
+
+        // Build structures for priority scorer
+        const depGraphNodes = new Map<string, DepGraphNode>();
+        if (result.nodes) {
+          for (const [id, node] of Object.entries(result.nodes as Record<string, { task_id: string; dependencies: string[]; dependents: string[] }>)) {
+            depGraphNodes.set(id, {
+              task_id: node.task_id || id,
+              dependencies: node.dependencies || [],
+              dependents: node.dependents || [],
+            });
+          }
+        }
+
+        const criticalPathIds = new Set<string>(critData?.criticalPath?.taskIds || []);
+
+        const scheduleTaskMap = new Map<string, ScheduleTaskInfo>();
+        if (critData?.tasks) {
+          for (const t of critData.tasks) {
+            // Enrich with totalFloat from schedule/calculate data (CPM-based)
+            const calcTask = schedCalcData?.tasks?.[t.taskId];
+            scheduleTaskMap.set(t.taskId, {
+              taskId: t.taskId,
+              earlyFinish: t.earlyFinish,
+              totalFloat: calcTask?.totalFloat,
+              isCritical: criticalPathIds.has(t.taskId),
+            });
+          }
+        }
+
+        const phaseProgress: PhaseProgress[] = progressData?.phases || [];
+
+        const sessionStatuses = new Map<string, SessionStatus>();
+        for (const [taskId, ps] of Object.entries(planStatusMap)) {
+          sessionStatuses.set(taskId, { hasSpec: ps.hasSpec, hasPlan: ps.hasPlan });
+        }
+
+        // Build minimal Task objects for scorer
+        const readyTasks = result.ready_to_start_details.map((rd: ReadyTaskDetail) => ({
+          id: rd.taskId,
+          section: rd.section,
+          description: rd.description,
+          owner: rd.owner,
+          dependencies: rd.dependencies,
+          cleanDependencies: [],
+          crossQuarterDeps: false,
+          prerequisites: '',
+          dod: '',
+          status: rd.status || 'Planned',
+          kpis: '',
+          sprint: rd.sprint,
+          artifacts: [],
+          validation: '',
+        }));
+
+        const currentSprintNum = typeof sprint === 'number' ? sprint : undefined;
+        const scored = computePriorityScores(
+          readyTasks,
+          depGraphNodes,
+          criticalPathIds,
+          sessionStatuses,
+          scheduleTaskMap,
+          phaseProgress,
+          currentSprintNum,
+        );
+
+        const newMap = new Map<string, ScoredTask>();
+        for (const s of scored) {
+          newMap.set(s.taskId, s);
+        }
+        setScoredMap(newMap);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -440,9 +529,19 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
           ) : (
             <div className="space-y-3">
               {sortedSprints.map((sprint) => {
-                const sprintTasks = ready_by_sprint[sprint] || [];
+                const rawSprintTasks = ready_by_sprint[sprint] || [];
+                // Sort tasks within each sprint by priority score (highest first)
+                const sprintTasks = [...rawSprintTasks].sort((a, b) => {
+                  const scoreA = scoredMap.get(a.taskId)?.score ?? 0;
+                  const scoreB = scoredMap.get(b.taskId)?.score ?? 0;
+                  return scoreB - scoreA;
+                });
                 const isExpanded = expandedSprints.has(sprint);
                 const isNextSprint = sprint === summary.next_sprint;
+
+                // Count bucket distribution for header
+                const nowCount = sprintTasks.filter((t) => scoredMap.get(t.taskId)?.bucket === 'now').length;
+                const nextCount = sprintTasks.filter((t) => scoredMap.get(t.taskId)?.bucket === 'next').length;
 
                 return (
                   <div
@@ -472,6 +571,13 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
                       </div>
                       <span className="text-sm text-gray-500">
                         {sprintTasks.length} task{sprintTasks.length !== 1 ? 's' : ''}
+                        {(nowCount > 0 || nextCount > 0) && (
+                          <span className="ml-1 text-xs">
+                            ({nowCount > 0 && <span className="text-red-600">{nowCount} NOW</span>}
+                            {nowCount > 0 && nextCount > 0 && ' \u00b7 '}
+                            {nextCount > 0 && <span className="text-amber-600">{nextCount} NEXT</span>})
+                          </span>
+                        )}
                       </span>
                     </button>
 
@@ -500,6 +606,19 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
                                     <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
                                       {task.section}
                                     </span>
+                                    {/* Priority badge */}
+                                    {scoredMap.has(task.taskId) && (() => {
+                                      const scored = scoredMap.get(task.taskId)!;
+                                      const badgeColor =
+                                        scored.bucket === 'now' ? 'bg-red-100 text-red-700' :
+                                        scored.bucket === 'next' ? 'bg-amber-100 text-amber-700' :
+                                        'bg-gray-100 text-gray-500';
+                                      return (
+                                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${badgeColor}`}>
+                                          {scored.bucket.toUpperCase()}
+                                        </span>
+                                      );
+                                    })()}
                                     {status && !isReadyStatus && (
                                       <span className="text-xs px-2 py-0.5 bg-gray-200 text-gray-700 rounded">
                                         {status.replace('_', ' ')}
@@ -509,6 +628,11 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
                                   <p className="text-sm text-gray-700 mt-1 line-clamp-2">
                                     {task.description}
                                   </p>
+                                  {scoredMap.has(task.taskId) && (
+                                    <p className="text-xs text-gray-500 mt-0.5">
+                                      {scoredMap.get(task.taskId)!.reason}
+                                    </p>
+                                  )}
                                   {task.dependencies.length > 0 && (
                                     <p className="text-xs text-green-600 mt-1">
                                       Dependencies complete: {task.dependencies.join(', ')}
