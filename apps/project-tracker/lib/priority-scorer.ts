@@ -1,0 +1,453 @@
+/**
+ * Priority Scorer — Smart Work Queue Engine
+ *
+ * Implements a WSJF-inspired (Weighted Shortest Job First) prioritization
+ * algorithm adapted for the IntelliFlow project tracker.
+ *
+ * METHODOLOGY (based on SAFe WSJF + CPM):
+ *   Priority = Cost of Delay / Job Size Proxy
+ *
+ * Cost of Delay is the sum of three Fibonacci-scaled (1-13) dimensions:
+ *   1. Business Value — governance tier (A/B/C) + critical path membership
+ *   2. Time Criticality — Total Float from CPM (negative = overdue) + sprint distance
+ *   3. Risk Reduction / Opportunity Enablement — fan-out (downstream unblocking) + phase health
+ *
+ * Job Size Proxy uses pipeline progress to approximate remaining effort:
+ *   - exec-ready = 1 (smallest remaining work)
+ *   - plan-ready  = 2
+ *   - needs-spec  = 3 (most remaining work)
+ *
+ * Buckets are assigned by percentile rank within the scored set:
+ *   - NOW  = top 20% OR overdue (negative float) OR critical-path Tier A
+ *   - NEXT = middle 40%
+ *   - WAIT = bottom 40%
+ *
+ * References:
+ *   - SAFe WSJF: https://framework.scaledagile.com/wsjf
+ *   - CPM / Total Float: schedule-calculator.ts (lines 430-467)
+ *   - Governance tiers: governance.ts computeDefaultTier()
+ *   - Feature Matrix forecast risk: tools/scripts/generate-feature-matrix.ps1
+ */
+
+import type { Task } from './types';
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export interface PriorityFactors {
+  /** Fibonacci 1-13 — governance tier + critical path membership */
+  businessValue: number;
+  /** Fibonacci 1-13 — schedule pressure from CPM float + sprint proximity */
+  timeCriticality: number;
+  /** Fibonacci 1-13 — downstream unblocking potential + phase health */
+  riskReductionOpportunity: number;
+  /** 1-3 — pipeline remaining effort (lower = closer to delivery) */
+  jobSizeProxy: number;
+}
+
+export interface ScoredTask {
+  taskId: string;
+  task: Task;
+  /** WSJF score = (BV + TC + RROE) / jobSizeProxy */
+  score: number;
+  factors: PriorityFactors;
+  /** Human-readable explanation of top contributing factors */
+  reason: string;
+  recommendedAction: 'spec' | 'plan' | 'exec';
+  bucket: 'now' | 'next' | 'wait';
+}
+
+/** Dependency-graph node (from /api/dependency-graph `nodes` map) */
+export interface DepGraphNode {
+  task_id: string;
+  dependencies: string[];
+  dependents: string[];
+}
+
+/** Session status for a single task (from /api/tasks/plan) */
+export interface SessionStatus {
+  hasSpec: boolean;
+  hasPlan: boolean;
+}
+
+/** Phase progress entry (from /api/sprint/progress) */
+export interface PhaseProgress {
+  phaseId: string;
+  phaseName: string;
+  total: number;
+  completed: number;
+  inProgress: number;
+  percentage: number;
+}
+
+/**
+ * Schedule task info from /api/schedule/calculate
+ * Includes CPM-computed fields that replace naive date comparisons.
+ */
+export interface ScheduleTaskInfo {
+  taskId: string;
+  /** ISO 8601 — projected finish from forward pass */
+  earlyFinish?: string;
+  /** CPM Total Float = LS - ES in minutes. Negative = overdue */
+  totalFloat?: number;
+  isCritical?: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Fibonacci scale mapping
+// ---------------------------------------------------------------------------
+
+/** Modified Fibonacci sequence used in SAFe WSJF (1,2,3,5,8,13) */
+const FIB = [1, 2, 3, 5, 8, 13] as const;
+
+/**
+ * Map a continuous value [0..1] to the Fibonacci scale.
+ * 0 → 1 (lowest), 1 → 13 (highest)
+ */
+function toFibonacci(normalized: number): number {
+  const clamped = Math.max(0, Math.min(1, normalized));
+  const idx = Math.round(clamped * (FIB.length - 1));
+  return FIB[idx];
+}
+
+// ---------------------------------------------------------------------------
+// Factor 1: Business Value (Fibonacci 1-13)
+// ---------------------------------------------------------------------------
+
+/**
+ * Business Value combines:
+ *   - Governance tier: A=high, B=medium, C=low
+ *   - Critical path membership: bonus for tasks on the critical path
+ *
+ * Governance tiers (from governance.ts computeDefaultTier):
+ *   A = security, foundational IFC-001..010, 5+ dependents, exceptions, strategy
+ *   B = ENV setup, AI-SETUP, automation, 2-4 dependents
+ *   C = everything else
+ */
+export function scoreBusinessValue(
+  taskId: string,
+  section: string,
+  dependentCount: number,
+  isCriticalPath: boolean,
+): number {
+  // Derive governance tier inline (same logic as governance.ts)
+  let tierScore: number;
+  const lcSection = section.toLowerCase();
+
+  if (
+    taskId.includes('SEC') || lcSection.includes('security') ||
+    (taskId.startsWith('IFC-0') && parseInt(taskId.replace('IFC-', ''), 10) <= 10) ||
+    dependentCount >= 5 ||
+    taskId.startsWith('EXC-') ||
+    lcSection.includes('planning') || lcSection.includes('strategy') ||
+    taskId.startsWith('DOC-001') || taskId.startsWith('BRAND-001') ||
+    taskId.startsWith('GTM-') || taskId.startsWith('ANALYTICS-001')
+  ) {
+    tierScore = 0.85; // Tier A → Fibonacci 8-13
+  } else if (
+    taskId.startsWith('ENV-') || taskId.startsWith('AI-SETUP-') ||
+    taskId.startsWith('AUTOMATION-') || dependentCount >= 2 ||
+    taskId.startsWith('ENG-OPS-') || taskId.startsWith('PM-OPS-')
+  ) {
+    tierScore = 0.5; // Tier B → Fibonacci 3-5
+  } else {
+    tierScore = 0.2; // Tier C → Fibonacci 1-2
+  }
+
+  // Critical path bonus: push score up by ~0.3
+  if (isCriticalPath) {
+    tierScore = Math.min(1, tierScore + 0.3);
+  }
+
+  return toFibonacci(tierScore);
+}
+
+// ---------------------------------------------------------------------------
+// Factor 2: Time Criticality (Fibonacci 1-13)
+// ---------------------------------------------------------------------------
+
+/**
+ * Time Criticality combines:
+ *   - CPM Total Float (schedule-calculator.ts lines 448-452)
+ *     Negative float = overdue (highest urgency)
+ *     Zero float = critical path (no slack)
+ *     Positive float = increasing slack
+ *   - Sprint distance: closer sprint = more urgent
+ *
+ * This replaces the naive earlyFinish date comparison with proper
+ * CPM-based schedule pressure metrics.
+ */
+export function scoreTimeCriticality(
+  taskId: string,
+  scheduleTaskMap: Map<string, ScheduleTaskInfo>,
+  taskSprint: number | string,
+  currentSprint: number,
+): number {
+  let floatScore = 0;
+
+  const info = scheduleTaskMap.get(taskId);
+  if (info?.totalFloat !== undefined) {
+    // totalFloat is in minutes. Map to [0,1]:
+    //   <= 0 min (overdue/critical) → 1.0
+    //   1-60 min (very tight) → 0.8
+    //   60-480 min (1-8 hours) → 0.6
+    //   480-2400 min (1-5 days) → 0.3
+    //   > 2400 min (5+ days) → 0.0
+    const f = info.totalFloat;
+    if (f <= 0) floatScore = 1.0;
+    else if (f <= 60) floatScore = 0.8;
+    else if (f <= 480) floatScore = 0.6;
+    else if (f <= 2400) floatScore = 0.3;
+    else floatScore = 0.0;
+  } else if (info?.earlyFinish) {
+    // Fallback: naive date comparison when float unavailable
+    const diffMs = new Date(info.earlyFinish).getTime() - Date.now();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    if (diffDays < 0) floatScore = 1.0;
+    else if (diffDays < 1) floatScore = 0.8;
+    else if (diffDays < 7) floatScore = 0.5;
+    else if (diffDays < 14) floatScore = 0.2;
+    else floatScore = 0.0;
+  }
+
+  // Sprint distance: current or past → 1.0, +1 → 0.6, +2 → 0.3, 3+ → 0
+  let sprintScore = 0;
+  if (typeof taskSprint === 'number') {
+    const distance = taskSprint - currentSprint;
+    if (distance <= 0) sprintScore = 1.0;
+    else if (distance === 1) sprintScore = 0.6;
+    else if (distance === 2) sprintScore = 0.3;
+    // else 0
+  }
+
+  // Weighted blend: 60% float pressure, 40% sprint proximity
+  const combined = floatScore * 0.6 + sprintScore * 0.4;
+  return toFibonacci(combined);
+}
+
+// ---------------------------------------------------------------------------
+// Factor 3: Risk Reduction / Opportunity Enablement (Fibonacci 1-13)
+// ---------------------------------------------------------------------------
+
+/**
+ * RROE captures the "multiplier effect" of completing this task:
+ *   - Fan-out: how many downstream tasks are unblocked
+ *     (Matches Feature Matrix "execution risk" concept: unresolved dependencies)
+ *   - Phase health: if the task's sprint has a phase falling behind,
+ *     completing this task reduces schedule risk
+ *
+ * From SAFe: "highlight jobs that may not bring revenue immediately
+ * but benefit the long-run" — a high fan-out task is exactly that.
+ */
+export function scoreRiskReduction(
+  dependentCount: number,
+  phaseProgress: PhaseProgress[],
+): number {
+  // Fan-out: 0 deps → 0, 1 → 0.15, 2 → 0.3, 3 → 0.5, 4 → 0.7, 5+ → 0.9
+  const fanOutScore = Math.min(dependentCount / 5.5, 1.0);
+
+  // Phase health: if worst phase < 50% → 1.0 risk, < 75% → 0.5, else → 0
+  let phaseScore = 0;
+  if (phaseProgress.length > 0) {
+    const phasesWithTasks = phaseProgress.filter((p) => p.total > 0);
+    if (phasesWithTasks.length > 0) {
+      const minPct = Math.min(...phasesWithTasks.map((p) => p.percentage));
+      if (minPct < 50) phaseScore = 1.0;
+      else if (minPct < 75) phaseScore = 0.5;
+    }
+  }
+
+  // Weighted: 70% fan-out, 30% phase health
+  const combined = fanOutScore * 0.7 + phaseScore * 0.3;
+  return toFibonacci(combined);
+}
+
+// ---------------------------------------------------------------------------
+// Job Size Proxy (denominator)
+// ---------------------------------------------------------------------------
+
+/**
+ * Approximates remaining effort via pipeline stage.
+ * Lower = less work remaining = higher WSJF priority.
+ *
+ *   exec-ready (spec + plan done) → 1  (just needs execution)
+ *   plan-ready (spec done)        → 2  (needs plan + execution)
+ *   needs-spec                    → 3  (needs full pipeline)
+ */
+export function computeJobSizeProxy(session: SessionStatus | undefined): number {
+  if (!session) return 3;
+  if (session.hasSpec && session.hasPlan) return 1;
+  if (session.hasSpec) return 2;
+  return 3;
+}
+
+// ---------------------------------------------------------------------------
+// Recommended action
+// ---------------------------------------------------------------------------
+
+function getRecommendedAction(session: SessionStatus | undefined): 'spec' | 'plan' | 'exec' {
+  if (!session) return 'spec';
+  if (session.hasSpec && session.hasPlan) return 'exec';
+  if (session.hasSpec) return 'plan';
+  return 'spec';
+}
+
+// ---------------------------------------------------------------------------
+// Reason string builder
+// ---------------------------------------------------------------------------
+
+function buildReason(
+  factors: PriorityFactors,
+  dependentCount: number,
+  isCriticalPath: boolean,
+  totalFloat: number | undefined,
+): string {
+  const parts: string[] = [];
+
+  if (isCriticalPath) parts.push('Critical path');
+  if (totalFloat !== undefined && totalFloat <= 0) parts.push('Overdue');
+  else if (totalFloat !== undefined && totalFloat <= 60) parts.push('Due today');
+  if (dependentCount >= 3) parts.push(`Unblocks ${dependentCount} tasks`);
+  if (factors.jobSizeProxy === 1) parts.push('Exec ready');
+  if (factors.businessValue >= 8) parts.push('Tier A');
+  if (factors.riskReductionOpportunity >= 8) parts.push('High fan-out');
+  if (factors.timeCriticality >= 8) parts.push('Current sprint');
+
+  return parts.length > 0 ? parts.join(' \u00b7 ') : 'Ready';
+}
+
+// ---------------------------------------------------------------------------
+// Bucket assignment (percentile-based)
+// ---------------------------------------------------------------------------
+
+/**
+ * Assigns buckets using percentile rank within the scored set,
+ * with hard overrides for overdue/critical-path Tier A tasks.
+ *
+ * Percentile thresholds:
+ *   - NOW:  top 20% of tasks by score
+ *   - NEXT: middle 40%
+ *   - WAIT: bottom 40%
+ *
+ * Hard overrides (always NOW):
+ *   - Negative Total Float (overdue per CPM)
+ *   - Critical-path AND Tier A governance
+ */
+function assignBuckets(scoredTasks: ScoredTaskInternal[]): void {
+  if (scoredTasks.length === 0) return;
+
+  // Percentile thresholds
+  const total = scoredTasks.length;
+  const nowCutoff = Math.max(1, Math.ceil(total * 0.2));
+  const nextCutoff = Math.ceil(total * 0.6);
+
+  for (let i = 0; i < scoredTasks.length; i++) {
+    const s = scoredTasks[i];
+
+    // Hard override: overdue (negative float)
+    if (s._totalFloat !== undefined && s._totalFloat <= 0) {
+      s.bucket = 'now';
+      continue;
+    }
+
+    // Hard override: critical path + high business value
+    if (s._isCriticalPath && s.factors.businessValue >= 8) {
+      s.bucket = 'now';
+      continue;
+    }
+
+    // Percentile rank (array is already sorted descending by score)
+    if (i < nowCutoff) {
+      s.bucket = 'now';
+    } else if (i < nextCutoff) {
+      s.bucket = 'next';
+    } else {
+      s.bucket = 'wait';
+    }
+  }
+}
+
+/** Internal type with extra fields for bucket assignment */
+interface ScoredTaskInternal extends ScoredTask {
+  _isCriticalPath: boolean;
+  _totalFloat: number | undefined;
+}
+
+// ---------------------------------------------------------------------------
+// Main entry point
+// ---------------------------------------------------------------------------
+
+export function computePriorityScores(
+  readyTasks: Task[],
+  depGraphNodes: Map<string, DepGraphNode>,
+  criticalPathIds: Set<string>,
+  sessionStatuses: Map<string, SessionStatus>,
+  scheduleTaskMap: Map<string, ScheduleTaskInfo>,
+  phaseProgress: PhaseProgress[],
+  currentSprint?: number,
+): ScoredTask[] {
+  // Infer current sprint from the lowest sprint number in ready tasks
+  const effectiveSprint =
+    currentSprint ??
+    Math.min(
+      ...readyTasks
+        .filter((t) => typeof t.sprint === 'number')
+        .map((t) => t.sprint as number),
+      0,
+    );
+
+  const scored: ScoredTaskInternal[] = readyTasks.map((task) => {
+    const session = sessionStatuses.get(task.id);
+    const node = depGraphNodes.get(task.id);
+    const dependentCount = node?.dependents.length ?? 0;
+    const isCriticalPath = criticalPathIds.has(task.id);
+    const scheduleInfo = scheduleTaskMap.get(task.id);
+
+    // --- WSJF numerator: Cost of Delay ---
+    const businessValue = scoreBusinessValue(
+      task.id, task.section, dependentCount, isCriticalPath,
+    );
+    const timeCriticality = scoreTimeCriticality(
+      task.id, scheduleTaskMap, task.sprint, effectiveSprint,
+    );
+    const riskReductionOpportunity = scoreRiskReduction(
+      dependentCount, phaseProgress,
+    );
+
+    // --- WSJF denominator ---
+    const jobSizeProxy = computeJobSizeProxy(session);
+
+    const factors: PriorityFactors = {
+      businessValue,
+      timeCriticality,
+      riskReductionOpportunity,
+      jobSizeProxy,
+    };
+
+    // WSJF = Cost of Delay / Job Size
+    const costOfDelay = businessValue + timeCriticality + riskReductionOpportunity;
+    const score = Math.round((costOfDelay / jobSizeProxy) * 100) / 100;
+
+    return {
+      taskId: task.id,
+      task,
+      score,
+      factors,
+      reason: buildReason(factors, dependentCount, isCriticalPath, scheduleInfo?.totalFloat),
+      recommendedAction: getRecommendedAction(session),
+      bucket: 'wait' as const, // provisional, overwritten by assignBuckets
+      _isCriticalPath: isCriticalPath,
+      _totalFloat: scheduleInfo?.totalFloat,
+    };
+  });
+
+  // Sort descending by WSJF score
+  scored.sort((a, b) => b.score - a.score);
+
+  // Assign NOW / NEXT / WAIT based on percentile rank + hard overrides
+  assignBuckets(scored);
+
+  // Strip internal fields before returning
+  return scored.map(({ _isCriticalPath, _totalFloat, ...rest }) => rest);
+}
