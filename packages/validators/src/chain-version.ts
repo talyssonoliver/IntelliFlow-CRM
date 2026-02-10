@@ -107,6 +107,10 @@ export type UpdateChainVersionInput = z.infer<typeof updateChainVersionSchema>;
 // Chain Version Full Schema
 // =============================================================================
 
+// Date fields use union to support both Date objects (server-side, storybook)
+// and ISO strings (tRPC client without superjson transformer)
+const dateOrString = z.union([z.date(), z.string().datetime()]);
+
 export const chainVersionSchema = z.object({
   id: z.string().uuid(),
   chainType: chainTypeSchema,
@@ -122,8 +126,8 @@ export const chainVersionSchema = z.object({
   rolloutPercent: z.number().int().nullable(),
   experimentId: z.string().cuid().nullable(),
   createdBy: z.string(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  createdAt: dateOrString,
+  updatedAt: dateOrString,
   tenantId: z.string(),
 });
 
@@ -141,7 +145,7 @@ export const chainVersionSummarySchema = z.object({
   description: z.string().nullable(),
   rolloutStrategy: versionRolloutStrategySchema,
   rolloutPercent: z.number().int().nullable(),
-  createdAt: z.date(),
+  createdAt: dateOrString,
   createdBy: z.string(),
 });
 
@@ -177,7 +181,7 @@ export const rollbackResultSchema = z.object({
   previousVersionId: z.string().uuid(),
   rolledBackVersionId: z.string().uuid(),
   auditId: z.string().uuid(),
-  rolledBackAt: z.date(),
+  rolledBackAt: dateOrString,
 });
 
 export type RollbackResult = z.infer<typeof rollbackResultSchema>;
@@ -193,7 +197,7 @@ export const chainVersionAuditSchema = z.object({
   previousState: z.record(z.unknown()).nullable(),
   newState: z.record(z.unknown()).nullable(),
   performedBy: z.string(),
-  performedAt: z.date(),
+  performedAt: dateOrString,
   reason: z.string().nullable(),
 });
 
@@ -282,7 +286,8 @@ export function formatVersionInfo(version: ChainVersion): string {
  */
 export function getVersionAge(version: ChainVersion): string {
   const now = new Date();
-  const diffMs = now.getTime() - version.createdAt.getTime();
+  const createdAt = version.createdAt instanceof Date ? version.createdAt : new Date(version.createdAt);
+  const diffMs = now.getTime() - createdAt.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
   if (diffDays === 0) return 'Created today';

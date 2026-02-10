@@ -61,5 +61,8 @@ export * from './empty-state';
 // Score Components
 export * from './score';
 
+// Search
+export * from './search-input';
+
 // Icon Mapping (Material Symbols reference)
 export { ICON_MAPPING } from '../lib/icon-mapping';

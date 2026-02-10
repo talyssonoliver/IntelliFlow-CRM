@@ -23,6 +23,9 @@ export { PrismaAIOutputReviewRepository } from './PrismaAIOutputReviewRepository
 export * from './PrismaChainVersionRepository';
 export * from './PrismaChainVersionAuditRepository';
 
+// Activity Feed Repository (IFC-069)
+export * from './PrismaActivityFeedRepository';
+
 // Outbox pattern (domain events)
 export * from './PrismaOutboxRepository';
 

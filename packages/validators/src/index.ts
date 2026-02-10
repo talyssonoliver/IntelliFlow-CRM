@@ -64,3 +64,6 @@ export * from './notifications';
 
 // AI Output Review Schemas (IFC-176)
 export * from './ai-review';
+
+// Activity Feed Schemas (IFC-069)
+export * from './activity-feed';

@@ -22,6 +22,7 @@
     "@supabase/supabase-js": "^2.89.0",
     "@tanstack/react-query": "^5.90.12",
     "@tanstack/react-table": "^8.21.0",
+    "@tanstack/react-virtual": "^3.13.18",
     "@trpc/client": "^11.8.0",
     "@trpc/react-query": "^11.8.0",
     "@trpc/server": "^11.8.0",

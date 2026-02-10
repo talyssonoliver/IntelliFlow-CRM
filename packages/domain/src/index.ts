@@ -96,7 +96,7 @@ export * from './ai/FeedbackEvents';
 export * from './ai/review';
 
 // AI Domain - Conversation Records (IFC-148)
-// TODO: Create conversation-record domain module (Prisma model exists but domain entity not yet implemented)
+export * from './ai/conversation-record';
 
 // Auth Domain - Constants
 export * from './auth/AuthConstants';
@@ -108,7 +108,7 @@ export * from './config/ConfigConstants';
 export * from './timeline/TimelineConstants';
 
 // Platform Domain - IDP Constants (IFC-078)
-export * from './platform/PlatformConstants';
+export * from './platform';
 
 // Auto-Response Domain (IFC-029)
 export * from './autoresponse';
@@ -118,3 +118,9 @@ export * from './intelligence';
 
 // Security Domain - AI Security Event Types (IFC-125)
 export * from './security/AISecurityEventTypes';
+
+// Activity Feed Domain (IFC-069)
+export * from './activity-feed';
+
+// CRM Domain - Billing (IFC-198)
+export * from './crm/billing';

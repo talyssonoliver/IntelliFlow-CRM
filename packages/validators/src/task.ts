@@ -94,3 +94,35 @@ export const completeTaskSchema = z.object({
 });
 
 export type CompleteTaskInput = z.infer<typeof completeTaskSchema>;
+
+// Assign Task Schema
+export const assignTaskSchema = z.object({
+  taskId: idSchema,
+  entityType: z.enum(['lead', 'contact', 'opportunity']),
+  entityId: idSchema,
+});
+
+export type AssignTaskInput = z.infer<typeof assignTaskSchema>;
+
+// Reschedule Task Schema
+export const rescheduleTaskSchema = z.object({
+  taskId: idSchema,
+  newDueDate: z.coerce.date(),
+});
+
+export type RescheduleTaskInput = z.infer<typeof rescheduleTaskSchema>;
+
+// Get Reminders Schema
+export const getRemindersSchema = z.object({
+  ownerId: idSchema.optional(),
+}).optional();
+
+export type GetRemindersInput = z.infer<typeof getRemindersSchema>;
+
+// Get By Entity Schema
+export const getByEntitySchema = z.object({
+  entityType: z.enum(['lead', 'contact', 'opportunity']),
+  entityId: idSchema,
+});
+
+export type GetByEntityInput = z.infer<typeof getByEntitySchema>;

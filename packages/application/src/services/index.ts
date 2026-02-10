@@ -27,3 +27,9 @@ export * from './AutoResponseService';
 
 // Chain Version Service (IFC-086)
 export * from './ChainVersionService';
+
+// Activity Feed Service (IFC-069)
+export * from './ActivityFeedService';
+
+// Billing Domain Service (IFC-198)
+export * from './BillingDomainService';

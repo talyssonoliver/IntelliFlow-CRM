@@ -13,3 +13,5 @@ export * from './AnalyticsRepositoryPort';
 export * from './TicketRepositoryPort';
 export * from './LeadConversionAuditRepositoryPort';
 export * from './AIOutputReviewRepositoryPort';
+export * from './ActivityFeedRepositoryPort';
+export * from './BillingRepositoryPort';
