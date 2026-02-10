@@ -1,5 +1,11 @@
 'use client';
 
+/**
+ * @deprecated Use AppSidebar with governanceSidebarConfig instead.
+ * This component is intentionally kept as a legacy reference.
+ * See: apps/web/src/components/sidebar/configs/governance.ts
+ */
+
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@intelliflow/ui';

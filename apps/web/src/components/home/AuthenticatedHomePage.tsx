@@ -1,24 +1,27 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
+import { useActivityFeed } from '@/hooks/useActivityFeed';
+import type { ActivityFeedType } from '@intelliflow/domain';
 import {
   EditQuickActionsSheet, ALL_QUICK_ACTIONS, loadEnabledActions,
   EditPinnedNavigationSheet, ALL_PINNED_NAV_GROUPS, loadPinnedGroups,
   getPinnedIcon,
 } from './PinnedItemsSheet';
 
-// Activity feed type filter options
+// Activity feed type filter options — values match ActivityFeedType (IFC-069 unified feed)
 const FEED_FILTER_OPTIONS = [
   { value: 'all', label: 'All Activity', icon: 'list' },
-  { value: 'mention', label: 'Mentions', icon: 'alternate_email' },
-  { value: 'call', label: 'Calls', icon: 'call' },
-  { value: 'email', label: 'Emails', icon: 'mail' },
-  { value: 'task', label: 'Tasks', icon: 'task_alt' },
-  { value: 'deal', label: 'Deals', icon: 'handshake' },
-  { value: 'lead', label: 'Leads', icon: 'person_add' },
+  { value: 'CALL', label: 'Calls', icon: 'call' },
+  { value: 'EMAIL', label: 'Emails', icon: 'mail' },
+  { value: 'MEETING', label: 'Meetings', icon: 'event' },
+  { value: 'TASK', label: 'Tasks', icon: 'task_alt' },
+  { value: 'DEAL', label: 'Deals', icon: 'handshake' },
+  { value: 'NOTE', label: 'Notes', icon: 'sticky_note_2' },
+  { value: 'TICKET', label: 'Tickets', icon: 'confirmation_number' },
 ] as const;
 
 // =============================================================================
@@ -39,32 +42,41 @@ type SerializedAIInsight = {
   createdAt: string;
 };
 
-type SerializedActivityFeedItem = {
+/** Shape of items from the unified activity feed (IFC-069), after tRPC serialization */
+type UnifiedFeedItem = {
   id: string;
-  type: 'mention' | 'call' | 'email' | 'task' | 'deal' | 'lead' | 'system' | 'ai';
+  source: string;
+  type: string;
   title: string;
-  description: string;
-  timestamp: string;
-  relativeTime: string;
-  actor?: {
-    id: string;
-    name: string;
-    avatarUrl?: string | null;
-    initials: string;
-  } | null;
-  attachment?: {
-    name: string;
-    type: string;
-    url?: string;
-  } | null;
-  badges?: {
-    id: string;
-    label: string;
-    variant: 'success' | 'warning' | 'info' | 'default';
-  }[];
-  actionUrl?: string | null;
-  isActionable: boolean;
+  description: string | null;
+  timestamp: string; // Date serialized to string by tRPC
+  actor: { id: string | null; name: string; avatarUrl?: string | null } | null;
+  entity: { id: string; type: string; name: string } | null;
+  metadata: Record<string, unknown> | null;
 };
+
+/** Compute relative time label from a timestamp string */
+function formatRelativeTime(timestamp: string): string {
+  const diff = Date.now() - new Date(timestamp).getTime();
+  const minutes = Math.floor(diff / 60_000);
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(timestamp).toLocaleDateString();
+}
+
+/** Derive initials from a name string */
+function getInitialsFromName(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join('');
+}
 
 type SerializedDailyGoal = {
   id: string;
@@ -123,13 +135,24 @@ function getInsightIcon(type: string): InsightIconStyle {
 
 function getActivityIcon(type: string): ActivityIconStyle {
   const iconMap: Record<string, ActivityIconStyle> = {
-    mention: { bg: 'bg-blue-100 dark:bg-blue-900', color: 'text-blue-600 dark:text-blue-300' },
-    call: { icon: 'call_received', bg: 'bg-emerald-100 dark:bg-emerald-900', color: 'text-emerald-600 dark:text-emerald-300' },
-    email: { icon: 'mail', bg: 'bg-indigo-100 dark:bg-indigo-900', color: 'text-indigo-600 dark:text-indigo-300' },
-    task: { icon: 'task_alt', bg: 'bg-amber-100 dark:bg-amber-900', color: 'text-amber-600 dark:text-amber-300' },
-    deal: { icon: 'handshake', bg: 'bg-green-100 dark:bg-green-900', color: 'text-green-600 dark:text-green-300' },
-    lead: { icon: 'person_add', bg: 'bg-cyan-100 dark:bg-cyan-900', color: 'text-cyan-600 dark:text-cyan-300' },
-    ai: { initials: 'AI', bg: 'bg-purple-100 dark:bg-purple-900', color: 'text-purple-600 dark:text-purple-300' },
+    // Unified feed types (UPPERCASE — IFC-069)
+    CALL: { icon: 'call_received', bg: 'bg-emerald-100 dark:bg-emerald-900', color: 'text-emerald-600 dark:text-emerald-300' },
+    EMAIL: { icon: 'mail', bg: 'bg-indigo-100 dark:bg-indigo-900', color: 'text-indigo-600 dark:text-indigo-300' },
+    MEETING: { icon: 'event', bg: 'bg-blue-100 dark:bg-blue-900', color: 'text-blue-600 dark:text-blue-300' },
+    NOTE: { icon: 'sticky_note_2', bg: 'bg-teal-100 dark:bg-teal-900', color: 'text-teal-600 dark:text-teal-300' },
+    TASK: { icon: 'task_alt', bg: 'bg-amber-100 dark:bg-amber-900', color: 'text-amber-600 dark:text-amber-300' },
+    CHAT: { icon: 'chat', bg: 'bg-pink-100 dark:bg-pink-900', color: 'text-pink-600 dark:text-pink-300' },
+    DOCUMENT: { icon: 'description', bg: 'bg-orange-100 dark:bg-orange-900', color: 'text-orange-600 dark:text-orange-300' },
+    DEAL: { icon: 'handshake', bg: 'bg-green-100 dark:bg-green-900', color: 'text-green-600 dark:text-green-300' },
+    TICKET: { icon: 'confirmation_number', bg: 'bg-rose-100 dark:bg-rose-900', color: 'text-rose-600 dark:text-rose-300' },
+    STAGE_CHANGE: { icon: 'swap_horiz', bg: 'bg-violet-100 dark:bg-violet-900', color: 'text-violet-600 dark:text-violet-300' },
+    STATUS_CHANGE: { icon: 'published_with_changes', bg: 'bg-sky-100 dark:bg-sky-900', color: 'text-sky-600 dark:text-sky-300' },
+    SCORE_UPDATE: { icon: 'trending_up', bg: 'bg-lime-100 dark:bg-lime-900', color: 'text-lime-600 dark:text-lime-300' },
+    QUALIFICATION: { icon: 'verified', bg: 'bg-cyan-100 dark:bg-cyan-900', color: 'text-cyan-600 dark:text-cyan-300' },
+    AGENT_ACTION: { initials: 'AI', bg: 'bg-purple-100 dark:bg-purple-900', color: 'text-purple-600 dark:text-purple-300' },
+    SLA_ALERT: { icon: 'warning', bg: 'bg-red-100 dark:bg-red-900', color: 'text-red-600 dark:text-red-300' },
+    ASSIGNMENT: { icon: 'person_add', bg: 'bg-cyan-100 dark:bg-cyan-900', color: 'text-cyan-600 dark:text-cyan-300' },
+    SYSTEM: { icon: 'settings', bg: 'bg-slate-200 dark:bg-slate-700', color: 'text-slate-600 dark:text-slate-300' },
   };
   return iconMap[type] || { icon: 'notifications', bg: 'bg-slate-100 dark:bg-slate-800', color: 'text-slate-600 dark:text-slate-400' };
 }
@@ -317,19 +340,25 @@ function InsightsSection({ isLoading, insights }: Readonly<InsightsSectionProps>
 }
 
 interface FeedItemCardProps {
-  item: SerializedActivityFeedItem;
+  item: UnifiedFeedItem;
 }
 
 function FeedItemCard({ item }: Readonly<FeedItemCardProps>) {
   const iconStyle = getActivityIcon(item.type);
-  const showInitials = item.actor?.initials || iconStyle.initials;
+  const actorInitials = item.actor ? getInitialsFromName(item.actor.name) : null;
+  const showInitials = actorInitials || iconStyle.initials;
+  const relativeTime = formatRelativeTime(item.timestamp);
+  // Build entity link if we have an entity reference
+  const entityUrl = item.entity
+    ? `/${item.entity.type.toLowerCase()}s/${item.entity.id}`
+    : null;
 
   return (
     <div className="p-5 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
       <div className="flex gap-3">
         {showInitials ? (
           <div className={`size-10 rounded-full ${iconStyle.bg} flex items-center justify-center ${iconStyle.color} font-bold shrink-0`}>
-            {item.actor?.initials || iconStyle.initials}
+            {actorInitials || iconStyle.initials}
           </div>
         ) : (
           <div className={`size-10 rounded-full ${iconStyle.bg} flex items-center justify-center ${iconStyle.color} shrink-0`}>
@@ -339,12 +368,12 @@ function FeedItemCard({ item }: Readonly<FeedItemCardProps>) {
         <div className="flex-1">
           <div className="flex justify-between items-start">
             <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{item.title}</p>
-            <span className="text-xs text-slate-400 whitespace-nowrap">{item.relativeTime}</span>
+            <span className="text-xs text-slate-400 whitespace-nowrap">{relativeTime}</span>
           </div>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{item.description}</p>
-          {item.actionUrl && (
-            <Link href={item.actionUrl} className="mt-2 text-sm text-[#137fec] font-medium hover:underline inline-block">
-              View Details
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{item.description || ''}</p>
+          {entityUrl && (
+            <Link href={entityUrl} className="mt-2 text-sm text-[#137fec] font-medium hover:underline inline-block">
+              View {item.entity!.name}
             </Link>
           )}
         </div>
@@ -355,7 +384,7 @@ function FeedItemCard({ item }: Readonly<FeedItemCardProps>) {
 
 interface FeedSectionProps {
   isLoading: boolean;
-  items: SerializedActivityFeedItem[] | undefined;
+  items: UnifiedFeedItem[] | undefined;
   hasMore: boolean | undefined;
   onLoadMore?: () => void;
   isLoadingMore?: boolean;
@@ -377,8 +406,8 @@ function FeedSection({ isLoading, items, hasMore, onLoadMore, isLoadingMore }: R
 
   return (
     <>
-      {items.map((item) => (
-        <FeedItemCard key={item.id} item={item} />
+      {items.map((item, idx) => (
+        <FeedItemCard key={`${item.id}-${idx}`} item={item} />
       ))}
       {hasMore && (
         <div className="p-4 border-t border-[#e2e8f0] dark:border-[#334155] text-center">
@@ -497,8 +526,6 @@ export function AuthenticatedHomePage() {
   const greetingIcon = getGreetingIcon(hour);
 
   // Local state
-  const [feedCursor, setFeedCursor] = useState<string | undefined>(undefined);
-  const [feedItems, setFeedItems] = useState<SerializedActivityFeedItem[]>([]);
   const [feedFilter, setFeedFilter] = useState<string>('all');
   const [showFeedFilterMenu, setShowFeedFilterMenu] = useState(false);
   const [isQuickActionsSheetOpen, setIsQuickActionsSheetOpen] = useState(false);
@@ -518,10 +545,18 @@ export function AuthenticatedHomePage() {
     undefined,
     { enabled: queryEnabled }
   );
-  const { data: feedData, isLoading: feedLoading, isFetching: feedFetching } = trpc.home.getActivityFeed.useQuery(
-    { limit: 5, cursor: feedCursor, types: feedFilter === 'all' ? undefined : [feedFilter as any] },
-    { enabled: queryEnabled }
+  // Unified Activity Feed (IFC-069) — real-time via WebSocket subscriptions
+  const feedTypes = useMemo(
+    () => (feedFilter === 'all' ? undefined : [feedFilter as ActivityFeedType]),
+    [feedFilter],
   );
+  const {
+    items: unifiedFeedItems,
+    isLoading: feedLoading,
+    isFetchingNextPage: feedFetchingNext,
+    hasNextPage: feedHasMore,
+    fetchNextPage: feedFetchNextPage,
+  } = useActivityFeed({ limit: 5, types: feedTypes, enabled: queryEnabled });
   const { data: goalData, isLoading: goalLoading } = trpc.home.getDailyGoal.useQuery(
     undefined,
     { enabled: queryEnabled }
@@ -540,14 +575,11 @@ export function AuthenticatedHomePage() {
 
   // Callbacks
   const handleLoadMore = useCallback(() => {
-    if (feedData?.nextCursor) {
-      setFeedCursor(feedData.nextCursor);
-    }
-  }, [feedData?.nextCursor]);
+    feedFetchNextPage();
+  }, [feedFetchNextPage]);
 
   const handleFeedFilterChange = useCallback((filter: string) => {
     setFeedFilter(filter);
-    setFeedCursor(undefined);
     setShowFeedFilterMenu(false);
   }, []);
 
@@ -570,13 +602,8 @@ export function AuthenticatedHomePage() {
   const enabledEntityTypes = new Set(enabledGroups.flatMap((g) => g.entityTypes));
   const filteredPinnedItems = pinnedData?.items?.filter((item) => enabledEntityTypes.has(item.entityType));
 
-  // Merge feed items for infinite scroll
-  const displayedFeedItems = feedCursor ? [...feedItems, ...(feedData?.items || [])] : feedData?.items;
-
-  // Update accumulated items when new data arrives
-  if (feedData?.items && feedCursor && !feedItems.includes(feedData.items[0])) {
-    setFeedItems((prev) => [...prev, ...feedData.items]);
-  }
+  // Feed items are already flattened by useActivityFeed hook
+  const displayedFeedItems = unifiedFeedItems as UnifiedFeedItem[];
 
   const firstName = welcomeData?.userName || user?.name?.split(' ')[0] || 'there';
   const greeting = welcomeData?.greeting || 'Welcome';
@@ -722,9 +749,9 @@ export function AuthenticatedHomePage() {
                 <FeedSection
                   isLoading={feedLoading}
                   items={displayedFeedItems}
-                  hasMore={feedData?.hasMore}
+                  hasMore={feedHasMore}
                   onLoadMore={handleLoadMore}
-                  isLoadingMore={feedFetching && !!feedCursor}
+                  isLoadingMore={feedFetchingNext}
                 />
               </div>
             </div>

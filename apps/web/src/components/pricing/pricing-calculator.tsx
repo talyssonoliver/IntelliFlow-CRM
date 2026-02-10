@@ -1,10 +1,8 @@
 'use client';
 
 /**
- * Pricing Calculator Component
- *
- * Interactive calculator for the pricing page that allows users to
- * calculate costs based on user count and billing frequency.
+ * @deprecated Legacy pricing calculator kept as a reference component.
+ * Active pricing UI lives in apps/web/src/app/(public)/pricing/page.tsx.
  */
 
 import { useState } from 'react';
