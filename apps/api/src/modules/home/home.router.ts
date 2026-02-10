@@ -412,6 +412,9 @@ export const homeRouter = createTRPCRouter({
 
   /**
    * Get activity feed for home page
+   * @deprecated Use activityFeed.getUnifiedFeed instead (IFC-069).
+   * This endpoint queries only AuditLogEntry. The new IFC-069 endpoint
+   * aggregates 7 activity sources with proper cursor pagination.
    */
   getActivityFeed: protectedProcedure
     .input(activityFeedQuerySchema)
