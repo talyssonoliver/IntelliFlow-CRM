@@ -57,6 +57,7 @@ export { embeddingChain, EmbeddingChain } from './chains/embedding.chain';
 export { BaseAgent } from './agents/base.agent';
 export {
   qualificationAgent,
+  getQualificationAgent,
   LeadQualificationAgent,
   createQualificationTask,
 } from './agents/qualification.agent';
