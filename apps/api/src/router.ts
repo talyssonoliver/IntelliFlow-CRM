@@ -26,17 +26,19 @@ import { auditRouter } from './modules/security/audit.router';
 import { authRouter } from './modules/auth/auth.router';
 import { billingRouter } from './modules/billing/billing.router';
 import { integrationsRouter } from './modules/integrations/integrations.router';
-import { chainVersionRouter } from './modules/chain-version/chain-version.router';
+import { chainVersionRouter } from './modules/chain-version';
 import { zepBudgetRouter } from './modules/zep/zep-budget.router';
 import { intelligenceRouter } from './modules/intelligence/intelligence.router';
 import { inboundEmailRouter } from './modules/email/inbound.router';
-import { autoResponseRouter } from './modules/autoresponse/autoresponse.router';
+import { autoResponseRouter } from './modules/autoresponse';
+import { aiMonitoringRouter } from './modules/ai-monitoring/ai-monitoring.router';
 import { aiReviewRouter } from './modules/ai-review/ai-review.router';
 import { homeRouter } from './modules/home/home.router';
 import { notificationsRouter } from './modules/notifications/notifications.router';
 import { workflowRouter } from './modules/workflow/workflow.router';
 import { webhooksRouter } from './modules/webhooks/webhooks.router';
 import { queuesAdminRouter } from './modules/admin/queues.router';
+import { activityFeedRouter } from './modules/misc/activity-feed.router';
 
 /**
  * Main application router
@@ -113,6 +115,7 @@ export const appRouter = createTRPCRouter({
   zepBudget: zepBudgetRouter,
   intelligence: intelligenceRouter,
   autoResponse: autoResponseRouter, // IFC-029: Auto-Response with Approval Gate
+  aiMonitoring: aiMonitoringRouter, // IFC-197: AI Monitoring
   aiReview: aiReviewRouter, // IFC-180: AI Output Review
 
   // Security & Compliance
@@ -146,6 +149,9 @@ export const appRouter = createTRPCRouter({
 
   // Queue Administration
   queuesAdmin: queuesAdminRouter,
+
+  // Activity Feed (IFC-069)
+  activityFeed: activityFeedRouter,
 });
 
 /**

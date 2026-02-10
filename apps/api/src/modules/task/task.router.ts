@@ -17,6 +17,10 @@ import {
   updateTaskSchema,
   taskQuerySchema,
   completeTaskSchema,
+  assignTaskSchema,
+  rescheduleTaskSchema,
+  getRemindersSchema,
+  getByEntitySchema,
   idSchema,
 } from '@intelliflow/validators/task';
 import { mapTaskToResponse } from '../../shared/mappers';
@@ -442,5 +446,89 @@ export const taskRouter = createTRPCRouter({
       overdue,
       dueToday,
     };
+  }),
+
+  /**
+   * Assign a task to a CRM entity (lead, contact, or opportunity)
+   */
+  assign: tenantProcedure.input(assignTaskSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const taskService = getTaskService(ctx);
+
+    let result;
+    switch (input.entityType) {
+      case 'lead':
+        result = await taskService.assignToLead(input.taskId, input.entityId, typedCtx.tenant.userId);
+        break;
+      case 'contact':
+        result = await taskService.assignToContact(input.taskId, input.entityId, typedCtx.tenant.userId);
+        break;
+      case 'opportunity':
+        result = await taskService.assignToOpportunity(input.taskId, input.entityId, typedCtx.tenant.userId);
+        break;
+    }
+
+    if (result.isFailure) {
+      const message = result.error.message;
+      if (message.includes('not found')) {
+        throw new TRPCError({ code: 'NOT_FOUND', message });
+      }
+      throw new TRPCError({ code: 'BAD_REQUEST', message });
+    }
+
+    return mapTaskToResponse(result.value);
+  }),
+
+  /**
+   * Reschedule a task (update due date)
+   */
+  reschedule: tenantProcedure.input(rescheduleTaskSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const taskService = getTaskService(ctx);
+
+    const result = await taskService.updateDueDate(input.taskId, input.newDueDate, typedCtx.tenant.userId);
+
+    if (result.isFailure) {
+      const message = result.error.message;
+      if (message.includes('not found')) {
+        throw new TRPCError({ code: 'NOT_FOUND', message });
+      }
+      throw new TRPCError({ code: 'BAD_REQUEST', message });
+    }
+
+    return mapTaskToResponse(result.value);
+  }),
+
+  /**
+   * Get tasks needing attention (overdue + due soon)
+   */
+  getReminders: tenantProcedure.input(getRemindersSchema).query(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const taskService = getTaskService(ctx);
+
+    const ownerId = input?.ownerId ?? typedCtx.tenant.userId;
+
+    const [overdue, dueSoon] = await Promise.all([
+      taskService.getOverdueTasks(ownerId),
+      taskService.getTasksDueSoon(ownerId),
+    ]);
+
+    return {
+      overdue: overdue.map(mapTaskToResponse),
+      dueSoon: dueSoon.map(mapTaskToResponse),
+      overdueCount: overdue.length,
+      dueSoonCount: dueSoon.length,
+    };
+  }),
+
+  /**
+   * Get tasks linked to a specific CRM entity
+   */
+  getByEntity: tenantProcedure.input(getByEntitySchema).query(async ({ ctx, input }) => {
+    const taskService = getTaskService(ctx);
+
+    const tasks = await taskService.getTasksByEntity(input.entityType, input.entityId);
+
+    return tasks.map(mapTaskToResponse);
   }),
 });

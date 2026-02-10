@@ -15,6 +15,7 @@ import {
   PrismaTaskRepository,
   PrismaChainVersionRepository,
   PrismaChainVersionAuditRepository,
+  PrismaActivityFeedRepository,
   InMemoryEventBus,
   MockAIService,
   InMemoryCache,
@@ -30,6 +31,7 @@ import {
   OpportunityService,
   TaskService,
   ChainVersionService,
+  ActivityFeedService,
 } from '@intelliflow/application';
 import {
   getAuditLogger,
@@ -98,6 +100,7 @@ const createAdapters = (prismaClient: PrismaClient) => {
   const taskRepository = new PrismaTaskRepository(prismaClient);
   const chainVersionRepository = new PrismaChainVersionRepository(prismaClient);
   const chainVersionAuditRepository = new PrismaChainVersionAuditRepository(prismaClient);
+  const activityFeedRepository = new PrismaActivityFeedRepository(prismaClient);
 
   // External services
   const eventBus = new InMemoryEventBus();
@@ -129,6 +132,7 @@ const createAdapters = (prismaClient: PrismaClient) => {
     taskRepository,
     chainVersionRepository,
     chainVersionAuditRepository,
+    activityFeedRepository,
     eventBus,
     aiService,
     cache,
@@ -219,6 +223,12 @@ const createServices = (prismaClient: PrismaClient) => {
     adapters.eventBus
   );
 
+  // IFC-069: Activity Feed Service
+  const activityFeedService = new ActivityFeedService(
+    adapters.activityFeedRepository,
+    adapters.cache
+  );
+
   return {
     leadService,
     contactService,
@@ -228,6 +238,7 @@ const createServices = (prismaClient: PrismaClient) => {
     ticketService,
     analyticsService,
     chainVersionService,
+    activityFeedService,
     // Security services (IFC-098, IFC-113, IFC-127)
     security,
     // Also expose adapters for direct access when needed
