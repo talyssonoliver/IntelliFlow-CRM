@@ -36,6 +36,7 @@ export {
   billingSidebarConfig,
   accountsSidebarConfig,
   developerSidebarConfig,
+  tasksSidebarConfig,
 } from './configs';
 
 // Icon reference and module colors
