@@ -30,6 +30,10 @@ import {
   DEFAULT_RELEVANCE_CONFIG as CANONICAL_RELEVANCE_CONFIG,
   RELEVANCE_PRESETS,
 } from '../config/relevance-config';
+import type {
+  ConversationRecordData,
+  MessageRecordWithConversation,
+} from '@intelliflow/domain';
 
 // Simple type interfaces to avoid Prisma generic complexity
 interface RolePermission {
@@ -168,31 +172,8 @@ export interface ContactNoteRecord {
   updatedAt: Date;
 }
 
-interface ConversationRecord {
-  id: string;
-  sessionId: string;
-  title: string | null;
-  summary: string | null;
-  agentName: string | null;
-  channel: string;
-  messageCount: number;
-  status: string;
-  userId: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-interface MessageRecord {
-  id: string;
-  content: string;
-  role: string;
-  conversationId: string;
-  createdAt: Date;
-  conversation: {
-    title: string | null;
-    userId: string;
-  };
-}
+// ConversationRecord and MessageRecord types imported from @intelliflow/domain
+// (ConversationRecordData, MessageRecordWithConversation)
 
 interface TicketRecord {
   id: string;
@@ -1340,7 +1321,7 @@ export class RetrievalService {
       orderBy: { startedAt: 'desc' },
     });
 
-    return (conversations as ConversationRecord[]).map((conv: ConversationRecord) => ({
+    return (conversations as ConversationRecordData[]).map((conv: ConversationRecordData) => ({
       id: conv.id,
       source: 'conversations',
       title: conv.title || `Conversation ${conv.sessionId.slice(0, 8)}`,
@@ -1390,7 +1371,7 @@ export class RetrievalService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return (messages as MessageRecord[]).map((msg: MessageRecord) => ({
+    return (messages as MessageRecordWithConversation[]).map((msg: MessageRecordWithConversation) => ({
       id: msg.id,
       source: 'messages',
       title: `Message in ${msg.conversation.title || 'conversation'}`,

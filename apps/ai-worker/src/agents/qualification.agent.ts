@@ -301,6 +301,29 @@ export function createQualificationTask(
 }
 
 /**
- * Global qualification agent instance
+ * Lazily create the global qualification agent instance.
+ *
+ * This prevents import-time crashes when AI provider configuration is valid for
+ * the running app but not for this specific agent path (e.g. Ollama in web-only
+ * workflows that don't execute qualification tasks).
  */
-export const qualificationAgent = new LeadQualificationAgent();
+let _qualificationAgent: LeadQualificationAgent | null = null;
+
+export function getQualificationAgent(): LeadQualificationAgent {
+  if (!_qualificationAgent) {
+    _qualificationAgent = new LeadQualificationAgent();
+  }
+  return _qualificationAgent;
+}
+
+/**
+ * Backward-compatible global agent export.
+ * It initializes on first property access instead of module import.
+ */
+export const qualificationAgent = new Proxy({} as LeadQualificationAgent, {
+  get(_target, prop, receiver) {
+    const agent = getQualificationAgent();
+    const value = Reflect.get(agent, prop, receiver);
+    return typeof value === 'function' ? value.bind(agent) : value;
+  },
+}) as LeadQualificationAgent;
