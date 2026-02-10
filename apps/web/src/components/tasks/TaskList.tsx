@@ -192,12 +192,11 @@ function createColumns(handlers: {
                 icon: 'check_circle',
                 label: 'Complete',
                 onClick: () => handlers.onComplete(task.id),
-                disabled: task.status === 'COMPLETED',
               },
             ]}
             dropdownActions={[
               { icon: 'edit', label: 'Edit', onClick: () => handlers.onEdit(task) },
-              { icon: 'delete', label: 'Delete', onClick: () => handlers.onDelete(task.id), destructive: true },
+              { icon: 'delete', label: 'Delete', onClick: () => handlers.onDelete(task.id), variant: 'destructive' },
             ]}
           />
         );
@@ -218,21 +217,17 @@ export function TaskList({
 }: TaskListProps) {
   const columns = useMemo(() => createColumns({ onComplete, onEdit, onDelete }), [onComplete, onEdit, onDelete]);
 
-  const bulkActions: BulkAction[] = useMemo(() => [
+  const bulkActions: BulkAction<TaskListItem>[] = useMemo(() => [
     {
       label: 'Mark Complete',
       icon: 'check_circle',
-      onClick: onBulkComplete,
-      confirmTitle: 'Complete Tasks',
-      confirmDescription: 'Are you sure you want to mark the selected tasks as complete?',
+      onExecute: (selected) => onBulkComplete(selected.map((t) => t.id)),
     },
     {
       label: 'Delete',
       icon: 'delete',
-      onClick: onBulkDelete,
       variant: 'destructive' as const,
-      confirmTitle: 'Delete Tasks',
-      confirmDescription: 'Are you sure you want to delete the selected tasks? This action cannot be undone.',
+      onExecute: (selected) => onBulkDelete(selected.map((t) => t.id)),
     },
   ], [onBulkComplete, onBulkDelete]);
 

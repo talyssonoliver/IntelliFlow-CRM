@@ -58,7 +58,7 @@ export default function TaskDetailPage() {
   });
 
   const handleComplete = useCallback((id: string) => {
-    completeMutation.mutate({ id });
+    completeMutation.mutate({ taskId: id });
   }, [completeMutation]);
 
   const handleEdit = useCallback((t: TaskDetailData) => {
@@ -75,7 +75,7 @@ export default function TaskDetailPage() {
       id: editingTask.id,
       title: formData.title,
       description: formData.description || undefined,
-      dueDate: formData.dueDate || undefined,
+      dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
       priority: formData.priority,
       status: formData.status,
     });

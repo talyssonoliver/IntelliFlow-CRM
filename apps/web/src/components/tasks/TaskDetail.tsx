@@ -201,14 +201,14 @@ export function TaskDetail({ task, isLoading, isNotFound, onComplete, onEdit, on
 
       <ConfirmationDialog
         open={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
+        onOpenChange={(open) => { if (!open) setShowDeleteConfirm(false); }}
         onConfirm={() => {
           onDelete(task.id);
           setShowDeleteConfirm(false);
         }}
         title="Delete Task"
         description="Are you sure you want to delete this task? This action cannot be undone."
-        confirmText="Delete"
+        confirmLabel="Delete"
         variant="destructive"
       />
     </div>

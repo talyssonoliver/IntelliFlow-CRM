@@ -87,7 +87,7 @@ export default function TasksPage() {
 
   // Reminder counts query
   const { data: remindersData } = api.task.getReminders.useQuery(
-    { days: 0 },
+    undefined,
     { enabled: isAuthenticated && !authLoading }
   );
 
@@ -185,7 +185,7 @@ export default function TasksPage() {
   }, [router]);
 
   const handleComplete = useCallback((id: string) => {
-    completeMutation.mutate({ id });
+    completeMutation.mutate({ taskId: id });
   }, [completeMutation]);
 
   const handleEdit = useCallback((task: TaskListItem) => {
@@ -197,7 +197,7 @@ export default function TasksPage() {
   }, [deleteMutation]);
 
   const handleBulkComplete = useCallback((ids: string[]) => {
-    ids.forEach((id) => completeMutation.mutate({ id }));
+    ids.forEach((id) => completeMutation.mutate({ taskId: id }));
   }, [completeMutation]);
 
   const handleBulkDelete = useCallback((ids: string[]) => {
@@ -208,7 +208,7 @@ export default function TasksPage() {
     createMutation.mutate({
       title: formData.title,
       description: formData.description || undefined,
-      dueDate: formData.dueDate || undefined,
+      dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
       priority: formData.priority,
       leadId: formData.entityType === 'lead' && formData.entityId ? formData.entityId : undefined,
       contactId: formData.entityType === 'contact' && formData.entityId ? formData.entityId : undefined,
@@ -222,7 +222,7 @@ export default function TasksPage() {
       id: editingTask.id,
       title: formData.title,
       description: formData.description || undefined,
-      dueDate: formData.dueDate || undefined,
+      dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
       priority: formData.priority,
       status: formData.status,
     });
