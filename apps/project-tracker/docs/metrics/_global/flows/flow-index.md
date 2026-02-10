@@ -1,8 +1,8 @@
 # IntelliFlow CRM - Flow Index
 
 > **Location**: `apps/project-tracker/docs/metrics/_global/flows/flow-index.md`
-> **Last Updated**: 2026-01-31
-> **Total Flows**: 42
+> **Last Updated**: 2026-02-09
+> **Total Flows**: 47
 
 This document serves as the master index linking all user flows to sitemap routes,
 UI components, and style guide patterns.
@@ -17,11 +17,13 @@ UI components, and style guide patterns.
 | [Comercial Core](#comercial-core) | FLOW-005 to FLOW-010 | 1-5 |
 | [Relacionamento e Suporte](#relacionamento-e-suporte) | FLOW-011 to FLOW-015 | 2-6 |
 | [Comunicação](#comunicação) | FLOW-016 to FLOW-022 | 5-7 |
-| [Analytics e Insights](#analytics-e-insights) | FLOW-023 to FLOW-028 | 5-9 |
-| [Segurança e Compliance](#segurança-e-compliance) | FLOW-029 to FLOW-033, FLOW-040 | 0-3, 11-12 |
+| [Analytics e Insights](#analytics-e-insights) | FLOW-023 to FLOW-028, FLOW-042, FLOW-043 | 5-9 |
+| [Segurança e Compliance](#segurança-e-compliance) | FLOW-029 to FLOW-033, FLOW-040, FLOW-044 | 0-3, 11-12 |
 | [Qualidade e Testes](#qualidade-e-testes) | FLOW-034 to FLOW-038 | 2-4 |
 | [Search & AI](#search--ai) | FLOW-039, FLOW-041 | 12-13 |
 | [AI & Configuration](#ai--configuration) | FLOW-045 | 14 |
+| [Billing & Payments](#billing--payments) | FLOW-048 | 14 |
+| [Dashboard](#dashboard) | FLOW-047 | 13-14 |
 
 ---
 
@@ -463,6 +465,71 @@ UI components, and style guide patterns.
 
 ---
 
+### FLOW-042: Insights Dashboard
+
+| Property | Value |
+|----------|-------|
+| **Priority** | High |
+| **Sprint** | 9 |
+| **Category** | Analytics e Insights |
+
+**Routes (Sitemap)**:
+- `/analytics` → [IFC-096] Sprint 9 (main dashboard)
+- `/reports/custom` → [IFC-096] Custom reports
+
+**Key Artifacts**:
+- `apps/api/src/modules/analytics/analytics.router.ts` (EXISTS)
+- `apps/api/src/modules/analytics/__tests__/analytics.router.test.ts` (EXISTS)
+- `apps/web/src/components/sidebar/configs/analytics.ts` (EXISTS)
+- `apps/web/src/components/analytics/WidgetBuilder.tsx` [IFC-037]
+- `apps/web/src/components/analytics/ExportButton.tsx` [IFC-037]
+- `docs/planning/prd-analytics-reporting.md` (EXISTS)
+- `docs/planning/adr/ADR-016-analytics-integrity.md` (EXISTS)
+
+**Backend Dependencies (IFC-096)**:
+- Analytics router with deals won trend, growth metrics, traffic sources
+- Supabase realtime channels with fallback polling
+- Tenant-scoped analytics service
+
+**Implementation Tasks**:
+- IFC-096: Custom Dashboards (COMPLETED)
+- IFC-037: Analytics UI (PLANNED)
+- IFC-038: Advanced Analytics (PLANNED)
+
+---
+
+### FLOW-043: Revenue Forecasting
+
+| Property | Value |
+|----------|-------|
+| **Priority** | High |
+| **Sprint** | 7 |
+| **Category** | Analytics e Insights |
+
+**Routes (Sitemap)**:
+- `/deals/[id]/forecast` → [IFC-092] Sprint 7
+- `/analytics` → Forecast widget [IFC-096]
+- `/reports/forecast` → Executive summary
+
+**Key Artifacts**:
+- `apps/api/src/shared/forecast-algorithm.test.ts` (EXISTS)
+- `artifacts/metrics/accuracy-backtest.csv` (EXISTS)
+- `docs/planning/adr/ADR-019-core-crm-foundation.md` (EXISTS)
+- `apps/web/src/app/deals/forecast/page.tsx` [PLANNED]
+- `apps/web/src/components/analytics/StageBreakdownChart.tsx` [PLANNED]
+
+**Backend Dependencies (IFC-092)**:
+- Weighted pipeline computation with stage probabilities
+- Historical win-rate analysis (96.2% accuracy)
+- Monthly projection with variance tracking
+
+**Implementation Tasks**:
+- IFC-092: Deal Forecasting (COMPLETED)
+- IFC-091: Opportunity Aggregate (COMPLETED)
+- Forecast UI: (NOT STARTED)
+
+---
+
 ### FLOW-030: Backup e Disaster Recovery
 
 | Property | Value |
@@ -533,7 +600,60 @@ UI components, and style guide patterns.
 | `/search`, header search | FLOW-039 | Search & AI |
 | `/privacy/dsar` | FLOW-040 | Seguranca e Compliance |
 | `/agent/chat`, `/cases/[id]` (RAG) | FLOW-041 | Search & AI |
+| `/analytics` | FLOW-042, FLOW-023 | Analytics e Insights |
+| `/deals/[id]/forecast`, `/reports/forecast` | FLOW-043 | Analytics e Insights |
+| Vault API (infrastructure) | FLOW-044 | Seguranca e Compliance |
 | `/settings/ai` | FLOW-045 | AI & Configuration |
+| `/billing`, `/billing/*` | FLOW-048 | Billing & Payments |
+| `/` (authenticated) | FLOW-047 | Dashboard |
+
+---
+
+## Billing & Payments
+
+### FLOW-048: Billing & Subscription Management
+
+| Property | Value |
+|----------|-------|
+| **Priority** | High |
+| **Sprint** | 14 |
+| **Category** | Billing & Payments |
+
+**Routes (Sitemap)**:
+- `/billing` → [PG-025] Billing Portal Sprint 14
+- `/billing/checkout` → [PG-026] Checkout
+- `/billing/invoices` → [PG-027] Invoice List
+- `/billing/invoices/[id]` → [PG-028] Invoice Detail
+- `/billing/settings` → [PG-029] Payment Methods
+- `/billing/subscriptions` → [PG-030] Subscription Manager
+- `/billing/receipts` → [PG-031] Receipts
+
+**Key Artifacts**:
+- `apps/web/src/components/billing/billing-portal.tsx` (EXISTS)
+- `apps/web/src/components/billing/checkout-form.tsx` (EXISTS)
+- `apps/web/src/components/billing/invoice-list.tsx` (EXISTS)
+- `apps/web/src/components/billing/subscription-manager.tsx` (EXISTS)
+- `apps/web/src/components/billing/payment-methods.tsx` (EXISTS)
+- `apps/web/src/components/billing/receipt-list.tsx` (EXISTS)
+- `apps/api/src/modules/billing/billing.router.ts` (EXISTS)
+- `packages/domain/src/crm/billing/Invoice.ts` (EXISTS - IFC-198)
+- `packages/adapters/src/payments/stripe/StripeAdapter.ts` (EXISTS - IFC-099)
+
+**Backend Dependencies (IFC-198, IFC-099)**:
+- Billing domain: Invoice/Receipt aggregates with state machine
+- Stripe adapter: PaymentServicePort via custom HTTP client
+- tRPC billing router with subscription, invoice, payment method endpoints
+
+**Implementation Tasks**:
+- IFC-198: Billing Domain Core (COMPLETED)
+- IFC-099: Stripe Payment Adapter (COMPLETED)
+- PG-025: Billing Portal (BACKLOG)
+- PG-026: Checkout (BACKLOG)
+- PG-027: Invoices (BACKLOG)
+- PG-028: Invoice Detail (BACKLOG)
+- PG-029: Payment Methods (BACKLOG)
+- PG-030: Subscriptions (BACKLOG)
+- PG-031: Receipts (COMPLETED)
 
 ---
 
@@ -634,6 +754,40 @@ UI components, and style guide patterns.
 
 ---
 
+### FLOW-044: Encryption Key Management
+
+| Property | Value |
+|----------|-------|
+| **Priority** | Critical |
+| **Sprint** | 0-1 |
+| **Category** | Seguranca e Compliance |
+
+**Routes (Sitemap)**:
+- No direct UI routes (infrastructure service)
+- `/admin/system` → Vault health status [AUTOMATION-002]
+
+**Key Artifacts**:
+- `artifacts/misc/vault-config.yaml` (EXISTS - EXC-SEC-001)
+- `docs/security/zero-trust-design.md` (EXISTS - IFC-072)
+- `apps/project-tracker/docs/metrics/sprint-0/.../EXC-SEC-001.json` (EXISTS)
+- `packages/adapters/src/security/vault-client.ts` [PLANNED]
+- `apps/api/src/middleware/encryption.ts` [PLANNED]
+- `scripts/security/rotate-keys.sh` [PLANNED]
+
+**Backend Dependencies (EXC-SEC-001, IFC-113)**:
+- HashiCorp Vault v1.21.1 with Transit secrets engine
+- AES-256-GCM data key, RSA-4096 key wrapping, Ed25519 signing
+- Monthly auto-rotation with 5-version retention
+- KV v2 for secret storage with version history
+
+**Implementation Tasks**:
+- EXC-SEC-001: Vault Setup (COMPLETED)
+- IFC-072: Zero Trust Model (COMPLETED)
+- IFC-113: Secrets Management (COMPLETED)
+- Vault Client Adapter: (NOT STARTED)
+
+---
+
 ### FLOW-041: Case RAG Retrieval (Agent Tool)
 
 | Property | Value |
@@ -667,6 +821,43 @@ UI components, and style guide patterns.
 - **IFC-176**: Citation UI Components (PLANNED - Sprint 12)
 
 **Implementation Status**: Backend COMPLETE, Frontend PARTIAL
+
+---
+
+## Dashboard
+
+### FLOW-047: Authenticated Home Page
+
+| Property | Value |
+|----------|-------|
+| **Priority** | High |
+| **Sprint** | 13-14 |
+| **Category** | Dashboard |
+
+**Routes (Sitemap)**:
+- `/` → Authenticated home (when logged in) [PG-129]
+- `/` → Public home (when visitor) [PG-001]
+
+**Key Artifacts**:
+- `apps/web/src/components/home/AuthenticatedHomePage.tsx` (EXISTS)
+- `apps/web/src/components/home/PinnedItemsSheet.tsx` (EXISTS)
+- `apps/web/src/components/home/PublicHomePage.tsx` (EXISTS)
+- `apps/web/src/components/home/HomePageContent.tsx` (EXISTS)
+- `docs/planning/prd-home-page.md` (EXISTS)
+- `docs/specs/HOME-PAGE-SPEC.md` [PLANNED]
+- `docs/planning/adr/ADR-027-authenticated-home-composition.md` [PLANNED]
+
+**Backend Dependencies (IFC-182)**:
+- Home router: dashboard stats, activity feed, AI insights, daily goals, pinned items
+- AI insights engine for contextual recommendations
+- Activity feed aggregation from all CRM entities
+
+**Implementation Tasks**:
+- IFC-182: Home Router Backend (IN PROGRESS)
+- PG-129: Authenticated Home UI (PLANNED)
+- PG-001: Public Home Page (PLANNED)
+- IFC-069: Activity Feed (PLANNED)
+- IFC-095: AI Insights Engine (PLANNED)
 
 ---
 

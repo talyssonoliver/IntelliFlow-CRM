@@ -1,0 +1,145 @@
+{
+  "$schema": "../../../schemas/task-status.schema.json",
+  "task_id": "PG-134",
+  "section": "Core CRM",
+  "description": "Account List & Detail Pages - Hierarchy view contacts opportunities revenue charts",
+  "owner": "Frontend Dev (STOA-Domain)",
+  "sprint": "sprint-5",
+  "phase": "phase-1",
+  "stream": null,
+  "status": "DONE",
+  "started_at": "2026-02-07T15:00:00.000Z",
+  "completed_at": "2026-02-08T11:02:00.000Z",
+  "target_duration_minutes": 390,
+  "actual_duration_minutes": 1202,
+  "dependencies": {
+    "required": [
+      "IFC-185"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-02-10T23:09:35.502Z"
+  },
+  "status_history": [
+    {
+      "status": "In Progress",
+      "at": "2026-02-07T15:00:00.000Z",
+      "note": "exec session started"
+    },
+    {
+      "status": "Completed",
+      "at": "2026-02-08T11:02:00.000Z",
+      "note": "exec completed — all 105 tests pass, typecheck clean, all artifacts created"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-09T22:44:00.000Z",
+      "note": "exec session continued — MATOP validation, compliance, gates, attestation pending"
+    },
+    {
+      "status": "Completed",
+      "at": "2026-02-09T22:55:00.000Z",
+      "note": "exec completed — all 7 gates PASS, attestation created, 109 tests passing, all artifacts verified"
+    }
+  ],
+  "execution": {
+    "started_at": "2026-02-07T15:00:00.000Z",
+    "completed_at": "2026-02-08T11:02:00.000Z",
+    "duration_minutes": 1202,
+    "executor": "Claude Code /exec",
+    "agents": [
+      "Foundation",
+      "Quality",
+      "Domain"
+    ],
+    "retry_count": 0,
+    "last_error": null
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/accounts/(list)/page.tsx",
+      "apps/web/src/app/accounts/[id]/page.tsx",
+      "apps/web/src/components/accounts/AccountCard.tsx",
+      "apps/web/src/components/accounts/AccountDetail.tsx",
+      "apps/web/src/components/accounts/AccountHierarchy.tsx",
+      "apps/web/src/components/accounts/RevenueChart.tsx",
+      "apps/web/src/components/accounts/AccountContactsList.tsx",
+      "apps/web/src/components/accounts/AccountOpportunitiesList.tsx"
+    ],
+    "created": [
+      "apps/web/src/app/accounts/(list)/page.tsx",
+      "apps/web/src/app/accounts/[id]/page.tsx",
+      "apps/web/src/components/accounts/AccountCard.tsx",
+      "apps/web/src/components/accounts/AccountDetail.tsx",
+      "apps/web/src/components/accounts/AccountHierarchy.tsx",
+      "apps/web/src/components/accounts/RevenueChart.tsx",
+      "apps/web/src/components/accounts/AccountContactsList.tsx",
+      "apps/web/src/components/accounts/AccountOpportunitiesList.tsx"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "executed_at": "2026-02-08T10:58:00.000Z",
+      "exit_code": 0,
+      "duration_ms": 15000,
+      "passed": true
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/web/src/components/accounts/__tests__/ packages/application/src/services/__tests__/AccountService.hierarchy.test.ts packages/adapters/__tests__/InMemoryAccountRepository.hierarchy.test.ts",
+      "executed_at": "2026-02-08T11:01:36.000Z",
+      "exit_code": 0,
+      "duration_ms": 2710,
+      "passed": true
+    },
+    {
+      "name": "TypeScript (application)",
+      "command": "pnpm --filter @intelliflow/application typecheck",
+      "executed_at": "2026-02-08T10:59:00.000Z",
+      "exit_code": 0,
+      "duration_ms": 8000,
+      "passed": true
+    },
+    {
+      "name": "TypeScript (adapters)",
+      "command": "pnpm --filter @intelliflow/adapters typecheck",
+      "executed_at": "2026-02-08T10:59:00.000Z",
+      "exit_code": 0,
+      "duration_ms": 6000,
+      "passed": true
+    }
+  ],
+  "kpis": {
+    "test_count": {
+      "target": 109,
+      "actual": 109,
+      "met": true,
+      "unit": "tests"
+    },
+    "test_pass_rate": {
+      "target": 100,
+      "actual": 100,
+      "met": true,
+      "unit": "percent"
+    },
+    "typescript_errors": {
+      "target": 0,
+      "actual": 0,
+      "met": true,
+      "unit": "errors"
+    },
+    "artifacts_created": {
+      "target": 8,
+      "actual": 8,
+      "met": true,
+      "unit": "files"
+    }
+  },
+  "blockers": [],
+  "notes": "Full-stack implementation across 4 sessions. Backend: domain hierarchy (setParent, removeParent, cycle detection), service layer (getHierarchy, setParent with depth check), InMemoryAccountRepository hierarchy methods. Frontend: AccountCard (tier logic, columns), AccountDetail (6-tab detail with lazy loading), AccountHierarchy (accessible tree with keyboard nav, ARIA roles), RevenueChart (pipeline data transformation), AccountContactsList (cursor pagination), AccountOpportunitiesList (stage filter, summary cards). 109 tests total (47 backend + 62 frontend). All 7 completion gates PASS. Attestation created. Dependency chains updated.",
+  "dependencies_resolved": [
+    "IFC-185"
+  ]
+}

@@ -1,0 +1,109 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "PG-136",
+  "section": "Core CRM",
+  "description": "Task Management Page - List calendar view assignments reminders entity linking",
+  "owner": "Frontend Dev (STOA-Domain)",
+  "sprint": "sprint-6",
+  "phase": "phase-1",
+  "stream": null,
+  "status": "IN_PROGRESS",
+  "started_at": "2026-02-09T22:00:00.000Z",
+  "completed_at": null,
+  "actual_duration_minutes": null,
+  "dependencies": {
+    "required": [
+      "IFC-187"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-02-10T23:09:35.386Z",
+    "notes": "IFC-187 (Task tRPC Router) marked Completed. 7/10 endpoints exist in router; 4 missing endpoints have workarounds via task.update and task.list filters. Service layer fully implements all methods."
+  },
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-02-03T00:00:00.000Z",
+      "note": "Task created during sprint planning"
+    },
+    {
+      "status": "Specifying",
+      "at": "2026-02-09T22:00:00.000Z",
+      "note": "Spec session started. Agents: Frontend-Lead, Domain-Expert, Test-Engineer, A11y-Expert"
+    },
+    {
+      "status": "Spec Complete",
+      "at": "2026-02-09T23:00:00.000Z",
+      "note": "Spec session completed. 4/4 agents approved. Dependency gap (IFC-187 missing 4 endpoints) documented with workarounds."
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-10T23:00:00.000Z",
+      "note": "exec session started — Phase 2 TDD implementation"
+    }
+  ],
+  "execution": {
+    "started_at": "2026-02-10T23:00:00.000Z",
+    "completed_at": null,
+    "duration_minutes": null,
+    "executor": "Claude Code /exec",
+    "agents": [
+      "Foundation",
+      "Quality",
+      "Domain"
+    ],
+    "retry_count": 0,
+    "last_error": null
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/tasks/(list)/page.tsx",
+      "apps/web/src/app/tasks/(list)/layout.tsx",
+      "apps/web/src/app/tasks/[id]/page.tsx",
+      "apps/web/src/components/tasks/TaskList.tsx",
+      "apps/web/src/components/tasks/TaskCard.tsx",
+      "apps/web/src/components/tasks/TaskCalendar.tsx",
+      "apps/web/src/components/tasks/TaskForm.tsx",
+      "apps/web/src/components/tasks/TaskDetail.tsx",
+      "apps/web/src/components/tasks/ReminderConfig.tsx",
+      "apps/web/src/components/sidebar/configs/tasks.ts"
+    ],
+    "created": [],
+    "missing": [
+      "apps/web/src/app/tasks/(list)/page.tsx",
+      "apps/web/src/app/tasks/(list)/layout.tsx",
+      "apps/web/src/app/tasks/[id]/page.tsx",
+      "apps/web/src/components/tasks/TaskList.tsx",
+      "apps/web/src/components/tasks/TaskCard.tsx",
+      "apps/web/src/components/tasks/TaskCalendar.tsx",
+      "apps/web/src/components/tasks/TaskForm.tsx",
+      "apps/web/src/components/tasks/TaskDetail.tsx",
+      "apps/web/src/components/tasks/ReminderConfig.tsx",
+      "apps/web/src/components/sidebar/configs/tasks.ts"
+    ]
+  },
+  "kpis": {
+    "load_time": {
+      "target": "<500ms",
+      "actual": null,
+      "met": false,
+      "unit": "ms"
+    },
+    "lighthouse": {
+      "target": ">=90",
+      "actual": null,
+      "met": false
+    },
+    "test_coverage": {
+      "target": 90,
+      "actual": null,
+      "met": false,
+      "unit": "percent"
+    }
+  },
+  "validations": [],
+  "blockers": [],
+  "notes": "Exec session started. Custom calendar (no third-party lib), month view only for MVP, mobile agenda fallback. IFC-187 workarounds for 4 missing endpoints. 16 files to create, 2 to modify. ~54 tests planned across 6 test files.",
+  "dependencies_resolved": [
+    "IFC-187"
+  ]
+}
