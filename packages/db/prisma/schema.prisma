@@ -170,6 +170,8 @@ model LeadActivity {
 
   @@index([leadId])
   @@index([timestamp])
+  // IFC-069: Composite index for unified activity feed
+  @@index([tenantId, timestamp(sort: Desc)])
   @@map("lead_activities")
 }
 
@@ -495,11 +497,16 @@ model ActivityEvent {
   opportunity     Opportunity?      @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
   userId          String?
 
+  // IFC-069: Tenant isolation for unified activity feed
+  tenantId        String?
+
   @@index([opportunityId])
   @@index([type])
   @@index([timestamp])
   // IFC-185: Composite index for Account router getActivity performance
   @@index([opportunityId, timestamp(sort: Desc)])
+  // IFC-069: Composite index for unified activity feed
+  @@index([tenantId, timestamp(sort: Desc)])
   @@map("activity_events")
 }
 
@@ -591,11 +598,16 @@ model ContactActivity {
   contactId       String
   contact         Contact             @relation(fields: [contactId], references: [id], onDelete: Cascade)
 
+  // IFC-069: Tenant isolation for unified activity feed
+  tenantId        String?
+
   @@index([contactId])
   @@index([type])
   @@index([timestamp])
   // IFC-185: Composite index for Account router getActivity performance
   @@index([contactId, timestamp(sort: Desc)])
+  // IFC-069: Composite index for unified activity feed
+  @@index([tenantId, timestamp(sort: Desc)])
   @@map("contact_activities")
 }
 
@@ -1224,6 +1236,8 @@ model TicketActivity {
   @@index([type])
   @@index([timestamp])
   @@index([tenantId])
+  // IFC-069: Composite index for unified activity feed
+  @@index([tenantId, timestamp(sort: Desc)])
   @@map("ticket_activities")
 }
 
@@ -2074,12 +2088,17 @@ model EmailRecord {
   metadata     Json?    // Additional tracking data
   createdAt    DateTime @default(now())
 
+  // IFC-069: Tenant isolation for unified activity feed
+  tenantId     String?
+
   attachments  EmailAttachment[]
 
   @@index([contactId])
   @@index([dealId])
   @@index([status])
   @@index([sentAt])
+  // IFC-069: Composite index for unified activity feed
+  @@index([tenantId, createdAt(sort: Desc)])
   @@map("email_records")
 }
 
@@ -2170,8 +2189,13 @@ model ChatMessage {
   metadata       Json?    // Platform-specific metadata
   createdAt      DateTime @default(now())
 
+  // IFC-069: Tenant isolation for unified activity feed
+  tenantId       String?
+
   @@index([conversationId])
   @@index([createdAt])
+  // IFC-069: Composite index for unified activity feed
+  @@index([tenantId, createdAt(sort: Desc)])
   @@map("chat_messages")
 }
 
@@ -2204,10 +2228,15 @@ model CallRecord {
   endedAt       DateTime?
   createdAt     DateTime @default(now())
 
+  // IFC-069: Tenant isolation for unified activity feed
+  tenantId      String?
+
   @@index([contactId])
   @@index([userId])
   @@index([startedAt])
   @@index([status])
+  // IFC-069: Composite index for unified activity feed
+  @@index([tenantId, startedAt(sort: Desc)])
   @@map("call_records")
 }
 

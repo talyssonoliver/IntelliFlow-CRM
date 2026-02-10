@@ -715,6 +715,280 @@ describe('Task Router', () => {
     });
   });
 
+  describe('assign', () => {
+    it('should assign task to lead via service', async () => {
+      const mockDomainTask = createMockDomainTask({ leadId: TEST_UUIDS.lead1 });
+
+      ctx.services!.task!.assignToLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainTask,
+      });
+
+      const result = await caller.assign({
+        taskId: TEST_UUIDS.task1,
+        entityType: 'lead',
+        entityId: TEST_UUIDS.lead1,
+      });
+
+      expect(result.leadId).toBe(TEST_UUIDS.lead1);
+      expect(ctx.services!.task!.assignToLead).toHaveBeenCalledWith(
+        TEST_UUIDS.task1,
+        TEST_UUIDS.lead1,
+        TEST_UUIDS.user1
+      );
+    });
+
+    it('should assign task to contact via service', async () => {
+      const mockDomainTask = createMockDomainTask({ contactId: TEST_UUIDS.contact1 });
+
+      ctx.services!.task!.assignToContact = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainTask,
+      });
+
+      const result = await caller.assign({
+        taskId: TEST_UUIDS.task1,
+        entityType: 'contact',
+        entityId: TEST_UUIDS.contact1,
+      });
+
+      expect(result.contactId).toBe(TEST_UUIDS.contact1);
+      expect(ctx.services!.task!.assignToContact).toHaveBeenCalledWith(
+        TEST_UUIDS.task1,
+        TEST_UUIDS.contact1,
+        TEST_UUIDS.user1
+      );
+    });
+
+    it('should assign task to opportunity via service', async () => {
+      const mockDomainTask = createMockDomainTask({ opportunityId: TEST_UUIDS.opportunity1 });
+
+      ctx.services!.task!.assignToOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainTask,
+      });
+
+      const result = await caller.assign({
+        taskId: TEST_UUIDS.task1,
+        entityType: 'opportunity',
+        entityId: TEST_UUIDS.opportunity1,
+      });
+
+      expect(result.opportunityId).toBe(TEST_UUIDS.opportunity1);
+      expect(ctx.services!.task!.assignToOpportunity).toHaveBeenCalledWith(
+        TEST_UUIDS.task1,
+        TEST_UUIDS.opportunity1,
+        TEST_UUIDS.user1
+      );
+    });
+
+    it('should throw NOT_FOUND for non-existent task', async () => {
+      ctx.services!.task!.assignToLead = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: `Task not found: ${TEST_UUIDS.nonExistent}` },
+      });
+
+      await expect(
+        caller.assign({
+          taskId: TEST_UUIDS.nonExistent,
+          entityType: 'lead',
+          entityId: TEST_UUIDS.lead1,
+        })
+      ).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
+      );
+    });
+
+    it('should throw BAD_REQUEST for completed task', async () => {
+      ctx.services!.task!.assignToLead = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: 'Cannot reassign completed or cancelled tasks' },
+      });
+
+      await expect(
+        caller.assign({
+          taskId: TEST_UUIDS.task1,
+          entityType: 'lead',
+          entityId: TEST_UUIDS.lead1,
+        })
+      ).rejects.toThrow(
+        expect.objectContaining({ code: 'BAD_REQUEST' })
+      );
+    });
+  });
+
+  describe('reschedule', () => {
+    it('should reschedule task with new due date', async () => {
+      const newDueDate = new Date('2025-02-15');
+      const mockDomainTask = createMockDomainTask({ dueDate: newDueDate });
+
+      ctx.services!.task!.updateDueDate = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainTask,
+      });
+
+      const result = await caller.reschedule({
+        taskId: TEST_UUIDS.task1,
+        newDueDate,
+      });
+
+      expect(result.dueDate).toEqual(newDueDate);
+      expect(ctx.services!.task!.updateDueDate).toHaveBeenCalledWith(
+        TEST_UUIDS.task1,
+        newDueDate,
+        TEST_UUIDS.user1
+      );
+    });
+
+    it('should throw NOT_FOUND for non-existent task', async () => {
+      ctx.services!.task!.updateDueDate = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: `Task not found: ${TEST_UUIDS.nonExistent}` },
+      });
+
+      await expect(
+        caller.reschedule({
+          taskId: TEST_UUIDS.nonExistent,
+          newDueDate: new Date('2025-02-15'),
+        })
+      ).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
+      );
+    });
+
+    it('should throw BAD_REQUEST for past date', async () => {
+      ctx.services!.task!.updateDueDate = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: 'Due date cannot be in the past' },
+      });
+
+      await expect(
+        caller.reschedule({
+          taskId: TEST_UUIDS.task1,
+          newDueDate: new Date('2020-01-01'),
+        })
+      ).rejects.toThrow(
+        expect.objectContaining({ code: 'BAD_REQUEST' })
+      );
+    });
+  });
+
+  describe('getReminders', () => {
+    it('should return overdue and due-soon tasks', async () => {
+      const overdueTask = createMockDomainTask({ title: 'Overdue task', isOverdue: true });
+      const dueSoonTask = createMockDomainTask({ title: 'Due soon task' });
+
+      ctx.services!.task!.getOverdueTasks = vi.fn().mockResolvedValue([overdueTask]);
+      ctx.services!.task!.getTasksDueSoon = vi.fn().mockResolvedValue([dueSoonTask]);
+
+      const result = await caller.getReminders({});
+
+      expect(result.overdue).toHaveLength(1);
+      expect(result.dueSoon).toHaveLength(1);
+      expect(result.overdueCount).toBe(1);
+      expect(result.dueSoonCount).toBe(1);
+      expect(result.overdue[0].title).toBe('Overdue task');
+      expect(result.dueSoon[0].title).toBe('Due soon task');
+    });
+
+    it('should return empty arrays when no tasks need attention', async () => {
+      ctx.services!.task!.getOverdueTasks = vi.fn().mockResolvedValue([]);
+      ctx.services!.task!.getTasksDueSoon = vi.fn().mockResolvedValue([]);
+
+      const result = await caller.getReminders({});
+
+      expect(result.overdue).toHaveLength(0);
+      expect(result.dueSoon).toHaveLength(0);
+      expect(result.overdueCount).toBe(0);
+      expect(result.dueSoonCount).toBe(0);
+    });
+
+    it('should filter by ownerId when provided', async () => {
+      ctx.services!.task!.getOverdueTasks = vi.fn().mockResolvedValue([]);
+      ctx.services!.task!.getTasksDueSoon = vi.fn().mockResolvedValue([]);
+
+      await caller.getReminders({ ownerId: TEST_UUIDS.user1 });
+
+      expect(ctx.services!.task!.getOverdueTasks).toHaveBeenCalledWith(TEST_UUIDS.user1);
+      expect(ctx.services!.task!.getTasksDueSoon).toHaveBeenCalledWith(TEST_UUIDS.user1);
+    });
+
+    it('should default to current user when no ownerId provided', async () => {
+      ctx.services!.task!.getOverdueTasks = vi.fn().mockResolvedValue([]);
+      ctx.services!.task!.getTasksDueSoon = vi.fn().mockResolvedValue([]);
+
+      await caller.getReminders({});
+
+      // Falls back to typedCtx.tenant.userId (TEST_UUIDS.user1)
+      expect(ctx.services!.task!.getOverdueTasks).toHaveBeenCalledWith(TEST_UUIDS.user1);
+      expect(ctx.services!.task!.getTasksDueSoon).toHaveBeenCalledWith(TEST_UUIDS.user1);
+    });
+  });
+
+  describe('getByEntity', () => {
+    it('should return tasks for a lead', async () => {
+      const mockDomainTask = createMockDomainTask({ leadId: TEST_UUIDS.lead1 });
+
+      ctx.services!.task!.getTasksByEntity = vi.fn().mockResolvedValue([mockDomainTask]);
+
+      const result = await caller.getByEntity({
+        entityType: 'lead',
+        entityId: TEST_UUIDS.lead1,
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].leadId).toBe(TEST_UUIDS.lead1);
+      expect(ctx.services!.task!.getTasksByEntity).toHaveBeenCalledWith('lead', TEST_UUIDS.lead1);
+    });
+
+    it('should return tasks for a contact', async () => {
+      const mockDomainTask = createMockDomainTask({ contactId: TEST_UUIDS.contact1 });
+
+      ctx.services!.task!.getTasksByEntity = vi.fn().mockResolvedValue([mockDomainTask]);
+
+      const result = await caller.getByEntity({
+        entityType: 'contact',
+        entityId: TEST_UUIDS.contact1,
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].contactId).toBe(TEST_UUIDS.contact1);
+    });
+
+    it('should return tasks for an opportunity', async () => {
+      const mockDomainTask = createMockDomainTask({ opportunityId: TEST_UUIDS.opportunity1 });
+
+      ctx.services!.task!.getTasksByEntity = vi.fn().mockResolvedValue([mockDomainTask]);
+
+      const result = await caller.getByEntity({
+        entityType: 'opportunity',
+        entityId: TEST_UUIDS.opportunity1,
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].opportunityId).toBe(TEST_UUIDS.opportunity1);
+    });
+
+    it('should return empty array for entity with no tasks', async () => {
+      ctx.services!.task!.getTasksByEntity = vi.fn().mockResolvedValue([]);
+
+      const result = await caller.getByEntity({
+        entityType: 'lead',
+        entityId: TEST_UUIDS.lead1,
+      });
+
+      expect(result).toHaveLength(0);
+    });
+  });
+
   describe('input validation', () => {
     it('should require title for create', async () => {
       // @ts-expect-error - Testing invalid input

@@ -23,6 +23,88 @@ describe('Supabase Configuration', () => {
     vi.restoreAllMocks();
   });
 
+  describe('getSupabaseConfig - Production Environment (IFC-169)', () => {
+    it('should throw when SUPABASE_URL is missing in production', async () => {
+      process.env.NODE_ENV = 'production';
+      delete process.env.VITEST;
+      delete process.env.SUPABASE_URL;
+      process.env.SUPABASE_ANON_KEY = 'real-anon-key';
+      process.env.SUPABASE_SERVICE_ROLE_KEY = 'real-service-key';
+
+      await expect(import('../supabase.js')).rejects.toThrow(
+        '[CRITICAL] Supabase configuration error in production'
+      );
+    });
+
+    it('should throw when SUPABASE_ANON_KEY is missing in production', async () => {
+      process.env.NODE_ENV = 'production';
+      delete process.env.VITEST;
+      process.env.SUPABASE_URL = 'https://prod.supabase.co';
+      delete process.env.SUPABASE_ANON_KEY;
+      process.env.SUPABASE_SERVICE_ROLE_KEY = 'real-service-key';
+
+      await expect(import('../supabase.js')).rejects.toThrow(
+        'SUPABASE_ANON_KEY'
+      );
+    });
+
+    it('should throw when SUPABASE_SERVICE_ROLE_KEY is missing in production', async () => {
+      process.env.NODE_ENV = 'production';
+      delete process.env.VITEST;
+      process.env.SUPABASE_URL = 'https://prod.supabase.co';
+      process.env.SUPABASE_ANON_KEY = 'real-anon-key';
+      delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      await expect(import('../supabase.js')).rejects.toThrow(
+        'SUPABASE_SERVICE_ROLE_KEY'
+      );
+    });
+
+    it('should throw listing all missing vars when none are set in production', async () => {
+      process.env.NODE_ENV = 'production';
+      delete process.env.VITEST;
+      delete process.env.SUPABASE_URL;
+      delete process.env.SUPABASE_ANON_KEY;
+      delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      await expect(import('../supabase.js')).rejects.toThrow(
+        'SUPABASE_URL'
+      );
+    });
+
+    it('should NOT throw when all vars are set in production', async () => {
+      process.env.NODE_ENV = 'production';
+      delete process.env.VITEST;
+      process.env.SUPABASE_URL = 'https://prod.supabase.co';
+      process.env.SUPABASE_ANON_KEY = 'real-anon-key';
+      process.env.SUPABASE_SERVICE_ROLE_KEY = 'real-service-key';
+
+      const mod = await import('../supabase.js');
+      expect(mod.supabase).toBeDefined();
+      expect(mod.getConfig().usingMockKeys).toBe(false);
+    });
+  });
+
+  describe('getSupabaseConfig - Development Environment (IFC-169)', () => {
+    it('should warn but not throw when vars are missing in development', async () => {
+      process.env.NODE_ENV = 'development';
+      delete process.env.VITEST;
+      delete process.env.SUPABASE_URL;
+      delete process.env.SUPABASE_ANON_KEY;
+      delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      const mod = await import('../supabase.js');
+
+      expect(mod.supabase).toBeDefined();
+      expect(mod.getConfig().usingMockKeys).toBe(true);
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[Supabase] Development mode')
+      );
+      warnSpy.mockRestore();
+    });
+  });
+
   describe('getSupabaseConfig - Test Environment', () => {
     it('should use mock keys silently in test environment', async () => {
       process.env.NODE_ENV = 'test';
@@ -205,6 +287,19 @@ describe('Supabase Auth Functions', () => {
     const { verifyToken } = await import('../supabase.js');
     expect(verifyToken).toBeDefined();
     expect(typeof verifyToken).toBe('function');
+  });
+
+  it('should reject token verification when using mock keys (IFC-169)', async () => {
+    process.env.NODE_ENV = 'test';
+    delete process.env.SUPABASE_ANON_KEY;
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    const { verifyToken } = await import('../supabase.js');
+    const result = await verifyToken('some-jwt-token');
+
+    expect(result.user).toBeNull();
+    expect(result.error).toBeDefined();
+    expect(result.error?.message).toBe('Mock keys cannot verify real tokens');
   });
 });
 

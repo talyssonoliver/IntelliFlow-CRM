@@ -563,7 +563,6 @@ export async function updateLeadEmbedding(
   leadId: string,
   embedding: number[]
 ): Promise<{ error: Error | null }> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabaseAdmin.from('leads') as any)
     .update({ embedding })
     .eq('id', leadId);
@@ -578,7 +577,6 @@ export async function updateContactEmbedding(
   contactId: string,
   embedding: number[]
 ): Promise<{ error: Error | null }> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabaseAdmin.from('contacts') as any)
     .update({ embedding })
     .eq('id', contactId);

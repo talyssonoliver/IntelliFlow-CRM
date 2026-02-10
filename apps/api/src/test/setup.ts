@@ -149,6 +149,7 @@ export const mockAdapters = {
   taskRepository: mockDeep<any>(),
   chainVersionRepository: mockDeep<any>(),
   chainVersionAuditRepository: mockDeep<any>(),
+  activityFeedRepository: mockDeep<any>(),
   eventBus: mockDeep<any>(),
   aiService: mockDeep<any>(),
   cache: mockDeep<any>(),
