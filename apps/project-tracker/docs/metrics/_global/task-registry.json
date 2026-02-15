@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-02-15T16:58:55.280Z",
+  "last_updated": "2026-02-15T18:58:15.172Z",
   "total_tasks": 305,
   "sprints": {
     "sprint-0": {
@@ -130,8 +130,10 @@
       "PG-016",
       "PG-018",
       "PG-021",
+      "PG-025",
       "PG-031",
       "PG-032",
+      "PG-033",
       "DOC-001",
       "BRAND-001",
       "BRAND-002",
@@ -235,14 +237,16 @@
       "IFC-189",
       "PG-133",
       "PG-134",
+      "PG-136",
       "PG-137",
+      "PG-138",
       "PG-139",
+      "PG-142",
+      "PG-143",
       "IFC-197",
       "IFC-198"
     ],
-    "IN_PROGRESS": [
-      "PG-136"
-    ],
+    "IN_PROGRESS": [],
     "VALIDATING": [],
     "BLOCKED": [],
     "PLANNED": [
@@ -288,13 +292,11 @@
       "PG-022",
       "PG-023",
       "PG-024",
-      "PG-025",
       "PG-026",
       "PG-027",
       "PG-028",
       "PG-029",
       "PG-030",
-      "PG-033",
       "PG-034",
       "PG-035",
       "PG-036",
@@ -408,11 +410,8 @@
       "PG-131",
       "PG-132",
       "IFC-190",
-      "PG-138",
       "PG-140",
       "PG-141",
-      "PG-142",
-      "PG-143",
       "PG-144",
       "PG-145",
       "PG-146",
@@ -3166,7 +3165,7 @@
       "section": "Billing Pages",
       "description": "Billing Portal",
       "owner": "Platform BE (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 14,
       "dependencies": [
         "IFC-099",
@@ -3309,7 +3308,7 @@
       "section": "Developer Pages",
       "description": "API Docs",
       "owner": "DevRel (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 15,
       "dependencies": [
         "PG-032"
@@ -7130,7 +7129,7 @@
       "section": "Core CRM",
       "description": "Task Management Page - List calendar view assignments reminders entity linking",
       "owner": "Frontend Dev (STOA-Domain)",
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "sprint": 6,
       "dependencies": [
         "IFC-187"
@@ -7164,7 +7163,7 @@
       "section": "Legal",
       "description": "Case List & Detail Pages - Party management deadline tracking document links timeline",
       "owner": "Frontend Dev (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 7,
       "dependencies": [
         "IFC-136"
@@ -7233,7 +7232,7 @@
       "section": "AI Intelligence",
       "description": "Sentiment Analysis Dashboard at /agent-approvals/sentiment - Timeline badges trend visualization email sentiment preview",
       "owner": "Frontend Dev (STOA-Intelligence)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 7,
       "dependencies": [
         "IFC-039",
@@ -7251,7 +7250,7 @@
       "section": "AI Intelligence",
       "description": "Churn Risk Dashboard at /agent-approvals/churn-risk - Health scores risk indicators intervention triggers trend charts",
       "owner": "Frontend Dev (STOA-Intelligence)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 7,
       "dependencies": [
         "IFC-095",

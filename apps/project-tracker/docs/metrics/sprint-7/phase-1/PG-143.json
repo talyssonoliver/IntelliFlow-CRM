@@ -6,7 +6,7 @@
   "sprint": "sprint-7",
   "phase": "phase-1",
   "stream": null,
-  "status": "BACKLOG",
+  "status": "DONE",
   "started_at": "2026-02-13T00:00:00Z",
   "completed_at": "2026-02-14T23:40:00Z",
   "target_duration_minutes": 30,
@@ -33,7 +33,7 @@
       "IFC-181"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-02-15T16:58:55.369Z"
+    "verified_at": "2026-02-15T18:58:15.269Z"
   },
   "execution": {
     "started_at": "2026-02-14T23:30:00Z",

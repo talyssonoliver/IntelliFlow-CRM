@@ -3,7 +3,7 @@
   "section": "Legal",
   "description": "Case List & Detail Pages - Party management deadline tracking document links timeline",
   "owner": "Frontend Dev (STOA-Domain)",
-  "status": "BACKLOG",
+  "status": "DONE",
   "status_history": [
     {
       "from": "Backlog",
@@ -36,7 +36,7 @@
       "IFC-136"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-02-15T16:58:55.368Z"
+    "verified_at": "2026-02-15T18:58:15.267Z"
   },
   "artifacts": {
     "created": [

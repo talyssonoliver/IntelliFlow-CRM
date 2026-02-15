@@ -7,7 +7,7 @@
   "sprint": "sprint-6",
   "phase": "phase-1",
   "stream": null,
-  "status": "IN_PROGRESS",
+  "status": "DONE",
   "started_at": "2026-02-09T22:00:00.000Z",
   "completed_at": "2026-02-10T23:35:00.000Z",
   "actual_duration_minutes": 95,
@@ -16,7 +16,7 @@
       "IFC-187"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-02-15T16:58:55.363Z",
+    "verified_at": "2026-02-15T18:58:15.262Z",
     "notes": "IFC-187 (Task tRPC Router) marked Completed. All 10 endpoints available in router (create, getById, list, update, delete, complete, assign, reschedule, getReminders, getByEntity)."
   },
   "status_history": [
