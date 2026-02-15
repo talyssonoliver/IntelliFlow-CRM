@@ -9,7 +9,7 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-02-10T23:09:35.237Z",
+    "verified_at": "2026-02-15T16:58:55.319Z",
     "required": [
       "DOC-001",
       "GTM-001"

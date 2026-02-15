@@ -2,7 +2,8 @@
 /**
  * AccountDetail Tests (PG-134)
  */
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AccountDetail } from '../AccountDetail';
 
@@ -57,6 +58,11 @@ vi.mock('../RevenueChart', () => ({
 }));
 vi.mock('../AccountHierarchy', () => ({
   AccountHierarchy: () => <div data-testid="hierarchy">Hierarchy</div>,
+}));
+
+// Mock RelatedTasksCard to avoid tRPC context requirement
+vi.mock('@/components/tasks/RelatedTasksCard', () => ({
+  RelatedTasksCard: () => <div data-testid="related-tasks">Next Steps</div>,
 }));
 
 // Mock EntityActionSheet and MoreActionsButton to avoid tRPC context requirement
@@ -159,22 +165,28 @@ describe('AccountDetail', () => {
     expect(screen.getByText('Account Details')).toBeInTheDocument();
   });
 
-  it('switches to contacts tab on click', () => {
+  it('switches to contacts tab on click', async () => {
+    const user = userEvent.setup();
     render(<AccountDetail {...defaultProps} />);
     // "Contacts" text appears in metric grid, tab bar, and sidebar — find the tab button
     const buttons = screen.getAllByRole('button');
     const contactsTab = buttons.find((b) => /^Contacts/.test(b.textContent || ''));
-    fireEvent.click(contactsTab!);
-    expect(screen.getByTestId('contacts-list')).toBeInTheDocument();
+    await user.click(contactsTab!);
+    await waitFor(() => {
+      expect(screen.getByTestId('contacts-list')).toBeInTheDocument();
+    });
   });
 
-  it('switches to hierarchy tab on click', () => {
+  it('switches to hierarchy tab on click', async () => {
+    const user = userEvent.setup();
     render(<AccountDetail {...defaultProps} />);
     // "Hierarchy" appears as tab, sidebar heading, and quick action — find exact tab button
     const buttons = screen.getAllByRole('button');
     const hierarchyTab = buttons.find((b) => b.textContent === 'Hierarchy');
-    fireEvent.click(hierarchyTab!);
-    expect(screen.getByTestId('hierarchy')).toBeInTheDocument();
+    await user.click(hierarchyTab!);
+    await waitFor(() => {
+      expect(screen.getByTestId('hierarchy')).toBeInTheDocument();
+    });
   });
 
   it('renders website link in overview', () => {
@@ -192,10 +204,13 @@ describe('AccountDetail', () => {
     expect(screen.getByTestId('more-actions')).toBeInTheDocument();
   });
 
-  it('opens action sheet via more actions button', () => {
+  it('opens action sheet via more actions button', async () => {
+    const user = userEvent.setup();
     render(<AccountDetail {...defaultProps} />);
-    fireEvent.click(screen.getByTestId('more-actions'));
-    expect(screen.getByTestId('action-sheet')).toBeInTheDocument();
+    await user.click(screen.getByTestId('more-actions'));
+    await waitFor(() => {
+      expect(screen.getByTestId('action-sheet')).toBeInTheDocument();
+    });
   });
 
   it('has breadcrumb link back to accounts list', () => {

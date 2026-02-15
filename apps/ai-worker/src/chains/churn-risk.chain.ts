@@ -22,6 +22,7 @@ import type { BaseMessage } from '@langchain/core/messages';
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
 import { costTracker } from '../utils/cost-tracker';
+import { getOpenAIClientSettings } from '../utils/openai-client';
 import pino from 'pino';
 
 /**
@@ -213,12 +214,14 @@ export class ChurnRiskChain {
     // Initialize the appropriate model based on configuration
     // Model type uses `any` due to LangChain's complex union types
     if (aiConfig.provider === 'openai') {
+      const openAIClientSettings = getOpenAIClientSettings();
       this.model = new ChatOpenAI({
         modelName: aiConfig.openai.model,
         temperature: 0.3, // Lower temperature for consistent predictions
         maxTokens: 1500,
         timeout: aiConfig.openai.timeout,
-        openAIApiKey: aiConfig.openai.apiKey,
+        apiKey: openAIClientSettings.apiKey,
+        configuration: openAIClientSettings.configuration,
         callbacks: aiConfig.features.enableChainLogging
           ? [
               {

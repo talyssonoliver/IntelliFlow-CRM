@@ -749,7 +749,7 @@ describe('TaskService', () => {
       expect(result.error.message).toContain('Cannot delete completed tasks');
     });
 
-    it('should allow deleting cancelled tasks', async () => {
+    it('should reject deleting cancelled tasks', async () => {
       const task = Task.create({
         title: 'Cancelled Delete',
         ownerId: 'owner-1',
@@ -759,7 +759,8 @@ describe('TaskService', () => {
 
       const result = await service.deleteTask(task.id.value);
 
-      expect(result.isSuccess).toBe(true);
+      expect(result.isFailure).toBe(true);
+      expect(result.error.message).toContain('Cannot delete cancelled tasks');
     });
 
     it('should fail if task not found', async () => {

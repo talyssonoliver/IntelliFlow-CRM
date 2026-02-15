@@ -177,6 +177,8 @@ AI_PROVIDER=openai
 
 # OpenAI Configuration
 OPENAI_API_KEY=sk-...
+# Optional OpenAI-compatible endpoint (e.g., vLLM)
+# OPENAI_BASE_URL=http://localhost:8000/v1
 OPENAI_MODEL=gpt-4-turbo-preview
 OPENAI_TEMPERATURE=0.7
 OPENAI_MAX_TOKENS=2000
@@ -211,6 +213,17 @@ LOG_LEVEL=info
 AI_PROVIDER=openai
 OPENAI_API_KEY=sk-your-key-here
 OPENAI_MODEL=gpt-4-turbo-preview
+```
+
+### Using OpenAI-Compatible Runtime (vLLM-ready)
+
+Use the `openai` provider with a local OpenAI-compatible endpoint:
+
+```bash
+AI_PROVIDER=openai
+OPENAI_BASE_URL=http://localhost:8000/v1
+OPENAI_MODEL=Qwen/Qwen2.5-7B-Instruct
+# OPENAI_API_KEY is optional for local servers; a fallback key is injected if omitted
 ```
 
 ### Using Ollama (Local Development)

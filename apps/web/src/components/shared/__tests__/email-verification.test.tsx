@@ -48,6 +48,7 @@ vi.mock('@/lib/shared/account-activation', () => ({
   checkResendRateLimit: (email: string) => mockCheckRateLimit(email),
   createVerificationToken: (email: string) => mockCreateToken(email),
   buildVerificationUrl: (token: string) => `/auth/verify-email/${token}`,
+  isTokenExpiringSoon: vi.fn(() => false),
 }));
 
 // Import component after mocks are set up

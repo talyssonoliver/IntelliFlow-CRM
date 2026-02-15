@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../schemas/task-status.schema.json",
+  "$schema": "../../schemas/task-status.schema.json",
   "task_id": "PG-032",
   "section": "Developer Pages",
   "description": "Docs Index",
@@ -11,7 +11,7 @@
     "required": [
       "IFC-079"
     ],
-    "verified_at": "2026-02-10T23:09:35.454Z",
+    "verified_at": "2026-02-15T16:58:55.397Z",
     "all_satisfied": true,
     "notes": "IFC-079 verified complete — attestation checked, all 4 artifacts exist (docusaurus.config.js, sidebars.js, search-index.json, package.json)"
   },

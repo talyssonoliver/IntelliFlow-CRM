@@ -8,9 +8,13 @@ import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
+import { AppAvatar } from '@/components/shared/app-avatar';
+import { RelatedTasksCard } from '@/components/tasks/RelatedTasksCard';
+import { UpcomingEventsCard } from '@/components/shared';
+import { normalizeAvatarSource } from '@/lib/shared/avatar-utils';
 
 // Tab types
-type TabId = 'overview' | 'activity' | 'deals' | 'tickets' | 'documents' | 'notes' | 'ai-insights';
+type TabId = 'overview' | 'activity' | 'tasks' | 'deals' | 'tickets' | 'documents' | 'notes' | 'ai-insights';
 
 interface Tab {
   id: TabId;
@@ -277,6 +281,8 @@ export default function Contact360Page() {
   // Transform API data to UI format
   const contact = useMemo(() => {
     if (!apiContact) return null;
+    const normalizedContactAvatar = normalizeAvatarSource(apiContact.avatarUrl) ?? normalizeAvatarSource(defaultContactAvatar) ?? defaultContactAvatar;
+    const normalizedOwnerAvatar = normalizeAvatarSource(apiContact.owner?.avatarUrl) ?? normalizeAvatarSource(defaultOwnerAvatar) ?? defaultOwnerAvatar;
 
     return {
       id: apiContact.id,
@@ -295,15 +301,15 @@ export default function Contact360Page() {
       hasActiveDeal: (apiContact.opportunities?.length || 0) > 0,
       createdAt: typeof apiContact.createdAt === 'string' ? apiContact.createdAt : apiContact.createdAt.toISOString(),
       lastContactedAt: typeof apiContact.updatedAt === 'string' ? apiContact.updatedAt : apiContact.updatedAt.toISOString(),
-      avatarUrl: apiContact.avatarUrl || defaultContactAvatar,
+      avatarUrl: normalizedContactAvatar,
       owner: apiContact.owner ? {
         name: apiContact.owner.name || 'Unknown',
         title: 'Account Executive',
-        avatarUrl: apiContact.owner.avatarUrl || defaultOwnerAvatar,
+        avatarUrl: normalizedOwnerAvatar,
       } : {
         name: 'Unassigned',
         title: '',
-        avatarUrl: defaultOwnerAvatar,
+        avatarUrl: normalizedOwnerAvatar,
       },
       account: apiContact.account ? {
         id: apiContact.account.id,
@@ -497,24 +503,11 @@ export default function Contact360Page() {
     }));
   }, [activities]);
 
-  // Upcoming event from calendar events
-  const upcomingEvent = useMemo(() => {
-    if (!apiContact?.calendarEvents || apiContact.calendarEvents.length === 0) return null;
-    const event = apiContact.calendarEvents[0];
-    const date = new Date(event.startTime);
-    return {
-      month: date.toLocaleDateString('en-US', { month: 'short' }),
-      day: date.getDate().toString(),
-      title: event.title,
-      time: date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
-      attendees: event.attendees || [contact?.avatarUrl || defaultContactAvatar, contact?.owner?.avatarUrl || defaultOwnerAvatar],
-    };
-  }, [apiContact?.calendarEvents, contact?.avatarUrl, contact?.owner?.avatarUrl]);
-
   // Tabs with dynamic counts
   const tabs: Tab[] = useMemo(() => [
     { id: 'overview', label: 'Overview' },
     { id: 'activity', label: 'Activity', count: activities.length },
+    { id: 'tasks', label: 'Tasks' },
     { id: 'deals', label: 'Deals', count: deals.length },
     { id: 'tickets', label: 'Tickets', count: 0 },
     { id: 'documents', label: 'Documents', count: apiContact?.documents?.length || 0 },
@@ -933,9 +926,12 @@ export default function Contact360Page() {
             <div className="h-24 bg-gradient-to-r from-blue-100 to-blue-50 dark:from-slate-800 dark:to-slate-800" />
             <div className="px-5 pb-6 relative">
               <div className="relative -mt-10 mb-3">
-                <div className="w-20 h-20 rounded-full border-4 border-white dark:border-slate-900 bg-slate-200 overflow-hidden shadow-sm">
-                  <img src={contact.avatarUrl} alt={`${contact.firstName} ${contact.lastName}`} className="w-full h-full object-cover" />
-                </div>
+                <AppAvatar
+                  name={`${contact.firstName} ${contact.lastName}`}
+                  src={contact.avatarUrl}
+                  className="w-20 h-20 border-4 border-white dark:border-slate-900 shadow-sm"
+                  fallbackClassName="text-2xl font-bold text-slate-500 bg-slate-200 dark:bg-slate-700"
+                />
                 {contact.isOnline && (
                   <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full" title="Online" />
                 )}
@@ -1010,9 +1006,12 @@ export default function Contact360Page() {
           <Card className="p-5">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase mb-3 tracking-wider">Contact Owner</h3>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden">
-                <img src={contact.owner.avatarUrl} alt={contact.owner.name} className="w-full h-full object-cover" />
-              </div>
+              <AppAvatar
+                name={contact.owner.name}
+                src={contact.owner.avatarUrl}
+                className="w-10 h-10"
+                fallbackClassName="text-sm font-bold bg-slate-200 dark:bg-slate-700"
+              />
               <div>
                 <p className="text-sm font-bold text-slate-900 dark:text-white">{contact.owner.name}</p>
                 <p className="text-xs text-slate-500">{contact.owner.title}</p>
@@ -1343,6 +1342,15 @@ export default function Contact360Page() {
             </div>
           )}
 
+          {/* Tasks Tab */}
+          {activeTab === 'tasks' && (
+            <RelatedTasksCard
+              entityType="contact"
+              entityId={contactId}
+              maxItems={20}
+            />
+          )}
+
           {/* Deals Tab */}
           {activeTab === 'deals' && (
             <Card className="p-6">
@@ -1591,57 +1599,19 @@ export default function Contact360Page() {
               <button onClick={() => setActiveTab('ai-insights')} className="w-full mt-2 text-sm text-[#137fec] hover:underline text-center">View Full Analysis</button>
             </div>
           </Card>
-          <Card className="p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Tasks</h3>
-              <button className="w-6 h-6 rounded hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500">
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M11 13H5v-2h6V5h2v6h6v2h-6v6h-2Z" /></svg>
-              </button>
-            </div>
-            <div className="space-y-3">
-              {tasks.map((task) => (
-                <label key={task.id} className={`flex items-start gap-3 group cursor-pointer ${task.completed ? 'opacity-50' : ''}`}>
-                  <input type="checkbox" defaultChecked={task.completed} className="rounded border-slate-300 text-[#137fec] focus:ring-[#137fec] mt-1" />
-                  <div className="flex-1">
-                    <p className={`text-sm font-medium text-slate-700 dark:text-slate-200 group-hover:text-[#137fec] transition-colors ${task.completed ? 'line-through' : ''}`}>{task.title}</p>
-                    <p className={`text-xs mt-0.5 ${task.priority === 'high' && !task.completed ? 'text-orange-600' : 'text-slate-400'}`}>Due {formatDate(task.dueDate)}</p>
-                  </div>
-                  {task.priority === 'high' && !task.completed && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400">High</span>
-                  )}
-                </label>
-              ))}
-            </div>
-          </Card>
-          <Card className="p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Upcoming</h3>
-              <button className="w-6 h-6 rounded hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500">
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M19 22v-3h-3v-2h3v-3h2v3h3v2h-3v3ZM5 22q-.825 0-1.412-.587Q3 20.825 3 20V6q0-.825.588-1.412Q4.175 4 5 4h1V2h2v2h6V2h2v2h1q.825 0 1.413.588Q19 5.175 19 6v6h-2V10H5v10h9v2Zm0-14h12V6H5Zm0 0V6v2Z" /></svg>
-              </button>
-            </div>
-            {upcomingEvent ? (
-              <div className="flex gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
-                <div className="flex flex-col items-center justify-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded w-12 h-12 flex-shrink-0">
-                  <span className="text-[10px] font-bold text-red-500 uppercase">{upcomingEvent.month}</span>
-                  <span className="text-lg font-bold text-slate-900 dark:text-white leading-none">{upcomingEvent.day}</span>
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-slate-900 dark:text-white">{upcomingEvent.title}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{upcomingEvent.time}</p>
-                  <div className="flex -space-x-1.5 mt-1.5">
-                    {(upcomingEvent.attendees as string[]).map((avatar) => (
-                      <div key={avatar} className="w-5 h-5 rounded-full ring-2 ring-white dark:ring-slate-900 bg-slate-200 overflow-hidden">
-                        <img src={avatar} alt="Attendee" className="w-full h-full object-cover" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-slate-500 dark:text-slate-400">No upcoming events</p>
-            )}
-          </Card>
+          <RelatedTasksCard
+            entityType="contact"
+            entityId={contactId}
+            maxItems={2}
+            compact
+            onViewAll={() => setActiveTab('tasks')}
+          />
+          <UpcomingEventsCard
+            entityType="contact"
+            entityId={contactId}
+            maxItems={1}
+            compact
+          />
           <Card className="p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-bold text-slate-900 dark:text-white">Notes</h3>

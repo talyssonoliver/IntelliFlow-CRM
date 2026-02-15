@@ -108,10 +108,10 @@ describe('ContactForm', () => {
       await user.type(screen.getByLabelText(/Last Name/i), 'Doe');
       await user.type(screen.getByLabelText(/Email Address/i), 'john@example.com');
 
-      fireEvent.click(screen.getByText('Next Step'));
+      await user.click(screen.getByText('Next Step'));
 
       await waitFor(() => {
-        expect(screen.getByText('Company & Role')).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: /Company & Role/i })).toBeInTheDocument();
         expect(screen.getByLabelText(/Company Name/i)).toBeInTheDocument();
       });
     });
@@ -130,13 +130,17 @@ describe('ContactForm', () => {
       await user.type(screen.getByLabelText(/First Name/i), 'John');
       await user.type(screen.getByLabelText(/Last Name/i), 'Doe');
       await user.type(screen.getByLabelText(/Email Address/i), 'john@example.com');
-      fireEvent.click(screen.getByText('Next Step'));
+      await user.click(screen.getByText('Next Step'));
 
       await waitFor(() => {
-        fireEvent.click(screen.getByText('Previous'));
+        expect(screen.getByRole('heading', { name: /Company & Role/i })).toBeInTheDocument();
       });
 
-      expect(screen.getByText('Contact Information')).toBeInTheDocument();
+      await user.click(screen.getByText('Previous'));
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /Contact Information/i })).toBeInTheDocument();
+      });
     });
 
     it('allows clicking on completed steps', async () => {
@@ -153,14 +157,18 @@ describe('ContactForm', () => {
       await user.type(screen.getByLabelText(/First Name/i), 'John');
       await user.type(screen.getByLabelText(/Last Name/i), 'Doe');
       await user.type(screen.getByLabelText(/Email Address/i), 'john@example.com');
-      fireEvent.click(screen.getByText('Next Step'));
+      await user.click(screen.getByText('Next Step'));
 
       await waitFor(() => {
-        const step1Button = screen.getByRole('button', { name: /Personal Details/i });
-        fireEvent.click(step1Button);
+        expect(screen.getByRole('heading', { name: /Company & Role/i })).toBeInTheDocument();
       });
 
-      expect(screen.getByText('Contact Information')).toBeInTheDocument();
+      const step1Button = screen.getByRole('button', { name: /Personal Details/i });
+      await user.click(step1Button);
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /Contact Information/i })).toBeInTheDocument();
+      });
     });
 
     it('does not allow clicking on upcoming steps', () => {
@@ -201,7 +209,7 @@ describe('ContactForm', () => {
       await user.type(screen.getByLabelText(/First Name/i), 'John');
       await user.type(screen.getByLabelText(/Last Name/i), 'Doe');
       await user.type(screen.getByLabelText(/Email Address/i), 'john@example.com');
-      fireEvent.click(screen.getByText('Next Step'));
+      await user.click(screen.getByText('Next Step'));
 
       await waitFor(() => {
         expect(screen.getByText('Previous')).toBeInTheDocument();
@@ -220,10 +228,13 @@ describe('ContactForm', () => {
         />
       );
 
-      fireEvent.click(screen.getByText('Next Step'));
+      await user.click(screen.getByText('Next Step'));
 
       await waitFor(() => {
-        expect(screen.getByText('First name is required')).toBeInTheDocument();
+        expect(screen.getByText(/Please fix the following errors/i)).toBeInTheDocument();
+        const alerts = screen.getAllByRole('alert');
+        const errorSummary = alerts[0]; // First alert is the summary
+        expect(errorSummary).toHaveTextContent('First name is required');
       });
     });
 
@@ -237,14 +248,18 @@ describe('ContactForm', () => {
         />
       );
 
-      fireEvent.click(screen.getByText('Next Step'));
+      await user.click(screen.getByText('Next Step'));
 
       await waitFor(() => {
-        expect(screen.getByText('Last name is required')).toBeInTheDocument();
+        expect(screen.getByText(/Please fix the following errors/i)).toBeInTheDocument();
+        const alerts = screen.getAllByRole('alert');
+        const errorSummary = alerts[0]; // First alert is the summary
+        expect(errorSummary).toHaveTextContent('Last name is required');
       });
     });
 
     it('shows error for empty email', async () => {
+      const user = userEvent.setup();
       render(
         <ContactForm
           mode="create"
@@ -253,10 +268,13 @@ describe('ContactForm', () => {
         />
       );
 
-      fireEvent.click(screen.getByText('Next Step'));
+      await user.click(screen.getByText('Next Step'));
 
       await waitFor(() => {
-        expect(screen.getByText('Email is required')).toBeInTheDocument();
+        expect(screen.getByText(/Please fix the following errors/i)).toBeInTheDocument();
+        const alerts = screen.getAllByRole('alert');
+        const errorSummary = alerts[0]; // First alert is the summary
+        expect(errorSummary).toHaveTextContent('Email is required');
       });
     });
 
@@ -274,10 +292,13 @@ describe('ContactForm', () => {
       await user.type(screen.getByLabelText(/Last Name/i), 'Doe');
       await user.type(screen.getByLabelText(/Email Address/i), 'invalid-email');
 
-      fireEvent.click(screen.getByText('Next Step'));
+      await user.click(screen.getByText('Next Step'));
 
       await waitFor(() => {
-        expect(screen.getByText('Please enter a valid email address')).toBeInTheDocument();
+        expect(screen.getByText(/Please fix the following errors/i)).toBeInTheDocument();
+        const alerts = screen.getAllByRole('alert');
+        const errorSummary = alerts[0]; // First alert is the summary
+        expect(errorSummary).toHaveTextContent('Please enter a valid email address');
       });
     });
 
@@ -296,10 +317,13 @@ describe('ContactForm', () => {
       await user.type(screen.getByLabelText(/Email Address/i), 'john@example.com');
       await user.type(screen.getByLabelText(/Phone Number/i), 'abcd');
 
-      fireEvent.click(screen.getByText('Next Step'));
+      await user.click(screen.getByText('Next Step'));
 
       await waitFor(() => {
-        expect(screen.getByText('Please enter a valid phone number')).toBeInTheDocument();
+        expect(screen.getByText(/Please fix the following errors/i)).toBeInTheDocument();
+        const alerts = screen.getAllByRole('alert');
+        const errorSummary = alerts[0]; // First alert is the summary
+        expect(errorSummary).toHaveTextContent('Please enter a valid phone number');
       });
     });
 
@@ -314,21 +338,28 @@ describe('ContactForm', () => {
       );
 
       // Trigger validation error
-      fireEvent.click(screen.getByText('Next Step'));
+      await user.click(screen.getByText('Next Step'));
 
       await waitFor(() => {
-        expect(screen.getByText('First name is required')).toBeInTheDocument();
+        expect(screen.getByText(/Please fix the following errors/i)).toBeInTheDocument();
       });
 
       // Fix the error
       await user.type(screen.getByLabelText(/First Name/i), 'John');
 
-      expect(screen.queryByText('First name is required')).not.toBeInTheDocument();
+      // Error should clear when field is corrected
+      await waitFor(() => {
+        const errorSummary = screen.queryByText(/Please fix the following errors/i);
+        // Error summary may still exist if other fields have errors, but firstName error should be gone
+        const firstNameInput = screen.getByLabelText(/First Name/i);
+        expect(firstNameInput).toHaveAttribute('aria-invalid', 'false');
+      });
     });
   });
 
   describe('Error Summary', () => {
     it('shows error summary when validation fails', async () => {
+      const user = userEvent.setup();
       render(
         <ContactForm
           mode="create"
@@ -337,7 +368,7 @@ describe('ContactForm', () => {
         />
       );
 
-      fireEvent.click(screen.getByText('Next Step'));
+      await user.click(screen.getByText('Next Step'));
 
       await waitFor(() => {
         expect(screen.getByText('Please fix the following errors:')).toBeInTheDocument();
@@ -345,6 +376,7 @@ describe('ContactForm', () => {
     });
 
     it('focuses error summary on validation failure', async () => {
+      const user = userEvent.setup();
       render(
         <ContactForm
           mode="create"
@@ -353,15 +385,17 @@ describe('ContactForm', () => {
         />
       );
 
-      fireEvent.click(screen.getByText('Next Step'));
+      await user.click(screen.getByText('Next Step'));
 
       await waitFor(() => {
-        const errorSummary = screen.getByRole('alert');
+        const alerts = screen.getAllByRole('alert');
+        const errorSummary = alerts[0]; // First alert is the summary
         expect(document.activeElement).toBe(errorSummary);
       });
     });
 
     it('lists all validation errors in summary', async () => {
+      const user = userEvent.setup();
       render(
         <ContactForm
           mode="create"
@@ -370,10 +404,12 @@ describe('ContactForm', () => {
         />
       );
 
-      fireEvent.click(screen.getByText('Next Step'));
+      await user.click(screen.getByText('Next Step'));
 
       await waitFor(() => {
-        const errorList = screen.getByRole('alert').querySelector('ul');
+        const alerts = screen.getAllByRole('alert');
+        const errorSummary = alerts[0]; // First alert is the summary
+        const errorList = errorSummary.querySelector('ul');
         expect(errorList?.children.length).toBeGreaterThan(0);
       });
     });
@@ -394,8 +430,12 @@ describe('ContactForm', () => {
       );
 
       // Navigate to step 3
-      fireEvent.click(screen.getByText('Next Step'));
-      await waitFor(() => fireEvent.click(screen.getByText('Next Step')));
+      await user.click(screen.getByText('Next Step'));
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /Company & Role/i })).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText('Next Step'));
 
       await waitFor(() => {
         expect(screen.getByText('Active')).toBeInTheDocument();
@@ -420,8 +460,13 @@ describe('ContactForm', () => {
       await user.type(screen.getByLabelText(/First Name/i), 'John');
       await user.type(screen.getByLabelText(/Last Name/i), 'Doe');
       await user.type(screen.getByLabelText(/Email Address/i), 'john@example.com');
-      fireEvent.click(screen.getByText('Next Step'));
-      await waitFor(() => fireEvent.click(screen.getByText('Next Step')));
+      await user.click(screen.getByText('Next Step'));
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /Company & Role/i })).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText('Next Step'));
 
       await waitFor(() => {
         const activeRadio = screen.getByRole('radio', { name: /Active Currently engaged contact/i });
@@ -443,14 +488,21 @@ describe('ContactForm', () => {
       );
 
       // Navigate to step 3
-      fireEvent.click(screen.getByText('Next Step'));
-      await waitFor(() => fireEvent.click(screen.getByText('Next Step')));
+      await user.click(screen.getByText('Next Step'));
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /Company & Role/i })).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText('Next Step'));
 
       await waitFor(() => {
-        const prospectRadio = screen.getByRole('radio', { name: /Prospect Potential customer/i });
-        fireEvent.click(prospectRadio);
-        expect(prospectRadio).toBeChecked();
+        expect(screen.getByRole('heading', { name: /Additional Information/i })).toBeInTheDocument();
       });
+
+      const prospectRadio = screen.getByRole('radio', { name: /Prospect Potential customer/i });
+      await user.click(prospectRadio);
+
+      expect(prospectRadio).toBeChecked();
     });
   });
 
@@ -471,15 +523,19 @@ describe('ContactForm', () => {
       await user.type(screen.getByLabelText(/First Name/i), 'John');
       await user.type(screen.getByLabelText(/Last Name/i), 'Doe');
       await user.type(screen.getByLabelText(/Email Address/i), 'john@example.com');
-      fireEvent.click(screen.getByText('Next Step'));
+      await user.click(screen.getByText('Next Step'));
 
       // Step 2
-      await waitFor(() => fireEvent.click(screen.getByText('Next Step')));
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /Company & Role/i })).toBeInTheDocument();
+      });
+      await user.click(screen.getByText('Next Step'));
 
       // Step 3
       await waitFor(() => {
-        fireEvent.click(screen.getByText('Create Contact'));
+        expect(screen.getByRole('heading', { name: /Additional Information/i })).toBeInTheDocument();
       });
+      await user.click(screen.getByText('Create Contact'));
 
       await waitFor(() => {
         expect(handlers.onSubmit).toHaveBeenCalledWith(expect.objectContaining({
@@ -504,8 +560,12 @@ describe('ContactForm', () => {
       );
 
       // Navigate to step 3
-      fireEvent.click(screen.getByText('Next Step'));
-      await waitFor(() => fireEvent.click(screen.getByText('Next Step')));
+      await user.click(screen.getByText('Next Step'));
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /Company & Role/i })).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText('Next Step'));
 
       await waitFor(() => {
         expect(screen.getByText('Save Changes')).toBeInTheDocument();
@@ -527,8 +587,12 @@ describe('ContactForm', () => {
       );
 
       // Navigate to step 3
-      fireEvent.click(screen.getByText('Next Step'));
-      await waitFor(() => fireEvent.click(screen.getByText('Next Step')));
+      await user.click(screen.getByText('Next Step'));
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /Company & Role/i })).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText('Next Step'));
 
       await waitFor(() => {
         expect(screen.getByText('Creating...')).toBeInTheDocument();
@@ -537,7 +601,8 @@ describe('ContactForm', () => {
       });
     });
 
-    it('calls onCancel when Cancel clicked', () => {
+    it('calls onCancel when Cancel clicked', async () => {
+      const user = userEvent.setup();
       render(
         <ContactForm
           mode="create"
@@ -546,7 +611,7 @@ describe('ContactForm', () => {
         />
       );
 
-      fireEvent.click(screen.getByText('Cancel'));
+      await user.click(screen.getByText('Cancel'));
       expect(handlers.onCancel).toHaveBeenCalledTimes(1);
     });
   });
@@ -595,6 +660,7 @@ describe('ContactForm', () => {
     });
 
     it('marks invalid fields with aria-invalid', async () => {
+      const user = userEvent.setup();
       render(
         <ContactForm
           mode="create"
@@ -603,7 +669,7 @@ describe('ContactForm', () => {
         />
       );
 
-      fireEvent.click(screen.getByText('Next Step'));
+      await user.click(screen.getByText('Next Step'));
 
       await waitFor(() => {
         expect(screen.getByLabelText(/First Name/i)).toHaveAttribute('aria-invalid', 'true');
@@ -611,6 +677,7 @@ describe('ContactForm', () => {
     });
 
     it('links error messages with aria-describedby', async () => {
+      const user = userEvent.setup();
       render(
         <ContactForm
           mode="create"
@@ -619,7 +686,7 @@ describe('ContactForm', () => {
         />
       );
 
-      fireEvent.click(screen.getByText('Next Step'));
+      await user.click(screen.getByText('Next Step'));
 
       await waitFor(() => {
         const firstNameInput = screen.getByLabelText(/First Name/i);

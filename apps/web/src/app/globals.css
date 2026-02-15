@@ -25,6 +25,14 @@
     --input: 214 32% 91%;
     --ring: 209 87% 50%;
     --radius: 0.5rem;
+
+    /* Pipeline stage colors (PG-135) */
+    --stage-qualification: 209 87% 50%;   /* blue – matches primary */
+    --stage-needs-analysis: 38 92% 50%;   /* amber */
+    --stage-proposal: 262 52% 56%;        /* purple */
+    --stage-negotiation: 28 80% 52%;      /* orange */
+    --stage-won: 142 71% 45%;             /* green */
+    --stage-lost: 0 84% 60%;              /* red – matches destructive */
   }
 
   .dark {
@@ -48,6 +56,14 @@
     --border: 215 25% 27%; /* #334155 */
     --input: 215 25% 27%;
     --ring: 209 87% 50%;
+
+    /* Pipeline stage colors (PG-135) - dark mode */
+    --stage-qualification: 209 87% 60%;
+    --stage-needs-analysis: 38 92% 55%;
+    --stage-proposal: 262 52% 65%;
+    --stage-negotiation: 28 80% 58%;
+    --stage-won: 142 71% 50%;
+    --stage-lost: 0 63% 55%;
   }
 }
 
@@ -73,4 +89,9 @@
   background-image:
     linear-gradient(to right, #1e293b 1px, transparent 1px),
     linear-gradient(to bottom, #1e293b 1px, transparent 1px);
+}
+
+/* Material Symbols — required for icon rendering */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }

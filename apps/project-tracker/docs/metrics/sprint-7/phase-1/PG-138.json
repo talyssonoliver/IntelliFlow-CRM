@@ -1,0 +1,90 @@
+{
+  "task_id": "PG-138",
+  "section": "Legal",
+  "description": "Case List & Detail Pages - Party management deadline tracking document links timeline",
+  "owner": "Frontend Dev (STOA-Domain)",
+  "status": "BACKLOG",
+  "status_history": [
+    {
+      "from": "Backlog",
+      "to": "Specifying",
+      "timestamp": "2026-02-13T00:00:00Z",
+      "executor": "claude-opus-4-6"
+    },
+    {
+      "from": "Specifying",
+      "to": "Spec Complete",
+      "timestamp": "2026-02-13T00:01:00Z",
+      "executor": "claude-opus-4-6"
+    },
+    {
+      "from": "Spec Complete",
+      "to": "Planning",
+      "timestamp": "2026-02-13T21:54:00Z",
+      "executor": "claude-opus-4-6"
+    },
+    {
+      "from": "Planning",
+      "to": "Plan Complete",
+      "timestamp": "2026-02-13T22:10:00Z",
+      "executor": "claude-opus-4-6"
+    }
+  ],
+  "started_at": "2026-02-13T00:00:00Z",
+  "dependencies": {
+    "required": [
+      "IFC-136"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-02-15T16:58:55.368Z"
+  },
+  "artifacts": {
+    "created": [
+      {
+        "path": ".specify/sprints/sprint-7/specifications/PG-138-spec.md",
+        "sha256": "5ca42bc3a2f1c5bac18603c436e9da255517f3652b5db8ed066b1e71bc690870",
+        "created_at": "2026-02-13T00:01:00Z"
+      },
+      {
+        "path": ".specify/sprints/sprint-7/planning/PG-138-plan.md",
+        "sha256": "097231cb228fc51a499017764507f638984f415bfd5a4c70d140f436d33cc278",
+        "created_at": "2026-02-13T22:10:00Z"
+      }
+    ]
+  },
+  "agents": [
+    "Frontend-Lead",
+    "Domain-Expert",
+    "Test-Engineer",
+    "Data-Engineer"
+  ],
+  "kpis": [
+    {
+      "target": "List loads <500ms",
+      "actual": "N/A",
+      "met": false
+    },
+    {
+      "target": "Lighthouse >=90",
+      "actual": "N/A",
+      "met": false
+    }
+  ],
+  "dependencies_resolved": [
+    "IFC-136"
+  ],
+  "completed_at": "2026-02-13T22:23:59.971Z",
+  "actual_duration_minutes": 15,
+  "validations": [
+    {
+      "name": "Task completion verification",
+      "command": "echo \"Task PG-138 completed\"",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2026-02-13T22:23:59.971Z",
+      "exit_code": 0,
+      "passed": true,
+      "notes": "Task marked as completed in Sprint_plan.csv"
+    }
+  ]
+}

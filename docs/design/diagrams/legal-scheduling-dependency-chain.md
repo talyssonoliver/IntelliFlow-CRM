@@ -160,7 +160,7 @@ The **Legal/Scheduling** domain covers Case Management, Appointments, Documents,
     │  - Party management     │  │  - Conflict display     │  │  - Version history      │
     │  - Deadline tracking    │  │  - Calendar integration │  │  - ACL management       │
     │                         │  │                         │  │                         │
-    │  CREATE: PG-138         │  │  CREATE: PG-139         │  │  CREATE: PG-140         │
+    │  DONE: PG-138 ✅        │  │  DONE: PG-139 ✅        │  │  CREATE: PG-140         │
     └─────────────────────────┘  └─────────────────────────┘  └─────────────────────────┘
 
                               ┌─────────────────────────────┐
@@ -261,8 +261,8 @@ The **Legal/Scheduling** domain covers Case Management, Appointments, Documents,
 
 | Feature | Backend Complete? | Frontend Task? | Action Required |
 |---------|-------------------|----------------|-----------------|
-| Case Management | YES | NO | Create PG-138 |
-| Appointments | YES | NO | Create PG-139 |
+| Case Management | YES | YES ✅ | PG-138 COMPLETED |
+| Appointments | YES | YES ✅ | PG-139 COMPLETED |
 | Documents | YES | NO | Create PG-140 |
 | Timeline | YES | YES (IFC-147)* | None |
 | Calendar Sync | YES | N/A (settings) | None |

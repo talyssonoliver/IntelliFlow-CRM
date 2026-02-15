@@ -59,6 +59,7 @@ export async function POST(request: Request) {
         spec: 'Backlog',
         plan: 'Spec Complete',
         hydrate: 'Backlog',
+        exec: 'Plan Complete',
       };
       const newStatus = revertStatusMap[sessionInfo.session] || 'Backlog';
       await updateTaskStatus(sessionInfo.taskId, newStatus as 'Backlog' | 'Spec Complete');

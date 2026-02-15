@@ -1,6 +1,6 @@
 import { OpenAIEmbeddings } from '@langchain/openai';
 import { z } from 'zod';
-import { aiConfig } from '../config/ai.config';
+import { getOpenAIClientSettings } from '../utils/openai-client';
 import pino from 'pino';
 
 const logger = pino({
@@ -55,10 +55,12 @@ export class EmbeddingChain {
     // Using text-embedding-3-small for cost efficiency (OpenAI recommended for pgvector)
     this.modelName = process.env.EMBEDDING_MODEL || 'text-embedding-3-small';
     this.dimensions = parseInt(process.env.EMBEDDING_DIMENSIONS || '1536', 10);
+    const openAIClientSettings = getOpenAIClientSettings();
 
     this.embeddings = new OpenAIEmbeddings({
       modelName: this.modelName,
-      openAIApiKey: aiConfig.openai.apiKey,
+      apiKey: openAIClientSettings.apiKey,
+      configuration: openAIClientSettings.configuration,
       stripNewLines: true,
       timeout: 30000,
     });

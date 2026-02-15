@@ -1,9 +1,11 @@
 import { ChatOpenAI } from '@langchain/openai';
+import { ChatOllama } from '@langchain/ollama';
 import { BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
 import { costTracker } from '../utils/cost-tracker';
 import { countMessagesTokens, countTokens } from '../utils/token-counter';
+import { getOpenAIClientSettings } from '../utils/openai-client';
 import pino from 'pino';
 
 /**
@@ -92,12 +94,14 @@ export abstract class BaseAgent<TInput = unknown, TOutput = unknown> {
 
     // Initialize the appropriate model
     if (aiConfig.provider === 'openai') {
+      const openAIClientSettings = getOpenAIClientSettings();
       this.model = new ChatOpenAI({
         modelName: aiConfig.openai.model,
         temperature: aiConfig.openai.temperature,
         maxTokens: aiConfig.openai.maxTokens,
         timeout: aiConfig.openai.timeout,
-        openAIApiKey: aiConfig.openai.apiKey,
+        apiKey: openAIClientSettings.apiKey,
+        configuration: openAIClientSettings.configuration,
       });
     } else if (aiConfig.provider === 'mock') {
       // Mock provider for testing - no real API calls
@@ -105,10 +109,11 @@ export abstract class BaseAgent<TInput = unknown, TOutput = unknown> {
         invoke: async () => ({ content: 'Mock response' }),
       };
     } else if (aiConfig.provider === 'ollama') {
-      // Ollama support - would use dynamic import at runtime:
-      // const { ChatOllama } = await import('@langchain/community/chat_models/ollama');
-      // this.model = new ChatOllama({ baseUrl, model, temperature });
-      throw new Error('Ollama support requires dynamic import - not yet implemented');
+      this.model = new ChatOllama({
+        baseUrl: aiConfig.ollama.baseUrl,
+        model: aiConfig.ollama.model,
+        temperature: aiConfig.ollama.temperature,
+      });
     } else {
       throw new Error(`Unknown AI provider: ${aiConfig.provider}`);
     }

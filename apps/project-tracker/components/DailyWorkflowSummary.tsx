@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { Icon } from '@/lib/icons';
 import { Task, SprintNumber } from '@/lib/types';
 import {
@@ -15,6 +16,7 @@ import {
   type SessionStatus,
   type ScheduleTaskInfo,
   type PhaseProgress,
+  type ParallelGroup,
 } from '@/lib/priority-scorer';
 
 interface DailyWorkflowSummaryProps {
@@ -90,6 +92,7 @@ export function DailyWorkflowSummary({
   sprint,
   onTaskClick,
 }: DailyWorkflowSummaryProps) {
+  const router = useRouter();
   const [workflowData, setWorkflowData] = useState<WorkflowData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -105,7 +108,6 @@ export function DailyWorkflowSummary({
     sessionId: string | null;
     taskId: string;
     sessionType: SessionType;
-    isSwarm: boolean;
   } | null>(null);
 
   // Session polling for real-time output
@@ -114,7 +116,7 @@ export function DailyWorkflowSummary({
     taskId: activeSession?.taskId ?? '',
     sessionType: activeSession?.sessionType ?? 'spec',
     enabled: showSessionModal && activeSession !== null,
-    pollInterval: activeSession?.isSwarm ? 5000 : 3000, // Swarm polls less frequently
+    pollInterval: 3000,
   });
 
   // Fetch workflow status for all tasks
@@ -174,56 +176,70 @@ export function DailyWorkflowSummary({
       // Process tasks into workflow categories
       const sessionStatusMap = new Map<string, SessionStatus>();
 
-      const workflowTasks: TaskWorkflowStatus[] = await Promise.all(
-        tasks.map(async (task) => {
-          // Check if task has spec/plan/context
-          const planStatusRes = await fetch(`/api/tasks/plan?taskId=${task.id}`);
-          const planStatus = await planStatusRes.json();
+      // Single batch fetch for all task spec/plan/context status (eliminates N+1 calls)
+      const taskIds = tasks.map((t) => t.id).join(',');
+      const batchRes = await fetch(`/api/tasks/plan-batch?taskIds=${taskIds}`);
+      const batchData = await batchRes.json();
+      const batchTasks: Record<string, {
+        sprintNumber: number;
+        hasSpec: boolean;
+        hasPlan: boolean;
+        hasContext: boolean;
+        isPlanned: boolean;
+        specPath: string | null;
+        planPath: string | null;
+      }> = batchData.tasks || {};
 
-          // Collect session status for priority scoring
-          sessionStatusMap.set(task.id, {
-            hasSpec: planStatus.hasSpec || false,
-            hasPlan: planStatus.hasPlan || false,
-          });
+      const workflowTasks: TaskWorkflowStatus[] = tasks.map((task) => {
+        const planStatus = batchTasks[task.id] || {
+          hasSpec: false,
+          hasPlan: false,
+          hasContext: false,
+        };
 
-          const dependenciesMet = graphData.ready_to_start_details?.some(
-            (r: { taskId: string }) => r.taskId === task.id
-          ) || false;
+        // Collect session status for priority scoring
+        sessionStatusMap.set(task.id, {
+          hasSpec: planStatus.hasSpec || false,
+          hasPlan: planStatus.hasPlan || false,
+        });
 
-          const hasContext = planStatus.hasContext || false;
-          const hasSpec = planStatus.hasSpec || false;
-          const hasPlan = planStatus.hasPlan || false;
-          const hasDelivery = task.status === 'Completed';
+        const dependenciesMet = graphData.ready_to_start_details?.some(
+          (r: { taskId: string }) => r.taskId === task.id
+        ) || false;
 
-          // Determine current session
-          let currentSession: TaskWorkflowStatus['currentSession'] = 'ready';
-          if (hasDelivery) {
-            currentSession = 'completed';
-          } else if (hasSpec && hasPlan) {
-            currentSession = 'exec';
-          } else if (hasSpec) {
-            currentSession = 'plan';
-          } else if (dependenciesMet) {
-            currentSession = 'spec';
-          }
+        const hasContext = planStatus.hasContext || false;
+        const hasSpec = planStatus.hasSpec || false;
+        const hasPlan = planStatus.hasPlan || false;
+        const hasDelivery = task.status === 'Completed';
 
-          return {
-            taskId: task.id,
-            description: task.description,
-            section: task.section,
-            owner: task.owner,
-            sprint: typeof task.sprint === 'number' ? task.sprint : 0,
-            status: task.status,
-            hasContext,
-            hasSpec,
-            hasPlan,
-            hasDelivery,
-            currentSession,
-            dependenciesMet,
-            dependencies: task.dependencies || [],
-          };
-        })
-      );
+        // Determine current session
+        let currentSession: TaskWorkflowStatus['currentSession'] = 'ready';
+        if (hasDelivery) {
+          currentSession = 'completed';
+        } else if (hasSpec && hasPlan) {
+          currentSession = 'exec';
+        } else if (hasSpec) {
+          currentSession = 'plan';
+        } else if (dependenciesMet) {
+          currentSession = 'spec';
+        }
+
+        return {
+          taskId: task.id,
+          description: task.description,
+          section: task.section,
+          owner: task.owner,
+          sprint: typeof task.sprint === 'number' ? task.sprint : 0,
+          status: task.status,
+          hasContext,
+          hasSpec,
+          hasPlan,
+          hasDelivery,
+          currentSession,
+          dependenciesMet,
+          dependencies: task.dependencies || [],
+        };
+      });
 
       // Filter by sprint if needed
       const filteredTasks = sprint === 'all'
@@ -260,6 +276,24 @@ export function DailyWorkflowSummary({
       }).filter(Boolean);
 
       const currentSprintNum = typeof sprint === 'number' ? sprint : undefined;
+      // parallel_execution_groups is Record<"sprint-N", Record<"group-N", string[]>>
+      // Flatten into ParallelGroup[] for the scorer
+      const parallelGroups: ParallelGroup[] = [];
+      const rawGroups = graphData.parallel_execution_groups;
+      if (rawGroups && typeof rawGroups === 'object') {
+        for (const [sprintKey, groups] of Object.entries(rawGroups)) {
+          if (groups && typeof groups === 'object') {
+            for (const [groupKey, taskList] of Object.entries(groups as Record<string, string[]>)) {
+              if (Array.isArray(taskList) && taskList.length > 0) {
+                parallelGroups.push({
+                  group_id: `${sprintKey}/${groupKey}`,
+                  tasks: taskList,
+                });
+              }
+            }
+          }
+        }
+      }
       const scoredTasks = computePriorityScores(
         readyFullTasks,
         depGraphNodes,
@@ -268,6 +302,7 @@ export function DailyWorkflowSummary({
         scheduleTaskMap,
         phaseProgress,
         currentSprintNum,
+        parallelGroups,
       );
 
       setWorkflowData({
@@ -314,50 +349,48 @@ export function DailyWorkflowSummary({
     });
   }, []);
 
-  // Run SESSION 1: Spec - Uses full Claude Code CLI session
-  const handleRunSpec = useCallback(async (e: React.MouseEvent, taskId: string) => {
+  // Unified session launcher — starts session then navigates to /swarm
+  // so the user never loses context on page reload.
+  const handleRunSession = useCallback(async (
+    e: React.MouseEvent,
+    taskId: string,
+    sessionType: SessionType,
+  ) => {
     e.preventDefault();
     e.stopPropagation();
 
     setActionInProgress(taskId);
     setActionResult(null);
 
-    // OPTIMISTIC UPDATE: Show task as "Specifying" immediately
-    applyOptimisticUpdate(taskId, 'Specifying', 'spec');
+    const statusLabels: Record<SessionType, string> = {
+      spec: 'Specifying',
+      plan: 'Planning',
+      exec: 'In Progress',
+      hydrate: 'Hydrating',
+    };
+    applyOptimisticUpdate(taskId, statusLabels[sessionType], sessionType as OptimisticState['expectedSession']);
 
     try {
-      // Start Claude Code session for spec generation
       const res = await fetch('/api/claude-session/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taskId, session: 'spec' }),
+        body: JSON.stringify({ taskId, session: sessionType }),
       });
 
       const result = await res.json();
 
       if (res.ok && result.success) {
-        // Session started - open the modal to show real-time output
-        setActiveSession({
-          sessionId: result.sessionId,
-          taskId,
-          sessionType: 'spec',
-          isSwarm: false,
-        });
-        setShowSessionModal(true);
-        setActionResult({
-          success: true,
-          message: `SESSION 1 started: Claude Code session running for ${taskId}`,
-        });
+        // Navigate to /swarm — it auto-detects the running session via lock files.
+        // Pass taskId so the swarm page can auto-select the task.
+        router.push(`/swarm?task=${encodeURIComponent(taskId)}`);
       } else {
-        // ROLLBACK: Clear optimistic state on failure
         clearOptimisticUpdate(taskId);
         setActionResult({
           success: false,
-          message: result.error || result.message || 'Failed to start spec session',
+          message: result.error || result.message || `Failed to start ${sessionType} session`,
         });
       }
     } catch (err) {
-      // ROLLBACK: Clear optimistic state on error
       clearOptimisticUpdate(taskId);
       setActionResult({
         success: false,
@@ -366,136 +399,36 @@ export function DailyWorkflowSummary({
     } finally {
       setActionInProgress(null);
     }
-  }, [applyOptimisticUpdate, clearOptimisticUpdate]);
+  }, [applyOptimisticUpdate, clearOptimisticUpdate, router]);
 
-  // Run SESSION 2: Plan - Uses full Claude Code CLI session
-  const handleRunPlan = useCallback(async (e: React.MouseEvent, taskId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    setActionInProgress(taskId);
-    setActionResult(null);
-
-    // OPTIMISTIC UPDATE: Show task as "Planning" immediately
-    applyOptimisticUpdate(taskId, 'Planning', 'plan');
-
-    try {
-      // Start Claude Code session for plan generation
-      const res = await fetch('/api/claude-session/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taskId, session: 'plan' }),
-      });
-
-      const result = await res.json();
-
-      if (res.ok && result.success) {
-        // Session started - open the modal to show real-time output
-        setActiveSession({
-          sessionId: result.sessionId,
-          taskId,
-          sessionType: 'plan',
-          isSwarm: false,
-        });
-        setShowSessionModal(true);
-        setActionResult({
-          success: true,
-          message: `SESSION 2 started: Claude Code session running for ${taskId}`,
-        });
-      } else {
-        // ROLLBACK: Clear optimistic state on failure
-        clearOptimisticUpdate(taskId);
-        setActionResult({
-          success: false,
-          message: result.error || result.message || 'Failed to start plan session',
-        });
-      }
-    } catch (err) {
-      // ROLLBACK: Clear optimistic state on error
-      clearOptimisticUpdate(taskId);
-      setActionResult({
-        success: false,
-        message: err instanceof Error ? err.message : 'Network error',
-      });
-    } finally {
-      setActionInProgress(null);
-    }
-  }, [applyOptimisticUpdate, clearOptimisticUpdate]);
-
-  // Run SESSION 3: Exec - Uses orchestrator.sh run (full pipeline with review)
-  const handleRunExec = useCallback(async (e: React.MouseEvent, taskId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    setActionInProgress(taskId);
-    setActionResult(null);
-
-    // OPTIMISTIC UPDATE: Show task as "Executing" immediately
-    applyOptimisticUpdate(taskId, 'In Progress', 'exec');
-
-    try {
-      // Run task via orchestrator.sh run (full pipeline with qualitative review)
-      const execRes = await fetch(`/api/swarm/run-task/${taskId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      const execResult = await execRes.json();
-
-      if (execRes.ok && execResult.success) {
-        // Task execution started - open the modal to show real-time output
-        setActiveSession({
-          sessionId: null, // Swarm uses taskId for identification
-          taskId,
-          sessionType: 'exec',
-          isSwarm: true,
-        });
-        setShowSessionModal(true);
-        setActionResult({
-          success: true,
-          message: `SESSION 3 started: ${execResult.command}`,
-        });
-      } else {
-        // ROLLBACK: Clear optimistic state on failure
-        clearOptimisticUpdate(taskId);
-        setActionResult({
-          success: false,
-          message: execResult.error || execResult.message || 'Failed to start exec session',
-        });
-      }
-    } catch (err) {
-      // ROLLBACK: Clear optimistic state on error
-      clearOptimisticUpdate(taskId);
-      setActionResult({
-        success: false,
-        message: err instanceof Error ? err.message : 'Network error',
-      });
-    } finally {
-      setActionInProgress(null);
-    }
-  }, [applyOptimisticUpdate, clearOptimisticUpdate]);
+  // Convenience wrappers that match the existing callback signatures
+  const handleRunSpec = useCallback(
+    (e: React.MouseEvent, taskId: string) => handleRunSession(e, taskId, 'spec'),
+    [handleRunSession],
+  );
+  const handleRunPlan = useCallback(
+    (e: React.MouseEvent, taskId: string) => handleRunSession(e, taskId, 'plan'),
+    [handleRunSession],
+  );
+  const handleRunExec = useCallback(
+    (e: React.MouseEvent, taskId: string) => handleRunSession(e, taskId, 'exec'),
+    [handleRunSession],
+  );
 
   // Kill active session
   const handleKillSession = useCallback(async () => {
-    if (!activeSession) return;
+    if (!activeSession || !activeSession.sessionId) return;
 
     try {
-      if (activeSession.isSwarm) {
-        // Kill via swarm endpoint
-        await fetch(`/api/swarm/kill-task/${activeSession.taskId}`, {
-          method: 'POST',
-        });
-      } else if (activeSession.sessionId) {
-        // Kill via claude-session endpoint
-        await fetch('/api/claude-session/kill', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId: activeSession.sessionId,
-            revertStatus: true,
-          }),
-        });
-      }
+      // All session types (spec, plan, exec) use the same claude-session endpoint
+      await fetch('/api/claude-session/kill', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: activeSession.sessionId,
+          revertStatus: true,
+        }),
+      });
 
       // Clear optimistic update and close modal
       clearOptimisticUpdate(activeSession.taskId);
@@ -640,8 +573,10 @@ export function DailyWorkflowSummary({
     };
   }, [workflowData, optimisticUpdates]);
 
-  // Loading state
-  if (loading) {
+  // Loading state — only show skeleton on initial load (no data yet).
+  // If we already have data (background refresh from CSV SSE), keep showing
+  // the current view so that the session modal and optimistic state are preserved.
+  if (loading && !workflowData) {
     return (
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-4">
@@ -947,7 +882,7 @@ export function DailyWorkflowSummary({
           output={sessionPolling.output}
           status={sessionPolling.status}
           phase={sessionPolling.phase}
-          isSwarm={activeSession.isSwarm}
+          isSwarm={false}
           onKill={handleKillSession}
         />
       )}
@@ -993,6 +928,16 @@ const ACTION_LABELS: Record<string, { label: string; activeLabel: string; color:
 // PriorityBucket component — collapsible bucket of scored tasks
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Readiness dot colors & labels
+// ---------------------------------------------------------------------------
+
+const READINESS_CONFIG = {
+  exec: { color: 'bg-green-500', label: 'Exec ready' },
+  plan: { color: 'bg-cyan-500', label: 'Plan ready' },
+  spec: { color: 'bg-indigo-500', label: 'Needs spec' },
+} as const;
+
 function PriorityBucket({
   bucket,
   label,
@@ -1022,12 +967,81 @@ function PriorityBucket({
 }) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const colors = BUCKET_COLORS[colorScheme];
-  const MAX_VISIBLE = bucket === 'now' ? 10 : 5;
+  // NOW bucket: no cap (sprint grouping provides natural visual boundaries)
+  // NEXT/WAIT: keep flat capped list
+  const MAX_VISIBLE = bucket === 'now' ? Infinity : 5;
 
   const handleAction = (e: React.MouseEvent, taskId: string, action: 'spec' | 'plan' | 'exec') => {
     if (action === 'spec') onRunSpec(e, taskId);
     else if (action === 'plan') onRunPlan(e, taskId);
     else onRunExec(e, taskId);
+  };
+
+  // Group tasks by sprint for NOW bucket
+  const sprintGroups = useMemo(() => {
+    if (bucket !== 'now') return null;
+    const groups = new Map<number, ScoredTask[]>();
+    for (const task of scoredTasks) {
+      const sprint = task.sprintNumber;
+      if (!groups.has(sprint)) groups.set(sprint, []);
+      groups.get(sprint)!.push(task);
+    }
+    // Sort by sprint number ascending (Map maintains insertion order)
+    return new Map([...groups.entries()].sort(([a], [b]) => a - b));
+  }, [bucket, scoredTasks]);
+
+  // Render a single task row with readiness dot + parallel indicator
+  const renderTaskRow = (scored: ScoredTask) => {
+    const fullTask = allTasks.find((t) => t.id === scored.taskId);
+    const actionMeta = ACTION_LABELS[scored.recommendedAction];
+    const readiness = READINESS_CONFIG[scored.recommendedAction];
+
+    return (
+      <div
+        key={scored.taskId}
+        className="p-2 hover:bg-gray-50 cursor-pointer"
+        onClick={() => fullTask && onTaskClick?.(fullTask)}
+      >
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            {/* Readiness dot (NOW bucket only) */}
+            {bucket === 'now' && (
+              <span
+                className={`w-2 h-2 rounded-full shrink-0 ${readiness.color}`}
+                title={readiness.label}
+              />
+            )}
+            {/* Parallel indicator (NOW bucket only) */}
+            {bucket === 'now' && scored.parallelGroupId && (
+              <span
+                className="text-[10px] text-violet-600 shrink-0"
+                title={`Parallel group: ${scored.parallelGroupId}`}
+              >
+                &#x2261;
+              </span>
+            )}
+            {bucket === 'now' && !scored.parallelGroupId && (
+              <span className="text-[10px] text-gray-400 shrink-0">&darr;</span>
+            )}
+            <span className="font-mono text-xs font-medium text-blue-600 shrink-0">
+              {scored.taskId}
+            </span>
+            <span className="text-xs text-gray-500 truncate">{scored.reason}</span>
+          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAction(e, scored.taskId, scored.recommendedAction);
+            }}
+            disabled={actionInProgress === scored.taskId}
+            className={`px-2 py-1 text-xs text-white rounded shrink-0 disabled:bg-gray-300 ${actionMeta.color}`}
+          >
+            {actionInProgress === scored.taskId ? actionMeta.activeLabel : actionMeta.label}
+          </button>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -1050,48 +1064,66 @@ function PriorityBucket({
       </button>
 
       {expanded && (
-        <div className="divide-y divide-gray-100 max-h-64 overflow-y-auto">
+        <div className="max-h-96 overflow-y-auto">
           {scoredTasks.length === 0 ? (
             <div className="p-3 text-center text-gray-500 text-xs">
               {bucket === 'now' ? 'No urgent tasks' : 'No tasks in this bucket'}
             </div>
-          ) : (
-            scoredTasks.slice(0, MAX_VISIBLE).map((scored) => {
-              const fullTask = allTasks.find((t) => t.id === scored.taskId);
-              const actionMeta = ACTION_LABELS[scored.recommendedAction];
-
-              return (
-                <div
-                  key={scored.taskId}
-                  className="p-2 hover:bg-gray-50 cursor-pointer"
-                  onClick={() => fullTask && onTaskClick?.(fullTask)}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <span className="font-mono text-xs font-medium text-blue-600 shrink-0">
-                        {scored.taskId}
-                      </span>
-                      <span className="text-xs text-gray-500 truncate">{scored.reason}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAction(e, scored.taskId, scored.recommendedAction);
-                      }}
-                      disabled={actionInProgress === scored.taskId}
-                      className={`px-2 py-1 text-xs text-white rounded shrink-0 disabled:bg-gray-300 ${actionMeta.color}`}
-                    >
-                      {actionInProgress === scored.taskId ? actionMeta.activeLabel : actionMeta.label}
-                    </button>
-                  </div>
+          ) : bucket === 'now' && sprintGroups ? (
+            /* NOW bucket: grouped by sprint with sub-headers */
+            Array.from(sprintGroups.entries()).map(([sprintNum, sprintTasks]) => (
+              <div key={sprintNum}>
+                <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-100 sticky top-0 z-10">
+                  <span className="text-[11px] font-semibold text-gray-600 uppercase tracking-wide">
+                    Sprint {sprintNum}
+                  </span>
+                  <span className="text-[10px] text-gray-400 ml-2">{sprintTasks.length} tasks</span>
                 </div>
-              );
-            })
-          )}
-          {scoredTasks.length > MAX_VISIBLE && (
-            <div className="p-2 text-center text-xs text-gray-400">
-              +{scoredTasks.length - MAX_VISIBLE} more
+                <div className="divide-y divide-gray-100">
+                  {sprintTasks.map(renderTaskRow)}
+                </div>
+              </div>
+            ))
+          ) : (
+            /* NEXT/WAIT: flat list with WSJF ordering */
+            <div className="divide-y divide-gray-100">
+              {scoredTasks.slice(0, MAX_VISIBLE).map((scored) => {
+                const fullTask = allTasks.find((t) => t.id === scored.taskId);
+                const actionMeta = ACTION_LABELS[scored.recommendedAction];
+
+                return (
+                  <div
+                    key={scored.taskId}
+                    className="p-2 hover:bg-gray-50 cursor-pointer"
+                    onClick={() => fullTask && onTaskClick?.(fullTask)}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <span className="font-mono text-xs font-medium text-blue-600 shrink-0">
+                          {scored.taskId}
+                        </span>
+                        <span className="text-xs text-gray-500 truncate">{scored.reason}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAction(e, scored.taskId, scored.recommendedAction);
+                        }}
+                        disabled={actionInProgress === scored.taskId}
+                        className={`px-2 py-1 text-xs text-white rounded shrink-0 disabled:bg-gray-300 ${actionMeta.color}`}
+                      >
+                        {actionInProgress === scored.taskId ? actionMeta.activeLabel : actionMeta.label}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+              {scoredTasks.length > MAX_VISIBLE && (
+                <div className="p-2 text-center text-xs text-gray-400">
+                  +{scoredTasks.length - MAX_VISIBLE} more
+                </div>
+              )}
             </div>
           )}
         </div>

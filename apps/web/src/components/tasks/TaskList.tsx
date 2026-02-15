@@ -33,8 +33,10 @@ export interface TaskListProps {
   readonly onComplete: (id: string) => void;
   readonly onEdit: (task: TaskListItem) => void;
   readonly onDelete: (id: string) => void;
+  readonly onArchive: (id: string) => void;
   readonly onBulkComplete: (ids: string[]) => void;
   readonly onBulkDelete: (ids: string[]) => void;
+  readonly onBulkArchive: (ids: string[]) => void;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -42,6 +44,7 @@ const STATUS_STYLES: Record<string, string> = {
   IN_PROGRESS: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
   COMPLETED: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
   CANCELLED: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300',
+  ARCHIVED: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400',
 };
 
 const PRIORITY_STYLES: Record<string, { color: string; icon: string }> = {
@@ -86,6 +89,7 @@ function createColumns(handlers: {
   onComplete: (id: string) => void;
   onEdit: (task: TaskListItem) => void;
   onDelete: (id: string) => void;
+  onArchive: (id: string) => void;
 }): ColumnDef<TaskListItem>[] {
   return [
     {
@@ -187,16 +191,24 @@ function createColumns(handlers: {
         const task = row.original;
         return (
           <TableRowActions
-            quickActions={[
-              {
-                icon: 'check_circle',
-                label: 'Complete',
-                onClick: () => handlers.onComplete(task.id),
-              },
-            ]}
+            quickActions={
+              task.status === 'COMPLETED' || task.status === 'CANCELLED'
+                ? []
+                : [
+                    {
+                      icon: 'check_circle',
+                      label: 'Complete',
+                      onClick: () => handlers.onComplete(task.id),
+                    },
+                  ]
+            }
             dropdownActions={[
               { icon: 'edit', label: 'Edit', onClick: () => handlers.onEdit(task) },
-              { icon: 'delete', label: 'Delete', onClick: () => handlers.onDelete(task.id), variant: 'destructive' },
+              ...(task.status === 'COMPLETED' || task.status === 'CANCELLED'
+                ? [{ icon: 'archive', label: 'Archive', onClick: () => handlers.onArchive(task.id) }]
+                : task.status !== 'ARCHIVED'
+                  ? [{ icon: 'delete', label: 'Delete', onClick: () => handlers.onDelete(task.id), variant: 'destructive' as const }]
+                  : []),
             ]}
           />
         );
@@ -212,10 +224,12 @@ export function TaskList({
   onComplete,
   onEdit,
   onDelete,
+  onArchive,
   onBulkComplete,
   onBulkDelete,
+  onBulkArchive,
 }: TaskListProps) {
-  const columns = useMemo(() => createColumns({ onComplete, onEdit, onDelete }), [onComplete, onEdit, onDelete]);
+  const columns = useMemo(() => createColumns({ onComplete, onEdit, onDelete, onArchive }), [onComplete, onEdit, onDelete, onArchive]);
 
   const bulkActions: BulkAction<TaskListItem>[] = useMemo(() => [
     {
@@ -224,12 +238,17 @@ export function TaskList({
       onExecute: (selected) => onBulkComplete(selected.map((t) => t.id)),
     },
     {
+      label: 'Archive',
+      icon: 'archive',
+      onExecute: (selected) => onBulkArchive(selected.filter((t) => t.status === 'COMPLETED' || t.status === 'CANCELLED').map((t) => t.id)),
+    },
+    {
       label: 'Delete',
       icon: 'delete',
       variant: 'destructive' as const,
-      onExecute: (selected) => onBulkDelete(selected.map((t) => t.id)),
+      onExecute: (selected) => onBulkDelete(selected.filter((t) => t.status !== 'COMPLETED' && t.status !== 'CANCELLED' && t.status !== 'ARCHIVED').map((t) => t.id)),
     },
-  ], [onBulkComplete, onBulkDelete]);
+  ], [onBulkComplete, onBulkDelete, onBulkArchive]);
 
   if (isLoading) {
     return (

@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { TicketDetail } from '../TicketDetail';
 import type { TicketDetailData } from '../types';
 
@@ -22,6 +22,21 @@ vi.mock('@/components/shared/entity-action-sheet', () => ({
 vi.mock('@/components/shared/more-actions-button', () => ({
   MoreActionsButton: ({ onClick }: any) => (
     <button data-testid="more-actions" onClick={onClick}>More Actions</button>
+  ),
+}));
+
+vi.mock('@/components/shared/app-avatar', () => ({
+  AppAvatar: () => <div data-testid="app-avatar" />,
+}));
+
+vi.mock('../TicketAssignSidebar', () => ({
+  TicketAssignSidebar: ({ open, onAssign, currentUserId }: any) => (
+    open ? (
+      <div data-testid="assign-sidebar">
+        <button onClick={() => onAssign(currentUserId)}>Assign to me</button>
+        <button onClick={() => onAssign('00000000-0000-4000-8000-000000000108')}>Assign teammate</button>
+      </div>
+    ) : null
   ),
 }));
 
@@ -216,6 +231,32 @@ describe('TicketDetail', () => {
     expect(screen.getAllByText('First Response').length).toBeGreaterThanOrEqual(1);
   });
 
+  it('shows Pending instead of N/A when first response is not recorded yet', () => {
+    const pendingResponseTicket = {
+      ...mockTicket,
+      firstResponseAt: null,
+      sla: {
+        ...mockTicket.sla,
+        firstResponse: {
+          ...mockTicket.sla.firstResponse,
+          actual: null,
+          met: false,
+        },
+      },
+    };
+
+    render(
+      <TicketDetail
+        ticket={pendingResponseTicket}
+        isLoading={false}
+        {...handlers}
+      />
+    );
+
+    expect(screen.getAllByText('Pending').length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText('N/A')).not.toBeInTheDocument();
+  });
+
   it('shows EscalationAlert for BREACHED tickets', () => {
     render(
       <TicketDetail
@@ -246,6 +287,75 @@ describe('TicketDetail', () => {
     );
 
     expect(screen.queryByTestId('escalation-alert')).not.toBeInTheDocument();
+  });
+
+  it('escalates ticket by setting priority to CRITICAL', () => {
+    render(
+      <TicketDetail
+        ticket={mockTicket}
+        isLoading={false}
+        {...handlers}
+      />
+    );
+
+    const escalationAlert = screen.getByTestId('escalation-alert');
+    fireEvent.click(within(escalationAlert).getByRole('button', { name: /escalate/i }));
+
+    expect(handlers.onPriorityChange).toHaveBeenCalledWith('CRITICAL');
+  });
+
+  it('uses current user id for reassign action', () => {
+    const currentUserId = '00000000-0000-4000-8000-000000000107';
+
+    render(
+      <TicketDetail
+        ticket={mockTicket}
+        isLoading={false}
+        currentUserId={currentUserId}
+        {...handlers}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /reassign/i }));
+    expect(screen.getByTestId('assign-sidebar')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /assign to me/i }));
+    expect(handlers.onAssign).toHaveBeenCalledWith(currentUserId);
+  });
+
+  it('opens the same assignment sidebar from quick action assign', () => {
+    render(
+      <TicketDetail
+        ticket={mockTicket}
+        isLoading={false}
+        currentUserId="00000000-0000-4000-8000-000000000107"
+        {...handlers}
+      />
+    );
+
+    const quickAssignButton = screen.getAllByRole('button').find((button) => {
+      const label = button.textContent?.toLowerCase() ?? '';
+      return label.includes('assign') && !label.includes('reassign');
+    });
+
+    expect(quickAssignButton).toBeTruthy();
+    fireEvent.click(quickAssignButton!);
+    expect(screen.getByTestId('assign-sidebar')).toBeInTheDocument();
+  });
+
+  it('assigns to a teammate from the sidebar', () => {
+    render(
+      <TicketDetail
+        ticket={mockTicket}
+        isLoading={false}
+        currentUserId="00000000-0000-4000-8000-000000000107"
+        {...handlers}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /reassign/i }));
+    fireEvent.click(screen.getByRole('button', { name: /assign teammate/i }));
+
+    expect(handlers.onAssign).toHaveBeenCalledWith('00000000-0000-4000-8000-000000000108');
   });
 
   it('renders all 5 tabs', () => {

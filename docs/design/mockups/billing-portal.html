@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Billing Portal - IntelliFlow CRM</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "primary": "#137fec",
+                "background-light": "#f6f7f8",
+                "background-dark": "#101922",
+              },
+              fontFamily: {
+                "display": ["Inter"]
+              },
+              borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+          },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100">
+<div class="flex h-screen overflow-hidden">
+<!-- Sidebar -->
+<aside class="w-64 flex-shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark flex flex-col">
+<div class="p-6 flex items-center gap-3">
+<div class="bg-primary p-1.5 rounded-lg text-white">
+<span class="material-symbols-outlined">account_tree</span>
+</div>
+<h2 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">IntelliFlow</h2>
+</div>
+<nav class="flex-1 px-4 space-y-1 overflow-y-auto">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="text-sm font-medium">Leads</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">contact_page</span>
+<span class="text-sm font-medium">Contacts</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">handshake</span>
+<span class="text-sm font-medium">Deals</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">confirmation_number</span>
+<span class="text-sm font-medium">Tickets</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">bar_chart</span>
+<span class="text-sm font-medium">Reports</span>
+</a>
+<div class="pt-4 mt-4 border-t border-slate-200 dark:border-slate-800">
+<a class="flex items-center gap-3 px-3 py-2 text-primary bg-primary/10 rounded-lg font-semibold" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="text-sm">Billing Portal</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors mt-1" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</div>
+</nav>
+<div class="p-4 border-t border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3 px-2 py-2">
+<img alt="Alex Smith Profile" class="w-8 h-8 rounded-full" data-alt="User profile avatar icon showing initials" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAw7VSvwplKNNLCzv1csZLS2WvKXYwDOe7BsJXRyr2A954nuI9XeWzzUb-HFAXkYqokiVQIVUpm9uqJ15PEjLDkN_V0Lbwae5NF8bStWFOoS-pPmuCClX99pEjHQQdxYVqzW8dsGpVn3TXTuVt_bHkoSH2OJ-rG1_JnYKNG57AV58DBy2sCmgATJ0G2aQT90-VA9IbQXOclkcsmXFiHeVOT5U3QQFPHi7DX1o1TcwA_DXTaKS_1ZidxbacWaqmMhlmvhCKuun2tRIGG"/>
+<div class="flex-1 overflow-hidden">
+<p class="text-xs font-semibold text-slate-900 dark:text-white truncate">Alex Smith</p>
+<p class="text-[10px] text-slate-500 truncate">Admin Account</p>
+</div>
+<span class="material-symbols-outlined text-slate-400 text-sm cursor-pointer hover:text-slate-600">logout</span>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto bg-slate-50 dark:bg-background-dark/50">
+<!-- Top Nav -->
+<header class="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark flex items-center justify-between px-8 sticky top-0 z-10">
+<div class="flex items-center gap-2 text-sm text-slate-500 font-medium">
+<span>Settings</span>
+<span class="material-symbols-outlined text-base">chevron_right</span>
+<span class="text-slate-900 dark:text-white">Billing Portal</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined text-slate-400 hover:text-primary cursor-pointer">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-background-dark"></span>
+</div>
+<span class="material-symbols-outlined text-slate-400 hover:text-primary cursor-pointer">help</span>
+</div>
+</header>
+<div class="max-w-5xl mx-auto p-8 space-y-8">
+<!-- Page Title Area -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Billing &amp; Subscription</h1>
+<p class="text-slate-500 mt-1">Manage your enterprise plan, payment methods, and invoice history.</p>
+</div>
+</div>
+<!-- Grid Layout for Overview and Management -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Subscription Overview -->
+<div class="lg:col-span-2 space-y-6">
+<section class="bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
+<div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+<h2 class="text-lg font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">auto_awesome</span>
+                                    Subscription Overview
+                                </h2>
+<span class="px-3 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-xs font-bold rounded-full uppercase tracking-wider">Active</span>
+</div>
+<div class="p-6 flex flex-col md:flex-row gap-8">
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-500">Current Plan</p>
+<h3 class="text-2xl font-bold text-slate-900 dark:text-white mt-1">Professional Plan</h3>
+<p class="text-slate-500 text-sm mt-2">Perfect for growing teams of up to 25 members.</p>
+</div>
+<div class="flex-1 md:border-l border-slate-100 dark:border-slate-800 md:pl-8">
+<p class="text-sm font-medium text-slate-500">Next Billing Date</p>
+<h3 class="text-2xl font-bold text-slate-900 dark:text-white mt-1">October 12, 2023</h3>
+<p class="text-slate-500 text-sm mt-2">Amount due: <span class="font-bold text-slate-900 dark:text-white">$99.00 USD</span></p>
+</div>
+</div>
+<div class="px-6 py-4 bg-slate-50 dark:bg-background-dark/80 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-3">
+<button class="bg-primary hover:bg-primary/90 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-all shadow-md flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">upgrade</span>
+                                    Upgrade Plan
+                                </button>
+<button class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-red-200 hover:bg-red-50 dark:hover:bg-red-900/10 text-slate-600 dark:text-slate-300 hover:text-red-600 text-sm font-semibold px-5 py-2 rounded-lg transition-all">
+                                    Cancel Subscription
+                                </button>
+</div>
+</section>
+<!-- Billing History -->
+<section class="bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm">
+<div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+<h2 class="text-lg font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">history</span>
+                                    Billing History
+                                </h2>
+<button class="text-sm text-primary font-medium hover:underline flex items-center gap-1">
+                                    View All <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="text-xs uppercase tracking-wider text-slate-400 bg-slate-50/50 dark:bg-slate-800/20">
+<th class="px-6 py-4 font-semibold">Invoice Date</th>
+<th class="px-6 py-4 font-semibold">Amount</th>
+<th class="px-6 py-4 font-semibold">Status</th>
+<th class="px-6 py-4 font-semibold text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+<tr>
+<td class="px-6 py-4 text-sm text-slate-900 dark:text-slate-200">Sep 12, 2023</td>
+<td class="px-6 py-4 text-sm font-semibold text-slate-900 dark:text-slate-200">$99.00</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1 text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 px-2 py-0.5 rounded">
+<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> Paid
+                                                </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">download</span>
+</button>
+</td>
+</tr>
+<tr>
+<td class="px-6 py-4 text-sm text-slate-900 dark:text-slate-200">Aug 12, 2023</td>
+<td class="px-6 py-4 text-sm font-semibold text-slate-900 dark:text-slate-200">$99.00</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1 text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 px-2 py-0.5 rounded">
+<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> Paid
+                                                </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">download</span>
+</button>
+</td>
+</tr>
+<tr>
+<td class="px-6 py-4 text-sm text-slate-900 dark:text-slate-200">Jul 12, 2023</td>
+<td class="px-6 py-4 text-sm font-semibold text-slate-900 dark:text-slate-200">$99.00</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1 text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-2 py-0.5 rounded">
+<span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span> Pending
+                                                </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">download</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+<!-- Side Controls: Payment Methods -->
+<div class="space-y-6">
+<section class="bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
+<div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+<h2 class="text-lg font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">credit_card</span>
+                                    Payment Methods
+                                </h2>
+</div>
+<div class="p-6 space-y-4">
+<!-- Card Display -->
+<div class="relative p-4 border border-primary/30 bg-primary/5 rounded-xl group transition-all">
+<div class="flex items-start justify-between">
+<div class="space-y-3">
+<div class="h-8 w-12 bg-white dark:bg-slate-700 rounded flex items-center justify-center border border-slate-200 dark:border-slate-600 shadow-sm">
+<span class="text-[10px] font-bold text-blue-800">VISA</span>
+</div>
+<div>
+<p class="text-sm font-semibold text-slate-900 dark:text-white">•••• •••• •••• 4242</p>
+<p class="text-xs text-slate-500 mt-0.5">Expires 12/25</p>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<button class="p-1.5 hover:bg-white dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-primary transition-all">
+<span class="material-symbols-outlined text-lg">edit</span>
+</button>
+</div>
+</div>
+<div class="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 bg-primary text-white text-[10px] font-bold rounded-full">
+                                        DEFAULT
+                                    </div>
+</div>
+<button class="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl text-slate-500 hover:text-primary hover:border-primary/50 hover:bg-primary/5 transition-all group font-medium text-sm">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">add_circle</span>
+                                    Add New Payment Method
+                                </button>
+</div>
+</section>
+<!-- Billing Information -->
+<section class="bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden p-6">
+<h3 class="font-semibold text-slate-900 dark:text-white mb-4">Billing Information</h3>
+<div class="space-y-4">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-slate-400 mt-0.5">business</span>
+<div>
+<p class="text-xs font-semibold text-slate-400 uppercase tracking-tight">Organization</p>
+<p class="text-sm text-slate-700 dark:text-slate-300">IntelliFlow Systems LLC</p>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-slate-400 mt-0.5">mail</span>
+<div>
+<p class="text-xs font-semibold text-slate-400 uppercase tracking-tight">Email</p>
+<p class="text-sm text-slate-700 dark:text-slate-300">billing@intelliflow.com</p>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-slate-400 mt-0.5">location_on</span>
+<div>
+<p class="text-xs font-semibold text-slate-400 uppercase tracking-tight">Address</p>
+<p class="text-sm text-slate-700 dark:text-slate-300">123 SaaS Street, Suite 400<br/>San Francisco, CA 94103</p>
+</div>
+</div>
+<button class="w-full mt-2 text-primary font-semibold text-sm hover:underline py-2">Update Info</button>
+</div>
+</section>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

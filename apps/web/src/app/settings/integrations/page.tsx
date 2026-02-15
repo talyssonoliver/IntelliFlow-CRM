@@ -14,7 +14,7 @@ const integrations = [
 
 export default function IntegrationsPage() {
   return (
-    <div className="p-8">
+    <div className="flex flex-col gap-6">
       <div className="max-w-4xl">
         {/* Header */}
         <div className="mb-8">

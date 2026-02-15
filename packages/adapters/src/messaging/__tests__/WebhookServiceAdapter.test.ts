@@ -214,6 +214,7 @@ describe('WebhookServiceAdapter', () => {
 
   describe('unregisterSource', () => {
     it('should delegate to framework and return result', () => {
+      mockFramework.unregisterSource.mockReturnValue(true);
       const result = adapter.unregisterSource('old-source');
       expect(mockFramework.unregisterSource).toHaveBeenCalledWith('old-source');
       expect(result).toBe(true);

@@ -5,7 +5,7 @@ import { Card } from '@intelliflow/ui';
 
 export default function AccountPage() {
   return (
-    <div className="p-8">
+    <div className="flex flex-col gap-6">
       <div className="max-w-2xl">
         {/* Header */}
         <div className="mb-8">

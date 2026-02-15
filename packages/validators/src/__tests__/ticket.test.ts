@@ -30,6 +30,7 @@ import {
   statusTransitionSchema,
   slaPauseSchema,
   slaResumeSchema,
+  statsInputSchema,
   type TicketStatus,
   type TicketPriority,
   type SLAStatus,
@@ -371,6 +372,117 @@ describe('Ticket Validators', () => {
       const input = { assignedToId: 'invalid' };
       const result = ticketQuerySchema.safeParse(input);
       expect(result.success).toBe(false);
+    });
+
+    // IFC-205: Search parameter tests
+    it('should accept search string parameter', () => {
+      const result = ticketQuerySchema.safeParse({ search: 'urgent issue' });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.search).toBe('urgent issue');
+      }
+    });
+
+    it('should accept search combined with status and priority filters', () => {
+      const result = ticketQuerySchema.safeParse({
+        search: 'login',
+        status: 'OPEN' as const,
+        priority: 'HIGH' as const,
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('should reject non-string search value', () => {
+      const result = ticketQuerySchema.safeParse({ search: 123 });
+      expect(result.success).toBe(false);
+    });
+
+    it('should enforce max 200 character limit on search', () => {
+      const result = ticketQuerySchema.safeParse({ search: 'x'.repeat(201) });
+      expect(result.success).toBe(false);
+    });
+
+    it('should accept search at exactly 200 characters', () => {
+      const result = ticketQuerySchema.safeParse({ search: 'x'.repeat(200) });
+      expect(result.success).toBe(true);
+    });
+
+    // IFC-206: sortBy enum override tests
+    it('should accept sortBy createdAt', () => {
+      const result = ticketQuerySchema.safeParse({ sortBy: 'createdAt' });
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept sortBy updatedAt', () => {
+      const result = ticketQuerySchema.safeParse({ sortBy: 'updatedAt' });
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept sortBy priority', () => {
+      const result = ticketQuerySchema.safeParse({ sortBy: 'priority' });
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept sortBy slaResolutionDue', () => {
+      const result = ticketQuerySchema.safeParse({ sortBy: 'slaResolutionDue' });
+      expect(result.success).toBe(true);
+    });
+
+    it('should reject disallowed sortBy value subject', () => {
+      const result = ticketQuerySchema.safeParse({ sortBy: 'subject' });
+      expect(result.success).toBe(false);
+    });
+
+    it('should default sortBy to createdAt when omitted', () => {
+      const result = ticketQuerySchema.safeParse({});
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.sortBy).toBe('createdAt');
+      }
+    });
+  });
+
+  // IFC-206: statsInputSchema tests
+  describe('statsInputSchema', () => {
+    it('should accept valid timeWindow value 24h', () => {
+      const result = statsInputSchema.safeParse({ timeWindow: '24h' });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.timeWindow).toBe('24h');
+      }
+    });
+
+    it('should accept valid timeWindow value 7d', () => {
+      const result = statsInputSchema.safeParse({ timeWindow: '7d' });
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept valid timeWindow value 30d', () => {
+      const result = statsInputSchema.safeParse({ timeWindow: '30d' });
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept valid timeWindow value all', () => {
+      const result = statsInputSchema.safeParse({ timeWindow: 'all' });
+      expect(result.success).toBe(true);
+    });
+
+    it('should reject invalid timeWindow value 1y', () => {
+      const result = statsInputSchema.safeParse({ timeWindow: '1y' });
+      expect(result.success).toBe(false);
+    });
+
+    it('should default timeWindow to all when omitted', () => {
+      const result = statsInputSchema.safeParse({});
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.timeWindow).toBe('all');
+      }
+    });
+
+    it('should accept empty object with all defaults', () => {
+      const result = statsInputSchema.safeParse({});
+      expect(result.success).toBe(true);
     });
   });
 

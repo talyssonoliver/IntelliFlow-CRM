@@ -53,6 +53,7 @@ interface AuthUser {
   name?: string;
   email: string;
   role?: string;
+  avatar?: string | null;
 }
 
 /**
@@ -65,7 +66,7 @@ function resolveUser(authUser: AuthUser | null, propUser?: UserData): UserData {
       name: authUser.name || authUser.email.split('@')[0],
       email: authUser.email,
       role: authUser.role,
-      avatar: undefined,
+      avatar: authUser.avatar || undefined,
     };
   }
   return propUser || { name: 'Guest', email: '', role: '' };
@@ -168,7 +169,17 @@ describe('UserMenu logic (supplementary2)', () => {
       expect(result.email).toBe('');
     });
 
-    it('authUser always has avatar as undefined', () => {
+    it('authUser uses avatar when present', () => {
+      const authUser: AuthUser = {
+        name: 'Test',
+        email: 'test@x.com',
+        avatar: 'https://lh3.googleusercontent.com/a/test',
+      };
+      const result = resolveUser(authUser);
+      expect(result.avatar).toBe('https://lh3.googleusercontent.com/a/test');
+    });
+
+    it('authUser falls back to undefined avatar when missing', () => {
       const authUser: AuthUser = { name: 'Test', email: 'test@x.com' };
       const result = resolveUser(authUser);
       expect(result.avatar).toBeUndefined();

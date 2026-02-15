@@ -102,6 +102,12 @@ vi.mock('@intelliflow/application', () => ({
     ok: (value: any) => ({ isFailure: false, value }),
     fail: (error: any) => ({ isFailure: true, error }),
   },
+  // Error classes required by shared/error-mapper.ts instanceof checks
+  ExternalServiceError: class extends Error { constructor(msg?: string) { super(msg); } },
+  AuthorizationError: class extends Error { constructor(msg?: string) { super(msg); } },
+  NotificationDeliveryError: class extends Error { constructor(msg?: string) { super(msg); } },
+  NotificationSchedulingError: class extends Error { constructor(msg?: string) { super(msg); } },
+  DuplicateWebhookError: class extends Error { constructor(msg?: string) { super(msg); } },
 }));
 
 import { aiReviewRouter } from '../ai-review.router';

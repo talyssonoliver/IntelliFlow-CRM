@@ -24,6 +24,9 @@ interface TaskLog {
   needsHumanReview?: boolean;
   minutesSinceActivity?: number;
   heartbeatAge?: number;
+  source?: 'swarm' | 'claude-session';
+  sessionId?: string;
+  sessionType?: string;
 }
 
 // Helper to get status indicator color
@@ -38,15 +41,29 @@ export default function SwarmMonitor() {
   const [activeTasks, setActiveTasks] = useState<TaskLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const handleKillTask = async (taskId: string) => {
+  const handleKillTask = async (taskId: string, task?: TaskLog) => {
     if (!confirm(`Kill agent working on ${taskId}? This will stop the current execution.`)) return;
 
     try {
-      const response = await fetch(`/api/swarm/kill-task/${taskId}`, { method: 'POST' });
-      if (response.ok) {
-        alert(`Task ${taskId} killed successfully`);
+      // Route to correct API based on task source
+      if (task?.source === 'claude-session' && task.sessionId) {
+        const response = await fetch('/api/claude-session/kill', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId: task.sessionId, taskId }),
+        });
+        if (response.ok) {
+          alert(`Claude session for ${taskId} killed successfully`);
+        } else {
+          alert('Failed to kill Claude session');
+        }
       } else {
-        alert('Failed to kill task');
+        const response = await fetch(`/api/swarm/kill-task/${taskId}`, { method: 'POST' });
+        if (response.ok) {
+          alert(`Task ${taskId} killed successfully`);
+        } else {
+          alert('Failed to kill task');
+        }
       }
     } catch (error) {
       console.error('Failed to kill task:', error);
@@ -82,21 +99,67 @@ export default function SwarmMonitor() {
   useEffect(() => {
     const fetchSwarmStatus = async () => {
       try {
-        // Read swarm health file
-        const healthResponse = await fetch('/api/swarm/health');
-        if (healthResponse.ok) {
-          const healthData = await healthResponse.json();
-          setHealth(healthData);
+        const allTasks: TaskLog[] = [];
+
+        // Fetch Claude sessions (primary system)
+        try {
+          const claudeResponse = await fetch('/api/claude-session/status?list=true');
+          if (claudeResponse.ok) {
+            const claudeData = await claudeResponse.json();
+            if (claudeData.activeSessions && claudeData.activeSessions.length > 0) {
+              const claudeTasks: TaskLog[] = claudeData.activeSessions.map((s: {
+                taskId: string;
+                session: string;
+                status: string;
+                sessionId: string;
+                startedAt: string;
+              }) => ({
+                taskId: s.taskId,
+                status: s.status === 'running' ? 'running' as const : 'stuck' as const,
+                phase: `Claude ${s.session} session`,
+                currentPhase: s.session.toUpperCase(),
+                attempt: 1,
+                lastUpdate: s.startedAt,
+                source: 'claude-session' as const,
+                sessionId: s.sessionId,
+                sessionType: s.session,
+              }));
+              allTasks.push(...claudeTasks);
+            }
+          }
+        } catch {
+          // Claude session API may not be available
         }
 
-        // Read active locks
-        const tasksResponse = await fetch('/api/swarm/active-tasks');
-        if (tasksResponse.ok) {
-          const tasksData = await tasksResponse.json();
-          setActiveTasks(tasksData);
+        // Fetch legacy swarm tasks
+        try {
+          const healthResponse = await fetch('/api/swarm/health');
+          if (healthResponse.ok) {
+            const healthData = await healthResponse.json();
+            setHealth(healthData);
+          }
+
+          const tasksResponse = await fetch('/api/swarm/active-tasks');
+          if (tasksResponse.ok) {
+            const tasksData = await tasksResponse.json();
+            const swarmTasks = tasksData.map((t: TaskLog) => ({ ...t, source: 'swarm' as const }));
+            allTasks.push(...swarmTasks);
+          }
+        } catch {
+          // Swarm API may not be available
         }
+
+        setActiveTasks(allTasks);
+
+        // Update health to reflect combined count
+        setHealth(prev => ({
+          active: allTasks.length,
+          max: prev?.max || 4,
+          watchdog_threshold: prev?.watchdog_threshold,
+          timestamp: new Date().toISOString(),
+        }));
       } catch (error) {
-        console.error('Failed to fetch swarm status:', error);
+        console.error('Failed to fetch agent status:', error);
       } finally {
         setIsLoading(false);
       }
@@ -105,11 +168,9 @@ export default function SwarmMonitor() {
     // Initial fetch
     fetchSwarmStatus();
 
-    // Only poll if there are active tasks (prevents memory waste)
-    // Polling disabled by default to save resources
-    // To enable: uncomment the lines below
-    // const interval = setInterval(fetchSwarmStatus, 10000); // 10 seconds
-    // return () => clearInterval(interval);
+    // Poll every 5 seconds to catch newly started sessions
+    const interval = setInterval(fetchSwarmStatus, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   if (isLoading) {
@@ -117,9 +178,9 @@ export default function SwarmMonitor() {
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center gap-2 mb-4">
           <Icon name="monitoring" size="lg" className="text-blue-600 animate-pulse" />
-          <h3 className="text-lg font-semibold text-gray-900">Swarm Manager</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Agent Monitor</h3>
         </div>
-        <p className="text-sm text-gray-500">Loading swarm status...</p>
+        <p className="text-sm text-gray-500">Loading agent status...</p>
       </div>
     );
   }
@@ -207,9 +268,9 @@ export default function SwarmMonitor() {
             size="lg"
             className={activeCount > 0 ? 'text-green-600 animate-pulse' : 'text-gray-400'}
           />
-          <h3 className="text-lg font-semibold text-gray-900">Swarm Manager</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Agent Monitor</h3>
           <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-            Streaming Enabled
+            Live
           </span>
         </div>
         <div className="flex items-center gap-3">
@@ -277,6 +338,11 @@ export default function SwarmMonitor() {
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-semibold text-gray-900">{task.taskId}</span>
+                        {task.source === 'claude-session' && (
+                          <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-medium">
+                            {task.sessionType?.toUpperCase() || 'CLAUDE'}
+                          </span>
+                        )}
                         {task.status === 'stuck' && (
                           <span className="text-xs bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-semibold">
                             STUCK
@@ -323,7 +389,7 @@ export default function SwarmMonitor() {
                   </div>
 
                   {/* Action Buttons */}
-                  {(task.isStuck || task.needsHumanReview || task.status !== 'running') && (
+                  {(task.source === 'claude-session' || task.isStuck || task.needsHumanReview || task.status !== 'running') && (
                     <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-200">
                       <button
                         onClick={() => handleOpenTerminal(task.taskId)}
@@ -347,7 +413,7 @@ export default function SwarmMonitor() {
                         Restart
                       </button>
                       <button
-                        onClick={() => handleKillTask(task.taskId)}
+                        onClick={() => handleKillTask(task.taskId, task)}
                         className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded transition-colors"
                       >
                         <Icon name="close" size="xs" />
@@ -392,8 +458,8 @@ export default function SwarmMonitor() {
       ) : (
         <div className="text-center py-4">
           <Icon name="schedule" size="2xl" className="text-gray-400 mx-auto mb-2" />
-          <p className="text-sm text-gray-500">No agents currently running</p>
-          <p className="text-xs text-gray-400 mt-1">Waiting for tasks...</p>
+          <p className="text-sm text-gray-500">No active sessions</p>
+          <p className="text-xs text-gray-400 mt-1">Start a spec, plan, or exec session above</p>
         </div>
       )}
 

@@ -19,7 +19,7 @@ const notificationSettings = [
 
 export default function NotificationsPage() {
   return (
-    <div className="p-8">
+    <div className="flex flex-col gap-6">
       <div className="max-w-2xl">
         {/* Header */}
         <div className="mb-8">

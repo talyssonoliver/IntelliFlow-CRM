@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>IntelliFlow CRM - Case Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300;400;500;600;700" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-size: 20px; vertical-align: middle; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900">
+<div class="flex flex-col min-h-screen">
+<!-- Global Header -->
+<header class="sticky top-0 z-50 flex items-center justify-between px-6 py-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-2 text-primary">
+<div class="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
+<span class="material-symbols-outlined">account_tree</span>
+</div>
+<h2 class="text-slate-900 dark:text-white text-xl font-extrabold tracking-tight">IntelliFlow</h2>
+</div>
+<div class="hidden md:flex items-center gap-6">
+<a class="text-slate-600 hover:text-primary text-sm font-medium transition-colors" href="#">Dashboard</a>
+<a class="text-primary text-sm font-bold border-b-2 border-primary pb-1" href="#">Cases</a>
+<a class="text-slate-600 hover:text-primary text-sm font-medium transition-colors" href="#">Clients</a>
+<a class="text-slate-600 hover:text-primary text-sm font-medium transition-colors" href="#">Analytics</a>
+</div>
+</div>
+<div class="flex items-center gap-4 flex-1 justify-end">
+<div class="relative max-w-md w-full hidden lg:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm focus:ring-2 focus:ring-primary/50" placeholder="Search cases, files, or contacts..." type="text"/>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white"></span>
+</button>
+<button class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+<div class="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-700">
+<div class="text-right hidden sm:block">
+<p class="text-xs font-semibold text-slate-900 dark:text-white">Alex Sterling</p>
+<p class="text-[10px] text-slate-500">Senior Partner</p>
+</div>
+<img alt="Profile" class="size-10 rounded-full border border-slate-200" data-alt="User profile avatar of Alex Sterling" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAswUBwecOKCdUY0E3OmPNtAve-18gy6BS6niHUIaJJFLIzlZGYyn2i5cSwO9p33-XC1373ephLCpezBT7s7B8ZbLNtAN5e4hSj0xgdVYYS3qn19NldeRvcQntBDdvz0AFxT6rXokK62SpPXcb1SshNgGtR9xGT9sV_BAjYyUpoegffOq5b7VY6SaNz8zW_U4HGCVglhuS5FOlcmQBgaqbK5Gp2r6VFA8gG1uNw0neSW9kvLN-0Anwpl8q4fn-ANN1H_AiFZho--nW5"/>
+</div>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden">
+<!-- Left Sidebar -->
+<aside class="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col py-6 hidden lg:flex">
+<nav class="flex-1 px-4 space-y-2">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm font-medium">Home</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary" href="#">
+<span class="material-symbols-outlined">folder_open</span>
+<span class="text-sm font-bold">Cases</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="text-sm font-medium">Contacts</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="text-sm font-medium">Documents</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="text-sm font-medium">Calendar</span>
+</a>
+<div class="pt-6 pb-2">
+<p class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Reports</p>
+</div>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors" href="#">
+<span class="material-symbols-outlined">assessment</span>
+<span class="text-sm font-medium">Case Velocity</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors" href="#">
+<span class="material-symbols-outlined">request_quote</span>
+<span class="text-sm font-medium">Billing Details</span>
+</a>
+</nav>
+<div class="px-4 mt-auto">
+<div class="p-4 bg-primary/5 rounded-xl border border-primary/10">
+<p class="text-xs font-bold text-primary uppercase mb-1">Storage Usage</p>
+<div class="w-full bg-slate-200 rounded-full h-1.5 mb-2">
+<div class="bg-primary h-1.5 rounded-full" style="width: 75%"></div>
+</div>
+<p class="text-[10px] text-slate-500">7.5 GB of 10 GB used</p>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark p-6">
+<!-- Top Breadcrumb & Actions -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+<div>
+<div class="flex items-center gap-2 text-xs text-slate-500 mb-1">
+<span>Main Dashboard</span>
+<span class="material-symbols-outlined text-[12px]">chevron_right</span>
+<span>Cases</span>
+<span class="material-symbols-outlined text-[12px]">chevron_right</span>
+<span class="text-primary font-medium">CF-2024-001</span>
+</div>
+<h1 class="text-2xl font-black text-slate-900 tracking-tight">Commercial Lease Dispute</h1>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors">
+<span class="material-symbols-outlined">ios_share</span> Export
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">
+<span class="material-symbols-outlined">add</span> New Entry
+                        </button>
+</div>
+</div>
+<!-- Three Column Grid -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+<!-- Left Column: Profile -->
+<div class="xl:col-span-3 space-y-6">
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<span class="px-2 py-1 bg-amber-100 text-amber-700 text-[10px] font-bold rounded uppercase tracking-wider">High Priority</span>
+<button class="text-slate-400 hover:text-slate-600">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="space-y-4">
+<div>
+<label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Case Number</label>
+<p class="text-sm font-bold text-slate-900">#CF-2024-001</p>
+</div>
+<div>
+<label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Client</label>
+<div class="flex items-center gap-2 mt-1">
+<div class="size-6 bg-slate-100 rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-slate-500 text-sm">business</span>
+</div>
+<p class="text-sm font-semibold text-slate-900">Global Logistics Corp.</p>
+</div>
+</div>
+<div>
+<label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Status</label>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full">
+<span class="size-2 bg-primary rounded-full animate-pulse"></span> In Progress
+                                    </span>
+</div>
+<div class="pt-4 border-t border-slate-100">
+<label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-3">Assigned Team</label>
+<div class="flex -space-x-2">
+<img alt="Team 1" class="size-8 rounded-full border-2 border-white" data-alt="Team member Sarah avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjGRpbNeX9A2xznGkM39ogg6TDpc8EZdQUGrWbb83JEFLYZ8MnhCZVSJUI6BXV8T8BKrqCuT1ZueuiELEg4y9o_7mXVlvzJDYn5GX8VtEXOPlMtgTi3KJuPT3IV0fniFNkzbXZiwdygEX38XEJYW-VRl5rR9Qs3QD-G-zul1ZKJtNU6xcRMaG4RR5L4IoOfDypjRcRbjm_IFgh08Wy0hMLvZ-rT8gjdaeM8YTiDPWfu7hCr3fvUh5uvWYeCZ6-23XeP2Ez5pyyoHRA"/>
+<img alt="Team 2" class="size-8 rounded-full border-2 border-white" data-alt="Team member Michael avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBf7kCqmuOowAM_uyaN7lkSa-VBAfbZnXy0GjdQ3Akx6UGL9JgkPlwrHcK_EpWQB7cn-52v9Odewj2oPjmPoaTu8Q8fPqqxHbbcGlUENXiLTLUTOSsiqfsQPVw2xvQv7fQMb3LeXFOu6oDxE7jWhapF70_5FZT0BR0ND3bmwx-SmYwkab1lW-odOykpqgJ3fLb9JfF7aDK1-ENzRj6k63YUyxVSizIw985qClT5ShmKXFctnIHcZUc5TpfyaUSW39dIgWVvC9HZHEXk"/>
+<img alt="Team 3" class="size-8 rounded-full border-2 border-white" data-alt="Team member Jessica avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEIDSmqA7PnvbXCsMYlBfY1wrycRqP42-9tmS0QxfoZvGLFCwssabl0BT5SQe1YtR-ODzh2YuELWcwKYvrDaStl-lXRsww_pL4q_gI3BiEfU_-0FXVC80ywlaegczjoQR_Ze4GU3fLavDkpjngict6-RIx30AMtnhnKTHFbSWB54Dcer_qKQvueoAEWK-QQcn134HSIlWf8rOXyIdMoV1a2CTvPmRZVmhR4MunPUUrcu8Q9LfPCSD3OPz-ZljH4SqyKcsvvhbxHjbD"/>
+<div class="size-8 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">+2</div>
+</div>
+<p class="text-xs text-slate-500 mt-2 italic">Managed by Sarah Jenkins</p>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
+<h3 class="text-sm font-bold text-slate-900 mb-4">Case Tags</h3>
+<div class="flex flex-wrap gap-2">
+<span class="px-2 py-1 bg-slate-100 text-slate-600 text-[10px] font-medium rounded">Real Estate</span>
+<span class="px-2 py-1 bg-slate-100 text-slate-600 text-[10px] font-medium rounded">Litigation</span>
+<span class="px-2 py-1 bg-slate-100 text-slate-600 text-[10px] font-medium rounded">Lease Terms</span>
+<span class="px-2 py-1 bg-slate-100 text-slate-600 text-[10px] font-medium rounded">Contract</span>
+</div>
+</div>
+</div>
+<!-- Center Column: Tabs & Activities -->
+<div class="xl:col-span-6 space-y-6">
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+<!-- Tabs -->
+<div class="flex border-b border-slate-100 px-6">
+<button class="px-4 py-4 text-sm font-bold text-primary border-b-2 border-primary">Overview</button>
+<button class="px-4 py-4 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors">Activities</button>
+<button class="px-4 py-4 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors">Evidence</button>
+<button class="px-4 py-4 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors">Records</button>
+</div>
+<!-- Activity Logger -->
+<div class="p-6">
+<div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 mb-8">
+<textarea class="w-full bg-transparent border-none focus:ring-0 text-sm resize-none placeholder:text-slate-400" placeholder="Write a note or log an activity..." rows="3"></textarea>
+<div class="flex items-center justify-between mt-2 pt-3 border-t border-slate-200/50">
+<div class="flex gap-2">
+<button class="p-1.5 text-slate-500 hover:bg-slate-200/50 rounded transition-colors"><span class="material-symbols-outlined">attach_file</span></button>
+<button class="p-1.5 text-slate-500 hover:bg-slate-200/50 rounded transition-colors"><span class="material-symbols-outlined">alternate_email</span></button>
+<button class="p-1.5 text-slate-500 hover:bg-slate-200/50 rounded transition-colors"><span class="material-symbols-outlined">image</span></button>
+</div>
+<button class="px-4 py-1.5 bg-primary text-white text-xs font-bold rounded-lg shadow-sm hover:bg-primary/90 transition-colors">Log Activity</button>
+</div>
+</div>
+<!-- Timeline -->
+<h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">Chronological Timeline</h4>
+<div class="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:h-full before:w-0.5 before:bg-slate-100 dark:before:bg-slate-800">
+<!-- Timeline Entry 1 -->
+<div class="relative flex items-start gap-6 group">
+<div class="size-10 rounded-full bg-primary/10 border-4 border-white dark:border-slate-900 flex items-center justify-center text-primary z-10 shrink-0">
+<span class="material-symbols-outlined text-sm">schedule</span>
+</div>
+<div class="flex-1 bg-white dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700 p-4 shadow-sm group-hover:border-primary/30 transition-colors">
+<div class="flex justify-between items-center mb-1">
+<p class="text-sm font-bold text-slate-900">Pre-trial Meeting Scheduled</p>
+<span class="text-[10px] text-slate-400">2 hours ago</span>
+</div>
+<p class="text-xs text-slate-600 leading-relaxed">Meeting with Prime Realty representatives set for next Tuesday at 10:00 AM. Location: Main Conference Room A.</p>
+<div class="mt-3 flex items-center gap-2">
+<img alt="User" class="size-5 rounded-full" data-alt="Avatar of user Sarah Jenkins" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAq_B8h9qaPZVYWNfT_WmEcqrxHiLerY3AMKc3dOycgvVi_HT1dUbvfhPDQG0uoR_XslvotLX60HnjqkqPQIuBKUpfm7pdVv3jG99jr1o3Kfv-uQS_gYd9VxMQJmImqYMSDuB-_CZjmICzAXBs_FvFYhRsyzo_dCITy0yY27O2eZxwiZcpa3JhNkRlpPyA4o138srvvexJ3RMw6bG8u2dJYnqPHWu7xe4HZFNIzes7naUxaoVzv9e1GFpp49QQtjbYdmOUjzbHeyOC0"/>
+<span class="text-[10px] text-slate-500">Sarah Jenkins • Calendar Event</span>
+</div>
+</div>
+</div>
+<!-- Timeline Entry 2 -->
+<div class="relative flex items-start gap-6 group">
+<div class="size-10 rounded-full bg-green-100 border-4 border-white dark:border-slate-900 flex items-center justify-center text-green-600 z-10 shrink-0">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+</div>
+<div class="flex-1 bg-white dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700 p-4 shadow-sm group-hover:border-primary/30 transition-colors">
+<div class="flex justify-between items-center mb-1">
+<p class="text-sm font-bold text-slate-900">Evidence Document Uploaded</p>
+<span class="text-[10px] text-slate-400">Yesterday, 4:15 PM</span>
+</div>
+<p class="text-xs text-slate-600 leading-relaxed">"Lease_Agreement_Addendum_V2.pdf" has been added to the case files by the legal team.</p>
+<div class="mt-3 p-2 bg-slate-50 rounded border border-slate-100 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">description</span>
+<span class="text-[10px] font-medium text-slate-700">Lease_Agreement_Addendum_V2.pdf</span>
+</div>
+<button class="text-[10px] text-primary font-bold hover:underline">Download</button>
+</div>
+</div>
+</div>
+<!-- Timeline Entry 3 -->
+<div class="relative flex items-start gap-6 group">
+<div class="size-10 rounded-full bg-blue-100 border-4 border-white dark:border-slate-900 flex items-center justify-center text-blue-600 z-10 shrink-0">
+<span class="material-symbols-outlined text-sm">history</span>
+</div>
+<div class="flex-1 bg-white dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700 p-4 shadow-sm group-hover:border-primary/30 transition-colors">
+<div class="flex justify-between items-center mb-1">
+<p class="text-sm font-bold text-slate-900">Case Intake Completed</p>
+<span class="text-[10px] text-slate-400">Oct 24, 2024</span>
+</div>
+<p class="text-xs text-slate-600 leading-relaxed">Initial case profile created and priority assigned as "High". Client onboarding documents verified.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Context & Metrics -->
+<div class="xl:col-span-3 space-y-6">
+<!-- Health Metrics -->
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
+<h3 class="text-sm font-bold text-slate-900 mb-4">Case Health</h3>
+<div class="space-y-4">
+<div>
+<div class="flex justify-between items-center mb-1.5">
+<p class="text-xs text-slate-500 font-medium">Resolution Progress</p>
+<span class="text-xs font-bold text-primary">68%</span>
+</div>
+<div class="w-full bg-slate-100 rounded-full h-2">
+<div class="bg-primary h-2 rounded-full" style="width: 68%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-center mb-1.5">
+<p class="text-xs text-slate-500 font-medium">Budget Consumed</p>
+<span class="text-xs font-bold text-amber-600">42%</span>
+</div>
+<div class="w-full bg-slate-100 rounded-full h-2">
+<div class="bg-amber-500 h-2 rounded-full" style="width: 42%"></div>
+</div>
+</div>
+<div class="pt-2 grid grid-cols-2 gap-4">
+<div class="text-center p-3 bg-slate-50 rounded-lg">
+<p class="text-[10px] text-slate-400 font-bold uppercase">SLA Days</p>
+<p class="text-lg font-black text-slate-900">12</p>
+</div>
+<div class="text-center p-3 bg-slate-50 rounded-lg">
+<p class="text-[10px] text-slate-400 font-bold uppercase">Items Open</p>
+<p class="text-lg font-black text-slate-900">4</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Upcoming Deadlines -->
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-sm font-bold text-slate-900">Deadlines</h3>
+<button class="text-[10px] text-primary font-bold">View Calendar</button>
+</div>
+<div class="space-y-3">
+<div class="flex gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors border-l-4 border-red-500">
+<div class="flex flex-col items-center justify-center bg-slate-100 rounded min-w-[36px] h-9">
+<span class="text-[10px] font-bold text-slate-400 uppercase">Nov</span>
+<span class="text-sm font-black text-slate-700">12</span>
+</div>
+<div>
+<p class="text-xs font-bold text-slate-900">Filing Deadline</p>
+<p class="text-[10px] text-slate-500">Superior Court Room 4B</p>
+</div>
+</div>
+<div class="flex gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors border-l-4 border-amber-500">
+<div class="flex flex-col items-center justify-center bg-slate-100 rounded min-w-[36px] h-9">
+<span class="text-[10px] font-bold text-slate-400 uppercase">Nov</span>
+<span class="text-sm font-black text-slate-700">18</span>
+</div>
+<div>
+<p class="text-xs font-bold text-slate-900">Mediation Phase</p>
+<p class="text-[10px] text-slate-500">Zoom Call (ID: 842 221)</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Key Stakeholders -->
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
+<h3 class="text-sm font-bold text-slate-900 mb-4">Key Stakeholders</h3>
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<img alt="Robert" class="size-8 rounded-full" data-alt="Avatar of client contact Robert Chen" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwa76WPb-NZ7yFday4Th32-MCayOGIyVjV1inQ2dRLktM1sgVnWO98v82nVzKpBC5ciRpNZ_n601cDs1RHG5-SUsIabDhWdLmBsh16e4Vvku5La4jhEz4275KxZMaH5QSgg4oiMm-3q7tka-sQC3tDh0Jzz5YKOJPTT9HAyjQo0di9TZD-6OwrQRYqAkRGL92-BMM2ezWdVDj4wdbGH9NquY90-2s4jWiJjLfqTBqYYAZda9qQ1BftffzpPXfSHlnew_rrb1lO7kq3"/>
+<div>
+<p class="text-xs font-bold text-slate-900">Robert Chen</p>
+<p class="text-[10px] text-slate-500">Client Lead</p>
+</div>
+</div>
+<button class="p-1.5 text-slate-400 hover:text-primary"><span class="material-symbols-outlined text-sm">mail</span></button>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<img alt="Helena" class="size-8 rounded-full" data-alt="Avatar of Lead Attorney Helena V." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaHtlXpn9s0nCBjDBUxtdlQfN_fC915wnIv8QOfifdk1cGomYnOV-0nUNS2z-CSca_N4X-Se8j-zbeUeV6EI3CBpuM5KQqt0fSkuYzK9FMbrjP9zlo13wfNdPY9Xo61QWNs7D_5AK6ZGPZECO7Z1SrqoWJVHLhIZjf34A-WxQ9yVw-4hSPGwWKHaNbHiBYUpBupaYw193YizczLdDyZFG12npJ06eZCVu1M2emhdfs-cboDAAQSGkUUFTNZKKDPusftsA_kSPrdYYS"/>
+<div>
+<p class="text-xs font-bold text-slate-900">Helena Vance</p>
+<p class="text-[10px] text-slate-500">Lead Attorney</p>
+</div>
+</div>
+<button class="p-1.5 text-slate-400 hover:text-primary"><span class="material-symbols-outlined text-sm">mail</span></button>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<img alt="Marcus" class="size-8 rounded-full" data-alt="Avatar of Opposing Counsel Marcus D." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNEwx0SqqNMME4jFnWXKb9-EwN64JD-LwxejA_pICBTT_Wgg1jL9kgnLTAMb-GMuWlFGtV52KMIv5Z0ZbH8MCD9eKLVdRPMn77NHfpVDSpT6bSFBbYFjYttUKeRmOUbj6UJDDVldJQat_GC6Gwjne4gy6H1POcDGznJD5FPXg1VFAkOIgnHfzOMcjQF869bLm2U12vhS-PVq_sr2vXgpYQnf34vU9XS7uXfwaY7aa0LRAYD8KRcHXpBC5ieXB2fkNPYw0yvCzVeOWM"/>
+<div>
+<p class="text-xs font-bold text-slate-900">Marcus Thorne</p>
+<p class="text-[10px] text-slate-500">Opposing Counsel</p>
+</div>
+</div>
+<button class="p-1.5 text-slate-400 hover:text-primary"><span class="material-symbols-outlined text-sm">call</span></button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+</body></html>

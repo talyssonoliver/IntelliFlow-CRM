@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Card } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
+import { AppAvatar } from '@/components/shared/app-avatar';
 
 // Tab types
 type TabId = 'overview' | 'versions' | 'access-control' | 'signatures' | 'comments';
@@ -740,9 +741,13 @@ export default function DocumentDetailPage() {
                       {comments.length > 0 ? (
                         comments.map((comment) => (
                           <div key={comment.id} className="flex gap-3">
-                            <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
-                              <img src={comment.authorAvatar} alt={comment.author} className="w-full h-full object-cover" />
-                            </div>
+                            <AppAvatar
+                              name={comment.author}
+                              src={comment.authorAvatar ?? null}
+                              maxInitials={2}
+                              className="w-10 h-10 flex-shrink-0"
+                              fallbackClassName="text-sm font-semibold bg-slate-200 dark:bg-slate-700"
+                            />
                             <div className="flex-1">
                               <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                                 <div className="flex items-center justify-between mb-1">

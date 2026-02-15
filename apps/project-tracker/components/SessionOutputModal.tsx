@@ -16,7 +16,7 @@ interface SessionOutputModalProps {
   output: string;
   status: SessionStatus;
   phase?: string;
-  isSwarm?: boolean; // True for exec (swarm), false for claude sessions
+  isSwarm?: boolean; // Deprecated — all sessions now use claude-session endpoints
   onKill: () => void;
 }
 
@@ -24,7 +24,7 @@ const SESSION_NAMES: Record<SessionType, string> = {
   hydrate: 'Context Hydration',
   spec: 'Spec Session',
   plan: 'Plan Session',
-  exec: 'Exec Session (Swarm)',
+  exec: 'Exec Session',
 };
 
 const STATUS_STYLES: Record<SessionStatus, string> = {
@@ -108,7 +108,7 @@ export function SessionOutputModal({
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <Icon
-              name={isSwarm ? 'memory' : 'smart_toy'}
+              name="smart_toy"
               className="w-6 h-6 text-indigo-600"
             />
             <div>
@@ -177,11 +177,7 @@ export function SessionOutputModal({
         {/* Footer Actions */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">
           <div className="text-sm text-gray-500">
-            {isSwarm ? (
-              <span>Running via Swarm Orchestrator</span>
-            ) : (
-              <span>Session ID: {sessionId || 'N/A'}</span>
-            )}
+            <span>Session ID: {sessionId || 'N/A'}</span>
           </div>
           <div className="flex gap-3">
             {canKill && (
@@ -246,49 +242,26 @@ export function useSessionPolling({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isSwarm = sessionType === 'exec';
-
   const fetchStatus = useCallback(async () => {
-    if (!enabled) return;
+    if (!enabled || !sessionId) return;
 
     try {
       setIsLoading(true);
       setError(null);
 
-      if (isSwarm) {
-        // Fetch from swarm endpoints
-        const [statusRes, logRes] = await Promise.all([
-          fetch(`/api/swarm/task-status?taskId=${taskId}`),
-          fetch(`/api/swarm/task-log?taskId=${taskId}&lines=200`),
-        ]);
-
-        if (statusRes.ok) {
-          const statusData = await statusRes.json();
-          setStatus(statusData.status);
-          setPhase(statusData.phase);
-        }
-
-        if (logRes.ok) {
-          const logData = await logRes.json();
-          setOutput(logData.output || '');
-        }
-      } else {
-        // Fetch from claude-session endpoints
-        if (!sessionId) return;
-
-        const res = await fetch(`/api/claude-session/status?sessionId=${sessionId}&lines=200`);
-        if (res.ok) {
-          const data = await res.json();
-          setStatus(data.status);
-          setOutput(data.output || '');
-        }
+      // All session types (spec, plan, exec) use the same claude-session endpoint
+      const res = await fetch(`/api/claude-session/status?sessionId=${sessionId}&lines=200`);
+      if (res.ok) {
+        const data = await res.json();
+        setStatus(data.status);
+        setOutput(data.output || '');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch session status');
     } finally {
       setIsLoading(false);
     }
-  }, [enabled, isSwarm, sessionId, taskId]);
+  }, [enabled, sessionId]);
 
   // Initial fetch
   useEffect(() => {

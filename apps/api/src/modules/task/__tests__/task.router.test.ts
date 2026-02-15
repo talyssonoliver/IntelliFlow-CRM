@@ -214,27 +214,21 @@ describe('Task Router', () => {
 
   describe('getById', () => {
     it('should return task by ID', async () => {
-      const mockDomainTask = createMockDomainTask();
-
-      ctx.services!.task!.getTaskById = vi.fn().mockResolvedValue({
-        isSuccess: true,
-        isFailure: false,
-        value: mockDomainTask,
-      });
+      prismaMock.task.findFirst.mockResolvedValue(mockTaskWithRelations as any);
 
       const result = await caller.getById({ id: TEST_UUIDS.task1 });
 
       expect(result.id).toBe(TEST_UUIDS.task1);
-      expect(result.title).toBe('Follow up call');
-      expect(ctx.services!.task!.getTaskById).toHaveBeenCalledWith(TEST_UUIDS.task1);
+      expect(result.title).toBe(mockTask.title);
+      expect(prismaMock.task.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ id: TEST_UUIDS.task1 }),
+        })
+      );
     });
 
     it('should throw NOT_FOUND for non-existent task', async () => {
-      ctx.services!.task!.getTaskById = vi.fn().mockResolvedValue({
-        isSuccess: false,
-        isFailure: true,
-        error: { code: 'NOT_FOUND_ERROR', message: `Task not found: ${TEST_UUIDS.nonExistent}` },
-      });
+      prismaMock.task.findFirst.mockResolvedValue(null);
 
       await expect(caller.getById({ id: TEST_UUIDS.nonExistent })).rejects.toThrow(
         expect.objectContaining({
@@ -935,9 +929,8 @@ describe('Task Router', () => {
 
   describe('getByEntity', () => {
     it('should return tasks for a lead', async () => {
-      const mockDomainTask = createMockDomainTask({ leadId: TEST_UUIDS.lead1 });
-
-      ctx.services!.task!.getTasksByEntity = vi.fn().mockResolvedValue([mockDomainTask]);
+      const taskWithLead = { ...mockTaskWithRelations, leadId: TEST_UUIDS.lead1 };
+      prismaMock.task.findMany.mockResolvedValue([taskWithLead] as any);
 
       const result = await caller.getByEntity({
         entityType: 'lead',
@@ -946,13 +939,16 @@ describe('Task Router', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].leadId).toBe(TEST_UUIDS.lead1);
-      expect(ctx.services!.task!.getTasksByEntity).toHaveBeenCalledWith('lead', TEST_UUIDS.lead1);
+      expect(prismaMock.task.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ leadId: TEST_UUIDS.lead1 }),
+        })
+      );
     });
 
     it('should return tasks for a contact', async () => {
-      const mockDomainTask = createMockDomainTask({ contactId: TEST_UUIDS.contact1 });
-
-      ctx.services!.task!.getTasksByEntity = vi.fn().mockResolvedValue([mockDomainTask]);
+      const taskWithContact = { ...mockTaskWithRelations, contactId: TEST_UUIDS.contact1 };
+      prismaMock.task.findMany.mockResolvedValue([taskWithContact] as any);
 
       const result = await caller.getByEntity({
         entityType: 'contact',
@@ -964,9 +960,8 @@ describe('Task Router', () => {
     });
 
     it('should return tasks for an opportunity', async () => {
-      const mockDomainTask = createMockDomainTask({ opportunityId: TEST_UUIDS.opportunity1 });
-
-      ctx.services!.task!.getTasksByEntity = vi.fn().mockResolvedValue([mockDomainTask]);
+      const taskWithOpp = { ...mockTaskWithRelations, opportunityId: TEST_UUIDS.opportunity1 };
+      prismaMock.task.findMany.mockResolvedValue([taskWithOpp] as any);
 
       const result = await caller.getByEntity({
         entityType: 'opportunity',
@@ -978,7 +973,7 @@ describe('Task Router', () => {
     });
 
     it('should return empty array for entity with no tasks', async () => {
-      ctx.services!.task!.getTasksByEntity = vi.fn().mockResolvedValue([]);
+      prismaMock.task.findMany.mockResolvedValue([]);
 
       const result = await caller.getByEntity({
         entityType: 'lead',

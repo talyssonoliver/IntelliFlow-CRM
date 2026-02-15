@@ -32,6 +32,12 @@ vi.mock('@intelliflow/ui', () => ({
   cn: (...args: any[]) => args.filter(Boolean).join(' '),
 }));
 
+vi.mock('@/components/shared/app-avatar', () => ({
+  AppAvatar: ({ name, fallbackText }: { name: string; fallbackText?: string }) => (
+    <div>{fallbackText || name}</div>
+  ),
+}));
+
 vi.mock('@/lib/auth/AuthContext', () => ({
   useAuth: () => ({
     user: mockAuthUser.value,

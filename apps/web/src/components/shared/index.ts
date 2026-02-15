@@ -94,6 +94,7 @@ export {
   type FilterChip,
   type SortOption,
 } from './search-filter-bar';
+export { AppAvatar, type AppAvatarProps } from './app-avatar';
 
 // MFA Components
 export { MfaQrGenerator, type MfaQrGeneratorProps } from './mfa-qr-generator';
@@ -113,6 +114,12 @@ export {
   type OAuthCallbackProps,
   type OAuthCallbackStatus,
 } from './oauth-callback';
+
+// Settings Navigation (PG-104)
+export { SettingsNav, type SettingsNavProps } from './settings-nav';
+
+// Upcoming Events Card (shared across dashboard, lead, contact, case detail pages)
+export { UpcomingEventsCard, type UpcomingEventsCardProps } from './upcoming-events-card';
 
 // Code Validation Utilities
 export {

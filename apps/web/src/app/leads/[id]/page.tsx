@@ -8,6 +8,10 @@ import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
+import { AppAvatar } from '@/components/shared/app-avatar';
+import { RelatedTasksCard } from '@/components/tasks/RelatedTasksCard';
+import { UpcomingEventsCard } from '@/components/shared';
+import { normalizeAvatarSource } from '@/lib/shared/avatar-utils';
 
 // Tab types matching Contact360 pattern
 type TabId = 'overview' | 'activity' | 'tasks' | 'notes' | 'emails' | 'files' | 'ai-insights';
@@ -304,6 +308,8 @@ export default function Lead360Page() {
   // Transform API data to UI format
   const lead = useMemo(() => {
     if (!apiLead) return null;
+    const normalizedLeadAvatar = normalizeAvatarSource(apiLead.avatarUrl) ?? normalizeAvatarSource(defaultLeadAvatar) ?? defaultLeadAvatar;
+    const normalizedOwnerAvatar = normalizeAvatarSource(apiLead.owner?.avatarUrl) ?? normalizeAvatarSource(defaultOwnerAvatar) ?? defaultOwnerAvatar;
 
     // Handle phone - could be string or value object
     const phoneValue = typeof apiLead.phone === 'string'
@@ -326,17 +332,17 @@ export default function Lead360Page() {
       temperature: getTemperature(apiLead.score),
       createdAt: apiLead.createdAt,
       lastContactedAt: apiLead.lastContactedAt || apiLead.createdAt,
-      avatarUrl: apiLead.avatarUrl || defaultLeadAvatar,
+      avatarUrl: normalizedLeadAvatar,
       estimatedValue: apiLead.estimatedValue || 0,
       tags: apiLead.tags || [],
       owner: apiLead.owner ? {
         name: apiLead.owner.name || 'Unknown',
         title: 'Sales Representative',
-        avatarUrl: apiLead.owner.avatarUrl || defaultOwnerAvatar,
+        avatarUrl: normalizedOwnerAvatar,
       } : {
         name: 'Unassigned',
         title: '',
-        avatarUrl: defaultOwnerAvatar,
+        avatarUrl: normalizedOwnerAvatar,
       },
     };
   }, [apiLead]);
@@ -543,22 +549,6 @@ export default function Lead360Page() {
       label: person === 'all' ? 'All People' : person,
     }));
   }, [activities]);
-
-  // Upcoming event (from next meeting activity or generated)
-  const upcomingEvent = useMemo(() => {
-    const meetingActivity = activities.find((act) => act.type === 'meeting');
-    if (meetingActivity) {
-      const date = new Date(meetingActivity.timestamp);
-      return {
-        month: date.toLocaleDateString('en-US', { month: 'short' }),
-        day: date.getDate().toString(),
-        title: meetingActivity.title.replace('Meeting Scheduled', '').trim() || 'Meeting',
-        time: date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
-        attendees: [lead?.avatarUrl || defaultLeadAvatar, lead?.owner?.avatarUrl || defaultOwnerAvatar],
-      };
-    }
-    return null;
-  }, [activities, lead?.avatarUrl, lead?.owner?.avatarUrl]);
 
   // Dynamic tabs with real counts
   const tabs: Tab[] = useMemo(() => [
@@ -913,9 +903,12 @@ export default function Lead360Page() {
             <div className="h-24 bg-gradient-to-r from-blue-100 to-indigo-50 dark:from-slate-800 dark:to-slate-800" />
             <div className="px-5 pb-6 relative">
               <div className="relative -mt-10 mb-3">
-                <div className="w-20 h-20 rounded-full border-4 border-white dark:border-slate-900 bg-slate-200 overflow-hidden shadow-sm">
-                  <img src={lead.avatarUrl} alt={`${lead.firstName} ${lead.lastName}`} className="w-full h-full object-cover" />
-                </div>
+                <AppAvatar
+                  name={`${lead.firstName} ${lead.lastName}`}
+                  src={lead.avatarUrl}
+                  className="w-20 h-20 border-4 border-white dark:border-slate-900 shadow-sm"
+                  fallbackClassName="text-2xl font-bold text-slate-500 bg-slate-200 dark:bg-slate-700"
+                />
               </div>
               <div className="mb-4">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">{lead.firstName} {lead.lastName}</h2>
@@ -997,9 +990,12 @@ export default function Lead360Page() {
           <Card className="p-5">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase mb-3 tracking-wider">Lead Owner</h3>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden">
-                <img src={lead.owner.avatarUrl} alt={lead.owner.name} className="w-full h-full object-cover" />
-              </div>
+              <AppAvatar
+                name={lead.owner.name}
+                src={lead.owner.avatarUrl}
+                className="w-10 h-10"
+                fallbackClassName="text-sm font-bold bg-slate-200 dark:bg-slate-700"
+              />
               <div>
                 <p className="text-sm font-bold text-slate-900 dark:text-white">{lead.owner.name}</p>
                 <p className="text-xs text-slate-500">{lead.owner.title}</p>
@@ -1127,29 +1123,13 @@ export default function Lead360Page() {
                   </div>
                 </dl>
               </Card>
-              <Card className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Open Tasks</h3>
-                  <button onClick={() => setActiveTab('tasks')} className="text-sm text-[#137fec] hover:underline">View All</button>
-                </div>
-                <div className="space-y-3">
-                  {tasks.filter((t) => !t.completed).length > 0 ? tasks.filter((t) => !t.completed).slice(0, 2).map((task) => (
-                    <div key={task.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-slate-900 dark:text-white truncate">{task.title}</p>
-                        <p className={`text-xs mt-0.5 ${task.priority === 'high' ? 'text-orange-600' : 'text-slate-500'}`}>
-                          {task.priority === 'high' ? 'Due Today' : task.dueDate ? `Due ${formatDate(task.dueDate)}` : 'No due date'}
-                        </p>
-                      </div>
-                      {task.priority === 'high' && (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-50 text-red-700">High</span>
-                      )}
-                    </div>
-                  )) : (
-                    <p className="text-sm text-slate-500 text-center py-4">No open tasks</p>
-                  )}
-                </div>
-              </Card>
+              <RelatedTasksCard
+                entityType="lead"
+                entityId={leadId}
+                title="Open Tasks"
+                maxItems={2}
+                onViewAll={() => setActiveTab('tasks')}
+              />
             </div>
           )}
 
@@ -1326,33 +1306,11 @@ export default function Lead360Page() {
 
           {/* Tasks Tab */}
           {activeTab === 'tasks' && (
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Tasks</h3>
-                <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
-                  <span className="material-symbols-outlined !text-[18px]">add</span>
-                  Add Task
-                </button>
-              </div>
-              <div className="space-y-3">
-                {tasks.length > 0 ? tasks.map((task) => (
-                  <label key={task.id} className={`flex items-start gap-3 group cursor-pointer p-3 bg-slate-50 dark:bg-slate-800 rounded-lg ${task.completed ? 'opacity-50' : ''}`}>
-                    <input type="checkbox" defaultChecked={task.completed} className="rounded border-slate-300 text-[#137fec] focus:ring-[#137fec] mt-0.5" />
-                    <div className="flex-1">
-                      <p className={`text-sm font-medium text-slate-700 dark:text-slate-200 group-hover:text-[#137fec] transition-colors ${task.completed ? 'line-through' : ''}`}>{task.title}</p>
-                      <p className={`text-xs mt-0.5 ${task.priority === 'high' && !task.completed ? 'text-orange-600' : 'text-slate-400'}`}>
-                        {task.priority === 'high' && !task.completed ? 'Due Today' : task.dueDate ? `Due ${formatDate(task.dueDate)}` : 'No due date'}
-                      </p>
-                    </div>
-                    {task.priority === 'high' && !task.completed && (
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400">High</span>
-                    )}
-                  </label>
-                )) : (
-                  <p className="text-sm text-slate-500 text-center py-8">No tasks yet</p>
-                )}
-              </div>
-            </Card>
+            <RelatedTasksCard
+              entityType="lead"
+              entityId={leadId}
+              maxItems={20}
+            />
           )}
 
           {/* Notes Tab */}
@@ -1616,60 +1574,21 @@ export default function Lead360Page() {
           </Card>
 
           {/* Tasks Widget */}
-          <Card className="p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Tasks</h3>
-              <button className="w-6 h-6 rounded hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500">
-                <span className="material-symbols-outlined !text-[20px]">add</span>
-              </button>
-            </div>
-            <div className="space-y-3">
-              {tasks.filter((t) => !t.completed).length > 0 ? tasks.filter((t) => !t.completed).slice(0, 2).map((task) => (
-                <label key={task.id} className="flex items-start gap-3 group cursor-pointer">
-                  <input type="checkbox" className="rounded border-slate-300 text-[#137fec] focus:ring-[#137fec] mt-1" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-slate-700 dark:text-slate-200 group-hover:text-[#137fec] transition-colors">{task.title}</p>
-                    <p className={`text-xs mt-0.5 ${task.priority === 'high' ? 'text-orange-600 font-medium' : 'text-slate-400'}`}>
-                      {task.priority === 'high' ? 'Due Today' : task.dueDate ? `Due ${formatDate(task.dueDate)}` : 'No due date'}
-                    </p>
-                  </div>
-                </label>
-              )) : (
-                <p className="text-sm text-slate-500 text-center py-2">No open tasks</p>
-              )}
-            </div>
-          </Card>
+          <RelatedTasksCard
+            entityType="lead"
+            entityId={leadId}
+            maxItems={2}
+            compact
+            onViewAll={() => setActiveTab('tasks')}
+          />
 
           {/* Upcoming Event */}
-          <Card className="p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Upcoming</h3>
-              <button className="w-6 h-6 rounded hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500">
-                <span className="material-symbols-outlined !text-[20px]">calendar_add_on</span>
-              </button>
-            </div>
-            {upcomingEvent ? (
-              <div className="flex gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
-                <div className="flex flex-col items-center justify-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded w-12 h-12 flex-shrink-0">
-                  <span className="text-[10px] font-bold text-red-500 uppercase">{upcomingEvent.month}</span>
-                  <span className="text-lg font-bold text-slate-900 dark:text-white leading-none">{upcomingEvent.day}</span>
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-slate-900 dark:text-white">{upcomingEvent.title}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{upcomingEvent.time}</p>
-                  <div className="flex -space-x-1.5 mt-1.5">
-                    {upcomingEvent.attendees.map((avatar, idx) => (
-                      <div key={idx} className="w-5 h-5 rounded-full ring-2 ring-white dark:ring-slate-900 bg-slate-200 overflow-hidden">
-                        <img src={avatar} alt="Attendee" className="w-full h-full object-cover" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-slate-500 text-center py-4">No upcoming events</p>
-            )}
-          </Card>
+          <UpcomingEventsCard
+            entityType="lead"
+            entityId={leadId}
+            maxItems={1}
+            compact
+          />
 
           {/* Notes Widget */}
           <Card className="p-5">

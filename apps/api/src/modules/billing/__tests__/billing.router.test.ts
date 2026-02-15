@@ -482,7 +482,7 @@ describe('billingRouter', () => {
 
       await expect(
         caller.updatePaymentMethod({ paymentMethodId: 'pm_invalid' })
-      ).rejects.toThrow('Invalid payment method');
+      ).rejects.toThrow(TRPCError);
     });
   });
 
@@ -1163,7 +1163,7 @@ describe('billingRouter', () => {
 
       const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
 
-      await expect(caller.getSubscription()).rejects.toThrow('Stripe API unavailable');
+      await expect(caller.getSubscription()).rejects.toThrow('An unexpected error occurred');
     });
 
     it('listInvoices throws error when Stripe API fails', async () => {

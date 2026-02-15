@@ -249,15 +249,15 @@ describe('Ticket Aggregate', () => {
         expect(ticket.status).toBe('OPEN'); // Unchanged
       });
 
-      it('should reject transition from CLOSED (terminal state)', () => {
+      it('should reject transition from CLOSED to OPEN (invalid transition)', () => {
         ticket.changeStatus('CLOSED', 'admin-123');
         ticket.clearDomainEvents();
 
         const result = ticket.changeStatus('OPEN', 'agent-456');
 
         expect(result.isFailure).toBe(true);
-        expect(result.error).toBeInstanceOf(TicketAlreadyClosedError);
-        expect(result.error.code).toBe('TICKET_ALREADY_CLOSED');
+        expect(result.error).toBeInstanceOf(InvalidTicketTransitionError);
+        expect(result.error.code).toBe('INVALID_TICKET_TRANSITION');
         expect(ticket.status).toBe('CLOSED'); // Unchanged
       });
 

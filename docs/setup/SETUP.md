@@ -165,6 +165,7 @@ cp .env.development .env
 - `AI_PROVIDER` - Choose 'ollama' (local) or 'openai' (cloud)
 - `OLLAMA_BASE_URL` - Ollama server URL (default: http://localhost:11434)
 - `OPENAI_API_KEY` - OpenAI API key (only if using OpenAI)
+- `OPENAI_BASE_URL` - Optional OpenAI-compatible endpoint (for vLLM or gateways)
 
 #### Authentication
 
@@ -293,6 +294,14 @@ OLLAMA_MODEL=llama2
 AI_PROVIDER=openai
 OPENAI_API_KEY=sk-your-key-here
 OPENAI_MODEL=gpt-4-turbo-preview
+```
+
+### Using OpenAI-Compatible Runtime (vLLM-ready)
+
+```bash
+AI_PROVIDER=openai
+OPENAI_BASE_URL=http://localhost:8000/v1
+OPENAI_MODEL=Qwen/Qwen2.5-7B-Instruct
 ```
 
 ## Troubleshooting

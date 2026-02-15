@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Card, Tabs, TabsList, TabsTrigger, TabsContent, ChurnRiskCard, NextBestActionCard, type ChurnRiskData, type NextBestActionData, type ChurnRiskLevel, type NBAActionType, type NBAPriority } from '@intelliflow/ui';
+import { AppAvatar } from '@/components/shared/app-avatar';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -210,13 +211,13 @@ export function ContactDetail({
             <div className="h-24 bg-gradient-to-r from-blue-100 to-blue-50 dark:from-slate-800 dark:to-slate-800" />
             <div className="px-5 pb-6 relative">
               <div className="relative -mt-10 mb-3">
-                <div className="w-20 h-20 rounded-full border-4 border-white dark:border-slate-900 bg-slate-200 overflow-hidden shadow-sm flex items-center justify-center text-2xl font-bold text-slate-500">
-                  {contact.avatarUrl ? (
-                    <img src={contact.avatarUrl} alt={fullName} className="w-full h-full object-cover" />
-                  ) : (
-                    <span>{contact.firstName[0]}{contact.lastName[0]}</span>
-                  )}
-                </div>
+                <AppAvatar
+                  name={fullName}
+                  src={contact.avatarUrl ?? null}
+                  maxInitials={2}
+                  className="w-20 h-20 border-4 border-white dark:border-slate-900 shadow-sm"
+                  fallbackClassName="text-2xl font-bold text-slate-500 bg-slate-200 dark:bg-slate-700"
+                />
               </div>
               <h2 className="text-xl font-bold text-slate-900 dark:text-white">{fullName}</h2>
               <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{contact.title}</p>
@@ -266,9 +267,13 @@ export function ContactDetail({
           <Card className="p-5">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase mb-3 tracking-wider">Contact Owner</h3>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-sm font-bold text-slate-500">
-                {contact.owner.name[0]}
-              </div>
+              <AppAvatar
+                name={contact.owner.name}
+                src={contact.owner.avatarUrl ?? null}
+                maxInitials={1}
+                className="w-10 h-10"
+                fallbackClassName="text-sm font-bold text-slate-500 bg-slate-200 dark:bg-slate-700"
+              />
               <div>
                 <p className="text-sm font-bold text-slate-900 dark:text-white">{contact.owner.name}</p>
                 {contact.owner.title && <p className="text-xs text-slate-500">{contact.owner.title}</p>}

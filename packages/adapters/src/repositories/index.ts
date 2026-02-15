@@ -10,6 +10,7 @@ export * from './PrismaAccountRepository';
 export * from './PrismaOpportunityRepository';
 export * from './PrismaTaskRepository';
 export * from './PrismaAppointmentRepository';
+export * from './PrismaCaseRepository';
 export * from './PrismaCaseDocumentRepository';
 export * from './PrismaNotificationRepository';
 export * from './PrismaNotificationPreferenceRepository';

@@ -24,6 +24,17 @@ describe('ActivityTimeline', () => {
   beforeEach(() => {
     handlers = createMockHandlers();
     resetAllMocks(handlers);
+    // JSDOM doesn't provide IntersectionObserver — stub it globally
+    global.IntersectionObserver = class MockIntersectionObserver {
+      observe = vi.fn();
+      disconnect = vi.fn();
+      unobserve = vi.fn();
+      root = null;
+      rootMargin = '';
+      thresholds = [] as number[];
+      takeRecords = () => [] as IntersectionObserverEntry[];
+      constructor(_cb: IntersectionObserverCallback, _opts?: IntersectionObserverInit) {}
+    } as unknown as typeof IntersectionObserver;
   });
 
   describe('Rendering', () => {
@@ -183,7 +194,7 @@ describe('ActivityTimeline', () => {
         />
       );
 
-      expect(screen.getByRole('radio', { name: /All/i })).toBeInTheDocument();
+      expect(screen.getByRole('radio', { name: /^All$/i })).toBeInTheDocument();
       expect(screen.getByRole('radio', { name: /Emails/i })).toBeInTheDocument();
       expect(screen.getByRole('radio', { name: /Calls/i })).toBeInTheDocument();
       expect(screen.getByRole('radio', { name: /Meetings/i })).toBeInTheDocument();
@@ -245,7 +256,7 @@ describe('ActivityTimeline', () => {
       fireEvent.click(screen.getByRole('radio', { name: /Emails/i }));
 
       // Click "All" to reset
-      fireEvent.click(screen.getByRole('radio', { name: /All/i }));
+      fireEvent.click(screen.getByRole('radio', { name: /^All$/i }));
 
       expect(screen.getByText(/Showing 5 of 5/)).toBeInTheDocument();
     });
@@ -440,15 +451,16 @@ describe('ActivityTimeline', () => {
       const observeMock = vi.fn();
       const disconnectMock = vi.fn();
 
-      global.IntersectionObserver = vi.fn(() => ({
-        observe: observeMock,
-        disconnect: disconnectMock,
-        unobserve: vi.fn(),
-        root: null,
-        rootMargin: '',
-        thresholds: [],
-        takeRecords: () => [],
-      })) as unknown as typeof IntersectionObserver;
+      global.IntersectionObserver = class MockIO {
+        observe = observeMock;
+        disconnect = disconnectMock;
+        unobserve = vi.fn();
+        root = null;
+        rootMargin = '';
+        thresholds = [] as number[];
+        takeRecords = () => [] as IntersectionObserverEntry[];
+        constructor(_cb: IntersectionObserverCallback, _opts?: IntersectionObserverInit) {}
+      } as unknown as typeof IntersectionObserver;
 
       const activities = createMockActivityList(5);
       render(

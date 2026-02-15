@@ -13,7 +13,7 @@ The **AI/Intelligence** domain covers Lead Scoring, Sentiment Analysis, Churn Ri
 | Feature | AI Chain | Router | Frontend UI | Route | Status |
 |---------|----------|--------|-------------|-------|--------|
 | Lead Scoring | IFC-005 | IFC-013 | IFC-023 + PG-148 | `/agent-approvals/lead-scoring` | COMPLETE (dashboard pending) |
-| Sentiment Analysis | IFC-039 | Partial | PG-142 | `/agent-approvals/sentiment` | UI PLANNED (Sprint 7) |
+| Sentiment Analysis | IFC-039 | Partial | PG-142 | `/agent-approvals/sentiment` | ✅ COMPLETE |
 | Churn Risk | IFC-095 | Partial | PG-143 | `/agent-approvals/churn-risk` | UI PLANNED (Sprint 7) |
 | RAG/Search | IFC-039 | IFC-156 | PG-144 | `/agent-approvals/ai-search` | UI PLANNED (Sprint 7) |
 | Auto-Response | IFC-029 | IFC-029 | IFC-149 | `/agent-approvals` | COMPLETE |
@@ -174,7 +174,7 @@ The **AI/Intelligence** domain covers Lead Scoring, Sentiment Analysis, Churn Ri
     Chain Status: ✅ UI task created
     - AI Chain: IFC-039 ✅
     - Router: Partial (in timeline.router) ⚠️
-    - Frontend: PG-142 (Sprint 7) ⏳
+    - Frontend: PG-142 (Sprint 7) ✅
 ```
 
 ---
@@ -457,7 +457,7 @@ The **AI/Intelligence** domain covers Lead Scoring, Sentiment Analysis, Churn Ri
 |---------|---------|-------|--------------|--------|--------|
 | IFC-149 | Agent Approvals | `/agent-approvals` | IFC-139 | 6 | COMPLETED ✅ |
 | IFC-181 | AI Review Queue | `/agent-approvals/ai-review` | IFC-180, IFC-149 | 6 | COMPLETED ✅ |
-| PG-142 | Sentiment Dashboard | `/agent-approvals/sentiment` | IFC-039, IFC-181 | 7 | BACKLOG |
+| PG-142 | Sentiment Dashboard | `/agent-approvals/sentiment` | IFC-039, IFC-181 | 7 | COMPLETED ✅ |
 | PG-143 | Churn Risk Dashboard | `/agent-approvals/churn-risk` | IFC-095, IFC-181 | 7 | BACKLOG |
 | PG-144 | AI Search | `/agent-approvals/ai-search` | IFC-156, IFC-155, IFC-181 | 7 | BACKLOG |
 | PG-148 | Lead Scoring Dashboard | `/agent-approvals/lead-scoring` | IFC-005, IFC-023, IFC-181 | 7 | BACKLOG |
@@ -482,7 +482,7 @@ The **AI/Intelligence** domain covers Lead Scoring, Sentiment Analysis, Churn Ri
 | Feature | AI Chain | Router | Frontend | Status |
 |---------|----------|--------|----------|--------|
 | Lead Scoring | IFC-005 ✅ | IFC-013 ✅ | IFC-023 ✅ + PG-148 | COMPLETE + dashboard planned |
-| Sentiment | IFC-039 ✅ | Partial ⚠️ | PG-142 (Sprint 7) | UI PLANNED |
+| Sentiment | IFC-039 ✅ | Partial ⚠️ | PG-142 (Sprint 7) ✅ | COMPLETE |
 | Churn Risk | IFC-095 ✅ | Partial ⚠️ | PG-143 (Sprint 7) | UI PLANNED |
 | RAG/Search | IFC-039 ✅ | IFC-156 ✅ | PG-144 (Sprint 7) | UI PLANNED |
 | Auto-Response | IFC-029 ✅ | IFC-029 ✅ | IFC-149 ✅ | COMPLETE |
@@ -511,7 +511,7 @@ The **AI/Intelligence** domain covers Lead Scoring, Sentiment Analysis, Churn Ri
     ├────────────────────────┼─────────────┼──────────────────────────────────────────────────┤
     │ AutoResponseChain      │ IFC-029     │ ✅ Complete + UI (IFC-149)                       │
     │ LeadScoringChain       │ IFC-005     │ ✅ Complete + UI (IFC-023) + Dashboard (PG-148)  │
-    │ SentimentAnalysisChain │ IFC-039     │ ✅ Chain complete, UI planned (PG-142, Sprint 7) │
+    │ SentimentAnalysisChain │ IFC-039     │ ✅ Chain + UI complete (PG-142, Sprint 7)        │
     │ ChurnRiskChain         │ IFC-095     │ ✅ Chain complete, UI planned (PG-143, Sprint 7) │
     │ EmbeddingChain         │ AI-SETUP-003│ ✅ Complete (internal use)                       │
     │ RAGContextChain        │ IFC-039     │ ✅ Chain complete, UI planned (PG-144, Sprint 7) │

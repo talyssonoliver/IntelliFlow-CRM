@@ -94,44 +94,44 @@ function MethodCard({ method, selected, onSelect }: MethodCardProps) {
       onClick={onSelect}
       className={cn(
         'w-full p-4 rounded-lg border-2 text-left transition-colors',
-        'focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-slate-900',
+        'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background',
         selected
-          ? 'border-[#137fec] bg-[#137fec]/10'
-          : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
+          ? 'border-primary bg-primary/10'
+          : 'border-border bg-muted/50 hover:border-muted-foreground/30'
       )}
     >
       <div className="flex items-start gap-3">
         <div
           className={cn(
             'w-10 h-10 rounded-lg flex items-center justify-center',
-            selected ? 'bg-[#137fec]' : 'bg-slate-700'
+            selected ? 'bg-primary' : 'bg-muted'
           )}
         >
-          <span className="material-symbols-outlined text-white" aria-hidden="true">
+          <span className={cn('material-symbols-outlined', selected ? 'text-primary-foreground' : 'text-muted-foreground')} aria-hidden="true">
             {method.icon}
           </span>
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <span className={cn('font-medium', selected ? 'text-white' : 'text-slate-300')}>
+            <span className={cn('font-medium', selected ? 'text-foreground' : 'text-foreground/80')}>
               {method.name}
             </span>
             {method.recommended && (
-              <span className="text-xs px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full">
+              <span className="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-full">
                 Recommended
               </span>
             )}
           </div>
-          <p className="text-sm text-slate-400 mt-1">{method.description}</p>
+          <p className="text-sm text-muted-foreground mt-1">{method.description}</p>
         </div>
         <div
           className={cn(
             'w-5 h-5 rounded-full border-2 flex items-center justify-center',
-            selected ? 'border-[#137fec] bg-[#137fec]' : 'border-slate-600'
+            selected ? 'border-primary bg-primary' : 'border-border'
           )}
         >
           {selected && (
-            <span className="material-symbols-outlined text-sm text-white" aria-hidden="true">
+            <span className="material-symbols-outlined text-sm text-primary-foreground" aria-hidden="true">
               check
             </span>
           )}
@@ -153,7 +153,7 @@ function VerificationInput({ value, onChange, onSubmit, error, loading }: Verifi
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <label htmlFor="verification-code" className="block text-sm font-medium text-slate-300">
+        <label htmlFor="verification-code" className="block text-sm font-medium text-foreground">
           Verification Code
         </label>
         <input
@@ -172,15 +172,15 @@ function VerificationInput({ value, onChange, onSubmit, error, loading }: Verifi
           placeholder="000000"
           className={cn(
             'w-full px-4 py-3 text-center text-2xl font-mono tracking-[0.5em]',
-            'bg-slate-700 border-2 rounded-lg',
-            'focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-slate-900',
-            error ? 'border-red-500' : 'border-slate-600 focus:border-[#137fec]'
+            'bg-muted border-2 rounded-lg text-foreground',
+            'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background',
+            error ? 'border-destructive' : 'border-border focus:border-primary'
           )}
           aria-describedby={error ? 'verification-error' : undefined}
           aria-invalid={!!error}
         />
         {error && (
-          <p id="verification-error" className="text-sm text-red-400 flex items-center gap-1">
+          <p id="verification-error" className="text-sm text-destructive flex items-center gap-1">
             <span className="material-symbols-outlined text-sm" aria-hidden="true">
               error
             </span>
@@ -196,14 +196,14 @@ function VerificationInput({ value, onChange, onSubmit, error, loading }: Verifi
           'w-full py-3 px-4 rounded-lg font-medium transition-colors',
           'flex items-center justify-center gap-2',
           value.length === 6 && !loading
-            ? 'bg-[var(--color-primary,#137fec)] text-white hover:bg-[var(--color-primary-hover,#0d6ecc)]'
-            : 'bg-slate-700 text-slate-500 cursor-not-allowed',
-          'focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-slate-900'
+            ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+            : 'bg-muted text-muted-foreground cursor-not-allowed',
+          'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background'
         )}
       >
         {loading ? (
           <>
-            <span className="w-5 h-5 border-2 border-slate-400 border-t-white rounded-full animate-spin" />
+            <span className="w-5 h-5 border-2 border-muted-foreground border-t-primary-foreground rounded-full animate-spin" />
             Verifying...
           </>
         ) : (
@@ -378,10 +378,10 @@ export default function MfaSetupPage() {
                 className={cn(
                   'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium',
                   step === s
-                    ? 'bg-[#137fec] text-white'
+                    ? 'bg-primary text-primary-foreground'
                     : ['method', 'setup', 'verify', 'backup', 'complete'].indexOf(step) > i
-                      ? 'bg-green-500 text-white'
-                      : 'bg-slate-700 text-slate-400'
+                      ? 'bg-emerald-500 text-white dark:text-white'
+                      : 'bg-muted text-muted-foreground'
                 )}
               >
                 {['method', 'setup', 'verify', 'backup', 'complete'].indexOf(step) > i ? (
@@ -397,8 +397,8 @@ export default function MfaSetupPage() {
                   className={cn(
                     'w-12 h-0.5 mx-1',
                     ['method', 'setup', 'verify', 'backup', 'complete'].indexOf(step) > i
-                      ? 'bg-green-500'
-                      : 'bg-slate-700'
+                      ? 'bg-emerald-500'
+                      : 'bg-muted'
                   )}
                 />
               )}
@@ -410,8 +410,8 @@ export default function MfaSetupPage() {
       {/* Step Content */}
       <Card className="max-w-lg p-6">
         <div className="mb-6">
-          <h2 className="text-xl font-semibold text-slate-100">{stepInfo.title}</h2>
-          <p className="text-slate-400 mt-1">{stepInfo.description}</p>
+          <h2 className="text-xl font-semibold text-foreground">{stepInfo.title}</h2>
+          <p className="text-muted-foreground mt-1">{stepInfo.description}</p>
         </div>
 
         {/* Method Selection Step */}
@@ -431,7 +431,7 @@ export default function MfaSetupPage() {
             {/* Phone input for SMS method */}
             {selectedMethod === 'sms' && (
               <div className="space-y-2">
-                <label htmlFor="phone-number" className="block text-sm font-medium text-slate-300">
+                <label htmlFor="phone-number" className="block text-sm font-medium text-foreground">
                   Phone Number
                 </label>
                 <input
@@ -441,12 +441,12 @@ export default function MfaSetupPage() {
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   placeholder="+1 (555) 123-4567"
                   className={cn(
-                    'w-full px-4 py-3 bg-slate-700 border-2 border-slate-600 rounded-lg',
-                    'focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:border-[#137fec]',
-                    'text-slate-100 placeholder:text-slate-500'
+                    'w-full px-4 py-3 bg-muted border-2 border-border rounded-lg',
+                    'focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary',
+                    'text-foreground placeholder:text-muted-foreground'
                   )}
                 />
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-muted-foreground">
                   Enter your phone number in E.164 format (e.g., +14155551234)
                 </p>
               </div>
@@ -454,8 +454,8 @@ export default function MfaSetupPage() {
 
             {/* Error display */}
             {verificationError && step === 'method' && (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
-                <p className="text-sm text-red-400 flex items-center gap-2">
+              <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3">
+                <p className="text-sm text-destructive flex items-center gap-2">
                   <span className="material-symbols-outlined text-lg" aria-hidden="true">
                     error
                   </span>
@@ -470,16 +470,16 @@ export default function MfaSetupPage() {
               disabled={setupMfaMutation.isPending || (selectedMethod === 'sms' && !phoneNumber)}
               className={cn(
                 'w-full py-3 px-4 rounded-lg font-medium',
-                'bg-[var(--color-primary,#137fec)] text-white',
-                'hover:bg-[var(--color-primary-hover,#0d6ecc)]',
-                'focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-slate-900',
+                'bg-primary text-primary-foreground',
+                'hover:bg-primary/90',
+                'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background',
                 'transition-colors flex items-center justify-center gap-2',
                 'disabled:opacity-50 disabled:cursor-not-allowed'
               )}
             >
               {setupMfaMutation.isPending ? (
                 <>
-                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                   Setting up...
                 </>
               ) : (
@@ -507,7 +507,7 @@ export default function MfaSetupPage() {
         {/* SMS/Email Setup Step (placeholder) */}
         {step === 'setup' && (setupData?.method === 'sms' || setupData?.method === 'email') && (
           <div className="space-y-4">
-            <p className="text-slate-400">
+            <p className="text-muted-foreground">
               {setupData.method === 'sms'
                 ? 'Enter your phone number to receive verification codes.'
                 : 'We will send verification codes to your email.'}
@@ -517,8 +517,8 @@ export default function MfaSetupPage() {
                 type="tel"
                 placeholder="+1 (555) 123-4567"
                 className={cn(
-                  'w-full px-4 py-3 bg-slate-700 border-2 border-slate-600 rounded-lg',
-                  'focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:border-[#137fec]'
+                  'w-full px-4 py-3 bg-muted border-2 border-border rounded-lg text-foreground',
+                  'focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary'
                 )}
               />
             )}
@@ -527,9 +527,9 @@ export default function MfaSetupPage() {
               onClick={handleSetupComplete}
               className={cn(
                 'w-full py-3 px-4 rounded-lg font-medium',
-                'bg-[var(--color-primary,#137fec)] text-white',
-                'hover:bg-[var(--color-primary-hover,#0d6ecc)]',
-                'focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-slate-900'
+                'bg-primary text-primary-foreground',
+                'hover:bg-primary/90',
+                'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background'
               )}
             >
               Send Code
@@ -561,16 +561,16 @@ export default function MfaSetupPage() {
         {/* Complete Step */}
         {step === 'complete' && (
           <div className="text-center space-y-6">
-            <div className="w-16 h-16 mx-auto bg-green-500/20 rounded-full flex items-center justify-center">
-              <span className="material-symbols-outlined text-4xl text-green-400" aria-hidden="true">
+            <div className="w-16 h-16 mx-auto bg-emerald-500/20 rounded-full flex items-center justify-center">
+              <span className="material-symbols-outlined text-4xl text-emerald-600 dark:text-emerald-400" aria-hidden="true">
                 verified_user
               </span>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-slate-100">
+              <h3 className="text-lg font-semibold text-foreground">
                 Two-Factor Authentication Enabled
               </h3>
-              <p className="text-slate-400 mt-2">
+              <p className="text-muted-foreground mt-2">
                 Your account is now protected with an additional layer of security.
                 You will need to enter a verification code when signing in.
               </p>
@@ -580,9 +580,9 @@ export default function MfaSetupPage() {
               onClick={handleComplete}
               className={cn(
                 'w-full py-3 px-4 rounded-lg font-medium',
-                'bg-[var(--color-primary,#137fec)] text-white',
-                'hover:bg-[var(--color-primary-hover,#0d6ecc)]',
-                'focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-slate-900',
+                'bg-primary text-primary-foreground',
+                'hover:bg-primary/90',
+                'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background',
                 'transition-colors flex items-center justify-center gap-2'
               )}
             >
@@ -600,7 +600,7 @@ export default function MfaSetupPage() {
         <div className="mt-4 text-center">
           <Link
             href="/settings/account"
-            className="text-sm text-slate-400 hover:text-white transition-colors"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             Cancel and return to settings
           </Link>

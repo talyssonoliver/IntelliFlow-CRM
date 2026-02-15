@@ -41,6 +41,18 @@ export const settingsSidebarConfig: SidebarConfig = {
           icon: 'notifications',
           href: '/settings/notifications',
         },
+        {
+          id: 'pipeline',
+          label: 'Pipeline',
+          icon: 'linear_scale',
+          href: '/settings/pipeline',
+        },
+        {
+          id: 'security',
+          label: 'Security',
+          icon: 'security',
+          href: '/settings/security/mfa',
+        },
       ],
     },
     {

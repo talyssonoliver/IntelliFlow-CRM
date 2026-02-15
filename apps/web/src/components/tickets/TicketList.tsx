@@ -26,9 +26,11 @@ import {
   StatusSelectDialog,
   type StatusOption,
   Skeleton,
+  cn,
 } from '@intelliflow/ui';
 import { TICKET_STATUSES } from '@intelliflow/domain';
 import { SearchFilterBar } from '@/components/shared';
+import { AppAvatar } from '@/components/shared/app-avatar';
 import { SLAIndicator } from './SLAIndicator';
 import { ticketStatusOptions, ticketPriorityOptions, slaStatusChips } from '@/lib/shared/filter-utils';
 import { getPriorityConfig } from '@/lib/tickets/ticket-utils';
@@ -77,9 +79,10 @@ export interface TicketListProps {
 // =============================================================================
 
 const SORT_OPTIONS = [
-  { value: 'updated', label: 'Recently Updated' },
-  { value: 'created', label: 'Newest First' },
-  { value: 'sla', label: 'SLA Priority' },
+  { value: 'updatedAt', label: 'Recently Updated' },
+  { value: 'createdAt', label: 'Newest First' },
+  { value: 'priority', label: 'Priority' },
+  { value: 'slaResolutionDue', label: 'SLA Deadline' },
 ];
 
 // =============================================================================
@@ -232,11 +235,17 @@ export function TicketList({
           if (!ticket.assignee) {
             return <span className="text-sm text-slate-500 dark:text-slate-400 italic">Unassigned</span>;
           }
+
+          const avatarValue = ticket.assigneeAvatar?.trim() ?? null;
+
           return (
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-slate-300">
-                {ticket.assigneeAvatar}
-              </div>
+              <AppAvatar
+                name={ticket.assignee}
+                src={avatarValue}
+                className="w-7 h-7"
+                fallbackClassName="text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700"
+              />
               <span className="text-sm text-slate-900 dark:text-white">{ticket.assignee}</span>
             </div>
           );
@@ -508,9 +517,22 @@ export function TicketList({
 
   return (
     <>
-      {/* Stats Cards */}
+      {/* Stats Cards — clickable to filter */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <Card className="p-4 bg-card border-border">
+        <Card
+          className={cn(
+            'p-4 border-border cursor-pointer transition-all duration-200 hover:shadow-md',
+            statusFilter === 'OPEN'
+              ? 'bg-primary/5 border-primary ring-1 ring-primary/30'
+              : 'bg-card hover:bg-accent/50'
+          )}
+          onClick={() => onStatusChange?.(statusFilter === 'OPEN' ? '' : 'OPEN')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onStatusChange?.(statusFilter === 'OPEN' ? '' : 'OPEN'); } }}
+          aria-pressed={statusFilter === 'OPEN'}
+          aria-label={`Filter by Open tickets: ${stats.open}`}
+        >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
               <span className="material-symbols-outlined text-xl text-primary">confirmation_number</span>
@@ -521,7 +543,20 @@ export function TicketList({
             </div>
           </div>
         </Card>
-        <Card className="p-4 bg-card border-border">
+        <Card
+          className={cn(
+            'p-4 border-border cursor-pointer transition-all duration-200 hover:shadow-md',
+            statusFilter === 'IN_PROGRESS'
+              ? 'bg-amber-500/5 border-amber-500 ring-1 ring-amber-500/30'
+              : 'bg-card hover:bg-accent/50'
+          )}
+          onClick={() => onStatusChange?.(statusFilter === 'IN_PROGRESS' ? '' : 'IN_PROGRESS')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onStatusChange?.(statusFilter === 'IN_PROGRESS' ? '' : 'IN_PROGRESS'); } }}
+          aria-pressed={statusFilter === 'IN_PROGRESS'}
+          aria-label={`Filter by In Progress tickets: ${stats.inProgress}`}
+        >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
               <span className="material-symbols-outlined text-xl text-amber-500">pending</span>
@@ -532,7 +567,20 @@ export function TicketList({
             </div>
           </div>
         </Card>
-        <Card className="p-4 bg-card border-border">
+        <Card
+          className={cn(
+            'p-4 border-border cursor-pointer transition-all duration-200 hover:shadow-md',
+            slaFilter === 'BREACHED'
+              ? 'bg-red-500/5 border-red-500 ring-1 ring-red-500/30'
+              : 'bg-card hover:bg-accent/50'
+          )}
+          onClick={() => onSLAChange?.(slaFilter === 'BREACHED' ? 'all' : 'BREACHED')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSLAChange?.(slaFilter === 'BREACHED' ? 'all' : 'BREACHED'); } }}
+          aria-pressed={slaFilter === 'BREACHED'}
+          aria-label={`Filter by SLA Breached tickets: ${stats.breached}`}
+        >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center">
               <span className="material-symbols-outlined text-xl text-red-500">timer_off</span>
@@ -543,7 +591,20 @@ export function TicketList({
             </div>
           </div>
         </Card>
-        <Card className="p-4 bg-card border-border">
+        <Card
+          className={cn(
+            'p-4 border-border cursor-pointer transition-all duration-200 hover:shadow-md',
+            statusFilter === 'RESOLVED'
+              ? 'bg-green-500/5 border-green-500 ring-1 ring-green-500/30'
+              : 'bg-card hover:bg-accent/50'
+          )}
+          onClick={() => onStatusChange?.(statusFilter === 'RESOLVED' ? '' : 'RESOLVED')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onStatusChange?.(statusFilter === 'RESOLVED' ? '' : 'RESOLVED'); } }}
+          aria-pressed={statusFilter === 'RESOLVED'}
+          aria-label={`Filter by Resolved tickets: ${stats.resolvedToday}`}
+        >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
               <span className="material-symbols-outlined text-xl text-green-500">check_circle</span>
@@ -560,7 +621,7 @@ export function TicketList({
       <SearchFilterBar
         searchValue={searchValue}
         onSearchChange={onSearchChange ?? (() => {})}
-        searchPlaceholder="Search tickets by subject, ID, or contact..."
+        searchPlaceholder="Search by subject, ID, contact, or assignee..."
         searchAriaLabel="Search tickets"
         filters={[
           {

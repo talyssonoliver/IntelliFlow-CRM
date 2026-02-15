@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Icon } from '@/lib/icons';
 
@@ -76,9 +77,11 @@ interface TaskQuestions {
 }
 
 export default function SwarmPage() {
+  const searchParams = useSearchParams();
+  const taskFromUrl = searchParams.get('task');
   const [health, setHealth] = useState<SwarmHealth | null>(null);
   const [activeTasks, setActiveTasks] = useState<TaskLog[]>([]);
-  const [selectedTask, setSelectedTask] = useState<string | null>(null);
+  const [selectedTask, setSelectedTask] = useState<string | null>(taskFromUrl);
   const [isLoading, setIsLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
   const [logEntries, setLogEntries] = useState<LogEntry[]>([]);
@@ -216,27 +219,23 @@ export default function SwarmPage() {
     }));
   };
 
-  // Initial fetch on mount only - no automatic polling to save memory
-  // Use the manual Refresh button to update status
+  // Initial fetch on mount
   useEffect(() => {
     fetchStatus();
     fetchQuestions();
   }, [fetchStatus, fetchQuestions]);
 
-  // DISABLED: Automatic polling - use manual refresh instead
-  // Uncomment below to enable automatic polling
-  /*
+  // Auto-poll when there are active tasks OR when navigated here from a
+  // session start (?task=...). This keeps the swarm view live so users can
+  // monitor the running session without manually refreshing.
   useEffect(() => {
-    if (activeTasks.length === 0) {
-      return;
-    }
+    if (activeTasks.length === 0 && !taskFromUrl) return;
     const interval = setInterval(() => {
       fetchStatus();
       fetchQuestions();
     }, pollInterval);
     return () => clearInterval(interval);
-  }, [activeTasks.length, pollInterval, fetchStatus, fetchQuestions]);
-  */
+  }, [activeTasks.length, taskFromUrl, pollInterval, fetchStatus, fetchQuestions]);
 
   // Auto-scroll logs
   useEffect(() => {

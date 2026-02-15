@@ -80,7 +80,7 @@ export default function GovernancePage() {
   }, []);
 
   return (
-    <div className="p-8">
+    <div className="flex flex-col gap-6">
       <div className="max-w-6xl">
         {/* Header */}
         <div className="mb-8">

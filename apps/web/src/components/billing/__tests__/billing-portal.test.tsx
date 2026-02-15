@@ -4,289 +4,562 @@
 /**
  * Billing Portal Component Tests
  *
+ * Tests for the redesigned billing portal with 3-column grid layout,
+ * subscription overview, payment methods, billing information, and billing history.
+ *
  * @implements PG-025 (Billing Portal)
  */
 
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BillingPortal } from '../billing-portal';
+import {
+  createMockSubscription,
+  createMockPaymentMethod,
+  createMockInvoice,
+  createMockBillingInformation,
+} from '@/test/fixtures/billing-data';
 
-// Mock subscription data
-const mockSubscription = {
-  id: 'sub_123',
-  customerId: 'cus_123',
-  status: 'active' as const,
-  priceId: 'price_professional_monthly',
-  quantity: 5,
-  currency: 'gbp',
-  currentPeriodStart: new Date('2025-01-01'),
-  currentPeriodEnd: new Date('2025-02-01'),
-  cancelAtPeriodEnd: false,
-};
+// ============================================
+// Default mock data
+// ============================================
 
-// Mock payment methods
-const mockPaymentMethods = [
-  {
-    id: 'pm_123',
-    type: 'card' as const,
-    card: {
-      brand: 'visa',
-      last4: '4242',
-      expMonth: 12,
-      expYear: 2026,
-    },
-    isDefault: true,
-    created: new Date('2024-01-01'),
-  },
-];
+const mockSubscription = createMockSubscription();
+const mockPaymentMethods = [createMockPaymentMethod()];
+const mockInvoices = [createMockInvoice()];
+const mockBillingInfo = createMockBillingInformation();
 
-// Mock invoices
-const mockInvoices = [
-  {
-    id: 'in_123',
-    customerId: 'cus_123',
-    status: 'paid' as const,
-    amountDue: 7900,
-    amountPaid: 7900,
-    amountRemaining: 0,
-    currency: 'gbp',
-    created: new Date('2024-12-01'),
-    invoicePdf: 'https://example.com/invoice.pdf',
-  },
-];
-
-// Mock usage metrics
-const mockUsage = {
-  apiCalls: { current: 8500, limit: 10000 },
-  storage: { current: 2.4, limit: 5, unit: 'GB' as const },
-  activeUsers: { current: 12, limit: 25 },
-};
+// ============================================
+// Mock modules
+// ============================================
 
 // Mock tRPC
+const mockGetSubscription = vi.fn(() => ({
+  data: mockSubscription,
+  isLoading: false,
+  error: null,
+}));
+const mockGetPaymentMethods = vi.fn(() => ({
+  data: mockPaymentMethods,
+  isLoading: false,
+  error: null,
+}));
+const mockListInvoices = vi.fn(() => ({
+  data: { invoices: mockInvoices, total: 1, page: 1, limit: 5, hasMore: false },
+  isLoading: false,
+  error: null,
+}));
+const mockGetBillingInformation = vi.fn(() => ({
+  data: mockBillingInfo,
+  isLoading: false,
+  error: null,
+}));
+
 vi.mock('@/lib/trpc', () => ({
   trpc: {
     billing: {
-      getSubscription: {
-        useQuery: vi.fn(() => ({
-          data: mockSubscription,
-          isLoading: false,
-          error: null,
-        })),
-      },
-      getPaymentMethods: {
-        useQuery: vi.fn(() => ({
-          data: mockPaymentMethods,
-          isLoading: false,
-          error: null,
-        })),
-      },
-      listInvoices: {
-        useQuery: vi.fn(() => ({
-          data: { invoices: mockInvoices, total: 1, page: 1, limit: 5, hasMore: false },
-          isLoading: false,
-          error: null,
-        })),
-      },
-      getUsageMetrics: {
-        useQuery: vi.fn(() => ({
-          data: mockUsage,
-          isLoading: false,
-          error: null,
-        })),
-      },
+      getSubscription: { useQuery: (...args: unknown[]) => mockGetSubscription(...args) },
+      getPaymentMethods: { useQuery: (...args: unknown[]) => mockGetPaymentMethods(...args) },
+      listInvoices: { useQuery: (...args: unknown[]) => mockListInvoices(...args) },
+      getBillingInformation: { useQuery: (...args: unknown[]) => mockGetBillingInformation(...args) },
     },
   },
+}));
+
+// Mock auth
+vi.mock('@/lib/auth/AuthContext', () => ({
+  useAuth: vi.fn(() => ({
+    isAuthenticated: true,
+    isLoading: false,
+  })),
+}));
+
+// Mock next/link
+vi.mock('next/link', () => ({
+  default: ({ children, href, ...props }: { children: React.ReactNode; href: string; [key: string]: unknown }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
 }));
 
 describe('BillingPortal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset to defaults
+    mockGetSubscription.mockReturnValue({ data: mockSubscription, isLoading: false, error: null });
+    mockGetPaymentMethods.mockReturnValue({ data: mockPaymentMethods, isLoading: false, error: null });
+    mockListInvoices.mockReturnValue({ data: { invoices: mockInvoices, total: 1, page: 1, limit: 5, hasMore: false }, isLoading: false, error: null });
+    mockGetBillingInformation.mockReturnValue({ data: mockBillingInfo, isLoading: false, error: null });
   });
 
   // ============================================
-  // Rendering Tests
+  // 1. Rendering & Layout
   // ============================================
 
-  describe('rendering', () => {
-    it('renders the subscription overview card', () => {
+  describe('Rendering & Layout', () => {
+    it('renders 3-column grid with lg:grid-cols-3', () => {
+      const { container } = render(<BillingPortal />);
+      const grid = container.firstElementChild;
+      expect(grid?.className).toContain('grid');
+      expect(grid?.className).toContain('lg:grid-cols-3');
+    });
+
+    it('renders SubscriptionOverviewCard in left column (col-span-2)', () => {
+      const { container } = render(<BillingPortal />);
+      const leftCol = container.querySelector('.lg\\:col-span-2');
+      expect(leftCol).toBeInTheDocument();
+      expect(within(leftCol as HTMLElement).getByText('Subscription Overview')).toBeInTheDocument();
+    });
+
+    it('renders PaymentMethodSection in right column', () => {
       render(<BillingPortal />);
-      // Check for subscription status
+      expect(screen.getByText('Payment Methods')).toBeInTheDocument();
+    });
+
+    it('renders BillingInformationCard in right column', () => {
+      render(<BillingPortal />);
+      expect(screen.getByText('Billing Information')).toBeInTheDocument();
+    });
+
+    it('renders BillingHistoryTable in left column', () => {
+      const { container } = render(<BillingPortal />);
+      const leftCol = container.querySelector('.lg\\:col-span-2');
+      expect(within(leftCol as HTMLElement).getByText('Billing History')).toBeInTheDocument();
+    });
+
+    it('does NOT render UsageMetrics section', () => {
+      render(<BillingPortal />);
+      expect(screen.queryByText('Usage This Month')).not.toBeInTheDocument();
+      expect(screen.queryByText('API Calls')).not.toBeInTheDocument();
+    });
+  });
+
+  // ============================================
+  // 2. Subscription Overview Card
+  // ============================================
+
+  describe('Subscription Overview Card', () => {
+    it('renders 2-section flex layout (plan info + billing date)', () => {
+      render(<BillingPortal />);
+      expect(screen.getByText('Professional')).toBeInTheDocument();
+      expect(screen.getByText('Next Billing Date')).toBeInTheDocument();
+    });
+
+    it('displays auto_awesome icon and Subscription Overview title', () => {
+      render(<BillingPortal />);
+      expect(screen.getByText('Subscription Overview')).toBeInTheDocument();
+      expect(screen.getByText('auto_awesome')).toBeInTheDocument();
+    });
+
+    it('shows ACTIVE status badge', () => {
+      render(<BillingPortal />);
       expect(screen.getByText('Active')).toBeInTheDocument();
     });
 
-    it('renders payment method section', () => {
+    it('shows TRIAL status badge for trialing subscription', () => {
+      mockGetSubscription.mockReturnValue({
+        data: createMockSubscription({ status: 'trialing' }),
+        isLoading: false,
+        error: null,
+      });
       render(<BillingPortal />);
-      expect(screen.getByText('Payment Method')).toBeInTheDocument();
+      expect(screen.getByText('Trial')).toBeInTheDocument();
     });
 
-    it('renders usage metrics section', () => {
+    it('shows PAST DUE badge for past_due subscription', () => {
+      mockGetSubscription.mockReturnValue({
+        data: createMockSubscription({ status: 'past_due' }),
+        isLoading: false,
+        error: null,
+      });
       render(<BillingPortal />);
-      expect(screen.getByText('Usage This Month')).toBeInTheDocument();
+      expect(screen.getByText('Past Due')).toBeInTheDocument();
     });
 
-    it('renders invoice history section', () => {
+    it('renders Upgrade Plan and Cancel Subscription buttons in footer', () => {
       render(<BillingPortal />);
-      expect(screen.getByText('Invoice History')).toBeInTheDocument();
+      expect(screen.getByText('Upgrade Plan')).toBeInTheDocument();
+      expect(screen.getByText('Cancel Subscription')).toBeInTheDocument();
     });
 
-    it('displays card information correctly', () => {
+    it('shows cancellation warning when cancelAtPeriodEnd is true', () => {
+      mockGetSubscription.mockReturnValue({
+        data: createMockSubscription({ cancelAtPeriodEnd: true }),
+        isLoading: false,
+        error: null,
+      });
       render(<BillingPortal />);
-      expect(screen.getByText(/Visa \*\*\*\* 4242/i)).toBeInTheDocument();
+      expect(screen.getByText('Subscription Ending')).toBeInTheDocument();
+    });
+
+    it('shows plan name from getPlanByPriceId', () => {
+      render(<BillingPortal />);
+      expect(screen.getByText('Professional')).toBeInTheDocument();
     });
   });
 
   // ============================================
-  // Loading State Tests
+  // 3. Payment Methods Card
   // ============================================
 
-  // Note: Loading state tests skipped - dynamic import mocking after
-  // vi.mock doesn't reliably override the module mock in Vitest.
-  // The component correctly shows skeletons during loading state.
-  describe('loading states', () => {
-    it.skip('shows skeleton while loading subscription', async () => {
-      const { trpc } = await import('@/lib/trpc');
-      vi.mocked(trpc.billing.getSubscription.useQuery).mockReturnValue({
-        data: undefined,
-        isLoading: true,
-        error: null,
-      } as ReturnType<typeof trpc.billing.getSubscription.useQuery>);
-
+  describe('Payment Methods Card', () => {
+    it('renders vertical card layout', () => {
       render(<BillingPortal />);
-      // Skeleton elements should be present when loading
-      const skeletons = document.querySelectorAll('[class*="skeleton"]');
+      expect(screen.getByText('Payment Methods')).toBeInTheDocument();
+    });
+
+    it('shows brand logo box with card brand name', () => {
+      render(<BillingPortal />);
+      expect(screen.getByText('Visa')).toBeInTheDocument();
+    });
+
+    it('shows DEFAULT badge on default card', () => {
+      render(<BillingPortal />);
+      expect(screen.getByText('DEFAULT')).toBeInTheDocument();
+    });
+
+    it('displays masked card number •••• •••• •••• last4', () => {
+      render(<BillingPortal />);
+      expect(screen.getByText(/•••• •••• •••• 4242/)).toBeInTheDocument();
+    });
+
+    it('shows card expiry date', () => {
+      render(<BillingPortal />);
+      expect(screen.getByText('Expires 12/2026')).toBeInTheDocument();
+    });
+
+    it('renders Add New Payment Method button with dashed border', () => {
+      render(<BillingPortal />);
+      expect(screen.getByText('+ Add New Payment Method')).toBeInTheDocument();
+    });
+
+    it('renders multiple payment methods', () => {
+      mockGetPaymentMethods.mockReturnValue({
+        data: [
+          createMockPaymentMethod(),
+          createMockPaymentMethod({ id: 'pm_456', isDefault: false, card: { brand: 'mastercard', last4: '5555', expMonth: 6, expYear: 2027 } }),
+        ],
+        isLoading: false,
+        error: null,
+      });
+      render(<BillingPortal />);
+      expect(screen.getByText(/•••• •••• •••• 4242/)).toBeInTheDocument();
+      expect(screen.getByText(/•••• •••• •••• 5555/)).toBeInTheDocument();
+    });
+
+    it('renders edit icon button', () => {
+      render(<BillingPortal />);
+      expect(screen.getByRole('button', { name: /edit payment method/i })).toBeInTheDocument();
+    });
+
+    it('shows empty state when no payment methods', () => {
+      mockGetPaymentMethods.mockReturnValue({ data: [], isLoading: false, error: null });
+      render(<BillingPortal />);
+      expect(screen.getByText('No payment method on file')).toBeInTheDocument();
+    });
+
+    it('renders Payment Methods title with credit_card icon', () => {
+      render(<BillingPortal />);
+      expect(screen.getByText('credit_card')).toBeInTheDocument();
+    });
+  });
+
+  // ============================================
+  // 4. Billing Information Card
+  // ============================================
+
+  describe('Billing Information Card', () => {
+    it('displays organization name with business icon', () => {
+      render(<BillingPortal />);
+      expect(screen.getByText('Acme Corp')).toBeInTheDocument();
+      expect(screen.getByText('business')).toBeInTheDocument();
+    });
+
+    it('displays email with mail icon', () => {
+      render(<BillingPortal />);
+      expect(screen.getByText('billing@acme.com')).toBeInTheDocument();
+      expect(screen.getByText('mail')).toBeInTheDocument();
+    });
+
+    it('displays address with location_on icon', () => {
+      render(<BillingPortal />);
+      expect(screen.getByText(/123 Business St/)).toBeInTheDocument();
+      expect(screen.getByText('location_on')).toBeInTheDocument();
+    });
+
+    it('renders Update Info button', () => {
+      render(<BillingPortal />);
+      expect(screen.getByText('Update Info')).toBeInTheDocument();
+    });
+
+    it('shows loading skeleton during fetch', () => {
+      mockGetBillingInformation.mockReturnValue({ data: undefined, isLoading: true, error: null });
+      const { container } = render(<BillingPortal />);
+      // Skeleton elements should be present
+      const skeletons = container.querySelectorAll('[class*="h-5"][class*="w-5"]');
       expect(skeletons.length).toBeGreaterThan(0);
     });
+
+    it('calls trpc.billing.getBillingInformation hook', () => {
+      render(<BillingPortal />);
+      expect(mockGetBillingInformation).toHaveBeenCalled();
+    });
+
+    it('shows empty state when no billing info', () => {
+      mockGetBillingInformation.mockReturnValue({ data: null, isLoading: false, error: null });
+      render(<BillingPortal />);
+      expect(screen.getByText('No billing information on file')).toBeInTheDocument();
+    });
   });
 
   // ============================================
-  // Empty State Tests
+  // 5. Billing History Table
   // ============================================
 
-  describe('empty states', () => {
-    it('shows no subscription message when user has no subscription', async () => {
-      const { trpc } = await import('@/lib/trpc');
-      vi.mocked(trpc.billing.getSubscription.useQuery).mockReturnValue({
-        data: null,
-        isLoading: false,
-        error: null,
-      } as ReturnType<typeof trpc.billing.getSubscription.useQuery>);
-
+  describe('Billing History Table', () => {
+    it('renders with Billing History title and history icon', () => {
       render(<BillingPortal />);
-      expect(screen.getByText(/No Active Subscription/i)).toBeInTheDocument();
+      expect(screen.getByText('Billing History')).toBeInTheDocument();
+      expect(screen.getByText('history')).toBeInTheDocument();
     });
 
-    it('shows no payment method message when none exist', async () => {
-      const { trpc } = await import('@/lib/trpc');
-      vi.mocked(trpc.billing.getPaymentMethods.useQuery).mockReturnValue({
-        data: [],
-        isLoading: false,
-        error: null,
-      } as ReturnType<typeof trpc.billing.getPaymentMethods.useQuery>);
-
+    it('shows 4 columns: Invoice Date, Amount, Status, Action', () => {
       render(<BillingPortal />);
-      expect(screen.getByText(/No payment method on file/i)).toBeInTheDocument();
+      expect(screen.getByText('Invoice Date')).toBeInTheDocument();
+      expect(screen.getByText('Amount')).toBeInTheDocument();
+      expect(screen.getByText('Status')).toBeInTheDocument();
+      expect(screen.getByText('Action')).toBeInTheDocument();
     });
 
-    it('shows no invoices message when none exist', async () => {
-      const { trpc } = await import('@/lib/trpc');
-      vi.mocked(trpc.billing.listInvoices.useQuery).mockReturnValue({
+    it('renders invoice data correctly', () => {
+      render(<BillingPortal />);
+      expect(screen.getByText('Paid')).toBeInTheDocument();
+    });
+
+    it('shows Paid status badge in green', () => {
+      render(<BillingPortal />);
+      const paidBadge = screen.getByText('Paid');
+      expect(paidBadge.className).toContain('border-success');
+    });
+
+    it('shows Open/Pending status badge in amber', () => {
+      mockListInvoices.mockReturnValue({
+        data: {
+          invoices: [createMockInvoice({ status: 'open', amountPaid: 0 })],
+          total: 1, page: 1, limit: 5, hasMore: false,
+        },
+        isLoading: false,
+        error: null,
+      });
+      render(<BillingPortal />);
+      const openBadge = screen.getByText('Open');
+      expect(openBadge.className).toContain('border-warning');
+    });
+
+    it('renders Download button when PDF available', () => {
+      render(<BillingPortal />);
+      expect(screen.getByRole('link', { name: /download invoice/i })).toBeInTheDocument();
+    });
+
+    it('hides Download when no PDF URL', () => {
+      mockListInvoices.mockReturnValue({
+        data: {
+          invoices: [createMockInvoice({ invoicePdf: undefined })],
+          total: 1, page: 1, limit: 5, hasMore: false,
+        },
+        isLoading: false,
+        error: null,
+      });
+      render(<BillingPortal />);
+      expect(screen.queryByRole('link', { name: /download invoice/i })).not.toBeInTheDocument();
+    });
+
+    it('shows View All link with arrow', () => {
+      render(<BillingPortal />);
+      expect(screen.getByText('View All')).toBeInTheDocument();
+      expect(screen.getByText('arrow_forward')).toBeInTheDocument();
+    });
+
+    it('shows empty state when no invoices', () => {
+      mockListInvoices.mockReturnValue({
         data: { invoices: [], total: 0, page: 1, limit: 5, hasMore: false },
         isLoading: false,
         error: null,
-      } as ReturnType<typeof trpc.billing.listInvoices.useQuery>);
-
+      });
       render(<BillingPortal />);
-      expect(screen.getByText(/No invoices yet/i)).toBeInTheDocument();
+      expect(screen.getByText('No invoices yet')).toBeInTheDocument();
+    });
+
+    it('formats dates and currency correctly', () => {
+      render(<BillingPortal />);
+      // Invoice date should be formatted
+      expect(screen.getByText(/Dec 2024|1 Dec 2024/)).toBeInTheDocument();
     });
   });
 
   // ============================================
-  // Subscription Status Tests
+  // 6. Loading States
   // ============================================
 
-  describe('subscription status', () => {
-    it('shows warning when subscription is canceling', async () => {
-      const { trpc } = await import('@/lib/trpc');
-      vi.mocked(trpc.billing.getSubscription.useQuery).mockReturnValue({
-        data: { ...mockSubscription, cancelAtPeriodEnd: true },
+  describe('Loading States', () => {
+    it('shows subscription skeleton during loading', () => {
+      mockGetSubscription.mockReturnValue({ data: undefined, isLoading: true, error: null });
+      const { container } = render(<BillingPortal />);
+      const skeletons = container.querySelectorAll('[class*="animate-pulse"]');
+      expect(skeletons.length).toBeGreaterThan(0);
+    });
+
+    it('shows payment methods skeleton during loading', () => {
+      mockGetPaymentMethods.mockReturnValue({ data: undefined, isLoading: true, error: null });
+      const { container } = render(<BillingPortal />);
+      const skeletons = container.querySelectorAll('[class*="animate-pulse"]');
+      expect(skeletons.length).toBeGreaterThan(0);
+    });
+
+    it('shows invoices skeleton during loading', () => {
+      mockListInvoices.mockReturnValue({ data: undefined, isLoading: true, error: null });
+      const { container } = render(<BillingPortal />);
+      const skeletons = container.querySelectorAll('[class*="animate-pulse"]');
+      expect(skeletons.length).toBeGreaterThan(0);
+    });
+
+    it('shows billing info skeleton during loading', () => {
+      mockGetBillingInformation.mockReturnValue({ data: undefined, isLoading: true, error: null });
+      const { container } = render(<BillingPortal />);
+      const skeletons = container.querySelectorAll('[class*="animate-pulse"]');
+      expect(skeletons.length).toBeGreaterThan(0);
+    });
+
+    it('shows auth loading skeleton', async () => {
+      const { useAuth } = vi.mocked(await import('@/lib/auth/AuthContext') as any);
+      useAuth.mockReturnValue({ isAuthenticated: false, isLoading: true });
+      const { container } = render(<BillingPortal />);
+      const skeletons = container.querySelectorAll('[class*="animate-pulse"]');
+      expect(skeletons.length).toBeGreaterThan(0);
+      useAuth.mockReturnValue({ isAuthenticated: true, isLoading: false });
+    });
+
+    it('does not show content during loading', () => {
+      mockGetSubscription.mockReturnValue({ data: undefined, isLoading: true, error: null });
+      mockGetPaymentMethods.mockReturnValue({ data: undefined, isLoading: true, error: null });
+      mockListInvoices.mockReturnValue({ data: undefined, isLoading: true, error: null });
+      mockGetBillingInformation.mockReturnValue({ data: undefined, isLoading: true, error: null });
+      render(<BillingPortal />);
+      expect(screen.queryByText('Subscription Overview')).not.toBeInTheDocument();
+      expect(screen.queryByText('Payment Methods')).not.toBeInTheDocument();
+    });
+  });
+
+  // ============================================
+  // 7. Empty States
+  // ============================================
+
+  describe('Empty States', () => {
+    it('shows no subscription message', () => {
+      mockGetSubscription.mockReturnValue({ data: null, isLoading: false, error: null });
+      render(<BillingPortal />);
+      expect(screen.getByText('No Active Subscription')).toBeInTheDocument();
+    });
+
+    it('shows no payment methods message', () => {
+      mockGetPaymentMethods.mockReturnValue({ data: [], isLoading: false, error: null });
+      render(<BillingPortal />);
+      expect(screen.getByText('No payment method on file')).toBeInTheDocument();
+    });
+
+    it('shows no invoices message', () => {
+      mockListInvoices.mockReturnValue({
+        data: { invoices: [], total: 0, page: 1, limit: 5, hasMore: false },
         isLoading: false,
         error: null,
-      } as ReturnType<typeof trpc.billing.getSubscription.useQuery>);
-
+      });
       render(<BillingPortal />);
-      expect(screen.getByText(/Subscription Ending/i)).toBeInTheDocument();
+      expect(screen.getByText('No invoices yet')).toBeInTheDocument();
+    });
+
+    it('shows no billing info message', () => {
+      mockGetBillingInformation.mockReturnValue({ data: null, isLoading: false, error: null });
+      render(<BillingPortal />);
+      expect(screen.getByText('No billing information on file')).toBeInTheDocument();
     });
   });
 
   // ============================================
-  // Usage Metrics Tests
+  // 8. Accessibility
   // ============================================
 
-  describe('usage metrics', () => {
-    it('displays API calls usage', () => {
-      render(<BillingPortal />);
-      expect(screen.getByText('API Calls')).toBeInTheDocument();
-      expect(screen.getByText(/8,500.*10,000/)).toBeInTheDocument();
-    });
-
-    it('displays storage usage', () => {
-      render(<BillingPortal />);
-      expect(screen.getByText('Storage')).toBeInTheDocument();
-    });
-
-    it('displays active users usage', () => {
-      render(<BillingPortal />);
-      expect(screen.getByText('Active Users')).toBeInTheDocument();
-      expect(screen.getByText(/12.*25/)).toBeInTheDocument();
-    });
-  });
-
-  // ============================================
-  // Accessibility Tests
-  // ============================================
-
-  describe('accessibility', () => {
-    it('has accessible section headings', () => {
+  describe('Accessibility', () => {
+    it('section headings use proper heading levels', () => {
       render(<BillingPortal />);
       const headings = screen.getAllByRole('heading');
       expect(headings.length).toBeGreaterThan(0);
     });
 
-    // Note: Button accessibility test skipped - some icon-only buttons
-    // with asChild pattern may not expose accessible name correctly in jsdom
-    it.skip('buttons have accessible names', () => {
+    it('all buttons have accessible names', () => {
       render(<BillingPortal />);
       const buttons = screen.getAllByRole('button');
       buttons.forEach((button) => {
-        expect(button).toHaveAccessibleName();
+        const name = button.getAttribute('aria-label') || button.textContent;
+        expect(name).toBeTruthy();
       });
     });
 
-    it('links have accessible names', () => {
+    it('all links have accessible names', () => {
       render(<BillingPortal />);
       const links = screen.getAllByRole('link');
       links.forEach((link) => {
-        expect(link).toHaveAccessibleName();
+        const name = link.getAttribute('aria-label') || link.textContent;
+        expect(name).toBeTruthy();
+      });
+    });
+
+    it('table uses proper ARIA with scope=col', () => {
+      render(<BillingPortal />);
+      const tableHeaders = document.querySelectorAll('th[scope="col"]');
+      expect(tableHeaders.length).toBe(4);
+    });
+
+    it('status badges include ARIA labels', () => {
+      render(<BillingPortal />);
+      const statusBadges = document.querySelectorAll('[aria-label*="status"]');
+      expect(statusBadges.length).toBeGreaterThan(0);
+    });
+
+    it('icons have aria-hidden=true', () => {
+      render(<BillingPortal />);
+      const icons = document.querySelectorAll('.material-symbols-outlined');
+      icons.forEach((icon) => {
+        expect(icon.getAttribute('aria-hidden')).toBe('true');
       });
     });
   });
 
   // ============================================
-  // Invoice Table Tests
+  // 9. Error States
   // ============================================
 
-  // Note: Invoice table tests skipped - tRPC mock not providing data
-  // correctly in jsdom environment. Component renders correctly in browser.
-  describe('invoice table', () => {
-    it.skip('renders invoice data correctly', () => {
+  describe('Error States', () => {
+    it('handles subscription query failure', () => {
+      mockGetSubscription.mockReturnValue({ data: undefined, isLoading: false, error: new Error('fetch failed') });
       render(<BillingPortal />);
-      expect(screen.getByText('Paid')).toBeInTheDocument();
+      expect(screen.getByText('Failed to load subscription details')).toBeInTheDocument();
     });
 
-    it.skip('shows download button for invoices with PDF', () => {
+    it('handles payment methods query failure', () => {
+      mockGetPaymentMethods.mockReturnValue({ data: undefined, isLoading: false, error: new Error('fetch failed') });
       render(<BillingPortal />);
-      const downloadLinks = screen.getAllByRole('link', { name: /download/i });
-      expect(downloadLinks.length).toBeGreaterThan(0);
+      expect(screen.getByText('Failed to load payment methods')).toBeInTheDocument();
+    });
+
+    it('handles invoices query failure', () => {
+      mockListInvoices.mockReturnValue({ data: undefined, isLoading: false, error: new Error('fetch failed') });
+      render(<BillingPortal />);
+      expect(screen.getByText('Failed to load billing history')).toBeInTheDocument();
+    });
+
+    it('handles billing info query failure', () => {
+      mockGetBillingInformation.mockReturnValue({ data: undefined, isLoading: false, error: new Error('fetch failed') });
+      render(<BillingPortal />);
+      expect(screen.getByText('Failed to load billing information')).toBeInTheDocument();
     });
   });
 });

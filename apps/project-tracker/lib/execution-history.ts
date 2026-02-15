@@ -304,7 +304,7 @@ function buildTaskSprintMap(projectRoot: string): Map<string, number> {
     const csvPath = join(projectRoot, 'docs', 'metrics', '_global', 'Sprint_plan.csv');
     if (!existsSync(csvPath)) return map;
     const content = readFileSync(csvPath, 'utf-8');
-    const records = parse(content, { columns: true, skip_empty_lines: true }) as Array<Record<string, string>>;
+    const records = parse(content, { columns: true, skip_empty_lines: true, bom: true }) as Array<Record<string, string>>;
     for (const row of records) {
       const id = row['Task ID'];
       if (id) {

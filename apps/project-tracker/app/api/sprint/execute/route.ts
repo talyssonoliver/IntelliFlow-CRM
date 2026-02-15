@@ -11,7 +11,7 @@ import type {
   SprintExecutionState,
 } from '../../../../../../tools/scripts/lib/sprint/types';
 import {
-  spawnSwarmAgent,
+  spawnClaudeExecAgent,
   spawnMatopAgent,
   processEvents,
   type SubprocessProgress,
@@ -567,7 +567,7 @@ async function executeParallelPhase(
         phaseNumber: phase.phaseNumber,
       });
 
-      const spawnFn = task.executionMode === 'swarm' ? spawnSwarmAgent : spawnMatopAgent;
+      const spawnFn = task.executionMode === 'swarm' ? spawnClaudeExecAgent : spawnMatopAgent;
 
       const result = await spawnFn({
         taskId: task.taskId,
@@ -632,7 +632,7 @@ async function executeSequentialPhase(
       phaseNumber: phase.phaseNumber,
     });
 
-    const spawnFn = task.executionMode === 'swarm' ? spawnSwarmAgent : spawnMatopAgent;
+    const spawnFn = task.executionMode === 'swarm' ? spawnClaudeExecAgent : spawnMatopAgent;
 
     const result = await spawnFn({
       taskId: task.taskId,

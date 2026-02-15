@@ -17,10 +17,12 @@ export const developerSidebarConfig: SidebarConfig = {
           icon: 'dashboard',
           href: '/docs',
         },
-        // Removed non-existent pages to prevent 404 errors:
-        // - /docs/guides (will be added in future task)
-        // - /docs/api (will be added in future task)
-        // - /docs/architecture (will be added in future task)
+        {
+          id: 'api-reference',
+          label: 'API Reference',
+          icon: 'api',
+          href: '/docs/api',
+        },
       ],
     },
     // Developer Tools section — items will be added by PG-033 (playground) and PG-035 (changelog)

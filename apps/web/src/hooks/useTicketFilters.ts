@@ -35,12 +35,12 @@ export function useTicketFilters(defaults?: Partial<TicketFilters>) {
   const [debouncedSearch, setDebouncedSearch] = useState(initialFilters.search);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Debounce search input (300ms)
+  // Debounce search input (400ms)
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       setDebouncedSearch(filters.search);
-    }, 300);
+    }, 400);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };

@@ -106,6 +106,13 @@ export interface TicketSLA {
   resolution: { target: number; remaining: number; status: SLAStatus };
 }
 
+export interface TicketAssigneeOption {
+  id: string;
+  name: string;
+  title: string;
+  avatar?: string | null;
+}
+
 export interface TicketAIInsights {
   suggestedSolutions: string[];
   sentiment: 'positive' | 'neutral' | 'negative';

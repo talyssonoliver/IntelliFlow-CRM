@@ -18,6 +18,7 @@
 
 import { ChatOpenAI } from '@langchain/openai';
 import { aiConfig } from '../config/ai.config';
+import { getOpenAIClientSettings } from '../utils/openai-client';
 import { sanitizeStringField } from '../utils/input-sanitizer';
 import { withMonitoring, createChainMonitor, type MonitoredResult } from '../monitoring/chain-monitor';
 
@@ -98,8 +99,16 @@ export class AutoResponseChain {
   private static readonly MAX_CUSTOM_INSTRUCTIONS_LENGTH = 500;
 
   constructor() {
-    this.llm = new ChatOpenAI();
-    this.modelVersion = `openai:${aiConfig.openai.model}:v1`;
+    const openAIClientSettings = getOpenAIClientSettings();
+    this.llm = new ChatOpenAI({
+      modelName: aiConfig.openai.model,
+      temperature: aiConfig.openai.temperature,
+      maxTokens: aiConfig.openai.maxTokens,
+      timeout: aiConfig.openai.timeout,
+      apiKey: openAIClientSettings.apiKey,
+      configuration: openAIClientSettings.configuration,
+    });
+    this.modelVersion = `${openAIClientSettings.endpoint}:${aiConfig.openai.model}:v1`;
   }
 
   /**

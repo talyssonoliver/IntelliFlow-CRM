@@ -34,6 +34,13 @@ export class TaskNotInProgressError extends DomainError {
   }
 }
 
+export class TaskCannotBeArchivedError extends DomainError {
+  readonly code = 'TASK_CANNOT_BE_ARCHIVED';
+  constructor() {
+    super('Only completed or cancelled tasks can be archived.');
+  }
+}
+
 interface TaskProps {
   title: string;
   description?: string;
@@ -135,15 +142,19 @@ export class Task extends AggregateRoot<TaskId> {
     return this.props.status === 'CANCELLED';
   }
 
+  get isArchived(): boolean {
+    return this.props.status === 'ARCHIVED';
+  }
+
   get isOverdue(): boolean {
-    if (!this.props.dueDate || this.isCompleted || this.isCancelled) {
+    if (!this.props.dueDate || this.isCompleted || this.isCancelled || this.isArchived) {
       return false;
     }
     return this.props.dueDate < new Date();
   }
 
   get isDueSoon(): boolean {
-    if (!this.props.dueDate || this.isCompleted || this.isCancelled) {
+    if (!this.props.dueDate || this.isCompleted || this.isCancelled || this.isArchived) {
       return false;
     }
     const tomorrow = new Date();
@@ -218,6 +229,20 @@ export class Task extends AggregateRoot<TaskId> {
     this.props.updatedAt = new Date();
 
     this.addDomainEvent(new TaskCompletedEvent(this.id, completedBy));
+
+    return Result.ok(undefined);
+  }
+
+  archive(archivedBy: string): Result<void, DomainError> {
+    if (this.props.status !== 'COMPLETED' && this.props.status !== 'CANCELLED') {
+      return Result.fail(new TaskCannotBeArchivedError());
+    }
+
+    const previousStatus = this.props.status;
+    this.props.status = 'ARCHIVED';
+    this.props.updatedAt = new Date();
+
+    this.addDomainEvent(new TaskStatusChangedEvent(this.id, previousStatus, 'ARCHIVED', archivedBy));
 
     return Result.ok(undefined);
   }

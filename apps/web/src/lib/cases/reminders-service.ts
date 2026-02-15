@@ -333,7 +333,7 @@ class RemindersService {
       case 'task':
         return `/tasks/${reminder.entityId}`;
       case 'appointment':
-        return `/appointments/${reminder.entityId}`;
+        return `/calendar/${reminder.entityId}`;
       default:
         return '#';
     }

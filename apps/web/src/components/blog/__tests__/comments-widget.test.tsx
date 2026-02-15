@@ -4,6 +4,27 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CommentsWidget } from '../comments-widget';
 
+vi.mock('@/components/shared/app-avatar', () => ({
+  AppAvatar: ({
+    name,
+    fallbackText,
+    maxInitials = 2,
+  }: {
+    name: string;
+    fallbackText?: string;
+    maxInitials?: number;
+  }) => {
+    const initials = name
+      .split(' ')
+      .map((part) => part[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, maxInitials);
+
+    return <div>{fallbackText || initials}</div>;
+  },
+}));
+
 /**
  * Comments Widget Component Tests
  *

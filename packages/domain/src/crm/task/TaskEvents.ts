@@ -2,12 +2,28 @@ import { DomainEvent } from '../../shared/DomainEvent';
 import { TaskId } from './TaskId';
 
 // Canonical enum values - single source of truth
-export const TASK_STATUSES = ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] as const;
+export const TASK_STATUSES = ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'ARCHIVED'] as const;
 export const TASK_PRIORITIES = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'] as const;
 
 // Derive types from const arrays
 export type TaskStatus = (typeof TASK_STATUSES)[number];
 export type TaskPriority = (typeof TASK_PRIORITIES)[number];
+
+/**
+ * Valid task status transitions - state machine definition
+ * ARCHIVED is a terminal state reachable only from COMPLETED or CANCELLED.
+ */
+export const VALID_TASK_TRANSITIONS: Record<TaskStatus, readonly TaskStatus[]> = {
+  PENDING: ['IN_PROGRESS', 'CANCELLED'],
+  IN_PROGRESS: ['COMPLETED', 'CANCELLED', 'PENDING'],
+  COMPLETED: ['ARCHIVED'],
+  CANCELLED: ['ARCHIVED', 'PENDING'],
+  ARCHIVED: [],
+} as const;
+
+export function canTransitionTaskTo(from: TaskStatus, to: TaskStatus): boolean {
+  return VALID_TASK_TRANSITIONS[from].includes(to);
+}
 
 /**
  * Event: Task was created

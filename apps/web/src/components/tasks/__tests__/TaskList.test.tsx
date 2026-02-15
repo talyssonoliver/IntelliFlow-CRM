@@ -83,8 +83,10 @@ describe('TaskList', () => {
     onComplete: vi.fn(),
     onEdit: vi.fn(),
     onDelete: vi.fn(),
+    onArchive: vi.fn(),
     onBulkComplete: vi.fn(),
     onBulkDelete: vi.fn(),
+    onBulkArchive: vi.fn(),
   };
 
   beforeEach(() => {
@@ -166,19 +168,19 @@ describe('TaskList', () => {
     expect(completeBtn).toBeInTheDocument();
   });
 
-  it('renders complete button for all tasks', () => {
+  it('hides complete button for completed tasks', () => {
     const completedTask = createMockTask({ status: 'COMPLETED' as any });
     render(<TaskList {...defaultProps} tasks={[completedTask]} />);
 
-    const completeBtn = screen.getByRole('button', { name: 'Complete' });
-    expect(completeBtn).toBeInTheDocument();
+    const completeBtn = screen.queryByRole('button', { name: 'Complete' });
+    expect(completeBtn).not.toBeInTheDocument();
   });
 
   it('renders bulk actions', () => {
     render(<TaskList {...defaultProps} />);
 
     expect(screen.getByTestId('bulk-actions')).toBeInTheDocument();
-    expect(screen.getByText('2 actions')).toBeInTheDocument();
+    expect(screen.getByText('3 actions')).toBeInTheDocument();
   });
 
   it('renders task description in subtitle', () => {

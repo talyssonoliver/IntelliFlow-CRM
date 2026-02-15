@@ -92,8 +92,8 @@ describe('VersionComparisonView', () => {
     it('renders version selectors', () => {
       render(<VersionComparisonView {...defaultProps} />);
 
-      expect(screen.getByLabelText('Version A')).toBeInTheDocument();
-      expect(screen.getByLabelText('Version B')).toBeInTheDocument();
+      expect(screen.getByRole('combobox', { name: /Version A/i })).toBeInTheDocument();
+      expect(screen.getByRole('combobox', { name: /Version B/i })).toBeInTheDocument();
     });
 
     it('renders compare button', () => {
@@ -120,11 +120,15 @@ describe('VersionComparisonView', () => {
     it('populates version dropdowns with version options', () => {
       render(<VersionComparisonView {...defaultProps} />);
 
-      const versionASelect = screen.getByLabelText('Version A') as HTMLSelectElement;
+      const versionASelect = screen.getByRole('combobox', { name: /Version A/i }) as HTMLSelectElement;
 
-      expect(versionASelect).toContainHTML('<option value="">Select version...</option>');
-      expect(versionASelect).toContainHTML('<option value="v1-uuid">');
-      expect(versionASelect).toContainHTML('SCORING - gpt-4 (ACTIVE)');
+      // Check for the default option
+      expect(versionASelect.querySelector('option[value=""]')).toBeInTheDocument();
+      expect(screen.getAllByRole('option', { name: /Select version/i }).length).toBeGreaterThan(0);
+
+      // Check for version options
+      expect(versionASelect.querySelector('option[value="v1-uuid"]')).toBeInTheDocument();
+      expect(screen.getAllByRole('option', { name: /SCORING - gpt-4 \(ACTIVE\)/ }).length).toBeGreaterThan(0);
     });
   });
 
@@ -145,8 +149,8 @@ describe('VersionComparisonView', () => {
     it('does not show version selectors when loading', () => {
       render(<VersionComparisonView {...defaultProps} isLoading={true} />);
 
-      expect(screen.queryByLabelText('Version A')).not.toBeInTheDocument();
-      expect(screen.queryByLabelText('Version B')).not.toBeInTheDocument();
+      expect(screen.queryByRole('combobox', { name: /Version A/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('combobox', { name: /Version B/i })).not.toBeInTheDocument();
     });
   });
 
@@ -155,7 +159,7 @@ describe('VersionComparisonView', () => {
       const user = userEvent.setup();
       render(<VersionComparisonView {...defaultProps} />);
 
-      const versionASelect = screen.getByLabelText('Version A') as HTMLSelectElement;
+      const versionASelect = screen.getByRole('combobox', { name: /Version A/i }) as HTMLSelectElement;
 
       await user.selectOptions(versionASelect, 'v1-uuid');
 
@@ -166,7 +170,7 @@ describe('VersionComparisonView', () => {
       const user = userEvent.setup();
       render(<VersionComparisonView {...defaultProps} />);
 
-      const versionBSelect = screen.getByLabelText('Version B') as HTMLSelectElement;
+      const versionBSelect = screen.getByRole('combobox', { name: /Version B/i }) as HTMLSelectElement;
 
       await user.selectOptions(versionBSelect, 'v2-uuid');
 
@@ -175,11 +179,13 @@ describe('VersionComparisonView', () => {
 
     it('clears comparison when version A changes', async () => {
       const user = userEvent.setup();
-      const { rerender } = render(<VersionComparisonView {...defaultProps} />);
+      // Create a fresh mock (vi.clearAllMocks clears defaultProps.onCompare)
+      const onCompare = vi.fn().mockResolvedValue(mockComparison);
+      const { rerender } = render(<VersionComparisonView {...defaultProps} onCompare={onCompare} />);
 
       // Select versions and compare
-      await user.selectOptions(screen.getByLabelText('Version A'), 'v1-uuid');
-      await user.selectOptions(screen.getByLabelText('Version B'), 'v2-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version A/i }), 'v1-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version B/i }), 'v2-uuid');
       await user.click(screen.getByRole('button', { name: /Compare Versions/i }));
 
       // Wait for comparison to render
@@ -188,7 +194,7 @@ describe('VersionComparisonView', () => {
       });
 
       // Change Version A
-      await user.selectOptions(screen.getByLabelText('Version A'), 'v3-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version A/i }), 'v3-uuid');
 
       // Comparison should be cleared (Differences table hidden)
       expect(screen.queryByText('Differences')).not.toBeInTheDocument();
@@ -198,8 +204,8 @@ describe('VersionComparisonView', () => {
       const user = userEvent.setup();
       render(<VersionComparisonView {...defaultProps} />);
 
-      await user.selectOptions(screen.getByLabelText('Version A'), 'v1-uuid');
-      await user.selectOptions(screen.getByLabelText('Version B'), 'v2-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version A/i }), 'v1-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version B/i }), 'v2-uuid');
 
       const compareButton = screen.getByRole('button', { name: /Compare Versions/i });
       expect(compareButton).not.toBeDisabled();
@@ -209,8 +215,8 @@ describe('VersionComparisonView', () => {
       const user = userEvent.setup();
       render(<VersionComparisonView {...defaultProps} />);
 
-      await user.selectOptions(screen.getByLabelText('Version A'), 'v1-uuid');
-      await user.selectOptions(screen.getByLabelText('Version B'), 'v1-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version A/i }), 'v1-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version B/i }), 'v1-uuid');
 
       const compareButton = screen.getByRole('button', { name: /Compare Versions/i });
       expect(compareButton).toBeDisabled();
@@ -223,8 +229,8 @@ describe('VersionComparisonView', () => {
       const onCompare = vi.fn().mockResolvedValue(mockComparison);
       render(<VersionComparisonView {...defaultProps} onCompare={onCompare} />);
 
-      await user.selectOptions(screen.getByLabelText('Version A'), 'v1-uuid');
-      await user.selectOptions(screen.getByLabelText('Version B'), 'v2-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version A/i }), 'v1-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version B/i }), 'v2-uuid');
       await user.click(screen.getByRole('button', { name: /Compare Versions/i }));
 
       expect(onCompare).toHaveBeenCalledWith('v1-uuid', 'v2-uuid');
@@ -237,8 +243,8 @@ describe('VersionComparisonView', () => {
       );
       render(<VersionComparisonView {...defaultProps} onCompare={onCompare} />);
 
-      await user.selectOptions(screen.getByLabelText('Version A'), 'v1-uuid');
-      await user.selectOptions(screen.getByLabelText('Version B'), 'v2-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version A/i }), 'v1-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version B/i }), 'v2-uuid');
       await user.click(screen.getByRole('button', { name: /Compare Versions/i }));
 
       expect(screen.getByRole('button', { name: /Comparing.../i })).toBeInTheDocument();
@@ -251,8 +257,8 @@ describe('VersionComparisonView', () => {
       );
       render(<VersionComparisonView {...defaultProps} onCompare={onCompare} />);
 
-      await user.selectOptions(screen.getByLabelText('Version A'), 'v1-uuid');
-      await user.selectOptions(screen.getByLabelText('Version B'), 'v2-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version A/i }), 'v1-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version B/i }), 'v2-uuid');
       await user.click(screen.getByRole('button', { name: /Compare Versions/i }));
 
       const compareButton = screen.getByRole('button', { name: /Comparing.../i });
@@ -263,8 +269,8 @@ describe('VersionComparisonView', () => {
       const user = userEvent.setup();
       render(<VersionComparisonView {...defaultProps} />);
 
-      await user.selectOptions(screen.getByLabelText('Version A'), 'v1-uuid');
-      await user.selectOptions(screen.getByLabelText('Version B'), 'v2-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version A/i }), 'v1-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version B/i }), 'v2-uuid');
       await user.click(screen.getByRole('button', { name: /Compare Versions/i }));
 
       await waitFor(() => {
@@ -278,8 +284,8 @@ describe('VersionComparisonView', () => {
       const onCompare = vi.fn().mockRejectedValue(new Error('Comparison failed'));
       render(<VersionComparisonView {...defaultProps} onCompare={onCompare} />);
 
-      await user.selectOptions(screen.getByLabelText('Version A'), 'v1-uuid');
-      await user.selectOptions(screen.getByLabelText('Version B'), 'v2-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version A/i }), 'v1-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version B/i }), 'v2-uuid');
       await user.click(screen.getByRole('button', { name: /Compare Versions/i }));
 
       await waitFor(() => {
@@ -291,50 +297,68 @@ describe('VersionComparisonView', () => {
   describe('Comparison Results Display', () => {
     beforeEach(async () => {
       const user = userEvent.setup();
-      render(<VersionComparisonView {...defaultProps} />);
+      // Create a fresh mock that returns mockComparison (vi.clearAllMocks clears defaultProps.onCompare)
+      const onCompare = vi.fn().mockResolvedValue(mockComparison);
+      render(<VersionComparisonView {...defaultProps} onCompare={onCompare} />);
 
-      await user.selectOptions(screen.getByLabelText('Version A'), 'v1-uuid');
-      await user.selectOptions(screen.getByLabelText('Version B'), 'v2-uuid');
-      await user.click(screen.getByRole('button', { name: /Compare Versions/i }));
+      const versionASelect = screen.getByRole('combobox', { name: /Version A/i });
+      const versionBSelect = screen.getByRole('combobox', { name: /Version B/i });
+
+      await user.selectOptions(versionASelect, 'v1-uuid');
+      await user.selectOptions(versionBSelect, 'v2-uuid');
+
+      // Wait for button to be enabled
+      const compareButton = screen.getByRole('button', { name: /Compare Versions/i });
+      await waitFor(() => {
+        expect(compareButton).not.toBeDisabled();
+      });
+
+      await user.click(compareButton);
 
       await waitFor(() => {
         expect(screen.getByText('Differences')).toBeInTheDocument();
-      });
+      }, { timeout: 3000 });
     });
 
     it('displays Version A details', () => {
-      expect(screen.getByText('Version A')).toBeInTheDocument();
-      expect(screen.getByText('gpt-4')).toBeInTheDocument();
-      expect(screen.getByText('SCORING')).toBeInTheDocument();
-      expect(screen.getByText(/ACTIVE/)).toBeInTheDocument();
+      // "Version A" appears twice: once in label, once in comparison card
+      expect(screen.getAllByText('Version A').length).toBeGreaterThan(0);
+      // Model and status appear in dropdown AND comparison card
+      expect(screen.getAllByText('gpt-4').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('SCORING').length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/ACTIVE/).length).toBeGreaterThan(0);
     });
 
     it('displays Version B details', () => {
-      expect(screen.getByText('Version B')).toBeInTheDocument();
-      expect(screen.getByText('gpt-4-turbo')).toBeInTheDocument();
-      expect(screen.getByText(/DRAFT/)).toBeInTheDocument();
+      // "Version B" appears twice: once in label, once in comparison card
+      expect(screen.getAllByText('Version B').length).toBeGreaterThan(0);
+      // Model and status appear in dropdown AND comparison card
+      expect(screen.getAllByText('gpt-4-turbo').length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/DRAFT/).length).toBeGreaterThan(0);
     });
 
     it('displays temperature for both versions', () => {
-      // Should show both 0.7 and 0.5
-      expect(screen.getByText('0.7')).toBeInTheDocument();
-      expect(screen.getByText('0.5')).toBeInTheDocument();
+      // Should show both 0.7 and 0.5 (may appear multiple times in cards and differences table)
+      expect(screen.getAllByText('0.7').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('0.5').length).toBeGreaterThan(0);
     });
 
     it('displays max tokens for both versions', () => {
-      expect(screen.getByText('2000')).toBeInTheDocument();
-      expect(screen.getByText('3000')).toBeInTheDocument();
+      // May appear multiple times in cards and differences table
+      expect(screen.getAllByText('2000').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('3000').length).toBeGreaterThan(0);
     });
 
     it('displays prompts in code blocks', () => {
+      // Prompts appear in both cards and differences table
       expect(
-        screen.getByText('You are a lead scoring AI. Score leads from 0-100.')
-      ).toBeInTheDocument();
+        screen.getAllByText('You are a lead scoring AI. Score leads from 0-100.').length
+      ).toBeGreaterThan(0);
       expect(
-        screen.getByText(
+        screen.getAllByText(
           'You are an advanced lead scoring AI. Provide detailed scoring with reasoning.'
-        )
-      ).toBeInTheDocument();
+        ).length
+      ).toBeGreaterThan(0);
     });
 
     it('renders differences table', () => {
@@ -353,15 +377,17 @@ describe('VersionComparisonView', () => {
       const table = screen.getByRole('table');
       expect(table).toContainHTML('<th');
       expect(screen.getByText('Field')).toBeInTheDocument();
-      expect(screen.getByText('Version A')).toBeInTheDocument();
-      expect(screen.getByText('Version B')).toBeInTheDocument();
+      // "Version A" and "Version B" appear multiple times (labels + table headers + card headings)
+      expect(screen.getAllByText('Version A').length).toBeGreaterThan(1);
+      expect(screen.getAllByText('Version B').length).toBeGreaterThan(1);
     });
 
     it('truncates long string values in differences table', () => {
       const longPrompt =
         'You are an advanced lead scoring AI. Provide detailed scoring with reasoning.';
-      const renderedText = screen.getByText(longPrompt);
-      expect(renderedText).toBeInTheDocument();
+      // Text may appear multiple times (in card and differences table)
+      const renderedTexts = screen.getAllByText(longPrompt);
+      expect(renderedTexts.length).toBeGreaterThan(0);
     });
   });
 
@@ -376,8 +402,8 @@ describe('VersionComparisonView', () => {
       const onCompare = vi.fn().mockResolvedValue(noDiffComparison);
       render(<VersionComparisonView {...defaultProps} onCompare={onCompare} />);
 
-      await user.selectOptions(screen.getByLabelText('Version A'), 'v1-uuid');
-      await user.selectOptions(screen.getByLabelText('Version B'), 'v2-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version A/i }), 'v1-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version B/i }), 'v2-uuid');
       await user.click(screen.getByRole('button', { name: /Compare Versions/i }));
 
       await waitFor(() => {
@@ -397,8 +423,8 @@ describe('VersionComparisonView', () => {
       const onCompare = vi.fn().mockResolvedValue(noDiffComparison);
       render(<VersionComparisonView {...defaultProps} onCompare={onCompare} />);
 
-      await user.selectOptions(screen.getByLabelText('Version A'), 'v1-uuid');
-      await user.selectOptions(screen.getByLabelText('Version B'), 'v2-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version A/i }), 'v1-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version B/i }), 'v2-uuid');
       await user.click(screen.getByRole('button', { name: /Compare Versions/i }));
 
       await waitFor(() => {
@@ -416,7 +442,7 @@ describe('VersionComparisonView', () => {
     it('handles empty versions array', () => {
       render(<VersionComparisonView {...defaultProps} versions={[]} />);
 
-      const versionASelect = screen.getByLabelText('Version A') as HTMLSelectElement;
+      const versionASelect = screen.getByRole('combobox', { name: /Version A/i }) as HTMLSelectElement;
       expect(versionASelect.children.length).toBe(1); // Only "Select version..." option
     });
 
@@ -430,13 +456,13 @@ describe('VersionComparisonView', () => {
       const onCompare = vi.fn().mockResolvedValue(comparisonWithoutPrompts);
       render(<VersionComparisonView {...defaultProps} onCompare={onCompare} />);
 
-      await user.selectOptions(screen.getByLabelText('Version A'), 'v1-uuid');
-      await user.selectOptions(screen.getByLabelText('Version B'), 'v2-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version A/i }), 'v1-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version B/i }), 'v2-uuid');
       await user.click(screen.getByRole('button', { name: /Compare Versions/i }));
 
       await waitFor(() => {
         // Should still render version details without errors
-        expect(screen.getByText('Version A')).toBeInTheDocument();
+        expect(screen.getAllByText('Version A')[0]).toBeInTheDocument();
       });
     });
 
@@ -450,8 +476,8 @@ describe('VersionComparisonView', () => {
       const onCompare = vi.fn().mockResolvedValue(comparisonWithMissingFields);
       render(<VersionComparisonView {...defaultProps} onCompare={onCompare} />);
 
-      await user.selectOptions(screen.getByLabelText('Version A'), 'v1-uuid');
-      await user.selectOptions(screen.getByLabelText('Version B'), 'v2-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version A/i }), 'v1-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version B/i }), 'v2-uuid');
       await user.click(screen.getByRole('button', { name: /Compare Versions/i }));
 
       await waitFor(() => {
@@ -462,7 +488,7 @@ describe('VersionComparisonView', () => {
     it('displays version ID truncated in dropdown options', () => {
       render(<VersionComparisonView {...defaultProps} />);
 
-      const versionASelect = screen.getByLabelText('Version A');
+      const versionASelect = screen.getByRole('combobox', { name: /Version A/i });
       // Should show first 8 chars: v1-uuid... → v1-uuid-u...
       expect(versionASelect).toContainHTML('v1-uuid...');
     });
@@ -472,15 +498,15 @@ describe('VersionComparisonView', () => {
     it('uses combobox role for version selectors', () => {
       render(<VersionComparisonView {...defaultProps} />);
 
-      expect(screen.getByRole('combobox', { name: /Version A/i })).toBeInTheDocument();
-      expect(screen.getByRole('combobox', { name: /Version B/i })).toBeInTheDocument();
+      expect(screen.getByRole('combobox', { name: /Version A/i })).toHaveAttribute('role', 'combobox');
+      expect(screen.getByRole('combobox', { name: /Version B/i })).toHaveAttribute('role', 'combobox');
     });
 
     it('has accessible labels for version selectors', () => {
       render(<VersionComparisonView {...defaultProps} />);
 
-      const versionASelect = screen.getByLabelText('Version A');
-      const versionBSelect = screen.getByLabelText('Version B');
+      const versionASelect = screen.getByRole('combobox', { name: /Version A/i });
+      const versionBSelect = screen.getByRole('combobox', { name: /Version B/i });
 
       expect(versionASelect).toBeInTheDocument();
       expect(versionBSelect).toBeInTheDocument();
@@ -488,10 +514,12 @@ describe('VersionComparisonView', () => {
 
     it('uses semantic HTML for comparison cards', async () => {
       const user = userEvent.setup();
-      render(<VersionComparisonView {...defaultProps} />);
+      // Create a fresh mock (vi.clearAllMocks clears defaultProps.onCompare)
+      const onCompare = vi.fn().mockResolvedValue(mockComparison);
+      render(<VersionComparisonView {...defaultProps} onCompare={onCompare} />);
 
-      await user.selectOptions(screen.getByLabelText('Version A'), 'v1-uuid');
-      await user.selectOptions(screen.getByLabelText('Version B'), 'v2-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version A/i }), 'v1-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version B/i }), 'v2-uuid');
       await user.click(screen.getByRole('button', { name: /Compare Versions/i }));
 
       await waitFor(() => {
@@ -508,8 +536,8 @@ describe('VersionComparisonView', () => {
       render(<VersionComparisonView {...defaultProps} onCompare={onCompare} />);
 
       // First comparison
-      await user.selectOptions(screen.getByLabelText('Version A'), 'v1-uuid');
-      await user.selectOptions(screen.getByLabelText('Version B'), 'v2-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version A/i }), 'v1-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version B/i }), 'v2-uuid');
       await user.click(screen.getByRole('button', { name: /Compare Versions/i }));
 
       await waitFor(() => {
@@ -520,8 +548,8 @@ describe('VersionComparisonView', () => {
       onCompare.mockClear();
 
       // Second comparison
-      await user.selectOptions(screen.getByLabelText('Version A'), 'v2-uuid');
-      await user.selectOptions(screen.getByLabelText('Version B'), 'v3-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version A/i }), 'v2-uuid');
+      await user.selectOptions(screen.getByRole('combobox', { name: /Version B/i }), 'v3-uuid');
       await user.click(screen.getByRole('button', { name: /Compare Versions/i }));
 
       await waitFor(() => {

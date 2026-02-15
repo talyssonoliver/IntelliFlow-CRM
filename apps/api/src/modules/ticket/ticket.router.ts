@@ -19,6 +19,7 @@ import {
   addResponseSchema,
   idSchema,
   ticketStatusSchema,
+  statsInputSchema,
 } from '@intelliflow/validators/ticket';
 import { type Context } from '../../context';
 import {
@@ -38,6 +39,20 @@ function getTicketService(ctx: Context) {
     });
   }
   return ctx.services.ticket;
+}
+
+function getAssigneeTitle(role?: string | null): string {
+  switch (role) {
+    case 'ADMIN':
+      return 'Support Admin';
+    case 'MANAGER':
+      return 'Support Manager';
+    case 'SALES_REP':
+      return 'Support Specialist';
+    case 'USER':
+    default:
+      return 'Support Agent';
+  }
 }
 
 /**
@@ -105,21 +120,31 @@ export const ticketRouter = createTRPCRouter({
    * List tickets with filtering and pagination
    */
   list: tenantProcedure.input(ticketQuerySchema).query(async ({ ctx, input }) => {
+    const startTime = performance.now();
     assertTenantContext(ctx);
     const ticketService = getTicketService(ctx);
     const tenantId = await getTenantId(ctx);
 
-    const { page = 1, limit = 20, status, priority, assignedToId } = input;
+    const { page = 1, limit = 20, status, priority, assignedToId, search, sortBy, sortOrder } = input;
     const offset = (page - 1) * limit;
 
     const result = await ticketService.findMany({
       status,
       priority,
       assignedToId,
+      search,
+      sortBy,
+      sortOrder,
       limit,
       offset,
       tenantId,
     });
+
+    const queryDurationMs = performance.now() - startTime;
+    console.log(`[ticket.list] Fetched ${result.total} tickets (page ${page}) in ${queryDurationMs.toFixed(2)}ms`);
+    if (queryDurationMs > 200) {
+      console.warn(`[ticket.list] SLOW: ${queryDurationMs.toFixed(2)}ms (target: <200ms)`);
+    }
 
     return {
       tickets: result.tickets,
@@ -127,6 +152,7 @@ export const ticketRouter = createTRPCRouter({
       page,
       limit,
       hasMore: result.hasMore,
+      queryDurationMs,
     };
   }),
 
@@ -173,15 +199,39 @@ export const ticketRouter = createTRPCRouter({
   }),
 
   /**
+   * Archive a resolved or closed ticket
+   */
+  archive: tenantProcedure.input(z.object({ id: idSchema })).mutation(async ({ ctx, input }) => {
+    const ticketService = getTicketService(ctx);
+
+    try {
+      await ticketService.archive(input.id);
+      return { success: true };
+    } catch (error) {
+      throw new TRPCError({
+        code: 'PRECONDITION_FAILED',
+        message: error instanceof Error ? error.message : 'Failed to archive ticket',
+      });
+    }
+  }),
+
+  /**
    * Get ticket statistics for dashboard
    */
-  stats: tenantProcedure.query(async ({ ctx }) => {
+  stats: tenantProcedure.input(statsInputSchema).query(async ({ ctx, input }) => {
+    const startTime = performance.now();
     const ticketService = getTicketService(ctx);
     const tenantId = await getTenantId(ctx);
 
-    const stats = await ticketService.getStats(tenantId);
+    const stats = await ticketService.getStats(tenantId, input.timeWindow);
 
-    return stats;
+    const queryDurationMs = performance.now() - startTime;
+    console.log(`[ticket.stats] Computed stats (${input.timeWindow}) in ${queryDurationMs.toFixed(2)}ms`);
+    if (queryDurationMs > 500) {
+      console.warn(`[ticket.stats] SLOW: ${queryDurationMs.toFixed(2)}ms (target: <500ms)`);
+    }
+
+    return { ...stats, queryDurationMs };
   }),
 
   /**
@@ -332,6 +382,33 @@ export const ticketRouter = createTRPCRouter({
 
       return { success: true, updated: successCount };
     }),
+
+  /**
+   * Team assignees for assignment actions
+   */
+  assignees: tenantProcedure.query(async ({ ctx }) => {
+    assertTenantContext(ctx);
+    const tenantId = await getTenantId(ctx);
+
+    const users = await ctx.prisma.user.findMany({
+      where: { tenantId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        avatarUrl: true,
+      },
+      orderBy: [{ name: 'asc' }, { email: 'asc' }],
+    });
+
+    return users.map((user) => ({
+      id: user.id,
+      name: (user.name || user.email).trim(),
+      title: getAssigneeTitle(user.role),
+      avatar: user.avatarUrl ?? null,
+    }));
+  }),
 
   /**
    * Get filter options with counts

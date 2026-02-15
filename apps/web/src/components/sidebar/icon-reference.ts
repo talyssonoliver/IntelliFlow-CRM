@@ -254,6 +254,12 @@ export const MODULE_COLORS = {
     text: 'text-emerald-600 dark:text-emerald-400',
   },
 
+  // Calendar/Appointments - Purple theme
+  calendar: {
+    iconBg: 'bg-slate-100 dark:bg-slate-800',
+    text: 'text-purple-600 dark:text-purple-400',
+  },
+
   // Dashboard - Primary/Default theme
   dashboard: {
     iconBg: 'bg-slate-100 dark:bg-slate-800',

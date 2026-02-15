@@ -62,7 +62,7 @@ describe('createNotification helper', () => {
     expect(result.title).toBe('New task');
     expect(result.body).toBe('You have been assigned a task');
     expect(result.priority).toBe('high');
-    expect(result.status).toBe('unread');
+    expect(result.status).toBe('pending');
     expect(result.isRead).toBe(false);
     expect(result.entityType).toBe('task');
     expect(result.entityId).toBe('task-1');
@@ -94,7 +94,7 @@ describe('createNotification helper', () => {
       body: 'System alert',
     });
 
-    expect(result.priority).toBe('medium');
+    expect(result.priority).toBe('normal');
     expect(result.entityType).toBeNull();
     expect(result.entityId).toBeNull();
     expect(result.actionUrl).toBeNull();

@@ -101,6 +101,7 @@ export async function GET(request: Request) {
           skip_empty_lines: true,
           relax_quotes: true,
           relax_column_count: true,
+          bom: true,
         }) as CsvTask[];
 
         // For 'all', group all tasks by section regardless of sprint
@@ -178,6 +179,7 @@ export async function GET(request: Request) {
           skip_empty_lines: true,
           relax_quotes: true,
           relax_column_count: true,
+          bom: true,
         }) as CsvTask[];
 
         const phases = getPhasesFromCsv(tasks, 'Continuous');
@@ -211,6 +213,7 @@ export async function GET(request: Request) {
         skip_empty_lines: true,
         relax_quotes: true,
         relax_column_count: true,
+        bom: true,
       }) as CsvTask[];
 
       const phases = getPhasesFromCsv(tasks, sprintNumber);

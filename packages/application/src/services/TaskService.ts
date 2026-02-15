@@ -657,10 +657,22 @@ export class TaskService {
       return Result.fail(new ValidationError(`Task not found: ${taskId}`));
     }
 
-    // Business rule: Cannot delete completed tasks (audit trail)
+    // Business rule: Cannot delete completed or archived tasks (audit trail)
     if (task.isCompleted) {
       return Result.fail(
-        new ValidationError('Cannot delete completed tasks. They are kept for audit purposes.')
+        new ValidationError('Cannot delete completed tasks. Use archive instead to remove from active views.')
+      );
+    }
+
+    if (task.status === 'ARCHIVED') {
+      return Result.fail(
+        new ValidationError('Cannot delete archived tasks. They are kept for audit purposes.')
+      );
+    }
+
+    if (task.status === 'CANCELLED') {
+      return Result.fail(
+        new ValidationError('Cannot delete cancelled tasks. Use archive instead to remove from active views.')
       );
     }
 
@@ -668,6 +680,34 @@ export class TaskService {
       await this.taskRepository.delete(taskIdResult.value);
     } catch (error) {
       return Result.fail(new PersistenceError('Failed to delete task'));
+    }
+
+    return Result.ok(undefined);
+  }
+
+  /**
+   * Archive a completed or cancelled task (soft removal from active views)
+   */
+  async archiveTask(taskId: string): Promise<Result<void, DomainError>> {
+    const taskIdResult = TaskId.create(taskId);
+    if (taskIdResult.isFailure) {
+      return Result.fail(taskIdResult.error);
+    }
+
+    const task = await this.taskRepository.findById(taskIdResult.value);
+    if (!task) {
+      return Result.fail(new ValidationError(`Task not found: ${taskId}`));
+    }
+
+    const archiveResult = task.archive('system');
+    if (archiveResult.isFailure) {
+      return Result.fail(archiveResult.error);
+    }
+
+    try {
+      await this.taskRepository.save(task);
+    } catch (error) {
+      return Result.fail(new PersistenceError('Failed to archive task'));
     }
 
     return Result.ok(undefined);

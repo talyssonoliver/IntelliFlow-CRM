@@ -233,6 +233,43 @@ export const usageMetricsSchema = z.object({
 export type UsageMetrics = z.infer<typeof usageMetricsSchema>;
 
 // ============================================
+// Billing Information Schemas (PG-025)
+// ============================================
+
+/**
+ * Billing address (follows Stripe structure)
+ */
+export const billingAddressSchema = z.object({
+  line1: z.string(),
+  line2: z.string().nullable().optional(),
+  city: z.string(),
+  state: z.string(),
+  postalCode: z.string(),
+  country: z.string(),
+});
+export type BillingAddress = z.infer<typeof billingAddressSchema>;
+
+/**
+ * Billing information response
+ */
+export const billingInformationSchema = z.object({
+  organization: z.string().nullable(),
+  email: z.string().email(),
+  address: billingAddressSchema.nullable(),
+});
+export type BillingInformation = z.infer<typeof billingInformationSchema>;
+
+/**
+ * Update billing information input
+ */
+export const updateBillingInformationInputSchema = z.object({
+  organization: z.string().nullable().optional(),
+  email: z.string().email().optional(),
+  address: billingAddressSchema.optional(),
+});
+export type UpdateBillingInformationInput = z.infer<typeof updateBillingInformationInputSchema>;
+
+// ============================================
 // Plan Configuration Schema
 // ============================================
 

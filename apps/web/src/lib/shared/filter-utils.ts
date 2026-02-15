@@ -145,6 +145,7 @@ export const TICKET_STATUS_COLORS: Record<string, string> = {
   WAITING_ON_THIRD_PARTY: 'bg-purple-500',
   RESOLVED: 'bg-green-500',
   CLOSED: 'bg-gray-500',
+  ARCHIVED: 'bg-gray-400',
 };
 
 /** Ticket priority colors */
@@ -236,6 +237,7 @@ export const TASK_STATUS_COLORS: Record<string, string> = {
   IN_PROGRESS: 'bg-blue-500',
   COMPLETED: 'bg-green-500',
   CANCELLED: 'bg-red-500',
+  ARCHIVED: 'bg-gray-400',
 };
 
 /** Task priority colors */

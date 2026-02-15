@@ -9,7 +9,7 @@
     "required": [
       "IFC-005"
     ],
-    "verified_at": "2026-02-10T23:09:35.329Z",
+    "verified_at": "2026-02-15T16:58:55.346Z",
     "all_satisfied": true,
     "notes": "IFC-005 LangChain AI Scoring completed - scoring chain supports provider switching"
   },

@@ -56,6 +56,10 @@ export interface ScoredTask {
   reason: string;
   recommendedAction: 'spec' | 'plan' | 'exec';
   bucket: 'now' | 'next' | 'wait';
+  /** Sprint number from CSV Target Sprint column */
+  sprintNumber: number;
+  /** Parallel execution group ID (if task belongs to one) */
+  parallelGroupId: string | null;
 }
 
 /** Dependency-graph node (from /api/dependency-graph `nodes` map) */
@@ -368,6 +372,12 @@ function assignBuckets(scoredTasks: ScoredTaskInternal[]): void {
   }
 }
 
+/** Parallel execution group from dependency graph */
+export interface ParallelGroup {
+  group_id: string;
+  tasks: string[];
+}
+
 /** Internal type with extra fields for bucket assignment */
 interface ScoredTaskInternal extends ScoredTask {
   _isCriticalPath: boolean;
@@ -386,6 +396,7 @@ export function computePriorityScores(
   scheduleTaskMap: Map<string, ScheduleTaskInfo>,
   phaseProgress: PhaseProgress[],
   currentSprint?: number,
+  parallelGroups?: ParallelGroup[],
 ): ScoredTask[] {
   // Infer current sprint from the lowest sprint number in ready tasks
   const effectiveSprint =
@@ -396,6 +407,16 @@ export function computePriorityScores(
         .map((t) => t.sprint as number),
       0,
     );
+
+  // Build taskId → groupId lookup from parallel execution groups
+  const taskToGroupMap = new Map<string, string>();
+  if (parallelGroups) {
+    for (const group of parallelGroups) {
+      for (const taskId of group.tasks) {
+        taskToGroupMap.set(taskId, group.group_id);
+      }
+    }
+  }
 
   const scored: ScoredTaskInternal[] = readyTasks.map((task) => {
     const session = sessionStatuses.get(task.id);
@@ -437,17 +458,39 @@ export function computePriorityScores(
       reason: buildReason(factors, dependentCount, isCriticalPath, scheduleInfo?.totalFloat),
       recommendedAction: getRecommendedAction(session),
       bucket: 'wait' as const, // provisional, overwritten by assignBuckets
+      sprintNumber: typeof task.sprint === 'number' ? task.sprint : 0,
+      parallelGroupId: taskToGroupMap.get(task.id) ?? null,
       _isCriticalPath: isCriticalPath,
       _totalFloat: scheduleInfo?.totalFloat,
     };
   });
 
-  // Sort descending by WSJF score
+  // Sort descending by WSJF score (used for bucket assignment + NEXT/WAIT ordering)
   scored.sort((a, b) => b.score - a.score);
 
   // Assign NOW / NEXT / WAIT based on percentile rank + hard overrides
   assignBuckets(scored);
 
+  // Apply 3-level sort to NOW bucket tasks only:
+  //   1. Sprint number ascending (lower sprint = work on first)
+  //   2. Pipeline readiness ascending (exec-ready=1, plan-ready=2, needs-spec=3)
+  //   3. WSJF score descending (tiebreaker)
+  // NEXT/WAIT keep pure WSJF ordering.
+  const nowTasks = scored.filter((s) => s.bucket === 'now');
+  const otherTasks = scored.filter((s) => s.bucket !== 'now');
+
+  nowTasks.sort((a, b) => {
+    // 1. Sprint number ascending
+    if (a.sprintNumber !== b.sprintNumber) return a.sprintNumber - b.sprintNumber;
+    // 2. Pipeline readiness ascending (lower jobSizeProxy = more ready)
+    if (a.factors.jobSizeProxy !== b.factors.jobSizeProxy)
+      return a.factors.jobSizeProxy - b.factors.jobSizeProxy;
+    // 3. WSJF score descending
+    return b.score - a.score;
+  });
+
+  const result = [...nowTasks, ...otherTasks];
+
   // Strip internal fields before returning
-  return scored.map(({ _isCriticalPath, _totalFloat, ...rest }) => rest);
+  return result.map(({ _isCriticalPath, _totalFloat, ...rest }) => rest);
 }

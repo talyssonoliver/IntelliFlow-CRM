@@ -133,6 +133,7 @@ export async function GET(request: Request) {
         skip_empty_lines: true,
         relax_quotes: true,
         relax_column_count: true,
+        bom: true,
       }) as CsvTask[];
 
       // Count all tasks using shared normalizeStatus
@@ -198,6 +199,7 @@ export async function GET(request: Request) {
         skip_empty_lines: true,
         relax_quotes: true,
         relax_column_count: true,
+        bom: true,
       }) as CsvTask[];
 
       const data = getSprintDataFromCsv(tasks, 'Continuous');
@@ -224,6 +226,7 @@ export async function GET(request: Request) {
         skip_empty_lines: true,
         relax_quotes: true,
         relax_column_count: true,
+        bom: true,
       }) as CsvTask[];
 
       // Get live data from CSV

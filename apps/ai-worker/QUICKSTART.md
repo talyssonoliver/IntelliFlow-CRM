@@ -35,6 +35,15 @@ OPENAI_API_KEY=sk-your-key-here
 OPENAI_MODEL=gpt-4-turbo-preview
 ```
 
+### Option A2: Using OpenAI-Compatible Endpoint (vLLM-ready)
+
+```bash
+AI_PROVIDER=openai
+OPENAI_BASE_URL=http://localhost:8000/v1
+OPENAI_MODEL=Qwen/Qwen2.5-7B-Instruct
+# OPENAI_API_KEY optional for local OpenAI-compatible runtimes
+```
+
 ### Option B: Using Ollama (Recommended for Development)
 
 1. Install Ollama from https://ollama.ai
@@ -151,6 +160,7 @@ Key environment variables:
 | ------------------------ | --------------------- | --------------------- |
 | `AI_PROVIDER`            | `openai` or `ollama`  | `openai`              |
 | `OPENAI_API_KEY`         | OpenAI API key        | -                     |
+| `OPENAI_BASE_URL`        | OpenAI-compatible URL | -                     |
 | `OPENAI_MODEL`           | Model name            | `gpt-4-turbo-preview` |
 | `COST_WARNING_THRESHOLD` | Warning threshold ($) | `10.0`                |
 | `COST_DAILY_LIMIT`       | Daily limit ($)       | -                     |
@@ -161,7 +171,7 @@ Key environment variables:
 
 ### "OpenAI API key not found"
 
-Make sure you've set `OPENAI_API_KEY` in `.env` or as an environment variable.
+Set `OPENAI_API_KEY` for OpenAI cloud, or set `OPENAI_BASE_URL` for a local OpenAI-compatible runtime.
 
 ### "Connection refused" (Ollama)
 

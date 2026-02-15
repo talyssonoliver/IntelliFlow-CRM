@@ -16,9 +16,11 @@ import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
+import { AppAvatar } from '@/components/shared/app-avatar';
 import { EscalationAlert } from './EscalationAlert';
+import { TicketAssignSidebar } from './TicketAssignSidebar';
 import { formatSLATime, getSLAConfig, getStatusConfig, getPriorityConfig, getChannelIcon } from '@/lib/tickets/ticket-utils';
-import type { TicketDetailData, ResolutionInput, TicketActivity } from './types';
+import type { TicketDetailData, ResolutionInput, TicketActivity, TicketAssigneeOption } from './types';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -27,6 +29,10 @@ type TabId = 'overview' | 'activity' | 'resolution' | 'attachments' | 'ai-insigh
 interface TicketDetailProps {
   ticket: TicketDetailData;
   isLoading: boolean;
+  currentUserId?: string | null;
+  currentUserName?: string | null;
+  assigneeOptions?: TicketAssigneeOption[];
+  isAssigneeOptionsLoading?: boolean;
   onStatusChange: (status: string) => Promise<void>;
   onPriorityChange: (priority: string) => Promise<void>;
   onAssign: (userId: string) => Promise<void>;
@@ -50,6 +56,10 @@ const tabs: { id: TabId; label: string }[] = [
 export function TicketDetail({
   ticket,
   isLoading,
+  currentUserId = null,
+  currentUserName = null,
+  assigneeOptions = [],
+  isAssigneeOptionsLoading = false,
   onStatusChange: _onStatusChange,
   onPriorityChange: _onPriorityChange,
   onAssign,
@@ -59,6 +69,7 @@ export function TicketDetail({
 }: TicketDetailProps) {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [actionSheetOpen, setActionSheetOpen] = useState(false);
+  const [assignSidebarOpen, setAssignSidebarOpen] = useState(false);
   const [replyMode, setReplyMode] = useState<'public' | 'internal'>('public');
   const [replyContent, setReplyContent] = useState('');
   const [activityNote, setActivityNote] = useState('');
@@ -72,6 +83,29 @@ export function TicketDetail({
   const slaConfig = getSLAConfig(ticket.sla.resolution.status);
   const statusConfig = getStatusConfig(ticket.status);
   const priorityConfig = getPriorityConfig(ticket.priority);
+  const hasFirstResponse = ticket.firstResponseAt !== null;
+  const firstResponseValue = ticket.sla.firstResponse.actual;
+  const firstResponseMetricClass = hasFirstResponse
+    ? ticket.sla.firstResponse.met
+      ? 'text-green-600'
+      : 'text-red-600'
+    : 'text-amber-600';
+  const firstResponseSummaryClass = hasFirstResponse
+    ? ticket.sla.firstResponse.met
+      ? 'text-green-600 font-medium'
+      : 'text-red-600 font-medium'
+    : 'text-amber-600 font-medium';
+  const firstResponseSummaryText = hasFirstResponse
+    ? ticket.sla.firstResponse.met
+      ? `Met (${firstResponseValue ?? 0}m)`
+      : 'Missed'
+    : 'Pending';
+  const firstResponseBarClass = hasFirstResponse
+    ? ticket.sla.firstResponse.met
+      ? 'bg-green-500'
+      : 'bg-red-500'
+    : 'bg-amber-500';
+  const canOpenAssignSidebar = Boolean(currentUserId) || assigneeOptions.length > 0 || isAssigneeOptionsLoading;
 
   const handleSendReply = async () => {
     if (!replyContent.trim()) return;
@@ -95,7 +129,10 @@ export function TicketDetail({
   };
 
   const handleEscalate = () => {
-    console.log('Escalate ticket:', ticket.id);
+    if (isLoading || ticket.priority === 'CRITICAL') {
+      return;
+    }
+    void _onPriorityChange('CRITICAL');
   };
 
   const activityCount = ticket.activities.length;
@@ -120,8 +157,8 @@ export function TicketDetail({
             {/* Title */}
             <div className="flex items-center gap-3 mt-1">
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{ticket.subject}</h1>
-              <span className={`px-2.5 py-0.5 rounded text-xs font-bold ${statusConfig.bg} ${statusConfig.text}`}>
-                {statusConfig.label}
+              <span className={`px-2.5 py-0.5 rounded text-xs font-bold ${statusConfig?.bg} ${statusConfig?.text}`}>
+                {statusConfig?.label}
               </span>
               <span className={`px-2.5 py-0.5 rounded text-xs font-bold ${priorityConfig.bg} ${priorityConfig.text} uppercase`}>
                 {priorityConfig.label}
@@ -157,8 +194,23 @@ export function TicketDetail({
           extraActions={[
             { label: 'Merge Ticket', icon: 'merge', onClick: () => {} },
             { label: 'Mark as Spam', icon: 'report', onClick: () => {} },
-            { label: 'Delete', icon: 'delete', onClick: () => {}, destructive: true },
+            ...(ticket.status === 'RESOLVED' || ticket.status === 'CLOSED'
+              ? [{ label: 'Archive', icon: 'archive', onClick: () => {} }]
+              : ticket.status !== 'ARCHIVED'
+                ? [{ label: 'Delete', icon: 'delete', onClick: () => {}, destructive: true }]
+                : []),
           ]}
+        />
+        <TicketAssignSidebar
+          open={assignSidebarOpen}
+          onOpenChange={setAssignSidebarOpen}
+          ticketSubject={ticket.subject}
+          currentUserId={currentUserId}
+          currentUserName={currentUserName}
+          assignees={assigneeOptions}
+          isAssigning={isLoading}
+          isLoadingOptions={isAssigneeOptionsLoading}
+          onAssign={onAssign}
         />
 
         {/* SLA Alert Banner */}
@@ -232,15 +284,13 @@ export function TicketDetail({
               <div className="h-16 bg-gradient-to-r from-blue-100 to-blue-50 dark:from-slate-800 dark:to-slate-800" />
               <div className="px-5 pb-5 relative">
                 <div className="relative -mt-8 mb-3">
-                  <div className="w-16 h-16 rounded-full border-4 border-white dark:border-slate-900 bg-slate-200 overflow-hidden shadow-sm">
-                    {ticket.customer.avatar ? (
-                      <img src={ticket.customer.avatar} alt={ticket.customer.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-lg font-bold text-slate-600">
-                        {ticket.customer.name.charAt(0)}
-                      </div>
-                    )}
-                  </div>
+                  <AppAvatar
+                    name={ticket.customer.name}
+                    src={ticket.customer.avatar ?? null}
+                    maxInitials={1}
+                    className="w-16 h-16 border-4 border-white dark:border-slate-900 shadow-sm"
+                    fallbackClassName="text-lg font-bold text-slate-600 bg-slate-200 dark:bg-slate-700"
+                  />
                 </div>
                 <div className="mb-4">
                   <div className="flex items-center gap-2">
@@ -297,13 +347,13 @@ export function TicketDetail({
               <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3">Assigned To</h3>
               {ticket.assigneeInfo ? (
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden">
-                    {ticket.assigneeInfo.avatar ? (
-                      <img src={ticket.assigneeInfo.avatar} alt={ticket.assigneeInfo.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-sm font-bold">{ticket.assigneeInfo.name.charAt(0)}</div>
-                    )}
-                  </div>
+                  <AppAvatar
+                    name={ticket.assigneeInfo.name}
+                    src={ticket.assigneeInfo.avatar ?? null}
+                    maxInitials={1}
+                    className="w-10 h-10"
+                    fallbackClassName="text-sm font-bold bg-slate-200 dark:bg-slate-700"
+                  />
                   <div>
                     <p className="text-sm font-bold text-slate-900 dark:text-white">{ticket.assigneeInfo.name}</p>
                     <p className="text-xs text-slate-500">{ticket.assigneeInfo.title}</p>
@@ -313,8 +363,8 @@ export function TicketDetail({
                 <p className="text-sm text-slate-500 italic">Unassigned</p>
               )}
               <button
-                onClick={() => onAssign('current-user-id')}
-                disabled={isLoading}
+                onClick={() => setAssignSidebarOpen(true)}
+                disabled={isLoading || !canOpenAssignSidebar}
                 className="w-full mt-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
               >
                 Reassign
@@ -360,8 +410,8 @@ export function TicketDetail({
 
                     <div className="grid grid-cols-3 gap-4">
                       <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg text-center">
-                        <p className={`text-2xl font-bold ${ticket.sla.firstResponse.met ? 'text-green-600' : 'text-red-600'}`}>
-                          {ticket.sla.firstResponse.actual !== null ? `${ticket.sla.firstResponse.actual}m` : 'N/A'}
+                        <p className={`text-2xl font-bold ${firstResponseMetricClass}`}>
+                          {firstResponseValue !== null ? `${firstResponseValue}m` : 'Pending'}
                         </p>
                         <p className="text-xs text-slate-500 mt-1">First Response</p>
                         <p className="text-[10px] text-slate-400">Target: {ticket.sla.firstResponse.target}m</p>
@@ -390,13 +440,13 @@ export function TicketDetail({
                       <div className="space-y-3">
                         {ticket.activities.slice(0, 3).map((activity) => (
                           <div key={activity.id} className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                            <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-bold flex-shrink-0">
-                              {activity.author.avatar ? (
-                                <img src={activity.author.avatar} alt="" className="w-full h-full rounded-full object-cover" />
-                              ) : (
-                                activity.author.name.charAt(0)
-                              )}
-                            </div>
+                            <AppAvatar
+                              name={activity.author.name}
+                              src={activity.author.avatar ?? null}
+                              maxInitials={1}
+                              className="w-8 h-8 flex-shrink-0"
+                              fallbackClassName="text-xs font-bold bg-slate-200 dark:bg-slate-700"
+                            />
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-slate-900 dark:text-white">{activity.author.name}</p>
                               <p className="text-xs text-slate-500 truncate">{activity.content.substring(0, 80)}...</p>
@@ -691,12 +741,12 @@ export function TicketDetail({
                 <div>
                   <div className="flex justify-between text-xs mb-1">
                     <span className="text-slate-600 dark:text-slate-300">First Response</span>
-                    <span className={ticket.sla.firstResponse.met ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
-                      {ticket.sla.firstResponse.met ? `Met (${ticket.sla.firstResponse.actual}m)` : 'Missed'}
+                    <span className={firstResponseSummaryClass}>
+                      {firstResponseSummaryText}
                     </span>
                   </div>
                   <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                    <div className={`h-full ${ticket.sla.firstResponse.met ? 'bg-green-500' : 'bg-red-500'} w-full`} />
+                    <div className={`h-full ${firstResponseBarClass} w-full`} />
                   </div>
                 </div>
                 <div>
@@ -739,14 +789,15 @@ export function TicketDetail({
                 </button>
                 <button
                   onClick={handleEscalate}
-                  className="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all group"
+                  disabled={isLoading || ticket.priority === 'CRITICAL'}
+                  className="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all group disabled:opacity-50 disabled:hover:border-slate-200 disabled:hover:bg-transparent dark:disabled:hover:border-slate-700 dark:disabled:hover:bg-transparent"
                 >
                   <span className="material-symbols-outlined text-slate-400 group-hover:text-red-600 mb-1" style={{ fontSize: '24px' }}>publish</span>
                   <span className="text-xs font-bold text-slate-600 dark:text-slate-400 group-hover:text-red-600">Escalate</span>
                 </button>
                 <button
-                  onClick={() => onAssign('current-user-id')}
-                  disabled={isLoading}
+                  onClick={() => setAssignSidebarOpen(true)}
+                  disabled={isLoading || !canOpenAssignSidebar}
                   className="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-[#137fec] hover:bg-[#137fec]/5 transition-all group disabled:opacity-50"
                 >
                   <span className="material-symbols-outlined text-slate-400 group-hover:text-[#137fec] mb-1" style={{ fontSize: '24px' }}>forward</span>
@@ -784,8 +835,8 @@ export function TicketDetail({
                     <Link key={related.id} href={`/tickets/${related.id}`} className="block p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-[#137fec]">#{related.id}</span>
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${relatedStatus.bg} ${relatedStatus.text}`}>
-                          {relatedStatus.label}
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${relatedStatus?.bg} ${relatedStatus?.text}`}>
+                          {relatedStatus?.label}
                         </span>
                       </div>
                       <p className="text-xs text-slate-500 truncate mt-1">{related.subject}</p>

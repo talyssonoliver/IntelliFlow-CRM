@@ -55,15 +55,24 @@ export type UpdateTicketInput = z.infer<typeof updateTicketSchema>;
 
 // Ticket Query Schema
 export const ticketQuerySchema = paginationSchema.extend({
+  search: z.string().max(200).optional(),
   status: ticketStatusSchema.optional(),
   priority: ticketPrioritySchema.optional(),
   category: ticketCategorySchema.optional(),
   slaStatus: slaStatusSchema.optional(),
   assignedToId: idSchema.optional(),
   contactId: idSchema.optional(),
+  sortBy: z.enum(['createdAt', 'updatedAt', 'priority', 'slaResolutionDue']).default('createdAt'),
 });
 
 export type TicketQueryInput = z.infer<typeof ticketQuerySchema>;
+
+// Stats Input Schema — time window for stats filtering
+export const statsInputSchema = z.object({
+  timeWindow: z.enum(['24h', '7d', '30d', 'all']).default('all'),
+});
+
+export type StatsInput = z.infer<typeof statsInputSchema>;
 
 // Add Response Schema
 export const addResponseSchema = z.object({

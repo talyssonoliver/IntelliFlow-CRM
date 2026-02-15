@@ -207,7 +207,18 @@ async function initializeWorker() {
     logger.info(
       {
         provider: aiConfig.provider,
-        model: aiConfig.provider === 'openai' ? aiConfig.openai.model : aiConfig.ollama.model,
+        model:
+          aiConfig.provider === 'openai'
+            ? aiConfig.openai.model
+            : aiConfig.provider === 'ollama'
+              ? aiConfig.ollama.model
+              : 'mock',
+        endpoint:
+          aiConfig.provider === 'openai'
+            ? aiConfig.openai.baseUrl || 'https://api.openai.com'
+            : aiConfig.provider === 'ollama'
+              ? aiConfig.ollama.baseUrl
+              : 'mock',
         costTrackingEnabled: aiConfig.costTracking.enabled,
         cacheEnabled: aiConfig.performance.cacheEnabled,
       },

@@ -10,10 +10,11 @@ import type { TicketStatus, TicketPriority, SLAStatus } from '@intelliflow/domai
 // ─── SLA Utilities ──────────────────────────────────────────────────────────
 
 export function formatSLATime(minutes: number): string {
-  const absMinutes = Math.abs(minutes);
+  const safeMinutes = Number.isFinite(minutes) ? minutes : 0;
+  const absMinutes = Math.abs(safeMinutes);
   const hours = Math.floor(absMinutes / 60);
   const mins = absMinutes % 60;
-  const sign = minutes < 0 ? '-' : '';
+  const sign = safeMinutes < 0 ? '-' : '';
   return `${sign}${hours.toString().padStart(2, '0')}h ${mins.toString().padStart(2, '0')}m`;
 }
 

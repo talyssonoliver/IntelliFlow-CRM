@@ -137,6 +137,7 @@ export async function GET(request: Request) {
       skip_empty_lines: true,
       relax_quotes: true,
       relax_column_count: true,
+      bom: true,
     }) as CsvRow[];
 
     // Transform to unified task format with normalized status

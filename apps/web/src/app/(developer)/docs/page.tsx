@@ -20,11 +20,10 @@ const docCategories: DocCategory[] = [
     id: 'api-reference',
     title: 'API Reference',
     description: 'Complete tRPC API documentation with 25 routers and 235 typed procedures',
-    href: 'https://intelliflow-crm.dev/docs/api/overview',
+    href: '/docs/api',
     icon: 'api',
     color: 'bg-purple-500',
     docCount: 25,
-    external: true,
   },
   {
     id: 'architecture',
@@ -70,7 +69,7 @@ export default function DocsPage() {
   const [filteredCategories, setFilteredCategories] = useState<DocCategory[]>(docCategories);
 
   return (
-    <div className="p-8">
+    <div className="flex flex-col gap-6">
       <div className="max-w-5xl">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-foreground">Developer Documentation</h1>

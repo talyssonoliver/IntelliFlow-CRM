@@ -64,8 +64,8 @@ export function CustomerPortalView({
       <div>
         <div className="flex items-center gap-3 mb-2">
           <h1 className="text-xl font-bold text-foreground">{ticket.subject}</h1>
-          <span className={`px-2 py-0.5 rounded text-xs font-bold ${statusConfig.bg} ${statusConfig.text}`}>
-            {statusConfig.label}
+          <span className={`px-2 py-0.5 rounded text-xs font-bold ${statusConfig?.bg} ${statusConfig?.text}`}>
+            {statusConfig?.label}
           </span>
         </div>
         <p className="text-sm text-muted-foreground">

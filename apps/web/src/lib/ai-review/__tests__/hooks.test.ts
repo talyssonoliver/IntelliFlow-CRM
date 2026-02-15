@@ -232,6 +232,6 @@ describe('useReviewDetail', () => {
 
   it('is disabled when reviewId is empty', () => {
     const result = useReviewDetail('');
-    expect(result.isEnabled).toBe(false);
+    expect(result.enabled).toBe(false);
   });
 });

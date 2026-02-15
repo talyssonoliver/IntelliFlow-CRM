@@ -9,6 +9,15 @@ import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { TaskDetail, type TaskDetailData } from '@/components/tasks/TaskDetail';
 import { TaskForm, type TaskFormData } from '@/components/tasks/TaskForm';
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function getEntityName(task: TaskDetailData): string {
+  if (task.lead) return `${task.lead.firstName} ${task.lead.lastName}`;
+  if (task.contact) return `${task.contact.firstName} ${task.contact.lastName}`;
+  if (task.opportunity) return task.opportunity.name;
+  return '';
+}
+
 export default function TaskDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
@@ -18,9 +27,11 @@ export default function TaskDetailPage() {
 
   const utils = api.useUtils();
 
+  const isValidId = UUID_REGEX.test(params.id ?? '');
+
   const { data: task, isLoading, error } = api.task.getById.useQuery(
     { id: params.id },
-    { enabled: isAuthenticated && !authLoading && !!params.id }
+    { enabled: isAuthenticated && !authLoading && !!params.id && isValidId }
   );
 
   const completeMutation = api.task.complete.useMutation({
@@ -57,6 +68,18 @@ export default function TaskDetailPage() {
     },
   });
 
+  const archiveMutation = api.task.archive.useMutation({
+    onSuccess: () => {
+      utils.task.getById.invalidate({ id: params.id });
+      utils.task.list.invalidate();
+      toast({ title: 'Task Archived', description: 'The task has been archived.' });
+      router.push('/tasks');
+    },
+    onError: (err) => {
+      toast({ title: 'Archive Failed', description: err.message, variant: 'destructive' });
+    },
+  });
+
   const handleComplete = useCallback((id: string) => {
     completeMutation.mutate({ taskId: id });
   }, [completeMutation]);
@@ -68,6 +91,10 @@ export default function TaskDetailPage() {
   const handleDelete = useCallback((id: string) => {
     deleteMutation.mutate({ id });
   }, [deleteMutation]);
+
+  const handleArchive = useCallback((id: string) => {
+    archiveMutation.mutate({ id });
+  }, [archiveMutation]);
 
   const handleEditSubmit = useCallback((formData: TaskFormData) => {
     if (!editingTask) return;
@@ -81,7 +108,7 @@ export default function TaskDetailPage() {
     });
   }, [editingTask, updateMutation]);
 
-  const isNotFound = !isLoading && !task && !error;
+  const isNotFound = !isLoading && !task && (!error || !isValidId || error.data?.code === 'NOT_FOUND');
 
   return (
     <div className="flex flex-col gap-6">
@@ -101,6 +128,7 @@ export default function TaskDetailPage() {
         onComplete={handleComplete}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onArchive={handleArchive}
       />
 
       {/* Edit Form */}
@@ -116,6 +144,7 @@ export default function TaskDetailPage() {
           status: editingTask.status,
           entityType: editingTask.lead ? 'lead' : editingTask.contact ? 'contact' : editingTask.opportunity ? 'opportunity' : 'none',
           entityId: editingTask.lead?.id ?? editingTask.contact?.id ?? editingTask.opportunity?.id ?? '',
+          entityName: getEntityName(editingTask),
         } : null}
         mode="edit"
       />

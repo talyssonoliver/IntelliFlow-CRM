@@ -28,6 +28,7 @@ export interface TaskDetailProps {
   readonly onComplete: (id: string) => void;
   readonly onEdit: (task: TaskDetailData) => void;
   readonly onDelete: (id: string) => void;
+  readonly onArchive: (id: string) => void;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -35,6 +36,7 @@ const STATUS_STYLES: Record<string, string> = {
   IN_PROGRESS: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
   COMPLETED: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
   CANCELLED: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300',
+  ARCHIVED: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400',
 };
 
 const PRIORITY_STYLES: Record<string, { color: string; icon: string }> = {
@@ -69,8 +71,9 @@ function getEntityInfo(task: TaskDetailData): { type: string; name: string; href
   return null;
 }
 
-export function TaskDetail({ task, isLoading, isNotFound, onComplete, onEdit, onDelete }: TaskDetailProps) {
+export function TaskDetail({ task, isLoading, isNotFound, onComplete, onEdit, onDelete, onArchive }: TaskDetailProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
 
   if (isLoading) {
     return (
@@ -174,29 +177,45 @@ export function TaskDetail({ task, isLoading, isNotFound, onComplete, onEdit, on
 
       {/* Actions */}
       <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => onComplete(task.id)}
-          disabled={task.status === 'COMPLETED'}
-          className="px-4 py-2 text-sm rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          aria-label="Complete task"
-        >
-          <span className="inline-flex items-center gap-1">
-            <span className="material-symbols-outlined text-base" aria-hidden="true">check_circle</span>
-            Complete
-          </span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowDeleteConfirm(true)}
-          className="px-4 py-2 text-sm rounded-md border border-destructive text-destructive hover:bg-destructive/10"
-          aria-label="Delete task"
-        >
-          <span className="inline-flex items-center gap-1">
-            <span className="material-symbols-outlined text-base" aria-hidden="true">delete</span>
-            Delete
-          </span>
-        </button>
+        {task.status !== 'COMPLETED' && task.status !== 'CANCELLED' && task.status !== 'ARCHIVED' && (
+          <button
+            type="button"
+            onClick={() => onComplete(task.id)}
+            className="px-4 py-2 text-sm rounded-md bg-green-600 text-white hover:bg-green-700"
+            aria-label="Complete task"
+          >
+            <span className="inline-flex items-center gap-1">
+              <span className="material-symbols-outlined text-base" aria-hidden="true">check_circle</span>
+              Complete
+            </span>
+          </button>
+        )}
+        {(task.status === 'COMPLETED' || task.status === 'CANCELLED') && (
+          <button
+            type="button"
+            onClick={() => setShowArchiveConfirm(true)}
+            className="px-4 py-2 text-sm rounded-md border border-muted-foreground text-muted-foreground hover:bg-accent"
+            aria-label="Archive task"
+          >
+            <span className="inline-flex items-center gap-1">
+              <span className="material-symbols-outlined text-base" aria-hidden="true">archive</span>
+              Archive
+            </span>
+          </button>
+        )}
+        {task.status !== 'COMPLETED' && task.status !== 'CANCELLED' && task.status !== 'ARCHIVED' && (
+          <button
+            type="button"
+            onClick={() => setShowDeleteConfirm(true)}
+            className="px-4 py-2 text-sm rounded-md border border-destructive text-destructive hover:bg-destructive/10"
+            aria-label="Delete task"
+          >
+            <span className="inline-flex items-center gap-1">
+              <span className="material-symbols-outlined text-base" aria-hidden="true">delete</span>
+              Delete
+            </span>
+          </button>
+        )}
       </div>
 
       <ConfirmationDialog
@@ -210,6 +229,18 @@ export function TaskDetail({ task, isLoading, isNotFound, onComplete, onEdit, on
         description="Are you sure you want to delete this task? This action cannot be undone."
         confirmLabel="Delete"
         variant="destructive"
+      />
+
+      <ConfirmationDialog
+        open={showArchiveConfirm}
+        onOpenChange={(open) => { if (!open) setShowArchiveConfirm(false); }}
+        onConfirm={() => {
+          onArchive(task.id);
+          setShowArchiveConfirm(false);
+        }}
+        title="Archive Task"
+        description="This task will be archived and hidden from active views. You can still find it by filtering for archived tasks."
+        confirmLabel="Archive"
       />
     </div>
   );

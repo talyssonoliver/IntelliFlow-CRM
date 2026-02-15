@@ -12,3 +12,5 @@ export { billingSidebarConfig } from './billing';
 export { accountsSidebarConfig } from './accounts';
 export { developerSidebarConfig } from './developer';
 export { tasksSidebarConfig } from './tasks';
+export { casesSidebarConfig } from './cases';
+export { appointmentsSidebarConfig } from './appointments';

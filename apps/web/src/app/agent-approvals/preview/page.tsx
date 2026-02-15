@@ -882,7 +882,7 @@ function AgentApprovalsPreviewContent() {
   }, []);
 
   return (
-    <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 space-y-6">
+    <div className="flex flex-col gap-6">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-2">
         <Link href="/dashboard" className="hover:text-[#137fec]">
@@ -1055,7 +1055,7 @@ function AgentApprovalsPreviewContent() {
 // Loading fallback
 function PreviewLoadingFallback() {
   return (
-    <div className="container mx-auto py-8 px-4 max-w-6xl">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center justify-center py-12">
         <p className="text-gray-600">Loading approvals...</p>
       </div>

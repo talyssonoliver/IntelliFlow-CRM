@@ -65,6 +65,9 @@ const mockPrisma = {
   tenant: {
     findUnique: vi.fn().mockResolvedValue(mockTenant),
   },
+  user: {
+    findMany: vi.fn().mockResolvedValue([]),
+  },
   ticket: {
     groupBy: vi.fn().mockResolvedValue([
       { status: 'OPEN', _count: 5 },
@@ -111,6 +114,7 @@ describe('ticketRouter', () => {
     vi.clearAllMocks();
     // Re-establish default mock values after clearing
     mockPrisma.tenant.findUnique.mockResolvedValue(mockTenant);
+    mockPrisma.user.findMany.mockResolvedValue([]);
     mockTicketService.create.mockResolvedValue(mockTicket);
     mockTicketService.findById.mockResolvedValue(mockTicket);
     mockTicketService.findMany.mockResolvedValue({
@@ -124,10 +128,45 @@ describe('ticketRouter', () => {
       total: 10,
       byStatus: { OPEN: 5, IN_PROGRESS: 3, RESOLVED: 2 },
       byPriority: { CRITICAL: 1, HIGH: 2, MEDIUM: 4, LOW: 3 },
+      bySLAStatus: { ON_TRACK: 4, AT_RISK: 2, BREACHED: 1, MET: 2, PAUSED: 1 },
       slaBreached: 1,
+      resolvedToday: 2,
       avgResponseTime: 24,
     });
     mockTicketService.addResponse.mockResolvedValue(true);
+  });
+
+  describe('assignees', () => {
+    it('returns tenant team members for assignment', async () => {
+      mockPrisma.user.findMany.mockResolvedValueOnce([
+        {
+          id: USER_UUID,
+          name: 'Sarah Jenkins',
+          email: 'sarah@intelliflow.dev',
+          role: 'MANAGER',
+          avatarUrl: null,
+        },
+      ]);
+
+      const mockContext = createMockContext();
+      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+
+      const result = await caller.assignees();
+
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { tenantId: TENANT_UUID },
+        })
+      );
+      expect(result).toEqual([
+        {
+          id: USER_UUID,
+          name: 'Sarah Jenkins',
+          title: 'Support Manager',
+          avatar: null,
+        },
+      ]);
+    });
   });
 
   // ============================================
@@ -359,14 +398,14 @@ describe('ticketRouter', () => {
       const mockContext = createMockContext();
       const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
 
-      const result = await caller.stats();
+      const result = await caller.stats({});
 
       expect(result.total).toBe(10);
       expect(result.byStatus['OPEN']).toBe(5);
       expect(result.byStatus['IN_PROGRESS']).toBe(3);
       expect(result.byStatus['RESOLVED']).toBe(2);
       expect(result.byPriority).toBeDefined();
-      expect(mockTicketService.getStats).toHaveBeenCalledWith(TENANT_UUID);
+      expect(mockTicketService.getStats).toHaveBeenCalledWith(TENANT_UUID, 'all');
     });
   });
 
@@ -584,7 +623,7 @@ describe('ticketRouter', () => {
       const mockContext = createMockContext();
       const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
 
-      await expect(caller.stats()).rejects.toThrow(/Default tenant not found/);
+      await expect(caller.stats({})).rejects.toThrow(/Default tenant not found/);
     });
   });
 });

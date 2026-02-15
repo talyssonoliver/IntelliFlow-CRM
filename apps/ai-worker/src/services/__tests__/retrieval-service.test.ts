@@ -451,9 +451,9 @@ describe('RelevanceEvaluator', () => {
 
   describe('combineScores', () => {
     it('should combine FTS and semantic scores with default weights', () => {
-      // weights: fullText=0.4, semantic=0.6
+      // weights: fullText=0.4, semantic=0.4
       const combined = evaluator.combineScores(1.0, 0.5);
-      expect(combined).toBeCloseTo(0.4 * 1.0 + 0.6 * 0.5, 5);
+      expect(combined).toBeCloseTo(0.4 * 1.0 + 0.4 * 0.5, 5);
     });
 
     it('should return 0 when both scores are 0', () => {

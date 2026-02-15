@@ -340,6 +340,30 @@ export const SEED_IDS = {
     contract2024: seedUUID('38', 2),
     requirementsSpec: seedUUID('38', 3),
   },
+  cases: {
+    estatePlanningSmith: seedUUID('58', 1),      // 00000000-0000-4000-8000-000000005801
+    corporateMergerTechFlow: seedUUID('58', 2),   // 00000000-0000-4000-8000-000000005802
+    civilLitigationJohnson: seedUUID('58', 3),    // 00000000-0000-4000-8000-000000005803
+    realEstateClosingPine: seedUUID('58', 4),     // 00000000-0000-4000-8000-000000005804
+    intellectualPropertyDispute: seedUUID('58', 5),
+    contractReviewGlobal: seedUUID('58', 6),
+    employmentDispute: seedUUID('58', 7),
+    regulatoryCompliance: seedUUID('58', 8),
+  },
+  caseTasks: {
+    reviewDocuments: seedUUID('59', 1),           // 00000000-0000-4000-8000-000000005901
+    fileMotion: seedUUID('59', 2),
+    clientMeeting: seedUUID('59', 3),
+    draftAgreement: seedUUID('59', 4),
+    courtHearing: seedUUID('59', 5),
+    collectEvidence: seedUUID('59', 6),
+    draftClosingDocs: seedUUID('59', 7),
+    titleSearch: seedUUID('59', 8),
+    depositTransfer: seedUUID('59', 9),
+    filingDeadline: seedUUID('59', 10),
+    mergerReview: seedUUID('59', 11),
+    dueDiligence: seedUUID('59', 12),
+  },
   caseDocuments: {
     employmentAgreement: seedUUID('39', 1),      // 00000000-0000-4000-8000-000000003901
     ndaTechCorp: seedUUID('39', 2),
@@ -493,6 +517,39 @@ export const SEED_IDS = {
   leadAIInsights: {
     marcusReed: seedUUID('56', 1),               // 00000000-0000-4000-8000-000000005601
     sarahMiller: seedUUID('56', 2),
+  },
+  // Appointments (calendar page demo data)
+  appointments: {
+    productDemoTechCorp: seedUUID('5a', 1),    // 00000000-0000-4000-8000-000000005a01
+    followUpCallSarah: seedUUID('5a', 2),
+    q3ReviewMeeting: seedUUID('5a', 3),
+    proposalDeadline: seedUUID('5a', 4),
+    clientConsultation: seedUUID('5a', 5),
+    courtHearing: seedUUID('5a', 6),
+    depositionPrep: seedUUID('5a', 7),
+    weeklyStandup: seedUUID('5a', 8),
+    partnerCall: seedUUID('5a', 9),
+    strategySession: seedUUID('5a', 10),
+  },
+  appointmentAttendees: {
+    att1: seedUUID('5b', 1),                   // 00000000-0000-4000-8000-000000005b01
+    att2: seedUUID('5b', 2),
+    att3: seedUUID('5b', 3),
+    att4: seedUUID('5b', 4),
+    att5: seedUUID('5b', 5),
+    att6: seedUUID('5b', 6),
+    att7: seedUUID('5b', 7),
+    att8: seedUUID('5b', 8),
+    att9: seedUUID('5b', 9),
+    att10: seedUUID('5b', 10),
+    att11: seedUUID('5b', 11),
+    att12: seedUUID('5b', 12),
+    att13: seedUUID('5b', 13),
+    att14: seedUUID('5b', 14),
+  },
+  appointmentCases: {
+    hearingCase: seedUUID('5c', 1),            // 00000000-0000-4000-8000-000000005c01
+    depositionCase: seedUUID('5c', 2),
   },
   // Auto-Response Drafts for IFC-029 (Agent Approvals page)
   autoResponseDrafts: {

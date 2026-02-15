@@ -177,7 +177,7 @@ export default function AIReviewDetailPage() {
 
   if (isError || !review) {
     return (
-      <div className="p-6">
+      <div>
         <p className="text-destructive">Review not found or an error occurred.</p>
         <Button
           variant="outline"
@@ -194,7 +194,7 @@ export default function AIReviewDetailPage() {
   const isOwnClaim = review.lockedBy === user?.id;
 
   return (
-    <div className="p-6 space-y-6 max-w-4xl mx-auto">
+    <div className="flex flex-col gap-6 max-w-4xl mx-auto">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-muted-foreground" aria-label="Breadcrumb">
         <Link href="/agent-approvals" className="hover:text-foreground transition-colors">

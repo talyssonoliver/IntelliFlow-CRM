@@ -3,7 +3,14 @@
 import { useState, useEffect } from 'react';
 import type { TaskStatus, TaskPriority } from '@intelliflow/domain';
 import { TASK_STATUSES, TASK_PRIORITIES } from '@intelliflow/domain';
-import { toast } from '@intelliflow/ui';
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetDescription,
+  toast,
+} from '@intelliflow/ui';
+import { EntitySearchField } from './EntitySearchField';
 
 export interface TaskFormData {
   readonly title: string;
@@ -13,6 +20,7 @@ export interface TaskFormData {
   readonly status: TaskStatus;
   readonly entityType: 'none' | 'lead' | 'contact' | 'opportunity';
   readonly entityId: string;
+  readonly entityName: string;
 }
 
 export interface TaskFormProps {
@@ -31,6 +39,7 @@ const DEFAULT_FORM: TaskFormData = {
   status: 'PENDING' as TaskStatus,
   entityType: 'none',
   entityId: '',
+  entityName: '',
 };
 
 export function TaskForm({ open, onClose, onSubmit, initialData, mode }: TaskFormProps) {
@@ -74,25 +83,21 @@ export function TaskForm({ open, onClose, onSubmit, initialData, mode }: TaskFor
     onClose();
   }
 
-  if (!open) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) handleClose();
-      }}
-      role="dialog"
-      aria-modal="true"
-      aria-label={mode === 'create' ? 'Create task' : 'Edit task'}
-    >
-      <div className="bg-background rounded-lg shadow-lg w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="px-6 py-4 border-b">
-          <h2 className="text-lg font-semibold text-foreground">
-            {mode === 'create' ? 'New Task' : 'Edit Task'}
-          </h2>
+    <Sheet open={open} onOpenChange={(isOpen) => { if (!isOpen) handleClose(); }}>
+      <SheetContent
+        side="right"
+        className="w-full max-w-lg flex flex-col overflow-hidden p-0 gap-0"
+        aria-label={mode === 'create' ? 'Create task' : 'Edit task'}
+      >
+        <div className="p-6 border-b flex-shrink-0">
+          <SheetTitle>{mode === 'create' ? 'New Task' : 'Edit Task'}</SheetTitle>
+          <SheetDescription>
+            {mode === 'create' ? 'Create a new task.' : 'Update task details.'}
+          </SheetDescription>
         </div>
-        <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
+
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
           {/* Title */}
           <div>
             <label htmlFor="task-title" className="block text-sm font-medium text-foreground mb-1">
@@ -185,7 +190,7 @@ export function TaskForm({ open, onClose, onSubmit, initialData, mode }: TaskFor
           {/* Entity Linking */}
           <fieldset>
             <legend className="text-sm font-medium text-foreground mb-2">Link to Entity</legend>
-            <div className="flex gap-4 flex-wrap">
+            <div className="flex gap-4 flex-wrap mb-3">
               {(['none', 'lead', 'contact', 'opportunity'] as const).map((type) => (
                 <label key={type} className="inline-flex items-center gap-1.5 text-sm cursor-pointer">
                   <input
@@ -193,17 +198,25 @@ export function TaskForm({ open, onClose, onSubmit, initialData, mode }: TaskFor
                     name="entityType"
                     value={type}
                     checked={form.entityType === type}
-                    onChange={() => setForm((f) => ({ ...f, entityType: type, entityId: '' }))}
+                    onChange={() => setForm((f) => ({ ...f, entityType: type, entityId: '', entityName: '' }))}
                     className="accent-primary"
                   />
                   {type === 'none' ? 'None' : type.charAt(0).toUpperCase() + type.slice(1)}
                 </label>
               ))}
             </div>
+            {form.entityType !== 'none' && (
+              <EntitySearchField
+                entityType={form.entityType}
+                value={form.entityId}
+                valueName={form.entityName || ''}
+                onChange={(id, name) => setForm((f) => ({ ...f, entityId: id, entityName: name }))}
+              />
+            )}
           </fieldset>
         </form>
 
-        <div className="px-6 py-4 border-t flex justify-end gap-3">
+        <div className="p-6 border-t flex justify-end gap-3 flex-shrink-0">
           <button
             type="button"
             onClick={handleClose}
@@ -219,7 +232,7 @@ export function TaskForm({ open, onClose, onSubmit, initialData, mode }: TaskFor
             {mode === 'create' ? 'Create Task' : 'Save Changes'}
           </button>
         </div>
-      </div>
-    </div>
+      </SheetContent>
+    </Sheet>
   );
 }

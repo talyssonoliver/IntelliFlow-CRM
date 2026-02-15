@@ -13,7 +13,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { ContactList } from '../ContactList';
 import { createMockContact, createMockContactList, createMockHandlers, resetAllMocks } from './contact-test-utils';
 
@@ -37,24 +38,36 @@ vi.mock('@intelliflow/ui', () => ({
     return (
       <table>
         <tbody>
-          {(data as Array<{ id: string; firstName: string; lastName: string }>).map((row) => (
-            <tr key={row.id} onClick={() => onRowClick(row)} data-testid={`row-${row.id}`}>
-              <td>{row.firstName} {row.lastName}</td>
-            </tr>
-          ))}
+          {(data as unknown[]).map((row: unknown, _idx: number) => {
+            const rowData = row as { id: string; firstName: string; lastName: string };
+            // Render all columns including the actions column
+            const actionsColumn = (columns as unknown[]).find((col: unknown) => (col as { id?: string }).id === 'actions') as { id?: string; cell?: (ctx: unknown) => React.ReactNode } | undefined;
+            return (
+              <tr key={rowData.id} onClick={() => onRowClick(row)} data-testid={`row-${rowData.id}`}>
+                <td>{rowData.firstName} {rowData.lastName}</td>
+                {actionsColumn && (
+                  <td>
+                    {typeof (actionsColumn as { cell?: (ctx: unknown) => React.ReactNode }).cell === 'function'
+                      ? (actionsColumn as { cell: (ctx: unknown) => React.ReactNode }).cell({ row: { original: row } })
+                      : null}
+                  </td>
+                )}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     );
   },
   TableRowActions: ({ quickActions, dropdownActions }: {
     quickActions?: Array<{ icon: string; label: string; onClick: () => void }>;
-    dropdownActions?: Array<{ icon: string; label: string; onClick: () => void; separator?: boolean; variant?: string }>;
+    dropdownActions?: Array<{ icon: string; label: string; onClick: () => void; separator?: boolean; variant?: string; id?: string }>;
   }) => (
     <div data-testid="row-actions">
       {quickActions?.map((action) => (
         <button key={action.label} onClick={action.onClick}>{action.label}</button>
       ))}
-      {dropdownActions?.map((action) => !action.separator && (
+      {dropdownActions?.filter(action => !action.separator).map((action) => (
         <button key={action.label} onClick={action.onClick}>{action.label}</button>
       ))}
     </div>
@@ -250,7 +263,8 @@ describe('ContactList', () => {
       expect(screen.getByText('Send Email')).toBeInTheDocument();
     });
 
-    it('opens tel: link when call action clicked', () => {
+    it('opens tel: link when call action clicked', async () => {
+      const user = userEvent.setup();
       const contacts = [createMockContact({ phone: '+1 (555) 123-4567' })];
       const windowOpen = vi.spyOn(window, 'open').mockImplementation(() => null);
 
@@ -267,13 +281,16 @@ describe('ContactList', () => {
         />
       );
 
-      fireEvent.click(screen.getByText('Call'));
-      expect(windowOpen).toHaveBeenCalledWith('tel:+1 (555) 123-4567');
+      await user.click(screen.getByText('Call'));
+      await waitFor(() => {
+        expect(windowOpen).toHaveBeenCalledWith('tel:+1 (555) 123-4567');
+      });
 
       windowOpen.mockRestore();
     });
 
-    it('opens mailto: link when email action clicked', () => {
+    it('opens mailto: link when email action clicked', async () => {
+      const user = userEvent.setup();
       const contacts = [createMockContact({ email: 'test@example.com' })];
       const windowOpen = vi.spyOn(window, 'open').mockImplementation(() => null);
 
@@ -290,8 +307,10 @@ describe('ContactList', () => {
         />
       );
 
-      fireEvent.click(screen.getByText('Send Email'));
-      expect(windowOpen).toHaveBeenCalledWith('mailto:test@example.com');
+      await user.click(screen.getByText('Send Email'));
+      await waitFor(() => {
+        expect(windowOpen).toHaveBeenCalledWith('mailto:test@example.com');
+      });
 
       windowOpen.mockRestore();
     });
@@ -317,7 +336,8 @@ describe('ContactList', () => {
       expect(screen.getByText('Edit Contact')).toBeInTheDocument();
     });
 
-    it('calls onEdit when edit action clicked', () => {
+    it('calls onEdit when edit action clicked', async () => {
+      const user = userEvent.setup();
       const contacts = [createMockContact()];
       render(
         <ContactList
@@ -333,8 +353,10 @@ describe('ContactList', () => {
         />
       );
 
-      fireEvent.click(screen.getByText('Edit Contact'));
-      expect(handlers.onEdit).toHaveBeenCalledTimes(1);
+      await user.click(screen.getByText('Edit Contact'));
+      await waitFor(() => {
+        expect(handlers.onEdit).toHaveBeenCalledTimes(1);
+      });
     });
 
     it('renders create deal action when onCreateDeal provided', () => {
@@ -412,7 +434,8 @@ describe('ContactList', () => {
       expect(screen.getByText('Delete')).toBeInTheDocument();
     });
 
-    it('calls onDelete when delete action clicked', () => {
+    it('calls onDelete when delete action clicked', async () => {
+      const user = userEvent.setup();
       const contacts = [createMockContact()];
       render(
         <ContactList
@@ -427,8 +450,10 @@ describe('ContactList', () => {
         />
       );
 
-      fireEvent.click(screen.getByText('Delete'));
-      expect(handlers.onDelete).toHaveBeenCalledTimes(1);
+      await user.click(screen.getByText('Delete'));
+      await waitFor(() => {
+        expect(handlers.onDelete).toHaveBeenCalledTimes(1);
+      });
     });
   });
 

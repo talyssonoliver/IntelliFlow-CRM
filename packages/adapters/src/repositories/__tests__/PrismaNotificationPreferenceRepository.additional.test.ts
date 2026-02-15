@@ -1,24 +1,53 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { PrismaNotificationPreferenceRepository } from '../PrismaNotificationPreferenceRepository';
 
-vi.mock('@intelliflow/domain', () => ({
-  NotificationPreference: {
-    reconstitute: vi.fn().mockImplementation((id: string, props: any) => ({
-      id, ...props,
-      toJSON: () => ({ channels: props.channels, categories: props.categories }),
-      isChannelEnabled: vi.fn().mockReturnValue(true),
-      isCategoryEnabled: vi.fn().mockReturnValue(true),
-      shouldDeliverNow: vi.fn().mockReturnValue(true),
-      isInQuietHours: vi.fn().mockReturnValue(false),
-    })),
-    createDefault: vi.fn().mockImplementation((tenantId: string, userId: string) => ({
-      id: 'pref_default', tenantId, userId,
-      quietHoursStart: '22:00', quietHoursEnd: '08:00', quietHoursEnabled: false,
-      timezone: 'UTC', doNotDisturb: false,
-      toJSON: () => ({ channels: {}, categories: {} }),
-    })),
-  },
-}));
+vi.mock('@intelliflow/domain', () => {
+  const mockReconstitute = vi.fn((id: string, props: any) => ({
+    id,
+    ...props,
+    toJSON: () => ({ channels: props.channels, categories: props.categories }),
+    isChannelEnabled: vi.fn().mockReturnValue(true),
+    isCategoryEnabled: vi.fn().mockReturnValue(true),
+    shouldDeliverNow: vi.fn().mockReturnValue(true),
+    isInQuietHours: vi.fn().mockReturnValue(false),
+  }));
+
+  const mockCreateDefault = vi.fn((tenantId: string, userId: string) => ({
+    id: 'pref_default',
+    tenantId,
+    userId,
+    quietHoursStart: '22:00',
+    quietHoursEnd: '08:00',
+    quietHoursEnabled: false,
+    timezone: 'UTC',
+    doNotDisturb: false,
+    toJSON: () => ({
+      channels: {
+        in_app: { enabled: true, frequency: 'realtime' },
+        email: { enabled: true, frequency: 'realtime' },
+        sms: { enabled: false, frequency: 'realtime' },
+        push: { enabled: false, frequency: 'realtime' },
+        webhook: { enabled: false, frequency: 'realtime' },
+      },
+      categories: {
+        system: true,
+        transactional: true,
+        reminders: true,
+        alerts: true,
+        updates: true,
+        marketing: false,
+        social: true,
+      },
+    }),
+  }));
+
+  return {
+    NotificationPreference: {
+      reconstitute: mockReconstitute,
+      createDefault: mockCreateDefault,
+    },
+  };
+});
 
 const mockPrisma = {
   notificationPreference: {
@@ -36,7 +65,15 @@ describe('PrismaNotificationPreferenceRepository', () => {
   let repo: PrismaNotificationPreferenceRepository;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    // Clear only Prisma mocks, not domain mocks
+    mockPrisma.notificationPreference.findUnique.mockClear();
+    mockPrisma.notificationPreference.findFirst.mockClear();
+    mockPrisma.notificationPreference.findMany.mockClear();
+    mockPrisma.notificationPreference.upsert.mockClear();
+    mockPrisma.notificationPreference.delete.mockClear();
+    mockPrisma.notificationPreference.count.mockClear();
+    mockPrisma.notificationPreference.updateMany.mockClear();
+
     repo = new PrismaNotificationPreferenceRepository(mockPrisma as any);
   });
 
@@ -93,7 +130,8 @@ describe('PrismaNotificationPreferenceRepository', () => {
     it('should return existing preference', async () => {
       mockPrisma.notificationPreference.findUnique.mockResolvedValue({
         id: 'pref_1', tenantId: 'tenant_1', userId: 'user_1',
-        channelPreferences: {}, categoryPreferences: {},
+        channelPreferences: { in_app: { enabled: true, frequency: 'realtime' } },
+        categoryPreferences: { system: true },
         quietHoursStart: '22:00', quietHoursEnd: '08:00', quietHoursEnabled: false,
         timezone: 'UTC', doNotDisturb: false,
         createdAt: new Date(), updatedAt: new Date(),

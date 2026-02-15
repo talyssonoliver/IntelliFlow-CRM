@@ -1,0 +1,133 @@
+{
+  "$schema": "../../../schemas/task-status.schema.json",
+  "task_id": "PG-025",
+  "section": "Billing Pages",
+  "description": "Billing Portal",
+  "owner": "Platform BE (STOA-Foundation)",
+  "sprint": "sprint-14",
+  "phase": null,
+  "stream": null,
+  "dependencies": {
+    "required": [
+      "IFC-099",
+      "IFC-198"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-02-15T16:58:55.391Z"
+  },
+  "status": "BACKLOG",
+  "started_at": "2026-02-14T20:00:00.000Z",
+  "completed_at": "2026-02-15T00:30:00.000Z",
+  "target_duration_minutes": 480,
+  "actual_duration_minutes": 270,
+  "status_history": [
+    {
+      "status": "Specifying",
+      "at": "2026-02-14T20:00:00.000Z",
+      "note": "spec session started"
+    },
+    {
+      "status": "Spec Complete",
+      "at": "2026-02-14T21:00:00.000Z",
+      "note": "spec session completed"
+    },
+    {
+      "status": "Planning",
+      "at": "2026-02-14T22:00:00.000Z",
+      "note": "plan session started"
+    },
+    {
+      "status": "Plan Complete",
+      "at": "2026-02-14T23:30:00.000Z",
+      "note": "plan session completed — plan reviewer APPROVED"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-14T23:50:00.000Z",
+      "note": "exec session started"
+    },
+    {
+      "status": "Completed",
+      "at": "2026-02-15T00:30:00.000Z",
+      "note": "exec completed — MATOP PASS, all gates passed"
+    }
+  ],
+  "execution": {
+    "started_at": "2026-02-14T23:50:00.000Z",
+    "completed_at": "2026-02-15T00:30:00.000Z",
+    "duration_minutes": 40,
+    "executor": "Claude Code /exec",
+    "agents": [
+      "Foundation",
+      "Quality"
+    ],
+    "retry_count": 0,
+    "last_error": null
+  },
+  "context_acknowledgment": {
+    "files_read": [],
+    "total_files": 4,
+    "total_tokens": 0
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/billing/page.tsx",
+      "apps/web/src/components/billing/billing-portal.tsx",
+      "apps/web/src/lib/billing/stripe-portal.ts"
+    ],
+    "created": [
+      "apps/web/src/app/billing/page.tsx",
+      "apps/web/src/components/billing/billing-portal.tsx",
+      "apps/web/src/lib/billing/stripe-portal.ts"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "Tests",
+      "command": "pnpm --filter web vitest run src/components/billing src/lib/billing",
+      "exit_code": 0,
+      "passed": true,
+      "duration_ms": 8040
+    },
+    {
+      "name": "Tests (Backend)",
+      "command": "pnpm --filter api vitest run src/modules/billing",
+      "exit_code": 0,
+      "passed": true,
+      "duration_ms": 844
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter web lint",
+      "exit_code": 0,
+      "passed": true,
+      "duration_ms": 6000
+    }
+  ],
+  "kpis": {
+    "test_coverage": {
+      "target": 90,
+      "actual": 93.61,
+      "met": true,
+      "unit": "percent"
+    },
+    "component_tests": {
+      "target": 61,
+      "actual": 61,
+      "met": true,
+      "unit": "count"
+    },
+    "billing_portal_functional": {
+      "target": 1,
+      "actual": 1,
+      "met": true
+    }
+  },
+  "blockers": [],
+  "notes": "PG-025 Billing Portal completed. 3-column grid layout with subscription overview, payment methods, billing information, and billing history. New getBillingInformation backend endpoint. Coverage: 93.61% statements, 95.65% lines. 61 component tests + 49 backend tests passing.",
+  "dependencies_resolved": [
+    "IFC-099",
+    "IFC-198"
+  ]
+}

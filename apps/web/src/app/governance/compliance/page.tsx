@@ -200,7 +200,7 @@ export default function ComplianceDashboardPage() {
   };
 
   return (
-    <div className="p-8">
+    <div className="flex flex-col gap-6">
       <div className="mx-auto">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">

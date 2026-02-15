@@ -10,12 +10,37 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import { PrismaClient, EventStatus } from '@prisma/client';
 
+// Skip integration tests when no database is available
+// Check both URL format AND that the DB is expected to be running
+// (DATABASE_URL in .env alone is not enough — the server must actually be up)
+import { createConnection } from 'node:net';
+
+const hasDatabase: boolean = await (async () => {
+  try {
+    const url = process.env.DATABASE_URL || '';
+    if (!url.startsWith('postgresql://') && !url.startsWith('postgres://')) return false;
+    // Extract host:port from DATABASE_URL and probe TCP connectivity
+    const match = url.match(/@([^:/]+):(\d+)\//);
+    if (!match) return false;
+    const [, host, port] = match;
+    return await new Promise<boolean>((resolve) => {
+      const sock = createConnection({ host, port: Number(port) }, () => {
+        sock.destroy();
+        resolve(true);
+      });
+      sock.on('error', () => resolve(false));
+      sock.setTimeout(1000, () => { sock.destroy(); resolve(false); });
+    });
+  } catch { return false; }
+})();
+
 // Test database client
 let prisma: PrismaClient;
 const TEST_TENANT_ID = 'test-tenant-ifc-150';
 
 // Create the test tenant before all tests
 beforeAll(async () => {
+  if (!hasDatabase) return;
   prisma = new PrismaClient();
 
   // Clean up any existing test tenant first
@@ -36,6 +61,7 @@ beforeAll(async () => {
 
 // Clean up tenant after all tests — always runs even if tests fail
 afterAll(async () => {
+  if (!hasDatabase) return;
   try {
     // Delete all domain events for this tenant first
     await prisma.domainEvent.deleteMany({
@@ -56,13 +82,14 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+  if (!hasDatabase) return;
   // Clean up test events after each test
   await prisma.domainEvent.deleteMany({
     where: { tenantId: TEST_TENANT_ID },
   });
 });
 
-describe('DomainEvent Outbox', () => {
+describe.skipIf(!hasDatabase)('DomainEvent Outbox', () => {
   it('should create event with PENDING status', async () => {
     // Arrange
     const eventData = {

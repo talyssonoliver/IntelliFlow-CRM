@@ -14,6 +14,11 @@ const eslintConfig = tseslint.config(
     plugins: {
       '@next/next': nextPlugin,
     },
+    languageOptions: {
+      parserOptions: {
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
     rules: {
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs['core-web-vitals'].rules,

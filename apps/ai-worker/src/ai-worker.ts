@@ -66,7 +66,18 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     this.logger.info(
       {
         provider: aiConfig.provider,
-        model: aiConfig.provider === 'openai' ? aiConfig.openai.model : aiConfig.ollama.model,
+        model:
+          aiConfig.provider === 'openai'
+            ? aiConfig.openai.model
+            : aiConfig.provider === 'ollama'
+              ? aiConfig.ollama.model
+              : 'mock',
+        endpoint:
+          aiConfig.provider === 'openai'
+            ? aiConfig.openai.baseUrl || 'https://api.openai.com'
+            : aiConfig.provider === 'ollama'
+              ? aiConfig.ollama.baseUrl
+              : 'mock',
         costTrackingEnabled: aiConfig.costTracking.enabled,
         cacheEnabled: aiConfig.performance.cacheEnabled,
       },
@@ -106,6 +117,105 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     }
   }
 
+  private async getProviderHealth(lastCheck: string): Promise<ComponentHealth> {
+    if (!this.configLoaded) {
+      return {
+        status: 'error',
+        latency: 0,
+        lastCheck,
+        message: 'AI configuration not loaded',
+      };
+    }
+
+    if (aiConfig.provider === 'mock') {
+      const inProduction = process.env.NODE_ENV === 'production';
+      return {
+        status: inProduction ? 'error' : 'ok',
+        latency: 0,
+        lastCheck,
+        message: inProduction
+          ? 'Mock provider must not run in production'
+          : 'Mock provider enabled for non-production environment',
+      };
+    }
+
+    if (aiConfig.provider === 'openai') {
+      const hasCompatibleEndpoint = Boolean(aiConfig.openai.baseUrl);
+      const hasApiKey = Boolean(aiConfig.openai.apiKey);
+      const endpointLabel = hasCompatibleEndpoint
+        ? `openai-compatible (${aiConfig.openai.baseUrl})`
+        : 'openai';
+
+      return {
+        status: hasApiKey || hasCompatibleEndpoint ? 'ok' : 'error',
+        latency: 0,
+        lastCheck,
+        message: hasApiKey || hasCompatibleEndpoint
+          ? `provider=${endpointLabel}, model=${aiConfig.openai.model}`
+          : 'OPENAI_API_KEY is missing and no OPENAI_BASE_URL is configured',
+      };
+    }
+
+    if (aiConfig.provider === 'ollama') {
+      const startedAt = Date.now();
+      const fetchFn = globalThis.fetch;
+
+      if (!fetchFn) {
+        return {
+          status: 'error',
+          latency: 0,
+          lastCheck,
+          message: 'Global fetch is unavailable for Ollama health checks',
+        };
+      }
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 2500);
+
+      try {
+        const url = new URL('/api/tags', aiConfig.ollama.baseUrl).toString();
+        const response = await fetchFn(url, {
+          method: 'GET',
+          signal: controller.signal,
+        });
+        const latency = Date.now() - startedAt;
+
+        if (!response.ok) {
+          return {
+            status: 'error',
+            latency,
+            lastCheck,
+            message: `Ollama health check failed (${response.status})`,
+          };
+        }
+
+        return {
+          status: 'ok',
+          latency,
+          lastCheck,
+          message: `provider=ollama, model=${aiConfig.ollama.model}, endpoint=${aiConfig.ollama.baseUrl}`,
+        };
+      } catch (error) {
+        const latency = Date.now() - startedAt;
+        return {
+          status: 'error',
+          latency,
+          lastCheck,
+          message: error instanceof Error ? error.message : String(error),
+        };
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
+
+    return {
+      status: 'error',
+      latency: 0,
+      lastCheck,
+      message: `Unsupported provider: ${String(aiConfig.provider)}`,
+    };
+  }
+
   /**
    * Check AI-specific dependencies
    */
@@ -114,19 +224,23 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
 
     // Check AI provider connectivity
     try {
+      const lastCheck = new Date().toISOString();
+
       // Simple config check as health indicator
       health.ai_config = {
         status: this.configLoaded ? 'ok' : 'error',
         latency: 0,
-        lastCheck: new Date().toISOString(),
+        lastCheck,
       };
+
+      health.ai_provider = await this.getProviderHealth(lastCheck);
 
       // Cost tracker health
       const stats = costTracker.getStatistics();
       health.cost_tracker = {
         status: 'ok',
         latency: 0,
-        lastCheck: new Date().toISOString(),
+        lastCheck,
         message: `ops=${stats.totalOperations}, cost=$${stats.totalCost.toFixed(2)}`,
       };
     } catch (error) {

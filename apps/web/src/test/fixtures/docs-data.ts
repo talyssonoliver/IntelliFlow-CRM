@@ -30,11 +30,10 @@ export const mockDocsCategories: DocCategory[] = [
     id: 'api-reference',
     title: 'API Reference',
     description: 'Complete tRPC API documentation with 25 routers and 235 typed procedures',
-    href: 'https://intelliflow-crm.dev/docs/api/overview',
+    href: '/docs/api',
     icon: 'api',
     color: 'bg-purple-500',
     docCount: 25,
-    external: true,
   },
   {
     id: 'architecture',

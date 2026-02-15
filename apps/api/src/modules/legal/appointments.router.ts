@@ -379,8 +379,25 @@ export const appointmentsRouter = createTRPCRouter({
       ctx.prisma.appointment.count({ where }),
     ]);
 
+    // Enrich attendees with user data for display
+    const allUserIds = [...new Set(appointments.flatMap(a => [a.organizerId, ...a.attendees.map(att => att.userId)]))];
+    const users = await ctx.prisma.user.findMany({
+      where: { id: { in: allUserIds } },
+      select: { id: true, name: true, avatarUrl: true },
+    });
+    const userMap = new Map(users.map(u => [u.id, u]));
+
+    const enrichedAppointments = appointments.map(a => ({
+      ...a,
+      organizer: userMap.get(a.organizerId) ?? null,
+      attendees: a.attendees.map(att => ({
+        ...att,
+        user: userMap.get(att.userId) ?? null,
+      })),
+    }));
+
     return {
-      appointments,
+      appointments: enrichedAppointments,
       total,
       page,
       limit,

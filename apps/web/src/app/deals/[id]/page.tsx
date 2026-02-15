@@ -8,6 +8,7 @@ import { Card, Button } from '@intelliflow/ui';
 import { EntityHeader } from '@/components/shared';
 import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
+import { RelatedTasksCard } from '@/components/tasks/RelatedTasksCard';
 
 // Material Symbols icon helper component
 const Icon = ({ name, className = '' }: { name: string; className?: string }) => (
@@ -609,43 +610,7 @@ function ProductsCard({ products, total }: { products: Deal['products']; total: 
   );
 }
 
-function NextStepsCard({ steps }: { steps: Deal['nextSteps'] }) {
-  return (
-    <Card className="p-5">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-          Next Steps
-        </h3>
-        <button className="w-6 h-6 flex items-center justify-center rounded bg-primary/10 hover:bg-primary/20 text-primary transition-colors">
-          <Icon name="add" className="text-base" />
-        </button>
-      </div>
-      <div className="space-y-3">
-        {steps.map((step) => (
-          <label key={step.id} className="flex items-start gap-3 group cursor-pointer">
-            <input
-              type="checkbox"
-              defaultChecked={step.completed}
-              className="mt-1 rounded border-slate-300 text-primary focus:ring-primary/50 cursor-pointer"
-            />
-            <div className="text-sm">
-              <p className="font-medium text-slate-700 group-hover:text-primary transition-colors">
-                {step.title}
-              </p>
-              <p
-                className={`text-xs mt-0.5 ${
-                  step.dueDate.includes('Tomorrow') ? 'text-red-500' : 'text-slate-400'
-                }`}
-              >
-                {step.dueDate}
-              </p>
-            </div>
-          </label>
-        ))}
-      </div>
-    </Card>
-  );
-}
+// NextStepsCard replaced by RelatedTasksCard
 
 function FilesCard({ files }: { files: Deal['files'] }) {
   const getFileIcon = (type: string) => {
@@ -787,7 +752,7 @@ export default function DealDetailPage() {
           {/* Right Sidebar */}
           <div className="lg:col-span-3 flex flex-col gap-6">
             <ProductsCard products={deal.products} total={deal.value} />
-            <NextStepsCard steps={deal.nextSteps} />
+            <RelatedTasksCard entityType="opportunity" entityId={dealId} title="Next Steps" />
             <FilesCard files={deal.files} />
           </div>
         </div>

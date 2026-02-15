@@ -85,6 +85,182 @@ const aiInsightsResponseSchema = z.object({
 
 export const intelligenceRouter = createTRPCRouter({
   /**
+   * Get sentiment dashboard data (PG-142)
+   *
+   * Single data source: LeadAIInsight + ContactAIInsight tables.
+   * Stats, analysis list, and trend chart all derive from the same rows,
+   * ensuring consistency between the summary counts and the detail cards.
+   */
+  getSentimentDashboard: tenantProcedure
+    .input(z.object({
+      entityType: z.enum(['all', 'lead', 'contact']).default('all'),
+      dateRange: z.enum(['7d', '30d', '90d']).default('30d'),
+      page: z.number().min(1).default(1),
+      limit: z.number().min(1).max(100).default(20),
+    }))
+    .query(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const tenantId = typedCtx.tenant.tenantId;
+
+      // Calculate date filter
+      const daysMap = { '7d': 7, '30d': 30, '90d': 90 };
+      const since = new Date();
+      since.setDate(since.getDate() - daysMap[input.dateRange]);
+
+      // ----- Unified data source: fetch full insight rows -----
+
+      type InsightRow = {
+        id: string;
+        entityType: 'lead' | 'contact';
+        entityId: string;
+        entityName: string;
+        sentiment: string;
+        churnRisk: string;
+        engagementScore: number;
+        sentimentTrend: string | null;
+        nextBestAction: string | null;
+        recommendations: unknown;
+        updatedAt: Date;
+      };
+
+      const churnToUrgency = (cr: string): string => {
+        if (cr === 'CRITICAL') return 'CRITICAL';
+        if (cr === 'HIGH') return 'HIGH';
+        if (cr === 'MEDIUM') return 'MEDIUM';
+        return 'NONE';
+      };
+
+      const allInsights: InsightRow[] = [];
+
+      if (input.entityType === 'all' || input.entityType === 'lead') {
+        const leadInsights = await ctx.prisma.leadAIInsight.findMany({
+          where: { tenantId, updatedAt: { gte: since } },
+          include: { lead: { select: { id: true, firstName: true, lastName: true, company: true } } },
+          orderBy: { updatedAt: 'desc' },
+        });
+        for (const li of leadInsights) {
+          const name = [li.lead.firstName, li.lead.lastName].filter(Boolean).join(' ') || li.lead.company || 'Unknown Lead';
+          allInsights.push({
+            id: li.id,
+            entityType: 'lead',
+            entityId: li.leadId,
+            entityName: name,
+            sentiment: (li.sentiment ?? 'NEUTRAL').toUpperCase(),
+            churnRisk: li.churnRisk,
+            engagementScore: li.engagementScore,
+            sentimentTrend: li.sentimentTrend,
+            nextBestAction: li.nextBestAction,
+            recommendations: li.recommendations,
+            updatedAt: li.updatedAt,
+          });
+        }
+      }
+
+      if (input.entityType === 'all' || input.entityType === 'contact') {
+        const contactInsights = await ctx.prisma.contactAIInsight.findMany({
+          where: { tenantId, updatedAt: { gte: since } },
+          include: { contact: { select: { id: true, firstName: true, lastName: true, company: true } } },
+          orderBy: { updatedAt: 'desc' },
+        });
+        for (const ci of contactInsights) {
+          const name = [ci.contact.firstName, ci.contact.lastName].filter(Boolean).join(' ') || ci.contact.company || 'Unknown Contact';
+          allInsights.push({
+            id: ci.id,
+            entityType: 'contact',
+            entityId: ci.contactId,
+            entityName: name,
+            sentiment: (ci.sentiment ?? 'NEUTRAL').toUpperCase(),
+            churnRisk: ci.churnRisk,
+            engagementScore: ci.engagementScore,
+            sentimentTrend: ci.sentimentTrend,
+            nextBestAction: ci.nextBestAction,
+            recommendations: ci.recommendations,
+            updatedAt: ci.updatedAt,
+          });
+        }
+      }
+
+      // Sort all insights by updatedAt desc (newest first)
+      allInsights.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+
+      // ----- Stats (derived from same rows) -----
+
+      const sentimentCounts = { VERY_POSITIVE: 0, POSITIVE: 0, NEUTRAL: 0, NEGATIVE: 0, VERY_NEGATIVE: 0 };
+      let urgentCount = 0;
+
+      for (const row of allInsights) {
+        const s = row.sentiment as keyof typeof sentimentCounts;
+        if (s in sentimentCounts) sentimentCounts[s]++;
+        if (row.churnRisk === 'CRITICAL' || row.churnRisk === 'HIGH') urgentCount++;
+      }
+
+      const posCount = sentimentCounts.VERY_POSITIVE + sentimentCounts.POSITIVE;
+      const neutralCount = sentimentCounts.NEUTRAL;
+      const negCount = sentimentCounts.VERY_NEGATIVE + sentimentCounts.NEGATIVE;
+      const total = posCount + neutralCount + negCount;
+      const avgScore = total > 0 ? (posCount - negCount) / total : 0;
+
+      // ----- Recent analyses (paginated slice of same rows) -----
+
+      const offset = (input.page - 1) * input.limit;
+      const paginatedInsights = allInsights.slice(offset, offset + input.limit);
+
+      const sentimentScoreMap: Record<string, number> = {
+        VERY_POSITIVE: 0.9, POSITIVE: 0.7, NEUTRAL: 0.5, NEGATIVE: 0.3, VERY_NEGATIVE: 0.1,
+      };
+
+      const recentAnalyses = paginatedInsights.map((row) => ({
+        id: row.id,
+        entityType: row.entityType,
+        entityId: row.entityId,
+        entityName: row.entityName,
+        sentiment: row.sentiment,
+        sentimentScore: sentimentScoreMap[row.sentiment] ?? 0.5,
+        emotions: [] as Array<{ emotion: string; intensity: number }>,
+        primaryEmotion: 'NEUTRAL',
+        urgency: churnToUrgency(row.churnRisk),
+        keyPhrases: [] as Array<{ phrase: string; sentiment: string }>,
+        confidence: row.engagementScore / 100,
+        analyzedAt: row.updatedAt.toISOString(),
+      }));
+
+      // ----- Trends (grouped by date from same rows) -----
+
+      const trendMap = new Map<string, { positive: number; neutral: number; negative: number; total: number }>();
+      for (const row of allInsights) {
+        const dateKey = row.updatedAt.toISOString().split('T')[0];
+        if (!trendMap.has(dateKey)) {
+          trendMap.set(dateKey, { positive: 0, neutral: 0, negative: 0, total: 0 });
+        }
+        const bucket = trendMap.get(dateKey)!;
+        if (row.sentiment.includes('POSITIVE')) bucket.positive++;
+        else if (row.sentiment.includes('NEGATIVE')) bucket.negative++;
+        else bucket.neutral++;
+        bucket.total++;
+      }
+
+      // Sort trend entries chronologically
+      const trendEntries = Array.from(trendMap.entries()).sort(
+        ([a], [b]) => a.localeCompare(b),
+      );
+
+      const trends = trendEntries.map(([date, b]) => ({
+        date,
+        positive: b.positive,
+        neutral: b.neutral,
+        negative: b.negative,
+        avgScore: b.total > 0 ? (b.positive - b.negative) / b.total : 0,
+      }));
+
+      return {
+        stats: { total, positive: posCount, neutral: neutralCount, negative: negCount, avgScore, urgentCount },
+        distribution: sentimentCounts,
+        recentAnalyses,
+        trends,
+      };
+    }),
+
+  /**
    * Get AI insights for a lead
    * Returns the stored AI insights from LeadAIInsight model
    */
@@ -448,6 +624,177 @@ export const intelligenceRouter = createTRPCRouter({
       });
 
       return aiInsight;
+    }),
+
+  /**
+   * Get churn risk dashboard data (PG-143)
+   *
+   * Single data source: LeadAIInsight + ContactAIInsight tables.
+   * Stats, at-risk customer list, and trend chart all derive from the same rows.
+   */
+  getChurnDashboard: tenantProcedure
+    .input(z.object({
+      entityType: z.enum(['all', 'lead', 'contact']).default('all'),
+      dateRange: z.enum(['7d', '30d', '90d']).default('30d'),
+      page: z.number().min(1).default(1),
+      limit: z.number().min(1).max(100).default(20),
+    }))
+    .query(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const tenantId = typedCtx.tenant.tenantId;
+
+      const daysMap = { '7d': 7, '30d': 30, '90d': 90 };
+      const since = new Date();
+      since.setDate(since.getDate() - daysMap[input.dateRange]);
+
+      // SLA hours per risk level
+      const slaHoursMap: Record<string, number> = {
+        CRITICAL: 24, HIGH: 48, MEDIUM: 168, LOW: 336, MINIMAL: 720,
+      };
+
+      type InsightRow = {
+        id: string;
+        entityType: 'lead' | 'contact';
+        entityId: string;
+        entityName: string;
+        churnRisk: string;
+        engagementScore: number;
+        nextBestAction: string | null;
+        recommendations: unknown;
+        lastEngagementDays: number | null;
+        updatedAt: Date;
+      };
+
+      const allInsights: InsightRow[] = [];
+
+      if (input.entityType === 'all' || input.entityType === 'lead') {
+        const leadInsights = await ctx.prisma.leadAIInsight.findMany({
+          where: { tenantId, updatedAt: { gte: since } },
+          include: { lead: { select: { id: true, firstName: true, lastName: true, company: true } } },
+          orderBy: { updatedAt: 'desc' },
+        });
+        for (const li of leadInsights) {
+          const name = [li.lead.firstName, li.lead.lastName].filter(Boolean).join(' ') || li.lead.company || 'Unknown Lead';
+          allInsights.push({
+            id: li.id,
+            entityType: 'lead',
+            entityId: li.leadId,
+            entityName: name,
+            churnRisk: li.churnRisk,
+            engagementScore: li.engagementScore,
+            nextBestAction: li.nextBestAction,
+            recommendations: li.recommendations,
+            lastEngagementDays: li.lastEngagementDays,
+            updatedAt: li.updatedAt,
+          });
+        }
+      }
+
+      if (input.entityType === 'all' || input.entityType === 'contact') {
+        const contactInsights = await ctx.prisma.contactAIInsight.findMany({
+          where: { tenantId, updatedAt: { gte: since } },
+          include: { contact: { select: { id: true, firstName: true, lastName: true, company: true } } },
+          orderBy: { updatedAt: 'desc' },
+        });
+        for (const ci of contactInsights) {
+          const name = [ci.contact.firstName, ci.contact.lastName].filter(Boolean).join(' ') || ci.contact.company || 'Unknown Contact';
+          allInsights.push({
+            id: ci.id,
+            entityType: 'contact',
+            entityId: ci.contactId,
+            entityName: name,
+            churnRisk: ci.churnRisk,
+            engagementScore: ci.engagementScore,
+            nextBestAction: ci.nextBestAction,
+            recommendations: ci.recommendations,
+            lastEngagementDays: ci.lastEngagementDays,
+            updatedAt: ci.updatedAt,
+          });
+        }
+      }
+
+      // Sort by risk (CRITICAL first), then updatedAt desc
+      const riskOrder: Record<string, number> = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3, MINIMAL: 4 };
+      allInsights.sort((a, b) => {
+        const riskDiff = (riskOrder[a.churnRisk] ?? 4) - (riskOrder[b.churnRisk] ?? 4);
+        if (riskDiff !== 0) return riskDiff;
+        return b.updatedAt.getTime() - a.updatedAt.getTime();
+      });
+
+      // Stats
+      const distribution: Record<string, number> = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0, MINIMAL: 0 };
+      let totalEngagement = 0;
+
+      for (const row of allInsights) {
+        if (row.churnRisk in distribution) distribution[row.churnRisk]++;
+        totalEngagement += row.engagementScore;
+      }
+
+      const total = allInsights.length;
+      const avgEngagement = total > 0 ? Math.round(totalEngagement / total) : 0;
+
+      // Paginated at-risk customers
+      const offset = (input.page - 1) * input.limit;
+      const paginatedInsights = allInsights.slice(offset, offset + input.limit);
+
+      const atRiskCustomers = paginatedInsights.map((row) => {
+        const slaHours = slaHoursMap[row.churnRisk] ?? 720;
+        const slaDeadline = new Date(row.updatedAt.getTime() + slaHours * 3600000);
+        return {
+          id: row.id,
+          entityType: row.entityType,
+          entityId: row.entityId,
+          entityName: row.entityName,
+          riskLevel: row.churnRisk as 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'MINIMAL',
+          engagementScore: row.engagementScore,
+          slaHours,
+          slaDeadline: slaDeadline.toISOString(),
+          nextBestAction: row.nextBestAction,
+          recommendations: Array.isArray(row.recommendations) ? row.recommendations as string[] : [],
+          lastEngagementDays: row.lastEngagementDays,
+          updatedAt: row.updatedAt.toISOString(),
+        };
+      });
+
+      // Trends grouped by date
+      const trendMap = new Map<string, { critical: number; high: number; medium: number; low: number; minimal: number; totalEng: number; count: number }>();
+      for (const row of allInsights) {
+        const dateKey = row.updatedAt.toISOString().split('T')[0];
+        if (!trendMap.has(dateKey)) {
+          trendMap.set(dateKey, { critical: 0, high: 0, medium: 0, low: 0, minimal: 0, totalEng: 0, count: 0 });
+        }
+        const bucket = trendMap.get(dateKey)!;
+        const key = row.churnRisk.toLowerCase() as 'critical' | 'high' | 'medium' | 'low' | 'minimal';
+        if (key in bucket) (bucket as Record<string, number>)[key]++;
+        bucket.totalEng += row.engagementScore;
+        bucket.count++;
+      }
+
+      const trendEntries = Array.from(trendMap.entries()).sort(([a], [b]) => a.localeCompare(b));
+      const trends = trendEntries.map(([date, b]) => ({
+        date,
+        critical: b.critical,
+        high: b.high,
+        medium: b.medium,
+        low: b.low,
+        minimal: b.minimal,
+        avgEngagement: b.count > 0 ? Math.round(b.totalEng / b.count) : 0,
+      }));
+
+      return {
+        stats: {
+          total,
+          critical: distribution.CRITICAL,
+          high: distribution.HIGH,
+          medium: distribution.MEDIUM,
+          low: distribution.LOW,
+          minimal: distribution.MINIMAL,
+          avgEngagement,
+        },
+        distribution,
+        atRiskCustomers,
+        trends,
+      };
     }),
 });
 

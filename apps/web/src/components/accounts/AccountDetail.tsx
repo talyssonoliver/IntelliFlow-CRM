@@ -13,6 +13,7 @@ import { RevenueChart } from './RevenueChart';
 import { AccountHierarchy } from './AccountHierarchy';
 import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
+import { RelatedTasksCard } from '@/components/tasks/RelatedTasksCard';
 
 interface AccountDetailProps {
   accountId: string;
@@ -585,6 +586,14 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
               </button>
             </div>
           </Card>
+
+          {/* Next Steps */}
+          <RelatedTasksCard
+            entityType="account"
+            entityId={accountId}
+            title="Next Steps"
+            maxItems={3}
+          />
 
           {/* Hierarchy Preview */}
           <Card className="p-5">

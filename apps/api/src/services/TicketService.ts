@@ -13,13 +13,85 @@ export class TicketService {
   constructor(private readonly prisma: PrismaClient) {}
 
   /**
+   * Map user role to a human-friendly assignee title.
+   */
+  private getAssigneeTitle(role?: string | null): string {
+    switch (role) {
+      case 'ADMIN':
+        return 'Support Admin';
+      case 'MANAGER':
+        return 'Support Manager';
+      case 'SALES_REP':
+        return 'Support Specialist';
+      case 'USER':
+      default:
+        return 'Support Agent';
+    }
+  }
+
+  /**
+   * Batch-load assignee profiles for tickets.
+   */
+  private async getAssigneeProfiles(assigneeIds: string[]): Promise<Map<string, {
+    name: string | null;
+    title: string;
+    avatar: string | null;
+  }>> {
+    if (assigneeIds.length === 0) {
+      return new Map();
+    }
+
+    const users = await this.prisma.user.findMany({
+      where: { id: { in: assigneeIds } },
+      select: {
+        id: true,
+        name: true,
+        role: true,
+        avatarUrl: true,
+      },
+    });
+
+    return new Map(
+      users.map((user) => [
+        user.id,
+        {
+          name: user.name ?? null,
+          title: this.getAssigneeTitle(user.role),
+          avatar: user.avatarUrl ?? null,
+        },
+      ])
+    );
+  }
+
+  /**
+   * Attach assignee display metadata to a ticket payload.
+   */
+  private withAssigneeMetadata<T extends { assigneeId: string | null }>(
+    ticket: T,
+    profiles: Map<string, { name: string | null; title: string; avatar: string | null }>
+  ): T & {
+    assigneeName: string | null;
+    assigneeTitle: string | null;
+    assigneeAvatar: string | null;
+  } {
+    const profile = ticket.assigneeId ? profiles.get(ticket.assigneeId) : undefined;
+    return {
+      ...ticket,
+      assigneeName: profile?.name ?? null,
+      assigneeTitle: profile?.title ?? null,
+      assigneeAvatar: profile?.avatar ?? null,
+    };
+  }
+
+  /**
    * Calculate SLA status for a ticket
    */
   calculateSLAStatus(ticket: Ticket): SLAStatus {
     const now = new Date();
+    const hasSLADue = Boolean(ticket.slaResponseDue || ticket.slaResolutionDue);
 
-    // If already breached, return breached
-    if (ticket.slaBreachedAt) {
+    // Guard against malformed data: breach timestamp without any SLA deadline.
+    if (ticket.slaBreachedAt && hasSLADue) {
       return 'BREACHED';
     }
 
@@ -62,6 +134,9 @@ export class TicketService {
     status?: TicketStatus;
     priority?: TicketPriority;
     assignedToId?: string;
+    search?: string;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
     limit?: number;
     offset?: number;
     tenantId: string;
@@ -70,6 +145,9 @@ export class TicketService {
       status,
       priority,
       assignedToId,
+      search,
+      sortBy,
+      sortOrder,
       limit = 20,
       offset = 0,
       tenantId,
@@ -79,18 +157,40 @@ export class TicketService {
       tenantId,
     };
 
+    if (search) {
+      // Find assignees whose name matches the search term
+      const matchingAssignees = await this.prisma.user.findMany({
+        where: {
+          tenantId,
+          name: { contains: search, mode: 'insensitive' },
+        },
+        select: { id: true },
+      });
+      const matchingAssigneeIds = matchingAssignees.map((u) => u.id);
+
+      where.OR = [
+        { subject: { contains: search, mode: 'insensitive' } },
+        { ticketNumber: { contains: search, mode: 'insensitive' } },
+        { contactName: { contains: search, mode: 'insensitive' } },
+        ...(matchingAssigneeIds.length > 0
+          ? [{ assigneeId: { in: matchingAssigneeIds } }]
+          : []),
+      ];
+    }
+
     if (status) where.status = status;
     if (priority) where.priority = priority;
     if (assignedToId) where.assigneeId = assignedToId;
+
+    const orderBy = sortBy
+      ? [{ [sortBy]: sortOrder || 'desc' } as Record<string, 'asc' | 'desc'>]
+      : [{ createdAt: 'desc' as const }];
 
     const tickets = await this.prisma.ticket.findMany({
       where,
       take: limit,
       skip: offset,
-      orderBy: [
-        { priority: 'desc' },
-        { createdAt: 'desc' },
-      ],
+      orderBy,
       include: {
         slaPolicy: true,
         activities: {
@@ -101,11 +201,20 @@ export class TicketService {
       },
     });
 
-    // Calculate SLA status for each ticket
-    const ticketsWithSLA = tickets.map((ticket: Ticket) => ({
-      ...ticket,
-      slaStatus: this.calculateSLAStatus(ticket),
-    }));
+    // Resolve assignee display metadata in one query for all returned tickets
+    const assigneeIds = [...new Set(tickets.map((ticket) => ticket.assigneeId).filter((id): id is string => !!id))];
+    const assigneeProfiles = await this.getAssigneeProfiles(assigneeIds);
+
+    // Calculate SLA status for each ticket and attach assignee metadata
+    const ticketsWithSLA = tickets.map((ticket: Ticket) =>
+      this.withAssigneeMetadata(
+        {
+          ...ticket,
+          slaStatus: this.calculateSLAStatus(ticket),
+        },
+        assigneeProfiles
+      )
+    );
 
     const total = await this.prisma.ticket.count({ where });
 
@@ -139,10 +248,15 @@ export class TicketService {
       return null;
     }
 
-    return {
-      ...ticket,
-      slaStatus: this.calculateSLAStatus(ticket),
-    };
+    const assigneeProfiles = await this.getAssigneeProfiles(ticket.assigneeId ? [ticket.assigneeId] : []);
+
+    return this.withAssigneeMetadata(
+      {
+        ...ticket,
+        slaStatus: this.calculateSLAStatus(ticket),
+      },
+      assigneeProfiles
+    );
   }
 
   /**
@@ -284,27 +398,86 @@ export class TicketService {
   }
 
   /**
-   * Delete a ticket (hard delete)
+   * Delete a ticket (hard delete) — blocked for resolved/closed/archived tickets
    */
   async delete(id: string) {
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { id },
+      select: { status: true },
+    });
+
+    if (!ticket) {
+      throw new Error(`Ticket not found: ${id}`);
+    }
+
+    if (ticket.status === 'RESOLVED' || ticket.status === 'CLOSED') {
+      throw new Error('Cannot delete resolved or closed tickets. Use archive instead to remove from active views.');
+    }
+
+    if (ticket.status === 'ARCHIVED') {
+      throw new Error('Cannot delete archived tickets. They are kept for audit purposes.');
+    }
+
     await this.prisma.ticket.delete({
       where: { id },
     });
   }
 
   /**
+   * Archive a resolved or closed ticket (soft removal from active views)
+   */
+  async archive(id: string) {
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { id },
+      select: { status: true },
+    });
+
+    if (!ticket) {
+      throw new Error(`Ticket not found: ${id}`);
+    }
+
+    if (ticket.status !== 'RESOLVED' && ticket.status !== 'CLOSED') {
+      throw new Error('Only resolved or closed tickets can be archived.');
+    }
+
+    return this.prisma.ticket.update({
+      where: { id },
+      data: { status: 'ARCHIVED' },
+    });
+  }
+
+  /**
    * Get ticket statistics
    */
-  async getStats(tenantId: string) {
+  async getStats(tenantId: string, timeWindow?: string) {
     const where: any = {
       tenantId,
     };
+
+    // Apply time window filter
+    if (timeWindow && timeWindow !== 'all') {
+      const now = new Date();
+      const ms: Record<string, number> = {
+        '24h': 24 * 60 * 60 * 1000,
+        '7d': 7 * 24 * 60 * 60 * 1000,
+        '30d': 30 * 24 * 60 * 60 * 1000,
+      };
+      if (ms[timeWindow]) {
+        where.createdAt = { gte: new Date(now.getTime() - ms[timeWindow]) };
+      }
+    }
+
+    // Start of today (midnight UTC)
+    const todayStart = new Date();
+    todayStart.setUTCHours(0, 0, 0, 0);
 
     const [
       total,
       byStatus,
       byPriority,
+      bySLAStatusRaw,
       breachedTickets,
+      resolvedToday,
       avgResponseTime,
     ] = await Promise.all([
       // Total tickets
@@ -324,6 +497,13 @@ export class TicketService {
         _count: true,
       }),
 
+      // By SLA status
+      this.prisma.ticket.groupBy({
+        by: ['slaStatus'],
+        where,
+        _count: true,
+      }),
+
       // Breached tickets
       this.prisma.ticket.count({
         where: {
@@ -332,9 +512,25 @@ export class TicketService {
         },
       }),
 
+      // Resolved today
+      this.prisma.ticket.count({
+        where: {
+          ...where,
+          resolvedAt: { gte: todayStart },
+        },
+      }),
+
       // Average response time
       this.getAverageResponseTime(where),
     ]);
+
+    // Zero-fill all 5 SLA statuses
+    const bySLAStatus: Record<string, number> = {
+      ON_TRACK: 0, AT_RISK: 0, BREACHED: 0, MET: 0, PAUSED: 0,
+    };
+    bySLAStatusRaw.forEach((item: any) => {
+      bySLAStatus[item.slaStatus] = item._count;
+    });
 
     return {
       total,
@@ -346,7 +542,9 @@ export class TicketService {
         acc[item.priority] = item._count;
         return acc;
       }, {} as Record<string, number>),
+      bySLAStatus,
       slaBreached: breachedTickets,
+      resolvedToday,
       avgResponseTime,
     };
   }

@@ -65,10 +65,10 @@ describe('DocsPage Integration', () => {
     expect(screen.getByText('Integration Resources')).toBeInTheDocument();
     expect(screen.getByText('Changelog & Updates')).toBeInTheDocument();
 
-    // But coming soon and external categories should not be clickable links
+    // Most categories are external or comingSoon — API Reference is the only active internal link
     const links = screen.queryAllByRole('link');
-    // Since all categories are either external or comingSoon, there are no links
-    expect(links.length).toBe(0);
+    expect(links.length).toBe(1);
+    expect(links[0]).toHaveAttribute('href', '/docs/api');
   });
 
   it('partial match filters categories correctly', async () => {

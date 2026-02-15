@@ -445,7 +445,7 @@ describe('AuditEventHandler - Additional Coverage', () => {
         expect.objectContaining({
           action: 'AI_PREDICT',
           actorType: 'AI_AGENT',
-          afterState: { churnRisk: 0.85 },
+          afterState: { churnRisk: 0.85, severity: 'MEDIUM' },
         })
       );
     });

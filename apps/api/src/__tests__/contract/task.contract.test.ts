@@ -296,12 +296,13 @@ describe('Task Router Contract Tests', () => {
     });
 
     it('should return task with fields', async () => {
-      const mockDomainTask = createMockDomainTask();
-      ctx.services!.task!.getTaskById = vi.fn().mockResolvedValue({
-        isSuccess: true,
-        isFailure: false,
-        value: mockDomainTask,
-      });
+      prismaMock.task.findFirst.mockResolvedValue({
+        ...mockTask,
+        owner: mockUser,
+        lead: mockLead,
+        contact: mockContact,
+        opportunity: mockOpportunity,
+      } as any);
 
       const result = await caller.getById({ id: TEST_UUIDS.task1 });
 
@@ -312,11 +313,7 @@ describe('Task Router Contract Tests', () => {
     });
 
     it('should throw NOT_FOUND for non-existent task', async () => {
-      ctx.services!.task!.getTaskById = vi.fn().mockResolvedValue({
-        isSuccess: false,
-        isFailure: true,
-        error: { code: 'NOT_FOUND_ERROR', message: `Task not found: ${TEST_UUIDS.nonExistent}` },
-      });
+      prismaMock.task.findFirst.mockResolvedValue(null);
 
       try {
         await caller.getById({ id: TEST_UUIDS.nonExistent });

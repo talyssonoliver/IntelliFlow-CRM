@@ -14,7 +14,7 @@ import { Skeleton } from '@intelliflow/ui';
 
 function LoadingSkeleton() {
   return (
-    <div className="p-6 space-y-6">
+    <div className="flex flex-col gap-6">
       <Skeleton className="h-8 w-48" />
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
         {Array.from({ length: 5 }).map((_, i) => (
@@ -35,7 +35,7 @@ function AIReviewPageContent() {
   const { isLoading: authLoading } = useRequireAuth();
   if (authLoading) return <LoadingSkeleton />;
   return (
-    <div className="p-6">
+    <div>
       <ReviewQueue />
     </div>
   );

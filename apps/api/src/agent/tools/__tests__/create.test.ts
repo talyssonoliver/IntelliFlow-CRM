@@ -813,8 +813,8 @@ describe('Create Agent Tools', () => {
       it('should have no warnings for normal business hours appointment', async () => {
         const context = createMockContext();
         // Use a specific future date that's a weekday
-        const startTime = new Date('2026-02-09T10:00:00'); // Monday, future date
-        const endTime = new Date('2026-02-09T11:00:00');
+        const startTime = new Date('2027-02-09T10:00:00'); // Tuesday, future date
+        const endTime = new Date('2027-02-09T11:00:00');
         const input = {
           title: 'Normal Meeting',
           appointmentType: 'MEETING' as const,

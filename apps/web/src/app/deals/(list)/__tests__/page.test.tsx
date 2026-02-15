@@ -1,24 +1,23 @@
 /**
  * @vitest-environment jsdom
  *
- * Tests for the Deals Pipeline page.
- * Uses mocks for heavy dependencies (recharts, dnd-kit, trpc) to enable fast, reliable tests.
- *
- * Memory optimization: All heavy dependencies are mocked before imports.
+ * Tests for the Deals Pipeline page (PG-135 — refactored).
+ * The page delegates to extracted components in @/components/deals/*.
+ * These tests verify data flow, auth, error handling, and composition.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as React from 'react';
 
 // CRITICAL: All vi.mock calls are hoisted before any imports
-// Mock next/navigation
 const mockPush = vi.fn();
+const mockReplace = vi.fn();
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: mockPush,
     back: vi.fn(),
     forward: vi.fn(),
     refresh: vi.fn(),
-    replace: vi.fn(),
+    replace: mockReplace,
     prefetch: vi.fn(),
   }),
   useSearchParams: () => new URLSearchParams(),
@@ -39,7 +38,17 @@ vi.mock('@intelliflow/domain', () => ({
   ] as const,
 }));
 
-// Mock trpc with stable references and configurable state
+// Mock auth
+const mockAuthState = {
+  isLoading: false,
+  isAuthenticated: true,
+};
+
+vi.mock('@/lib/auth/AuthContext', () => ({
+  useRequireAuth: () => mockAuthState,
+}));
+
+// Mock trpc with configurable state
 const mockRefetch = vi.fn();
 const mockMutate = vi.fn();
 const mockOpportunityData = {
@@ -86,12 +95,11 @@ const mockOpportunityData = {
   ],
 };
 
-// Configurable mock state for different test scenarios
 const mockQueryState = {
   data: mockOpportunityData as typeof mockOpportunityData | undefined,
   isLoading: false,
   isError: false,
-  error: null as { message: string } | null,
+  error: null as { message: string; data?: { code: string } } | null,
 };
 
 vi.mock('@/lib/trpc', () => ({
@@ -116,10 +124,10 @@ vi.mock('@/lib/trpc', () => ({
   },
 }));
 
-// Mock @intelliflow/ui - lightweight
+// Mock @intelliflow/ui
 vi.mock('@intelliflow/ui', () => ({
-  Card: ({ children, className }: { children: React.ReactNode; className?: string }) => (
-    <div data-testid="card" className={className}>{children}</div>
+  Card: ({ children, className, ...rest }: { children: React.ReactNode; className?: string; [key: string]: unknown }) => (
+    <div data-testid="card" className={className} {...rest}>{children}</div>
   ),
   cn: (...args: (string | undefined | boolean)[]) => args.filter(Boolean).join(' '),
   Skeleton: ({ className }: { className?: string }) => (
@@ -137,7 +145,60 @@ vi.mock('@/components/shared', () => ({
   ),
 }));
 
-// Mock recharts - lightweight components
+// Mock extracted deal components — render minimal stubs that prove props flow through
+vi.mock('@/components/deals', () => ({
+  PipelineBoard: ({ deals, onStageChange, onDealNavigate }: {
+    deals: Array<{ id: string; name: string; stage: string }>;
+    onStageChange: (id: string, stage: string) => void;
+    onDealNavigate: (id: string) => void;
+  }) => (
+    <div data-testid="pipeline-board" data-deal-count={deals.length}>
+      {deals.map((d) => (
+        <button
+          key={d.id}
+          data-testid={`deal-${d.id}`}
+          onClick={() => onDealNavigate(d.id)}
+        >
+          {d.name}
+        </button>
+      ))}
+      {/* Expose onStageChange for testing */}
+      <button
+        data-testid="trigger-stage-change"
+        onClick={() => {
+          if (deals.length > 0) {
+            onStageChange(deals[0].id, 'PROPOSAL');
+          }
+        }}
+      >
+        Trigger Stage Change
+      </button>
+    </div>
+  ),
+  ValueSummary: ({ stats }: { stats: { totalDeals: number; totalValue: number; weightedValue: number; wonValue: number } }) => (
+    <div data-testid="value-summary">
+      <span data-testid="total-deals">{stats.totalDeals}</span>
+      <span data-testid="total-value">{stats.totalValue}</span>
+      <span data-testid="weighted-value">{stats.weightedValue}</span>
+      <span data-testid="won-value">{stats.wonValue}</span>
+    </div>
+  ),
+  DealFilters: ({ value, onChange }: {
+    value: Record<string, unknown>;
+    onChange: (v: Record<string, unknown>) => void;
+  }) => (
+    <div data-testid="deal-filters">
+      <button
+        data-testid="set-filter"
+        onClick={() => onChange({ ...value, ownerId: 'me' })}
+      >
+        Set Filter
+      </button>
+    </div>
+  ),
+}));
+
+// Mock recharts
 vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="responsive-container">{children}</div>
@@ -158,54 +219,7 @@ vi.mock('recharts', () => ({
   Legend: () => <div data-testid="legend" />,
 }));
 
-// Mock @dnd-kit/core
-vi.mock('@dnd-kit/core', () => ({
-  DndContext: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="dnd-context">{children}</div>
-  ),
-  DragOverlay: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="drag-overlay">{children}</div>
-  ),
-  closestCorners: vi.fn(),
-  KeyboardSensor: vi.fn(),
-  PointerSensor: vi.fn(),
-  useSensor: vi.fn(() => ({})),
-  useSensors: vi.fn(() => []),
-}));
-
-// Mock @dnd-kit/sortable
-vi.mock('@dnd-kit/sortable', () => ({
-  arrayMove: vi.fn((arr, from, to) => {
-    const result = [...arr];
-    const [removed] = result.splice(from, 1);
-    result.splice(to, 0, removed);
-    return result;
-  }),
-  SortableContext: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="sortable-context">{children}</div>
-  ),
-  sortableKeyboardCoordinates: vi.fn(),
-  verticalListSortingStrategy: {},
-  useSortable: () => ({
-    attributes: {},
-    listeners: {},
-    setNodeRef: vi.fn(),
-    transform: null,
-    transition: null,
-    isDragging: false,
-  }),
-}));
-
-// Mock @dnd-kit/utilities
-vi.mock('@dnd-kit/utilities', () => ({
-  CSS: {
-    Transform: {
-      toString: () => '',
-    },
-  },
-}));
-
-// NOW import after all mocks are declared
+// NOW import after all mocks
 import { render, screen, waitFor, act, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import DealsPage from '../page';
@@ -213,18 +227,19 @@ import DealsPage from '../page';
 describe('DealsPage', { timeout: 10000 }, () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Reset mock state to default (loaded with data)
     mockQueryState.data = mockOpportunityData;
     mockQueryState.isLoading = false;
     mockQueryState.isError = false;
     mockQueryState.error = null;
+    mockAuthState.isLoading = false;
+    mockAuthState.isAuthenticated = true;
   });
 
   afterEach(() => {
     cleanup();
   });
 
-  describe('Rendering', () => {
+  describe('Rendering & Composition', () => {
     it('renders the page header with correct title', async () => {
       await act(async () => {
         render(<DealsPage />);
@@ -234,15 +249,40 @@ describe('DealsPage', { timeout: 10000 }, () => {
       expect(screen.getByText('Deals Pipeline')).toBeInTheDocument();
     });
 
-    it('renders stats cards', async () => {
+    it('renders DealFilters component', async () => {
       await act(async () => {
         render(<DealsPage />);
       });
 
-      expect(screen.getByText('Active Deals')).toBeInTheDocument();
-      expect(screen.getByText('Pipeline Value')).toBeInTheDocument();
-      expect(screen.getByText('Weighted Value')).toBeInTheDocument();
-      expect(screen.getByText('Won This Period')).toBeInTheDocument();
+      expect(screen.getByTestId('deal-filters')).toBeInTheDocument();
+    });
+
+    it('renders ValueSummary with computed stats', async () => {
+      await act(async () => {
+        render(<DealsPage />);
+      });
+
+      const summary = screen.getByTestId('value-summary');
+      expect(summary).toBeInTheDocument();
+
+      // 2 active deals (QUALIFICATION + PROPOSAL), 1 CLOSED_WON
+      expect(screen.getByTestId('total-deals')).toHaveTextContent('2');
+
+      // Active pipeline value: 75000 + 125000 = 200000
+      expect(screen.getByTestId('total-value')).toHaveTextContent('200000');
+
+      // Won value: 50000
+      expect(screen.getByTestId('won-value')).toHaveTextContent('50000');
+    });
+
+    it('renders PipelineBoard with transformed deals', async () => {
+      await act(async () => {
+        render(<DealsPage />);
+      });
+
+      const board = screen.getByTestId('pipeline-board');
+      expect(board).toBeInTheDocument();
+      expect(board).toHaveAttribute('data-deal-count', '3');
     });
 
     it('renders charts', async () => {
@@ -256,202 +296,154 @@ describe('DealsPage', { timeout: 10000 }, () => {
       expect(screen.getByTestId('bar-chart')).toBeInTheDocument();
     });
 
-    it('renders kanban board with all pipeline stages', async () => {
+    it('renders SR-only data tables for chart accessibility (AC-23)', async () => {
       await act(async () => {
         render(<DealsPage />);
       });
 
-      // Check for stage labels
-      expect(screen.getByText('Prospecting')).toBeInTheDocument();
-      expect(screen.getByText('Qualification')).toBeInTheDocument();
-      expect(screen.getByText('Needs Analysis')).toBeInTheDocument();
-      expect(screen.getByText('Proposal')).toBeInTheDocument();
-      expect(screen.getByText('Negotiation')).toBeInTheDocument();
-      expect(screen.getByText('Closed Won')).toBeInTheDocument();
-      expect(screen.getByText('Closed Lost')).toBeInTheDocument();
-    });
-
-    it('renders deal cards with required information', async () => {
-      await act(async () => {
-        render(<DealsPage />);
-      });
-
-      await waitFor(() => {
-        // Check for sample deal data from trpc mock
-        expect(screen.getByText('Enterprise License - Acme Corp')).toBeInTheDocument();
-        expect(screen.getByText('Acme Corporation')).toBeInTheDocument();
-      });
+      const tables = screen.getAllByRole('table');
+      expect(tables.length).toBe(2);
+      expect(screen.getByLabelText('Deals by Stage data')).toBeInTheDocument();
+      expect(screen.getByLabelText('Revenue by Stage data')).toBeInTheDocument();
     });
   });
 
-  describe('Accessibility', () => {
-    it('has accessible deal cards with aria-labels', async () => {
+  describe('Data Flow', () => {
+    it('passes correct stats when deals have zero values', async () => {
+      mockQueryState.data = {
+        opportunities: [],
+      };
+
       await act(async () => {
         render(<DealsPage />);
       });
 
-      await waitFor(() => {
-        const dealButton = screen.getByRole('button', {
-          name: /View deal: Enterprise License - Acme Corp/i
-        });
-        expect(dealButton).toBeInTheDocument();
-      });
+      expect(screen.getByTestId('total-deals')).toHaveTextContent('0');
+      expect(screen.getByTestId('total-value')).toHaveTextContent('0');
     });
 
-    it('has accessible drag handles', async () => {
-      await act(async () => {
-        render(<DealsPage />);
-      });
-
-      await waitFor(() => {
-        const dragHandles = screen.getAllByRole('button', {
-          name: /Drag to move deal/i
-        });
-        expect(dragHandles.length).toBeGreaterThan(0);
-      });
-    });
-  });
-
-  describe('Navigation', () => {
-    it('navigates to deal detail page on card click', async () => {
+    it('navigates to deal detail on PipelineBoard deal click', async () => {
       const user = userEvent.setup();
+
       await act(async () => {
         render(<DealsPage />);
       });
 
-      await waitFor(async () => {
-        const dealCard = screen.getByRole('button', {
-          name: /View deal: Enterprise License - Acme Corp/i
-        });
-        await user.click(dealCard);
-      });
+      const dealBtn = screen.getByTestId('deal-1');
+      await user.click(dealBtn);
 
       expect(mockPush).toHaveBeenCalledWith('/deals/1');
     });
-  });
 
-  describe('Currency Formatting', () => {
-    it('displays currency values in compact format for stats', async () => {
+    it('stage change triggers optimistic update + mutation', async () => {
+      const user = userEvent.setup();
+
       await act(async () => {
         render(<DealsPage />);
       });
 
-      // The pipeline value should show something like $250K (sum of sample deals)
-      // We just verify the format pattern exists
-      const statValues = screen.getAllByText(/\$[\d.]+[KM]?/);
-      expect(statValues.length).toBeGreaterThan(0);
-    });
+      const triggerBtn = screen.getByTestId('trigger-stage-change');
+      await user.click(triggerBtn);
 
-    it('displays currency values in full format on deal cards', async () => {
+      expect(mockMutate).toHaveBeenCalledWith({ id: '1', stage: 'PROPOSAL' });
+    });
+  });
+
+  describe('Loading State', () => {
+    it('renders skeleton UI when data is loading', async () => {
+      mockQueryState.data = undefined;
+      mockQueryState.isLoading = true;
+
       await act(async () => {
         render(<DealsPage />);
       });
 
-      await waitFor(() => {
-        // Sample deal has value 75000 -> $75,000
-        expect(screen.getByText('$75,000')).toBeInTheDocument();
-      });
+      const skeletons = screen.getAllByTestId('skeleton');
+      expect(skeletons.length).toBeGreaterThan(0);
     });
-  });
 
-  describe('Pipeline Stats', () => {
-    it('calculates weighted value correctly', async () => {
+    it('renders skeleton when auth is loading', async () => {
+      mockAuthState.isLoading = true;
+
       await act(async () => {
         render(<DealsPage />);
       });
 
-      // Weighted value is shown in the stats cards
-      const weightedValueCard = screen.getByText('Weighted Value').closest('[data-testid="card"]');
-      expect(weightedValueCard).toBeInTheDocument();
+      const skeletons = screen.getAllByTestId('skeleton');
+      expect(skeletons.length).toBeGreaterThan(0);
+    });
+
+    it('does not render deal components when loading', async () => {
+      mockQueryState.data = undefined;
+      mockQueryState.isLoading = true;
+
+      await act(async () => {
+        render(<DealsPage />);
+      });
+
+      expect(screen.queryByTestId('pipeline-board')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('value-summary')).not.toBeInTheDocument();
     });
   });
-});
 
-describe('Loading State', () => {
-  it('renders skeleton UI when data is loading', async () => {
-    // Set mock to loading state
-    mockQueryState.data = undefined;
-    mockQueryState.isLoading = true;
-    mockQueryState.isError = false;
-    mockQueryState.error = null;
+  describe('Error State', () => {
+    it('renders error message when query fails', async () => {
+      mockQueryState.data = undefined;
+      mockQueryState.isLoading = false;
+      mockQueryState.isError = true;
+      mockQueryState.error = { message: 'Failed to fetch opportunities' };
 
-    await act(async () => {
-      render(<DealsPage />);
+      await act(async () => {
+        render(<DealsPage />);
+      });
+
+      expect(screen.getByText('Failed to load deals')).toBeInTheDocument();
+      expect(screen.getByText('Failed to fetch opportunities')).toBeInTheDocument();
     });
 
-    // Skeleton elements should be rendered
-    const skeletons = screen.getAllByTestId('skeleton');
-    expect(skeletons.length).toBeGreaterThan(0);
-  });
+    it('renders retry button in error state', async () => {
+      mockQueryState.data = undefined;
+      mockQueryState.isLoading = false;
+      mockQueryState.isError = true;
+      mockQueryState.error = { message: 'Network error' };
 
-  it('does not render deal cards when loading', async () => {
-    // Set mock to loading state
-    mockQueryState.data = undefined;
-    mockQueryState.isLoading = true;
-    mockQueryState.isError = false;
-    mockQueryState.error = null;
+      await act(async () => {
+        render(<DealsPage />);
+      });
 
-    await act(async () => {
-      render(<DealsPage />);
+      const retryButton = screen.getByRole('button', { name: /retry/i });
+      expect(retryButton).toBeInTheDocument();
     });
 
-    // Deal cards should not be present
-    expect(screen.queryByText('Enterprise License - Acme Corp')).not.toBeInTheDocument();
-    expect(screen.queryByText('Cloud Migration - TechStart')).not.toBeInTheDocument();
-  });
-});
+    it('calls refetch when retry button is clicked', async () => {
+      const user = userEvent.setup();
 
-describe('Error State', () => {
-  it('renders error message when query fails', async () => {
-    // Set mock to error state
-    mockQueryState.data = undefined;
-    mockQueryState.isLoading = false;
-    mockQueryState.isError = true;
-    mockQueryState.error = { message: 'Failed to fetch opportunities' };
+      mockQueryState.data = undefined;
+      mockQueryState.isLoading = false;
+      mockQueryState.isError = true;
+      mockQueryState.error = { message: 'Network error' };
 
-    await act(async () => {
-      render(<DealsPage />);
+      await act(async () => {
+        render(<DealsPage />);
+      });
+
+      const retryButton = screen.getByRole('button', { name: /retry/i });
+      await user.click(retryButton);
+
+      expect(mockRefetch).toHaveBeenCalledTimes(1);
     });
 
-    // Error message should be displayed
-    expect(screen.getByText('Failed to load deals')).toBeInTheDocument();
-    expect(screen.getByText('Failed to fetch opportunities')).toBeInTheDocument();
-  });
+    it('shows redirect message for auth errors', async () => {
+      mockQueryState.data = undefined;
+      mockQueryState.isLoading = false;
+      mockQueryState.isError = true;
+      mockQueryState.error = { message: 'Unauthorized', data: { code: 'UNAUTHORIZED' } };
 
-  it('renders retry button in error state', async () => {
-    // Set mock to error state
-    mockQueryState.data = undefined;
-    mockQueryState.isLoading = false;
-    mockQueryState.isError = true;
-    mockQueryState.error = { message: 'Network error' };
+      await act(async () => {
+        render(<DealsPage />);
+      });
 
-    await act(async () => {
-      render(<DealsPage />);
+      expect(screen.getByText('Redirecting to login...')).toBeInTheDocument();
     });
-
-    // Retry button should be present
-    const retryButton = screen.getByRole('button', { name: /retry/i });
-    expect(retryButton).toBeInTheDocument();
-  });
-
-  it('calls refetch when retry button is clicked', async () => {
-    const user = userEvent.setup();
-
-    // Set mock to error state
-    mockQueryState.data = undefined;
-    mockQueryState.isLoading = false;
-    mockQueryState.isError = true;
-    mockQueryState.error = { message: 'Network error' };
-
-    await act(async () => {
-      render(<DealsPage />);
-    });
-
-    // Click retry button
-    const retryButton = screen.getByRole('button', { name: /retry/i });
-    await user.click(retryButton);
-
-    // refetch should have been called
-    expect(mockRefetch).toHaveBeenCalledTimes(1);
   });
 });

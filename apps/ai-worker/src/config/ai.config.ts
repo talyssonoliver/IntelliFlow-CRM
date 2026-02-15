@@ -15,6 +15,8 @@ export const AIConfigSchema = z.object({
   // OpenAI Configuration
   openai: z.object({
     apiKey: z.string().optional(),
+    // Optional OpenAI-compatible endpoint (e.g., vLLM)
+    baseUrl: z.string().url().optional(),
     model: z.string().default('gpt-4-turbo-preview'),
     temperature: z.number().min(0).max(2).default(0.7),
     maxTokens: z.number().positive().default(2000),
@@ -61,12 +63,14 @@ export type AIConfig = z.infer<typeof AIConfigSchema>;
  */
 export function loadAIConfig(): AIConfig {
   const provider = (process.env.AI_PROVIDER || 'openai') as AIProvider;
+  const openAIBaseUrl = (process.env.OPENAI_BASE_URL || process.env.OPENAI_API_BASE || '').trim();
 
   const config: AIConfig = {
     provider,
 
     openai: {
       apiKey: process.env.OPENAI_API_KEY,
+      baseUrl: openAIBaseUrl || undefined,
       model: process.env.OPENAI_MODEL || 'gpt-4-turbo-preview',
       temperature: Number.parseFloat(process.env.OPENAI_TEMPERATURE || '0.7'),
       maxTokens: Number.parseInt(process.env.OPENAI_MAX_TOKENS || '2000', 10),

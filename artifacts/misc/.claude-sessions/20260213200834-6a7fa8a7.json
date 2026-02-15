@@ -1,0 +1,12 @@
+{
+  "sessionId": "20260213200834-6a7fa8a7",
+  "taskId": "PG-019",
+  "session": "spec",
+  "status": "failed",
+  "outputFile": "C:\\Users\\talys\\projects\\intelliFlow-CRM\\artifacts\\logs\\claude-sessions\\20260213200834-6a7fa8a7.log",
+  "statusFile": "C:\\Users\\talys\\projects\\intelliFlow-CRM\\artifacts\\misc\\.claude-sessions\\20260213200834-6a7fa8a7.json",
+  "startedAt": "2026-02-13T20:08:34.456Z",
+  "pid": 34208,
+  "error": "Session timed out after 1800000ms",
+  "completedAt": "2026-02-13T20:38:55.186Z"
+}

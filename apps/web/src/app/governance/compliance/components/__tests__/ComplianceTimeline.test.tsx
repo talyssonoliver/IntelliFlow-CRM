@@ -8,7 +8,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock timeline data - using future dates relative to today (2026-02-01)
+// Mock timeline data - using future dates (2027) to avoid tests becoming stale
 const mockTimelineResponse = {
   success: true,
   data: {
@@ -16,7 +16,7 @@ const mockTimelineResponse = {
       {
         id: 'EVT-001',
         title: 'ISO 27001 Annual Audit',
-        date: '2026-02-10',
+        date: '2027-02-10',
         type: 'audit',
         standard: 'ISO 27001',
         status: 'scheduled',
@@ -25,7 +25,7 @@ const mockTimelineResponse = {
       {
         id: 'EVT-002',
         title: 'GDPR Policy Review',
-        date: '2026-02-15',
+        date: '2027-02-15',
         type: 'review',
         standard: 'GDPR',
         status: 'scheduled',
@@ -33,7 +33,7 @@ const mockTimelineResponse = {
       {
         id: 'EVT-003',
         title: 'SOC 2 Certification Renewal',
-        date: '2026-02-25',
+        date: '2027-02-25',
         type: 'certification',
         standard: 'SOC 2',
         status: 'scheduled',
@@ -41,13 +41,13 @@ const mockTimelineResponse = {
       {
         id: 'EVT-004',
         title: 'ISO 42001 Assessment',
-        date: '2026-01-15',
+        date: '2027-01-15',
         type: 'assessment',
         standard: 'ISO 42001',
         status: 'completed',
       },
     ],
-    currentMonth: '2026-02',
+    currentMonth: '2027-02',
     upcomingCount: 3,
   },
 };
@@ -267,14 +267,11 @@ describe('ComplianceTimeline', () => {
     it('should show event date in list', async () => {
       render(<ComplianceTimeline />);
 
-      // Extract matcher to reduce function nesting
-      const dateTextMatcher = (content: string, element: Element | null) =>
-        element?.tagName === 'P' && content.includes('Feb 10');
-
       await waitFor(() => {
         // Events should show date format like "Feb 10" (future date)
-        const dateText = screen.getByText(dateTextMatcher);
-        expect(dateText).toBeInTheDocument();
+        // The component uses toLocaleDateString with { month: 'short', day: 'numeric' }
+        // which produces "Feb 10" format
+        expect(screen.getByText(/Feb 10/)).toBeInTheDocument();
       }, { timeout: 3000 });
     });
 
@@ -330,7 +327,7 @@ describe('ComplianceTimeline', () => {
 
       await waitFor(() => {
         // Should show formatted date
-        expect(screen.getByText(/Tuesday, February 10, 2026/)).toBeInTheDocument();
+        expect(screen.getByText(/Wednesday, February 10, 2027/)).toBeInTheDocument();
       });
     });
 
@@ -405,7 +402,7 @@ describe('ComplianceTimeline', () => {
           success: true,
           data: {
             events: [],
-            currentMonth: '2026-01',
+            currentMonth: '2027-01',
             upcomingCount: 0,
           },
         }),

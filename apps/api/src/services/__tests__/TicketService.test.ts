@@ -28,6 +28,9 @@ type MockPrismaClient = {
   sLAPolicy: {
     findUnique: ReturnType<typeof vi.fn>;
   };
+  user: {
+    findMany: ReturnType<typeof vi.fn>;
+  };
 };
 
 describe('TicketService', () => {
@@ -92,6 +95,9 @@ describe('TicketService', () => {
       sLAPolicy: {
         findUnique: vi.fn(),
       },
+      user: {
+        findMany: vi.fn().mockResolvedValue([]),
+      },
     };
 
     service = new TicketService(mockPrisma as unknown as PrismaClient);
@@ -109,6 +115,17 @@ describe('TicketService', () => {
 
       const result = service.calculateSLAStatus(ticket);
       expect(result).toBe('BREACHED');
+    });
+
+    it('should ignore malformed breach timestamp when no SLA due times exist', () => {
+      const ticket = createMockTicket({
+        slaBreachedAt: new Date('2025-01-14T10:00:00Z'),
+        slaResponseDue: null,
+        slaResolutionDue: null,
+      });
+
+      const result = service.calculateSLAStatus(ticket);
+      expect(result).toBe('ON_TRACK');
     });
 
     it('should return MET if ticket is resolved', () => {
@@ -309,6 +326,34 @@ describe('TicketService', () => {
       );
     });
 
+    it('should enrich assignee metadata from user records', async () => {
+      const assignedTicket = createMockTicket({ assigneeId: 'user-1' });
+      mockPrisma.ticket.findMany.mockResolvedValue([assignedTicket]);
+      mockPrisma.ticket.count.mockResolvedValue(1);
+      mockPrisma.user.findMany.mockResolvedValue([
+        {
+          id: 'user-1',
+          name: 'Amanda Wilson',
+          role: 'USER',
+          avatarUrl: null,
+        },
+      ]);
+
+      const result = await service.findMany({
+        tenantId: 'tenant-1',
+      });
+
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: { in: ['user-1'] } },
+        })
+      );
+      expect(result.tickets[0]).toMatchObject({
+        assigneeName: 'Amanda Wilson',
+        assigneeTitle: 'Support Agent',
+      });
+    });
+
     it('should return hasMore false when all results fetched', async () => {
       mockPrisma.ticket.findMany.mockResolvedValue([createMockTicket()]);
       mockPrisma.ticket.count.mockResolvedValue(1);
@@ -320,6 +365,127 @@ describe('TicketService', () => {
       });
 
       expect(result.hasMore).toBe(false);
+    });
+
+    // IFC-205: Search filtering tests
+    describe('search', () => {
+      it('should apply search filter across subject, ticketNumber, contactName', async () => {
+        mockPrisma.ticket.findMany.mockResolvedValue([]);
+        mockPrisma.ticket.count.mockResolvedValue(0);
+
+        await service.findMany({
+          search: 'login issue',
+          tenantId: 'tenant-1',
+        });
+
+        expect(mockPrisma.ticket.findMany).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: expect.objectContaining({
+              tenantId: 'tenant-1',
+              OR: [
+                { subject: { contains: 'login issue', mode: 'insensitive' } },
+                { ticketNumber: { contains: 'login issue', mode: 'insensitive' } },
+                { contactName: { contains: 'login issue', mode: 'insensitive' } },
+              ],
+            }),
+          })
+        );
+      });
+
+      it('should use case-insensitive mode for all search fields', async () => {
+        mockPrisma.ticket.findMany.mockResolvedValue([]);
+        mockPrisma.ticket.count.mockResolvedValue(0);
+
+        await service.findMany({
+          search: 'Test',
+          tenantId: 'tenant-1',
+        });
+
+        const calledWith = mockPrisma.ticket.findMany.mock.calls[0][0];
+        const orClauses = calledWith.where.OR;
+
+        expect(orClauses).toHaveLength(3);
+        orClauses.forEach((clause: any) => {
+          const field = Object.keys(clause)[0];
+          expect(clause[field].mode).toBe('insensitive');
+        });
+      });
+
+      it('should combine search with status filter (AND logic)', async () => {
+        mockPrisma.ticket.findMany.mockResolvedValue([]);
+        mockPrisma.ticket.count.mockResolvedValue(0);
+
+        await service.findMany({
+          search: 'urgent',
+          status: 'OPEN' as any,
+          tenantId: 'tenant-1',
+        });
+
+        const calledWith = mockPrisma.ticket.findMany.mock.calls[0][0];
+        expect(calledWith.where.status).toBe('OPEN');
+        expect(calledWith.where.OR).toBeDefined();
+        expect(calledWith.where.OR).toHaveLength(3);
+      });
+
+      it('should combine search with priority filter', async () => {
+        mockPrisma.ticket.findMany.mockResolvedValue([]);
+        mockPrisma.ticket.count.mockResolvedValue(0);
+
+        await service.findMany({
+          search: 'bug',
+          priority: 'HIGH' as any,
+          tenantId: 'tenant-1',
+        });
+
+        const calledWith = mockPrisma.ticket.findMany.mock.calls[0][0];
+        expect(calledWith.where.priority).toBe('HIGH');
+        expect(calledWith.where.OR).toBeDefined();
+      });
+
+      it('should not add OR clause when search is undefined', async () => {
+        mockPrisma.ticket.findMany.mockResolvedValue([]);
+        mockPrisma.ticket.count.mockResolvedValue(0);
+
+        await service.findMany({
+          tenantId: 'tenant-1',
+        });
+
+        const calledWith = mockPrisma.ticket.findMany.mock.calls[0][0];
+        expect(calledWith.where.OR).toBeUndefined();
+      });
+
+      it('should not add OR clause when search is empty string', async () => {
+        mockPrisma.ticket.findMany.mockResolvedValue([]);
+        mockPrisma.ticket.count.mockResolvedValue(0);
+
+        await service.findMany({
+          search: '',
+          tenantId: 'tenant-1',
+        });
+
+        const calledWith = mockPrisma.ticket.findMany.mock.calls[0][0];
+        expect(calledWith.where.OR).toBeUndefined();
+      });
+
+      it('should apply search filter to count query (shared where clause)', async () => {
+        mockPrisma.ticket.findMany.mockResolvedValue([]);
+        mockPrisma.ticket.count.mockResolvedValue(0);
+
+        await service.findMany({
+          search: 'login',
+          tenantId: 'tenant-1',
+        });
+
+        expect(mockPrisma.ticket.count).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: expect.objectContaining({
+              OR: expect.arrayContaining([
+                expect.objectContaining({ subject: { contains: 'login', mode: 'insensitive' } }),
+              ]),
+            }),
+          })
+        );
+      });
     });
   });
 
@@ -362,6 +528,25 @@ describe('TicketService', () => {
           }),
         })
       );
+    });
+
+    it('should enrich assignee metadata for a single ticket', async () => {
+      mockPrisma.ticket.findUnique.mockResolvedValue(createMockTicket({ assigneeId: 'user-2' }));
+      mockPrisma.user.findMany.mockResolvedValue([
+        {
+          id: 'user-2',
+          name: 'Sarah Jenkins',
+          role: 'MANAGER',
+          avatarUrl: null,
+        },
+      ]);
+
+      const result = await service.findById('ticket-1');
+
+      expect(result).toMatchObject({
+        assigneeName: 'Sarah Jenkins',
+        assigneeTitle: 'Support Manager',
+      });
     });
 
     it('should filter next steps to uncompleted only', async () => {
@@ -707,6 +892,7 @@ describe('TicketService', () => {
 
   describe('delete', () => {
     it('should delete ticket by id', async () => {
+      mockPrisma.ticket.findUnique.mockResolvedValue({ status: 'OPEN' } as any);
       mockPrisma.ticket.delete.mockResolvedValue({});
 
       await service.delete('ticket-1');
@@ -714,6 +900,22 @@ describe('TicketService', () => {
       expect(mockPrisma.ticket.delete).toHaveBeenCalledWith({
         where: { id: 'ticket-1' },
       });
+    });
+
+    it('should reject delete for resolved tickets', async () => {
+      mockPrisma.ticket.findUnique.mockResolvedValue({ status: 'RESOLVED' } as any);
+
+      await expect(service.delete('ticket-1')).rejects.toThrow(
+        'Cannot delete resolved or closed tickets. Use archive instead to remove from active views.'
+      );
+    });
+
+    it('should reject delete for archived tickets', async () => {
+      mockPrisma.ticket.findUnique.mockResolvedValue({ status: 'ARCHIVED' } as any);
+
+      await expect(service.delete('ticket-1')).rejects.toThrow(
+        'Cannot delete archived tickets. They are kept for audit purposes.'
+      );
     });
   });
 
@@ -736,8 +938,16 @@ describe('TicketService', () => {
           { priority: 'HIGH', _count: 10 },
           { priority: 'MEDIUM', _count: 25 },
           { priority: 'LOW', _count: 10 },
+        ])
+        .mockResolvedValueOnce([
+          { slaStatus: 'ON_TRACK', _count: 30 },
+          { slaStatus: 'AT_RISK', _count: 10 },
+          { slaStatus: 'BREACHED', _count: 5 },
+          { slaStatus: 'MET', _count: 3 },
+          { slaStatus: 'PAUSED', _count: 2 },
         ]);
       mockPrisma.ticket.count.mockResolvedValueOnce(3); // breached
+      mockPrisma.ticket.count.mockResolvedValueOnce(2); // resolved today
       mockPrisma.ticket.findMany.mockResolvedValueOnce([
         { createdAt: new Date('2025-01-15T09:00:00Z'), firstResponseAt: new Date('2025-01-15T09:30:00Z') },
         { createdAt: new Date('2025-01-15T08:00:00Z'), firstResponseAt: new Date('2025-01-15T08:45:00Z') },
@@ -758,8 +968,10 @@ describe('TicketService', () => {
       mockPrisma.ticket.count.mockResolvedValueOnce(10);
       mockPrisma.ticket.groupBy
         .mockResolvedValueOnce([{ status: 'OPEN', _count: 10 }])
-        .mockResolvedValueOnce([{ priority: 'MEDIUM', _count: 10 }]);
-      mockPrisma.ticket.count.mockResolvedValueOnce(0);
+        .mockResolvedValueOnce([{ priority: 'MEDIUM', _count: 10 }])
+        .mockResolvedValueOnce([]); // SLA groupBy
+      mockPrisma.ticket.count.mockResolvedValueOnce(0); // breached
+      mockPrisma.ticket.count.mockResolvedValueOnce(0); // resolved today
       mockPrisma.ticket.findMany.mockResolvedValueOnce([]); // No tickets with first response
 
       const result = await service.getStats('tenant-1');
@@ -771,6 +983,7 @@ describe('TicketService', () => {
       mockPrisma.ticket.count.mockResolvedValueOnce(0);
       mockPrisma.ticket.groupBy.mockResolvedValue([]);
       mockPrisma.ticket.count.mockResolvedValueOnce(0);
+      mockPrisma.ticket.count.mockResolvedValueOnce(0);
       mockPrisma.ticket.findMany.mockResolvedValueOnce([]);
 
       await service.getStats('tenant-1');
@@ -780,6 +993,210 @@ describe('TicketService', () => {
           where: expect.objectContaining({
             tenantId: 'tenant-1',
           }),
+        })
+      );
+    });
+
+    // IFC-206: SLA groupBy tests
+    it('should return bySLAStatus with counts for all 5 SLA statuses', async () => {
+      mockPrisma.ticket.count.mockResolvedValueOnce(20); // total
+      mockPrisma.ticket.groupBy
+        .mockResolvedValueOnce([{ status: 'OPEN', _count: 20 }])
+        .mockResolvedValueOnce([{ priority: 'MEDIUM', _count: 20 }])
+        .mockResolvedValueOnce([
+          { slaStatus: 'ON_TRACK', _count: 10 },
+          { slaStatus: 'AT_RISK', _count: 4 },
+          { slaStatus: 'BREACHED', _count: 3 },
+          { slaStatus: 'MET', _count: 2 },
+          { slaStatus: 'PAUSED', _count: 1 },
+        ]);
+      mockPrisma.ticket.count.mockResolvedValueOnce(3); // breached
+      mockPrisma.ticket.count.mockResolvedValueOnce(0); // resolved today
+      mockPrisma.ticket.findMany.mockResolvedValueOnce([]);
+
+      const result = await service.getStats('tenant-1');
+
+      expect(result.bySLAStatus).toEqual({
+        ON_TRACK: 10,
+        AT_RISK: 4,
+        BREACHED: 3,
+        MET: 2,
+        PAUSED: 1,
+      });
+    });
+
+    it('should include zero-count SLA statuses', async () => {
+      mockPrisma.ticket.count.mockResolvedValueOnce(5);
+      mockPrisma.ticket.groupBy
+        .mockResolvedValueOnce([{ status: 'OPEN', _count: 5 }])
+        .mockResolvedValueOnce([{ priority: 'LOW', _count: 5 }])
+        .mockResolvedValueOnce([
+          { slaStatus: 'ON_TRACK', _count: 5 },
+        ]); // Only ON_TRACK returned
+      mockPrisma.ticket.count.mockResolvedValueOnce(0);
+      mockPrisma.ticket.count.mockResolvedValueOnce(0);
+      mockPrisma.ticket.findMany.mockResolvedValueOnce([]);
+
+      const result = await service.getStats('tenant-1');
+
+      expect(result.bySLAStatus).toEqual({
+        ON_TRACK: 5,
+        AT_RISK: 0,
+        BREACHED: 0,
+        MET: 0,
+        PAUSED: 0,
+      });
+    });
+
+    // IFC-206: Time window filtering tests
+    it('should add createdAt filter for 24h time window', async () => {
+      mockPrisma.ticket.count.mockResolvedValueOnce(0);
+      mockPrisma.ticket.groupBy.mockResolvedValue([]);
+      mockPrisma.ticket.count.mockResolvedValueOnce(0);
+      mockPrisma.ticket.count.mockResolvedValueOnce(0);
+      mockPrisma.ticket.findMany.mockResolvedValueOnce([]);
+
+      await service.getStats('tenant-1', '24h');
+
+      expect(mockPrisma.ticket.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            tenantId: 'tenant-1',
+            createdAt: { gte: new Date('2025-01-14T10:00:00Z') },
+          }),
+        })
+      );
+    });
+
+    it('should add createdAt filter for 7d time window', async () => {
+      mockPrisma.ticket.count.mockResolvedValueOnce(0);
+      mockPrisma.ticket.groupBy.mockResolvedValue([]);
+      mockPrisma.ticket.count.mockResolvedValueOnce(0);
+      mockPrisma.ticket.count.mockResolvedValueOnce(0);
+      mockPrisma.ticket.findMany.mockResolvedValueOnce([]);
+
+      await service.getStats('tenant-1', '7d');
+
+      expect(mockPrisma.ticket.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            tenantId: 'tenant-1',
+            createdAt: { gte: new Date('2025-01-08T10:00:00Z') },
+          }),
+        })
+      );
+    });
+
+    it('should add createdAt filter for 30d time window', async () => {
+      mockPrisma.ticket.count.mockResolvedValueOnce(0);
+      mockPrisma.ticket.groupBy.mockResolvedValue([]);
+      mockPrisma.ticket.count.mockResolvedValueOnce(0);
+      mockPrisma.ticket.count.mockResolvedValueOnce(0);
+      mockPrisma.ticket.findMany.mockResolvedValueOnce([]);
+
+      await service.getStats('tenant-1', '30d');
+
+      expect(mockPrisma.ticket.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            tenantId: 'tenant-1',
+            createdAt: { gte: new Date('2024-12-16T10:00:00Z') },
+          }),
+        })
+      );
+    });
+
+    it('should have no createdAt filter for all time window', async () => {
+      mockPrisma.ticket.count.mockResolvedValueOnce(0);
+      mockPrisma.ticket.groupBy.mockResolvedValue([]);
+      mockPrisma.ticket.count.mockResolvedValueOnce(0);
+      mockPrisma.ticket.count.mockResolvedValueOnce(0);
+      mockPrisma.ticket.findMany.mockResolvedValueOnce([]);
+
+      await service.getStats('tenant-1', 'all');
+
+      expect(mockPrisma.ticket.count).toHaveBeenCalledWith({
+        where: { tenantId: 'tenant-1' },
+      });
+    });
+
+    it('should have no createdAt filter when timeWindow is not provided', async () => {
+      mockPrisma.ticket.count.mockResolvedValueOnce(0);
+      mockPrisma.ticket.groupBy.mockResolvedValue([]);
+      mockPrisma.ticket.count.mockResolvedValueOnce(0);
+      mockPrisma.ticket.count.mockResolvedValueOnce(0);
+      mockPrisma.ticket.findMany.mockResolvedValueOnce([]);
+
+      await service.getStats('tenant-1');
+
+      expect(mockPrisma.ticket.count).toHaveBeenCalledWith({
+        where: { tenantId: 'tenant-1' },
+      });
+    });
+  });
+
+  // IFC-206: Sort param tests
+  describe('findMany sort', () => {
+    it('should use sortBy updatedAt with default desc order', async () => {
+      mockPrisma.ticket.findMany.mockResolvedValue([]);
+      mockPrisma.ticket.count.mockResolvedValue(0);
+
+      await service.findMany({
+        tenantId: 'tenant-1',
+        sortBy: 'updatedAt',
+      });
+
+      expect(mockPrisma.ticket.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ updatedAt: 'desc' }],
+        })
+      );
+    });
+
+    it('should use sortBy priority with explicit asc order', async () => {
+      mockPrisma.ticket.findMany.mockResolvedValue([]);
+      mockPrisma.ticket.count.mockResolvedValue(0);
+
+      await service.findMany({
+        tenantId: 'tenant-1',
+        sortBy: 'priority',
+        sortOrder: 'asc',
+      });
+
+      expect(mockPrisma.ticket.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ priority: 'asc' }],
+        })
+      );
+    });
+
+    it('should use sortBy slaResolutionDue with default desc order', async () => {
+      mockPrisma.ticket.findMany.mockResolvedValue([]);
+      mockPrisma.ticket.count.mockResolvedValue(0);
+
+      await service.findMany({
+        tenantId: 'tenant-1',
+        sortBy: 'slaResolutionDue',
+      });
+
+      expect(mockPrisma.ticket.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ slaResolutionDue: 'desc' }],
+        })
+      );
+    });
+
+    it('should default to createdAt desc when no sortBy provided', async () => {
+      mockPrisma.ticket.findMany.mockResolvedValue([]);
+      mockPrisma.ticket.count.mockResolvedValue(0);
+
+      await service.findMany({
+        tenantId: 'tenant-1',
+      });
+
+      expect(mockPrisma.ticket.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ createdAt: 'desc' }],
         })
       );
     });

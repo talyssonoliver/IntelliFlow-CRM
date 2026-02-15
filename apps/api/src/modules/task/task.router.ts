@@ -89,18 +89,26 @@ export const taskRouter = createTRPCRouter({
    */
   getById: tenantProcedure.input(z.object({ id: idSchema })).query(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
-    const taskService = getTaskService(ctx);
 
-    const result = await taskService.getTaskById(input.id);
+    const where = createTenantWhereClause(typedCtx.tenant, { id: input.id });
+    const task = await typedCtx.prismaWithTenant.task.findFirst({
+      where,
+      include: {
+        owner: { select: { id: true, email: true, name: true } },
+        lead: { select: { id: true, email: true, firstName: true, lastName: true } },
+        contact: { select: { id: true, email: true, firstName: true, lastName: true } },
+        opportunity: { select: { id: true, name: true, stage: true } },
+      },
+    });
 
-    if (result.isFailure) {
+    if (!task) {
       throw new TRPCError({
         code: 'NOT_FOUND',
-        message: result.error.message,
+        message: 'Task not found',
       });
     }
 
-    return mapTaskToResponse(result.value);
+    return task;
   }),
 
   /**
@@ -354,6 +362,38 @@ export const taskRouter = createTRPCRouter({
   }),
 
   /**
+   * Archive a completed or cancelled task
+   */
+  archive: tenantProcedure.input(z.object({ id: idSchema })).mutation(async ({ ctx, input }) => {
+    const taskService = getTaskService(ctx);
+
+    const result = await taskService.archiveTask(input.id);
+
+    if (result.isFailure) {
+      const errorCode = result.error.code;
+      const message = result.error.message;
+      if (errorCode === 'NOT_FOUND_ERROR' || message.includes('not found')) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message,
+        });
+      }
+      if (errorCode === 'VALIDATION_ERROR') {
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message,
+        });
+      }
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message,
+      });
+    }
+
+    return { success: true, id: input.id };
+  }),
+
+  /**
    * Complete a task
    */
   complete: tenantProcedure.input(completeTaskSchema).mutation(async ({ ctx, input }) => {
@@ -525,10 +565,26 @@ export const taskRouter = createTRPCRouter({
    * Get tasks linked to a specific CRM entity
    */
   getByEntity: tenantProcedure.input(getByEntitySchema).query(async ({ ctx, input }) => {
-    const taskService = getTaskService(ctx);
+    const typedCtx = getTenantContext(ctx);
 
-    const tasks = await taskService.getTasksByEntity(input.entityType, input.entityId);
+    const entityFilter = input.entityType === 'lead'
+      ? { leadId: input.entityId }
+      : input.entityType === 'contact'
+        ? { contactId: input.entityId }
+        : { opportunityId: input.entityId };
 
-    return tasks.map(mapTaskToResponse);
+    const where = createTenantWhereClause(typedCtx.tenant, entityFilter);
+    const tasks = await typedCtx.prismaWithTenant.task.findMany({
+      where,
+      include: {
+        owner: { select: { id: true, email: true, name: true } },
+        lead: { select: { id: true, email: true, firstName: true, lastName: true } },
+        contact: { select: { id: true, email: true, firstName: true, lastName: true } },
+        opportunity: { select: { id: true, name: true, stage: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return tasks;
   }),
 });

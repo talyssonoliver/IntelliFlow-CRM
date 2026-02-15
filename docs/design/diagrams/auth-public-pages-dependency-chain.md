@@ -79,19 +79,19 @@ The **Auth & Public Pages** domain covers authentication flows, public marketing
     └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘
 
     ╔═══════════════════════════════════════════════════════════════════════════════════════════╗
-    ║  MFA/2FA FLOW                                                            ⚠️ PARTIAL     ║
+    ║  MFA/2FA FLOW                                                            ✅ COMPLETE     ║
     ╚═══════════════════════════════════════════════════════════════════════════════════════════╝
 
     ┌─────────────────────────────┐         ┌─────────────────────────────┐
-    │        IFC-098              │         │       PG-022 / PG-023       │
-    │   MFA Backend               │         │   MFA Frontend              │
+    │        IFC-098              │         │       PG-021                │
+    │   RBAC / MFA Backend        │         │   MFA Setup Page            │
     │                             │         │                             │
-    │  - TOTP setup               │         │  - MFA enrollment           │
-    │  - Backup codes             │ ───────►│  - Code verification        │
-    │  - Recovery flow            │         │  - Backup code display      │
+    │  - TOTP setup               │         │  - 5-step wizard            │
+    │  - Backup codes             │ ───────►│  - QR code, SMS, Email      │
+    │  - Recovery flow            │         │  - 41 page tests (96% cov)  │
     │                             │         │                             │
-    │  Status: COMPLETED ✅       │         │  Status: BACKLOG ⚠️         │
-    │  Sprint: 5                  │         │  Sprint: 26                 │
+    │  Status: COMPLETED ✅       │         │  Status: COMPLETED ✅       │
+    │  Sprint: 5                  │         │  Sprint: 13                 │
     └─────────────────────────────┘         └─────────────────────────────┘
 ```
 
@@ -155,15 +155,15 @@ The **Auth & Public Pages** domain covers authentication flows, public marketing
     ╚═══════════════════════════════════════════════════════════════════════════════════════════╝
 
     ┌─────────────────────────────┐
-    │     PG-025: Billing Portal  │
+    │  ✅ PG-025: Billing Portal  │
     │                             │
     │  Dependencies:              │
     │  - Stripe integration       │         ┌─────────────────────────────┐
     │  - pricing.calculator.ts    │ ───────►│  Billing Pages              │
     │  - stripe-integration.ts    │         │                             │
     │                             │         │  PG-026: Plans              │
-    │  Status: BACKLOG            │         │  PG-027: Usage              │
-    │  Sprint: 20                 │         │  PG-028: Invoices           │
+    │  Status: COMPLETED          │         │  PG-027: Usage              │
+    │  Sprint: 14                 │         │  PG-028: Invoices           │
     │                             │         │  PG-029: Payment Methods    │
     └─────────────────────────────┘         │  PG-030: Upgrade            │
                                             │  PG-031: Downgrade          │
@@ -210,10 +210,10 @@ The **Auth & Public Pages** domain covers authentication flows, public marketing
 
     ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
     │   PG-032    │  │   PG-033    │  │   PG-034    │  │   PG-035    │  │   PG-036    │
-    │  Docs Hub   │  │  Quickstart │  │  Tutorials  │  │   Guides    │  │ API Ref     │
-    │             │  │             │  │             │  │             │  │             │
-    │ /docs       │  │ /quickstart │  │ /tutorials  │  │ /guides     │  │ /api        │
-    │ ✅ DONE     │  │ BACKLOG     │  │ BACKLOG     │  │ BACKLOG     │  │ BACKLOG     │
+    │  Docs Hub   │  │  API Docs   │  │  Tutorials  │  │   Guides    │  │ Webhooks    │
+    │             │  │  (Scalar)   │  │             │  │             │  │             │
+    │ /docs       │  │ /docs/api   │  │ /tutorials  │  │ /guides     │  │ /api        │
+    │ ✅ DONE     │  │ ✅ DONE     │  │ BACKLOG     │  │ BACKLOG     │  │ BACKLOG     │
     └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘
 
     ┌─────────────────────────────────────────────────────────────────────────────────────────┐
@@ -306,7 +306,7 @@ No new tasks required for Auth domain - all chains are tracked:
 |---------|---------|----------|--------|
 | MFA | IFC-098 ✅ | PG-022-023 (Backlog) | Tracked |
 | Onboarding | IFC-076 (Backlog) | PG-126 (Backlog) | Tracked |
-| Billing | Partial | PG-025-031 (Backlog) | Tracked |
+| Billing | Partial | PG-025 ✅, PG-026-031 (Backlog) | Tracked |
 
 **Total New Tasks Required: 0**
 - All auth/public page chains are already tracked

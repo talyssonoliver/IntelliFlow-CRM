@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { cn } from '@intelliflow/ui';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useLogout } from '@/hooks/useLogout';
+import { AppAvatar } from '@/components/shared/app-avatar';
 
 interface UserMenuProps {
   user?: {
@@ -30,7 +31,7 @@ export function UserMenu({
         name: authUser.name || authUser.email.split('@')[0],
         email: authUser.email,
         role: authUser.role,
-        avatar: undefined,
+        avatar: authUser.avatar || undefined,
       }
     : propUser || { name: 'Guest', email: '', role: '' };
   const [isOpen, setIsOpen] = React.useState(false);
@@ -76,13 +77,13 @@ export function UserMenu({
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
-        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center overflow-hidden">
-          {user.avatar ? (
-            <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
-          ) : (
-            <span className="text-sm font-medium text-muted-foreground">{initials}</span>
-          )}
-        </div>
+        <AppAvatar
+          name={user.name}
+          src={user.avatar ?? null}
+          fallbackText={initials}
+          className="w-8 h-8"
+          fallbackClassName="text-sm font-medium text-muted-foreground bg-muted"
+        />
         <span className="hidden sm:inline text-sm font-medium text-foreground">
           {user.name}
         </span>
@@ -97,13 +98,13 @@ export function UserMenu({
           {/* User Info Header */}
           <div className="px-4 py-3 border-b border-border">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden">
-                {user.avatar ? (
-                  <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-sm font-medium text-muted-foreground">{initials}</span>
-                )}
-              </div>
+              <AppAvatar
+                name={user.name}
+                src={user.avatar ?? null}
+                fallbackText={initials}
+                className="w-10 h-10"
+                fallbackClassName="text-sm font-medium text-muted-foreground bg-muted"
+              />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-foreground truncate">{user.name}</p>
                 {user.email && (

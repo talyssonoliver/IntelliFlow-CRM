@@ -5,6 +5,7 @@ import { Card } from '@intelliflow/ui';
 import { MarkdownRenderer, ReadingProgress, TableOfContents } from '@/components/blog/markdown-renderer';
 import { CommentsWidget } from '@/components/blog/comments-widget';
 import { ShareButtons } from '@/components/blog/share-buttons';
+import { AppAvatar } from '@/components/shared/app-avatar';
 
 // Blog post data structure
 interface BlogPost {
@@ -372,19 +373,13 @@ export default async function BlogPostPage({
 
             {/* Author Info */}
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center">
-                {post.author.avatar ? (
-                  <img
-                    src={post.author.avatar}
-                    alt=""
-                    className="w-full h-full rounded-full object-cover"
-                  />
-                ) : (
-                  <span className="material-symbols-outlined text-slate-300" aria-hidden="true">
-                    person
-                  </span>
-                )}
-              </div>
+              <AppAvatar
+                name={post.author.name}
+                src={post.author.avatar ?? null}
+                className="w-12 h-12"
+                fallbackText="person"
+                fallbackClassName="bg-slate-700 text-slate-300 material-symbols-outlined text-base"
+              />
               <div>
                 <p className="font-medium text-white">{post.author.name}</p>
                 <p className="text-sm text-slate-300">

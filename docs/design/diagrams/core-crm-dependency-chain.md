@@ -132,8 +132,8 @@ The **Core CRM** domain covers 6 primary entities: Lead, Contact, Account, Oppor
     │  - /leads/[id]  │  │  - /contacts/   │  │  - /accounts/   │  │    forecast     │  │  - /tasks/[id]  │
     │                 │  │    [id]         │  │    [id]         │  │                 │  │                 │
     │                 │  │                 │  │                 │  │  MISSING:       │  │                 │
-    │  COMPLETED ✅   │  │  CREATE: PG-133 │  │  COMPLETED ✅   │  │  - /deals list  │  │  CREATE: PG-136 │
-    │  Sprint 2       │  │                 │  │  Sprint 5       │  │  CREATE: PG-135 │  │                 │
+    │  COMPLETED ✅   │  │  CREATE: PG-133 │  │  COMPLETED ✅   │  │  - /deals list  │  │  COMPLETED ✅   │
+    │  Sprint 2       │  │                 │  │  Sprint 5       │  │  CREATE: PG-135 │  │  Sprint 6       │
     └─────────────────┘  └─────────────────┘  └─────────────────┘  └─────────────────┘  └─────────────────┘
 ```
 
@@ -164,7 +164,7 @@ The **Core CRM** domain covers 6 primary entities: Lead, Contact, Account, Oppor
 
     Optional API Enhancements (Sprint 6, not hard blockers):
     ┌─────────────────────────┐  ┌─────────────────────────┐  ┌─────────────────────────┐
-    │    ⬜ IFC-205            │  │    ⬜ IFC-206            │  │    ⬜ IFC-207            │
+    │    ✅ IFC-205            │  │    ✅ IFC-206            │  │    ✅ IFC-207            │
     │  Ticket Full-Text       │  │  Ticket Stats           │  │  Query Performance      │
     │  Search                 │  │  Enhancement            │  │  Tracking               │
     │  (search param)         │  │  (SLA breakdown, sort)  │  │  (queryDurationMs)      │
@@ -242,7 +242,7 @@ The **Core CRM** domain covers 6 primary entities: Lead, Contact, Account, Oppor
 | Contact | No (domain exists) | YES | Create IFC-184, PG-133 |
 | Account | No (router done ✅) | No (PG-134 ✅) | Complete |
 | Opportunity | No (router done ✅) | YES | Create PG-135 |
-| Task | No (domain exists) | YES | Create IFC-187, PG-136 |
+| Task | No (router done ✅) | No (PG-136 ✅) | Complete — 9 components, 104 tests, tRPC integration |
 | Ticket | No (router done ✅) | No (PG-137 ✅) | Complete — 7 components, 79 tests, tRPC integration |
 
 **Total New Tasks Required: 10** (IFC-189 completed 2026-02-07)

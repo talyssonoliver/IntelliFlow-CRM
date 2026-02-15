@@ -32,7 +32,7 @@ async function getTaskSprintNumber(taskId: string): Promise<number> {
 
   try {
     const csvContent = await readFile(csvPath, 'utf-8');
-    const records = parse(csvContent, { columns: true, skip_empty_lines: true }) as Array<Record<string, string>>;
+    const records = parse(csvContent, { columns: true, skip_empty_lines: true, bom: true }) as Array<Record<string, string>>;
     const task = records.find((r) => r['Task ID'] === taskId);
     return parseInt(task?.['Target Sprint'] || '0', 10);
   } catch {

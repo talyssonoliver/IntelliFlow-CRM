@@ -55,6 +55,7 @@ vi.mock('@trpc/server', () => ({
     context: () => ({
       create: () => ({
         middleware: (fn: any) => fn,
+        procedure: { use: (mw: any) => mw },
       }),
     }),
   },

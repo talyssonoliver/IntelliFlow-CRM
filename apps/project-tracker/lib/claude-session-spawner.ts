@@ -1,8 +1,8 @@
 /**
  * Claude Session Spawner
  *
- * Spawns Claude Code CLI sessions for spec and plan workflows.
- * For exec (SESSION 3), use the existing Swarm system instead.
+ * Spawns Claude Code CLI sessions for spec, plan, and exec workflows.
+ * All sessions use the same `claude --print "/command taskId"` pattern.
  *
  * This module handles:
  * - Spawning `claude --print "/command taskId"` processes
@@ -11,14 +11,14 @@
  * - Managing session lifecycle (timeout, kill)
  */
 
-import { spawn, ChildProcess } from 'child_process';
-import { mkdir, writeFile, appendFile, readFile } from 'fs/promises';
-import { existsSync } from 'fs';
-import { join } from 'path';
-import { randomBytes } from 'crypto';
+import { spawn, ChildProcess } from 'node:child_process';
+import { mkdir, writeFile, appendFile, readFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { randomBytes } from 'node:crypto';
 
 // Session types that this spawner handles
-export type SessionType = 'spec' | 'plan' | 'hydrate';
+export type SessionType = 'spec' | 'plan' | 'hydrate' | 'exec';
 
 export interface ClaudeSessionConfig {
   taskId: string;
@@ -47,6 +47,7 @@ const SESSION_COMMANDS: Record<SessionType, string> = {
   hydrate: '/hydrate-context',
   spec: '/spec-session',
   plan: '/plan-session',
+  exec: '/exec',
 };
 
 // Track active sessions in memory
@@ -85,7 +86,7 @@ function getStatusDir(): string {
  * Generate a unique session ID
  */
 function generateSessionId(): string {
-  const timestamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
+  const timestamp = new Date().toISOString().replaceAll(/[-:T]/g, '').slice(0, 14);
   const random = randomBytes(4).toString('hex');
   return `${timestamp}-${random}`;
 }
@@ -355,7 +356,7 @@ async function listSessions(): Promise<string[]> {
     return [];
   }
 
-  const { readdir } = await import('fs/promises');
+  const { readdir } = await import('node:fs/promises');
   const files = await readdir(statusDir);
   return files.filter((f) => f.endsWith('.json')).map((f) => f.replace('.json', ''));
 }

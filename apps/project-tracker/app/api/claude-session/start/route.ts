@@ -1,8 +1,8 @@
 /**
  * POST /api/claude-session/start
  *
- * Start a Claude Code CLI session for spec or plan workflows.
- * For exec (SESSION 3), use /api/tasks/start instead (Swarm system).
+ * Start a Claude Code CLI session for spec, plan, or exec workflows.
+ * All sessions use the same Claude Code 7-phase workflow.
  */
 
 import { NextResponse } from 'next/server';
@@ -27,6 +27,7 @@ const SESSION_START_STATUS: Record<SessionType, WorkflowStatus> = {
   hydrate: 'In Progress',
   spec: 'Specifying',
   plan: 'Planning',
+  exec: 'In Progress',
 };
 
 export async function POST(request: Request) {
@@ -43,11 +44,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'session is required' }, { status: 400 });
     }
 
-    // Only allow spec, plan, hydrate - exec uses Swarm
-    if (!['spec', 'plan', 'hydrate'].includes(session)) {
+    if (!['spec', 'plan', 'hydrate', 'exec'].includes(session)) {
       return NextResponse.json(
         {
-          error: `Invalid session type: ${session}. Use 'spec', 'plan', or 'hydrate'. For 'exec', use /api/tasks/start (Swarm system).`,
+          error: `Invalid session type: ${session}. Use 'spec', 'plan', 'hydrate', or 'exec'.`,
         },
         { status: 400 }
       );
@@ -61,7 +61,8 @@ export async function POST(request: Request) {
 
     // Check prerequisites (skip for hydrate as it's Phase 0)
     if (session !== 'hydrate') {
-      const check = canProceedToSession(task, session as 'spec' | 'plan');
+      const sessionCheck = session === 'exec' ? 'exec' : (session as 'spec' | 'plan');
+      const check = canProceedToSession(task, sessionCheck);
       if (!check.canProceed) {
         return NextResponse.json(
           {
@@ -86,17 +87,18 @@ export async function POST(request: Request) {
         // Update status on completion
         if (finalResult.status === 'completed') {
           const successStatus: Record<SessionType, WorkflowStatus> = {
-            hydrate: 'Planned', // After hydration, task is planned
+            hydrate: 'Planned',
             spec: 'Spec Complete',
             plan: 'Plan Complete',
+            exec: 'Completed',
           };
           await updateTaskStatus(taskId, successStatus[session]);
         } else if (finalResult.status === 'failed' || finalResult.status === 'timeout') {
-          // Revert to previous logical status on failure
           const failureStatus: Record<SessionType, WorkflowStatus> = {
             hydrate: 'Backlog',
             spec: 'Backlog',
-            plan: 'Spec Complete', // Plan failed, still has spec
+            plan: 'Spec Complete',
+            exec: 'Failed',
           };
           await updateTaskStatus(taskId, failureStatus[session]);
         }
@@ -113,7 +115,7 @@ export async function POST(request: Request) {
       statusFile: result.statusFile,
       startedAt: result.startedAt,
       pid: result.pid,
-      message: `Claude Code session started: /${session === 'hydrate' ? 'hydrate-context' : `${session}-session`} ${taskId}`,
+      message: `Claude Code session started: ${session === 'hydrate' ? '/hydrate-context' : session === 'exec' ? '/exec' : `/${session}-session`} ${taskId}`,
     });
   } catch (error) {
     console.error('[claude-session/start] Error:', error);

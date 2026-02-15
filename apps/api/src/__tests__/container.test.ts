@@ -33,6 +33,7 @@ vi.mock('@intelliflow/db', () => {
         return mockPrismaInstance;
       }
     },
+    prisma: mockPrismaInstance,
   };
 });
 
@@ -43,8 +44,13 @@ vi.mock('@intelliflow/adapters', () => ({
   PrismaAccountRepository: class { constructor() { return { name: 'accountRepo' }; } },
   PrismaOpportunityRepository: class { constructor() { return { name: 'opportunityRepo' }; } },
   PrismaTaskRepository: class { constructor() { return { name: 'taskRepo' }; } },
+  PrismaChainVersionRepository: class { constructor() { return { name: 'chainVersionRepo' }; } },
+  PrismaChainVersionAuditRepository: class { constructor() { return { name: 'chainVersionAuditRepo' }; } },
+  PrismaActivityFeedRepository: class { constructor() { return { name: 'activityFeedRepo' }; } },
   InMemoryEventBus: class { constructor() { return { name: 'eventBus' }; } },
   MockAIService: class { constructor() { return { name: 'aiService' }; } },
+  GuardrailsAIService: class { constructor() { return { name: 'guardrailsAIService' }; } },
+  DurableAuditLogAdapter: class { constructor() { return { name: 'durableAuditLogAdapter' }; } },
   InMemoryCache: class { constructor() { return { name: 'cache' }; } },
 }));
 
@@ -54,6 +60,8 @@ vi.mock('@intelliflow/application', () => ({
   AccountService: class { constructor() { return { name: 'accountService' }; } },
   OpportunityService: class { constructor() { return { name: 'opportunityService' }; } },
   TaskService: class { constructor() { return { name: 'taskService' }; } },
+  ChainVersionService: class { constructor() { return { name: 'chainVersionService' }; } },
+  ActivityFeedService: class { constructor() { return { name: 'activityFeedService' }; } },
 }));
 
 vi.mock('../services/TicketService', () => ({

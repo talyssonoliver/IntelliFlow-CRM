@@ -146,10 +146,49 @@ export async function spawnMatopAgent(options: SubprocessOptions): Promise<Subpr
   });
 }
 
+/**
+ * Spawn a Claude Code /exec session as a subprocess
+ *
+ * Uses the same 7-phase workflow as interactive `/exec`:
+ * Phase 1: Load Context (spec, plan, hydrated context)
+ * Phase 1.5: Validate Dependencies
+ * Phase 2: TDD Implementation (RED → GREEN → REFACTOR)
+ * Phase 3: MATOP Validation (STOA gates)
+ * Phase 4: Compliance Check
+ * Phase 4.5: Completion Gates
+ * Phase 5: Attestation
+ * Phase 6: Delivery Report
+ * Phase 7: Dependency Chain Update
+ *
+ * CLI: claude --print "/exec <task-id>"
+ */
+export async function spawnClaudeExecAgent(options: SubprocessOptions): Promise<SubprocessResult> {
+  const { taskId, runId, timeout = 60 * 60 * 1000, cwd, onStdout, onStderr, onProgress } = options;
+
+  const projectRoot = cwd || getProjectRoot();
+
+  // Use claude CLI with --print to run /exec non-interactively
+  const command = 'claude';
+  const args = ['--print', `/exec ${taskId}`];
+
+  return spawnProcess({
+    command,
+    args,
+    taskId,
+    runId,
+    timeout,
+    cwd: projectRoot,
+    onStdout,
+    onStderr,
+    onProgress,
+    type: 'claude-exec',
+  });
+}
+
 interface SpawnProcessOptions extends SubprocessOptions {
   command: string;
   args: string[];
-  type: 'swarm' | 'matop';
+  type: 'swarm' | 'matop' | 'claude-exec';
 }
 
 /**

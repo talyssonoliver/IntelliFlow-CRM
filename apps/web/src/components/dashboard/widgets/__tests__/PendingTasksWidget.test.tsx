@@ -1,16 +1,54 @@
 // @vitest-environment jsdom
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { PendingTasksWidget } from '../PendingTasksWidget';
 
+// Mock TaskCreateSheet to avoid deep tRPC dependency chain
+vi.mock('@/components/tasks/TaskCreateSheet', () => ({
+  TaskCreateSheet: () => null,
+}));
+
+// Mock the tRPC API
+vi.mock('@/lib/api', () => ({
+  api: {
+    task: {
+      list: {
+        useQuery: vi.fn(() => ({
+          data: { tasks: [] },
+          isLoading: false,
+        })),
+      },
+      complete: {
+        useMutation: vi.fn(() => ({
+          mutate: vi.fn(),
+        })),
+      },
+      create: {
+        useMutation: vi.fn(() => ({
+          mutate: vi.fn(),
+          mutateAsync: vi.fn(),
+          isPending: false,
+        })),
+      },
+    },
+    useUtils: vi.fn(() => ({
+      task: {
+        list: {
+          invalidate: vi.fn(),
+        },
+        getReminders: {
+          invalidate: vi.fn(),
+        },
+      },
+    })),
+  },
+}));
+
 describe('PendingTasksWidget', () => {
-  it('lists sample tasks and add button', () => {
+  it('renders widget title and add button', () => {
     render(<PendingTasksWidget />);
 
     expect(screen.getByText('Pending Tasks')).toBeInTheDocument();
-    expect(screen.getByText('Call with Acme Corp')).toBeInTheDocument();
-    // Component uses design system color (text-destructive)
-    expect(screen.getByText('Overdue')).toHaveClass('text-destructive');
-    expect(screen.getByRole('button', { name: /\+ Add New Task/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Add new task/i })).toBeInTheDocument();
   });
 });

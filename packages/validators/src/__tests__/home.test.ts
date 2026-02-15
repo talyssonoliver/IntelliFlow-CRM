@@ -577,6 +577,7 @@ describe('Home Page Validators', () => {
         'contact',
         'account',
         'opportunity',
+        'ticket',
         'document',
         'report',
         'list',

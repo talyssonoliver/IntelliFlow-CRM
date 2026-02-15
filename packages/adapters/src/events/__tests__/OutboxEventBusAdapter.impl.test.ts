@@ -10,6 +10,30 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { DomainEvent } from '@intelliflow/domain';
+
+// Mock the @intelliflow/db module before importing adapter
+vi.mock('@intelliflow/db', () => ({
+  withTransaction: vi.fn(async (callback: (tx: any) => Promise<any>) => {
+    // Create a mock transaction client
+    const mockTx = {
+      domainEvent: {
+        findFirst: vi.fn().mockResolvedValue(null),
+        create: vi.fn().mockResolvedValue({ id: 'created-id' }),
+      },
+    };
+    return callback(mockTx);
+  }),
+  EventStatus: {
+    PENDING: 'PENDING',
+    PROCESSING: 'PROCESSING',
+    COMPLETED: 'COMPLETED',
+    FAILED: 'FAILED',
+  },
+  Prisma: {
+    JsonNull: null,
+  },
+}));
+
 import {
   OutboxEventBusAdapter,
   type ContextAccessors,
@@ -99,7 +123,8 @@ function createMockPrisma() {
       create: vi.fn().mockResolvedValue({ id: 'created-id' }),
     },
     $transaction: vi.fn(async (callback: (tx: any) => Promise<any>) => {
-      return callback(mockTx);
+      // Mock transaction by calling callback with mockTx and returning its result
+      return await callback(mockTx);
     }),
     _tx: mockTx,
   };
@@ -279,12 +304,29 @@ describe('OutboxEventBusAdapter (Implementation)', () => {
 
   describe('publishAll', () => {
     it('should do nothing for empty array', async () => {
+      const { withTransaction } = await import('@intelliflow/db');
+      vi.mocked(withTransaction).mockClear();
+
       await adapter.publishAll([]);
 
-      expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+      expect(withTransaction).not.toHaveBeenCalled();
     });
 
     it('should publish all events within a transaction', async () => {
+      const { withTransaction } = await import('@intelliflow/db');
+      const mockCreate = vi.fn().mockResolvedValue({ id: 'created-id' });
+      const mockFindFirst = vi.fn().mockResolvedValue(null);
+
+      vi.mocked(withTransaction).mockImplementation(async (callback: any) => {
+        const mockTx = {
+          domainEvent: {
+            findFirst: mockFindFirst,
+            create: mockCreate,
+          },
+        };
+        return callback(mockTx);
+      });
+
       const events = [
         new TestLeadCreatedEvent('lead-1', 'a@example.com'),
         new TestContactUpdatedEvent('contact-1', 'Alice'),
@@ -292,27 +334,52 @@ describe('OutboxEventBusAdapter (Implementation)', () => {
 
       await adapter.publishAll(events);
 
-      expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1);
-      expect(mockPrisma._tx.domainEvent.create).toHaveBeenCalledTimes(2);
+      expect(withTransaction).toHaveBeenCalledTimes(1);
+      expect(mockCreate).toHaveBeenCalledTimes(2);
     });
 
     it('should skip duplicates within the batch', async () => {
+      const { withTransaction } = await import('@intelliflow/db');
+      const mockCreate = vi.fn().mockResolvedValue({ id: 'created-id' });
+      const mockFindFirst = vi.fn()
+        .mockResolvedValueOnce(null) // first event is new
+        .mockResolvedValueOnce({ id: 'existing-id' }); // second is duplicate
+
+      vi.mocked(withTransaction).mockImplementation(async (callback: any) => {
+        const mockTx = {
+          domainEvent: {
+            findFirst: mockFindFirst,
+            create: mockCreate,
+          },
+        };
+        return callback(mockTx);
+      });
+
       const events = [
         new TestLeadCreatedEvent('lead-1', 'a@example.com'),
         new TestContactUpdatedEvent('contact-1', 'Alice'),
       ];
 
-      // Make the second event look like a duplicate
-      mockPrisma._tx.domainEvent.findFirst
-        .mockResolvedValueOnce(null) // first event is new
-        .mockResolvedValueOnce({ id: 'existing-id' }); // second is duplicate
-
       await adapter.publishAll(events);
 
-      expect(mockPrisma._tx.domainEvent.create).toHaveBeenCalledTimes(1);
+      expect(mockCreate).toHaveBeenCalledTimes(1);
     });
 
     it('should use correct aggregate types for different events', async () => {
+      const { withTransaction } = await import('@intelliflow/db');
+      const mockCreate = vi.fn().mockResolvedValue({ id: 'created-id' });
+      const mockFindFirst = vi.fn().mockResolvedValue(null);
+
+      vi.mocked(withTransaction).mockImplementation(async (callback: any) => {
+        const mockTx = {
+          domainEvent: {
+            findFirst: mockFindFirst,
+            create: mockCreate,
+          },
+        };
+        return callback(mockTx);
+      });
+
       const events = [
         new TestLeadCreatedEvent('lead-1', 'a@example.com'),
         new TestContactUpdatedEvent('contact-1', 'Bob'),
@@ -320,18 +387,32 @@ describe('OutboxEventBusAdapter (Implementation)', () => {
 
       await adapter.publishAll(events);
 
-      const calls = mockPrisma._tx.domainEvent.create.mock.calls;
+      const calls = mockCreate.mock.calls;
       expect(calls[0][0].data.aggregateType).toBe('Lead');
       expect(calls[1][0].data.aggregateType).toBe('Contact');
     });
 
     it('should handle a single event in the batch', async () => {
+      const { withTransaction } = await import('@intelliflow/db');
+      const mockCreate = vi.fn().mockResolvedValue({ id: 'created-id' });
+      const mockFindFirst = vi.fn().mockResolvedValue(null);
+
+      vi.mocked(withTransaction).mockImplementation(async (callback: any) => {
+        const mockTx = {
+          domainEvent: {
+            findFirst: mockFindFirst,
+            create: mockCreate,
+          },
+        };
+        return callback(mockTx);
+      });
+
       const events = [new TestLeadCreatedEvent('lead-only', 'only@example.com')];
 
       await adapter.publishAll(events);
 
-      expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1);
-      expect(mockPrisma._tx.domainEvent.create).toHaveBeenCalledTimes(1);
+      expect(withTransaction).toHaveBeenCalledTimes(1);
+      expect(mockCreate).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -510,7 +591,8 @@ describe('OutboxEventBusAdapter (Implementation)', () => {
     });
 
     it('should propagate transaction errors in publishAll', async () => {
-      mockPrisma.$transaction.mockRejectedValue(new Error('Transaction failed'));
+      const { withTransaction } = await import('@intelliflow/db');
+      vi.mocked(withTransaction).mockRejectedValue(new Error('Transaction failed'));
 
       const events = [new TestLeadCreatedEvent('lead-1', 'a@example.com')];
       await expect(adapter.publishAll(events)).rejects.toThrow('Transaction failed');

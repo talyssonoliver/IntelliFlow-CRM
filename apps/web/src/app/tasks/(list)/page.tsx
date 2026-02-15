@@ -9,6 +9,13 @@ import { taskStatusOptions, taskPriorityOptions } from '@/lib/shared/filter-util
 import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { TaskList, type TaskListItem } from '@/components/tasks/TaskList';
+
+function getEntityName(task: TaskListItem): string {
+  if (task.lead) return `${task.lead.firstName} ${task.lead.lastName}`;
+  if (task.contact) return `${task.contact.firstName} ${task.contact.lastName}`;
+  if (task.opportunity) return task.opportunity.name;
+  return '';
+}
 import { TaskCalendar, type CalendarTask } from '@/components/tasks/TaskCalendar';
 import { TaskForm, type TaskFormData } from '@/components/tasks/TaskForm';
 import { ReminderConfig } from '@/components/tasks/ReminderConfig';
@@ -138,6 +145,17 @@ export default function TasksPage() {
     },
   });
 
+  const archiveMutation = api.task.archive.useMutation({
+    onSuccess: () => {
+      utils.task.list.invalidate();
+      utils.task.getReminders.invalidate();
+      toast({ title: 'Task Archived', description: 'The task has been archived.' });
+    },
+    onError: (err) => {
+      toast({ title: 'Archive Failed', description: err.message, variant: 'destructive' });
+    },
+  });
+
   const tasks = useMemo(() => {
     if (!data?.tasks) return [];
     return data.tasks as TaskListItem[];
@@ -158,7 +176,7 @@ export default function TasksPage() {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     return tasks.filter((t) => {
-      if (!t.dueDate || t.status === 'COMPLETED' || t.status === 'CANCELLED') return false;
+      if (!t.dueDate || t.status === 'COMPLETED' || t.status === 'CANCELLED' || t.status === 'ARCHIVED') return false;
       const d = typeof t.dueDate === 'string' ? new Date(t.dueDate) : t.dueDate;
       const dueDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
       return dueDay < today;
@@ -169,7 +187,7 @@ export default function TasksPage() {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     return tasks.filter((t) => {
-      if (!t.dueDate || t.status === 'COMPLETED' || t.status === 'CANCELLED') return false;
+      if (!t.dueDate || t.status === 'COMPLETED' || t.status === 'CANCELLED' || t.status === 'ARCHIVED') return false;
       const d = typeof t.dueDate === 'string' ? new Date(t.dueDate) : t.dueDate;
       const dueDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
       return dueDay.getTime() === today.getTime();
@@ -196,6 +214,10 @@ export default function TasksPage() {
     deleteMutation.mutate({ id });
   }, [deleteMutation]);
 
+  const handleArchive = useCallback((id: string) => {
+    archiveMutation.mutate({ id });
+  }, [archiveMutation]);
+
   const handleBulkComplete = useCallback((ids: string[]) => {
     ids.forEach((id) => completeMutation.mutate({ taskId: id }));
   }, [completeMutation]);
@@ -203,6 +225,10 @@ export default function TasksPage() {
   const handleBulkDelete = useCallback((ids: string[]) => {
     ids.forEach((id) => deleteMutation.mutate({ id }));
   }, [deleteMutation]);
+
+  const handleBulkArchive = useCallback((ids: string[]) => {
+    ids.forEach((id) => archiveMutation.mutate({ id }));
+  }, [archiveMutation]);
 
   const handleCreateSubmit = useCallback((formData: TaskFormData) => {
     createMutation.mutate({
@@ -371,8 +397,10 @@ export default function TasksPage() {
           onComplete={handleComplete}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onArchive={handleArchive}
           onBulkComplete={handleBulkComplete}
           onBulkDelete={handleBulkDelete}
+          onBulkArchive={handleBulkArchive}
         />
       )}
 
@@ -412,6 +440,7 @@ export default function TasksPage() {
           status: editingTask.status,
           entityType: editingTask.lead ? 'lead' : editingTask.contact ? 'contact' : editingTask.opportunity ? 'opportunity' : 'none',
           entityId: editingTask.lead?.id ?? editingTask.contact?.id ?? editingTask.opportunity?.id ?? '',
+          entityName: getEntityName(editingTask),
         } : null}
         mode="edit"
       />

@@ -372,6 +372,20 @@ async function cleanDatabase() {
   await prisma.calendarEvent.deleteMany({
     where: { id: { startsWith: SEED_UUID_PREFIX } },
   });
+  // Appointments (calendar page data)
+  await prisma.appointmentAttendee.deleteMany({
+    where: { id: { startsWith: SEED_UUID_PREFIX } },
+  });
+  await prisma.appointmentCase.deleteMany({
+    where: { id: { startsWith: SEED_UUID_PREFIX } },
+  });
+  await prisma.appointment.deleteMany({
+    where: { id: { startsWith: SEED_UUID_PREFIX } },
+  });
+  // Also delete old hardcoded appointment IDs
+  await prisma.appointment.deleteMany({
+    where: { id: { in: ['home-appt-1', 'home-appt-2'] } },
+  });
   await prisma.teamMessage.deleteMany({
     where: { id: { startsWith: SEED_UUID_PREFIX } },
   });
@@ -465,6 +479,17 @@ async function cleanDatabase() {
   // Also delete leads owned by seed users (test-created with CUID IDs)
   await prisma.lead.deleteMany({
     where: { ownerId: { startsWith: SEED_UUID_PREFIX } },
+  });
+  // Cases and case tasks (depends on accounts and users)
+  await prisma.caseTask.deleteMany({
+    where: { id: { startsWith: SEED_UUID_PREFIX } },
+  });
+  await prisma.case.deleteMany({
+    where: { id: { startsWith: SEED_UUID_PREFIX } },
+  });
+  // Delete any remaining opportunities referencing seed accounts
+  await prisma.opportunity.deleteMany({
+    where: { accountId: { startsWith: SEED_UUID_PREFIX } },
   });
   await prisma.account.deleteMany({
     where: { id: { startsWith: SEED_UUID_PREFIX } },
@@ -1557,8 +1582,6 @@ The IntelliFlow Team`,
         decidedAt: twoDaysAgo.toISOString(),
         reason: 'Great response - addresses their specific needs',
       }),
-      sentAt: twoDaysAgo,
-      messageId: 'msg_abc123def456',
       createdAt: threeDaysAgo,
       updatedAt: twoDaysAgo,
     },
@@ -2047,7 +2070,6 @@ async function seedSLAPolicies(tenantId: string) {
       id: SEED_IDS.slaPolicy.default,
       name: 'Standard SLA',
       description: 'Default SLA policy for standard support tickets',
-      tenantId,
       criticalResponseMinutes: 15,
       highResponseMinutes: 60,
       mediumResponseMinutes: 240,
@@ -2059,12 +2081,12 @@ async function seedSLAPolicies(tenantId: string) {
       warningThresholdPercent: 25,
       isDefault: true,
       isActive: true,
+      tenantId,
     },
     {
       id: SEED_IDS.slaPolicy.premium,
       name: 'Premium SLA',
       description: 'Premium SLA policy for enterprise customers',
-      tenantId,
       criticalResponseMinutes: 5,
       highResponseMinutes: 30,
       mediumResponseMinutes: 120,
@@ -2076,6 +2098,7 @@ async function seedSLAPolicies(tenantId: string) {
       warningThresholdPercent: 30,
       isDefault: false,
       isActive: true,
+      tenantId,
     },
   ];
 
@@ -2107,6 +2130,7 @@ async function seedTickets(tenantId: string) {
       priority: TicketPriority.CRITICAL,
       slaPolicyId: SEED_IDS.slaPolicy.premium,
       slaStatus: SLAStatus.BREACHED,
+      slaResolutionDue: new Date(now.getTime() - 2 * 60 * 60 * 1000), // 2 hours overdue
       slaBreachedAt: new Date(now.getTime() - 2 * 60 * 60 * 1000), // 2 hours ago
       contactName: 'Robert Chen',
       contactEmail: 'r.chen@acmecorp.com',
@@ -2167,6 +2191,7 @@ async function seedTickets(tenantId: string) {
       priority: TicketPriority.CRITICAL,
       slaPolicyId: SEED_IDS.slaPolicy.premium,
       slaStatus: SLAStatus.BREACHED,
+      slaResolutionDue: new Date(now.getTime() - 12 * 60 * 60 * 1000), // 12 hours overdue
       slaBreachedAt: new Date(now.getTime() - 12 * 60 * 60 * 1000), // 12 hours ago
       contactName: 'James Wilson',
       contactEmail: 'j.wilson@techstart.com',
@@ -2189,6 +2214,22 @@ async function seedTickets(tenantId: string) {
       tenantId,
     },
   ];
+
+  for (const ticket of tickets) {
+    const hasSlaDue = Boolean(ticket.slaResponseDue || ticket.slaResolutionDue);
+
+    if (ticket.slaStatus === SLAStatus.BREACHED && !ticket.slaBreachedAt) {
+      throw new Error(
+        `Invalid seed ticket ${ticket.ticketNumber}: BREACHED status requires slaBreachedAt`
+      );
+    }
+
+    if (ticket.slaBreachedAt && !hasSlaDue) {
+      throw new Error(
+        `Invalid seed ticket ${ticket.ticketNumber}: slaBreachedAt requires slaResponseDue or slaResolutionDue`
+      );
+    }
+  }
 
   for (const ticket of tickets) {
     await prisma.ticket.upsert({
@@ -4371,6 +4412,344 @@ async function seedDocuments(tenantId: string) {
   console.log(`✅ Created ${documents.length} documents`);
 }
 
+// =============================================================================
+// PG-138: Case Management — seed data matching case_list.html mockup
+// =============================================================================
+
+async function seedCases() {
+  console.log('⚖️ Seeding cases...');
+
+  const tenantId = SEED_IDS.tenant.default;
+
+  // Users matching mockup assignees
+  const sarahJenkins = SEED_IDS.users.sarahJenkins;
+  const mikeDavis = SEED_IDS.users.mikeDavis;   // Michael K. in mockup
+  const davidKim = SEED_IDS.users.davidKim;      // David C. in mockup
+  const emilyDavis = SEED_IDS.users.emilyDavis;  // Emily W. in mockup
+  const admin = SEED_IDS.users.admin;
+  const jamesWilson = SEED_IDS.users.jamesWilson;
+  const alexMorgan = SEED_IDS.users.alexMorgan;
+
+  // Accounts as clients
+  const smithConsulting = SEED_IDS.accounts.smithConsulting;
+  const techFlowInc = SEED_IDS.additionalAccounts.techFlowInc;
+  const acmeCorp = SEED_IDS.accounts.acmeCorp;
+  const techCorp = SEED_IDS.accounts.techCorp;
+  const globalSoft = SEED_IDS.accounts.globalSoft;
+  const finTech = SEED_IDS.accounts.finTech;
+  const designCo = SEED_IDS.accounts.designCo;
+  const dataCorp = SEED_IDS.accounts.dataCorp;
+
+  const cases = [
+    // Row 1 from mockup: Estate Planning - Smith Family (In Progress, Medium)
+    {
+      id: SEED_IDS.cases.estatePlanningSmith,
+      title: 'Estate Planning - Smith Family',
+      description: 'Comprehensive estate planning including wills, trusts, and power of attorney documents for the Smith family. Client requires tax-efficient wealth transfer strategy.',
+      status: 'IN_PROGRESS' as const,
+      priority: 'MEDIUM' as const,
+      deadline: new Date('2026-03-24'),
+      clientId: smithConsulting,
+      assignedTo: sarahJenkins,
+      resolution: null,
+      parties: JSON.stringify([
+        { name: 'Robert Smith', role: 'Client', email: 'robert@smith-consulting.com' },
+        { name: 'Margaret Smith', role: 'Spouse', email: 'margaret@smith-consulting.com' },
+      ]),
+      closedAt: null,
+      tenantId,
+      createdAt: new Date('2026-01-10T09:00:00Z'),
+      updatedAt: new Date('2026-02-14T10:30:00Z'),
+    },
+    // Row 2 from mockup: Corporate Merger - TechFlow Inc (Overdue, High)
+    {
+      id: SEED_IDS.cases.corporateMergerTechFlow,
+      title: 'Corporate Merger - TechFlow Inc',
+      description: 'Legal due diligence and documentation for the merger of TechFlow Inc with DataStream Corp. Awaiting financial disclosure documents from counterparty.',
+      status: 'OPEN' as const,
+      priority: 'HIGH' as const,
+      deadline: new Date('2026-02-12'),  // Past deadline = overdue
+      clientId: techFlowInc,
+      assignedTo: mikeDavis,
+      resolution: null,
+      parties: JSON.stringify([
+        { name: 'TechFlow Inc.', role: 'Acquirer', email: 'legal@techflow.com' },
+        { name: 'DataStream Corp', role: 'Target', email: 'counsel@datastream.com' },
+      ]),
+      closedAt: null,
+      tenantId,
+      createdAt: new Date('2025-11-15T08:00:00Z'),
+      updatedAt: new Date('2026-02-13T14:00:00Z'),
+    },
+    // Row 3 from mockup: Civil Litigation - Johnson v. City (Open, Low)
+    {
+      id: SEED_IDS.cases.civilLitigationJohnson,
+      title: 'Civil Litigation - Johnson v. City',
+      description: 'Civil lawsuit filed by Linda Johnson against City of Springfield regarding property zoning dispute. Initial review phase - gathering evidence and reviewing municipal records.',
+      status: 'OPEN' as const,
+      priority: 'LOW' as const,
+      deadline: new Date('2026-04-05'),
+      clientId: acmeCorp,
+      assignedTo: davidKim,
+      resolution: null,
+      parties: JSON.stringify([
+        { name: 'Linda Johnson', role: 'Plaintiff', email: 'l.johnson@email.com' },
+        { name: 'City of Springfield', role: 'Defendant' },
+      ]),
+      closedAt: null,
+      tenantId,
+      createdAt: new Date('2026-01-20T10:00:00Z'),
+      updatedAt: new Date('2026-02-12T11:30:00Z'),
+    },
+    // Row 4 from mockup: Real Estate Closing - 442 Pine St (Closed, Medium)
+    {
+      id: SEED_IDS.cases.realEstateClosingPine,
+      title: 'Real Estate Closing - 442 Pine St',
+      description: 'Residential real estate closing for property at 442 Pine Street. All documents signed, title transferred, and funds disbursed.',
+      status: 'CLOSED' as const,
+      priority: 'MEDIUM' as const,
+      deadline: new Date('2026-01-28'),
+      clientId: techCorp,
+      assignedTo: emilyDavis,
+      resolution: 'Successfully closed on January 28, 2026. Title transferred and funds disbursed to all parties.',
+      parties: JSON.stringify([
+        { name: 'Marcos Rodriguez', role: 'Buyer', email: 'marcos@techcorp.com' },
+        { name: 'First National Bank', role: 'Lender' },
+      ]),
+      closedAt: new Date('2026-01-28T16:00:00Z'),
+      tenantId,
+      createdAt: new Date('2025-12-01T09:00:00Z'),
+      updatedAt: new Date('2026-01-28T16:00:00Z'),
+    },
+    // Additional cases for stats (Open: 124, In Progress: 86, Overdue: 12, Closed: 432 from mockup)
+    {
+      id: SEED_IDS.cases.intellectualPropertyDispute,
+      title: 'IP Dispute - Patent Infringement Claim',
+      description: 'Patent infringement claim regarding proprietary AI algorithm. Client alleges unauthorized use of patented technology in competitor product.',
+      status: 'IN_PROGRESS' as const,
+      priority: 'HIGH' as const,
+      deadline: new Date('2026-03-15'),
+      clientId: globalSoft,
+      assignedTo: admin,
+      resolution: null,
+      parties: JSON.stringify([
+        { name: 'GlobalSoft Inc', role: 'Plaintiff' },
+        { name: 'CompetitorX Ltd', role: 'Defendant' },
+      ]),
+      closedAt: null,
+      tenantId,
+      createdAt: new Date('2026-01-05T08:00:00Z'),
+      updatedAt: new Date('2026-02-10T15:00:00Z'),
+    },
+    {
+      id: SEED_IDS.cases.contractReviewGlobal,
+      title: 'Contract Review - Global SaaS Agreement',
+      description: 'Reviewing and negotiating enterprise SaaS agreement with multi-year terms. Focus on liability caps, data protection, and SLA commitments.',
+      status: 'OPEN' as const,
+      priority: 'MEDIUM' as const,
+      deadline: new Date('2026-03-01'),
+      clientId: finTech,
+      assignedTo: sarahJenkins,
+      resolution: null,
+      parties: null,
+      closedAt: null,
+      tenantId,
+      createdAt: new Date('2026-02-01T10:00:00Z'),
+      updatedAt: new Date('2026-02-13T09:00:00Z'),
+    },
+    {
+      id: SEED_IDS.cases.employmentDispute,
+      title: 'Employment Dispute - Wrongful Termination',
+      description: 'Employment dispute regarding alleged wrongful termination. Employee claims termination violated company policy and employment contract.',
+      status: 'IN_PROGRESS' as const,
+      priority: 'URGENT' as const,
+      deadline: new Date('2026-02-20'),
+      clientId: designCo,
+      assignedTo: jamesWilson,
+      resolution: null,
+      parties: JSON.stringify([
+        { name: 'DesignCo Inc', role: 'Employer' },
+        { name: 'Alex Thompson', role: 'Former Employee' },
+      ]),
+      closedAt: null,
+      tenantId,
+      createdAt: new Date('2026-01-25T08:00:00Z'),
+      updatedAt: new Date('2026-02-14T08:00:00Z'),
+    },
+    {
+      id: SEED_IDS.cases.regulatoryCompliance,
+      title: 'Regulatory Compliance - GDPR Audit',
+      description: 'GDPR compliance audit and documentation review. Preparing data processing inventory and updating privacy policies.',
+      status: 'OPEN' as const,
+      priority: 'HIGH' as const,
+      deadline: new Date('2026-04-01'),
+      clientId: dataCorp,
+      assignedTo: alexMorgan,
+      resolution: null,
+      parties: null,
+      closedAt: null,
+      tenantId,
+      createdAt: new Date('2026-02-05T10:00:00Z'),
+      updatedAt: new Date('2026-02-12T14:00:00Z'),
+    },
+  ];
+
+  for (const c of cases) {
+    await prisma.case.upsert({
+      where: { id: c.id },
+      update: c,
+      create: c,
+    });
+  }
+
+  console.log(`✅ Created ${cases.length} cases`);
+}
+
+async function seedCaseTasks() {
+  console.log('📋 Seeding case tasks...');
+
+  const tasks = [
+    // Estate Planning tasks
+    {
+      id: SEED_IDS.caseTasks.reviewDocuments,
+      caseId: SEED_IDS.cases.estatePlanningSmith,
+      title: 'Review existing estate documents',
+      description: 'Review all current wills, trusts, and beneficiary designations',
+      dueDate: new Date('2026-02-20'),
+      status: 'COMPLETED' as const,
+      assignee: SEED_IDS.users.sarahJenkins,
+      completedAt: new Date('2026-02-15T14:00:00Z'),
+    },
+    {
+      id: SEED_IDS.caseTasks.draftAgreement,
+      caseId: SEED_IDS.cases.estatePlanningSmith,
+      title: 'Draft updated trust agreement',
+      description: 'Prepare new revocable living trust with tax optimization provisions',
+      dueDate: new Date('2026-03-10'),
+      status: 'IN_PROGRESS' as const,
+      assignee: SEED_IDS.users.sarahJenkins,
+      completedAt: null,
+    },
+    {
+      id: SEED_IDS.caseTasks.clientMeeting,
+      caseId: SEED_IDS.cases.estatePlanningSmith,
+      title: 'Schedule client review meeting',
+      description: 'Set up meeting with Robert and Margaret Smith to review draft documents',
+      dueDate: new Date('2026-03-15'),
+      status: 'PENDING' as const,
+      assignee: SEED_IDS.users.sarahJenkins,
+      completedAt: null,
+    },
+    // Corporate Merger tasks (overdue)
+    {
+      id: SEED_IDS.caseTasks.mergerReview,
+      caseId: SEED_IDS.cases.corporateMergerTechFlow,
+      title: 'Complete financial due diligence review',
+      description: 'Review all financial statements, audit reports, and projections from TechFlow',
+      dueDate: new Date('2026-02-10'),
+      status: 'IN_PROGRESS' as const,
+      assignee: SEED_IDS.users.mikeDavis,
+      completedAt: null,
+    },
+    {
+      id: SEED_IDS.caseTasks.dueDiligence,
+      caseId: SEED_IDS.cases.corporateMergerTechFlow,
+      title: 'Collect outstanding disclosure documents',
+      description: 'Request and verify all required disclosure documents from counterparty',
+      dueDate: new Date('2026-02-08'),
+      status: 'PENDING' as const,
+      assignee: SEED_IDS.users.mikeDavis,
+      completedAt: null,
+    },
+    // Civil Litigation tasks
+    {
+      id: SEED_IDS.caseTasks.collectEvidence,
+      caseId: SEED_IDS.cases.civilLitigationJohnson,
+      title: 'Gather zoning records and evidence',
+      description: 'Request municipal zoning records, meeting minutes, and prior zoning decisions',
+      dueDate: new Date('2026-03-01'),
+      status: 'IN_PROGRESS' as const,
+      assignee: SEED_IDS.users.davidKim,
+      completedAt: null,
+    },
+    {
+      id: SEED_IDS.caseTasks.fileMotion,
+      caseId: SEED_IDS.cases.civilLitigationJohnson,
+      title: 'File preliminary motion',
+      description: 'Prepare and file motion for preliminary injunction',
+      dueDate: new Date('2026-03-20'),
+      status: 'PENDING' as const,
+      assignee: SEED_IDS.users.davidKim,
+      completedAt: null,
+    },
+    // Real Estate Closing tasks (all completed)
+    {
+      id: SEED_IDS.caseTasks.titleSearch,
+      caseId: SEED_IDS.cases.realEstateClosingPine,
+      title: 'Complete title search',
+      description: 'Verify clear title and resolve any liens or encumbrances',
+      dueDate: new Date('2026-01-15'),
+      status: 'COMPLETED' as const,
+      assignee: SEED_IDS.users.emilyDavis,
+      completedAt: new Date('2026-01-14T10:00:00Z'),
+    },
+    {
+      id: SEED_IDS.caseTasks.draftClosingDocs,
+      caseId: SEED_IDS.cases.realEstateClosingPine,
+      title: 'Draft closing documents',
+      description: 'Prepare deed, settlement statement, and all closing documents',
+      dueDate: new Date('2026-01-25'),
+      status: 'COMPLETED' as const,
+      assignee: SEED_IDS.users.emilyDavis,
+      completedAt: new Date('2026-01-24T16:00:00Z'),
+    },
+    {
+      id: SEED_IDS.caseTasks.depositTransfer,
+      caseId: SEED_IDS.cases.realEstateClosingPine,
+      title: 'Process deposit and fund transfer',
+      description: 'Coordinate escrow deposit and final fund transfer between parties',
+      dueDate: new Date('2026-01-28'),
+      status: 'COMPLETED' as const,
+      assignee: SEED_IDS.users.emilyDavis,
+      completedAt: new Date('2026-01-28T14:00:00Z'),
+    },
+    // Employment Dispute task
+    {
+      id: SEED_IDS.caseTasks.filingDeadline,
+      caseId: SEED_IDS.cases.employmentDispute,
+      title: 'Prepare response to claim',
+      description: 'Draft formal response to wrongful termination claim before filing deadline',
+      dueDate: new Date('2026-02-18'),
+      status: 'IN_PROGRESS' as const,
+      assignee: SEED_IDS.users.jamesWilson,
+      completedAt: null,
+    },
+    // Court Hearing for IP case
+    {
+      id: SEED_IDS.caseTasks.courtHearing,
+      caseId: SEED_IDS.cases.intellectualPropertyDispute,
+      title: 'Prepare for preliminary hearing',
+      description: 'Prepare all materials for the preliminary injunction hearing',
+      dueDate: new Date('2026-03-10'),
+      status: 'PENDING' as const,
+      assignee: SEED_IDS.users.admin,
+      completedAt: null,
+    },
+  ];
+
+  const tenantId = SEED_IDS.tenant.default;
+  for (const t of tasks) {
+    const data = { ...t, tenantId };
+    await prisma.caseTask.upsert({
+      where: { id: t.id },
+      update: data,
+      create: data,
+    });
+  }
+
+  console.log(`✅ Created ${tasks.length} case tasks`);
+}
+
 // IFC-152: Case Document Management
 async function seedCaseDocuments() {
   console.log('📑 Seeding case documents...');
@@ -5950,7 +6329,7 @@ async function seedHomePageData(tenantId: string) {
       ipAddress: '192.168.1.100',
       userAgent: 'Mozilla/5.0',
       tenantId,
-      createdAt: twoDaysAgo,
+      timestamp: twoDaysAgo,
     },
     {
       id: 'home-audit-2',
@@ -5967,14 +6346,14 @@ async function seedHomePageData(tenantId: string) {
       ipAddress: '192.168.1.100',
       userAgent: 'Mozilla/5.0',
       tenantId,
-      createdAt: yesterday,
+      timestamp: yesterday,
     },
     {
       id: 'home-audit-3',
       eventType: 'LeadQualified',
       eventId: `event-home-audit-3-${Date.now()}`,
       actorType: ActorType.AI,
-      actorId: 'ai-scoring-engine',
+      actorId: null,
       resourceType: 'Lead',
       resourceId: SEED_IDS.leads.sarahMiller,
       action: AuditAction.UPDATE,
@@ -5984,7 +6363,7 @@ async function seedHomePageData(tenantId: string) {
       ipAddress: null,
       userAgent: 'IntelliFlow AI Engine',
       tenantId,
-      createdAt: yesterday,
+      timestamp: yesterday,
     },
     {
       id: 'home-audit-4',
@@ -6001,7 +6380,7 @@ async function seedHomePageData(tenantId: string) {
       ipAddress: '192.168.1.100',
       userAgent: 'Mozilla/5.0',
       tenantId,
-      createdAt: new Date(now.getTime() - 2 * 60 * 60 * 1000), // 2 hours ago
+      timestamp: new Date(now.getTime() - 2 * 60 * 60 * 1000), // 2 hours ago
     },
     {
       id: 'home-audit-5',
@@ -6018,7 +6397,7 @@ async function seedHomePageData(tenantId: string) {
       ipAddress: '192.168.1.100',
       userAgent: 'Mozilla/5.0',
       tenantId,
-      createdAt: new Date(now.getTime() - 4 * 60 * 60 * 1000), // 4 hours ago
+      timestamp: new Date(now.getTime() - 4 * 60 * 60 * 1000), // 4 hours ago
     },
   ];
 
@@ -6031,42 +6410,232 @@ async function seedHomePageData(tenantId: string) {
   }
   console.log(`  ✅ Created ${recentAuditLogs.length} recent audit log entries`);
 
-  // 4. Create appointments for today (for welcome stats)
-  const todayAppointments = [
+  // 4. Create appointments (comprehensive calendar demo data)
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const dayAfterTomorrow = new Date(today);
+  dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
+  const nextWeek = new Date(today);
+  nextWeek.setDate(nextWeek.getDate() + 7);
+  const nextWeek2 = new Date(today);
+  nextWeek2.setDate(nextWeek2.getDate() + 9);
+  const nextWeek3 = new Date(today);
+  nextWeek3.setDate(nextWeek3.getDate() + 10);
+  const twoWeeksOut = new Date(today);
+  twoWeeksOut.setDate(twoWeeksOut.getDate() + 14);
+  const threeWeeksOut = new Date(today);
+  threeWeeksOut.setDate(threeWeeksOut.getDate() + 21);
+
+  const appointments = [
     {
-      id: 'home-appt-1',
+      id: SEED_IDS.appointments.productDemoTechCorp,
       title: 'Product Demo - TechCorp',
-      description: 'Show new analytics features',
+      description: 'Show new analytics features and discuss enterprise licensing',
       startTime: new Date(today.getTime() + 10 * 60 * 60 * 1000), // 10 AM today
-      endTime: new Date(today.getTime() + 11 * 60 * 60 * 1000), // 11 AM today
+      endTime: new Date(today.getTime() + 11 * 60 * 60 * 1000),   // 11 AM today
       status: AppointmentStatus.CONFIRMED,
-      type: AppointmentType.MEETING,
-      location: 'Zoom',
+      appointmentType: AppointmentType.MEETING,
+      location: 'Zoom - https://zoom.us/j/123456789',
+      notes: 'Key stakeholders: CTO and VP Engineering. Focus on real-time dashboards.',
+      bufferMinutesBefore: 15,
+      reminderMinutes: 30,
       organizerId: user.id,
       tenantId,
     },
     {
-      id: 'home-appt-2',
-      title: 'Weekly Team Standup',
-      description: 'Review pipeline and blockers',
+      id: SEED_IDS.appointments.followUpCallSarah,
+      title: 'Follow-up Call - Sarah Miller',
+      description: 'Discuss proposal feedback and next steps for enterprise deal',
       startTime: new Date(today.getTime() + 14 * 60 * 60 * 1000), // 2 PM today
       endTime: new Date(today.getTime() + 14.5 * 60 * 60 * 1000), // 2:30 PM today
-      status: AppointmentStatus.CONFIRMED,
-      type: AppointmentType.MEETING,
-      location: 'Conference Room A',
+      status: AppointmentStatus.SCHEDULED,
+      appointmentType: AppointmentType.CALL,
+      location: 'Phone: +1 (555) 234-5678',
+      notes: 'Sarah mentioned budget concerns in last email. Prepare pricing options.',
+      reminderMinutes: 15,
       organizerId: user.id,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.appointments.q3ReviewMeeting,
+      title: 'Q3 Pipeline Review',
+      description: 'Quarterly review of sales pipeline, conversion rates, and revenue targets',
+      startTime: new Date(tomorrow.getTime() + 9 * 60 * 60 * 1000),  // 9 AM tomorrow
+      endTime: new Date(tomorrow.getTime() + 10.5 * 60 * 60 * 1000), // 10:30 AM tomorrow
+      status: AppointmentStatus.CONFIRMED,
+      appointmentType: AppointmentType.MEETING,
+      location: 'Conference Room B',
+      notes: 'Bring pipeline reports and forecast spreadsheets. CFO will attend.',
+      bufferMinutesBefore: 10,
+      bufferMinutesAfter: 10,
+      reminderMinutes: 60,
+      organizerId: user.id,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.appointments.proposalDeadline,
+      title: 'Proposal Deadline - Acme Corp',
+      description: 'Final deadline for submitting enterprise software proposal to Acme Corp',
+      startTime: new Date(dayAfterTomorrow.getTime() + 17 * 60 * 60 * 1000), // 5 PM day after tomorrow
+      endTime: new Date(dayAfterTomorrow.getTime() + 17.5 * 60 * 60 * 1000), // 5:30 PM
+      status: AppointmentStatus.SCHEDULED,
+      appointmentType: AppointmentType.OTHER,
+      location: 'N/A - Document submission',
+      notes: 'Submit via Acme procurement portal. Include pricing tiers and SLA guarantees.',
+      reminderMinutes: 120,
+      organizerId: user.id,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.appointments.clientConsultation,
+      title: 'Client Consultation - GlobalSoft',
+      description: 'Initial consultation on CRM integration and data migration requirements',
+      startTime: new Date(nextWeek.getTime() + 11 * 60 * 60 * 1000), // 11 AM next week
+      endTime: new Date(nextWeek.getTime() + 12 * 60 * 60 * 1000),   // 12 PM
+      status: AppointmentStatus.SCHEDULED,
+      appointmentType: AppointmentType.CONSULTATION,
+      location: 'Microsoft Teams',
+      notes: 'Assess current CRM setup, data volume, integration points. Bring migration checklist.',
+      bufferMinutesBefore: 15,
+      reminderMinutes: 60,
+      organizerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.appointments.courtHearing,
+      title: 'Court Hearing - Johnson Civil Case',
+      description: 'Preliminary hearing for Johnson v. Smith civil litigation case',
+      startTime: new Date(nextWeek2.getTime() + 9 * 60 * 60 * 1000),  // 9 AM
+      endTime: new Date(nextWeek2.getTime() + 12 * 60 * 60 * 1000),   // 12 PM
+      status: AppointmentStatus.CONFIRMED,
+      appointmentType: AppointmentType.HEARING,
+      location: 'District Court, Room 304',
+      notes: 'Bring case files, evidence binder, and witness list. Arrive 30 min early.',
+      bufferMinutesBefore: 30,
+      bufferMinutesAfter: 15,
+      reminderMinutes: 120,
+      organizerId: SEED_IDS.users.jamesWilson,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.appointments.depositionPrep,
+      title: 'Deposition Prep - TechFlow Merger',
+      description: 'Prepare witness for deposition in TechFlow corporate merger case',
+      startTime: new Date(nextWeek3.getTime() + 14 * 60 * 60 * 1000), // 2 PM
+      endTime: new Date(nextWeek3.getTime() + 16 * 60 * 60 * 1000),   // 4 PM
+      status: AppointmentStatus.SCHEDULED,
+      appointmentType: AppointmentType.DEPOSITION,
+      location: 'Law Office - Suite 500',
+      notes: 'Review all financial documents. Prepare witness for cross-examination questions.',
+      bufferMinutesBefore: 15,
+      reminderMinutes: 60,
+      organizerId: SEED_IDS.users.mikeDavis,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.appointments.weeklyStandup,
+      title: 'Weekly Team Standup',
+      description: 'Review pipeline progress, blockers, and weekly priorities',
+      startTime: new Date(tomorrow.getTime() + 14 * 60 * 60 * 1000),  // 2 PM tomorrow
+      endTime: new Date(tomorrow.getTime() + 14.5 * 60 * 60 * 1000),  // 2:30 PM
+      status: AppointmentStatus.CONFIRMED,
+      appointmentType: AppointmentType.MEETING,
+      location: 'Conference Room A',
+      notes: 'Standing meeting. Each team member: 2 min update. Focus on deals closing this week.',
+      organizerId: user.id,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.appointments.partnerCall,
+      title: 'Partner Integration Call - Zapier',
+      description: 'Discuss webhook integration and API partnership opportunities',
+      startTime: new Date(twoWeeksOut.getTime() + 15 * 60 * 60 * 1000), // 3 PM
+      endTime: new Date(twoWeeksOut.getTime() + 16 * 60 * 60 * 1000),   // 4 PM
+      status: AppointmentStatus.SCHEDULED,
+      appointmentType: AppointmentType.CALL,
+      location: 'Google Meet',
+      notes: 'Review API documentation beforehand. Prepare integration demo environment.',
+      reminderMinutes: 30,
+      organizerId: SEED_IDS.users.alexMorgan,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.appointments.strategySession,
+      title: 'Q4 Strategy Planning Session',
+      description: 'Executive strategy session for Q4 goals, budgets, and hiring plan',
+      startTime: new Date(threeWeeksOut.getTime() + 10 * 60 * 60 * 1000), // 10 AM
+      endTime: new Date(threeWeeksOut.getTime() + 13 * 60 * 60 * 1000),   // 1 PM
+      status: AppointmentStatus.SCHEDULED,
+      appointmentType: AppointmentType.MEETING,
+      location: 'Executive Boardroom',
+      notes: 'Full-day session. Lunch provided. Bring department budget proposals.',
+      bufferMinutesBefore: 15,
+      bufferMinutesAfter: 15,
+      reminderMinutes: 1440, // 24 hours
+      organizerId: SEED_IDS.users.manager,
       tenantId,
     },
   ];
 
-  for (const appt of todayAppointments) {
+  for (const appt of appointments) {
     await prisma.appointment.upsert({
       where: { id: appt.id },
       update: appt,
       create: appt,
     });
   }
-  console.log(`  ✅ Created ${todayAppointments.length} appointments for today`);
+  console.log(`  ✅ Created ${appointments.length} appointments`);
+
+  // 4b. Create appointment attendees
+  const attendees = [
+    // Product Demo - TechCorp: admin + Sarah + Mike
+    { id: SEED_IDS.appointmentAttendees.att1, appointmentId: SEED_IDS.appointments.productDemoTechCorp, userId: SEED_IDS.users.sarahJohnson, tenantId },
+    { id: SEED_IDS.appointmentAttendees.att2, appointmentId: SEED_IDS.appointments.productDemoTechCorp, userId: SEED_IDS.users.mikeDavis, tenantId },
+    // Follow-up Call - Sarah: admin only (organizer)
+    // Q3 Pipeline Review: admin + Sarah + Emily + James
+    { id: SEED_IDS.appointmentAttendees.att3, appointmentId: SEED_IDS.appointments.q3ReviewMeeting, userId: SEED_IDS.users.sarahJohnson, tenantId },
+    { id: SEED_IDS.appointmentAttendees.att4, appointmentId: SEED_IDS.appointments.q3ReviewMeeting, userId: SEED_IDS.users.emilyDavis, tenantId },
+    { id: SEED_IDS.appointmentAttendees.att5, appointmentId: SEED_IDS.appointments.q3ReviewMeeting, userId: SEED_IDS.users.jamesWilson, tenantId },
+    { id: SEED_IDS.appointmentAttendees.att6, appointmentId: SEED_IDS.appointments.q3ReviewMeeting, userId: SEED_IDS.users.manager, tenantId },
+    // Client Consultation - GlobalSoft: Sarah + Alex
+    { id: SEED_IDS.appointmentAttendees.att7, appointmentId: SEED_IDS.appointments.clientConsultation, userId: SEED_IDS.users.alexMorgan, tenantId },
+    // Court Hearing: James + Mike
+    { id: SEED_IDS.appointmentAttendees.att8, appointmentId: SEED_IDS.appointments.courtHearing, userId: SEED_IDS.users.mikeDavis, tenantId },
+    // Deposition Prep: Mike + James
+    { id: SEED_IDS.appointmentAttendees.att9, appointmentId: SEED_IDS.appointments.depositionPrep, userId: SEED_IDS.users.jamesWilson, tenantId },
+    // Weekly Standup: everyone
+    { id: SEED_IDS.appointmentAttendees.att10, appointmentId: SEED_IDS.appointments.weeklyStandup, userId: SEED_IDS.users.sarahJohnson, tenantId },
+    { id: SEED_IDS.appointmentAttendees.att11, appointmentId: SEED_IDS.appointments.weeklyStandup, userId: SEED_IDS.users.mikeDavis, tenantId },
+    { id: SEED_IDS.appointmentAttendees.att12, appointmentId: SEED_IDS.appointments.weeklyStandup, userId: SEED_IDS.users.emilyDavis, tenantId },
+    // Partner Call: Alex + admin
+    { id: SEED_IDS.appointmentAttendees.att13, appointmentId: SEED_IDS.appointments.partnerCall, userId: user.id, tenantId },
+    // Strategy Session: manager + Sarah + Mike + Emily + James + Alex
+    { id: SEED_IDS.appointmentAttendees.att14, appointmentId: SEED_IDS.appointments.strategySession, userId: SEED_IDS.users.sarahJohnson, tenantId },
+  ];
+
+  for (const att of attendees) {
+    await prisma.appointmentAttendee.upsert({
+      where: { id: att.id },
+      update: att,
+      create: att,
+    });
+  }
+  console.log(`  ✅ Created ${attendees.length} appointment attendees`);
+
+  // 4c. Link appointments to cases
+  const appointmentCases = [
+    { id: SEED_IDS.appointmentCases.hearingCase, appointmentId: SEED_IDS.appointments.courtHearing, caseId: SEED_IDS.cases.civilLitigationJohnson, tenantId },
+    { id: SEED_IDS.appointmentCases.depositionCase, appointmentId: SEED_IDS.appointments.depositionPrep, caseId: SEED_IDS.cases.corporateMergerTechFlow, tenantId },
+  ];
+
+  for (const ac of appointmentCases) {
+    await prisma.appointmentCase.upsert({
+      where: { id: ac.id },
+      update: ac,
+      create: ac,
+    });
+  }
+  console.log(`  ✅ Created ${appointmentCases.length} appointment-case links`);
 
   // 5. Create user preferences with pinned items
   const existingPrefs = await prisma.user.findUnique({
@@ -6269,6 +6838,10 @@ async function main() {
 
     // FLOW-021: Document Management
     try { await seedDocuments(); } catch (e) { console.warn('⚠️  seedDocuments failed:', (e as Error).message?.slice(0, 100)); }
+
+    // PG-138: Case Management
+    try { await seedCases(); } catch (e) { console.warn('⚠️  seedCases failed:', (e as Error).message?.slice(0, 100)); }
+    try { await seedCaseTasks(); } catch (e) { console.warn('⚠️  seedCaseTasks failed:', (e as Error).message?.slice(0, 100)); }
 
     // IFC-152: Case Document Management
     try { await seedCaseDocuments(); } catch (e) { console.warn('⚠️  seedCaseDocuments failed:', (e as Error).message?.slice(0, 100)); }

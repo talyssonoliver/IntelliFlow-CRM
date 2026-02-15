@@ -42,6 +42,7 @@ describe('TaskDetail', () => {
   const onComplete = vi.fn();
   const onEdit = vi.fn();
   const onDelete = vi.fn();
+  const onArchive = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -55,6 +56,7 @@ describe('TaskDetail', () => {
         onComplete={onComplete}
         onEdit={onEdit}
         onDelete={onDelete}
+        onArchive={onArchive}
       />
     );
 
@@ -70,6 +72,7 @@ describe('TaskDetail', () => {
         onComplete={onComplete}
         onEdit={onEdit}
         onDelete={onDelete}
+        onArchive={onArchive}
       />
     );
 
@@ -85,6 +88,7 @@ describe('TaskDetail', () => {
         onComplete={onComplete}
         onEdit={onEdit}
         onDelete={onDelete}
+        onArchive={onArchive}
       />
     );
 
@@ -99,6 +103,7 @@ describe('TaskDetail', () => {
         onComplete={onComplete}
         onEdit={onEdit}
         onDelete={onDelete}
+        onArchive={onArchive}
       />
     );
 
@@ -113,6 +118,7 @@ describe('TaskDetail', () => {
         onComplete={onComplete}
         onEdit={onEdit}
         onDelete={onDelete}
+        onArchive={onArchive}
       />
     );
 
@@ -127,6 +133,7 @@ describe('TaskDetail', () => {
         onComplete={onComplete}
         onEdit={onEdit}
         onDelete={onDelete}
+        onArchive={onArchive}
       />
     );
 
@@ -141,6 +148,7 @@ describe('TaskDetail', () => {
         onComplete={onComplete}
         onEdit={onEdit}
         onDelete={onDelete}
+        onArchive={onArchive}
       />
     );
 
@@ -155,6 +163,7 @@ describe('TaskDetail', () => {
         onComplete={onComplete}
         onEdit={onEdit}
         onDelete={onDelete}
+        onArchive={onArchive}
       />
     );
 
@@ -169,6 +178,7 @@ describe('TaskDetail', () => {
         onComplete={onComplete}
         onEdit={onEdit}
         onDelete={onDelete}
+        onArchive={onArchive}
       />
     );
 
@@ -176,7 +186,7 @@ describe('TaskDetail', () => {
     expect(onComplete).toHaveBeenCalledWith('task-1');
   });
 
-  it('disables complete button for completed tasks', () => {
+  it('hides complete button and shows archive for completed tasks', () => {
     const completedTask = { ...mockTask, status: 'COMPLETED' as const };
     render(
       <TaskDetail
@@ -185,10 +195,12 @@ describe('TaskDetail', () => {
         onComplete={onComplete}
         onEdit={onEdit}
         onDelete={onDelete}
+        onArchive={onArchive}
       />
     );
 
-    expect(screen.getByRole('button', { name: 'Complete task' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Complete task' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Archive task' })).toBeInTheDocument();
   });
 
   it('calls onEdit when edit button clicked', () => {
@@ -199,6 +211,7 @@ describe('TaskDetail', () => {
         onComplete={onComplete}
         onEdit={onEdit}
         onDelete={onDelete}
+        onArchive={onArchive}
       />
     );
 
@@ -214,6 +227,7 @@ describe('TaskDetail', () => {
         onComplete={onComplete}
         onEdit={onEdit}
         onDelete={onDelete}
+        onArchive={onArchive}
       />
     );
 
@@ -229,6 +243,7 @@ describe('TaskDetail', () => {
         onComplete={onComplete}
         onEdit={onEdit}
         onDelete={onDelete}
+        onArchive={onArchive}
       />
     );
 
@@ -246,6 +261,7 @@ describe('TaskDetail', () => {
         onComplete={onComplete}
         onEdit={onEdit}
         onDelete={onDelete}
+        onArchive={onArchive}
       />
     );
 
@@ -261,6 +277,7 @@ describe('TaskDetail', () => {
         onComplete={onComplete}
         onEdit={onEdit}
         onDelete={onDelete}
+        onArchive={onArchive}
       />
     );
 

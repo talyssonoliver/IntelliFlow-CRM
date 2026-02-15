@@ -4,7 +4,7 @@
  * Billing Portal Page
  *
  * Main billing management page with subscription overview,
- * payment methods, invoice history, and usage metrics.
+ * payment methods, billing information, and billing history.
  *
  * @implements PG-025 (Billing Portal)
  */
@@ -14,15 +14,14 @@ import { BillingPortal } from '@/components/billing';
 
 export default function BillingPage() {
   return (
-    <div className="billing-page">
+    <div className="flex flex-col gap-6">
       <PageHeader
         breadcrumbs={[
-          { label: 'Home', href: '/' },
           { label: 'Settings', href: '/settings' },
-          { label: 'Billing' },
+          { label: 'Billing Portal' },
         ]}
-        title="Billing & Subscription"
-        description="Manage your subscription, payment methods, and view invoices"
+        title="Billing Portal"
+        description="Manage your enterprise plan, payment methods, and invoice history."
         actions={[
           {
             label: 'Compare Plans',

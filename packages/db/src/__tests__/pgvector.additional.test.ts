@@ -32,6 +32,14 @@ vi.mock('../client', () => ({
   },
   Prisma: {
     raw: (str: string) => str,
+    sql: (strings: TemplateStringsArray, ...values: any[]) => ({
+      strings,
+      values,
+    }),
+  },
+  executeRawWithTiming: async <T>(sql: any): Promise<{ result: T; duration: number }> => {
+    const result = await mockPrismaQueryRaw(sql);
+    return { result, duration: 10 };
   },
 }));
 
@@ -253,6 +261,7 @@ describe('pgvector Helper Module - Additional Coverage', () => {
 
     it('should query database with correct parameters', async () => {
       const embedding = Array(1536).fill(0.1);
+      // Mock the actual query result that includes all database columns
       mockPrismaQueryRaw.mockResolvedValueOnce([
         { id: 'lead-1', email: 'lead1@test.com', company: 'Corp A', score: 85, similarity: 0.95 },
         { id: 'lead-2', email: 'lead2@test.com', company: null, score: 70, similarity: 0.82 },
@@ -264,8 +273,10 @@ describe('pgvector Helper Module - Additional Coverage', () => {
       expect(results[0].item.id).toBe('lead-1');
       expect(results[0].item.email).toBe('lead1@test.com');
       expect(results[0].item.company).toBe('Corp A');
+      expect(results[0].item.score).toBe(85);
       expect(results[0].similarity).toBe(0.95);
       expect(results[1].item.company).toBeNull();
+      expect(mockPrismaQueryRaw).toHaveBeenCalledTimes(1);
     });
 
     it('should use default options', async () => {
@@ -324,9 +335,11 @@ describe('pgvector Helper Module - Additional Coverage', () => {
 
       expect(results).toHaveLength(1);
       expect(results[0].item.id).toBe('contact-1');
+      expect(results[0].item.email).toBe('c1@test.com');
       expect(results[0].item.firstName).toBe('John');
       expect(results[0].item.lastName).toBe('Doe');
       expect(results[0].similarity).toBe(0.88);
+      expect(mockPrismaQueryRaw).toHaveBeenCalledTimes(1);
     });
 
     it('should return empty array when no matches', async () => {
@@ -336,6 +349,7 @@ describe('pgvector Helper Module - Additional Coverage', () => {
       const results = await findSimilarContacts(embedding);
 
       expect(results).toEqual([]);
+      expect(mockPrismaQueryRaw).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -415,6 +429,7 @@ describe('pgvector Helper Module - Additional Coverage', () => {
       expect(result.indexExists).toBe(true);
       expect(result.indexName).toBe('leads_embedding_hnsw_idx');
       expect(result.indexType).toBe('HNSW');
+      expect(mockPrismaQueryRaw).toHaveBeenCalledTimes(1);
     });
 
     it('should detect IVFFlat index', async () => {
@@ -430,6 +445,7 @@ describe('pgvector Helper Module - Additional Coverage', () => {
       expect(result.indexExists).toBe(true);
       expect(result.indexName).toBe('leads_embedding_ivfflat_idx');
       expect(result.indexType).toBe('IVFFlat');
+      expect(mockPrismaQueryRaw).toHaveBeenCalledTimes(1);
     });
 
     it('should detect unknown index type', async () => {
@@ -445,6 +461,7 @@ describe('pgvector Helper Module - Additional Coverage', () => {
       expect(result.indexExists).toBe(true);
       expect(result.indexName).toBe('leads_embedding_btree_idx');
       expect(result.indexType).toBe('Unknown');
+      expect(mockPrismaQueryRaw).toHaveBeenCalledTimes(1);
     });
 
     it('should return not exists when no index found', async () => {
@@ -455,6 +472,7 @@ describe('pgvector Helper Module - Additional Coverage', () => {
       expect(result.indexExists).toBe(false);
       expect(result.indexName).toBeNull();
       expect(result.indexType).toBeNull();
+      expect(mockPrismaQueryRaw).toHaveBeenCalledTimes(1);
     });
 
     it('should return not exists on database error', async () => {
@@ -465,6 +483,7 @@ describe('pgvector Helper Module - Additional Coverage', () => {
       expect(result.indexExists).toBe(false);
       expect(result.indexName).toBeNull();
       expect(result.indexType).toBeNull();
+      expect(mockPrismaQueryRaw).toHaveBeenCalledTimes(1);
     });
   });
 });

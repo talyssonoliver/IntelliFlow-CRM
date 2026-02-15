@@ -1,20 +1,38 @@
 /**
  * TaskForm Component Tests (PG-136)
  *
- * Tests for create/edit task form dialog with validation.
+ * Tests for create/edit task form Sheet with validation and entity search.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { TaskForm } from '../TaskForm';
 
+// Mock Sheet components to render inline (no portal)
 vi.mock('@intelliflow/ui', () => ({
   toast: vi.fn(),
+  Sheet: ({ children, open }: any) => open ? <div data-testid="sheet-root">{children}</div> : null,
+  SheetContent: ({ children, ...props }: any) => (
+    <div role="dialog" aria-modal="true" aria-label={props['aria-label']} data-testid="sheet-content">
+      {children}
+    </div>
+  ),
+  SheetTitle: ({ children }: any) => <h2>{children}</h2>,
+  SheetDescription: ({ children }: any) => <p>{children}</p>,
 }));
 
 vi.mock('@intelliflow/domain', () => ({
   TASK_STATUSES: ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] as const,
   TASK_PRIORITIES: ['LOW', 'MEDIUM', 'HIGH', 'URGENT'] as const,
+}));
+
+// Mock EntitySearchField
+vi.mock('../EntitySearchField', () => ({
+  EntitySearchField: ({ entityType, value, valueName, onChange }: any) => (
+    <div data-testid={`entity-search-${entityType}`}>
+      {value ? valueName : `Search ${entityType}`}
+    </div>
+  ),
 }));
 
 describe('TaskForm', () => {
@@ -173,5 +191,18 @@ describe('TaskForm', () => {
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByRole('dialog')).toHaveAttribute('aria-modal', 'true');
+  });
+
+  it('shows EntitySearchField when entity type is not none', () => {
+    render(
+      <TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="create" />
+    );
+
+    // Initially "none" is selected, no search field
+    expect(screen.queryByTestId('entity-search-lead')).not.toBeInTheDocument();
+
+    // Select "Lead"
+    fireEvent.click(screen.getByDisplayValue('lead'));
+    expect(screen.getByTestId('entity-search-lead')).toBeInTheDocument();
   });
 });

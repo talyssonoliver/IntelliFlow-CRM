@@ -16,6 +16,19 @@ vi.mock('@langchain/openai', () => {
   };
 });
 
+vi.mock('@langchain/ollama', () => {
+  return {
+    ChatOllama: class MockChatOllama {
+      constructor(config: unknown) {
+        // Store config for potential inspection
+      }
+      async invoke(messages: unknown[] | string): Promise<{ content: string }> {
+        return { content: 'Mocked Ollama response' };
+      }
+    },
+  };
+});
+
 // Mock the ai.config
 vi.mock('../config/ai.config', () => ({
   aiConfig: {
@@ -26,6 +39,12 @@ vi.mock('../config/ai.config', () => ({
       maxTokens: 2000,
       timeout: 30000,
       apiKey: 'test-api-key',
+    },
+    ollama: {
+      baseUrl: 'http://localhost:11434',
+      model: 'mistral',
+      temperature: 0.7,
+      timeout: 60000,
     },
     costTracking: {
       enabled: true,
@@ -112,7 +131,7 @@ describe('BaseAgent', () => {
       expect(stats.config.verbose).toBe(false);
     });
 
-    it('should throw error for Ollama provider', async () => {
+    it('should initialize Ollama provider', async () => {
       // Reset modules to apply new mock
       vi.resetModules();
 
@@ -120,12 +139,21 @@ describe('BaseAgent', () => {
       vi.doMock('../config/ai.config', () => ({
         aiConfig: {
           provider: 'ollama',
+          ollama: {
+            baseUrl: 'http://localhost:11434',
+            model: 'mistral',
+            temperature: 0.7,
+            timeout: 60000,
+          },
           openai: {
             model: 'gpt-4-turbo-preview',
             temperature: 0.7,
             maxTokens: 2000,
             timeout: 30000,
             apiKey: 'test-api-key',
+          },
+          costTracking: {
+            enabled: true,
           },
         },
       }));
@@ -140,7 +168,8 @@ describe('BaseAgent', () => {
         }
       }
 
-      expect(() => new OllamaTestAgent(config)).toThrow('Ollama support requires dynamic import');
+      const ollamaAgent = new OllamaTestAgent(config);
+      expect(ollamaAgent).toBeDefined();
 
       // Restore original mock
       vi.doMock('../config/ai.config', () => ({
@@ -152,6 +181,12 @@ describe('BaseAgent', () => {
             maxTokens: 2000,
             timeout: 30000,
             apiKey: 'test-api-key',
+          },
+          ollama: {
+            baseUrl: 'http://localhost:11434',
+            model: 'mistral',
+            temperature: 0.7,
+            timeout: 60000,
           },
           costTracking: {
             enabled: true,

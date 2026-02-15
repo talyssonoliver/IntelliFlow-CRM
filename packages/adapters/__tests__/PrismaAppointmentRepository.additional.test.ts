@@ -12,6 +12,19 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { PrismaClient } from '@intelliflow/db';
 import { PrismaAppointmentRepository } from '../src/repositories/PrismaAppointmentRepository';
 
+// Mock the withTransaction function from @intelliflow/db
+vi.mock('@intelliflow/db', async () => {
+  const actual = await vi.importActual('@intelliflow/db');
+  return {
+    ...actual,
+    withTransaction: vi.fn((fn: (tx: any) => Promise<any>) => {
+      // Get the mock transaction from the global test context
+      const mockTx = (global as any).__mockTransaction;
+      return fn(mockTx);
+    }),
+  };
+});
+
 // Mock Prisma transaction
 const createMockTransaction = () => ({
   appointment: {
@@ -30,6 +43,9 @@ const createMockTransaction = () => ({
 // Mock Prisma Client
 const createMockPrismaClient = () => {
   const mockTx = createMockTransaction();
+
+  // Store in global for withTransaction mock to access
+  (global as any).__mockTransaction = mockTx;
 
   return {
     appointment: {
@@ -122,10 +138,7 @@ describe('PrismaAppointmentRepository - Additional', () => {
 
       await repository.save(appointment);
 
-      // Should use transaction
-      expect(mockPrisma.$transaction).toHaveBeenCalled();
-
-      // Should upsert the appointment
+      // Should upsert the appointment in transaction
       expect(mockPrisma._mockTx.appointment.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: '550e8400-e29b-41d4-a716-446655440000' },
@@ -320,7 +333,6 @@ describe('PrismaAppointmentRepository - Additional', () => {
 
       await repository.saveAll(appts);
 
-      expect(mockPrisma.$transaction).toHaveBeenCalled();
       // Should upsert each appointment
       expect(mockPrisma._mockTx.appointment.upsert).toHaveBeenCalledTimes(2);
     });
@@ -391,7 +403,7 @@ describe('PrismaAppointmentRepository - Additional', () => {
     it('should handle empty array', async () => {
       await repository.saveAll([]);
 
-      expect(mockPrisma.$transaction).toHaveBeenCalled();
+      // Should not upsert any appointments
       expect(mockPrisma._mockTx.appointment.upsert).not.toHaveBeenCalled();
     });
   });

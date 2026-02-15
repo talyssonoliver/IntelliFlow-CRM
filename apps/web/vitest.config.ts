@@ -58,10 +58,13 @@ export default defineConfig({
     },
   },
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@/components': path.resolve(__dirname, './src/components'),
-      '@/lib': path.resolve(__dirname, './src/lib'),
-    },
+    alias: [
+      // Stub uninstalled optional dependencies — CSS sub-path must come before package alias
+      { find: /^@scalar\/api-reference-react\/style\.css$/, replacement: path.resolve(__dirname, './src/test/__mocks__/empty.ts') },
+      { find: /^@scalar\/api-reference-react$/, replacement: path.resolve(__dirname, './src/test/__mocks__/scalar-stub.ts') },
+      { find: '@/components', replacement: path.resolve(__dirname, './src/components') },
+      { find: '@/lib', replacement: path.resolve(__dirname, './src/lib') },
+      { find: '@', replacement: path.resolve(__dirname, './src') },
+    ],
   },
 });

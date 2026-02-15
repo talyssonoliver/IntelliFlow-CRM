@@ -12,7 +12,7 @@
       "IFC-002",
       "IFC-003"
     ],
-    "verified_at": "2026-02-10T23:09:35.348Z",
+    "verified_at": "2026-02-15T16:58:55.358Z",
     "all_satisfied": true,
     "notes": "IFC-002 (DDD domain models) and IFC-003 (tRPC foundation) are prerequisites"
   },

@@ -13,12 +13,14 @@
  */
 
 import { useRouter } from 'next/navigation';
+import { useMemo } from 'react';
 import { toast } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared';
 import { TicketList } from '@/components/tickets';
-import type { TicketListItem, BulkActionType, TicketStats, TicketFilterOptions } from '@/components/tickets';
+import type { BulkActionType, TicketStats, TicketFilterOptions } from '@/components/tickets';
 import { useTicketFilters } from '@/hooks/useTicketFilters';
 import { api } from '@/lib/api';
+import { mapTicketListItems } from '@/lib/tickets/ticket-detail-mapper';
 
 const defaultStats: TicketStats = { open: 0, inProgress: 0, breached: 0, resolvedToday: 0 };
 const defaultFilterOptions: TicketFilterOptions = {
@@ -45,9 +47,29 @@ export default function TicketsPage() {
   const utils = api.useUtils();
 
   // tRPC queries
-  const { data, isLoading } = api.ticket.list.useQuery(queryParams as never);
-  const { data: stats } = api.ticket.stats.useQuery();
+  const { data, isLoading } = api.ticket.list.useQuery(queryParams as never, {
+    placeholderData: ((prev: unknown) => prev) as never,
+  });
+  const { data: rawStats } = api.ticket.stats.useQuery({});
   const { data: filterOptions } = api.ticket.filterOptions.useQuery();
+  const tickets = useMemo(
+    () => mapTicketListItems((data as Record<string, unknown>)?.tickets),
+    [data]
+  );
+
+  // Map API stats shape to UI TicketStats shape
+  const stats: TicketStats = useMemo(() => {
+    if (!rawStats) return defaultStats;
+    const s = rawStats as Record<string, unknown>;
+    const byStatus = (s.byStatus as Record<string, number>) ?? {};
+    return {
+      open: byStatus['OPEN'] ?? 0,
+      inProgress: byStatus['IN_PROGRESS'] ?? 0,
+      breached: (s.slaBreached as number) ?? 0,
+      resolvedToday: (s.resolvedToday as number) ?? 0,
+      slaBreakdown: (s.bySLAStatus as Record<string, number>) ?? undefined,
+    };
+  }, [rawStats]);
 
   // Bulk mutation hooks
   const bulkAssignMutation = api.ticket.bulkAssign.useMutation({
@@ -131,10 +153,10 @@ export default function TicketsPage() {
         ]}
       />
       <TicketList
-        tickets={((data as Record<string, unknown>)?.tickets as TicketListItem[]) ?? []}
+        tickets={tickets}
         total={((data as Record<string, unknown>)?.total as number) ?? 0}
         isLoading={isLoading}
-        stats={(stats as unknown as TicketStats) ?? defaultStats}
+        stats={stats}
         filterOptions={(filterOptions as unknown as TicketFilterOptions) ?? defaultFilterOptions}
         onRowClick={(t) => router.push(`/tickets/${t.id}`)}
         onBulkAction={handleBulkAction}

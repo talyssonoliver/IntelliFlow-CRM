@@ -19,6 +19,7 @@ export type {
   TicketNextStep,
   TicketRelated,
   TicketSLA,
+  TicketAssigneeOption,
   TicketAIInsights,
 } from './types';
 
@@ -27,6 +28,7 @@ export { SLAIndicator } from './SLAIndicator';
 export { TicketList } from './TicketList';
 export { TicketCard } from './TicketCard';
 export { TicketDetail } from './TicketDetail';
+export { TicketAssignSidebar } from './TicketAssignSidebar';
 export { EscalationAlert } from './EscalationAlert';
 export { TicketForm } from './TicketForm';
 export { CustomerPortalView } from './CustomerPortalView';

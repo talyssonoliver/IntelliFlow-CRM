@@ -206,20 +206,35 @@ describe('ChainVersionEditor', () => {
 
     it('resets form when dialog closes', async () => {
       const user = userEvent.setup();
-      const { rerender } = render(<ChainVersionEditor {...defaultProps} />);
+      const onOpenChange = vi.fn((open: boolean) => {
+        if (!open) {
+          // Simulate the component's reset logic
+        }
+      });
+      const { rerender } = render(<ChainVersionEditor {...defaultProps} onOpenChange={onOpenChange} />);
 
       // Fill form
       await user.selectOptions(screen.getByLabelText(/Chain Type/i), 'SCORING');
       await user.type(screen.getByLabelText(/^Model/i), 'gpt-4');
       await user.type(screen.getByLabelText(/System Prompt/i), 'Test prompt here');
 
-      // Close dialog
-      rerender(<ChainVersionEditor {...defaultProps} open={false} />);
+      // Verify fields were filled
+      expect((screen.getByLabelText(/Chain Type/i) as HTMLSelectElement).value).toBe('SCORING');
+      expect((screen.getByLabelText(/^Model/i) as HTMLInputElement).value).toBe('gpt-4');
 
-      // Reopen dialog
-      rerender(<ChainVersionEditor {...defaultProps} open={true} />);
+      // Close dialog by clicking cancel
+      await user.click(screen.getByRole('button', { name: /Cancel/i }));
 
-      // Check form is reset
+      // Verify onOpenChange was called with false
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+
+      // Reopen with fresh props (simulates parent component managing state)
+      rerender(<ChainVersionEditor {...defaultProps} open={true} onOpenChange={onOpenChange} />);
+
+      // Wait for form to be visible again
+      await screen.findByLabelText(/Chain Type/i);
+
+      // Fields should be reset to defaults
       const chainTypeSelect = screen.getByLabelText(/Chain Type/i) as HTMLSelectElement;
       const modelInput = screen.getByLabelText(/^Model/i) as HTMLInputElement;
       const promptTextarea = screen.getByLabelText(/System Prompt/i) as HTMLTextAreaElement;

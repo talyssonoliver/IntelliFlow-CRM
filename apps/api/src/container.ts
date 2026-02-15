@@ -6,7 +6,7 @@
  * this container provides concrete adapter implementations.
  */
 
-import { PrismaClient } from '@intelliflow/db';
+import { prisma as sharedPrisma, type PrismaClient } from '@intelliflow/db';
 import {
   PrismaLeadRepository,
   PrismaContactRepository,
@@ -42,44 +42,12 @@ import {
 } from './security';
 
 /**
- * Create a fresh Prisma client for the API
- * This bypasses the global singleton to avoid caching issues during development
- * (especially when RLS settings change)
+ * Get the API Prisma client.
+ *
+ * Uses the shared singleton from @intelliflow/db so all API modules reuse a single
+ * PrismaClient instance (avoids connection exhaustion in Next.js dev/HMR).
  */
-const createFreshPrismaClient = () => {
-  const client = new PrismaClient({
-    datasources: {
-      db: {
-        url: process.env.DATABASE_URL,
-      },
-    },
-    log:
-      process.env.NODE_ENV === 'development'
-        ? [
-            { emit: 'event', level: 'query' },
-            { emit: 'stdout', level: 'error' },
-            { emit: 'stdout', level: 'warn' },
-          ]
-        : [{ emit: 'stdout', level: 'error' }],
-  });
-  return client;
-};
-
-/**
- * Lazy-initialized Prisma client
- * Created on first access to avoid blocking module initialization
- */
-let _apiPrisma: PrismaClient | null = null;
-
-/**
- * Get the API Prisma client (creates on first access)
- */
-export const getApiPrisma = (): PrismaClient => {
-  if (!_apiPrisma) {
-    _apiPrisma = createFreshPrismaClient();
-  }
-  return _apiPrisma;
-};
+export const getApiPrisma = (): PrismaClient => sharedPrisma;
 
 /**
  * Direct export for backward compatibility
@@ -248,7 +216,7 @@ const createServices = (prismaClient: PrismaClient) => {
 
 /**
  * Singleton container instance
- * Services are created once with a fresh Prisma client and reused across all requests
+ * Services are created once with the shared Prisma client and reused across all requests
  */
 const containerBase = createServices(apiPrisma);
 

@@ -242,7 +242,7 @@ describe('Notifications Validators', () => {
     it('should reject invalid status in notification', () => {
       const result = notificationSchema.safeParse({
         ...validNotification,
-        status: 'pending',
+        status: 'invalid_status',
       });
       expect(result.success).toBe(false);
     });
@@ -699,7 +699,7 @@ describe('Notifications Validators', () => {
 
     it('should accept with priorities filter', () => {
       const result = notificationSubscriptionInputSchema.safeParse({
-        priorities: ['high', 'urgent'],
+        priorities: ['high', 'normal'],
       });
       expect(result.success).toBe(true);
     });

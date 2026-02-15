@@ -10,9 +10,16 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { healthRouter } from '../health.router';
 import { prismaMock, createPublicContext } from '../../../test/setup';
 
-// Mock correlation module
+// Mock correlation module - MUST include all exports used by middleware.ts
 vi.mock('../../../tracing/correlation', () => ({
   getCorrelationId: vi.fn(() => 'test-correlation-id'),
+  initializeRequestContext: vi.fn(() => ({
+    correlationId: 'test-correlation-id',
+    requestId: 'test-request-id',
+    userId: undefined,
+    startTime: Date.now(),
+  })),
+  runWithContext: vi.fn((_ctx: any, fn: () => any) => fn()),
 }));
 
 describe('Health Router', () => {

@@ -44,6 +44,26 @@ model Tenant {
   domainEvents         DomainEvent[]
   aiOutputReviews      AIOutputReview[]
   experiments          Experiment[]
+  slaPolicies          SLAPolicy[]
+  aiScores             AIScore[]
+  teamMessages         TeamMessage[]
+  pipelineSnapshots    PipelineSnapshot[]
+  trafficSources       TrafficSource[]
+  growthMetrics        GrowthMetric[]
+  relatedTickets       RelatedTicket[]
+  ticketAIInsights     TicketAIInsight[]
+  salesPerformances    SalesPerformance[]
+  teams                Team[]
+  teamMembers          TeamMember[]
+  emailTemplates       EmailTemplate[]
+  feedbackSurveys      FeedbackSurvey[]
+  accountHealthScores  AccountHealthScore[]
+  agentSkills          AgentSkill[]
+  slABreaches          SLABreach[]
+  escalationHistories  EscalationHistory[]
+  reportDefinitions    ReportDefinition[]
+  aiInsights           AIInsight[]
+  performanceMetrics   PerformanceMetric[]
 
   @@index([slug])
   @@index([status])
@@ -85,6 +105,8 @@ model User {
   auditLogs           AuditLog[]
   auditLogEntries     AuditLogEntry[]
   conversationRecords ConversationRecord[]
+  casesAssigned       Case[]              @relation("CaseAssignee")
+  caseTasksAssigned   CaseTask[]          @relation("CaseTaskAssignee")
 
   @@index([email])
   @@index([role])
@@ -323,6 +345,7 @@ model Account {
   owner         User      @relation(fields: [ownerId], references: [id])
   contacts      Contact[]
   opportunities Opportunity[]
+  cases         Case[]
 
   // Hierarchy: parent/child account relationships
   parentAccountId  String?
@@ -674,6 +697,7 @@ enum TaskStatus {
   IN_PROGRESS
   COMPLETED
   CANCELLED
+  ARCHIVED
 }
 
 // ============================================
@@ -694,8 +718,12 @@ model AIScore {
   scoredById    String
   scoredBy      User      @relation(fields: [scoredById], references: [id])
 
+  tenantId      String
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([leadId])
   @@index([createdAt])
+  @@index([tenantId])
   @@map("ai_scores")
 }
 
@@ -976,6 +1004,7 @@ model AppointmentCase {
   appointmentId String
   appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
   caseId        String
+  case          Case        @relation("CaseAppointments", fields: [caseId], references: [id], onDelete: Cascade)
   tenantId      String
   createdAt     DateTime    @default(now())
 
@@ -1001,6 +1030,92 @@ enum AppointmentStatus {
   COMPLETED
   CANCELLED
   NO_SHOW
+}
+
+// ============================================
+// LEGAL CASES - PG-138 Case Management
+// ============================================
+
+model Case {
+  id          String       @id @default(uuid())
+  title       String
+  description String?      @db.Text
+  status      CaseStatus   @default(OPEN)
+  priority    CasePriority @default(MEDIUM)
+  deadline    DateTime?
+  clientId    String
+  assignedTo  String
+  resolution  String?      @db.Text
+  parties     Json?
+  closedAt    DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Multi-tenancy
+  tenantId    String
+
+  // Relations
+  client       Account          @relation(fields: [clientId], references: [id])
+  assignee     User             @relation("CaseAssignee", fields: [assignedTo], references: [id])
+  tasks        CaseTask[]
+  appointments AppointmentCase[] @relation("CaseAppointments")
+
+  @@index([status])
+  @@index([priority])
+  @@index([clientId])
+  @@index([assignedTo])
+  @@index([deadline])
+  @@index([status, deadline])
+  @@index([tenantId])
+  @@map("cases")
+}
+
+model CaseTask {
+  id          String         @id @default(uuid())
+  caseId      String
+  title       String
+  description String?        @db.Text
+  dueDate     DateTime?
+  status      CaseTaskStatus @default(PENDING)
+  assignee    String?
+  completedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  tenantId    String
+
+  case         Case  @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  assignedUser User? @relation("CaseTaskAssignee", fields: [assignee], references: [id], onDelete: SetNull)
+
+  @@index([caseId])
+  @@index([status])
+  @@index([assignee])
+  @@index([dueDate])
+  @@index([status, dueDate])
+  @@index([tenantId])
+  @@map("case_tasks")
+}
+
+enum CaseStatus {
+  OPEN
+  IN_PROGRESS
+  ON_HOLD
+  CLOSED
+  CANCELLED
+}
+
+enum CasePriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum CaseTaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
 }
 
 // ============================================
@@ -1135,11 +1250,15 @@ model SLAPolicy {
   isDefault               Boolean       @default(false)
   isActive                Boolean       @default(true)
 
+  tenantId                String
+  tenant                  Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   createdAt               DateTime      @default(now())
   updatedAt               DateTime      @updatedAt
 
   tickets                 Ticket[]
 
+  @@index([tenantId])
   @@map("sla_policies")
 }
 
@@ -1167,6 +1286,7 @@ enum TicketStatus {
   WAITING_ON_THIRD_PARTY
   RESOLVED
   CLOSED
+  ARCHIVED
 }
 
 enum TicketPriority {
@@ -1837,8 +1957,12 @@ model TeamMessage {
   channel   String   @default("general")
   createdAt DateTime @default(now())
 
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([channel])
   @@index([createdAt])
+  @@index([tenantId])
   @@map("team_messages")
 }
 
@@ -1852,8 +1976,12 @@ model PipelineSnapshot {
   color      String   @default("bg-ds-primary")
   snapshotDate DateTime @default(now())
 
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@unique([stage, snapshotDate])
   @@index([snapshotDate])
+  @@index([tenantId])
   @@map("pipeline_snapshots")
 }
 
@@ -1865,8 +1993,12 @@ model TrafficSource {
   color        String   @default("bg-ds-primary")
   snapshotDate DateTime @default(now())
 
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@unique([name, snapshotDate])
   @@index([snapshotDate])
+  @@index([tenantId])
   @@map("traffic_sources")
 }
 
@@ -1879,9 +2011,13 @@ model GrowthMetric {
   metricType String   @default("revenue") // 'revenue', 'leads', 'deals'
   createdAt  DateTime @default(now())
 
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@unique([month, year, metricType])
   @@index([year])
   @@index([metricType])
+  @@index([tenantId])
   @@map("growth_metrics")
 }
 
@@ -1924,8 +2060,12 @@ model RelatedTicket {
   similarity     Int      // 0-100 percentage match
   createdAt      DateTime @default(now())
 
+  tenantId       String
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@unique([ticketId, relatedId])
   @@index([ticketId])
+  @@index([tenantId])
   @@map("related_tickets")
 }
 
@@ -1942,6 +2082,10 @@ model TicketAIInsight {
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
 
+  tenantId                String
+  tenant                  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
   @@map("ticket_ai_insights")
 }
 
@@ -1957,10 +2101,14 @@ model SalesPerformance {
   period       String   @default("monthly") // 'daily', 'weekly', 'monthly', 'quarterly'
   snapshotDate DateTime @default(now())
 
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@unique([userId, period, snapshotDate])
   @@index([period])
   @@index([snapshotDate])
   @@index([rank])
+  @@index([tenantId])
   @@map("sales_performance")
 }
 
@@ -2020,10 +2168,14 @@ model Team {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  tenantId    String
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   members     TeamMember[]
 
   @@index([workspaceId])
   @@index([leaderId])
+  @@index([tenantId])
   @@map("teams")
 }
 
@@ -2036,9 +2188,13 @@ model TeamMember {
   role      String   @default("member") // 'lead', 'member'
   joinedAt  DateTime @default(now())
 
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@unique([userId, teamId])
   @@index([userId])
   @@index([teamId])
+  @@index([tenantId])
   @@map("team_members")
 }
 
@@ -2059,8 +2215,12 @@ model EmailTemplate {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([category])
   @@index([isActive])
+  @@index([tenantId])
   @@map("email_templates")
 }
 
@@ -2356,10 +2516,14 @@ model FeedbackSurvey {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([type])
   @@index([contactId])
   @@index([status])
   @@index([score])
+  @@index([tenantId])
   @@map("feedback_surveys")
 }
 
@@ -2436,9 +2600,13 @@ model AccountHealthScore {
   calculatedAt    DateTime @default(now())
   validUntil      DateTime?
 
+  tenantId        String
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([accountId])
   @@index([churnRisk])
   @@index([overallScore])
+  @@index([tenantId])
   @@map("account_health_scores")
 }
 
@@ -2458,10 +2626,14 @@ model AgentSkill {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@unique([userId, skillName])
   @@index([userId])
   @@index([skillName])
   @@index([proficiency])
+  @@index([tenantId])
   @@map("agent_skills")
 }
 
@@ -2569,9 +2741,13 @@ model SLABreach {
   notes       String?  @db.Text
   createdAt   DateTime @default(now())
 
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([ticketId])
   @@index([breachType])
   @@index([resolved])
+  @@index([tenantId])
   @@map("sla_breaches")
 }
 
@@ -2590,9 +2766,13 @@ model EscalationHistory {
   acknowledgedAt DateTime?
   resolvedAt  DateTime?
 
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([ticketId])
   @@index([level])
   @@index([escalatedAt])
+  @@index([tenantId])
   @@map("escalation_history")
 }
 
@@ -2761,8 +2941,12 @@ model ReportDefinition {
   schedules   ReportSchedule[]
   executions  ReportExecution[]
 
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([category])
   @@index([createdBy])
+  @@index([tenantId])
   @@map("report_definitions")
 }
 
@@ -2838,11 +3022,15 @@ model AIInsight {
   expiresAt   DateTime?
   createdAt   DateTime @default(now())
 
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([type])
   @@index([category])
   @@index([status])
   @@index([entityType, entityId])
   @@index([createdAt])
+  @@index([tenantId])
   @@map("ai_insights")
 }
 
@@ -2921,9 +3109,13 @@ model PerformanceMetric {
   serviceName String?
   recordedAt  DateTime @default(now())
 
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([metricName])
   @@index([serviceName])
   @@index([recordedAt])
+  @@index([tenantId])
   @@map("performance_metrics")
 }
 

@@ -20,6 +20,7 @@ import type { BaseMessage } from '@langchain/core/messages';
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
 import { costTracker } from '../utils/cost-tracker';
+import { getOpenAIClientSettings } from '../utils/openai-client';
 import pino from 'pino';
 
 /**
@@ -136,12 +137,14 @@ export class SentimentAnalysisChain {
   constructor() {
     // Initialize the appropriate model
     if (aiConfig.provider === 'openai') {
+      const openAIClientSettings = getOpenAIClientSettings();
       this.model = new ChatOpenAI({
         modelName: aiConfig.openai.model,
         temperature: 0.1, // Low temperature for consistent classification
         maxTokens: 1000,
         timeout: aiConfig.openai.timeout,
-        openAIApiKey: aiConfig.openai.apiKey,
+        apiKey: openAIClientSettings.apiKey,
+        configuration: openAIClientSettings.configuration,
         callbacks: aiConfig.features.enableChainLogging
           ? [
               {

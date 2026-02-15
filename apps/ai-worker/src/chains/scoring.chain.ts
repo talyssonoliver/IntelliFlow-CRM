@@ -6,6 +6,7 @@ import { StructuredOutputParser } from '@langchain/core/output_parsers';
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
 import { costTracker } from '../utils/cost-tracker';
+import { getOpenAIClientSettings } from '../utils/openai-client';
 import { chainMonitor, withMonitoring } from '../monitoring/chain-monitor';
 import type { MonitoredResult } from '../monitoring/chain-monitor';
 import { leadScoreSchema } from '@intelliflow/validators';
@@ -50,12 +51,14 @@ export class LeadScoringChain {
   constructor() {
     // Initialize the appropriate model based on configuration
     if (aiConfig.provider === 'openai') {
+      const openAIClientSettings = getOpenAIClientSettings();
       this.model = new ChatOpenAI({
         modelName: aiConfig.openai.model,
         temperature: aiConfig.openai.temperature,
         maxTokens: aiConfig.openai.maxTokens,
         timeout: aiConfig.openai.timeout,
-        openAIApiKey: aiConfig.openai.apiKey,
+        apiKey: openAIClientSettings.apiKey,
+        configuration: openAIClientSettings.configuration,
         callbacks: aiConfig.features.enableChainLogging
           ? [
               {

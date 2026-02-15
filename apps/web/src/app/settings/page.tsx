@@ -1,95 +1,80 @@
 'use client';
 
-import Link from 'next/link';
-import { Card } from '@intelliflow/ui';
+/**
+ * Settings Home Page
+ *
+ * Central hub for all application settings with organized navigation,
+ * client-side search, and recent changes section.
+ * Part of PG-104 (Settings Home).
+ */
 
-const settingsCards = [
-  {
-    title: 'Account',
-    description: 'Manage your personal information, password, and security settings',
-    href: '/settings/account',
-    icon: 'person',
-    color: 'bg-blue-500',
-  },
-  {
-    title: 'Team',
-    description: 'Invite team members, manage roles, and control access permissions',
-    href: '/settings/team',
-    icon: 'group',
-    color: 'bg-indigo-500',
-  },
-  {
-    title: 'AI Chains',
-    description: 'Manage AI chain versions, rollout strategies, and memory budget',
-    href: '/settings/ai',
-    icon: 'auto_awesome',
-    color: 'bg-violet-500',
-  },
-  {
-    title: 'Integrations',
-    description: 'Connect third-party apps and services to enhance your workflow',
-    href: '/settings/integrations',
-    icon: 'extension',
-    color: 'bg-purple-500',
-  },
-  {
-    title: 'Notifications',
-    description: 'Configure email, push, and in-app notification preferences',
-    href: '/settings/notifications',
-    icon: 'notifications',
-    color: 'bg-amber-500',
-  },
-  {
-    title: 'Governance',
-    description: 'Compliance dashboards, ADR registry, and policy management',
-    href: '/governance',
-    icon: 'policy',
-    color: 'bg-emerald-500',
-    external: true,
-  },
-];
+import { useState, useDeferredValue, useCallback } from 'react';
+import { SearchInput } from '@intelliflow/ui';
+import { PageHeader } from '@/components/shared';
+import { SettingsNav } from '@/components/shared/settings-nav';
+import { SETTINGS_ITEMS } from '@/lib/shared/settings-search';
+import { filterSettings } from '@/lib/shared/settings-search';
 
 export default function SettingsPage() {
-  return (
-    <div className="p-8">
-      <div className="max-w-4xl">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your account, team, and application preferences
-          </p>
-        </div>
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedQuery = useDeferredValue(searchQuery);
 
-        {/* Settings Cards Grid */}
-        <div className="grid gap-4 md:grid-cols-2">
-          {settingsCards.map((card) => (
-            <Link key={card.href} href={card.href} className="group">
-              <Card className="p-6 h-full hover:border-primary hover:shadow-md transition-all">
-                <div className="flex items-start gap-4">
-                  <div
-                    className={`w-12 h-12 ${card.color} rounded-lg flex items-center justify-center flex-shrink-0`}
-                  >
-                    <span className="material-symbols-outlined text-2xl text-white">
-                      {card.icon}
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
-                      {card.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {card.description}
-                    </p>
-                  </div>
-                  <span className="material-symbols-outlined text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all">
-                    chevron_right
-                  </span>
-                </div>
-              </Card>
-            </Link>
-          ))}
+  const filteredCount = debouncedQuery
+    ? filterSettings(debouncedQuery, SETTINGS_ITEMS).length
+    : SETTINGS_ITEMS.length;
+
+  const handleClear = useCallback(() => {
+    setSearchQuery('');
+  }, []);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleClear();
+      }
+    },
+    [handleClear]
+  );
+
+  return (
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/' },
+          { label: 'Settings' },
+        ]}
+        title="Settings"
+        description="Manage your account, team, and application settings"
+      />
+
+      {/* Search */}
+      <div role="search" aria-label="Search settings">
+        <SearchInput
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onClear={handleClear}
+          onKeyDown={handleKeyDown}
+          placeholder="Search settings..."
+          aria-label="Search settings"
+        />
+        <div aria-live="polite" className="sr-only">
+          {debouncedQuery
+            ? `${filteredCount} setting${filteredCount !== 1 ? 's' : ''} found`
+            : ''}
         </div>
+      </div>
+
+      {/* Navigation Cards */}
+      <SettingsNav searchQuery={debouncedQuery} />
+
+      {/* Recent Changes */}
+      <div className="border-t border-border pt-6">
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+          Recent Changes
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          No recent changes
+        </p>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { Button, Card } from '@intelliflow/ui';
 import { cn } from '@intelliflow/ui';
+import { AppAvatar } from '@/components/shared/app-avatar';
 
 interface Comment {
   id: string;
@@ -236,23 +237,12 @@ function CommentCard({
     <article className="space-y-4">
       <div className="flex gap-3">
         {/* Avatar */}
-        <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
-          {comment.author.avatar ? (
-            <img
-              src={comment.author.avatar}
-              alt=""
-              className="w-full h-full rounded-full object-cover"
-            />
-          ) : (
-            <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
-              {comment.author.name
-                .split(' ')
-                .map(n => n[0])
-                .join('')
-                .slice(0, 2)}
-            </span>
-          )}
-        </div>
+        <AppAvatar
+          name={comment.author.name}
+          src={comment.author.avatar ?? null}
+          className="w-10 h-10 flex-shrink-0"
+          fallbackClassName="text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-200 dark:bg-slate-700"
+        />
 
         {/* Content */}
         <div className="flex-1 min-w-0">

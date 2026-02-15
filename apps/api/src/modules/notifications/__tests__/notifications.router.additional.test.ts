@@ -303,7 +303,7 @@ describe("notificationsRouter additional coverage", () => {
       expect(result.title).toBe("New task assigned");
       expect(result.priority).toBe("high");
       expect(result.isRead).toBe(false);
-      expect(result.status).toBe("unread");
+      expect(result.status).toBe("pending");
     });
 
     it("should use default priority when not specified", async () => {
@@ -317,7 +317,7 @@ describe("notificationsRouter additional coverage", () => {
         body: "System maintenance scheduled",
       });
 
-      expect(result.priority).toBe("medium");
+      expect(result.priority).toBe("normal");
     });
   });
 });

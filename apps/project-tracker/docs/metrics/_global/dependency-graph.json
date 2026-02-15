@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/dependency-graph.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-02-10T23:09:35.510Z",
+  "last_updated": "2026-02-15T16:58:55.432Z",
   "description": "Cross-sprint dependency tracking for all tasks",
   "nodes": {
     "EXC-INIT-001": {
@@ -1895,11 +1895,11 @@
     "PG-021": {
       "task_id": "PG-021",
       "sprint": 13,
-      "status": "BACKLOG",
+      "status": "DONE",
       "dependencies": [
+        "PG-015",
         "IFC-006",
-        "IFC-098",
-        "PG-015"
+        "IFC-098"
       ],
       "dependents": [
         "PG-022",
@@ -4558,7 +4558,7 @@
     "PG-139": {
       "task_id": "PG-139",
       "sprint": 7,
-      "status": "BACKLOG",
+      "status": "DONE",
       "dependencies": [
         "IFC-137"
       ],
@@ -4897,7 +4897,7 @@
     "PG-154": {
       "task_id": "PG-154",
       "sprint": 14,
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "dependencies": [
         "PG-129"
       ],
@@ -4906,7 +4906,7 @@
     "PG-155": {
       "task_id": "PG-155",
       "sprint": 14,
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "dependencies": [
         "PG-129"
       ],
@@ -4917,7 +4917,7 @@
     "PG-156": {
       "task_id": "PG-156",
       "sprint": 15,
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "dependencies": [
         "PG-129"
       ],
@@ -4926,7 +4926,7 @@
     "PG-157": {
       "task_id": "PG-157",
       "sprint": 15,
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "dependencies": [
         "PG-129"
       ],
@@ -4935,7 +4935,7 @@
     "PG-158": {
       "task_id": "PG-158",
       "sprint": 15,
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "dependencies": [
         "PG-129"
       ],
@@ -4944,7 +4944,7 @@
     "PG-159": {
       "task_id": "PG-159",
       "sprint": 15,
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "dependencies": [
         "PG-129"
       ],
@@ -4953,7 +4953,7 @@
     "PG-160": {
       "task_id": "PG-160",
       "sprint": 15,
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "dependencies": [
         "PG-129"
       ],
@@ -4962,7 +4962,7 @@
     "PG-161": {
       "task_id": "PG-161",
       "sprint": 16,
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "dependencies": [
         "IFC-183",
         "PG-129"
@@ -4972,7 +4972,7 @@
     "PG-162": {
       "task_id": "PG-162",
       "sprint": 16,
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "dependencies": [
         "IFC-095",
         "PG-129"
@@ -4982,7 +4982,7 @@
     "PG-163": {
       "task_id": "PG-163",
       "sprint": 15,
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "dependencies": [
         "PG-129"
       ],
@@ -4991,7 +4991,7 @@
     "PG-164": {
       "task_id": "PG-164",
       "sprint": 15,
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "dependencies": [
         "PG-129",
         "PG-155"
@@ -5001,7 +5001,7 @@
     "PG-165": {
       "task_id": "PG-165",
       "sprint": 14,
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "dependencies": [
         "PG-129"
       ],
@@ -5010,7 +5010,7 @@
     "PG-166": {
       "task_id": "PG-166",
       "sprint": 15,
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "dependencies": [
         "PG-129"
       ],
@@ -5019,7 +5019,7 @@
     "PG-167": {
       "task_id": "PG-167",
       "sprint": 16,
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "dependencies": [
         "PG-129"
       ],
@@ -5028,7 +5028,7 @@
     "PG-168": {
       "task_id": "PG-168",
       "sprint": 16,
-      "status": "PLANNED",
+      "status": "BACKLOG",
       "dependencies": [
         "PG-129"
       ],
@@ -8859,7 +8859,6 @@
   ],
   "blocked_tasks": [
     "PG-020",
-    "PG-022",
     "PG-026",
     "PG-027",
     "PG-028",
@@ -8962,7 +8961,6 @@
     "IFC-206",
     "IFC-207",
     "PG-138",
-    "PG-139",
     "PG-142",
     "PG-143",
     "PG-144",
@@ -8976,7 +8974,7 @@
     "PG-141",
     "PG-017",
     "PG-019",
-    "PG-021",
+    "PG-022",
     "PG-023",
     "PG-024",
     "PG-104",

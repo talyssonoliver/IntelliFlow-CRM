@@ -17,16 +17,19 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('@intelliflow/domain', () => ({
   AutoResponseDraft: {
-    rehydrate: vi.fn().mockImplementation((props: any) => ({
-      ...props,
-      id: { toString: () => props.id },
-      content: { toValue: () => ({ subject: 'Sub', body: 'Body' }) },
-      statusHistory: props.statusHistory || [],
-      approvalDecision: props.approvalDecision,
-      escalation: props.escalation,
-      incrementVersion: vi.fn(),
-      version: props.version || 0,
-    })),
+    rehydrate: vi.fn((props: any) => {
+      const incrementVersionMock = vi.fn();
+      return {
+        ...props,
+        id: { toString: () => props.id },
+        content: { toValue: () => ({ subject: 'Sub', body: 'Body' }) },
+        statusHistory: props.statusHistory || [],
+        approvalDecision: props.approvalDecision,
+        escalation: props.escalation,
+        incrementVersion: incrementVersionMock,
+        version: props.version || 0,
+      };
+    }),
   },
   AutoResponseDraftId: { create: vi.fn((id: string) => ({ toString: () => id })) },
   ResponseContent: { create: vi.fn((p: any) => p) },
@@ -56,7 +59,14 @@ describe('PrismaAutoResponseDraftRepository - supplementary', () => {
   let repo: PrismaAutoResponseDraftRepository;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    // Clear only Prisma mocks, not domain mocks
+    mockPrisma.autoResponseDraft.findUnique.mockClear();
+    mockPrisma.autoResponseDraft.findFirst.mockClear();
+    mockPrisma.autoResponseDraft.findMany.mockClear();
+    mockPrisma.autoResponseDraft.create.mockClear();
+    mockPrisma.autoResponseDraft.updateMany.mockClear();
+    mockPrisma.autoResponseDraft.delete.mockClear();
+    mockPrisma.autoResponseDraft.count.mockClear();
     repo = new PrismaAutoResponseDraftRepository(mockPrisma as any);
   });
 
